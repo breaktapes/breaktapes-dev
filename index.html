@@ -3594,7 +3594,7 @@ async function renderGreeting() {
   navigator.geolocation.getCurrentPosition(async pos => {
     try {
       const { latitude: lat, longitude: lon } = pos.coords;
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}&hourly=temperature_2m,weathercode&forecast_days=1&timezone=auto`;
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}&hourly=temperature_2m,weathercode&forecast_days=2&timezone=auto`;
       const res  = await fetch(url);
       const data = await res.json();
       const times = data.hourly.time;
@@ -4871,6 +4871,9 @@ let activeMarkerEl = null;
 let geoCache = JSON.parse(localStorage.getItem('fl2_geocache') || '{}');
 let routeCache  = {};   // raceName → coords[] | null
 let routeLayers = [];
+let countryRaceMap  = {};
+let countryLayers   = {};
+let countryPolyCache = JSON.parse(localStorage.getItem('fl2_countrypolycache') || '{}');
 
 async function renderMap() {
   // Stats pills
@@ -4909,7 +4912,8 @@ async function renderMap() {
   } else {
     // Clear old markers
     mapMarkers.forEach(m => leafletMap.removeLayer(m));
-    mapMarkers = []; arcData = []; cityRaceMap = {};
+    Object.values(countryLayers).forEach(l => leafletMap.removeLayer(l));
+    mapMarkers = []; cityRaceMap = {}; countryLayers = {}; countryRaceMap = {};
   }
 
   if (!races.length) { loadEl.classList.add('hidden'); return; }
@@ -4977,6 +4981,8 @@ async function renderMap() {
 
   loadEl.classList.add('hidden');
   if (failed > 0) errEl.classList.add('show');
+
+  fetchAndAddCountries(); // non-blocking — loads country polygons for hover
 }
 
 /* ── Hover tooltip ───────────────────────────────── */
@@ -5006,6 +5012,69 @@ function showMapTip(key, e) {
 
 function hideMapTip() {
   document.getElementById('mapTip').style.opacity = '0';
+}
+
+/* ── Country highlight ───────────────────────────── */
+async function fetchAndAddCountries() {
+  countryRaceMap = {};
+  for (const r of races) {
+    if (!countryRaceMap[r.country]) countryRaceMap[r.country] = [];
+    countryRaceMap[r.country].push(r);
+  }
+  for (const country of Object.keys(countryRaceMap)) {
+    if (countryLayers[country]) continue;
+    if (!countryPolyCache[country]) {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(country)}&polygon_geojson=1&format=json&limit=1`,
+          { headers: { 'Accept-Language':'en', 'User-Agent':'BreaktapesApp/1.0' } }
+        );
+        const data = await res.json();
+        if (data?.[0]?.geojson) {
+          countryPolyCache[country] = data[0].geojson;
+          localStorage.setItem('fl2_countrypolycache', JSON.stringify(countryPolyCache));
+        }
+        await new Promise(r => setTimeout(r, 1100));
+      } catch(_) {}
+    }
+    const geojson = countryPolyCache[country];
+    if (!geojson || !leafletMap) continue;
+    const layer = L.geoJSON(geojson, {
+      style: { fillColor:'transparent', fillOpacity:0, color:'transparent', weight:0 },
+    }).addTo(leafletMap);
+    layer.on('mouseover', e => highlightCountry(e, country));
+    layer.on('mousemove', e => moveCountryTip(e));
+    layer.on('mouseout',  () => resetCountry());
+    countryLayers[country] = layer;
+  }
+}
+
+function highlightCountry(e, country) {
+  e.target.setStyle({ fillColor:'#FF4D00', fillOpacity:0.12, color:'#FF4D00', weight:1, opacity:0.35 });
+  const cr = countryRaceMap[country] || [];
+  const km = Math.round(cr.reduce((s,r) => s+(r.distKm||0), 0));
+  const tip = document.getElementById('mapTip');
+  tip.innerHTML = `<div class="tip-city">${country}</div>
+    <div class="tip-race"><span>🏃</span><span class="tip-name">${cr.length} race${cr.length!==1?'s':''}</span><span class="tip-time">${km} km</span></div>`;
+  const pt = leafletMap.latLngToContainerPoint(e.latlng);
+  tip.style.left = (pt.x+14)+'px';
+  tip.style.top  = (pt.y-20)+'px';
+  tip.style.opacity = '1';
+}
+
+function moveCountryTip(e) {
+  const tip = document.getElementById('mapTip');
+  if (tip.style.opacity !== '1') return;
+  const pt = leafletMap.latLngToContainerPoint(e.latlng);
+  tip.style.left = (pt.x+14)+'px';
+  tip.style.top  = (pt.y-20)+'px';
+}
+
+function resetCountry() {
+  Object.values(countryLayers).forEach(l =>
+    l.setStyle({ fillColor:'transparent', fillOpacity:0, color:'transparent', weight:0 })
+  );
+  hideMapTip();
 }
 
 /* ── Race route via Overpass API ─────────────────── */
