@@ -2784,11 +2784,11 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
         </div>
         <div class="fg">
           <label class="fl">Email</label>
-          <input class="fi" id="authEmail" type="email" placeholder="you@example.com" autocomplete="email">
+          <input class="fi" id="authEmail" type="text" placeholder="you@example.com" autocomplete="off">
         </div>
         <div class="fg">
           <label class="fl">Password</label>
-          <input class="fi" id="authPassword" type="password" placeholder="At least 6 characters" autocomplete="current-password">
+          <input class="fi" id="authPassword" type="text" placeholder="At least 6 characters" autocomplete="off">
         </div>
       </div>
       <div class="auth-note" id="authHelperText">Sign in to load your protected Supabase data and keep it synced.</div>
@@ -3031,6 +3031,8 @@ function openAuthModal() {
   closeMenu();
   setAuthMode(authUser ? 'signin' : authMode);
   if (authUser) document.getElementById('authEmail').value = authUser.email || '';
+  document.getElementById('authEmail').type = 'email';
+  document.getElementById('authPassword').type = 'password';
   document.getElementById('authModal').classList.add('open');
 }
 
@@ -4427,7 +4429,13 @@ function openEditAth(){
   openM('eaModal');
 }
 function openM(id){ document.getElementById(id).classList.add('open'); }
-function closeM(id){ document.getElementById(id).classList.remove('open'); }
+function closeM(id){
+  document.getElementById(id).classList.remove('open');
+  if (id === 'authModal') {
+    document.getElementById('authEmail').type = 'text';
+    document.getElementById('authPassword').type = 'text';
+  }
+}
 function bgClose(e,id){ if(e.target===e.currentTarget)closeM(id); }
 
 function onNrTypeChange() {
