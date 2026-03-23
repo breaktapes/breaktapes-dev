@@ -1845,9 +1845,94 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
 .auth-note {
   margin-top: 0.75rem; font-size: 12px; color: var(--muted); line-height: 1.5;
 }
+
+/* =============================================
+   LANDING SCREEN
+   ============================================= */
+#landing-screen {
+  position: fixed; inset: 0; z-index: 600;
+  background: var(--black);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  transition: opacity 0.35s ease;
+}
+#landing-screen.out { opacity: 0; pointer-events: none; }
+.landing-wordmark {
+  font-family: var(--headline);
+  font-size: clamp(28px, 8vw, 48px);
+  font-weight: 900; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--white);
+  margin-bottom: 2.5rem;
+}
+.landing-wordmark .slash { color: var(--orange); }
+.landing-headline {
+  font-family: var(--headline);
+  font-size: clamp(2.8rem, 13vw, 5.5rem);
+  font-weight: 900; line-height: 0.92;
+  text-transform: uppercase; letter-spacing: 0.01em;
+  color: var(--white); margin-bottom: 1.25rem;
+}
+.landing-headline em {
+  font-style: normal; color: var(--orange);
+}
+.landing-sub {
+  font-size: 15px; color: var(--muted);
+  max-width: 300px; line-height: 1.65;
+  margin: 0 auto 2.5rem;
+}
+.landing-actions {
+  display: flex; gap: 0.75rem;
+  width: 100%; max-width: 340px;
+  margin-bottom: 1.25rem;
+}
+.landing-actions .btn-main,
+.landing-actions .btn-ghost { flex: 1; }
+.landing-guest {
+  font-family: var(--headline); font-weight: 700;
+  font-size: 12px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--muted);
+  cursor: pointer; border: none; background: none;
+  padding: 0.5rem; transition: color 0.15s;
+  margin-bottom: 3rem;
+}
+.landing-guest:hover { color: var(--white); }
+.landing-features {
+  display: flex; gap: 1.5rem; flex-wrap: wrap;
+  justify-content: center; margin-top: 0.5rem;
+}
+.landing-feat {
+  font-family: var(--headline); font-size: 11px;
+  font-weight: 700; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--muted2);
+  display: flex; align-items: center; gap: 0.4rem;
+}
+.landing-feat-dot {
+  width: 4px; height: 4px; border-radius: 50%;
+  background: var(--orange); flex-shrink: 0;
+}
 </style>
 </head>
 <body>
+
+<!-- ==== LANDING SCREEN ==== -->
+<div id="landing-screen">
+  <div class="landing-wordmark">BREAK<span class="slash">/</span>TAPES</div>
+  <div class="landing-headline">Track Every<br><em>Finish Line.</em></div>
+  <p class="landing-sub">Log your marathons, triathlons, ultras and more. Sync across every device.</p>
+  <div class="landing-actions">
+    <button class="btn-main" onclick="openLandingAuth('signin')">Sign In</button>
+    <button class="btn-ghost" onclick="openLandingAuth('signup')">Create Account</button>
+  </div>
+  <button class="landing-guest" onclick="guestContinue()">Continue as Guest →</button>
+  <div class="landing-features">
+    <span class="landing-feat"><span class="landing-feat-dot"></span>Race Log</span>
+    <span class="landing-feat"><span class="landing-feat-dot"></span>Medal Wall</span>
+    <span class="landing-feat"><span class="landing-feat-dot"></span>Personal Bests</span>
+    <span class="landing-feat"><span class="landing-feat-dot"></span>Race Countdown</span>
+  </div>
+</div>
 
 <!-- ==== HEADER ==== -->
 <header>
@@ -3027,6 +3112,24 @@ function setAuthMode(mode) {
   document.getElementById('authPassword').autocomplete = signIn ? 'current-password' : 'new-password';
 }
 
+function dismissLanding() {
+  const el = document.getElementById('landing-screen');
+  if (!el) return;
+  el.classList.add('out');
+  setTimeout(() => el.remove(), 350);
+}
+
+function openLandingAuth(mode) {
+  setAuthMode(mode);
+  document.getElementById('authEmail').type = 'email';
+  document.getElementById('authPassword').type = 'password';
+  document.getElementById('authModal').classList.add('open');
+}
+
+function guestContinue() {
+  dismissLanding();
+}
+
 function openAuthModal() {
   closeMenu();
   setAuthMode(authUser ? 'signin' : authMode);
@@ -3043,6 +3146,7 @@ async function refreshAuthState(session) {
   updateAuthUI();
   if (authUser) {
     await loadRemoteState();
+    dismissLanding();
     render(curPage);
   }
 }
@@ -5583,6 +5687,7 @@ async function initApp() {
   initAllLocationPickers();
   initRaceNamePicker();
   updateAuthUI();
+  if (authUser) dismissLanding();
 }
 
 /* ============================
