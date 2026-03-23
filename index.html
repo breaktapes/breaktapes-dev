@@ -7,6 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 /* =============================================
@@ -2737,6 +2738,15 @@ let trainingFilter = 'All';
 let selectedPhotoBase64 = null;
 let curPage = 'dashboard';
 let curRTab = 'ai';
+const SUPABASE_URL = 'https://yqzycwuyhvzkbofwkazr.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_XiI5lGzh_3rWoA2TxrKnWg_gPtPKSRp';
+const REMOTE_SYNC_KEYS = new Set(['fl2_races', 'fl2_ath', 'fl2_nr', 'fl2_upcoming']);
+const REMOTE_STATE_ROW_ID = 'default';
+let supabaseClient = null;
+let remoteSyncTimer = null;
+let remoteSyncReady = false;
+let remoteSyncInFlight = false;
+let suppressRemoteSync = false;
 
 /* Seed data */
 if (!races) {
@@ -2759,7 +2769,109 @@ if (!nextRace) {
   nextRace = { name:"Boston Marathon", date:d.toISOString().slice(0,10), location:"Boston, USA", distance:"Marathon" };
   sv('fl2_nr', nextRace);
 }
-function sv(k,v){ localStorage.setItem(k, JSON.stringify(v)); }
+function sv(k,v){
+  localStorage.setItem(k, JSON.stringify(v));
+  if (!suppressRemoteSync && remoteSyncReady && REMOTE_SYNC_KEYS.has(k)) scheduleRemoteStateSync();
+}
+
+function initSupabaseClient() {
+  if (!window.supabase?.createClient) return null;
+  if (!supabaseClient) supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  return supabaseClient;
+}
+
+function buildRemoteStatePayload() {
+  return {
+    id: REMOTE_STATE_ROW_ID,
+    races,
+    athlete,
+    next_race: nextRace,
+    upcoming_races: upcomingRaces
+  };
+}
+
+function applyRemoteState(row) {
+  if (!row) return false;
+  suppressRemoteSync = true;
+  try {
+    if (Array.isArray(row.races)) {
+      races = row.races;
+      localStorage.setItem('fl2_races', JSON.stringify(races));
+    }
+    if (row.athlete && typeof row.athlete === 'object') {
+      athlete = row.athlete;
+      localStorage.setItem('fl2_ath', JSON.stringify(athlete));
+    }
+    if (row.next_race && typeof row.next_race === 'object') {
+      nextRace = row.next_race;
+      localStorage.setItem('fl2_nr', JSON.stringify(nextRace));
+    }
+    if (Array.isArray(row.upcoming_races)) {
+      upcomingRaces = row.upcoming_races;
+      localStorage.setItem('fl2_upcoming', JSON.stringify(upcomingRaces));
+    }
+  } finally {
+    suppressRemoteSync = false;
+  }
+  return true;
+}
+
+async function loadRemoteState() {
+  const client = initSupabaseClient();
+  if (!client) return false;
+  try {
+    const { data, error } = await client
+      .from('app_state')
+      .select('races, athlete, next_race, upcoming_races, updated_at')
+      .eq('id', REMOTE_STATE_ROW_ID)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) {
+      const seedPayload = buildRemoteStatePayload();
+      const { error: upsertError } = await client.from('app_state').upsert(seedPayload, { onConflict: 'id' });
+      if (upsertError) throw upsertError;
+      return true;
+    }
+    const hasRemoteData =
+      (Array.isArray(data.races) && data.races.length > 0) ||
+      (data.athlete && Object.keys(data.athlete).length > 0) ||
+      (data.next_race && Object.keys(data.next_race).length > 0) ||
+      (Array.isArray(data.upcoming_races) && data.upcoming_races.length > 0);
+    if (!hasRemoteData) {
+      const seedPayload = buildRemoteStatePayload();
+      const { error: upsertError } = await client.from('app_state').upsert(seedPayload, { onConflict: 'id' });
+      if (upsertError) throw upsertError;
+      return true;
+    }
+    return applyRemoteState(data);
+  } catch (error) {
+    console.warn('Supabase load failed:', error.message || error);
+    return false;
+  }
+}
+
+function scheduleRemoteStateSync() {
+  clearTimeout(remoteSyncTimer);
+  remoteSyncTimer = setTimeout(() => {
+    syncRemoteState();
+  }, 350);
+}
+
+async function syncRemoteState() {
+  if (remoteSyncInFlight) return;
+  const client = initSupabaseClient();
+  if (!client) return;
+  remoteSyncInFlight = true;
+  try {
+    const payload = buildRemoteStatePayload();
+    const { error } = await client.from('app_state').upsert(payload, { onConflict: 'id' });
+    if (error) throw error;
+  } catch (error) {
+    console.warn('Supabase sync failed:', error.message || error);
+  } finally {
+    remoteSyncInFlight = false;
+  }
+}
 
 /* ============================
    NAVIGATION
@@ -5420,15 +5532,19 @@ function initAllLocationPickers() {
 /* ============================
    INIT — check Strava callback
    ============================ */
-handleStravaCallback();
+async function initApp() {
+  await loadRemoteState();
+  remoteSyncReady = true;
+  handleStravaCallback();
+  render('dashboard');
+  initAllLocationPickers();
+  initRaceNamePicker();
+}
 
 /* ============================
    INIT
    ============================ */
-render('dashboard');
-initAllLocationPickers();
-initRaceNamePicker();
+initApp();
 </script>
 </body>
 </html>
-
