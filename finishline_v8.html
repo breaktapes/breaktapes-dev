@@ -1817,6 +1817,34 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
   padding: 0.75rem 1rem; margin-bottom: 1rem;
 }
 .settings-info a { color: var(--orange); text-decoration: none; }
+.auth-status-card {
+  font-size: 12px; color: var(--muted); line-height: 1.6;
+  background: var(--surface3); border: 1px solid var(--border); border-radius: 5px;
+  padding: 0.75rem 1rem; margin-bottom: 1rem;
+}
+.auth-status-email { color: var(--white); font-weight: 600; }
+.auth-row {
+  display:flex; align-items:center; justify-content:space-between; gap:0.75rem;
+  padding: 0.65rem 0.75rem; border-radius: 4px; border: 1px solid var(--border);
+  background: var(--surface2); margin-top: 0.75rem;
+}
+.auth-pill {
+  font-family: var(--headline); font-size: 10px; font-weight: 800;
+  letter-spacing: 0.12em; text-transform: uppercase; border-radius: 999px;
+  padding: 0.25rem 0.55rem; border: 1px solid var(--border2); color: var(--muted);
+}
+.auth-pill.on { color: var(--green); border-color: rgba(0,255,136,0.35); background: rgba(0,255,136,0.08); }
+.auth-pill.off { color: var(--orange); border-color: rgba(255,77,0,0.35); background: rgba(255,77,0,0.08); }
+.auth-switch {
+  width:100%; display:flex; gap:0.5rem; margin-bottom:1rem;
+}
+.auth-switch .btn-ghost,
+.auth-switch .btn-main {
+  flex:1;
+}
+.auth-note {
+  margin-top: 0.75rem; font-size: 12px; color: var(--muted); line-height: 1.5;
+}
 </style>
 </head>
 <body>
@@ -1870,6 +1898,9 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
     <button class="menu-item" onclick="openSettings()">
       <span class="menu-icon">⚙️</span>Settings
     </button>
+    <button class="menu-item" id="mi-auth" onclick="openAuthModal()">
+      <span class="menu-icon">🔐</span><span id="authMenuLabel">Sign In</span>
+    </button>
   </div>
   <div class="menu-footer">
     <div class="menu-athlete" onclick="go('athlete')">
@@ -1878,6 +1909,13 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
         <div class="menu-ath-name" id="mAthName">Athlete</div>
         <div class="menu-ath-sub" id="mAthSub">0 races</div>
       </div>
+    </div>
+    <div class="auth-row">
+      <div>
+        <div class="menu-ath-name" id="authFooterTitle">Guest Mode</div>
+        <div class="menu-ath-sub" id="authFooterSub">Sign in to sync your data</div>
+      </div>
+      <span class="auth-pill off" id="authFooterPill">Offline</span>
     </div>
   </div>
 </nav>
@@ -2703,6 +2741,14 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
       <div class="modal-sub">Configure AI and integrations</div>
     </div>
     <div class="modal-body">
+      <div class="auth-status-card">
+        <div id="authSettingsStatus">You’re currently using this app without an account.</div>
+        <div class="auth-note">Supabase auth protects each athlete’s cloud data. Your Anthropic key and Strava secret stay local in this browser.</div>
+        <div style="display:flex;gap:0.6rem;flex-wrap:wrap;margin-top:0.85rem">
+          <button class="btn-main" type="button" id="settingsAuthBtn" onclick="openAuthModal()">Sign In</button>
+          <button class="btn-ghost" type="button" id="settingsSignOutBtn" onclick="signOutUser()" style="display:none">Sign Out</button>
+        </div>
+      </div>
       <div class="fgrid" style="grid-template-columns:1fr">
         <div class="fg">
           <label class="fl">Anthropic API Key</label>
@@ -2714,6 +2760,42 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
     <div class="modal-foot">
       <button class="btn-ghost" onclick="closeM('settingsModal')">Cancel</button>
       <button class="btn-main" onclick="saveSettings()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==== AUTH MODAL ==== -->
+<div class="modal-overlay" id="authModal" onclick="bgClose(event,'authModal')">
+  <div class="modal">
+    <div class="modal-drag"></div>
+    <div class="modal-head">
+      <div class="modal-h" id="authModalTitle">Sign In</div>
+      <div class="modal-sub" id="authModalSub">Access your private race history from any device.</div>
+    </div>
+    <div class="modal-body">
+      <div class="auth-switch">
+        <button class="btn-main" type="button" id="authModeSignInBtn" onclick="setAuthMode('signin')">Sign In</button>
+        <button class="btn-ghost" type="button" id="authModeSignUpBtn" onclick="setAuthMode('signup')">Create Account</button>
+      </div>
+      <div class="fgrid" style="grid-template-columns:1fr">
+        <div class="fg" id="authNameWrap" style="display:none">
+          <label class="fl">Full Name</label>
+          <input class="fi" id="authName" placeholder="e.g. Ayush Krishna">
+        </div>
+        <div class="fg">
+          <label class="fl">Email</label>
+          <input class="fi" id="authEmail" type="email" placeholder="you@example.com" autocomplete="email">
+        </div>
+        <div class="fg">
+          <label class="fl">Password</label>
+          <input class="fi" id="authPassword" type="password" placeholder="At least 6 characters" autocomplete="current-password">
+        </div>
+      </div>
+      <div class="auth-note" id="authHelperText">Sign in to load your protected Supabase data and keep it synced.</div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeM('authModal')">Cancel</button>
+      <button class="btn-main" id="authSubmitBtn" onclick="submitAuth()">Sign In</button>
     </div>
   </div>
 </div>
@@ -2741,12 +2823,14 @@ let curRTab = 'ai';
 const SUPABASE_URL = 'https://yqzycwuyhvzkbofwkazr.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_XiI5lGzh_3rWoA2TxrKnWg_gPtPKSRp';
 const REMOTE_SYNC_KEYS = new Set(['fl2_races', 'fl2_ath', 'fl2_nr', 'fl2_upcoming']);
-const REMOTE_STATE_ROW_ID = 'default';
 let supabaseClient = null;
 let remoteSyncTimer = null;
 let remoteSyncReady = false;
 let remoteSyncInFlight = false;
 let suppressRemoteSync = false;
+let authMode = 'signin';
+let authSession = null;
+let authUser = null;
 
 /* Seed data */
 if (!races) {
@@ -2782,7 +2866,7 @@ function initSupabaseClient() {
 
 function buildRemoteStatePayload() {
   return {
-    id: REMOTE_STATE_ROW_ID,
+    user_id: authUser.id,
     races,
     athlete,
     next_race: nextRace,
@@ -2818,17 +2902,17 @@ function applyRemoteState(row) {
 
 async function loadRemoteState() {
   const client = initSupabaseClient();
-  if (!client) return false;
+  if (!client || !authUser) return false;
   try {
     const { data, error } = await client
-      .from('app_state')
+      .from('user_state')
       .select('races, athlete, next_race, upcoming_races, updated_at')
-      .eq('id', REMOTE_STATE_ROW_ID)
+      .eq('user_id', authUser.id)
       .maybeSingle();
     if (error) throw error;
     if (!data) {
       const seedPayload = buildRemoteStatePayload();
-      const { error: upsertError } = await client.from('app_state').upsert(seedPayload, { onConflict: 'id' });
+      const { error: upsertError } = await client.from('user_state').upsert(seedPayload, { onConflict: 'user_id' });
       if (upsertError) throw upsertError;
       return true;
     }
@@ -2839,7 +2923,7 @@ async function loadRemoteState() {
       (Array.isArray(data.upcoming_races) && data.upcoming_races.length > 0);
     if (!hasRemoteData) {
       const seedPayload = buildRemoteStatePayload();
-      const { error: upsertError } = await client.from('app_state').upsert(seedPayload, { onConflict: 'id' });
+      const { error: upsertError } = await client.from('user_state').upsert(seedPayload, { onConflict: 'user_id' });
       if (upsertError) throw upsertError;
       return true;
     }
@@ -2858,19 +2942,132 @@ function scheduleRemoteStateSync() {
 }
 
 async function syncRemoteState() {
-  if (remoteSyncInFlight) return;
+  if (remoteSyncInFlight || !authUser) return;
   const client = initSupabaseClient();
   if (!client) return;
   remoteSyncInFlight = true;
   try {
     const payload = buildRemoteStatePayload();
-    const { error } = await client.from('app_state').upsert(payload, { onConflict: 'id' });
+    const { error } = await client.from('user_state').upsert(payload, { onConflict: 'user_id' });
     if (error) throw error;
   } catch (error) {
     console.warn('Supabase sync failed:', error.message || error);
   } finally {
     remoteSyncInFlight = false;
   }
+}
+
+function updateAuthUI() {
+  const signedIn = !!authUser;
+  const email = authUser?.email || '';
+  document.getElementById('authMenuLabel').textContent = signedIn ? 'Account' : 'Sign In';
+  document.getElementById('authFooterTitle').textContent = signedIn ? (athlete?.name || 'Signed In') : 'Guest Mode';
+  document.getElementById('authFooterSub').textContent = signedIn ? email : 'Sign in to sync your data';
+  document.getElementById('authFooterPill').textContent = signedIn ? 'Synced' : 'Offline';
+  document.getElementById('authFooterPill').className = `auth-pill ${signedIn ? 'on' : 'off'}`;
+  document.getElementById('authSettingsStatus').innerHTML = signedIn
+    ? `Signed in as <span class="auth-status-email">${email}</span>. Your races now sync to your private Supabase account.`
+    : `You’re currently using this app without an account.`;
+  document.getElementById('settingsAuthBtn').textContent = signedIn ? 'Manage Account' : 'Sign In';
+  document.getElementById('settingsSignOutBtn').style.display = signedIn ? '' : 'none';
+}
+
+function setAuthMode(mode) {
+  authMode = mode;
+  const signIn = mode === 'signin';
+  document.getElementById('authModalTitle').textContent = signIn ? 'Sign In' : 'Create Account';
+  document.getElementById('authModalSub').textContent = signIn
+    ? 'Access your private race history from any device.'
+    : 'Create a Supabase account to store your data securely.';
+  document.getElementById('authSubmitBtn').textContent = signIn ? 'Sign In' : 'Create Account';
+  document.getElementById('authNameWrap').style.display = signIn ? 'none' : '';
+  document.getElementById('authHelperText').textContent = signIn
+    ? 'Sign in to load your protected Supabase data and keep it synced.'
+    : 'Your current local data will be used to seed your account the first time you sign in.';
+  document.getElementById('authModeSignInBtn').className = signIn ? 'btn-main' : 'btn-ghost';
+  document.getElementById('authModeSignUpBtn').className = signIn ? 'btn-ghost' : 'btn-main';
+  document.getElementById('authPassword').autocomplete = signIn ? 'current-password' : 'new-password';
+}
+
+function openAuthModal() {
+  closeMenu();
+  setAuthMode(authUser ? 'signin' : authMode);
+  if (authUser) document.getElementById('authEmail').value = authUser.email || '';
+  document.getElementById('authModal').classList.add('open');
+}
+
+async function refreshAuthState(session) {
+  authSession = session || null;
+  authUser = session?.user || null;
+  remoteSyncReady = !!authUser;
+  updateAuthUI();
+  if (authUser) {
+    await loadRemoteState();
+    render(curPage);
+  }
+}
+
+async function initAuth() {
+  const client = initSupabaseClient();
+  if (!client) return;
+  const { data } = await client.auth.getSession();
+  await refreshAuthState(data.session);
+  client.auth.onAuthStateChange(async (_event, session) => {
+    await refreshAuthState(session);
+  });
+}
+
+async function submitAuth() {
+  const client = initSupabaseClient();
+  if (!client) return;
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const fullName = document.getElementById('authName').value.trim();
+  if (!email || !password) {
+    alert('Please enter both email and password.');
+    return;
+  }
+  const btn = document.getElementById('authSubmitBtn');
+  const prev = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = authMode === 'signin' ? 'Signing In…' : 'Creating…';
+  try {
+    if (authMode === 'signin') {
+      const { error } = await client.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      closeM('authModal');
+      render(curPage);
+      return;
+    }
+    const { error } = await client.auth.signUp({
+      email,
+      password,
+      options: {
+        data: { full_name: fullName || athlete?.name || '' },
+        emailRedirectTo: window.location.href.split('?')[0]
+      }
+    });
+    if (error) throw error;
+    alert('Account created. If Supabase email confirmation is enabled, confirm your email, then sign in.');
+    setAuthMode('signin');
+  } catch (error) {
+    alert(error.message || 'Authentication failed.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = prev;
+  }
+}
+
+async function signOutUser() {
+  const client = initSupabaseClient();
+  if (!client || !authUser) return;
+  const { error } = await client.auth.signOut();
+  if (error) {
+    alert(error.message || 'Could not sign out.');
+    return;
+  }
+  updateAuthUI();
+  closeM('settingsModal');
 }
 
 /* ============================
@@ -4790,6 +4987,7 @@ function fmtDate(d){
 function openSettings(){
   closeMenu();
   document.getElementById('setApiKey').value = getApiKey();
+  updateAuthUI();
   document.getElementById('settingsModal').classList.add('open');
 }
 function saveSettings(){
@@ -5533,12 +5731,12 @@ function initAllLocationPickers() {
    INIT — check Strava callback
    ============================ */
 async function initApp() {
-  await loadRemoteState();
-  remoteSyncReady = true;
+  await initAuth();
   handleStravaCallback();
   render('dashboard');
   initAllLocationPickers();
   initRaceNamePicker();
+  updateAuthUI();
 }
 
 /* ============================
