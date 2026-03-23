@@ -1280,12 +1280,6 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
 }
 
 /* Arc canvas sits above tiles, below markers */
-#arcCanvas {
-  position: absolute; inset: 0;
-  pointer-events: none;
-  z-index: 410;
-}
-
 /* ── Floating stat pills (top-left) ── */
 .map-pill-bar {
   position: absolute; top: 1rem; left: 1rem; z-index: 800;
@@ -1359,6 +1353,31 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
   box-shadow: 0 0 0 4px rgba(255,77,0,0.2), 0 0 20px rgba(255,77,0,0.5);
   transform: scale(1.3);
 }
+
+/* ── Hover tooltip ── */
+.map-hover-tip {
+  position: absolute; z-index: 950;
+  background: rgba(6,7,10,0.94);
+  backdrop-filter: blur(20px) saturate(200%);
+  -webkit-backdrop-filter: blur(20px) saturate(200%);
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: 8px; padding: 0.55rem 0.85rem;
+  pointer-events: none; max-width: 220px;
+  opacity: 0; transition: opacity 0.12s;
+}
+.tip-city {
+  font-family: var(--headline); font-size: 10px; font-weight: 800;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--orange); margin-bottom: 0.35rem;
+}
+.tip-race {
+  display: flex; align-items: center; gap: 0.4rem;
+  font-size: 12px; color: var(--white); margin-bottom: 0.18rem;
+  white-space: nowrap;
+}
+.tip-name { flex: 1; font-weight: 500; overflow: hidden; text-overflow: ellipsis; max-width: 130px; }
+.tip-time { font-family: var(--headline); font-weight: 700; font-size: 12px; color: var(--green); flex-shrink: 0; }
+.tip-more { font-size: 10px; color: var(--muted); margin-top: 0.25rem; }
 
 /* ── Bottom drawer ── */
 .map-drawer {
@@ -2247,8 +2266,7 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
 <div id="page-map" class="page">
   <!-- Full-bleed map -->
   <div id="raceMap"></div>
-  <!-- Canvas for glowing arcs -->
-  <canvas id="arcCanvas"></canvas>
+  <div id="mapTip" class="map-hover-tip"></div>
   <!-- Floating stat pills -->
   <div class="map-pill-bar">
     <div class="map-pill"><div class="map-pill-num" id="ms-races">0</div><div class="map-pill-label">Races</div></div>
@@ -4848,10 +4866,11 @@ async function parsePhoto(){
    ============================ */
 let leafletMap  = null;
 let mapMarkers  = [];
-let arcData     = [];   // [{from:{lat,lng}, to:{lat,lng}}]
 let cityRaceMap = {};   // key → races[]
 let activeMarkerEl = null;
 let geoCache = JSON.parse(localStorage.getItem('fl2_geocache') || '{}');
+let routeCache  = {};   // raceName → coords[] | null
+let routeLayers = [];
 
 async function renderMap() {
   // Stats pills
@@ -4887,10 +4906,6 @@ async function renderMap() {
     }).addTo(leafletMap);
     L.control.zoom({ position: 'bottomright' }).addTo(leafletMap);
 
-    // Resize canvas to match map on every move/zoom
-    leafletMap.on('moveend zoomend resize viewreset', () => {
-      syncCanvas(); redrawArcs();
-    });
   } else {
     // Clear old markers
     mapMarkers.forEach(m => leafletMap.removeLayer(m));
@@ -4948,104 +4963,89 @@ async function renderMap() {
 
     const marker = L.marker([coord.lat, coord.lng], { icon })
       .addTo(leafletMap)
+      .on('mouseover', e => showMapTip(key, e))
+      .on('mouseout',  () => hideMapTip())
       .on('click', () => openDrawer(key));
     mapMarkers.push(marker);
   }
 
-  // ── Build arc data (chronological route) ──────────
-  const chrono = [...races]
-    .sort((a,b) => new Date(a.date)-new Date(b.date))
-    .filter(r => geoCache[r.city+'||'+r.country]);
-
-  arcData = [];
-  for (let i = 0; i < chrono.length - 1; i++) {
-    const from = geoCache[chrono[i].city+'||'+chrono[i].country];
-    const to   = geoCache[chrono[i+1].city+'||'+chrono[i+1].country];
-    if (!from || !to) continue;
-    if (from.lat === to.lat && from.lng === to.lng) continue;
-    arcData.push({ from, to });
-  }
-
-  // ── Fit and draw ───────────────────────────────────
+  // ── Fit bounds ─────────────────────────────────────
   if (bounds.length === 1) leafletMap.setView(bounds[0], 7);
   else if (bounds.length > 1) leafletMap.fitBounds(bounds, { padding: [80, 80] });
 
   leafletMap.invalidateSize();
-  syncCanvas();
-  redrawArcs();
 
   loadEl.classList.add('hidden');
   if (failed > 0) errEl.classList.add('show');
 }
 
-/* ── Canvas setup ─────────────────────────────────── */
-function syncCanvas() {
-  const mapEl = document.getElementById('raceMap');
-  const canvas = document.getElementById('arcCanvas');
-  canvas.width  = mapEl.offsetWidth;
-  canvas.height = mapEl.offsetHeight;
-  canvas.style.width  = mapEl.offsetWidth  + 'px';
-  canvas.style.height = mapEl.offsetHeight + 'px';
+/* ── Hover tooltip ───────────────────────────────── */
+function showMapTip(key, e) {
+  const cityRaces = cityRaceMap[key];
+  if (!cityRaces || !leafletMap) return;
+  const [city] = key.split('||');
+  const typeIco = {run:'🏃', tri:'🏊', cycle:'🚴', ultra:'🏔️', hyrox:'💪'};
+  const medalIco = {gold:'🥇', silver:'🥈', bronze:'🥉', finisher:'🏅'};
+  const tip = document.getElementById('mapTip');
+  const shown = cityRaces.slice(0, 3);
+  tip.innerHTML =
+    `<div class="tip-city">${city}</div>` +
+    shown.map(r =>
+      `<div class="tip-race">
+        <span>${typeIco[r.type]||'🏅'}</span>
+        <span class="tip-name">${r.name}</span>
+        <span class="tip-time">${r.time}</span>
+      </div>`
+    ).join('') +
+    (cityRaces.length > 3 ? `<div class="tip-more">+${cityRaces.length - 3} more</div>` : '');
+  const pt = leafletMap.latLngToContainerPoint(e.target.getLatLng());
+  tip.style.left = (pt.x + 14) + 'px';
+  tip.style.top  = (pt.y - 20) + 'px';
+  tip.style.opacity = '1';
 }
 
-/* ── Draw glowing bezier arcs on canvas ──────────── */
-function redrawArcs() {
-  const canvas = document.getElementById('arcCanvas');
-  if (!canvas || !leafletMap) return;
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  if (!arcData.length) return;
+function hideMapTip() {
+  document.getElementById('mapTip').style.opacity = '0';
+}
 
-  for (const arc of arcData) {
-    const p1 = leafletMap.latLngToContainerPoint([arc.from.lat, arc.from.lng]);
-    const p2 = leafletMap.latLngToContainerPoint([arc.to.lat,   arc.to.lng]);
+/* ── Race route via Overpass API ─────────────────── */
+async function fetchAndDrawRoute(cityRaces, coord) {
+  routeLayers.forEach(l => leafletMap.removeLayer(l));
+  routeLayers = [];
 
-    // Skip if both points are off-screen
-    const pad = 200;
-    if (p1.x < -pad && p2.x < -pad) continue;
-    if (p1.x > canvas.width+pad && p2.x > canvas.width+pad) continue;
+  for (const race of cityRaces) {
+    const cacheKey = race.name;
+    let segments = routeCache[cacheKey];
 
-    // Control point: midpoint pushed upward proportional to distance
-    const dx   = p2.x - p1.x, dy = p2.y - p1.y;
-    const dist = Math.sqrt(dx*dx + dy*dy);
-    const mx   = (p1.x + p2.x) / 2;
-    const my   = (p1.y + p2.y) / 2;
-    // Perpendicular offset: push northward (negative y), clamp for very long arcs
-    const lift = Math.min(dist * 0.42, 220);
-    const cx   = mx  - dy * 0.08;
-    const cy   = my  - lift;
+    if (segments === undefined) {
+      try {
+        const name = race.name.replace(/['"\\]/g, '').split(' ').slice(0, 4).join(' ');
+        const pad  = 0.35;
+        const bbox = `${coord.lat-pad},${coord.lng-pad},${coord.lat+pad},${coord.lng+pad}`;
+        const q    = `[out:json][timeout:12];relation["name"~"${name}","i"]["route"]["type"="route"](${bbox});out geom;`;
+        const res  = await fetch('https://overpass-api.de/api/interpreter?data=' + encodeURIComponent(q));
+        const data = await res.json();
+        if (data.elements && data.elements.length) {
+          segments = (data.elements[0].members || [])
+            .filter(m => m.type === 'way' && m.geometry && m.geometry.length > 1)
+            .map(m => m.geometry.map(g => [g.lat, g.lon]));
+        } else {
+          segments = null;
+        }
+      } catch(_) { segments = null; }
+      routeCache[cacheKey] = segments;
+    }
 
-    // 1) Wide outer glow
-    ctx.beginPath();
-    ctx.moveTo(p1.x, p1.y);
-    ctx.quadraticCurveTo(cx, cy, p2.x, p2.y);
-    ctx.strokeStyle = 'rgba(255, 77, 0, 0.08)';
-    ctx.lineWidth   = 18;
-    ctx.lineCap     = 'round';
-    ctx.shadowColor = 'transparent';
-    ctx.shadowBlur  = 0;
-    ctx.stroke();
-
-    // 2) Mid glow
-    ctx.beginPath();
-    ctx.moveTo(p1.x, p1.y);
-    ctx.quadraticCurveTo(cx, cy, p2.x, p2.y);
-    ctx.strokeStyle = 'rgba(255, 120, 40, 0.18)';
-    ctx.lineWidth   = 7;
-    ctx.stroke();
-
-    // 3) Core white line with orange shadow
-    ctx.beginPath();
-    ctx.moveTo(p1.x, p1.y);
-    ctx.quadraticCurveTo(cx, cy, p2.x, p2.y);
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.72)';
-    ctx.lineWidth   = 1.2;
-    ctx.shadowColor = '#FF6630';
-    ctx.shadowBlur  = 8;
-    ctx.stroke();
-
-    // Reset shadow
-    ctx.shadowBlur = 0; ctx.shadowColor = 'transparent';
+    if (segments && segments.length) {
+      for (const seg of segments) {
+        const layer = L.polyline(seg, {
+          color: '#FF4D00', weight: 3, opacity: 0.85,
+          lineJoin: 'round', lineCap: 'round',
+        }).addTo(leafletMap);
+        routeLayers.push(layer);
+      }
+      if (routeLayers.length) break;
+    }
   }
 }
 
@@ -5053,6 +5053,9 @@ function redrawArcs() {
 function openDrawer(key) {
   const cityRaces = cityRaceMap[key];
   if (!cityRaces) return;
+
+  const coord = geoCache[key];
+  if (coord) fetchAndDrawRoute(cityRaces, coord);
 
   const [city, country] = key.split('||');
   document.getElementById('drawerCity').textContent    = city;
@@ -5083,6 +5086,8 @@ function openDrawer(key) {
 function closeDrawer() {
   document.getElementById('mapDrawer').classList.remove('open');
   if (activeMarkerEl) { activeMarkerEl.classList.remove('active'); activeMarkerEl = null; }
+  routeLayers.forEach(l => leafletMap && leafletMap.removeLayer(l));
+  routeLayers = [];
 }
 
 /* ============================
