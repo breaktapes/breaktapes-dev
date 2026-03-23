@@ -1,0 +1,2957 @@
+[
+  {
+    "name": "Tokyo Marathon",
+    "aliases": [
+      "Tokyo",
+      "TMM"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Tokyo",
+    "country": "Japan",
+    "month": 3,
+    "day": 2
+  },
+  {
+    "name": "Boston Marathon",
+    "aliases": [
+      "Boston",
+      "BAA Marathon"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Boston",
+    "country": "United States",
+    "month": 4,
+    "day": 20
+  },
+  {
+    "name": "London Marathon",
+    "aliases": [
+      "TCS London",
+      "Virgin London"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "London",
+    "country": "United Kingdom",
+    "month": 4,
+    "day": 27
+  },
+  {
+    "name": "Berlin Marathon",
+    "aliases": [
+      "BMW Berlin",
+      "Berlin"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Berlin",
+    "country": "Germany",
+    "month": 9,
+    "day": 28
+  },
+  {
+    "name": "Chicago Marathon",
+    "aliases": [
+      "Bank of America Chicago"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Chicago",
+    "country": "United States",
+    "month": 10,
+    "day": 12
+  },
+  {
+    "name": "New York City Marathon",
+    "aliases": [
+      "NYC Marathon",
+      "NYCM",
+      "TCS NYC"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "New York",
+    "country": "United States",
+    "month": 11,
+    "day": 2
+  },
+  {
+    "name": "Paris Marathon",
+    "aliases": [
+      "Paris"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Paris",
+    "country": "France",
+    "month": 4,
+    "day": 6
+  },
+  {
+    "name": "Dubai Marathon",
+    "aliases": [
+      "Dubai"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Dubai",
+    "country": "United Arab Emirates",
+    "month": 1,
+    "day": 12
+  },
+  {
+    "name": "ADNOC Abu Dhabi Marathon",
+    "aliases": [
+      "Abu Dhabi Marathon",
+      "ADNOC Marathon"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Abu Dhabi",
+    "country": "United Arab Emirates",
+    "month": 12,
+    "day": 6
+  },
+  {
+    "name": "Amsterdam Marathon",
+    "aliases": [
+      "TCS Amsterdam",
+      "Amsterdam"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Amsterdam",
+    "country": "Netherlands",
+    "month": 10,
+    "day": 19
+  },
+  {
+    "name": "Rotterdam Marathon",
+    "aliases": [
+      "NN Rotterdam",
+      "Rotterdam"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Rotterdam",
+    "country": "Netherlands",
+    "month": 4,
+    "day": 13
+  },
+  {
+    "name": "Vienna City Marathon",
+    "aliases": [
+      "Vienna",
+      "VCM"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Vienna",
+    "country": "Austria",
+    "month": 4,
+    "day": 27
+  },
+  {
+    "name": "Barcelona Marathon",
+    "aliases": [
+      "Barcelona",
+      "Zurich Barcelona"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Barcelona",
+    "country": "Spain",
+    "month": 3,
+    "day": 16
+  },
+  {
+    "name": "Rome Marathon",
+    "aliases": [
+      "Rome",
+      "Maratona di Roma"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Rome",
+    "country": "Italy",
+    "month": 3,
+    "day": 23
+  },
+  {
+    "name": "Athens Classic Marathon",
+    "aliases": [
+      "Athens",
+      "Athens Authentic"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Athens",
+    "country": "Greece",
+    "month": 11,
+    "day": 10
+  },
+  {
+    "name": "Stockholm Marathon",
+    "aliases": [
+      "Stockholm"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Stockholm",
+    "country": "Sweden",
+    "month": 6,
+    "day": 7
+  },
+  {
+    "name": "Copenhagen Marathon",
+    "aliases": [
+      "Copenhagen"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Copenhagen",
+    "country": "Denmark",
+    "month": 5,
+    "day": 18
+  },
+  {
+    "name": "Sydney Marathon",
+    "aliases": [
+      "Sydney",
+      "SMC"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Sydney",
+    "country": "Australia",
+    "month": 9,
+    "day": 21
+  },
+  {
+    "name": "Melbourne Marathon",
+    "aliases": [
+      "Melbourne"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Melbourne",
+    "country": "Australia",
+    "month": 10,
+    "day": 12
+  },
+  {
+    "name": "Cape Town Marathon",
+    "aliases": [
+      "Cape Town",
+      "Sanlam Cape Town"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Cape Town",
+    "country": "South Africa",
+    "month": 9,
+    "day": 21
+  },
+  {
+    "name": "Singapore Marathon",
+    "aliases": [
+      "SCSM",
+      "Singapore"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Singapore",
+    "country": "Singapore",
+    "month": 12,
+    "day": 7
+  },
+  {
+    "name": "Seoul Marathon",
+    "aliases": [
+      "Seoul",
+      "Dong-A Seoul"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Seoul",
+    "country": "South Korea",
+    "month": 3,
+    "day": 16
+  },
+  {
+    "name": "Osaka Marathon",
+    "aliases": [
+      "Osaka"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Osaka",
+    "country": "Japan",
+    "month": 2,
+    "day": 2
+  },
+  {
+    "name": "Shanghai Marathon",
+    "aliases": [
+      "Shanghai"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Shanghai",
+    "country": "China",
+    "month": 11,
+    "day": 30
+  },
+  {
+    "name": "Mumbai Marathon",
+    "aliases": [
+      "Mumbai",
+      "TATA Mumbai"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Mumbai",
+    "country": "India",
+    "month": 1,
+    "day": 19
+  },
+  {
+    "name": "Jaipur Marathon",
+    "aliases": [
+      "Jaipur"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Jaipur",
+    "country": "India",
+    "month": 2,
+    "day": 2
+  },
+  {
+    "name": "Delhi Half Marathon",
+    "aliases": [
+      "Airtel Delhi Half",
+      "Vedanta Delhi Half",
+      "ADHM"
+    ],
+    "type": "run",
+    "dist": "Half Marathon",
+    "distKm": 21.1,
+    "city": "New Delhi",
+    "country": "India",
+    "month": 10,
+    "day": 19
+  },
+  {
+    "name": "Bengaluru Marathon",
+    "aliases": [
+      "Bengaluru",
+      "Bangalore Marathon"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Bengaluru",
+    "country": "India",
+    "month": 10,
+    "day": 20
+  },
+  {
+    "name": "TCS World 10K Bangalore",
+    "aliases": [
+      "TCS World 10K",
+      "World 10K Bangalore",
+      "World 10K"
+    ],
+    "type": "run",
+    "dist": "10KM",
+    "distKm": 10,
+    "city": "Bengaluru",
+    "country": "India",
+    "month": 5,
+    "day": 18
+  },
+  {
+    "name": "Hyderabad Marathon",
+    "aliases": [
+      "Hyderabad"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Hyderabad",
+    "country": "India",
+    "month": 8,
+    "day": 25
+  },
+  {
+    "name": "Chennai Marathon",
+    "aliases": [
+      "Chennai"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Chennai",
+    "country": "India",
+    "month": 2,
+    "day": 9
+  },
+  {
+    "name": "Pune International Marathon",
+    "aliases": [
+      "Pune Marathon",
+      "Pune"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Pune",
+    "country": "India",
+    "month": 9,
+    "day": 15
+  },
+  {
+    "name": "Kochi Marathon",
+    "aliases": [
+      "Standard Chartered Kochi",
+      "TATA Kochi",
+      "Kochi"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Kochi",
+    "country": "India",
+    "month": 1,
+    "day": 26
+  },
+  {
+    "name": "Thrissur Marathon",
+    "aliases": [
+      "Thrissur"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Thrissur",
+    "country": "India",
+    "month": 1,
+    "day": 26
+  },
+  {
+    "name": "Ladakh Marathon",
+    "aliases": [
+      "Khardung La Challenge",
+      "Ladakh"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Leh",
+    "country": "India",
+    "month": 9,
+    "day": 7
+  },
+  {
+    "name": "Tawang Marathon",
+    "aliases": [
+      "Tawang"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Tawang",
+    "country": "India",
+    "month": 9,
+    "day": 14
+  },
+  {
+    "name": "Everest Base Camp Marathon",
+    "aliases": [
+      "EBC Marathon",
+      "Everest Marathon",
+      "EBC"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Gorak Shep",
+    "country": "Nepal",
+    "month": 5,
+    "day": 29
+  },
+  {
+    "name": "Dublin Marathon",
+    "aliases": [
+      "Dublin"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Dublin",
+    "country": "Ireland",
+    "month": 10,
+    "day": 27
+  },
+  {
+    "name": "Lisbon Marathon",
+    "aliases": [
+      "EDP Lisbon",
+      "Lisbon"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Lisbon",
+    "country": "Portugal",
+    "month": 10,
+    "day": 5
+  },
+  {
+    "name": "Manchester Marathon",
+    "aliases": [
+      "Manchester",
+      "AJ Bell Manchester"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Manchester",
+    "country": "United Kingdom",
+    "month": 4,
+    "day": 6
+  },
+  {
+    "name": "Brighton Marathon",
+    "aliases": [
+      "Brighton"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Brighton",
+    "country": "United Kingdom",
+    "month": 4,
+    "day": 6
+  },
+  {
+    "name": "Edinburgh Marathon",
+    "aliases": [
+      "Edinburgh"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Edinburgh",
+    "country": "United Kingdom",
+    "month": 5,
+    "day": 25
+  },
+  {
+    "name": "Gold Coast Marathon",
+    "aliases": [
+      "Gold Coast",
+      "GC Marathon"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Gold Coast",
+    "country": "Australia",
+    "month": 7,
+    "day": 6
+  },
+  {
+    "name": "Toronto Marathon",
+    "aliases": [
+      "Toronto",
+      "Scotiabank Toronto"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Toronto",
+    "country": "Canada",
+    "month": 5,
+    "day": 4
+  },
+  {
+    "name": "Great North Run",
+    "aliases": [
+      "Great North",
+      "GNR"
+    ],
+    "type": "run",
+    "dist": "Half Marathon",
+    "distKm": 21.1,
+    "city": "Newcastle",
+    "country": "United Kingdom",
+    "month": 9,
+    "day": 7
+  },
+  {
+    "name": "NYC Half Marathon",
+    "aliases": [
+      "NYC Half",
+      "United Airlines NYC Half"
+    ],
+    "type": "run",
+    "dist": "Half Marathon",
+    "distKm": 21.1,
+    "city": "New York",
+    "country": "United States",
+    "month": 3,
+    "day": 16
+  },
+  {
+    "name": "Royal Parks Half Marathon",
+    "aliases": [
+      "Royal Parks",
+      "Royal Parks Half"
+    ],
+    "type": "run",
+    "dist": "Half Marathon",
+    "distKm": 21.1,
+    "city": "London",
+    "country": "United Kingdom",
+    "month": 10,
+    "day": 12
+  },
+  {
+    "name": "Abu Dhabi Half Marathon",
+    "aliases": [
+      "Abu Dhabi Half",
+      "ADNOC"
+    ],
+    "type": "run",
+    "dist": "Half Marathon",
+    "distKm": 21.1,
+    "city": "Abu Dhabi",
+    "country": "United Arab Emirates",
+    "month": 2,
+    "day": 14
+  },
+  {
+    "name": "Ras Al Khaimah Half Marathon",
+    "aliases": [
+      "RAK Half",
+      "RAK Marathon"
+    ],
+    "type": "run",
+    "dist": "Half Marathon",
+    "distKm": 21.1,
+    "city": "Ras Al Khaimah",
+    "country": "United Arab Emirates",
+    "month": 2,
+    "day": 21
+  },
+  {
+    "name": "Dubai Creek Striders Half Marathon",
+    "aliases": [
+      "DCS Half",
+      "Dubai Creek Half",
+      "Dubai Creek Striders"
+    ],
+    "type": "run",
+    "dist": "Half Marathon",
+    "distKm": 21.1,
+    "city": "Dubai",
+    "country": "United Arab Emirates",
+    "month": 11,
+    "day": 22
+  },
+  {
+    "name": "Lisbon Half Marathon",
+    "aliases": [
+      "EDP Lisbon Half"
+    ],
+    "type": "run",
+    "dist": "Half Marathon",
+    "distKm": 21.1,
+    "city": "Lisbon",
+    "country": "Portugal",
+    "month": 3,
+    "day": 16
+  },
+  {
+    "name": "Valencia Half Marathon",
+    "aliases": [
+      "Valencia Half"
+    ],
+    "type": "run",
+    "dist": "Half Marathon",
+    "distKm": 21.1,
+    "city": "Valencia",
+    "country": "Spain",
+    "month": 10,
+    "day": 26
+  },
+  {
+    "name": "Valencia Marathon",
+    "aliases": [
+      "Valencia",
+      "Trinidad Alfonso"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Valencia",
+    "country": "Spain",
+    "month": 12,
+    "day": 7
+  },
+  {
+    "name": "UTMB",
+    "aliases": [
+      "Ultra-Trail du Mont-Blanc",
+      "Ultra Trail Mont Blanc"
+    ],
+    "type": "run",
+    "dist": "100 Mile",
+    "distKm": 171,
+    "city": "Chamonix",
+    "country": "France",
+    "month": 8,
+    "day": 29
+  },
+  {
+    "name": "Comrades Marathon",
+    "aliases": [
+      "Comrades"
+    ],
+    "type": "run",
+    "dist": "Custom…",
+    "distKm": 90,
+    "city": "Durban",
+    "country": "South Africa",
+    "month": 6,
+    "day": 8,
+    "customDist": "90K"
+  },
+  {
+    "name": "Western States 100",
+    "aliases": [
+      "Western States",
+      "WSER"
+    ],
+    "type": "run",
+    "dist": "100 Mile",
+    "distKm": 161,
+    "city": "Auburn",
+    "country": "United States",
+    "month": 6,
+    "day": 27
+  },
+  {
+    "name": "Leadville 100",
+    "aliases": [
+      "Leadville",
+      "LT100"
+    ],
+    "type": "run",
+    "dist": "100 Mile",
+    "distKm": 161,
+    "city": "Leadville",
+    "country": "United States",
+    "month": 8,
+    "day": 15
+  },
+  {
+    "name": "Two Oceans Marathon",
+    "aliases": [
+      "Two Oceans",
+      "Old Mutual Two Oceans"
+    ],
+    "type": "run",
+    "dist": "Custom…",
+    "distKm": 56,
+    "city": "Cape Town",
+    "country": "South Africa",
+    "month": 4,
+    "day": 19,
+    "customDist": "56K"
+  },
+  {
+    "name": "Transgrancanaria",
+    "aliases": [
+      "TGC",
+      "Transgran"
+    ],
+    "type": "run",
+    "dist": "100KM",
+    "distKm": 128,
+    "city": "Las Palmas",
+    "country": "Spain",
+    "month": 2,
+    "day": 28
+  },
+  {
+    "name": "Tor des Géants",
+    "aliases": [
+      "TDG",
+      "Tor des Geants"
+    ],
+    "type": "run",
+    "dist": "100 Mile",
+    "distKm": 350,
+    "city": "Courmayeur",
+    "country": "Italy",
+    "month": 9,
+    "day": 7
+  },
+  {
+    "name": "Ultra-Trail Cape Town",
+    "aliases": [
+      "UTCT"
+    ],
+    "type": "run",
+    "dist": "100KM",
+    "distKm": 100,
+    "city": "Cape Town",
+    "country": "South Africa",
+    "month": 12,
+    "day": 6
+  },
+  {
+    "name": "Spartathlon",
+    "aliases": [
+      "Spartathlon"
+    ],
+    "type": "run",
+    "dist": "100 Mile",
+    "distKm": 246,
+    "city": "Athens",
+    "country": "Greece",
+    "month": 9,
+    "day": 26
+  },
+  {
+    "name": "Badwater 135",
+    "aliases": [
+      "Badwater"
+    ],
+    "type": "run",
+    "dist": "100 Mile",
+    "distKm": 217,
+    "city": "Death Valley",
+    "country": "United States",
+    "month": 7,
+    "day": 14
+  },
+  {
+    "name": "Marathon des Sables",
+    "aliases": [
+      "MDS",
+      "Marathon of the Sands"
+    ],
+    "type": "run",
+    "dist": "Custom…",
+    "distKm": 250,
+    "city": "Ouarzazate",
+    "country": "Morocco",
+    "month": 4,
+    "day": 1,
+    "customDist": "250K Stage Race"
+  },
+  {
+    "name": "UTMB OCC",
+    "aliases": [
+      "OCC",
+      "Orsières Champex Chamonix"
+    ],
+    "type": "run",
+    "dist": "50KM",
+    "distKm": 55,
+    "city": "Chamonix",
+    "country": "France",
+    "month": 8,
+    "day": 27
+  },
+  {
+    "name": "UTMB CCC",
+    "aliases": [
+      "CCC"
+    ],
+    "type": "run",
+    "dist": "100KM",
+    "distKm": 101,
+    "city": "Chamonix",
+    "country": "France",
+    "month": 8,
+    "day": 28
+  },
+  {
+    "name": "Ironman World Championship",
+    "aliases": [
+      "Kona",
+      "Ironman Kona",
+      "IMWC"
+    ],
+    "type": "tri",
+    "dist": "Full Distance",
+    "distKm": 226,
+    "city": "Kailua-Kona",
+    "country": "United States",
+    "month": 10,
+    "day": 26
+  },
+  {
+    "name": "Challenge Roth",
+    "aliases": [
+      "Roth",
+      "Challenge"
+    ],
+    "type": "tri",
+    "dist": "Full Distance",
+    "distKm": 226,
+    "city": "Roth",
+    "country": "Germany",
+    "month": 7,
+    "day": 6
+  },
+  {
+    "name": "Norseman",
+    "aliases": [
+      "Norseman Xtreme Triathlon"
+    ],
+    "type": "tri",
+    "dist": "Full Distance",
+    "distKm": 226,
+    "city": "Eidfjord",
+    "country": "Norway",
+    "month": 8,
+    "day": 2
+  },
+  {
+    "name": "Ironman Frankfurt",
+    "aliases": [
+      "Ironman Germany",
+      "IM Frankfurt"
+    ],
+    "type": "tri",
+    "dist": "Full Distance",
+    "distKm": 226,
+    "city": "Frankfurt",
+    "country": "Germany",
+    "month": 6,
+    "day": 29
+  },
+  {
+    "name": "Ironman Switzerland",
+    "aliases": [
+      "IM Switzerland",
+      "IM Zurich"
+    ],
+    "type": "tri",
+    "dist": "Full Distance",
+    "distKm": 226,
+    "city": "Zurich",
+    "country": "Switzerland",
+    "month": 7,
+    "day": 6
+  },
+  {
+    "name": "Ironman UK",
+    "aliases": [
+      "IM UK",
+      "IM Bolton"
+    ],
+    "type": "tri",
+    "dist": "Full Distance",
+    "distKm": 226,
+    "city": "Bolton",
+    "country": "United Kingdom",
+    "month": 7,
+    "day": 20
+  },
+  {
+    "name": "Ironman Australia",
+    "aliases": [
+      "IM Australia",
+      "IM Port Mac"
+    ],
+    "type": "tri",
+    "dist": "Full Distance",
+    "distKm": 226,
+    "city": "Port Macquarie",
+    "country": "Australia",
+    "month": 5,
+    "day": 4
+  },
+  {
+    "name": "Ironman 70.3 Dubai",
+    "aliases": [
+      "IM 70.3 Dubai"
+    ],
+    "type": "tri",
+    "dist": "Middle Distance",
+    "distKm": 113,
+    "city": "Dubai",
+    "country": "United Arab Emirates",
+    "month": 2,
+    "day": 3
+  },
+  {
+    "name": "Ironman 70.3 Bahrain",
+    "aliases": [
+      "IM 70.3 Bahrain"
+    ],
+    "type": "tri",
+    "dist": "Middle Distance",
+    "distKm": 113,
+    "city": "Manama",
+    "country": "Bahrain",
+    "month": 11,
+    "day": 28
+  },
+  {
+    "name": "Ironman 70.3 World Championship",
+    "aliases": [
+      "70.3 Worlds"
+    ],
+    "type": "tri",
+    "dist": "Middle Distance",
+    "distKm": 113,
+    "city": "Taupo",
+    "country": "New Zealand",
+    "month": 12,
+    "day": 7
+  },
+  {
+    "name": "Ironman South Africa",
+    "aliases": [
+      "IM South Africa",
+      "ISUZU Ironman SA"
+    ],
+    "type": "tri",
+    "dist": "Full Distance",
+    "distKm": 226,
+    "city": "Port Elizabeth",
+    "country": "South Africa",
+    "month": 3,
+    "day": 30
+  },
+  {
+    "name": "Ironman Lanzarote",
+    "aliases": [
+      "Club La Santa Ironman",
+      "IM Lanzarote"
+    ],
+    "type": "tri",
+    "dist": "Full Distance",
+    "distKm": 226,
+    "city": "Lanzarote",
+    "country": "Spain",
+    "month": 5,
+    "day": 17
+  },
+  {
+    "name": "Ironman Hamburg",
+    "aliases": [
+      "IM Hamburg",
+      "Ironman European Championship"
+    ],
+    "type": "tri",
+    "dist": "Full Distance",
+    "distKm": 226,
+    "city": "Hamburg",
+    "country": "Germany",
+    "month": 6,
+    "day": 1
+  },
+  {
+    "name": "Ironman Klagenfurt",
+    "aliases": [
+      "IM Klagenfurt",
+      "Ironman Austria",
+      "Ironman Kärnten"
+    ],
+    "type": "tri",
+    "dist": "Full Distance",
+    "distKm": 226,
+    "city": "Klagenfurt",
+    "country": "Austria",
+    "month": 6,
+    "day": 15
+  },
+  {
+    "name": "Ironman Les Sables d'Olonne",
+    "aliases": [
+      "IM Les Sables",
+      "Ironman Vendée"
+    ],
+    "type": "tri",
+    "dist": "Full Distance",
+    "distKm": 226,
+    "city": "Les Sables d'Olonne",
+    "country": "France",
+    "month": 6,
+    "day": 22
+  },
+  {
+    "name": "Ironman Nice",
+    "aliases": [
+      "IM Nice"
+    ],
+    "type": "tri",
+    "dist": "Full Distance",
+    "distKm": 226,
+    "city": "Nice",
+    "country": "France",
+    "month": 6,
+    "day": 29
+  },
+  {
+    "name": "Ironman Vitoria-Gasteiz",
+    "aliases": [
+      "IM Vitoria",
+      "Ironman Spain"
+    ],
+    "type": "tri",
+    "dist": "Full Distance",
+    "distKm": 226,
+    "city": "Vitoria-Gasteiz",
+    "country": "Spain",
+    "month": 7,
+    "day": 13
+  },
+  {
+    "name": "Ironman Switzerland Thun",
+    "aliases": [
+      "IM Thun",
+      "Ironman Thun"
+    ],
+    "type": "tri",
+    "dist": "Full Distance",
+    "distKm": 226,
+    "city": "Thun",
+    "country": "Switzerland",
+    "month": 8,
+    "day": 24
+  },
+  {
+    "name": "Ironman World Championship Women",
+    "aliases": [
+      "Ironman Worlds Women",
+      "IM Worlds Nice"
+    ],
+    "type": "tri",
+    "dist": "Full Distance",
+    "distKm": 226,
+    "city": "Nice",
+    "country": "France",
+    "month": 9,
+    "day": 14
+  },
+  {
+    "name": "Ironman Malaysia",
+    "aliases": [
+      "IM Malaysia",
+      "Ironman Langkawi"
+    ],
+    "type": "tri",
+    "dist": "Full Distance",
+    "distKm": 226,
+    "city": "Langkawi",
+    "country": "Malaysia",
+    "month": 11,
+    "day": 1
+  },
+  {
+    "name": "Ironman Cozumel",
+    "aliases": [
+      "IM Cozumel"
+    ],
+    "type": "tri",
+    "dist": "Full Distance",
+    "distKm": 226,
+    "city": "Cozumel",
+    "country": "Mexico",
+    "month": 11,
+    "day": 23
+  },
+  {
+    "name": "Ironman Western Australia",
+    "aliases": [
+      "IM Western Australia",
+      "IM Busselton"
+    ],
+    "type": "tri",
+    "dist": "Full Distance",
+    "distKm": 226,
+    "city": "Busselton",
+    "country": "Australia",
+    "month": 12,
+    "day": 7
+  },
+  {
+    "name": "Ironman New Zealand",
+    "aliases": [
+      "IM New Zealand",
+      "IM Taupo",
+      "ANZCO Ironman NZ"
+    ],
+    "type": "tri",
+    "dist": "Full Distance",
+    "distKm": 226,
+    "city": "Taupō",
+    "country": "New Zealand",
+    "month": 3,
+    "day": 7
+  },
+  {
+    "name": "Ironman Texas",
+    "aliases": [
+      "IM Texas",
+      "Ironman North American Championship"
+    ],
+    "type": "tri",
+    "dist": "Full Distance",
+    "distKm": 226,
+    "city": "The Woodlands",
+    "country": "United States",
+    "month": 4,
+    "day": 5
+  },
+  {
+    "name": "Ironman Lake Placid",
+    "aliases": [
+      "IM Lake Placid"
+    ],
+    "type": "tri",
+    "dist": "Full Distance",
+    "distKm": 226,
+    "city": "Lake Placid",
+    "country": "United States",
+    "month": 7,
+    "day": 20
+  },
+  {
+    "name": "Ironman Kalmar",
+    "aliases": [
+      "IM Kalmar"
+    ],
+    "type": "tri",
+    "dist": "Full Distance",
+    "distKm": 226,
+    "city": "Kalmar",
+    "country": "Sweden",
+    "month": 8,
+    "day": 17
+  },
+  {
+    "name": "Ironman Copenhagen",
+    "aliases": [
+      "IM Copenhagen"
+    ],
+    "type": "tri",
+    "dist": "Full Distance",
+    "distKm": 226,
+    "city": "Copenhagen",
+    "country": "Denmark",
+    "month": 8,
+    "day": 18
+  },
+  {
+    "name": "Ironman Maryland",
+    "aliases": [
+      "IM Maryland"
+    ],
+    "type": "tri",
+    "dist": "Full Distance",
+    "distKm": 226,
+    "city": "Cambridge",
+    "country": "United States",
+    "month": 9,
+    "day": 20
+  },
+  {
+    "name": "Ironman Wisconsin",
+    "aliases": [
+      "IM Wisconsin"
+    ],
+    "type": "tri",
+    "dist": "Full Distance",
+    "distKm": 226,
+    "city": "Madison",
+    "country": "United States",
+    "month": 9,
+    "day": 7
+  },
+  {
+    "name": "Ironman Florida",
+    "aliases": [
+      "IM Florida",
+      "IMFL"
+    ],
+    "type": "tri",
+    "dist": "Full Distance",
+    "distKm": 226,
+    "city": "Panama City Beach",
+    "country": "United States",
+    "month": 11,
+    "day": 1
+  },
+  {
+    "name": "Ironman 70.3 Oman",
+    "aliases": [
+      "IM 70.3 Oman"
+    ],
+    "type": "tri",
+    "dist": "Middle Distance",
+    "distKm": 113,
+    "city": "Muscat",
+    "country": "Oman",
+    "month": 2,
+    "day": 8
+  },
+  {
+    "name": "Ironman 70.3 Valencia",
+    "aliases": [
+      "IM 70.3 Valencia"
+    ],
+    "type": "tri",
+    "dist": "Middle Distance",
+    "distKm": 113,
+    "city": "Valencia",
+    "country": "Spain",
+    "month": 4,
+    "day": 27
+  },
+  {
+    "name": "Ironman 70.3 Venice-Jesolo",
+    "aliases": [
+      "IM 70.3 Venice",
+      "IM 70.3 Jesolo"
+    ],
+    "type": "tri",
+    "dist": "Middle Distance",
+    "distKm": 113,
+    "city": "Jesolo",
+    "country": "Italy",
+    "month": 5,
+    "day": 4
+  },
+  {
+    "name": "Ironman 70.3 Mallorca",
+    "aliases": [
+      "IM 70.3 Mallorca",
+      "IM 70.3 Alcudia"
+    ],
+    "type": "tri",
+    "dist": "Middle Distance",
+    "distKm": 113,
+    "city": "Alcúdia",
+    "country": "Spain",
+    "month": 5,
+    "day": 10
+  },
+  {
+    "name": "Ironman 70.3 Aix-en-Provence",
+    "aliases": [
+      "IM 70.3 Aix",
+      "IM 70.3 Provence"
+    ],
+    "type": "tri",
+    "dist": "Middle Distance",
+    "distKm": 113,
+    "city": "Aix-en-Provence",
+    "country": "France",
+    "month": 5,
+    "day": 18
+  },
+  {
+    "name": "Ironman 70.3 Kraichgau",
+    "aliases": [
+      "IM 70.3 Kraichgau"
+    ],
+    "type": "tri",
+    "dist": "Middle Distance",
+    "distKm": 113,
+    "city": "Kraichgau",
+    "country": "Germany",
+    "month": 5,
+    "day": 25
+  },
+  {
+    "name": "Ironman 70.3 Tours",
+    "aliases": [
+      "IM 70.3 Tours",
+      "IM 70.3 Loire Valley"
+    ],
+    "type": "tri",
+    "dist": "Middle Distance",
+    "distKm": 113,
+    "city": "Tours",
+    "country": "France",
+    "month": 6,
+    "day": 1
+  },
+  {
+    "name": "Ironman 70.3 Switzerland",
+    "aliases": [
+      "IM 70.3 Switzerland",
+      "IM 70.3 Rapperswil"
+    ],
+    "type": "tri",
+    "dist": "Middle Distance",
+    "distKm": 113,
+    "city": "Rapperswil-Jona",
+    "country": "Switzerland",
+    "month": 6,
+    "day": 1
+  },
+  {
+    "name": "Ironman 70.3 Warsaw",
+    "aliases": [
+      "IM 70.3 Warsaw"
+    ],
+    "type": "tri",
+    "dist": "Middle Distance",
+    "distKm": 113,
+    "city": "Warsaw",
+    "country": "Poland",
+    "month": 6,
+    "day": 8
+  },
+  {
+    "name": "Ironman 70.3 Bolton",
+    "aliases": [
+      "IM 70.3 Bolton",
+      "IM 70.3 UK"
+    ],
+    "type": "tri",
+    "dist": "Middle Distance",
+    "distKm": 113,
+    "city": "Bolton",
+    "country": "United Kingdom",
+    "month": 6,
+    "day": 8
+  },
+  {
+    "name": "Ironman 70.3 Elsinore",
+    "aliases": [
+      "IM 70.3 Elsinore",
+      "IM 70.3 Denmark"
+    ],
+    "type": "tri",
+    "dist": "Middle Distance",
+    "distKm": 113,
+    "city": "Helsingør",
+    "country": "Denmark",
+    "month": 6,
+    "day": 22
+  },
+  {
+    "name": "Ironman 70.3 Nice",
+    "aliases": [
+      "IM 70.3 Nice"
+    ],
+    "type": "tri",
+    "dist": "Middle Distance",
+    "distKm": 113,
+    "city": "Nice",
+    "country": "France",
+    "month": 6,
+    "day": 29
+  },
+  {
+    "name": "Ironman 70.3 Jönköping",
+    "aliases": [
+      "IM 70.3 Jonkoping",
+      "IM 70.3 European Championship"
+    ],
+    "type": "tri",
+    "dist": "Middle Distance",
+    "distKm": 113,
+    "city": "Jönköping",
+    "country": "Sweden",
+    "month": 7,
+    "day": 6
+  },
+  {
+    "name": "Ironman 70.3 Geelong",
+    "aliases": [
+      "IM 70.3 Geelong"
+    ],
+    "type": "tri",
+    "dist": "Middle Distance",
+    "distKm": 113,
+    "city": "Geelong",
+    "country": "Australia",
+    "month": 3,
+    "day": 21
+  },
+  {
+    "name": "Ironman 70.3 Oceanside",
+    "aliases": [
+      "IM 70.3 Oceanside",
+      "IM 70.3 California"
+    ],
+    "type": "tri",
+    "dist": "Middle Distance",
+    "distKm": 113,
+    "city": "Oceanside",
+    "country": "United States",
+    "month": 3,
+    "day": 28
+  },
+  {
+    "name": "Ironman 70.3 Pennsylvania",
+    "aliases": [
+      "IM 70.3 Pennsylvania",
+      "IM 70.3 Happy Valley"
+    ],
+    "type": "tri",
+    "dist": "Middle Distance",
+    "distKm": 113,
+    "city": "State College",
+    "country": "United States",
+    "month": 6,
+    "day": 15
+  },
+  {
+    "name": "Ironman 70.3 Muncie",
+    "aliases": [
+      "IM 70.3 Muncie"
+    ],
+    "type": "tri",
+    "dist": "Middle Distance",
+    "distKm": 113,
+    "city": "Muncie",
+    "country": "United States",
+    "month": 7,
+    "day": 12
+  },
+  {
+    "name": "Ironman 70.3 Musselman",
+    "aliases": [
+      "IM 70.3 Musselman"
+    ],
+    "type": "tri",
+    "dist": "Middle Distance",
+    "distKm": 113,
+    "city": "Geneva",
+    "country": "United States",
+    "month": 7,
+    "day": 13
+  },
+  {
+    "name": "Ironman 70.3 Oregon",
+    "aliases": [
+      "IM 70.3 Oregon"
+    ],
+    "type": "tri",
+    "dist": "Middle Distance",
+    "distKm": 113,
+    "city": "Bend",
+    "country": "United States",
+    "month": 7,
+    "day": 20
+  },
+  {
+    "name": "Ironman 70.3 Ohio",
+    "aliases": [
+      "IM 70.3 Ohio"
+    ],
+    "type": "tri",
+    "dist": "Middle Distance",
+    "distKm": 113,
+    "city": "Maumee",
+    "country": "United States",
+    "month": 7,
+    "day": 20
+  },
+  {
+    "name": "Ironman 70.3 Maine",
+    "aliases": [
+      "IM 70.3 Maine"
+    ],
+    "type": "tri",
+    "dist": "Middle Distance",
+    "distKm": 113,
+    "city": "Old Orchard Beach",
+    "country": "United States",
+    "month": 7,
+    "day": 27
+  },
+  {
+    "name": "Ironman 70.3 Calgary",
+    "aliases": [
+      "IM 70.3 Calgary"
+    ],
+    "type": "tri",
+    "dist": "Middle Distance",
+    "distKm": 113,
+    "city": "Calgary",
+    "country": "Canada",
+    "month": 7,
+    "day": 27
+  },
+  {
+    "name": "L'Étape du Tour",
+    "aliases": [
+      "Etape du Tour",
+      "L'Etape"
+    ],
+    "type": "cycle",
+    "dist": "Gran Fondo",
+    "distKm": 145,
+    "city": "Albertville",
+    "country": "France",
+    "month": 7,
+    "day": 13
+  },
+  {
+    "name": "La Marmotte",
+    "aliases": [
+      "Marmotte",
+      "Granfondo Marmotte"
+    ],
+    "type": "cycle",
+    "dist": "Gran Fondo",
+    "distKm": 174,
+    "city": "Bourg d'Oisans",
+    "country": "France",
+    "month": 7,
+    "day": 5
+  },
+  {
+    "name": "Maratona dles Dolomites",
+    "aliases": [
+      "Maratona Dolomites",
+      "Maratona"
+    ],
+    "type": "cycle",
+    "dist": "Gran Fondo",
+    "distKm": 138,
+    "city": "La Villa",
+    "country": "Italy",
+    "month": 7,
+    "day": 6
+  },
+  {
+    "name": "Ötztaler Radmarathon",
+    "aliases": [
+      "Ötztaler",
+      "Oetztaler"
+    ],
+    "type": "cycle",
+    "dist": "Gran Fondo",
+    "distKm": 238,
+    "city": "Sölden",
+    "country": "Austria",
+    "month": 8,
+    "day": 31
+  },
+  {
+    "name": "Tour de France Étape",
+    "aliases": [
+      "Etape Tour",
+      "Tour de France"
+    ],
+    "type": "cycle",
+    "dist": "Gran Fondo",
+    "distKm": 150,
+    "city": "Paris",
+    "country": "France",
+    "month": 7,
+    "day": 20
+  },
+  {
+    "name": "Haute Route Alps",
+    "aliases": [
+      "Haute Route"
+    ],
+    "type": "cycle",
+    "dist": "Gran Fondo",
+    "distKm": 900,
+    "city": "Geneva",
+    "country": "Switzerland",
+    "month": 8,
+    "day": 24
+  },
+  {
+    "name": "Cape Epic",
+    "aliases": [
+      "Absa Cape Epic"
+    ],
+    "type": "cycle",
+    "dist": "Gran Fondo",
+    "distKm": 700,
+    "city": "Cape Town",
+    "country": "South Africa",
+    "month": 3,
+    "day": 16
+  },
+  {
+    "name": "Tour of Flanders Sportif",
+    "aliases": [
+      "Ronde van Vlaanderen",
+      "Flanders"
+    ],
+    "type": "cycle",
+    "dist": "Gran Fondo",
+    "distKm": 272,
+    "city": "Oudenaarde",
+    "country": "Belgium",
+    "month": 4,
+    "day": 6
+  },
+  {
+    "name": "L'Alpe d'Huez Triathlon",
+    "aliases": [
+      "Alpe d'Huez Tri"
+    ],
+    "type": "tri",
+    "dist": "Full Distance",
+    "distKm": 226,
+    "city": "L'Alpe d'Huez",
+    "country": "France",
+    "month": 7,
+    "day": 17
+  },
+  {
+    "name": "Fred Whitton Challenge",
+    "aliases": [
+      "Fred Whitton"
+    ],
+    "type": "cycle",
+    "dist": "Gran Fondo",
+    "distKm": 180,
+    "city": "Coniston",
+    "country": "United Kingdom",
+    "month": 5,
+    "day": 11
+  },
+  {
+    "name": "Dirty Kanza 200",
+    "aliases": [
+      "Unbound Gravel",
+      "Dirty Kanza"
+    ],
+    "type": "cycle",
+    "dist": "Gran Fondo",
+    "distKm": 322,
+    "city": "Emporia",
+    "country": "United States",
+    "month": 6,
+    "day": 1
+  },
+  {
+    "name": "HYROX Dubai",
+    "aliases": [
+      "Hyrox Dubai"
+    ],
+    "type": "hyrox",
+    "dist": "Solo Open",
+    "distKm": 8,
+    "city": "Dubai",
+    "country": "United Arab Emirates",
+    "month": 11,
+    "day": 8
+  },
+  {
+    "name": "HYROX London",
+    "aliases": [
+      "Hyrox London"
+    ],
+    "type": "hyrox",
+    "dist": "Solo Open",
+    "distKm": 8,
+    "city": "London",
+    "country": "United Kingdom",
+    "month": 1,
+    "day": 18
+  },
+  {
+    "name": "HYROX Frankfurt",
+    "aliases": [
+      "Hyrox Frankfurt"
+    ],
+    "type": "hyrox",
+    "dist": "Solo Open",
+    "distKm": 8,
+    "city": "Frankfurt",
+    "country": "Germany",
+    "month": 11,
+    "day": 22
+  },
+  {
+    "name": "HYROX New York",
+    "aliases": [
+      "Hyrox NYC",
+      "Hyrox New York"
+    ],
+    "type": "hyrox",
+    "dist": "Solo Open",
+    "distKm": 8,
+    "city": "New York",
+    "country": "United States",
+    "month": 3,
+    "day": 8
+  },
+  {
+    "name": "HYROX Chicago",
+    "aliases": [
+      "Hyrox Chicago"
+    ],
+    "type": "hyrox",
+    "dist": "Solo Open",
+    "distKm": 8,
+    "city": "Chicago",
+    "country": "United States",
+    "month": 10,
+    "day": 25
+  },
+  {
+    "name": "HYROX Sydney",
+    "aliases": [
+      "Hyrox Sydney"
+    ],
+    "type": "hyrox",
+    "dist": "Solo Open",
+    "distKm": 8,
+    "city": "Sydney",
+    "country": "Australia",
+    "month": 9,
+    "day": 13
+  },
+  {
+    "name": "HYROX Abu Dhabi",
+    "aliases": [
+      "Hyrox Abu Dhabi"
+    ],
+    "type": "hyrox",
+    "dist": "Solo Open",
+    "distKm": 8,
+    "city": "Abu Dhabi",
+    "country": "United Arab Emirates",
+    "month": 5,
+    "day": 16
+  },
+  {
+    "name": "Bengaluru Marathon",
+    "aliases": [
+      "Shriram Properties Bengaluru Marathon",
+      "Wipro Bengaluru Marathon"
+    ],
+    "type": "run",
+    "dist": "10KM",
+    "distKm": 10,
+    "city": "Bengaluru",
+    "country": "India",
+    "month": 9,
+    "day": 21
+  },
+  {
+    "name": "Bengaluru Marathon",
+    "aliases": [
+      "Shriram Properties Bengaluru Marathon",
+      "Wipro Bengaluru Marathon"
+    ],
+    "type": "run",
+    "dist": "5KM",
+    "distKm": 5,
+    "city": "Bengaluru",
+    "country": "India",
+    "month": 9,
+    "day": 21
+  },
+  {
+    "name": "Bengaluru Marathon",
+    "aliases": [
+      "Shriram Properties Bengaluru Marathon",
+      "Wipro Bengaluru Marathon"
+    ],
+    "type": "run",
+    "dist": "Half Marathon",
+    "distKm": 21.1,
+    "city": "Bengaluru",
+    "country": "India",
+    "month": 9,
+    "day": 21
+  },
+  {
+    "name": "Bengaluru Marathon",
+    "aliases": [
+      "Shriram Properties Bengaluru Marathon",
+      "Wipro Bengaluru Marathon"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Bengaluru",
+    "country": "India",
+    "month": 9,
+    "day": 21
+  },
+  {
+    "name": "TCS World 10K Bangalore",
+    "aliases": [
+      "TCS W10K",
+      "TCS World 10K Bengaluru",
+      "World 10K Bengaluru"
+    ],
+    "type": "run",
+    "dist": "10KM",
+    "distKm": 10,
+    "city": "Bengaluru",
+    "country": "India",
+    "month": 4,
+    "day": 27
+  },
+  {
+    "name": "TCS World 10K Bangalore",
+    "aliases": [
+      "TCS W10K",
+      "TCS World 10K Bengaluru",
+      "World 10K Bengaluru"
+    ],
+    "type": "run",
+    "dist": "Custom…",
+    "distKm": 5,
+    "city": "Bengaluru",
+    "country": "India",
+    "month": 4,
+    "day": 27,
+    "customDist": "Majja Run"
+  },
+  {
+    "name": "Run Bhopal Run",
+    "aliases": [
+      "RBR"
+    ],
+    "type": "run",
+    "dist": "10KM",
+    "distKm": 10,
+    "city": "Bhopal",
+    "country": "India",
+    "month": 12,
+    "day": 7
+  },
+  {
+    "name": "Run Bhopal Run",
+    "aliases": [
+      "RBR"
+    ],
+    "type": "run",
+    "dist": "5KM",
+    "distKm": 5,
+    "city": "Bhopal",
+    "country": "India",
+    "month": 12,
+    "day": 7
+  },
+  {
+    "name": "Run Bhopal Run",
+    "aliases": [
+      "RBR"
+    ],
+    "type": "run",
+    "dist": "Half Marathon",
+    "distKm": 21.1,
+    "city": "Bhopal",
+    "country": "India",
+    "month": 12,
+    "day": 7
+  },
+  {
+    "name": "Bodhgaya Marathon",
+    "aliases": [
+      "Bodh Gaya Marathon",
+      "Bodhgaya Marathon - Run for Global Peace"
+    ],
+    "type": "run",
+    "dist": "10KM",
+    "distKm": 10,
+    "city": "Bodh Gaya",
+    "country": "India",
+    "month": 2,
+    "day": 1
+  },
+  {
+    "name": "Bodhgaya Marathon",
+    "aliases": [
+      "Bodh Gaya Marathon",
+      "Bodhgaya Marathon - Run for Global Peace"
+    ],
+    "type": "run",
+    "dist": "Custom…",
+    "distKm": 10,
+    "city": "Bodh Gaya",
+    "country": "India",
+    "month": 2,
+    "day": 1,
+    "customDist": "Niranjana Run"
+  },
+  {
+    "name": "Bodhgaya Marathon",
+    "aliases": [
+      "Bodh Gaya Marathon",
+      "Bodhgaya Marathon - Run for Global Peace"
+    ],
+    "type": "run",
+    "dist": "Custom…",
+    "distKm": 5,
+    "city": "Bodh Gaya",
+    "country": "India",
+    "month": 2,
+    "day": 1,
+    "customDist": "Sujata Run"
+  },
+  {
+    "name": "Bodhgaya Marathon",
+    "aliases": [
+      "Bodh Gaya Marathon",
+      "Bodhgaya Marathon - Run for Global Peace"
+    ],
+    "type": "run",
+    "dist": "Half Marathon",
+    "distKm": 21.1,
+    "city": "Bodh Gaya",
+    "country": "India",
+    "month": 2,
+    "day": 1
+  },
+  {
+    "name": "Bodhgaya Marathon",
+    "aliases": [
+      "Bodh Gaya Marathon",
+      "Bodhgaya Marathon - Run for Global Peace"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Bodh Gaya",
+    "country": "India",
+    "month": 2,
+    "day": 1
+  },
+  {
+    "name": "Goa River Marathon",
+    "aliases": [
+      "SKF Goa River Marathon",
+      "SKF-GRM"
+    ],
+    "type": "run",
+    "dist": "10KM",
+    "distKm": 10,
+    "city": "Chicalim",
+    "country": "India",
+    "month": 12,
+    "day": 14
+  },
+  {
+    "name": "Goa River Marathon",
+    "aliases": [
+      "SKF Goa River Marathon",
+      "SKF-GRM"
+    ],
+    "type": "run",
+    "dist": "5KM",
+    "distKm": 5,
+    "city": "Chicalim",
+    "country": "India",
+    "month": 12,
+    "day": 14
+  },
+  {
+    "name": "Goa River Marathon",
+    "aliases": [
+      "SKF Goa River Marathon",
+      "SKF-GRM"
+    ],
+    "type": "run",
+    "dist": "Custom…",
+    "distKm": 32.2,
+    "city": "Chicalim",
+    "country": "India",
+    "month": 12,
+    "day": 14,
+    "customDist": "20 Miler"
+  },
+  {
+    "name": "Goa River Marathon",
+    "aliases": [
+      "SKF Goa River Marathon",
+      "SKF-GRM"
+    ],
+    "type": "run",
+    "dist": "Half Marathon",
+    "distKm": 21.1,
+    "city": "Chicalim",
+    "country": "India",
+    "month": 12,
+    "day": 14
+  },
+  {
+    "name": "Goa River Marathon",
+    "aliases": [
+      "SKF Goa River Marathon",
+      "SKF-GRM"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Chicalim",
+    "country": "India",
+    "month": 12,
+    "day": 14
+  },
+  {
+    "name": "Sarmang Dehradun Marathon",
+    "aliases": [
+      "Dehradun Marathon"
+    ],
+    "type": "run",
+    "dist": "10KM",
+    "distKm": 10,
+    "city": "Dehradun",
+    "country": "India",
+    "month": 10,
+    "day": 5
+  },
+  {
+    "name": "Sarmang Dehradun Marathon",
+    "aliases": [
+      "Dehradun Marathon"
+    ],
+    "type": "run",
+    "dist": "5KM",
+    "distKm": 5,
+    "city": "Dehradun",
+    "country": "India",
+    "month": 10,
+    "day": 5
+  },
+  {
+    "name": "Sarmang Dehradun Marathon",
+    "aliases": [
+      "Dehradun Marathon"
+    ],
+    "type": "run",
+    "dist": "Custom…",
+    "distKm": 50,
+    "city": "Dehradun",
+    "country": "India",
+    "month": 10,
+    "day": 5,
+    "customDist": "Ultra"
+  },
+  {
+    "name": "Sarmang Dehradun Marathon",
+    "aliases": [
+      "Dehradun Marathon"
+    ],
+    "type": "run",
+    "dist": "Half Marathon",
+    "distKm": 21.1,
+    "city": "Dehradun",
+    "country": "India",
+    "month": 10,
+    "day": 5
+  },
+  {
+    "name": "Sarmang Dehradun Marathon",
+    "aliases": [
+      "Dehradun Marathon"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Dehradun",
+    "country": "India",
+    "month": 10,
+    "day": 5
+  },
+  {
+    "name": "JBG Durgapur",
+    "aliases": [
+      "JBG Durgapur 10K",
+      "JBG Durgapur Marathon"
+    ],
+    "type": "run",
+    "dist": "10KM",
+    "distKm": 10,
+    "city": "Durgapur",
+    "country": "India",
+    "month": 12,
+    "day": 22
+  },
+  {
+    "name": "JBG Durgapur",
+    "aliases": [
+      "JBG Durgapur 10K",
+      "JBG Durgapur Marathon"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Durgapur",
+    "country": "India",
+    "month": 1,
+    "day": 11
+  },
+  {
+    "name": "Hyderabad Marathon",
+    "aliases": [
+      "Airtel Hyderabad Marathon",
+      "NMDC Hyderabad Marathon"
+    ],
+    "type": "run",
+    "dist": "10KM",
+    "distKm": 10,
+    "city": "Hyderabad",
+    "country": "India",
+    "month": 8,
+    "day": 24
+  },
+  {
+    "name": "Hyderabad Marathon",
+    "aliases": [
+      "Airtel Hyderabad Marathon",
+      "NMDC Hyderabad Marathon"
+    ],
+    "type": "run",
+    "dist": "5KM",
+    "distKm": 5,
+    "city": "Hyderabad",
+    "country": "India",
+    "month": 8,
+    "day": 24
+  },
+  {
+    "name": "Hyderabad Marathon",
+    "aliases": [
+      "Airtel Hyderabad Marathon",
+      "NMDC Hyderabad Marathon"
+    ],
+    "type": "run",
+    "dist": "Half Marathon",
+    "distKm": 21.1,
+    "city": "Hyderabad",
+    "country": "India",
+    "month": 8,
+    "day": 24
+  },
+  {
+    "name": "Hyderabad Marathon",
+    "aliases": [
+      "Airtel Hyderabad Marathon",
+      "NMDC Hyderabad Marathon"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Hyderabad",
+    "country": "India",
+    "month": 8,
+    "day": 24
+  },
+  {
+    "name": "Indore Marathon",
+    "aliases": [
+      "Union Bank of India Indore Marathon"
+    ],
+    "type": "run",
+    "dist": "10KM",
+    "distKm": 10,
+    "city": "Indore",
+    "country": "India",
+    "month": 2,
+    "day": 1
+  },
+  {
+    "name": "Indore Marathon",
+    "aliases": [
+      "Union Bank of India Indore Marathon"
+    ],
+    "type": "run",
+    "dist": "5KM",
+    "distKm": 5,
+    "city": "Indore",
+    "country": "India",
+    "month": 2,
+    "day": 1
+  },
+  {
+    "name": "Indore Marathon",
+    "aliases": [
+      "Union Bank of India Indore Marathon"
+    ],
+    "type": "run",
+    "dist": "Half Marathon",
+    "distKm": 21.1,
+    "city": "Indore",
+    "country": "India",
+    "month": 2,
+    "day": 1
+  },
+  {
+    "name": "Jaipur Marathon",
+    "aliases": [
+      "AU Bank Jaipur Marathon",
+      "AU Jaipur Marathon"
+    ],
+    "type": "run",
+    "dist": "10KM",
+    "distKm": 10,
+    "city": "Jaipur",
+    "country": "India",
+    "month": 2,
+    "day": 1
+  },
+  {
+    "name": "Jaipur Marathon",
+    "aliases": [
+      "AU Bank Jaipur Marathon",
+      "AU Jaipur Marathon"
+    ],
+    "type": "run",
+    "dist": "5KM",
+    "distKm": 5,
+    "city": "Jaipur",
+    "country": "India",
+    "month": 2,
+    "day": 1
+  },
+  {
+    "name": "Jaipur Marathon",
+    "aliases": [
+      "AU Bank Jaipur Marathon",
+      "AU Jaipur Marathon"
+    ],
+    "type": "run",
+    "dist": "Custom…",
+    "distKm": 6,
+    "city": "Jaipur",
+    "country": "India",
+    "month": 2,
+    "day": 1,
+    "customDist": "6KM"
+  },
+  {
+    "name": "Jaipur Marathon",
+    "aliases": [
+      "AU Bank Jaipur Marathon",
+      "AU Jaipur Marathon"
+    ],
+    "type": "run",
+    "dist": "Half Marathon",
+    "distKm": 21.1,
+    "city": "Jaipur",
+    "country": "India",
+    "month": 2,
+    "day": 1
+  },
+  {
+    "name": "Jaipur Marathon",
+    "aliases": [
+      "AU Bank Jaipur Marathon",
+      "AU Jaipur Marathon"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Jaipur",
+    "country": "India",
+    "month": 2,
+    "day": 1
+  },
+  {
+    "name": "Pink City Half Marathon",
+    "aliases": [
+      "PCHM",
+      "Vedanta Pink City Half Marathon",
+      "Vedanta Pink City Half Marathon – 10th Edition"
+    ],
+    "type": "run",
+    "dist": "10KM",
+    "distKm": 10,
+    "city": "Jaipur",
+    "country": "India",
+    "month": 11,
+    "day": 30
+  },
+  {
+    "name": "Pink City Half Marathon",
+    "aliases": [
+      "PCHM",
+      "Vedanta Pink City Half Marathon",
+      "Vedanta Pink City Half Marathon – 10th Edition"
+    ],
+    "type": "run",
+    "dist": "5KM",
+    "distKm": 5,
+    "city": "Jaipur",
+    "country": "India",
+    "month": 11,
+    "day": 30
+  },
+  {
+    "name": "Pink City Half Marathon",
+    "aliases": [
+      "PCHM",
+      "Vedanta Pink City Half Marathon",
+      "Vedanta Pink City Half Marathon – 10th Edition"
+    ],
+    "type": "run",
+    "dist": "Half Marathon",
+    "distKm": 21.1,
+    "city": "Jaipur",
+    "country": "India",
+    "month": 11,
+    "day": 30
+  },
+  {
+    "name": "IEM-UEM Kolkata Marathon",
+    "aliases": [],
+    "type": "run",
+    "dist": "10KM",
+    "distKm": 10,
+    "city": "Kolkata",
+    "country": "India",
+    "month": 2,
+    "day": 22
+  },
+  {
+    "name": "IEM-UEM Kolkata Marathon",
+    "aliases": [],
+    "type": "run",
+    "dist": "5KM",
+    "distKm": 5,
+    "city": "Kolkata",
+    "country": "India",
+    "month": 2,
+    "day": 22
+  },
+  {
+    "name": "IEM-UEM Kolkata Marathon",
+    "aliases": [],
+    "type": "run",
+    "dist": "Half Marathon",
+    "distKm": 21.1,
+    "city": "Kolkata",
+    "country": "India",
+    "month": 2,
+    "day": 22
+  },
+  {
+    "name": "IEM-UEM Kolkata Marathon",
+    "aliases": [],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Kolkata",
+    "country": "India",
+    "month": 2,
+    "day": 22
+  },
+  {
+    "name": "JBG Kolkata Marathon",
+    "aliases": [
+      "JBG Kolkata World 10K"
+    ],
+    "type": "run",
+    "dist": "10KM",
+    "distKm": 10,
+    "city": "Kolkata",
+    "country": "India",
+    "month": 11,
+    "day": 30
+  },
+  {
+    "name": "JBG Kolkata Marathon",
+    "aliases": [
+      "JBG Kolkata World 10K"
+    ],
+    "type": "run",
+    "dist": "5KM",
+    "distKm": 5,
+    "city": "Kolkata",
+    "country": "India",
+    "month": 11,
+    "day": 30
+  },
+  {
+    "name": "JBG Kolkata Marathon",
+    "aliases": [
+      "JBG Kolkata World 10K"
+    ],
+    "type": "run",
+    "dist": "Half Marathon",
+    "distKm": 21.1,
+    "city": "Kolkata",
+    "country": "India",
+    "month": 11,
+    "day": 30
+  },
+  {
+    "name": "Ladakh Marathon",
+    "aliases": [
+      "Ladakh Marathon & Ultra"
+    ],
+    "type": "run",
+    "dist": "5KM",
+    "distKm": 5,
+    "city": "Leh",
+    "country": "India",
+    "month": 9,
+    "day": 13
+  },
+  {
+    "name": "Ladakh Marathon",
+    "aliases": [
+      "Ladakh Marathon & Ultra"
+    ],
+    "type": "run",
+    "dist": "Custom…",
+    "distKm": 11.2,
+    "city": "Leh",
+    "country": "India",
+    "month": 9,
+    "day": 14,
+    "customDist": "11.2KM"
+  },
+  {
+    "name": "Ladakh Marathon",
+    "aliases": [
+      "Ladakh Marathon & Ultra"
+    ],
+    "type": "run",
+    "dist": "Custom…",
+    "distKm": 72,
+    "city": "Leh",
+    "country": "India",
+    "month": 9,
+    "day": 12,
+    "customDist": "Khardung La Challenge"
+  },
+  {
+    "name": "Ladakh Marathon",
+    "aliases": [
+      "Ladakh Marathon & Ultra"
+    ],
+    "type": "run",
+    "dist": "Custom…",
+    "distKm": 122,
+    "city": "Leh",
+    "country": "India",
+    "month": 9,
+    "day": 11,
+    "customDist": "Silk Route Ultra"
+  },
+  {
+    "name": "Ladakh Marathon",
+    "aliases": [
+      "Ladakh Marathon & Ultra"
+    ],
+    "type": "run",
+    "dist": "Half Marathon",
+    "distKm": 21.1,
+    "city": "Leh",
+    "country": "India",
+    "month": 9,
+    "day": 14
+  },
+  {
+    "name": "Ladakh Marathon",
+    "aliases": [
+      "Ladakh Marathon & Ultra"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Leh",
+    "country": "India",
+    "month": 9,
+    "day": 14
+  },
+  {
+    "name": "Abu International Half Marathon",
+    "aliases": [
+      "Dadi Prakashmani Abu International Half Marathon"
+    ],
+    "type": "run",
+    "dist": "Half Marathon",
+    "distKm": 21.1,
+    "city": "Mount Abu",
+    "country": "India",
+    "month": 8,
+    "day": 17
+  },
+  {
+    "name": "Mumbai Marathon",
+    "aliases": [
+      "SCMM",
+      "Standard Chartered Mumbai Marathon",
+      "Tata Mumbai Marathon"
+    ],
+    "type": "run",
+    "dist": "10KM",
+    "distKm": 10,
+    "city": "Mumbai",
+    "country": "India",
+    "month": 1,
+    "day": 18
+  },
+  {
+    "name": "Mumbai Marathon",
+    "aliases": [
+      "SCMM",
+      "Standard Chartered Mumbai Marathon",
+      "Tata Mumbai Marathon"
+    ],
+    "type": "run",
+    "dist": "Custom…",
+    "distKm": 6,
+    "city": "Mumbai",
+    "country": "India",
+    "month": 1,
+    "day": 18,
+    "customDist": "Dream Run"
+  },
+  {
+    "name": "Mumbai Marathon",
+    "aliases": [
+      "SCMM",
+      "Standard Chartered Mumbai Marathon",
+      "Tata Mumbai Marathon"
+    ],
+    "type": "run",
+    "dist": "Half Marathon",
+    "distKm": 21.1,
+    "city": "Mumbai",
+    "country": "India",
+    "month": 1,
+    "day": 18
+  },
+  {
+    "name": "Mumbai Marathon",
+    "aliases": [
+      "SCMM",
+      "Standard Chartered Mumbai Marathon",
+      "Tata Mumbai Marathon"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Mumbai",
+    "country": "India",
+    "month": 1,
+    "day": 18
+  },
+  {
+    "name": "Saquib Rizvi Memorial Cancer Awareness Half Marathon",
+    "aliases": [],
+    "type": "run",
+    "dist": "Half Marathon",
+    "distKm": 21.1,
+    "city": "Mumbai",
+    "country": "India",
+    "month": 10,
+    "day": 5
+  },
+  {
+    "name": "Delhi Half Marathon",
+    "aliases": [
+      "ADHM",
+      "Airtel Delhi Half Marathon",
+      "Vedanta Delhi Half Marathon"
+    ],
+    "type": "run",
+    "dist": "10KM",
+    "distKm": 10,
+    "city": "New Delhi",
+    "country": "India",
+    "month": 10,
+    "day": 12
+  },
+  {
+    "name": "Delhi Half Marathon",
+    "aliases": [
+      "ADHM",
+      "Airtel Delhi Half Marathon",
+      "Vedanta Delhi Half Marathon"
+    ],
+    "type": "run",
+    "dist": "Custom…",
+    "distKm": 7,
+    "city": "New Delhi",
+    "country": "India",
+    "month": 10,
+    "day": 12,
+    "customDist": "Great Delhi Run"
+  },
+  {
+    "name": "Delhi Half Marathon",
+    "aliases": [
+      "ADHM",
+      "Airtel Delhi Half Marathon",
+      "Vedanta Delhi Half Marathon"
+    ],
+    "type": "run",
+    "dist": "Half Marathon",
+    "distKm": 21.1,
+    "city": "New Delhi",
+    "country": "India",
+    "month": 10,
+    "day": 12
+  },
+  {
+    "name": "Spiti Marathon",
+    "aliases": [
+      "Surya Spiti Challenge"
+    ],
+    "type": "run",
+    "dist": "10KM",
+    "distKm": 10,
+    "city": "Sumdo",
+    "country": "India",
+    "month": 8,
+    "day": 22
+  },
+  {
+    "name": "Spiti Marathon",
+    "aliases": [
+      "Surya Spiti Challenge"
+    ],
+    "type": "run",
+    "dist": "Custom…",
+    "distKm": 77,
+    "city": "Sumdo",
+    "country": "India",
+    "month": 8,
+    "day": 22,
+    "customDist": "Kunzum La 77 Challenge"
+  },
+  {
+    "name": "Spiti Marathon",
+    "aliases": [
+      "Surya Spiti Challenge"
+    ],
+    "type": "run",
+    "dist": "Half Marathon",
+    "distKm": 21.1,
+    "city": "Sumdo",
+    "country": "India",
+    "month": 8,
+    "day": 22
+  },
+  {
+    "name": "Tawang Marathon",
+    "aliases": [
+      "TAWANG Marathon"
+    ],
+    "type": "run",
+    "dist": "10KM",
+    "distKm": 10,
+    "city": "Tawang",
+    "country": "India",
+    "month": 10,
+    "day": 24
+  },
+  {
+    "name": "Tawang Marathon",
+    "aliases": [
+      "TAWANG Marathon"
+    ],
+    "type": "run",
+    "dist": "5KM",
+    "distKm": 5,
+    "city": "Tawang",
+    "country": "India",
+    "month": 10,
+    "day": 24
+  },
+  {
+    "name": "Tawang Marathon",
+    "aliases": [
+      "TAWANG Marathon"
+    ],
+    "type": "run",
+    "dist": "Half Marathon",
+    "distKm": 21.1,
+    "city": "Tawang",
+    "country": "India",
+    "month": 10,
+    "day": 24
+  },
+  {
+    "name": "Tawang Marathon",
+    "aliases": [
+      "TAWANG Marathon"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Tawang",
+    "country": "India",
+    "month": 10,
+    "day": 24
+  },
+  {
+    "name": "Zinc City Half Marathon",
+    "aliases": [
+      "Vedanta Zinc City Half Marathon",
+      "ZCHM"
+    ],
+    "type": "run",
+    "dist": "10KM",
+    "distKm": 10,
+    "city": "Udaipur",
+    "country": "India",
+    "month": 9,
+    "day": 21
+  },
+  {
+    "name": "Zinc City Half Marathon",
+    "aliases": [
+      "Vedanta Zinc City Half Marathon",
+      "ZCHM"
+    ],
+    "type": "run",
+    "dist": "5KM",
+    "distKm": 5,
+    "city": "Udaipur",
+    "country": "India",
+    "month": 9,
+    "day": 21
+  },
+  {
+    "name": "Zinc City Half Marathon",
+    "aliases": [
+      "Vedanta Zinc City Half Marathon",
+      "ZCHM"
+    ],
+    "type": "run",
+    "dist": "Half Marathon",
+    "distKm": 21.1,
+    "city": "Udaipur",
+    "country": "India",
+    "month": 9,
+    "day": 21
+  },
+  {
+    "name": "Vadodara International Marathon",
+    "aliases": [
+      "MG Vadodara International Marathon",
+      "MG Vadodara Int’l Marathon",
+      "Vadodara Marathon"
+    ],
+    "type": "run",
+    "dist": "10KM",
+    "distKm": 10,
+    "city": "Vadodara",
+    "country": "India",
+    "month": 2,
+    "day": 1
+  },
+  {
+    "name": "Vadodara International Marathon",
+    "aliases": [
+      "MG Vadodara International Marathon",
+      "MG Vadodara Int’l Marathon",
+      "Vadodara Marathon"
+    ],
+    "type": "run",
+    "dist": "5KM",
+    "distKm": 5,
+    "city": "Vadodara",
+    "country": "India",
+    "month": 2,
+    "day": 1
+  },
+  {
+    "name": "Vadodara International Marathon",
+    "aliases": [
+      "MG Vadodara International Marathon",
+      "MG Vadodara Int’l Marathon",
+      "Vadodara Marathon"
+    ],
+    "type": "run",
+    "dist": "Custom…",
+    "distKm": 5,
+    "city": "Vadodara",
+    "country": "India",
+    "month": 2,
+    "day": 1,
+    "customDist": "Gazra Run"
+  },
+  {
+    "name": "Vadodara International Marathon",
+    "aliases": [
+      "MG Vadodara International Marathon",
+      "MG Vadodara Int’l Marathon",
+      "Vadodara Marathon"
+    ],
+    "type": "run",
+    "dist": "Custom…",
+    "distKm": 5,
+    "city": "Vadodara",
+    "country": "India",
+    "month": 2,
+    "day": 1,
+    "customDist": "Heritage Fun Run"
+  },
+  {
+    "name": "Vadodara International Marathon",
+    "aliases": [
+      "MG Vadodara International Marathon",
+      "MG Vadodara Int’l Marathon",
+      "Vadodara Marathon"
+    ],
+    "type": "run",
+    "dist": "Half Marathon",
+    "distKm": 21.1,
+    "city": "Vadodara",
+    "country": "India",
+    "month": 2,
+    "day": 1
+  },
+  {
+    "name": "Vadodara International Marathon",
+    "aliases": [
+      "MG Vadodara International Marathon",
+      "MG Vadodara Int’l Marathon",
+      "Vadodara Marathon"
+    ],
+    "type": "run",
+    "dist": "Marathon",
+    "distKm": 42.2,
+    "city": "Vadodara",
+    "country": "India",
+    "month": 2,
+    "day": 1
+  }
+]
