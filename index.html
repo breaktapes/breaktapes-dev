@@ -2797,8 +2797,8 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
         Copy the Client ID and Client Secret from your app's settings page.
       </div>
       <div class="fgrid" style="grid-template-columns:1fr">
-        <div class="fg"><label class="fl">Client ID</label><input class="fi" id="strClientId" placeholder="e.g. 123456"></div>
-        <div class="fg"><label class="fl">Client Secret</label><input class="fi" id="strSecret" type="password" placeholder="your_client_secret"></div>
+        <div class="fg"><label class="fl">Client ID</label><input class="fi" id="strClientId" placeholder="e.g. 123456" autocomplete="off"></div>
+        <div class="fg"><label class="fl">Client Secret</label><input class="fi" id="strSecret" type="text" placeholder="your_client_secret" autocomplete="new-password"></div>
       </div>
     </div>
     <div class="modal-foot">
@@ -3027,7 +3027,7 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
       <div class="fgrid" style="grid-template-columns:1fr">
         <div class="fg">
           <label class="fl">Anthropic API Key</label>
-          <input class="fi" id="setApiKey" type="password" placeholder="sk-ant-...">
+          <input class="fi" id="setApiKey" type="text" placeholder="sk-ant-..." autocomplete="new-password">
           <div class="ai-hint" style="margin-top:6px">Required for AI race import and screenshot parsing. Get your key at console.anthropic.com</div>
         </div>
       </div>
