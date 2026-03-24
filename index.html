@@ -1707,7 +1707,7 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
 
 .mw-card {
   background-color: var(--surface);
-  background-image: radial-gradient(ellipse 150% 90% at 50% -5%, var(--mw-spot, rgba(255,215,0,0.08)) 0%, transparent 62%);
+  background-image: radial-gradient(ellipse 160% 55% at 50% 0%, var(--mw-spot, rgba(255,215,0,0.12)) 0%, transparent 65%);
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: 1.4rem 1.1rem 1.1rem;
@@ -1717,12 +1717,12 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
   transition: all 0.32s cubic-bezier(0.4,0,0.2,1);
   animation: cardIn 0.4s ease both;
 }
-/* Per-tier spotlight color */
-.mw-gold    { --mw-spot: rgba(255,215,0,0.13); }
-.mw-silver  { --mw-spot: rgba(200,212,220,0.11); }
-.mw-bronze  { --mw-spot: rgba(205,140,90,0.13); }
-.mw-finisher { --mw-spot: rgba(255,77,0,0.09); }
-.mw-pb      { --mw-spot: rgba(255,215,0,0.22); }
+/* Per-tier colors — card bg gradient + art spotlight (bright/mid) */
+.mw-gold     { --mw-spot: rgba(255,210,60,0.10);  --spot-b: rgba(255,225,100,0.88); --spot-m: rgba(200,150,20,0.45); }
+.mw-silver   { --mw-spot: rgba(200,215,230,0.10); --spot-b: rgba(215,230,245,0.82); --spot-m: rgba(155,180,210,0.40); }
+.mw-bronze   { --mw-spot: rgba(210,140,80,0.10);  --spot-b: rgba(245,190,90,0.85); --spot-m: rgba(190,120,40,0.42); }
+.mw-finisher { --mw-spot: rgba(255,90,0,0.09);    --spot-b: rgba(255,160,80,0.80); --spot-m: rgba(200,90,20,0.38); }
+.mw-pb       { --mw-spot: rgba(255,215,0,0.14);   --spot-b: rgba(255,235,90,0.92); --spot-m: rgba(220,170,20,0.48); }
 /* Hover: lift + color-matched outer glow */
 .mw-card:hover {
   transform: translateY(-8px) scale(1.015);
@@ -1748,30 +1748,36 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
 .mw-bronze::before   { background: linear-gradient(90deg,transparent,#CD8C5A,transparent); }
 .mw-finisher::before { background: linear-gradient(90deg,transparent,var(--orange),transparent); }
 
-/* Medal art area — photo-first */
+/* Medal art area — strong spotlight backdrop for mix-blend-mode:multiply */
 .mw-art {
   width: 100%; height: 210px;
   margin: 0 auto 0.9rem;
   display: flex; align-items: center; justify-content: center;
   position: relative;
-  /* Warm radial backdrop so mix-blend-mode:multiply has light to work against */
-  background: radial-gradient(ellipse 70% 70% at 50% 55%, rgba(255,252,240,0.13) 0%, transparent 72%);
+  /* Bright radial spotlight: center is light (medal shows through multiply), edges fade dark */
+  background:
+    radial-gradient(ellipse 65% 72% at 50% 58%,
+      var(--spot-b, rgba(255,225,100,0.88)) 0%,
+      var(--spot-m, rgba(200,150,20,0.42)) 44%,
+      transparent 68%
+    );
   border-radius: 10px;
   overflow: hidden;
 }
 .mw-art svg { width: 100%; height: 100%; max-height: 190px; }
 
-/* Real medal photos — white background disappears via multiply on dark */
+/* Real medal photos — multiply removes white bg; bright backdrop makes colors pop */
 .mw-photo {
   max-height: 195px; max-width: 100%;
   object-fit: contain;
   mix-blend-mode: multiply;
-  filter: contrast(1.08) brightness(1.12) drop-shadow(0 4px 18px rgba(0,0,0,0.3));
+  /* Higher brightness so medal colors survive the multiply against the spotlight */
+  filter: contrast(1.05) brightness(1.5) saturate(1.1);
   transition: transform 0.35s cubic-bezier(0.4,0,0.2,1), filter 0.35s ease;
 }
 .mw-card:hover .mw-photo {
   transform: scale(1.05) translateY(-4px);
-  filter: contrast(1.1) brightness(1.15) drop-shadow(0 12px 36px rgba(0,0,0,0.5));
+  filter: contrast(1.06) brightness(1.6) saturate(1.15);
 }
 
 /* Change photo button — top-right of art area, visible on hover */
