@@ -555,13 +555,13 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
 
 /* ── Calendar Heatmap ── */
 .cal-section { margin-bottom:1.5rem; }
-.cal-heatmap-wrap { background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:1rem; overflow-x:auto; }
-.cal-grid { display:flex; flex-direction:column; gap:4px; min-width:340px; }
-.cal-row { display:flex; align-items:center; gap:4px; }
-.cal-label { font-family:var(--headline); font-size:8px; font-weight:800; letter-spacing:0.1em; color:var(--muted); text-transform:uppercase; width:28px; flex-shrink:0; text-align:right; padding-right:4px; }
-.cal-month-labels { display:flex; gap:4px; padding-left:32px; margin-bottom:2px; }
-.cal-month-lbl { font-family:var(--headline); font-size:7px; font-weight:800; letter-spacing:0.04em; color:var(--muted); text-transform:uppercase; flex:0 0 24px; text-align:center; opacity:0.5; }
-.cal-cell { width:24px; height:24px; border-radius:3px; flex-shrink:0; background:var(--surface3); border:1px solid var(--border); cursor:default; transition:opacity 0.15s; }
+.cal-heatmap-wrap { background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:1rem; }
+.cal-grid { display:flex; flex-direction:column; gap:4px; }
+.cal-month-labels,
+.cal-row { display:grid; grid-template-columns:28px repeat(12,1fr); gap:4px; align-items:center; }
+.cal-label { font-family:var(--headline); font-size:8px; font-weight:800; letter-spacing:0.1em; color:var(--muted); text-transform:uppercase; text-align:right; padding-right:4px; }
+.cal-month-lbl { font-family:var(--headline); font-size:7px; font-weight:800; letter-spacing:0.04em; color:var(--muted); text-transform:uppercase; text-align:center; opacity:0.5; }
+.cal-cell { aspect-ratio:1; border-radius:3px; background:var(--surface3); border:1px solid var(--border); cursor:default; transition:opacity 0.15s; min-width:0; }
 .cal-cell:hover { opacity:0.75; }
 .cal-cell[data-c="1"] { background:rgba(0,255,136,0.25); border-color:rgba(0,255,136,0.3); }
 .cal-cell[data-c="2"] { background:rgba(0,255,136,0.45); border-color:rgba(0,255,136,0.5); }
@@ -2401,6 +2401,11 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
     <div class="ath-section">
       <div class="ath-section-h">Personal Bests</div>
       <div class="ath-pb-grid" id="athPBs"></div>
+    </div>
+    <!-- Race Activity Heatmap -->
+    <div class="ath-section">
+      <div class="ath-section-h">Race Activity</div>
+      <div id="athCalHeatmap"></div>
     </div>
     <!-- Countries -->
     <div class="ath-section">
@@ -4322,8 +4327,8 @@ function showBETip(e, i) {
 function hideBETip() { const t=document.getElementById('beChartTip'); if(t) t.style.display='none'; }
 
 /* ── Calendar Heatmap ── */
-function renderCalHeatmap() {
-  const el = document.getElementById('calHeatmap');
+function renderCalHeatmap(elId, hideLabel) {
+  const el = document.getElementById(elId||'calHeatmap');
   if (!el) return;
   if (!races.length) { el.innerHTML=''; return; }
   const map = {};
@@ -4335,7 +4340,7 @@ function renderCalHeatmap() {
   const years = [...new Set(races.map(r=>(r.date||'').slice(0,4)).filter(y=>y>='2000'))].sort().reverse();
   if (!years.length) { el.innerHTML=''; return; }
   const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const monthHdr = `<div class="cal-month-labels">${MONTHS.map(m=>`<div class="cal-month-lbl">${m}</div>`).join('')}</div>`;
+  const monthHdr = `<div class="cal-month-labels"><div></div>${MONTHS.map(m=>`<div class="cal-month-lbl">${m}</div>`).join('')}</div>`;
   const rowsHtml = years.map(y => {
     const cells = Array.from({length:12},(_,mi) => {
       const k = `${y}-${String(mi+1).padStart(2,'0')}`;
@@ -4345,7 +4350,7 @@ function renderCalHeatmap() {
     }).join('');
     return `<div class="cal-row"><div class="cal-label">${y}</div>${cells}</div>`;
   }).join('');
-  el.innerHTML = `<div class="cal-section"><div class="be-section-hd">Race Activity</div>
+  el.innerHTML = `<div class="cal-section">${hideLabel?'':'<div class="be-section-hd">Race Activity</div>'}
     <div class="cal-heatmap-wrap"><div class="cal-grid">${monthHdr}${rowsHtml}</div></div></div>`;
 }
 
@@ -4357,12 +4362,13 @@ function renderMatchedRaces() {
   if (!eligible.length) { el.innerHTML=''; return; }
   const groups = {};
   eligible.forEach(r => {
-    const base = r.name.replace(/\s+\d{4}$/,'');
+    const base = r.name.replace(/\s+\d{4}$/,'') + '||' + (r.distance||'');
     (groups[base] = groups[base]||[]).push(r);
   });
   const multi = Object.entries(groups).filter(([,rs])=>rs.length>=2).sort((a,b)=>b[1].length-a[1].length);
   if (!multi.length) { el.innerHTML=''; return; }
-  const items = multi.map(([name,rs],gi) => {
+  const items = multi.map(([key,rs],gi) => {
+    const [name] = key.split('||');
     const sorted = [...rs].sort((a,b)=>new Date(a.date)-new Date(b.date));
     const pbSecs = Math.min(...sorted.map(r=>timeToSecs(r.time)));
     const tRows = sorted.map((r,ri) => {
@@ -4897,6 +4903,8 @@ function renderAthlete(){
   // Countries
   const countries=[...new Set(races.map(r=>r.country))];
   document.getElementById('cChips').innerHTML=countries.length?countries.map(c=>`<span class="country-chip">${c}</span>`).join(''):`<span style="color:var(--muted);font-size:12px">No races yet.</span>`;
+  // Race activity heatmap
+  renderCalHeatmap('athCalHeatmap', true);
   // Avatar
   const savi=localStorage.getItem('fl2_avi');
   if(savi){
