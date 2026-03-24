@@ -4,6 +4,51 @@
 
 ---
 
+## gstack
+
+gstack is installed at `.claude/skills/gstack` (committed to this repo — teammates get it automatically on clone).
+
+**Web browsing:** Always use `/browse` for any web browsing tasks. Never use `mcp__claude-in-chrome__*` tools directly.
+
+**Available skills:**
+
+| Skill | Purpose |
+|---|---|
+| `/browse` | Web browsing |
+| `/office-hours` | Engineering office hours |
+| `/plan-ceo-review` | CEO review planning |
+| `/plan-eng-review` | Engineering review planning |
+| `/plan-design-review` | Design review planning |
+| `/design-consultation` | Design consultation |
+| `/design-review` | Design review |
+| `/review` | Code review |
+| `/ship` | Ship a feature |
+| `/land-and-deploy` | Land and deploy |
+| `/canary` | Canary deploy |
+| `/qa` | QA |
+| `/qa-only` | QA only |
+| `/benchmark` | Benchmarking |
+| `/retro` | Retrospective |
+| `/investigate` | Investigation |
+| `/document-release` | Document a release |
+| `/codex` | Codex |
+| `/cso` | CSO |
+| `/autoplan` | Auto planning |
+| `/careful` | Careful mode |
+| `/freeze` | Freeze |
+| `/guard` | Guard |
+| `/unfreeze` | Unfreeze |
+| `/setup-browser-cookies` | Set up browser cookies |
+| `/setup-deploy` | Set up deploy |
+| `/gstack-upgrade` | Upgrade gstack |
+
+**If gstack skills aren't working** (e.g. binary missing after a fresh clone), rebuild with:
+```bash
+cd .claude/skills/gstack && ./setup
+```
+
+---
+
 ## Project Overview
 
 **BREAKTAPES** is a single-page app for endurance athletes to track race history, medals, personal bests, upcoming races, and wearable health data.
