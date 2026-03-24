@@ -6241,9 +6241,9 @@ async function owFetch(path, params = {}) {
     const res = await fetch(url.toString(), {
       headers: { 'X-Open-Wearables-API-Key': cfg.key, 'Accept': 'application/json' }
     });
-    if (!res.ok) return null;
+    if (!res.ok) { console.warn(`OW ${path} → ${res.status}`); return null; }
     return await res.json();
-  } catch { return null; }
+  } catch(e) { console.warn('OW fetch error:', e.message); return null; }
 }
 
 async function testOWConnection() {
@@ -6253,13 +6253,16 @@ async function testOWConnection() {
   const el  = document.getElementById('owTestResult');
   if (!url || !key || !uid) { el.textContent = 'Fill in all three fields first.'; el.style.color = 'var(--muted)'; return; }
   el.textContent = 'Testing…'; el.style.color = 'var(--muted)';
-  const today = new Date().toISOString().slice(0, 10);
+  const end = new Date().toISOString().slice(0, 10);
+  const start = new Date(Date.now() - 30*24*60*60*1000).toISOString().slice(0, 10);
   try {
-    const res = await fetch(`${url}/api/v1/users/${uid}/summaries/recovery?start_date=${today}&end_date=${today}`, {
+    const res = await fetch(`${url}/api/v1/users/${uid}/summaries/activity?start_date=${start}&end_date=${end}&limit=1`, {
       headers: { 'X-Open-Wearables-API-Key': key, 'Accept': 'application/json' }
     });
     if (res.ok) {
-      el.textContent = '✓ Connected successfully';
+      const d = await res.json();
+      const count = d?.data?.length ?? '?';
+      el.textContent = `✓ Connected — ${count} activity record(s) found`;
       el.style.color = '#4ade80';
     } else {
       el.textContent = `✗ Error ${res.status} — check URL, key, and user ID`;
@@ -6291,15 +6294,17 @@ async function loadOWData() {
   const cfg = getOWConfig();
   if (!cfg) return null;
   if (owDataCache && Date.now() - owDataTs < 10 * 60 * 1000) return owDataCache; // 10-min cache
-  const today = new Date().toISOString().slice(0, 10);
+  const end   = new Date().toISOString().slice(0, 10);
+  const start = new Date(Date.now() - 30*24*60*60*1000).toISOString().slice(0, 10);
+  const params = { start_date: start, end_date: end, limit: 1, sort_order: 'desc' };
   const [recovery, sleep, activity] = await Promise.all([
-    owFetch(`/api/v1/users/${cfg.uid}/summaries/recovery`,  { start_date: today, end_date: today, limit: 1 }),
-    owFetch(`/api/v1/users/${cfg.uid}/summaries/sleep`,     { start_date: today, end_date: today, limit: 1 }),
-    owFetch(`/api/v1/users/${cfg.uid}/summaries/activity`,  { start_date: today, end_date: today, limit: 1 }),
+    owFetch(`/api/v1/users/${cfg.uid}/summaries/recovery`, params).catch(() => null),
+    owFetch(`/api/v1/users/${cfg.uid}/summaries/sleep`,    params).catch(() => null),
+    owFetch(`/api/v1/users/${cfg.uid}/summaries/activity`, params).catch(() => null),
   ]);
-  const rec  = recovery?.data?.[0]  || recovery?.[0]  || null;
-  const slp  = sleep?.data?.[0]     || sleep?.[0]     || null;
-  const act  = activity?.data?.[0]  || activity?.[0]  || null;
+  const rec  = recovery?.data?.[0]  || null;
+  const slp  = sleep?.data?.[0]     || null;
+  const act  = activity?.data?.[0]  || null;
   owDataCache = { rec, slp, act };
   owDataTs = Date.now();
   return owDataCache;
