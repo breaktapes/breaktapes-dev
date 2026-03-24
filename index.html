@@ -4099,7 +4099,8 @@ function renderPRStrip() {
   const eligible = races.filter(r => ['run','tri','ultra'].includes(r.type) && r.time && timeToSecs(r.time) < Infinity);
   if (!eligible.length) { el.innerHTML = ''; return; }
   // Split into run/ultra and tri, sorted ascending by distance
-  const byDist = (a, b) => (DIST_KM[a] || 0) - (DIST_KM[b] || 0);
+  const distVal = d => DIST_KM[d] || parseFloat(d) || 0;
+  const byDist = (a, b) => distVal(a) - distVal(b);
   const runDists = [...new Set(eligible.filter(r => r.type==='run'||r.type==='ultra').map(r => r.distance))].sort(byDist);
   const triDists = [...new Set(eligible.filter(r => r.type==='tri').map(r => r.distance))].sort(byDist);
   const allDists = [...runDists, ...triDists];
