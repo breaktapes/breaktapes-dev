@@ -478,6 +478,41 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
   color: var(--muted);
 }
 
+/* ── PR Strip ── */
+.pr-strip { display:grid; grid-template-columns:repeat(3,1fr); gap:0.75rem; margin-bottom:1.5rem; }
+.pr-card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:6px; padding:1rem 1rem 0.85rem;
+  position:relative; overflow:hidden; cursor:default;
+}
+.pr-card-kicker {
+  font-family:var(--headline); font-size:8px; font-weight:800;
+  letter-spacing:0.18em; text-transform:uppercase; color:var(--green);
+  margin-bottom:0.3rem;
+}
+.pr-card-dist {
+  font-family:var(--headline); font-size:10px; font-weight:800;
+  letter-spacing:0.1em; text-transform:uppercase; color:var(--muted);
+  margin-bottom:0.5rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.pr-card-time {
+  font-family:var(--headline); font-size:1.65rem; font-weight:900;
+  letter-spacing:-0.02em; color:var(--fg); line-height:1;
+  margin-bottom:0.4rem; font-variant-numeric:tabular-nums;
+}
+.pr-card-name {
+  font-size:10px; color:var(--muted); white-space:nowrap;
+  overflow:hidden; text-overflow:ellipsis; line-height:1.3;
+}
+.pr-card-icon {
+  position:absolute; top:0.7rem; right:0.75rem;
+  font-size:1.1rem; opacity:0.25; line-height:1;
+}
+@media(max-width:480px) {
+  .pr-strip { grid-template-columns:repeat(3,1fr); gap:0.5rem; }
+  .pr-card-time { font-size:1.25rem; }
+}
+
 /* ── Recent ── */
 .section-row {
   display:flex; align-items:center; justify-content:space-between;
@@ -1972,7 +2007,7 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
     <span class="menu-top-label">Menu</span>
   </div>
   <div class="menu-nav">
-    <div class="menu-section-label">Pages</div>
+
     <button class="menu-item active" id="mi-dashboard" onclick="go('dashboard')">
       <span class="menu-icon">⚡</span>Dashboard
     </button>
@@ -2196,6 +2231,7 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
       <div class="s-tile"><div class="s-tile-num" id="hs-k">0</div><div class="s-tile-label">Total KM</div></div>
       <div class="s-tile" onclick="go('medals')" style="cursor:pointer"><div class="s-tile-num" id="hs-m">0</div><div class="s-tile-label">Medals</div></div>
     </div>
+    <div id="prStrip"></div>
     <div class="history-list" id="histList"></div>
   </div>
 </div>
@@ -4035,6 +4071,33 @@ function buildTriPBMap() {
   });
   return pb;
 }
+function renderPRStrip() {
+  const el = document.getElementById('prStrip');
+  if (!el) return;
+  const eligible = races.filter(r => ['run','tri','ultra'].includes(r.type) && r.time && timeToSecs(r.time) < Infinity);
+  if (!eligible.length) { el.innerHTML = ''; return; }
+  // Best time per distance
+  const pbMap = {};
+  eligible.forEach(r => {
+    const s = timeToSecs(r.time);
+    if (!pbMap[r.distance] || s < pbMap[r.distance].secs)
+      pbMap[r.distance] = { secs:s, time:r.time, name:r.name, type:r.type };
+  });
+  // Sort by distance (longest first), take top 3
+  const top3 = Object.entries(pbMap)
+    .sort((a, b) => (DIST_KM[b[0]] || 0) - (DIST_KM[a[0]] || 0))
+    .slice(0, 3);
+  if (!top3.length) { el.innerHTML = ''; return; }
+  const icon = { run:'🏃', tri:'🏊', ultra:'🏔️' };
+  el.innerHTML = `<div class="pr-strip">${top3.map(([dist, pb]) => `
+    <div class="pr-card">
+      <div class="pr-card-icon">${icon[pb.type]||'🏃'}</div>
+      <div class="pr-card-kicker">PR</div>
+      <div class="pr-card-dist">${dist}</div>
+      <div class="pr-card-time">${pb.time}</div>
+      <div class="pr-card-name">${pb.name.replace(/\s+\d{4}$/,'')}</div>
+    </div>`).join('')}</div>`;
+}
 function getPodiumPos(str) {
   if (!str) return null;
   const m = String(str).match(/^\s*(\d+)\s*[\/\-]/);
@@ -4051,6 +4114,7 @@ function renderHistory(){
   document.getElementById('hs-c').textContent = new Set(races.map(r=>r.country)).size;
   document.getElementById('hs-k').textContent = Math.round(races.reduce((s,r)=>s+(r.distKm||0),0));
   document.getElementById('hs-m').textContent = races.length;
+  renderPRStrip();
   const list = document.getElementById('histList');
   if(!races.length){
     list.innerHTML=`<div class="empty"><div class="empty-ico">📋</div><div class="empty-h">No races logged</div><div class="empty-p">Add your first race.</div></div>`;
