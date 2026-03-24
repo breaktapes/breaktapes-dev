@@ -4136,7 +4136,6 @@ function renderMedals() {
         <span class="mw-up-hint">Tap to upload yours</span>
       </label>`;
     }
-
     return `<div class="mw-card mw-${r.medal}${isPB?' mw-pb':''}" id="mw-${r.id}" onclick="openRaceDetail(${r.id})">
       <span class="mw-type-pill ${TYPE_PILL[r.type]||'tag-run'}">${TYPE_LABEL[r.type]||r.type}</span>
       ${r.priority==='A'?`<span class="pri-badge pri-a" style="position:absolute;top:8px;left:8px">A</span>`:''}
