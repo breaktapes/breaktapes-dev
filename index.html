@@ -479,22 +479,35 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
 }
 
 /* ── PR Strip ── */
+.pr-dist-tabs {
+  display:flex; gap:0.4rem; flex-wrap:wrap; margin-bottom:0.75rem;
+}
+.pr-dist-tab {
+  font-family:var(--headline); font-size:9px; font-weight:800;
+  letter-spacing:0.1em; text-transform:uppercase;
+  padding:0.35rem 0.75rem; border-radius:4px;
+  border:1px solid var(--border); background:var(--surface);
+  color:var(--muted); cursor:pointer; transition:border-color 0.15s, color 0.15s;
+  white-space:nowrap;
+}
+.pr-dist-tab:hover { border-color:var(--green); color:var(--fg); }
+.pr-dist-tab.active { border-color:var(--green); color:var(--green); }
 .pr-strip { display:grid; grid-template-columns:repeat(3,1fr); gap:0.75rem; margin-bottom:1.5rem; }
 .pr-card {
   background:var(--surface); border:1px solid var(--border);
   border-radius:6px; padding:1rem 1rem 0.85rem;
-  position:relative; overflow:hidden; cursor:default;
+  position:relative; overflow:hidden;
 }
-.pr-card-kicker {
+.pr-card-gold   { background:linear-gradient(135deg,rgba(212,175,55,0.2) 0%,rgba(212,175,55,0.05) 100%); border-color:rgba(212,175,55,0.4); }
+.pr-card-silver { background:linear-gradient(135deg,rgba(180,180,190,0.18) 0%,rgba(180,180,190,0.05) 100%); border-color:rgba(180,180,190,0.35); }
+.pr-card-bronze { background:linear-gradient(135deg,rgba(188,110,60,0.2) 0%,rgba(188,110,60,0.05) 100%); border-color:rgba(188,110,60,0.35); }
+.pr-card-rank {
   font-family:var(--headline); font-size:8px; font-weight:800;
-  letter-spacing:0.18em; text-transform:uppercase; color:var(--green);
-  margin-bottom:0.3rem;
+  letter-spacing:0.18em; text-transform:uppercase; margin-bottom:0.35rem;
 }
-.pr-card-dist {
-  font-family:var(--headline); font-size:10px; font-weight:800;
-  letter-spacing:0.1em; text-transform:uppercase; color:var(--muted);
-  margin-bottom:0.5rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-}
+.pr-card-gold   .pr-card-rank { color:#d4af37; }
+.pr-card-silver .pr-card-rank { color:#a8a8b8; }
+.pr-card-bronze .pr-card-rank { color:#c07a3a; }
 .pr-card-time {
   font-family:var(--headline); font-size:1.65rem; font-weight:900;
   letter-spacing:-0.02em; color:var(--fg); line-height:1;
@@ -504,12 +517,13 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
   font-size:10px; color:var(--muted); white-space:nowrap;
   overflow:hidden; text-overflow:ellipsis; line-height:1.3;
 }
+.pr-card-date { font-size:9px; color:var(--muted); margin-top:0.2rem; opacity:0.7; }
 .pr-card-icon {
   position:absolute; top:0.7rem; right:0.75rem;
-  font-size:1.1rem; opacity:0.25; line-height:1;
+  font-size:1.1rem; opacity:0.2; line-height:1;
 }
 @media(max-width:480px) {
-  .pr-strip { grid-template-columns:repeat(3,1fr); gap:0.5rem; }
+  .pr-strip { gap:0.5rem; }
   .pr-card-time { font-size:1.25rem; }
 }
 
@@ -4071,32 +4085,38 @@ function buildTriPBMap() {
   });
   return pb;
 }
+let prSelectedDist = null;
+function selectPRDist(dist) { prSelectedDist = dist; renderPRStrip(); }
 function renderPRStrip() {
   const el = document.getElementById('prStrip');
   if (!el) return;
   const eligible = races.filter(r => ['run','tri','ultra'].includes(r.type) && r.time && timeToSecs(r.time) < Infinity);
   if (!eligible.length) { el.innerHTML = ''; return; }
-  // Best time per distance
-  const pbMap = {};
-  eligible.forEach(r => {
-    const s = timeToSecs(r.time);
-    if (!pbMap[r.distance] || s < pbMap[r.distance].secs)
-      pbMap[r.distance] = { secs:s, time:r.time, name:r.name, type:r.type };
-  });
-  // Sort by distance (longest first), take top 3
-  const top3 = Object.entries(pbMap)
-    .sort((a, b) => (DIST_KM[b[0]] || 0) - (DIST_KM[a[0]] || 0))
+  // All unique distances, sorted longest first
+  const dists = [...new Set(eligible.map(r => r.distance))]
+    .sort((a, b) => (DIST_KM[b] || 0) - (DIST_KM[a] || 0));
+  if (!dists.length) { el.innerHTML = ''; return; }
+  if (!prSelectedDist || !dists.includes(prSelectedDist)) prSelectedDist = dists[0];
+  // Top 3 fastest for selected distance
+  const top3 = eligible
+    .filter(r => r.distance === prSelectedDist)
+    .sort((a, b) => timeToSecs(a.time) - timeToSecs(b.time))
     .slice(0, 3);
-  if (!top3.length) { el.innerHTML = ''; return; }
-  const icon = { run:'🏃', tri:'🏊', ultra:'🏔️' };
-  el.innerHTML = `<div class="pr-strip">${top3.map(([dist, pb]) => `
-    <div class="pr-card">
-      <div class="pr-card-icon">${icon[pb.type]||'🏃'}</div>
-      <div class="pr-card-kicker">PR</div>
-      <div class="pr-card-dist">${dist}</div>
-      <div class="pr-card-time">${pb.time}</div>
-      <div class="pr-card-name">${pb.name.replace(/\s+\d{4}$/,'')}</div>
+  const medals = ['gold','silver','bronze'];
+  const ranks  = ['FASTEST','2ND','3RD'];
+  const icon   = { run:'🏃', tri:'🏊', ultra:'🏔️' };
+  const tabsHtml = `<div class="pr-dist-tabs">${dists.map(d =>
+    `<button class="pr-dist-tab${d===prSelectedDist?' active':''}" onclick="selectPRDist(this.dataset.d)" data-d="${d.replace(/"/g,'&quot;')}">${d}</button>`
+  ).join('')}</div>`;
+  const cardsHtml = `<div class="pr-strip">${top3.map((r, i) => `
+    <div class="pr-card pr-card-${medals[i]}">
+      <div class="pr-card-icon">${icon[r.type]||'🏃'}</div>
+      <div class="pr-card-rank">${ranks[i]}</div>
+      <div class="pr-card-time">${r.time}</div>
+      <div class="pr-card-name">${r.name.replace(/\s+\d{4}$/,'')}</div>
+      <div class="pr-card-date">${fmtDate(r.date)}</div>
     </div>`).join('')}</div>`;
+  el.innerHTML = tabsHtml + cardsHtml;
 }
 function getPodiumPos(str) {
   if (!str) return null;
