@@ -4266,69 +4266,105 @@ function renderBEChart() {
     .filter(r => r.year > 1900)
     .sort((a,b) => new Date(a.date)-new Date(b.date));
   if (data.length < 2) { el.innerHTML = ''; return; }
-  const W = 400, H = 160;
-  const PAD = {l:54,r:16,t:16,b:28};
+
+  const W = 400, H = 170;
+  const PAD = {l:54,r:16,t:16,b:32};
   const cW = W-PAD.l-PAD.r, cH = H-PAD.t-PAD.b;
-  const dates = data.map(d => new Date(d.date).getTime());
-  const minT = Math.min(...dates), maxT = Math.max(...dates), tRange = maxT-minT||1;
+
+  // Date range — extend slightly beyond first/last race
+  const firstDate = new Date(data[0].date);
+  const lastDate  = new Date(data[data.length-1].date);
+  // Snap to month boundaries for clean axis
+  const axisStart = new Date(firstDate.getFullYear(), firstDate.getMonth(), 1);
+  const axisEnd   = new Date(lastDate.getFullYear(),  lastDate.getMonth()+1, 1);
+  const axisRange = axisEnd - axisStart || 1;
+
+  const xFn = dateStr => PAD.l + ((new Date(dateStr) - axisStart) / axisRange) * cW;
+  const xFnMs = ms => PAD.l + ((ms - axisStart) / axisRange) * cW;
+
   const minS = Math.min(...data.map(d=>d.secs));
   const maxS = Math.max(...data.map(d=>d.secs));
-  const sRange = maxS-minS||1;
-  const xFn = d => PAD.l + ((new Date(d.date).getTime()-minT)/tRange)*cW;
-  const yFn = s => PAD.t + cH - ((s-minS)/sRange)*cH;
-  // Linear regression for trend
-  const xs = data.map(d=>(new Date(d.date).getTime()-minT)/tRange);
+  const sRange = maxS - minS || 1;
+  const yFn = s => PAD.t + cH - ((s - minS) / sRange) * cH;
+
+  // Average time
+  const avgSecs = Math.round(data.reduce((s,d)=>s+d.secs,0)/data.length);
+
+  // Linear regression (using normalised time axis 0..1)
+  const totalMs = axisRange;
+  const xs = data.map(d=>(new Date(d.date)-axisStart)/totalMs);
   const ys = data.map(d=>(d.secs-minS)/sRange);
-  const n = xs.length;
+  const n  = xs.length;
   const avgX = xs.reduce((a,b)=>a+b,0)/n, avgY = ys.reduce((a,b)=>a+b,0)/n;
   const num = xs.reduce((s,x,i)=>s+(x-avgX)*(ys[i]-avgY),0);
   const den = xs.reduce((s,x)=>s+(x-avgX)**2,0)||1;
   const slope = num/den, intercept = avgY-slope*avgX;
-  const trendY1 = PAD.t+cH-((slope*0+intercept)*cH);
-  const trendY2 = PAD.t+cH-((slope*1+intercept)*cH);
+  const trendY1 = PAD.t+cH-((intercept)*cH);
+  const trendY2 = PAD.t+cH-((slope+intercept)*cH);
+
   // Y-axis ticks
   const yTickVals = [maxS, (minS+maxS)/2, minS];
   const yTicksHtml = yTickVals.map(s =>
     `<text x="${PAD.l-6}" y="${yFn(s)+4}" text-anchor="end" class="be-ax">${secsToHMS(s)}</text>`).join('');
   const gridHtml = yTickVals.map(s =>
     `<line x1="${PAD.l}" y1="${yFn(s)}" x2="${W-PAD.r}" y2="${yFn(s)}" stroke="rgba(245,245,245,0.05)" stroke-width="1"/>`).join('');
-  // X-axis: pick up to 5 representative years
-  const years = [...new Set(data.map(d=>d.year))].sort();
-  const step = Math.max(1, Math.ceil(years.length/5));
-  const xLabels = years.filter((_,i)=>i%step===0||i===years.length-1);
-  const xLabelsHtml = xLabels.map(y => {
-    const pt = data.find(d=>d.year===y);
-    if (!pt) return '';
-    return `<text x="${xFn(pt)}" y="${H-6}" text-anchor="middle" class="be-ax">${y}</text>`;
-  }).join('');
-  // Path
-  const linePath = data.map((d,i)=>`${i===0?'M':'L'}${xFn(d)},${yFn(d.secs)}`).join(' ');
+
+  // Monthly x-axis ticks
+  const totalMonths = (axisEnd.getFullYear()-axisStart.getFullYear())*12 + (axisEnd.getMonth()-axisStart.getMonth());
+  const labelStep = totalMonths <= 6 ? 1 : totalMonths <= 18 ? 3 : totalMonths <= 36 ? 6 : 12;
+  const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const xTicksHtml = [], xGridHtml = [];
+  let cur = new Date(axisStart);
+  while (cur <= axisEnd) {
+    const x = xFnMs(cur);
+    // Light vertical gridline for every month
+    xGridHtml.push(`<line x1="${x}" y1="${PAD.t}" x2="${x}" y2="${PAD.t+cH}" stroke="rgba(245,245,245,0.03)" stroke-width="1"/>`);
+    // Label every labelStep months
+    const monthOffset = (cur.getFullYear()-axisStart.getFullYear())*12+(cur.getMonth()-axisStart.getMonth());
+    if (monthOffset % labelStep === 0) {
+      const lbl = cur.getMonth()===0 ? `${cur.getFullYear()}` : `${MON[cur.getMonth()]}`;
+      xTicksHtml.push(`<text x="${x}" y="${H-6}" text-anchor="middle" class="be-ax">${lbl}</text>`);
+    }
+    cur = new Date(cur.getFullYear(), cur.getMonth()+1, 1);
+  }
+
+  // Data line path
+  const linePath = data.map((d,i)=>`${i===0?'M':'L'}${xFn(d.date)},${yFn(d.secs)}`).join(' ');
+
   // Points
   const pbSecs = Math.min(...data.map(d=>d.secs));
   const ptsHtml = data.map((d,i) => {
     const isPB = d.secs===pbSecs;
-    return `<circle r="${isPB?5.5:3.5}" cx="${xFn(d)}" cy="${yFn(d.secs)}"
+    return `<circle r="${isPB?5.5:3.5}" cx="${xFn(d.date)}" cy="${yFn(d.secs)}"
       fill="${isPB?'var(--green)':'rgba(245,245,245,0.5)'}"
       stroke="${isPB?'rgba(0,255,136,0.3)':'rgba(245,245,245,0.15)'}" stroke-width="${isPB?3:1}"
       data-i="${i}" onmouseenter="showBETip(event,${i})" onmouseleave="hideBETip()" style="cursor:pointer"/>`;
   }).join('');
-  // Trend colour: slope<0 = getting faster (green), else orange
+
+  // Trend line colour: slope<0 = improving
   const trendCol = slope < 0 ? 'var(--green)' : 'var(--orange)';
+
   el.innerHTML = `<div class="be-section">
     <div class="be-section-hd">Progress Over Time · ${prSelectedDist}</div>
     <div class="be-chart-wrap" id="beChartWrap">
       <div class="be-chart-tip" id="beChartTip"></div>
       <svg class="be-chart-svg" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
-        <style>.be-ax{font-family:'Barlow Condensed',sans-serif;font-size:8.5px;font-weight:700;fill:rgba(245,245,245,0.35);}</style>
-        ${gridHtml}${yTicksHtml}${xLabelsHtml}
+        <style>.be-ax{font-family:'Barlow Condensed',sans-serif;font-size:8px;font-weight:700;fill:rgba(245,245,245,0.35);}</style>
+        ${xGridHtml.join('')}${gridHtml}${yTicksHtml}${xTicksHtml.join('')}
         <path d="${linePath}" fill="none" stroke="rgba(245,245,245,0.1)" stroke-width="1.5"/>
+        <!-- Trend line visible -->
+        <line id="beTrendLine" x1="${PAD.l}" y1="${trendY1}" x2="${W-PAD.r}" y2="${trendY2}"
+          stroke="${trendCol}" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.55" pointer-events="none"/>
+        <!-- Invisible hover zone over trend line -->
         <line x1="${PAD.l}" y1="${trendY1}" x2="${W-PAD.r}" y2="${trendY2}"
-          stroke="${trendCol}" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.55"/>
+          stroke="transparent" stroke-width="14" style="cursor:crosshair"
+          onmouseenter="showBETrendTip(event,${avgSecs})" onmouseleave="hideBETip()"/>
         ${ptsHtml}
       </svg>
     </div>
   </div>`;
   window._beData = data;
+  window._beAvgSecs = avgSecs;
 }
 function showBETip(e, i) {
   const d = (window._beData||[])[i];
@@ -4343,6 +4379,16 @@ function showBETip(e, i) {
   tip.style.top  = (er.top-wr.top-44)+'px';
 }
 function hideBETip() { const t=document.getElementById('beChartTip'); if(t) t.style.display='none'; }
+function showBETrendTip(e, avgSecs) {
+  const tip = document.getElementById('beChartTip');
+  const wrap = document.getElementById('beChartWrap');
+  if (!tip||!wrap) return;
+  tip.innerHTML = `<span class="tip-time">${secsToHMS(avgSecs)}</span><span class="tip-name">Average time · ${(window._beData||[]).length} races</span>`;
+  tip.style.display = 'block';
+  const wr = wrap.getBoundingClientRect();
+  tip.style.left = (e.clientX - wr.left + 10) + 'px';
+  tip.style.top  = (e.clientY - wr.top  - 44) + 'px';
+}
 
 /* ── Calendar Heatmap ── */
 function renderCalHeatmap(elId, hideLabel) {
