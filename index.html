@@ -1717,12 +1717,12 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
   transition: all 0.32s cubic-bezier(0.4,0,0.2,1);
   animation: cardIn 0.4s ease both;
 }
-/* Per-tier colors — card bg gradient + art spotlight (bright/mid) */
-.mw-gold     { --mw-spot: rgba(255,210,60,0.10);  --spot-b: rgba(255,225,100,0.88); --spot-m: rgba(200,150,20,0.45); }
-.mw-silver   { --mw-spot: rgba(200,215,230,0.10); --spot-b: rgba(215,230,245,0.82); --spot-m: rgba(155,180,210,0.40); }
-.mw-bronze   { --mw-spot: rgba(210,140,80,0.10);  --spot-b: rgba(245,190,90,0.85); --spot-m: rgba(190,120,40,0.42); }
-.mw-finisher { --mw-spot: rgba(255,90,0,0.09);    --spot-b: rgba(255,160,80,0.80); --spot-m: rgba(200,90,20,0.38); }
-.mw-pb       { --mw-spot: rgba(255,215,0,0.14);   --spot-b: rgba(255,235,90,0.92); --spot-m: rgba(220,170,20,0.48); }
+/* Uniform white spotlight — same for all tiers */
+.mw-gold, .mw-silver, .mw-bronze, .mw-finisher, .mw-pb {
+  --mw-spot: rgba(255,255,255,0.06);
+  --spot-b:  rgba(255,255,255,0.82);
+  --spot-m:  rgba(255,255,255,0.28);
+}
 /* Hover: lift + color-matched outer glow */
 .mw-card:hover {
   transform: translateY(-8px) scale(1.015);
