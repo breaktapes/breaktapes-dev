@@ -2,8 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>BREAKTAPES</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -35,6 +37,17 @@
   /* type */
   --headline: 'Barlow Condensed', sans-serif;
   --body:     'Barlow', -apple-system, BlinkMacSystemFont, sans-serif;
+  /* error states */
+  --error:      #ff5555;
+  --error-dim:  #ff7070;
+  /* text scale */
+  --text-xs:    10px;
+  --text-sm:    12px;
+  --text-base:  14px;
+  --text-md:    16px;
+  /* spacing */
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px;
+  --sp-5: 20px; --sp-6: 24px; --sp-8: 32px;
 }
 
 /* =============================================
@@ -49,7 +62,7 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
-  cursor: default;
+  cursor: auto;
 }
 
 /* =============================================
@@ -77,6 +90,8 @@ header {
   border-bottom: 1px solid var(--border2);
   display: flex; align-items: center; justify-content: space-between;
   padding: 0 1.25rem;
+  padding-top: env(safe-area-inset-top, 0px);
+  height: calc(56px + env(safe-area-inset-top, 0px));
 }
 
 .logo {
@@ -226,7 +241,7 @@ header {
 /* =============================================
    MAIN / PAGES
    ============================================= */
-main { margin-top:56px; min-height:calc(100vh - 56px); }
+main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(100vh - 56px); }
 
 .page { display:none; }
 .page.active {
@@ -1466,10 +1481,11 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
   border:1px solid var(--border2);
   border-top:2px solid var(--orange);
   border-radius:8px 8px 0 0;
-  width:100%; max-width:500px; max-height:92vh;
+  width:100%; max-width:500px; max-height:calc(92vh - env(safe-area-inset-bottom, 0px));
   overflow:hidden; display:flex; flex-direction:column;
   transform:translateY(30px); transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);
 }
+@media (orientation: landscape) and (max-height: 500px) { .modal { max-height: 85vh; } }
 @media(min-width:600px){ .modal { border-radius:8px; } }
 .modal-overlay.open .modal { transform:translateY(0); }
 
@@ -1503,7 +1519,7 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
 }
 .m-tab.active { background:var(--surface3); color:var(--white); }
 
-.modal-body { padding:1.25rem 1.5rem; overflow-y:auto; flex:1; }
+.modal-body { padding:1.25rem 1.5rem; overflow-y:auto; flex:1; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
 
 /* AI textarea */
 .ai-ta {
@@ -1548,6 +1564,7 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
 .modal-foot {
   padding:1rem 1.5rem 1.5rem; flex-shrink:0;
   border-top:1px solid var(--border); display:flex; gap:0.75rem;
+  padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
 }
 .btn-main {
   flex:1; background:var(--orange); color:var(--black);
@@ -1570,7 +1587,7 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
 /* =============================================
    RESPONSIVE
    ============================================= */
-@media(max-width:680px){
+@media(max-width:767px){
   .stats-row  { grid-template-columns:repeat(2,1fr); }
   .ath-stats  { grid-template-columns:repeat(2,1fr); }
   .bio-grid   { grid-template-columns:repeat(2,1fr); }
@@ -1587,10 +1604,108 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
 }
 
 /* =============================================
+   ACCESSIBILITY
+   ============================================= */
+:focus-visible { outline: 2px solid var(--orange); outline-offset: 3px; border-radius: 3px; }
+:focus:not(:focus-visible) { outline: none; }
+
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+/* =============================================
+   FORM UX — Inline validation
+   ============================================= */
+.fi-wrap { position: relative; }
+.fi-reveal { position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%);
+  background: none; border: none; color: var(--muted); cursor: pointer; padding: 4px; }
+.fi-reveal:hover { color: var(--white); }
+
+.fi-error { border-color: var(--error) !important; }
+.fg-err-msg { font-size: 11px; color: var(--error-dim); display: none; margin-top: 3px; font-family: var(--headline); letter-spacing: 0.06em; }
+.fg-err-msg.show { display: block; }
+
+/* =============================================
+   CONTRAST FIXES
+   ============================================= */
+.fi::placeholder { color: rgba(245,245,245,0.40); }
+.fl { color: rgba(245,245,245,0.55); }
+.hist-sub { color: rgba(245,245,245,0.45); }
+.s-tile-label { color: rgba(245,245,245,0.45); }
+.menu-section-label { color: rgba(245,245,245,0.35); }
+
+/* =============================================
+   BOTTOM NAV
+   ============================================= */
+.bottom-nav {
+  display: none;
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 500;
+  background: rgba(8,8,8,0.96);
+  backdrop-filter: blur(16px) saturate(180%);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  border-top: 1px solid var(--border2);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (max-width: 767px) {
+  .bottom-nav { display: flex; align-items: flex-start; justify-content: space-around; }
+  main { padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px)); }
+  .hamburger { display: none; }
+}
+.bn-tab {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 3px; padding: 8px 0 4px; min-height: 48px; min-width: 44px;
+  cursor: pointer; background: none; border: none;
+  color: var(--muted); transition: color 0.15s;
+  font-family: var(--headline); font-size: 8px; font-weight: 800;
+  letter-spacing: 0.1em; text-transform: uppercase;
+}
+.bn-tab:active { transform: scale(0.92); }
+.bn-tab.active { color: var(--orange); }
+.bn-tab svg { width: 22px; height: 22px; }
+.bn-tab.active svg { stroke: var(--orange); }
+@media (max-width: 360px) { .bn-tab { font-size: 0; } }
+
+/* =============================================
+   ATHLETE PAGE — Settings link on mobile
+   ============================================= */
+.athlete-settings-link { display: none; text-align: center; margin-top: 2rem; }
+@media (max-width: 767px) { .athlete-settings-link { display: block; } }
+
+/* =============================================
+   HISTORY SEARCH
+   ============================================= */
+.hist-search-wrap { position: relative; margin-bottom: var(--sp-3, 12px); display: flex; gap: var(--sp-2, 8px); align-items: center; }
+.hist-clear-btn { background: none; border: none; color: var(--muted); font-size: 1.2rem; cursor: pointer; padding: 4px 8px; }
+.hist-match-count { font-size: var(--text-sm, 12px); color: var(--muted); margin-bottom: var(--sp-2, 8px); font-family: var(--headline); letter-spacing: 0.06em; }
+.hist-sub-mobile { display: none; font-size: 10px; color: rgba(245,245,245,0.45); margin-top: 2px; }
+@media (max-width: 767px) {
+  .hist-sub-mobile { display: block; }
+  .hist-dist, .hist-date { display: none; }
+  .hist-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+
+/* =============================================
+   BREAKPOINT CONSOLIDATION
+   ============================================= */
+@media (max-width: 767px) {
+  .stats-row  { grid-template-columns:repeat(2,1fr); }
+  .ath-stats  { grid-template-columns:repeat(2,1fr); }
+  .bio-grid   { grid-template-columns:repeat(2,1fr); }
+  .hist-row   { grid-template-columns:42px 1fr 100px 32px; }
+  .ath-hero-content { flex-direction:column; align-items:center; text-align:center; }
+  .ath-tags   { justify-content:center; }
+  .ath-name-row { justify-content:center; }
+  .bio-edit-row { justify-content:center; }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  /* Tablet: two-column layout where applicable */
+  .card { /* tablet-aware sizing */ }
+}
+
+/* =============================================
    RACE MAP PAGE  —  Flighty-style
    ============================================= */
 #page-map {
-  height: calc(100vh - 56px);
+  height: calc(100vh - 56px - env(safe-area-inset-top, 0px));
   display: none;
   position: relative;
   overflow: hidden;
@@ -1607,7 +1722,7 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
 /* Arc canvas sits above tiles, below markers */
 /* ── Floating stat pills (top-left) ── */
 .map-pill-bar {
-  position: absolute; bottom: 1rem; left: 1rem; z-index: 800;
+  position: absolute; bottom: calc(1rem + env(safe-area-inset-bottom, 0px)); left: 1rem; z-index: 800;
   display: flex; gap: 0.45rem; flex-wrap: wrap;
   pointer-events: none;
 }
@@ -2403,11 +2518,11 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
 </div>
 
 <!-- ==== HEADER ==== -->
-<header>
+<header role="banner">
   <div class="logo" onclick="go('dashboard')">BREAK<span class="slash">/</span>TAPES</div>
   <div class="header-right">
     <button class="cta-btn" onclick="openRaceModal()">+ LOG RACE</button>
-    <div class="hamburger" id="hbtn" onclick="toggleMenu()">
+    <div class="hamburger" id="hbtn" onclick="toggleMenu()" aria-label="Open navigation menu" aria-expanded="false" aria-controls="sMenu">
       <span></span><span></span><span></span>
     </div>
   </div>
@@ -2415,7 +2530,7 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
 
 <!-- ==== SLIDE MENU ==== -->
 <div class="menu-overlay" id="mOverlay" onclick="closeMenu()"></div>
-<nav class="side-menu" id="sMenu">
+<nav class="side-menu" id="sMenu" aria-label="Main navigation" aria-hidden="true">
   <div class="menu-top">
     <span class="menu-top-label">Menu</span>
   </div>
@@ -2475,6 +2590,7 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
 
 <!-- ==== MAIN ==== -->
 <main>
+<div aria-live="polite" aria-atomic="true" id="a11y-status" class="sr-only"></div>
 
 <!-- DASHBOARD -->
 <div id="page-dashboard" class="page active">
@@ -2654,7 +2770,13 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
     <div id="prStrip"></div>
     <div id="beChart"></div>
     <div id="matchedRaces"></div>
+    <div class="hist-search-wrap">
+      <input class="fi" id="histSearch" type="search" placeholder="Search races..." oninput="filterHistory()" aria-label="Search race history">
+      <button class="hist-clear-btn" id="histClearBtn" onclick="clearHistSearch()" style="display:none" aria-label="Clear search">×</button>
+    </div>
+    <div class="hist-match-count" id="histMatchCount" style="display:none"></div>
     <div class="history-list" id="histList"></div>
+    <button class="btn-ghost" id="histLoadMore" onclick="histPage++;renderHistory()" style="display:none;width:100%;margin-top:1rem;">Load more races</button>
   </div>
 </div>
 
@@ -2726,6 +2848,9 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
     <div class="ath-section">
       <div class="ath-section-h">Countries Raced</div>
       <div class="country-chips" id="cChips"></div>
+    </div>
+    <div class="athlete-settings-link">
+      <button class="btn-ghost" onclick="openSettings ? openSettings() : document.getElementById('settingsModal') && document.getElementById('settingsModal').classList.add('open')" aria-label="Open settings">⚙ Settings</button>
     </div>
   </div>
 </div>
@@ -2813,10 +2938,10 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
 
 <!-- ==== ADD RACE MODAL ==== -->
 <div class="modal-overlay" id="raceModal" onclick="bgClose(event,'raceModal')">
-  <div class="modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="raceModalTitle">
     <div class="modal-drag"></div>
     <div class="modal-head">
-      <div class="modal-h">Log A Race</div>
+      <div class="modal-h" id="raceModalTitle">Log A Race</div>
       <div class="modal-sub">Cross the line. Claim the medal.</div>
       <div class="modal-tabs-row">
         <button class="m-tab active" onclick="switchRTab('ai',this)">✨ AI Import</button>
@@ -2986,10 +3111,10 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
 
 <!-- ==== NEXT RACE MODAL ==== -->
 <div class="modal-overlay" id="nrModal" onclick="bgClose(event,'nrModal')">
-  <div class="modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="nrModalTitle">
     <div class="modal-drag"></div>
     <div class="modal-head">
-      <div class="modal-h">Set Next Race</div>
+      <div class="modal-h" id="nrModalTitle">Set Next Race</div>
       <div class="modal-sub">Your countdown starts now.</div>
     </div>
     <div class="modal-body">
@@ -3042,10 +3167,10 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
 
 <!-- ==== EDIT ATHLETE MODAL ==== -->
 <div class="modal-overlay" id="eaModal" onclick="bgClose(event,'eaModal')">
-  <div class="modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="eaModalTitle">
     <div class="modal-drag"></div>
     <div class="modal-head">
-      <div class="modal-h">Edit Profile</div>
+      <div class="modal-h" id="eaModalTitle">Edit Profile</div>
       <div class="modal-sub">Your story. Your stats.</div>
     </div>
     <div class="modal-body">
@@ -3088,10 +3213,10 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
 
 <!-- ==== STRAVA SETUP MODAL ==== -->
 <div class="modal-overlay" id="stravaModal" onclick="bgClose(event,'stravaModal')">
-  <div class="modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="stravaModalTitle">
     <div class="modal-drag"></div>
     <div class="modal-head">
-      <div class="modal-h">Connect Strava</div>
+      <div class="modal-h" id="stravaModalTitle">Connect Strava</div>
       <div class="modal-sub">Set up your Strava API credentials</div>
     </div>
     <div class="modal-body">
@@ -3114,11 +3239,11 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
 
 <!-- ==== UPCOMING RACES MODAL ==== -->
 <div class="modal-overlay" id="upcomingModal" onclick="bgClose(event,'upcomingModal')">
-  <div class="modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="upcomingModalTitle">
     <div class="modal-drag"></div>
     <div class="modal-head" style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem">
       <div>
-        <div class="modal-h">Upcoming Races</div>
+        <div class="modal-h" id="upcomingModalTitle">Upcoming Races</div>
         <div class="modal-sub">Tap a race to show it on your dashboard.</div>
       </div>
       <button class="btn-main" style="white-space:nowrap;padding:.5rem 1rem;font-size:12px;flex-shrink:0" onclick="closeM('upcomingModal');addNewUpcoming()">+ Add Race</button>
@@ -3129,7 +3254,7 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
 
 <!-- ==== RACE DETAIL MODAL ==== -->
 <div class="modal-overlay" id="raceDetailModal" onclick="bgClose(event,'raceDetailModal')">
-  <div class="modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-label="Race detail">
     <div class="modal-drag"></div>
     <div class="modal-head">
       <div class="rd-name-wrap">
@@ -3319,10 +3444,10 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
 
 <!-- ==== SETTINGS MODAL ==== -->
 <div class="modal-overlay" id="settingsModal" onclick="bgClose(event,'settingsModal')">
-  <div class="modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="settingsModalTitle">
     <div class="modal-drag"></div>
     <div class="modal-head">
-      <div class="modal-h">Settings</div>
+      <div class="modal-h" id="settingsModalTitle">Settings</div>
       <div class="modal-sub">Configure AI and integrations</div>
     </div>
     <div class="modal-body">
@@ -3337,7 +3462,15 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
       <div class="fgrid" style="grid-template-columns:1fr">
         <div class="fg">
           <label class="fl">Anthropic API Key</label>
-          <input class="fi" id="setApiKey" type="text" placeholder="sk-ant-..." autocomplete="new-password">
+          <div class="fi-wrap">
+            <input class="fi" id="setApiKey" type="password" placeholder="sk-ant-..." autocomplete="new-password">
+            <button class="fi-reveal" onclick="toggleReveal(this)" aria-label="Show/hide key">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
           <div class="ai-hint" style="margin-top:6px">Required for AI race import and screenshot parsing. Get your key at console.anthropic.com</div>
         </div>
       </div>
@@ -3350,7 +3483,15 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
           </div>
           <div class="fg" style="margin-top:0.65rem">
             <label class="fl">API Key</label>
-            <input class="fi" id="owKey" type="text" placeholder="ow_..." autocomplete="new-password">
+            <div class="fi-wrap">
+              <input class="fi" id="owKey" type="password" placeholder="ow_..." autocomplete="new-password">
+              <button class="fi-reveal" onclick="toggleReveal(this)" aria-label="Show/hide key">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+              </button>
+            </div>
           </div>
           <div class="fg" style="margin-top:0.65rem">
             <label class="fl">User ID</label>
@@ -3373,7 +3514,7 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
 
 <!-- ==== AUTH MODAL ==== -->
 <div class="modal-overlay" id="authModal" onclick="bgClose(event,'authModal')">
-  <div class="modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="authModalTitle">
     <div class="modal-drag"></div>
     <div class="modal-head">
       <div class="modal-h" id="authModalTitle">Sign In</div>
@@ -3390,12 +3531,14 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
           <input class="fi" id="authName" placeholder="e.g. Ayush Krishna">
         </div>
         <div class="fg">
-          <label class="fl">Email</label>
+          <label class="fl" for="authEmail">Email</label>
           <input class="fi" id="authEmail" type="text" placeholder="you@example.com" autocomplete="off">
+          <div class="fg-err-msg"></div>
         </div>
         <div class="fg">
-          <label class="fl">Password</label>
-          <input class="fi" id="authPassword" type="text" placeholder="At least 6 characters" autocomplete="off">
+          <label class="fl" for="authPassword">Password</label>
+          <input class="fi" id="authPassword" type="password" placeholder="At least 6 characters" autocomplete="current-password">
+          <div class="fg-err-msg"></div>
         </div>
       </div>
       <div class="auth-note" id="authHelperText">Sign in to load your protected Supabase data and keep it synced.</div>
@@ -3427,6 +3570,10 @@ let trainingFilter = 'All';
 let selectedPhotoBase64 = null;
 let curPage = 'dashboard';
 let curRTab = 'ai';
+let histSearchQuery = '';
+let histPage = 0;
+const HIST_PER_PAGE = 20;
+let _histSearchTimer;
 const _IS_PROD    = window.location.hostname === 'app.breaktapes.com';
 const _IS_STAGING = window.location.hostname === 'dev.breaktapes.com';
 const SUPABASE_URL      = _IS_PROD
@@ -3696,8 +3843,12 @@ async function submitAuth() {
   const email = document.getElementById('authEmail').value.trim();
   const password = document.getElementById('authPassword').value;
   const fullName = document.getElementById('authName').value.trim();
-  if (!email || !password) {
-    alert('Please enter both email and password.');
+  if (!email) {
+    showFieldError('authEmail', 'Drop an email to get started.');
+    return;
+  }
+  if (!password) {
+    showFieldError('authPassword', 'Need a password to race in.');
     return;
   }
   const btn = document.getElementById('authSubmitBtn');
@@ -3747,6 +3898,9 @@ async function signOutUser() {
    NAVIGATION
    ============================ */
 function go(page) {
+  document.querySelectorAll('.bn-tab').forEach(b => b.classList.remove('active'));
+  const _bn = document.getElementById('bn-' + page);
+  if (_bn) _bn.classList.add('active');
   curPage = page;
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
@@ -4169,6 +4323,17 @@ function renderDash(){
   const sorted = [...races].sort((a,b)=>new Date(b.date)-new Date(a.date)).filter(r=>new Date(r.date+'T00:00:00')>=cutoff).slice(0,3);
   const pbMap = buildPBMap();
   const triPBMap = buildTriPBMap();
+  if (!races.length) {
+    document.getElementById('recentFeed').innerHTML = `<div class="card" style="text-align:center;padding:2rem;margin-bottom:1rem;">
+  <p style="font-family:var(--headline);font-size:1.4rem;font-weight:700;letter-spacing:0.06em;">YOUR STORY STARTS HERE</p>
+  <button class="btn-ghost" onclick="openRaceModal()" style="color:var(--orange);margin-top:0.5rem;">Log a race →</button>
+</div>`;
+    renderGoals();
+    renderDashInsights();
+    renderOWFatigueChart();
+    document.getElementById('dashPBs').innerHTML = renderPBSections(calcPBs(), 'dash-pb-card');
+    return;
+  }
   document.getElementById('recentFeed').innerHTML = sorted.length ? sorted.map(r=>{
     const d=new Date(r.date+'T00:00:00');
     const mon=d.toLocaleString('en',{month:'short'}).toUpperCase();
@@ -4444,7 +4609,10 @@ function renderAchievements(pbIds) {
 async function renderMedals() {
   const g = document.getElementById('medalGrid');
   if (!races.length) {
-    g.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="empty-ico">🏅</div><div class="empty-h">No medals yet</div><div class="empty-p">Add your first race to build your wall.</div><button class="btn-main" style="display:inline-block;width:auto;padding:.6rem 1.5rem" onclick="openRaceModal()">+ Log Race</button></div>`;
+    g.innerHTML = `<div style="text-align:center;padding:3rem 1rem;grid-column:1/-1;">
+  <p style="font-family:var(--headline);font-size:1.4rem;font-weight:700;color:var(--muted);margin-bottom:1rem;">No medals yet. Every race earns one.</p>
+  <button class="cta-btn" onclick="openRaceModal()">+ Log a race</button>
+</div>`;
     return;
   }
   // Load community photos for these races (uses localStorage cache, re-fetches after TTL)
@@ -4485,7 +4653,7 @@ async function renderMedals() {
     let artInner;
     if (photo) {
       const changeLabel = hasPersonalPhoto ? '📷 Change' : '📷 Add yours';
-      artInner = `<img class="mw-photo" src="${photo}" alt="medal photo">
+      artInner = `<img loading="lazy" class="mw-photo" src="${photo}" alt="medal photo">
         <button class="mw-change-btn" onclick="event.stopPropagation();document.getElementById('mw-file-${r.id}').click()">${changeLabel}</button>`;
     } else if (cached || example || badge) {
       artInner = (cached || example || badge) +
@@ -5187,6 +5355,27 @@ function podiumClass(pos) {
 function podiumMedal(pos) {
   return pos===1?'🥇':pos===2?'🥈':pos===3?'🥉':'';
 }
+function filterHistory() {
+  clearTimeout(_histSearchTimer);
+  _histSearchTimer = setTimeout(() => {
+    histSearchQuery = (document.getElementById('histSearch')?.value || '').toLowerCase();
+    histPage = 0;
+    const clearBtn = document.getElementById('histClearBtn');
+    if (clearBtn) clearBtn.style.display = histSearchQuery ? 'block' : 'none';
+    renderHistory();
+  }, 150);
+}
+function clearHistSearch() {
+  clearTimeout(_histSearchTimer);
+  histSearchQuery = '';
+  const s = document.getElementById('histSearch');
+  if (s) s.value = '';
+  const clearBtn = document.getElementById('histClearBtn');
+  if (clearBtn) clearBtn.style.display = 'none';
+  histPage = 0;
+  renderHistory();
+}
+
 function renderHistory(){
   document.getElementById('hs-r').textContent = races.length;
   document.getElementById('hs-c').textContent = new Set(races.map(r=>r.country)).size;
@@ -5196,19 +5385,70 @@ function renderHistory(){
   renderBEChart();
   renderMatchedRaces();
   const list = document.getElementById('histList');
+  const matchCountEl = document.getElementById('histMatchCount');
+  const loadMoreBtn = document.getElementById('histLoadMore');
   if(!races.length){
-    list.innerHTML=`<div class="empty"><div class="empty-ico">📋</div><div class="empty-h">No races logged</div><div class="empty-p">Add your first race.</div></div>`;
+    list.innerHTML=`<div class="hist-empty" style="text-align:center;padding:3rem 1rem;">
+  <p style="font-family:var(--headline);font-size:1.6rem;font-weight:700;color:var(--muted);line-height:1.2;margin-bottom:1rem;">No races yet.<br>Every finish line starts with one.</p>
+  <button class="cta-btn" onclick="openRaceModal()">+ Log your first race</button>
+</div>`;
+    if (matchCountEl) matchCountEl.style.display = 'none';
+    if (loadMoreBtn) loadMoreBtn.style.display = 'none';
     return;
   }
-  const ico={run:'🏃',tri:'🏊‍♂️',cycle:'🚴',ultra:'🏔️'};
   const pb = buildPBMap();
   const triPB = buildTriPBMap();
   const sorted = [...races].sort((a,b)=>new Date(b.date)-new Date(a.date));
+
+  // Apply search filter
+  let filtered = sorted;
+  if (histSearchQuery) {
+    filtered = sorted.filter(r => {
+      const q = histSearchQuery;
+      return (r.name||'').toLowerCase().includes(q)
+        || (r.city||'').toLowerCase().includes(q)
+        || (r.country||'').toLowerCase().includes(q)
+        || (r.distance||'').toLowerCase().includes(q);
+    });
+  }
+
+  // Update match count
+  if (matchCountEl) {
+    if (histSearchQuery && filtered.length > 0) {
+      matchCountEl.textContent = `${filtered.length} race${filtered.length !== 1 ? 's' : ''} match`;
+      matchCountEl.style.display = 'block';
+    } else {
+      matchCountEl.style.display = 'none';
+    }
+  }
+
+  // No search matches
+  if (histSearchQuery && !filtered.length) {
+    list.innerHTML = `<div class="hist-empty" style="text-align:center;padding:2rem 1rem;">
+  <p style="color:var(--muted);">No races match — try a different search.</p>
+</div>`;
+    if (loadMoreBtn) loadMoreBtn.style.display = 'none';
+    return;
+  }
+
+  // Pagination (only when not searching)
+  let displayRaces, showLoadMore;
+  if (histSearchQuery) {
+    displayRaces = filtered;
+    showLoadMore = false;
+  } else {
+    const pageEnd = (histPage + 1) * HIST_PER_PAGE;
+    displayRaces = filtered.slice(0, pageEnd);
+    showLoadMore = filtered.length > pageEnd;
+  }
+
+  if (loadMoreBtn) loadMoreBtn.style.display = showLoadMore ? 'block' : 'none';
+
   let lastYear = null;
   const rows = [];
-  sorted.forEach((r,i) => {
+  displayRaces.forEach((r,i) => {
     const yr = (r.date||'').slice(0,4);
-    if (yr && yr !== lastYear) {
+    if (!histSearchQuery && yr && yr !== lastYear) {
       rows.push(`<div class="hist-year-head">${yr}</div>`);
       lastYear = yr;
     }
@@ -5239,6 +5479,7 @@ function renderHistory(){
         <div>
           <div class="hist-name">${r.name.replace(/\s+\d{4}$/,'')}${r.priority==='A'?` <span class="pri-badge pri-a">A</span>`:''}${podiumHtml}</div>
           <div class="hist-sub">${r.city}, ${r.country}${r.placing?' · '+r.placing:''}</div>
+          <div class="hist-sub-mobile">${r.distance} · ${fmtDate(r.date)}</div>
           ${segPBsHtml}
         </div>
         <div class="hist-dist">${r.distance}</div>
@@ -5713,12 +5954,30 @@ function openEditAth(){
 function openM(id){ document.getElementById(id).classList.add('open'); }
 function closeM(id){
   document.getElementById(id).classList.remove('open');
-  if (id === 'authModal') {
-    document.getElementById('authEmail').type = 'text';
-    document.getElementById('authPassword').type = 'text';
-  }
+}
+function toggleReveal(btn) {
+  const wrap = btn.closest('.fi-wrap');
+  const inp = wrap ? wrap.querySelector('input') : null;
+  if (!inp) return;
+  const isHidden = inp.type === 'password';
+  inp.type = isHidden ? 'text' : 'password';
+  const svg = btn.querySelector('svg');
+  if (svg) svg.innerHTML = isHidden
+    ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'
+    : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
 }
 function bgClose(e,id){ if(e.target===e.currentTarget)closeM(id); }
+function showFieldError(fieldId, msg) {
+  const field = document.getElementById(fieldId);
+  if (!field) return;
+  field.classList.add('fi-error');
+  const err = field.closest('.fg') ? field.closest('.fg').querySelector('.fg-err-msg') : null;
+  if (err) { err.textContent = msg; err.classList.add('show'); }
+  field.addEventListener('input', () => {
+    field.classList.remove('fi-error');
+    if (err) err.classList.remove('show');
+  }, { once: true });
+}
 
 function onNrTypeChange() {
   const type = document.getElementById('nrType').value;
@@ -6075,7 +6334,21 @@ async function renderMap() {
     mapMarkers = []; cityRaceMap = {}; countryLayers = {}; countryRaceMap = {};
   }
 
-  if (!races.length) { loadEl.classList.add('hidden'); return; }
+  if (!races.length) {
+    loadEl.classList.add('hidden');
+    const mapEl = document.getElementById('raceMap');
+    if (mapEl) {
+      const existing = mapEl.querySelector('.map-empty-state');
+      if (!existing) {
+        const emptyDiv = document.createElement('div');
+        emptyDiv.className = 'map-empty-state';
+        emptyDiv.style.cssText = 'text-align:center;padding:3rem 1rem;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;';
+        emptyDiv.innerHTML = '<p style="font-family:var(--headline);font-size:1.4rem;font-weight:700;color:var(--muted);margin-bottom:0.5rem;">No routes yet.</p><p style="color:var(--muted);font-size:0.9rem;">Log a race with a city to see your world map.</p>';
+        mapEl.appendChild(emptyDiv);
+      }
+    }
+    return;
+  }
 
   // ── Geocode ────────────────────────────────────────
   const uniqueLocs = [...new Map(
@@ -7428,6 +7701,47 @@ async function initApp() {
 }
 
 /* ============================
+   MODAL SWIPE TO DISMISS
+   ============================ */
+function initModalSwipe(modalEl, closeCallback) {
+  let startY = 0, dragging = false;
+  modalEl.addEventListener('touchstart', e => {
+    if (!e.target.closest('.modal-drag, .modal-head')) return;
+    startY = e.touches[0].clientY; dragging = true;
+    modalEl.style.transition = 'none';
+  }, { passive: true });
+  modalEl.addEventListener('touchmove', e => {
+    if (!dragging) return;
+    const d = Math.max(0, e.touches[0].clientY - startY);
+    modalEl.style.transform = `translateY(${d}px)`;
+  }, { passive: true });
+  modalEl.addEventListener('touchend', e => {
+    if (!dragging) return; dragging = false;
+    modalEl.style.transition = '';
+    if (e.changedTouches[0].clientY - startY > 80) closeCallback();
+    else modalEl.style.transform = '';
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    const modal = overlay.querySelector('.modal');
+    if (modal) initModalSwipe(modal, () => closeM(overlay.id));
+  });
+  document.querySelectorAll('.tp-in').forEach(inp => {
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        const dir = e.key === 'ArrowUp' ? 1 : -1;
+        if (typeof stepTime === 'function') {
+          try { stepTime(inp.id, dir); } catch(err) {}
+        }
+      }
+    });
+  });
+});
+
+/* ============================
    INIT
    ============================ */
 initApp();
@@ -7435,7 +7749,7 @@ initApp();
 
 <!-- GOALS MODAL -->
 <div class="modal-overlay" id="goalModal" onclick="bgClose(event,'goalModal')">
-  <div class="modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="goalModalTitle">
     <div class="modal-drag"></div>
     <div class="modal-head">
       <div class="modal-h" id="goalModalTitle">Set Goal</div>
@@ -7471,5 +7785,27 @@ initApp();
     </div>
   </div>
 </div>
+<nav class="bottom-nav" aria-label="Main navigation">
+  <button class="bn-tab active" id="bn-dashboard" onclick="go('dashboard')" aria-label="Dashboard">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+    Home
+  </button>
+  <button class="bn-tab" id="bn-history" onclick="go('history')" aria-label="Race History">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+    History
+  </button>
+  <button class="bn-tab" id="bn-medals" onclick="go('medals')" aria-label="Medal Wall">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+    Medals
+  </button>
+  <button class="bn-tab" id="bn-map" onclick="go('map')" aria-label="Race Map">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+    Map
+  </button>
+  <button class="bn-tab" id="bn-athlete" onclick="go('athlete')" aria-label="Athlete Profile">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    Me
+  </button>
+</nav>
 </body>
 </html>

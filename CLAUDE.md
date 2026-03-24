@@ -181,6 +181,16 @@ Pages: `dashboard`, `pace`, `medals`, `history`, `athlete`, `map`, `training`
 
 ---
 
+## Frontend Design System
+
+All frontend work MUST conform to `DESIGN.md` in the repo root.
+
+**Rule:** Read `DESIGN.md` before making any frontend change. Do not deviate from it without explicit user approval.
+
+`DESIGN.md` covers: color tokens, typography scale, spacing grid, breakpoints, navigation patterns, icon style, modal patterns, form validation, empty states, accessibility requirements, iOS safe area, and brand copy voice.
+
+---
+
 ## Key Functions Reference
 
 | Function | Purpose |
