@@ -525,6 +525,123 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
   .ow-widget { grid-template-columns:repeat(2,1fr); }
 }
 
+/* ── OW: Race Day Readiness sparkline ── */
+.ow-readiness {
+  margin-top:0.75rem; padding-top:0.75rem;
+  border-top:1px solid rgba(255,255,255,0.07);
+}
+.ow-readiness-row {
+  display:flex; align-items:center; gap:0.75rem;
+}
+.ow-readiness-label {
+  font-family:var(--headline); font-size:9px; font-weight:800;
+  letter-spacing:0.12em; text-transform:uppercase; color:var(--muted);
+  white-space:nowrap; flex-shrink:0;
+}
+.ow-readiness-spark { flex:1; min-width:60px; }
+.ow-readiness-spark svg { display:block; width:100%; }
+.ow-readiness-score {
+  font-family:var(--headline); font-size:1rem; font-weight:900;
+  letter-spacing:-0.01em; flex-shrink:0;
+}
+
+/* ── OW: Training Load (race detail) ── */
+.ow-load-row {
+  background:rgba(255,255,255,0.03); border-radius:6px;
+  padding:0.75rem 0.9rem;
+}
+.ow-load-title {
+  font-family:var(--headline); font-size:9px; font-weight:800;
+  letter-spacing:0.14em; text-transform:uppercase; color:var(--muted);
+  margin-bottom:0.5rem;
+}
+.ow-load-stats {
+  display:flex; align-items:baseline; gap:0.4rem; margin-bottom:0.5rem;
+}
+.ow-load-val {
+  font-family:var(--headline); font-size:1.25rem; font-weight:900;
+  color:var(--green);
+}
+.ow-load-key {
+  font-family:var(--headline); font-size:9px; font-weight:700;
+  text-transform:uppercase; color:var(--muted); letter-spacing:0.1em;
+}
+.ow-load-sep { color:var(--muted); font-size:12px; }
+.ow-load-pills { display:flex; gap:0.35rem; flex-wrap:wrap; }
+.ow-load-pill {
+  font-family:var(--headline); font-size:9px; font-weight:700;
+  letter-spacing:0.08em; text-transform:uppercase;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:3px; padding:2px 6px; color:var(--muted);
+}
+
+/* ── OW: Sleep the night before ── */
+.ow-sleep-row {
+  display:flex; align-items:center; gap:0.6rem;
+  background:rgba(255,255,255,0.03); border-radius:6px;
+  padding:0.65rem 0.9rem;
+}
+.ow-sleep-icon { font-size:1.2rem; flex-shrink:0; }
+.ow-sleep-text { font-size:13px; color:var(--muted); }
+.ow-sleep-hrs {
+  font-family:var(--headline); font-weight:900; font-size:14px;
+  color:var(--fg);
+}
+.ow-sleep-score {
+  font-family:var(--headline); font-weight:900; font-size:14px;
+}
+.ow-sleep-scorelab { font-size:11px; color:var(--muted); }
+.ow-sleep-label { color:var(--muted); font-size:12px; }
+.ow-sleep-src { font-size:10px; color:var(--muted); opacity:0.5; }
+
+/* ── OW: VO2 Max chart (athlete page) ── */
+.ow-vo2-header {
+  display:flex; align-items:baseline; gap:0.4rem; flex-wrap:wrap;
+}
+.ow-vo2-val {
+  font-family:var(--headline); font-size:2rem; font-weight:900;
+  color:var(--green);
+}
+.ow-vo2-unit { font-size:11px; color:var(--muted); }
+.ow-vo2-delta {
+  font-family:var(--headline); font-size:11px; font-weight:800;
+  letter-spacing:0.08em;
+}
+.ow-vo2-dates {
+  display:flex; justify-content:space-between;
+  font-size:10px; color:var(--muted); margin-top:4px;
+  font-family:var(--headline); letter-spacing:0.06em;
+}
+
+/* ── OW: Fatigue vs Performance scatter ── */
+.ow-fatigue-card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:8px; padding:1.1rem 1.25rem; margin-bottom:1rem;
+}
+.ow-fatigue-title {
+  font-family:var(--headline); font-size:11px; font-weight:800;
+  letter-spacing:0.12em; text-transform:uppercase; color:var(--fg);
+  margin-bottom:2px;
+}
+.ow-fatigue-sub {
+  font-size:11px; color:var(--muted); margin-bottom:0.75rem;
+}
+.ow-fatigue-empty {
+  font-size:12px; color:var(--muted); text-align:center;
+  padding:1rem 0; line-height:1.5;
+}
+.ow-fatigue-count {
+  font-size:10px; color:var(--muted); text-align:right;
+  margin-top:4px; font-family:var(--headline); letter-spacing:0.06em;
+}
+
+/* ── OW: Training feed ── */
+.ow-training-header {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-top:1.75rem; margin-bottom:0.5rem;
+}
+.ow-workout-row { border-left:2px solid #818cf8; }
+
 /* ── PR Strip ── */
 .pr-group { margin-bottom:0.85rem; }
 .pr-group-label {
@@ -2381,6 +2498,8 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
     </div>
     <!-- Open Wearables Recovery -->
     <div id="owWidget"></div>
+    <!-- OW Fatigue vs Performance (shown when OW connected + enough data) -->
+    <div id="owFatigueSection"></div>
     <!-- Goals -->
     <div id="goalsSection"></div>
     <!-- Year in Review + H2H -->
@@ -2598,6 +2717,11 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
       <div class="ath-section-h">Race Activity</div>
       <div id="athCalHeatmap"></div>
     </div>
+    <!-- OW VO2 Max Trend -->
+    <div class="ath-section" id="athVO2Section" style="display:none">
+      <div class="ath-section-h">VO2 Max Trend</div>
+      <div id="athVO2Chart"></div>
+    </div>
     <!-- Countries -->
     <div class="ath-section">
       <div class="ath-section-h">Countries Raced</div>
@@ -2675,6 +2799,13 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
       </div>
     </div>
     <div id="trainingFeed"></div>
+    <!-- OW Workouts section -->
+    <div id="owTrainingSection" style="margin-top:1.75rem">
+      <div class="training-bar ow-training-header">
+        <div class="section-h">Open Wearables</div>
+      </div>
+      <div id="owTrainingFeed"></div>
+    </div>
   </div>
 </div>
 
@@ -3171,6 +3302,12 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
       <div class="rd-section">
         <div class="rd-label">Race Notes</div>
         <textarea class="ai-ta" id="rdNotes" placeholder="How did it go? Conditions, strategy, reflections…" style="min-height:80px"></textarea>
+      </div>
+      <!-- OW Health Context: sleep + training load (async, hidden until loaded) -->
+      <div id="rdOwHealth" style="display:none">
+        <div class="rd-label" style="margin-bottom:0.5rem">Health Context</div>
+        <div id="rdOwSleep" style="margin-bottom:0.5rem"></div>
+        <div id="rdOwTrainingLoad"></div>
       </div>
     </div>
     <div class="modal-foot">
@@ -3904,10 +4041,12 @@ function renderCountdown(){
       <div class="cd-colon">:</div>
       <div class="cd-unit"><span class="cd-num" id="cd-s">${pad(ss)}</span><div class="cd-label">Secs</div></div>
     </div>
-    <button class="cd-upcoming-link" onclick="openUpcoming()">All Upcoming Races →</button>`;
+    <button class="cd-upcoming-link" onclick="openUpcoming()">All Upcoming Races →</button>
+    <div class="ow-readiness" id="owReadinessSparkline"></div>`;
   clearInterval(cdTimer);
   cdTimer = setInterval(tickCD, 1000);
   fetchCourseInfo(nextRace);
+  renderOWReadiness();
 }
 function tickCD(){
   if(!nextRace) return;
@@ -4045,6 +4184,7 @@ function renderDash(){
 
   renderGoals();
   renderDashInsights();
+  renderOWFatigueChart();
   // Personal Bests on dashboard
   document.getElementById('dashPBs').innerHTML = renderPBSections(calcPBs(), 'dash-pb-card');
 }
@@ -5334,7 +5474,18 @@ function openRaceDetail(id) {
   }
   const tbody = document.getElementById('rdSplits');
   tbody.innerHTML = (r.splits || []).map(_splitRowHtml).join('');
+  // Reset OW health context panel
+  const rdOwHealth = document.getElementById('rdOwHealth');
+  if (rdOwHealth) rdOwHealth.style.display = 'none';
+  const rdOwSleep = document.getElementById('rdOwSleep');
+  if (rdOwSleep) rdOwSleep.innerHTML = '';
+  const rdOwTL = document.getElementById('rdOwTrainingLoad');
+  if (rdOwTL) rdOwTL.innerHTML = '';
   openM('raceDetailModal');
+  if (r.date && getOWConfig()) {
+    renderOWSleepBeforeRace(r.date);
+    renderOWTrainingLoad(r.date);
+  }
 }
 function saveRaceDetail() {
   const r = races.find(r => r.id === _rdId);
@@ -5416,6 +5567,8 @@ function renderAthlete(){
   document.getElementById('cChips').innerHTML=countries.length?countries.map(c=>`<span class="country-chip">${c}</span>`).join(''):`<span style="color:var(--muted);font-size:12px">No races yet.</span>`;
   // Race activity heatmap
   renderCalHeatmap('athCalHeatmap', true);
+  // OW VO2 Max trend
+  renderOWVO2Chart();
   // Avatar
   const savi=localStorage.getItem('fl2_avi');
   if(savi){
@@ -6394,6 +6547,310 @@ async function renderOWWidget() {
 }
 
 /* ============================
+   OW FEATURE 1 — RACE DAY READINESS
+   7-day recovery sparkline in the countdown card
+   ============================ */
+async function renderOWReadiness() {
+  const cfg = getOWConfig();
+  if (!cfg || !nextRace || !nextRace.date) return;
+  const el = document.getElementById('owReadinessSparkline');
+  if (!el) return;
+  const end   = new Date().toISOString().slice(0, 10);
+  const start = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const data  = await owFetch(`/api/v1/users/${cfg.uid}/summaries/recovery`,
+    { start_date: start, end_date: end, limit: 7, sort_order: 'asc' });
+  const records = data?.data || [];
+  const scores = records.map(r => r.recovery_score ?? r.score ?? null).filter(s => s != null);
+  if (scores.length < 2) return;
+
+  const maxS = Math.max(...scores), minS = Math.min(...scores), range = maxS - minS || 1;
+  const W = 100, H = 24;
+  const pts = scores.map((s, i) => {
+    const x = Math.round((i / (scores.length - 1)) * W);
+    const y = Math.round(H - ((s - minS) / range) * (H - 4) - 2);
+    return `${x},${y}`;
+  }).join(' ');
+  const latest = scores[scores.length - 1];
+  const prev   = scores[scores.length - 2];
+  const trend  = latest > prev ? '↑' : latest < prev ? '↓' : '→';
+  const color  = latest >= 66 ? '#4ade80' : latest >= 33 ? '#facc15' : '#f87171';
+
+  el.innerHTML = `<div class="ow-readiness-row">
+    <div class="ow-readiness-label">7-Day Recovery</div>
+    <div class="ow-readiness-spark">
+      <svg height="${H}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+        <polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.8"
+          stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="ow-readiness-score" style="color:${color}">${Math.round(latest)} ${trend}</div>
+  </div>`;
+}
+
+/* ============================
+   OW FEATURE 2 — TRAINING LOAD (week before race)
+   ============================ */
+async function renderOWTrainingLoad(raceDate) {
+  const el = document.getElementById('rdOwTrainingLoad');
+  if (!el) return;
+  const cfg = getOWConfig();
+  if (!cfg) return;
+  const dayBefore7 = new Date(new Date(raceDate + 'T00:00:00') - 7 * 24 * 60 * 60 * 1000)
+    .toISOString().slice(0, 10);
+  const data = await owFetch(`/api/v1/users/${cfg.uid}/events/workouts`,
+    { start_date: dayBefore7, end_date: raceDate, limit: 50 });
+  const workouts = data?.data || data?.workouts || data?.results || [];
+  if (!workouts.length) return;
+
+  const totalKm  = workouts.reduce((s, w) => s + ((w.distance_meters || w.distance || 0) / 1000), 0);
+  const totalMin = workouts.reduce((s, w) => s + ((w.duration_seconds || w.moving_time || 0) / 60), 0);
+  const SPORT_ICON = { run:'🏃', ride:'🚴', bike:'🚴', swim:'🏊', walk:'🚶',
+                       cycling:'🚴', running:'🏃', swimming:'🏊' };
+  const pillsHtml = workouts.slice(0, 8).map(w => {
+    const t = (w.activity_type || w.sport || w.type || '').toLowerCase();
+    const icon = SPORT_ICON[t] || '⚡';
+    const km = w.distance_meters ? (w.distance_meters / 1000).toFixed(1)
+             : w.distance        ? (w.distance / 1000).toFixed(1) : null;
+    return `<span class="ow-load-pill">${icon}${km ? ' '+km+'km' : ''}</span>`;
+  }).join('');
+
+  el.innerHTML = `<div class="ow-load-row">
+    <div class="ow-load-title">Training Load — 7 days before</div>
+    <div class="ow-load-stats">
+      <div class="ow-load-stat"><span class="ow-load-val">${workouts.length}</span><span class="ow-load-key"> workouts</span></div>
+      ${totalKm > 0 ? `<span class="ow-load-sep">·</span><div class="ow-load-stat"><span class="ow-load-val">${totalKm.toFixed(0)}</span><span class="ow-load-key"> km</span></div>` : ''}
+      ${totalMin > 0 ? `<span class="ow-load-sep">·</span><div class="ow-load-stat"><span class="ow-load-val">${Math.round(totalMin)}</span><span class="ow-load-key"> min</span></div>` : ''}
+    </div>
+    ${pillsHtml ? `<div class="ow-load-pills">${pillsHtml}</div>` : ''}
+  </div>`;
+  // Show parent health section
+  const parent = document.getElementById('rdOwHealth');
+  if (parent) parent.style.display = '';
+}
+
+/* ============================
+   OW FEATURE 3 — VO2 MAX TREND (athlete page)
+   ============================ */
+async function renderOWVO2Chart() {
+  const section = document.getElementById('athVO2Section');
+  const chart   = document.getElementById('athVO2Chart');
+  if (!section || !chart) return;
+  const cfg = getOWConfig();
+  if (!cfg) return;
+
+  section.style.display = '';
+  chart.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:0.5rem 0">Loading…</div>';
+
+  const end   = new Date().toISOString().slice(0, 10);
+  const start = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const data  = await owFetch(`/api/v1/users/${cfg.uid}/summaries/body`,
+    { start_date: start, end_date: end, limit: 90, sort_order: 'asc' });
+  const pts = (data?.data || [])
+    .map(r => ({ d: r.date || (r.recorded_at || '').slice(0, 10), v: r.vo2_max ?? r.vo2max ?? null }))
+    .filter(p => p.v != null && p.d);
+
+  if (!pts.length) {
+    chart.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:0.5rem 0">No VO2 Max data available yet.</div>';
+    return;
+  }
+
+  const vals = pts.map(p => p.v);
+  const maxV = Math.max(...vals), minV = Math.min(...vals), range = maxV - minV || 1;
+  const W = 300, H = 70;
+  const svgPts = pts.map((p, i) => {
+    const x = Math.round((i / (pts.length - 1)) * W);
+    const y = Math.round(H - ((p.v - minV) / range) * (H - 8) - 4);
+    return { x, y, ...p };
+  });
+  const polyPts = svgPts.map(p => `${p.x},${p.y}`).join(' ');
+  const latest  = vals[vals.length - 1];
+  const delta   = latest - vals[0];
+  const dStr    = (delta >= 0 ? '+' : '') + delta.toFixed(1);
+  const dColor  = delta >= 0 ? '#4ade80' : '#f87171';
+
+  chart.innerHTML = `
+    <div class="ow-vo2-header">
+      <span class="ow-vo2-val">${latest.toFixed(1)}</span>
+      <span class="ow-vo2-unit">mL/kg/min</span>
+      <span class="ow-vo2-delta" style="color:${dColor}">${dStr} past year</span>
+    </div>
+    <svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"
+      style="display:block;margin-top:8px;overflow:visible">
+      <polyline points="${polyPts}" fill="none" stroke="var(--green)" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round"/>
+      ${svgPts.map(p =>
+        `<circle cx="${p.x}" cy="${p.y}" r="3" fill="var(--green)">
+          <title>${p.d}: ${p.v.toFixed(1)} mL/kg/min</title>
+         </circle>`).join('')}
+    </svg>
+    <div class="ow-vo2-dates">
+      <span>${pts[0].d}</span><span>${pts[pts.length-1].d}</span>
+    </div>`;
+}
+
+/* ============================
+   OW FEATURE 4 — SLEEP THE NIGHT BEFORE
+   ============================ */
+async function renderOWSleepBeforeRace(raceDate) {
+  const el = document.getElementById('rdOwSleep');
+  if (!el) return;
+  const cfg = getOWConfig();
+  if (!cfg) return;
+
+  const dayBefore = new Date(new Date(raceDate + 'T00:00:00') - 24 * 60 * 60 * 1000)
+    .toISOString().slice(0, 10);
+  const data = await owFetch(`/api/v1/users/${cfg.uid}/summaries/sleep`,
+    { start_date: dayBefore, end_date: raceDate, limit: 1, sort_order: 'desc' });
+  const slp = data?.data?.[0] || null;
+  if (!slp) return;
+
+  const hrs   = slp.total_sleep_duration_seconds
+    ? (slp.total_sleep_duration_seconds / 3600).toFixed(1)
+    : (slp.total_sleep_hours ?? null);
+  const score = slp.sleep_score ?? slp.score ?? null;
+  const src   = slp.source || '';
+  if (!hrs && score == null) return;
+
+  const scoreHtml = score != null
+    ? `<span class="ow-sleep-score ${owScoreColor(score)}">${Math.round(score)}</span><span class="ow-sleep-scorelab"> score</span>`
+    : '';
+
+  el.innerHTML = `<div class="ow-sleep-row">
+    <div class="ow-sleep-icon">🌙</div>
+    <div class="ow-sleep-text">
+      ${hrs ? `<span class="ow-sleep-hrs">${hrs}h</span>` : ''}
+      ${hrs && score != null ? ' · ' : ''}
+      ${scoreHtml}
+      <span class="ow-sleep-label"> sleep the night before</span>
+      ${src ? `<span class="ow-sleep-src"> · ${src}</span>` : ''}
+    </div>
+  </div>`;
+  // Show parent health section
+  const parent = document.getElementById('rdOwHealth');
+  if (parent) parent.style.display = '';
+}
+
+/* ============================
+   OW FEATURE 5 — FATIGUE VS PERFORMANCE SCATTER
+   ============================ */
+async function renderOWFatigueChart() {
+  const el = document.getElementById('owFatigueSection');
+  if (!el) return;
+  const cfg = getOWConfig();
+  if (!cfg) { el.innerHTML = ''; return; }
+
+  const racesWithTime = races.filter(r =>
+    r.time && r.date && timeToSecs(r.time) < Infinity && r.priority !== 'C'
+  );
+  if (racesWithTime.length < 3) { el.innerHTML = ''; return; }
+
+  const allDates = racesWithTime.map(r => r.date).sort();
+  const recData  = await owFetch(`/api/v1/users/${cfg.uid}/summaries/recovery`,
+    { start_date: allDates[0], end_date: allDates[allDates.length - 1], limit: 500, sort_order: 'asc' });
+  const recByDate = {};
+  (recData?.data || []).forEach(r => {
+    const d = r.date || (r.recorded_at || '').slice(0, 10);
+    if (d) recByDate[d] = r.recovery_score ?? r.score ?? null;
+  });
+
+  const pts = racesWithTime
+    .map(r => ({ race: r, rec: recByDate[r.date] ?? null, secs: timeToSecs(r.time) }))
+    .filter(p => p.rec != null);
+
+  if (pts.length < 3) {
+    el.innerHTML = `<div class="ow-fatigue-card">
+      <div class="ow-fatigue-title">Fatigue vs Performance</div>
+      <div class="ow-fatigue-empty">Not enough matched data yet. Once you race with OW connected, recovery scores will be correlated with your race times.</div>
+    </div>`;
+    return;
+  }
+
+  const recVals  = pts.map(p => p.rec),  secVals = pts.map(p => p.secs);
+  const minRec   = Math.min(...recVals),  maxRec  = Math.max(...recVals),  recRange  = maxRec - minRec || 1;
+  const minSec   = Math.min(...secVals),  maxSec  = Math.max(...secVals),  secRange  = maxSec - minSec || 1;
+  const W = 280, H = 110, PX = 22, PY = 12;
+
+  const circles = pts.map(p => {
+    const cx = Math.round(PX + ((p.rec - minRec) / recRange) * (W - PX * 2));
+    const cy = Math.round(H - PY - ((maxSec - p.secs) / secRange) * (H - PY * 2));
+    const color = owScoreColor(p.rec) === 'ow-val-good' ? '#4ade80'
+                : owScoreColor(p.rec) === 'ow-val-ok'   ? '#facc15' : '#f87171';
+    return `<circle cx="${cx}" cy="${cy}" r="5" fill="${color}" fill-opacity="0.75"
+      stroke="${color}" stroke-width="1">
+      <title>${p.race.name} · Rec ${Math.round(p.rec)} · ${p.race.time}</title>
+    </circle>`;
+  }).join('');
+
+  el.innerHTML = `<div class="ow-fatigue-card">
+    <div class="ow-fatigue-title">Fatigue vs Performance</div>
+    <div class="ow-fatigue-sub">Recovery score on race day vs finish time · ${pts.length} races</div>
+    <svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" style="overflow:visible">
+      <line x1="${PX}" y1="${H-PY}" x2="${W-PX}" y2="${H-PY}" stroke="var(--border)" stroke-width="1"/>
+      <line x1="${PX}" y1="${PY}"   x2="${PX}"   y2="${H-PY}" stroke="var(--border)" stroke-width="1"/>
+      <text x="${PX}" y="${H-2}" font-size="8" fill="var(--muted)" font-family="var(--headline)">LOW REC</text>
+      <text x="${W-PX}" y="${H-2}" font-size="8" fill="var(--muted)" font-family="var(--headline)" text-anchor="end">HIGH REC</text>
+      <text x="${PX-2}" y="${PY+4}" font-size="8" fill="var(--muted)" font-family="var(--headline)" text-anchor="end" writing-mode="tb">FASTER</text>
+      ${circles}
+    </svg>
+  </div>`;
+}
+
+/* ============================
+   OW FEATURE 6 — TRAINING PAGE WORKOUTS FEED
+   ============================ */
+async function renderOWTrainingFeed() {
+  const el = document.getElementById('owTrainingFeed');
+  if (!el) return;
+  const cfg = getOWConfig();
+  if (!cfg) {
+    el.innerHTML = `<div class="ow-connect-prompt">
+      <div class="ow-connect-text"><strong>Connect Open Wearables</strong> for normalized workouts from any device — Garmin, Whoop, Polar, Oura and more.</div>
+      <button class="btn-ghost" onclick="openSettings()" style="white-space:nowrap;flex-shrink:0">Connect →</button>
+    </div>`;
+    return;
+  }
+  el.innerHTML = '<div class="training-empty"><div class="training-empty-icon">⌛</div><div class="training-empty-h">Loading OW workouts…</div></div>';
+
+  const end   = new Date().toISOString().slice(0, 10);
+  const start = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const data  = await owFetch(`/api/v1/users/${cfg.uid}/events/workouts`,
+    { start_date: start, end_date: end, limit: 60, sort_order: 'desc' });
+  const workouts = data?.data || data?.workouts || data?.results || [];
+
+  if (!workouts.length) {
+    el.innerHTML = '<div class="training-empty"><div class="training-empty-icon">📭</div><div class="training-empty-h">No OW workouts found</div><div class="training-empty-sub">Sync a wearable device in Open Wearables to see workouts here</div></div>';
+    return;
+  }
+
+  const SPORT_ICON = { run:'🏃', running:'🏃', ride:'🚴', bike:'🚴', cycling:'🚴',
+                       swim:'🏊', swimming:'🏊', walk:'🚶', walking:'🚶',
+                       hike:'🥾', strength:'💪', yoga:'🧘', default:'⚡' };
+  el.innerHTML = workouts.slice(0, 60).map(w => {
+    const rawType = (w.activity_type || w.sport || w.type || '').toLowerCase();
+    const icon    = SPORT_ICON[rawType] || SPORT_ICON.default;
+    const km      = w.distance_meters ? (w.distance_meters / 1000).toFixed(1)
+                  : w.distance        ? (w.distance / 1000).toFixed(1) : null;
+    const durSecs = w.duration_seconds || w.moving_time || 0;
+    const dur     = durSecs ? fmtDuration(durSecs) : '—';
+    const dateStr = (w.start_date || w.date || '').slice(0, 10);
+    const date    = dateStr ? fmtDate(dateStr) : '';
+    const src     = w.source || w.device || '';
+    const typeLabel = w.activity_type || w.sport || w.type || 'Activity';
+    return `<div class="training-activity ow-workout-row">
+      <div class="ta-icon">${icon}</div>
+      <div class="ta-main">
+        <div class="ta-name">${w.name || typeLabel}</div>
+        <div class="ta-date">${date}${src ? ' · '+src : ''} · ${typeLabel}</div>
+      </div>
+      <div class="ta-meta">
+        ${km ? `<div class="ta-stat"><div class="ta-val">${km}</div><div class="ta-lbl">km</div></div>` : ''}
+        <div class="ta-stat"><div class="ta-val">${dur}</div><div class="ta-lbl">time</div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ============================
    STRAVA OAUTH
    ============================ */
 function handleStravaBtn(){
@@ -6564,6 +7021,7 @@ function renderTraining(){
     syncBtn.style.display = 'none';
   }
   renderTrainingFeed();
+  renderOWTrainingFeed();
 }
 
 const ACTIVITY_ICONS = { Run:'🏃', VirtualRun:'🏃', Ride:'🚴', VirtualRide:'🚴', Swim:'🏊', Walk:'🚶', Hike:'🥾', WeightTraining:'🏋️', Yoga:'🧘', Workout:'💪' };
