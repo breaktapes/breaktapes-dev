@@ -4,6 +4,51 @@
 
 ---
 
+## gstack
+
+gstack is installed at `.claude/skills/gstack` (committed to this repo — teammates get it automatically on clone).
+
+**Web browsing:** Always use `/browse` for any web browsing tasks. Never use `mcp__claude-in-chrome__*` tools directly.
+
+**Available skills:**
+
+| Skill | Purpose |
+|---|---|
+| `/browse` | Web browsing |
+| `/office-hours` | Engineering office hours |
+| `/plan-ceo-review` | CEO review planning |
+| `/plan-eng-review` | Engineering review planning |
+| `/plan-design-review` | Design review planning |
+| `/design-consultation` | Design consultation |
+| `/design-review` | Design review |
+| `/review` | Code review |
+| `/ship` | Ship a feature |
+| `/land-and-deploy` | Land and deploy |
+| `/canary` | Canary deploy |
+| `/qa` | QA |
+| `/qa-only` | QA only |
+| `/benchmark` | Benchmarking |
+| `/retro` | Retrospective |
+| `/investigate` | Investigation |
+| `/document-release` | Document a release |
+| `/codex` | Codex |
+| `/cso` | CSO |
+| `/autoplan` | Auto planning |
+| `/careful` | Careful mode |
+| `/freeze` | Freeze |
+| `/guard` | Guard |
+| `/unfreeze` | Unfreeze |
+| `/setup-browser-cookies` | Set up browser cookies |
+| `/setup-deploy` | Set up deploy |
+| `/gstack-upgrade` | Upgrade gstack |
+
+**If gstack skills aren't working** (e.g. binary missing after a fresh clone), rebuild with:
+```bash
+cd .claude/skills/gstack && ./setup
+```
+
+---
+
 ## Project Overview
 
 **BREAKTAPES** is a single-page app for endurance athletes to track race history, medals, personal bests, upcoming races, and wearable health data.
@@ -21,18 +66,37 @@
 - **Staging Supabase:** `https://yqzycwuyhvzkbofwkazr.supabase.co` (project: `breaktapes-dev`)
 - **Local preview:** `python3 -m http.server 3000` (serves from root; access `index.html` directly)
 
-### Deploy commands
-```bash
-# Production (always from main)
-wrangler deploy --env=""
+### Release pipeline (automated via GitHub Actions)
 
-# Staging (from any branch)
-wrangler deploy --env staging
+```
+feature-branch
+    │
+    ▼  PR merge
+ staging  ──► auto-deploy → dev.breaktapes.com  +  staging DB migrations
+    │
+    ▼  PR merge
+  main  ──────► auto-deploy → app.breaktapes.com  +  prod DB migrations
 ```
 
-> **Important:** After editing `index.html`, copy it to `public/` before deploying:
-> `cp index.html public/index.html && wrangler deploy --env=""`
-> The `public/` directory is the Cloudflare asset source. `index.html` at root is the source of truth for development.
+| Workflow file | Trigger | Action |
+|---|---|---|
+| `.github/workflows/ci.yml` | PR opened/updated targeting `staging` or `main` | Validates HTML, markers, wrangler config |
+| `.github/workflows/deploy-staging.yml` | Push to `staging` branch | Supabase migrations + `wrangler deploy --env staging` |
+| `.github/workflows/deploy-production.yml` | Push to `main` branch | Supabase migrations + `wrangler deploy --env=""` |
+
+### Manual deploy (emergency / local)
+```bash
+cp index.html public/index.html
+
+# Staging
+CLOUDFLARE_API_TOKEN="" CF_API_TOKEN="" wrangler deploy --env staging
+
+# Production
+CLOUDFLARE_API_TOKEN="" CF_API_TOKEN="" wrangler deploy --env=""
+```
+
+### Required GitHub Secrets
+`CLOUDFLARE_API_TOKEN` · `SUPABASE_ACCESS_TOKEN` · `SUPABASE_PROD_PROJECT_REF` · `SUPABASE_PROD_DB_PASSWORD` · `SUPABASE_STAGING_PROJECT_REF` · `SUPABASE_STAGING_DB_PASSWORD`
 
 ---
 

@@ -5,6 +5,22 @@
 
 ---
 
+## 2026-03-24 (session 3)
+
+### CI/CD pipeline via GitHub Actions
+**Decision:** Three GitHub Actions workflows in `.github/workflows/`.
+- `ci.yml` — runs on all PRs to `staging` or `main`; validates HTML markers, file size, wrangler config
+- `deploy-staging.yml` — triggers on push to `staging`; pushes Supabase migrations + deploys to `dev.breaktapes.com`
+- `deploy-production.yml` — triggers on push to `main`; pushes Supabase migrations + deploys to `app.breaktapes.com`
+
+**Branch strategy:** `feature → staging → main`. `staging` is a permanent protected branch — the stable pre-production environment. `main` is production-only.
+
+**Concurrency:** Staging deploys cancel-in-progress (fast iteration). Production deploys never cancel (`cancel-in-progress: false`) — a deploy in flight always finishes.
+
+**Supabase migrations in pipeline:** Auto-pushed on every deploy using `supabase link + supabase db push --yes`. Both environments get migrations independently, preventing schema drift.
+
+---
+
 ## 2026-03-24 (session 2)
 
 ### Production / staging environment split
