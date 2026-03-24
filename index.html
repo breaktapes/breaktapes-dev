@@ -5570,8 +5570,12 @@ function raceDbSearch(q) {
   const queryBase = s.replace(/\b(?:19|20)\d{2}\b/, '').replace(/\s+/g,' ').trim();
 
   const now = new Date();
+  const todayStr = now.toISOString().slice(0, 10);
   const matches = raceDb.map((race, idx) => ({ ...race, _idx: idx }))
     .filter(r => {
+      // Exclude future-dated races — those belong only in the countdown feature
+      const raceDate = getRaceDate(r, r.year || now.getFullYear());
+      if (raceDate && raceDate > todayStr) return false;
       if (queryYear && Number(r.year) !== queryYear) return false;
       if (!queryBase) return true;
       return r.name.toLowerCase().includes(queryBase) ||
