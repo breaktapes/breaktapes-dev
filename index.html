@@ -478,6 +478,53 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
   color: var(--muted);
 }
 
+/* ── Open Wearables Recovery Widget ── */
+.ow-widget {
+  display:grid; grid-template-columns:repeat(4,1fr);
+  gap:0.75rem; margin-bottom:1rem;
+}
+.ow-tile {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:6px; padding:1rem 0.9rem; position:relative;
+}
+.ow-tile-val {
+  font-family:var(--headline); font-size:2rem; font-weight:900;
+  letter-spacing:-0.02em; line-height:1; margin-bottom:4px;
+  font-variant-numeric:tabular-nums;
+}
+.ow-tile-label {
+  font-family:var(--headline); font-size:9px; font-weight:800;
+  letter-spacing:0.15em; text-transform:uppercase; color:var(--muted);
+}
+.ow-tile-src {
+  font-size:9px; color:var(--muted); opacity:0.5; margin-top:2px;
+}
+.ow-val-good   { color:#4ade80; }
+.ow-val-ok     { color:#facc15; }
+.ow-val-low    { color:#f87171; }
+.ow-val-neutral{ color:var(--green); }
+.ow-bar {
+  height:3px; border-radius:2px; background:var(--border);
+  margin-top:6px; overflow:hidden;
+}
+.ow-bar-fill { height:100%; border-radius:2px; transition:width 0.4s ease; }
+.ow-connect-prompt {
+  background:var(--surface); border:1px dashed var(--border);
+  border-radius:6px; padding:0.9rem 1rem; margin-bottom:1rem;
+  display:flex; align-items:center; justify-content:space-between; gap:1rem;
+}
+.ow-connect-text {
+  font-size:13px; color:var(--muted);
+}
+.ow-connect-text strong { color:var(--fg); }
+.ow-loading {
+  grid-column:1/-1; text-align:center; padding:1rem;
+  font-size:12px; color:var(--muted);
+}
+@media(max-width:500px) {
+  .ow-widget { grid-template-columns:repeat(2,1fr); }
+}
+
 /* ── PR Strip ── */
 .pr-group { margin-bottom:0.85rem; }
 .pr-group-label {
@@ -2332,6 +2379,8 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
       <div class="s-tile"><div class="s-tile-num" id="ds-k">0</div><div class="s-tile-label">Total KM</div></div>
       <div class="s-tile" onclick="go('medals')" style="cursor:pointer"><div class="s-tile-num" id="ds-m">0</div><div class="s-tile-label">Medals</div></div>
     </div>
+    <!-- Open Wearables Recovery -->
+    <div id="owWidget"></div>
     <!-- Goals -->
     <div id="goalsSection"></div>
     <!-- Year in Review + H2H -->
@@ -3155,6 +3204,28 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
           <div class="ai-hint" style="margin-top:6px">Required for AI race import and screenshot parsing. Get your key at console.anthropic.com</div>
         </div>
       </div>
+      <div style="margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid var(--border)">
+        <div class="modal-sub" style="margin-bottom:0.85rem;font-size:13px;font-weight:700;color:var(--fg)">Open Wearables</div>
+        <div class="fgrid" style="grid-template-columns:1fr">
+          <div class="fg">
+            <label class="fl">Instance URL</label>
+            <input class="fi" id="owUrl" type="text" placeholder="https://your-instance.example.com" autocomplete="off">
+          </div>
+          <div class="fg" style="margin-top:0.65rem">
+            <label class="fl">API Key</label>
+            <input class="fi" id="owKey" type="text" placeholder="ow_..." autocomplete="new-password">
+          </div>
+          <div class="fg" style="margin-top:0.65rem">
+            <label class="fl">User ID</label>
+            <input class="fi" id="owUserId" type="text" placeholder="your-user-id" autocomplete="off">
+            <div class="ai-hint" style="margin-top:6px">Connects Garmin, Whoop, Oura, Apple Health & more. <a href="https://openwearables.io" target="_blank" style="color:var(--orange)">openwearables.io ↗</a></div>
+          </div>
+          <div class="fg" style="margin-top:0.65rem">
+            <button class="btn-ghost" type="button" onclick="testOWConnection()" style="width:100%">Test Connection</button>
+            <div id="owTestResult" style="font-size:12px;margin-top:6px;color:var(--muted)"></div>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="modal-foot">
       <button class="btn-ghost" onclick="closeM('settingsModal')">Cancel</button>
@@ -3928,6 +3999,7 @@ async function renderGreeting() {
 function renderDash(){
   renderGreeting();
   renderCountdown();
+  renderOWWidget();
   document.getElementById('ds-r').textContent = races.length;
   document.getElementById('ds-c').textContent = new Set(races.map(r=>r.country)).size;
   document.getElementById('ds-k').textContent = Math.round(races.reduce((s,r)=>s+(r.distKm||0),0));
@@ -6128,12 +6200,178 @@ function fmtDate(d){
 function openSettings(){
   closeMenu();
   document.getElementById('setApiKey').value = getApiKey();
+  const owCfg = getOWConfig();
+  if (owCfg) {
+    document.getElementById('owUrl').value    = owCfg.url || '';
+    document.getElementById('owKey').value    = owCfg.key || '';
+    document.getElementById('owUserId').value = owCfg.uid || '';
+  }
   updateAuthUI();
   document.getElementById('settingsModal').classList.add('open');
 }
 function saveSettings(){
   localStorage.setItem('fl2_apikey', document.getElementById('setApiKey').value.trim());
+  const owUrl = document.getElementById('owUrl').value.trim().replace(/\/$/, '');
+  const owKey = document.getElementById('owKey').value.trim();
+  const owUid = document.getElementById('owUserId').value.trim();
+  if (owUrl && owKey && owUid) {
+    localStorage.setItem('fl2_ow', JSON.stringify({ url: owUrl, key: owKey, uid: owUid }));
+  } else if (!owUrl && !owKey && !owUid) {
+    localStorage.removeItem('fl2_ow');
+  }
   closeM('settingsModal');
+  if (owUrl && owKey && owUid) renderOWWidget();
+}
+
+/* ============================
+   OPEN WEARABLES INTEGRATION
+   ============================ */
+
+function getOWConfig() {
+  try { return JSON.parse(localStorage.getItem('fl2_ow') || 'null'); }
+  catch { return null; }
+}
+
+async function owFetch(path, params = {}) {
+  const cfg = getOWConfig();
+  if (!cfg) return null;
+  const url = new URL(`${cfg.url}${path}`);
+  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+  try {
+    const res = await fetch(url.toString(), {
+      headers: { 'X-Open-Wearables-API-Key': cfg.key, 'Accept': 'application/json' }
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch { return null; }
+}
+
+async function testOWConnection() {
+  const url = document.getElementById('owUrl').value.trim().replace(/\/$/, '');
+  const key = document.getElementById('owKey').value.trim();
+  const uid = document.getElementById('owUserId').value.trim();
+  const el  = document.getElementById('owTestResult');
+  if (!url || !key || !uid) { el.textContent = 'Fill in all three fields first.'; el.style.color = 'var(--muted)'; return; }
+  el.textContent = 'Testing…'; el.style.color = 'var(--muted)';
+  const today = new Date().toISOString().slice(0, 10);
+  try {
+    const res = await fetch(`${url}/api/v1/users/${uid}/summaries/recovery?start_date=${today}&end_date=${today}`, {
+      headers: { 'X-Open-Wearables-API-Key': key, 'Accept': 'application/json' }
+    });
+    if (res.ok) {
+      el.textContent = '✓ Connected successfully';
+      el.style.color = '#4ade80';
+    } else {
+      el.textContent = `✗ Error ${res.status} — check URL, key, and user ID`;
+      el.style.color = '#f87171';
+    }
+  } catch(e) {
+    el.textContent = `✗ Could not reach instance: ${e.message}`;
+    el.style.color = '#f87171';
+  }
+}
+
+// Colour helpers
+function owScoreColor(score, low = 33, high = 66) {
+  if (score == null) return 'ow-val-neutral';
+  if (score >= high) return 'ow-val-good';
+  if (score >= low)  return 'ow-val-ok';
+  return 'ow-val-low';
+}
+function owBar(score, max = 100) {
+  const pct = Math.min(100, Math.round((score / max) * 100));
+  const color = score >= 66 ? '#4ade80' : score >= 33 ? '#facc15' : '#f87171';
+  return `<div class="ow-bar"><div class="ow-bar-fill" style="width:${pct}%;background:${color}"></div></div>`;
+}
+
+let owDataCache = null;
+let owDataTs    = 0;
+
+async function loadOWData() {
+  const cfg = getOWConfig();
+  if (!cfg) return null;
+  if (owDataCache && Date.now() - owDataTs < 10 * 60 * 1000) return owDataCache; // 10-min cache
+  const today = new Date().toISOString().slice(0, 10);
+  const [recovery, sleep, activity] = await Promise.all([
+    owFetch(`/api/v1/users/${cfg.uid}/summaries/recovery`,  { start_date: today, end_date: today, limit: 1 }),
+    owFetch(`/api/v1/users/${cfg.uid}/summaries/sleep`,     { start_date: today, end_date: today, limit: 1 }),
+    owFetch(`/api/v1/users/${cfg.uid}/summaries/activity`,  { start_date: today, end_date: today, limit: 1 }),
+  ]);
+  const rec  = recovery?.data?.[0]  || recovery?.[0]  || null;
+  const slp  = sleep?.data?.[0]     || sleep?.[0]     || null;
+  const act  = activity?.data?.[0]  || activity?.[0]  || null;
+  owDataCache = { rec, slp, act };
+  owDataTs = Date.now();
+  return owDataCache;
+}
+
+async function renderOWWidget() {
+  const el = document.getElementById('owWidget');
+  if (!el) return;
+  const cfg = getOWConfig();
+  if (!cfg) {
+    el.innerHTML = `<div class="ow-connect-prompt">
+      <div class="ow-connect-text"><strong>Connect Open Wearables</strong> to see today's recovery, HRV, and sleep on your dashboard.</div>
+      <button class="btn-ghost" onclick="openSettings()" style="white-space:nowrap;flex-shrink:0">Connect →</button>
+    </div>`;
+    return;
+  }
+  el.innerHTML = `<div class="ow-widget"><div class="ow-loading">Loading health data…</div></div>`;
+  const data = await loadOWData();
+  if (!data || (!data.rec && !data.slp && !data.act)) {
+    el.innerHTML = ''; return; // silently hide if no data
+  }
+  const { rec, slp, act } = data;
+
+  // Recovery score
+  const recScore  = rec?.recovery_score   ?? rec?.score ?? null;
+  const hrv       = rec?.hrv_rmssd        ?? rec?.hrv   ?? null;
+  const rhr       = rec?.resting_hr       ?? rec?.resting_heart_rate ?? null;
+  const sleepScore= slp?.sleep_score      ?? slp?.score ?? null;
+  const sleepHrs  = slp?.total_sleep_duration_seconds
+                    ? (slp.total_sleep_duration_seconds / 3600).toFixed(1)
+                    : (slp?.total_sleep_hours ?? null);
+  const steps     = act?.steps            ?? null;
+  const src       = rec?.source || slp?.source || '';
+
+  const tiles = [];
+
+  if (recScore != null) tiles.push(`
+    <div class="ow-tile">
+      <div class="ow-tile-val ${owScoreColor(recScore)}">${Math.round(recScore)}</div>
+      <div class="ow-tile-label">Recovery</div>
+      ${owBar(recScore)}
+      ${src ? `<div class="ow-tile-src">${src}</div>` : ''}
+    </div>`);
+
+  if (hrv != null) tiles.push(`
+    <div class="ow-tile">
+      <div class="ow-tile-val ow-val-neutral">${Math.round(hrv)}<span style="font-size:0.9rem;font-weight:600"> ms</span></div>
+      <div class="ow-tile-label">HRV</div>
+    </div>`);
+
+  if (sleepScore != null || sleepHrs != null) tiles.push(`
+    <div class="ow-tile">
+      <div class="ow-tile-val ${sleepScore != null ? owScoreColor(sleepScore) : 'ow-val-neutral'}">${sleepScore != null ? Math.round(sleepScore) : sleepHrs + 'h'}</div>
+      <div class="ow-tile-label">${sleepScore != null ? 'Sleep Score' : 'Sleep'}</div>
+      ${sleepScore != null ? owBar(sleepScore) : ''}
+    </div>`);
+
+  if (rhr != null) tiles.push(`
+    <div class="ow-tile">
+      <div class="ow-tile-val ow-val-neutral">${Math.round(rhr)}<span style="font-size:0.9rem;font-weight:600"> bpm</span></div>
+      <div class="ow-tile-label">Resting HR</div>
+    </div>`);
+
+  if (steps != null && tiles.length < 4) tiles.push(`
+    <div class="ow-tile">
+      <div class="ow-tile-val ow-val-neutral">${Number(steps).toLocaleString()}</div>
+      <div class="ow-tile-label">Steps</div>
+    </div>`);
+
+  el.innerHTML = tiles.length
+    ? `<div class="ow-widget">${tiles.join('')}</div>`
+    : '';
 }
 
 /* ============================
