@@ -3783,7 +3783,7 @@ function setAuthMode(mode) {
   document.getElementById('authNameWrap').style.display = signIn ? 'none' : '';
   document.getElementById('authHelperText').textContent = signIn
     ? 'Sign in to load your protected Supabase data and keep it synced.'
-    : 'Your current local data will be used to seed your account the first time you sign in.';
+    : 'Your race history is private and synced across every device.';
   document.getElementById('authModeSignInBtn').className = signIn ? 'btn-main' : 'btn-ghost';
   document.getElementById('authModeSignUpBtn').className = signIn ? 'btn-ghost' : 'btn-main';
   document.getElementById('authPassword').autocomplete = signIn ? 'current-password' : 'new-password';
