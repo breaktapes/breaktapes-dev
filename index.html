@@ -1675,11 +1675,20 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
   font-size: 13px;
   letter-spacing: 0.2em;
 }
-/* PB card highlight */
+/* PB card highlight + shimmer top bar */
 .mw-pb {
   box-shadow: 0 0 0 1.5px rgba(255,215,0,0.45), 0 8px 28px rgba(0,0,0,0.55);
 }
-.mw-pb::before { background: #FFD700 !important; }
+@keyframes pbShimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+.mw-pb::before {
+  background: linear-gradient(90deg, transparent 0%, #FFD700 30%, #FFFACC 50%, #FFD700 70%, transparent 100%) !important;
+  background-size: 200% 100% !important;
+  animation: pbShimmer 2.8s linear infinite;
+  height: 3px !important;
+}
 /* PB crown badge */
 .mw-pb-crown {
   position: absolute;
@@ -1697,20 +1706,33 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
 }
 
 .mw-card {
-  background: var(--surface);
+  background-color: var(--surface);
+  background-image: radial-gradient(ellipse 150% 90% at 50% -5%, var(--mw-spot, rgba(255,215,0,0.08)) 0%, transparent 62%);
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: 1.4rem 1.1rem 1.1rem;
   text-align: center;
   position: relative; overflow: hidden;
   cursor: pointer;
-  transition: all 0.28s cubic-bezier(0.4,0,0.2,1);
+  transition: all 0.32s cubic-bezier(0.4,0,0.2,1);
   animation: cardIn 0.4s ease both;
 }
+/* Per-tier spotlight color */
+.mw-gold    { --mw-spot: rgba(255,215,0,0.13); }
+.mw-silver  { --mw-spot: rgba(200,212,220,0.11); }
+.mw-bronze  { --mw-spot: rgba(205,140,90,0.13); }
+.mw-finisher { --mw-spot: rgba(255,77,0,0.09); }
+.mw-pb      { --mw-spot: rgba(255,215,0,0.22); }
+/* Hover: lift + color-matched outer glow */
 .mw-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 20px 50px rgba(0,0,0,0.7);
+  transform: translateY(-8px) scale(1.015);
+  box-shadow: 0 28px 64px rgba(0,0,0,0.75);
 }
+.mw-gold:hover    { box-shadow: 0 28px 64px rgba(0,0,0,0.75), 0 0 48px rgba(255,215,0,0.14); border-color: rgba(255,215,0,0.3); }
+.mw-silver:hover  { box-shadow: 0 28px 64px rgba(0,0,0,0.75), 0 0 48px rgba(200,212,220,0.1); border-color: rgba(200,212,220,0.25); }
+.mw-bronze:hover  { box-shadow: 0 28px 64px rgba(0,0,0,0.75), 0 0 48px rgba(205,140,90,0.12); border-color: rgba(205,140,90,0.3); }
+.mw-finisher:hover { box-shadow: 0 28px 64px rgba(0,0,0,0.75), 0 0 48px rgba(255,77,0,0.1); border-color: rgba(255,77,0,0.25); }
+.mw-pb:hover      { box-shadow: 0 28px 64px rgba(0,0,0,0.75), 0 0 56px rgba(255,215,0,0.2); border-color: rgba(255,215,0,0.45); }
 .mw-card:nth-child(2){animation-delay:.05s}
 .mw-card:nth-child(3){animation-delay:.1s}
 .mw-card:nth-child(4){animation-delay:.14s}
@@ -1798,6 +1820,59 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
 }
 .mw-card:hover .mw-upload-btn { display: block; }
 .mw-upload-btn:hover { background: rgba(255,255,255,0.15); color: var(--white); }
+
+/* Tier badge (LEGENDARY / ELITE) on card */
+.mw-tier {
+  position: absolute; bottom: 8px; left: 8px;
+  font-family: var(--headline); font-size: 7px; font-weight: 900;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  padding: 2px 6px; border-radius: 3px; z-index: 3;
+}
+.mw-tier-legendary {
+  background: rgba(255,215,0,0.12);
+  border: 1px solid rgba(255,215,0,0.5);
+  color: #FFD700;
+  text-shadow: 0 0 8px rgba(255,215,0,0.6);
+}
+.mw-tier-elite {
+  background: rgba(255,77,0,0.1);
+  border: 1px solid rgba(255,77,0,0.4);
+  color: var(--orange);
+}
+
+/* Achievement badges row */
+.mw-ach-wrap {
+  margin-bottom: 1.5rem;
+}
+.mw-ach-title {
+  font-family: var(--headline); font-size: 11px; font-weight: 800;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--muted); padding-bottom: 0.55rem;
+  border-bottom: 1px solid var(--border); margin-bottom: 0.85rem;
+}
+.mw-ach-grid {
+  display: flex; flex-wrap: wrap; gap: 0.5rem;
+}
+.mw-ach-badge {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 0.5rem 0.8rem;
+  transition: all 0.2s ease; position: relative;
+}
+.mw-ach-badge.unlocked {
+  background: rgba(255,215,0,0.05);
+  border-color: rgba(255,215,0,0.28);
+  box-shadow: 0 0 16px rgba(255,215,0,0.07);
+}
+.mw-ach-badge.locked { opacity: 0.3; filter: grayscale(1); }
+.mw-ach-icon { font-size: 20px; line-height: 1; }
+.mw-ach-info { display: flex; flex-direction: column; gap: 1px; }
+.mw-ach-name {
+  font-family: var(--headline); font-size: 9px; font-weight: 900;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--white);
+}
+.mw-ach-badge.unlocked .mw-ach-name { color: #FFD700; }
+.mw-ach-desc { font-size: 9px; color: var(--muted); }
 .mw-art img {
   width: 100%; height: 100%; object-fit: contain;
   filter: drop-shadow(0 12px 32px rgba(0,0,0,0.7)) drop-shadow(0 3px 8px rgba(0,0,0,0.5));
@@ -2339,6 +2414,7 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
   <div class="wrap">
     <div class="page-kicker">Your Collection</div>
     <div class="page-h1">Medal<br><span class="accent">Wall</span></div>
+    <div id="mwAchievements"></div>
     <div class="medal-wall-ai-grid" id="medalGrid"></div>
   </div>
 </div>
@@ -3920,6 +3996,53 @@ function getExampleMedal(name, year) {
   return null;
 }
 
+/* ── Medal Wall: Achievement Badges + Tier System ─────────────────── */
+
+const MW_ACHIEVEMENTS = [
+  { id:'first_race',  icon:'🏁', name:'First Finish',   desc:'Crossed your first finish line',         fn:(r)=>r.length>=1 },
+  { id:'ten_races',   icon:'🔟', name:'10 Races',        desc:'Completed 10 races',                    fn:(r)=>r.length>=10 },
+  { id:'marathoner',  icon:'🏃', name:'Marathoner',      desc:'Finished a marathon',                   fn:(r)=>r.some(x=>x.distance==='marathon'||x.dist==='marathon') },
+  { id:'globe',       icon:'🌍', name:'Globe Trotter',   desc:'Raced in 3+ countries',                 fn:(r)=>new Set(r.map(x=>x.country).filter(Boolean)).size>=3 },
+  { id:'sub2_half',   icon:'⚡', name:'Sub-2 Half',      desc:'Half marathon under 2 hours',           fn:(r)=>r.some(x=>(x.distance||'').includes('half')&&x.time&&timeToSecs(x.time)<7200) },
+  { id:'ultra',       icon:'🦅', name:'Ultra Runner',    desc:'Finished a 50K or longer',              fn:(r)=>r.some(x=>(x.distKm||0)>=50&&x.type==='run') },
+  { id:'ironman',     icon:'🔱', name:'Iron Will',       desc:'Completed a 70.3 or full Ironman',      fn:(r)=>r.some(x=>x.type==='tri'&&((x.distance||'').includes('70.3')||(x.distance||'').includes('ironman'))) },
+  { id:'pb_hunter',   icon:'🎯', name:'PB Hunter',       desc:'5 or more personal bests',              fn:(r,pbIds)=>pbIds.size>=5 },
+  { id:'veteran',     icon:'📅', name:'Veteran',         desc:'Raced across 3+ years',                 fn:(r)=>new Set(r.map(x=>(x.date||'').slice(0,4)).filter(Boolean)).size>=3 },
+  { id:'century',     icon:'💯', name:'Century Club',    desc:'100+ km raced in a single year',        fn:(r)=>{ const m={}; r.forEach(x=>{const y=(x.date||'').slice(0,4);if(y)m[y]=(m[y]||0)+(x.distKm||0);}); return Object.values(m).some(v=>v>=100); } },
+  { id:'podium',      icon:'🥇', name:'Podium',          desc:'Top 3 finish in any race',              fn:(r)=>r.some(x=>{ const p=parseInt((x.placing||'').split('/')[0]); return p>=1&&p<=3; }) },
+  { id:'world_major', icon:'🌟', name:'World Major',     desc:'Completed a World Marathon Major',      fn:(r)=>r.some(x=>/tokyo|london|boston|berlin|chicago|new york|nyc/i.test(x.name||'')) },
+];
+
+const MW_LEGENDARY_RACES = /comrades|utmb|western states|badwater|boston marathon|london marathon|tokyo marathon|berlin marathon|chicago marathon|new york marathon|nyc marathon|ironman(?! 70)/i;
+const MW_ELITE_DIST_KM = 42; // marathon+ is always noteworthy
+
+function getMedalTier(r, isPB) {
+  if (MW_LEGENDARY_RACES.test(r.name||'') || (r.distKm||0)>=80) return 'legendary';
+  if (isPB || (r.distKm||0)>=MW_ELITE_DIST_KM) return 'elite';
+  return null;
+}
+
+function renderAchievements(pbIds) {
+  const el = document.getElementById('mwAchievements');
+  if (!el || !races.length) { if(el) el.innerHTML=''; return; }
+  const unlocked = MW_ACHIEVEMENTS.filter(a => a.fn(races, pbIds));
+  const unlockedIds = new Set(unlocked.map(a=>a.id));
+  const badges = MW_ACHIEVEMENTS.map(a => {
+    const on = unlockedIds.has(a.id);
+    return `<div class="mw-ach-badge ${on?'unlocked':'locked'}" title="${a.desc}">
+      <span class="mw-ach-icon">${a.icon}</span>
+      <div class="mw-ach-info">
+        <div class="mw-ach-name">${a.name}</div>
+        <div class="mw-ach-desc">${a.desc}</div>
+      </div>
+    </div>`;
+  }).join('');
+  el.innerHTML = `<div class="mw-ach-wrap">
+    <div class="mw-ach-title">🏆 Achievements · ${unlocked.length}/${MW_ACHIEVEMENTS.length} Unlocked</div>
+    <div class="mw-ach-grid">${badges}</div>
+  </div>`;
+}
+
 function renderMedals() {
   const g = document.getElementById('medalGrid');
   if (!races.length) {
@@ -3961,6 +4084,9 @@ function renderMedals() {
     else if (badge)   artContent = badge;
     else { artContent = `<div class="mw-skeleton"></div><div class="mw-gen-label">Finding medal…</div>`; needsGen.push(r); }
     const uploadLabel = photo ? '📷 Change' : '📷 Add Photo';
+    const tier = getMedalTier(r, isPB);
+    const tierBadge = tier === 'legendary' ? `<span class="mw-tier mw-tier-legendary">★ Legendary</span>`
+                    : tier === 'elite'     ? `<span class="mw-tier mw-tier-elite">Elite</span>` : '';
     return `<div class="mw-card mw-${r.medal}${isPB?' mw-pb':''}" id="mw-${r.id}" onclick="openRaceDetail(${r.id})">
       <span class="mw-type-pill ${TYPE_PILL[r.type]||'tag-run'}">${TYPE_LABEL[r.type]||r.type}</span>
       ${r.priority==='A'?`<span class="pri-badge pri-a" style="position:absolute;top:8px;left:8px">A</span>`:''}
@@ -3970,10 +4096,14 @@ function renderMedals() {
       <div class="mw-city">📍 ${r.city}, ${r.country}</div>
       <div class="mw-time-chip">${r.time}</div>
       <div class="mw-date">${fmtDate(r.date)}</div>
+      ${tierBadge}
       <input type="file" accept="image/*" id="mw-file-${r.id}" style="display:none" onchange="uploadMedalPhoto(event,${r.id})">
       <button class="mw-upload-btn" onclick="event.stopPropagation();document.getElementById('mw-file-${r.id}').click()">${uploadLabel}</button>
     </div>`;
   };
+
+  // Render achievement badges
+  renderAchievements(pbIds);
 
   let html = '';
 
