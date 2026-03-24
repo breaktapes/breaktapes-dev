@@ -2342,7 +2342,6 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
     </div>
     <div id="prStrip"></div>
     <div id="beChart"></div>
-    <div id="calHeatmap"></div>
     <div id="matchedRaces"></div>
     <div class="history-list" id="histList"></div>
   </div>
@@ -4536,7 +4535,6 @@ function renderHistory(){
   document.getElementById('hs-m').textContent = races.length;
   renderPRStrip();
   renderBEChart();
-  renderCalHeatmap();
   renderMatchedRaces();
   const list = document.getElementById('histList');
   if(!races.length){
