@@ -1,5 +1,4 @@
--- Race catalog refresh from RACE_DB.editable.yearly2.csv
--- Replaces all previous seed data
+-- Race catalog v2 refresh — fixes date parsing for pre-2000 races
 truncate table public.race_catalog restart identity cascade;
 
 insert into public.race_catalog
