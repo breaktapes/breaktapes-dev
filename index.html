@@ -570,6 +570,28 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
 
 /* ── Course Records ── */
 .matched-section { margin-bottom:1.5rem; }
+.cr-header-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:0.6rem; }
+.cr-customize-btn {
+  font-family:var(--headline); font-size:8px; font-weight:800; letter-spacing:0.12em;
+  text-transform:uppercase; color:var(--muted); background:none; border:none;
+  cursor:pointer; transition:color 0.15s; padding:0;
+}
+.cr-customize-btn:hover { color:var(--orange); }
+.cr-customize-panel {
+  background:var(--surface); border:1px solid var(--border2); border-radius:6px;
+  padding:0.75rem 1rem; margin-bottom:0.75rem; display:none;
+}
+.cr-customize-panel.open { display:block; }
+.cr-customize-grid { display:flex; flex-direction:column; gap:0.4rem; }
+.cr-toggle-row { display:flex; align-items:center; justify-content:space-between; padding:0.3rem 0; }
+.cr-toggle-name { font-family:var(--headline); font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; color:var(--white); }
+.cr-toggle-sub { font-size:9px; color:var(--muted); margin-top:1px; }
+.cr-toggle { position:relative; width:32px; height:18px; flex-shrink:0; }
+.cr-toggle input { opacity:0; width:0; height:0; }
+.cr-toggle-track { position:absolute; inset:0; background:var(--surface3); border:1px solid var(--border2); border-radius:100px; cursor:pointer; transition:background 0.2s; }
+.cr-toggle input:checked + .cr-toggle-track { background:var(--green); border-color:var(--green); }
+.cr-toggle-track::after { content:''; position:absolute; left:2px; top:50%; transform:translateY(-50%); width:12px; height:12px; background:#000; border-radius:50%; transition:left 0.2s; }
+.cr-toggle input:checked + .cr-toggle-track::after { left:16px; }
 .cr-pills { display:flex; gap:0.4rem; flex-wrap:wrap; margin-bottom:0.75rem; }
 .cr-pill {
   font-family:var(--headline); font-size:9px; font-weight:800;
@@ -4351,8 +4373,12 @@ function renderCalHeatmap(elId, hideLabel) {
 }
 
 /* ── Course Records ── */
-let _crMulti = [];
+let _crAll = [];   // all eligible groups
+let _crMulti = []; // visible (not hidden) groups
 let crSelectedIdx = 0;
+let crHidden = new Set(JSON.parse(localStorage.getItem('fl2_cr_hidden')||'[]'));
+function saveCRHidden() { localStorage.setItem('fl2_cr_hidden', JSON.stringify([...crHidden])); }
+
 function renderMatchedRaces() {
   const el = document.getElementById('matchedRaces');
   if (!el) return;
@@ -4363,49 +4389,91 @@ function renderMatchedRaces() {
     const base = r.name.replace(/\s+\d{4}$/,'') + '||' + (r.distance||'');
     (groups[base] = groups[base]||[]).push(r);
   });
-  _crMulti = Object.entries(groups).filter(([,rs])=>rs.length>=2).sort((a,b)=>b[1].length-a[1].length);
-  if (!_crMulti.length) { el.innerHTML=''; return; }
+  _crAll = Object.entries(groups).filter(([,rs])=>rs.length>=2).sort((a,b)=>b[1].length-a[1].length);
+  _crMulti = _crAll.filter(([key])=>!crHidden.has(key));
+  if (!_crAll.length) { el.innerHTML=''; return; }
   if (crSelectedIdx >= _crMulti.length) crSelectedIdx = 0;
   _renderCRSection(el);
 }
-function _renderCRSection(el) {
+function _renderCRSection(el, custOpen) {
+  // Customize panel rows
+  const custRows = _crAll.map(([key,rs]) => {
+    const [name,,dist] = [...key.split('||'), ''];
+    const visible = !crHidden.has(key);
+    const safeKey = key.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    return `<div class="cr-toggle-row">
+      <div>
+        <div class="cr-toggle-name">${name}</div>
+        <div class="cr-toggle-sub">${rs[0].distance} · ${rs.length} races</div>
+      </div>
+      <label class="cr-toggle">
+        <input type="checkbox" ${visible?'checked':''} onchange="toggleCRRace('${safeKey}',this.checked)">
+        <span class="cr-toggle-track"></span>
+      </label>
+    </div>`;
+  }).join('');
+
   const pills = _crMulti.map(([key,rs],i) => {
     const [name] = key.split('||');
     return `<button class="cr-pill${i===crSelectedIdx?' active':''}" onclick="selectCR(${i})">${name}</button>`;
   }).join('');
-  const [,rs] = _crMulti[crSelectedIdx];
-  const sorted = [...rs].sort((a,b)=>new Date(a.date)-new Date(b.date));
-  const pbSecs = Math.min(...sorted.map(r=>timeToSecs(r.time)));
-  const tRows = sorted.map((r,ri) => {
-    const secs = timeToSecs(r.time);
-    const isPB = secs===pbSecs;
-    const prev = ri>0 ? timeToSecs(sorted[ri-1].time) : null;
-    let delta = '';
-    if (prev!==null) {
-      const diff = secs-prev;
-      delta = diff<0 ? `<span class="improve">▲ ${secsToHMS(Math.abs(diff))}</span>` : diff>0 ? `<span class="slower">▼ ${secsToHMS(diff)}</span>` : '';
-    }
-    return `<tr>
-      <td class="matched-td year-col">${(r.date||'').slice(0,4)}</td>
-      <td class="matched-td time-col${isPB?' is-pb':''}">${r.time}${isPB?'<span class="pb-chip">PB</span>':''}${delta}</td>
-      <td class="matched-td">${r.distance}</td>
-      <td class="matched-td">${r.city||'—'}</td>
-      <td class="matched-td">${r.placing||'—'}</td>
-    </tr>`;
-  }).join('');
-  el.innerHTML = `<div class="matched-section">
-    <div class="be-section-hd">Course Records</div>
-    <div class="cr-pills">${pills}</div>
+
+  let tableHtml = '';
+  if (_crMulti.length) {
+    const [,rs] = _crMulti[crSelectedIdx] || _crMulti[0];
+    const sorted = [...rs].sort((a,b)=>new Date(a.date)-new Date(b.date));
+    const pbSecs = Math.min(...sorted.map(r=>timeToSecs(r.time)));
+    const tRows = sorted.map((r,ri) => {
+      const secs = timeToSecs(r.time);
+      const isPB = secs===pbSecs;
+      const prev = ri>0 ? timeToSecs(sorted[ri-1].time) : null;
+      let delta = '';
+      if (prev!==null) {
+        const diff = secs-prev;
+        delta = diff<0 ? `<span class="improve">▲ ${secsToHMS(Math.abs(diff))}</span>` : diff>0 ? `<span class="slower">▼ ${secsToHMS(diff)}</span>` : '';
+      }
+      return `<tr>
+        <td class="matched-td year-col">${(r.date||'').slice(0,4)}</td>
+        <td class="matched-td time-col${isPB?' is-pb':''}">${r.time}${isPB?'<span class="pb-chip">PB</span>':''}${delta}</td>
+        <td class="matched-td">${r.placing||'—'}</td>
+      </tr>`;
+    }).join('');
+    tableHtml = `<div class="cr-pills">${pills}</div>
     <div class="cr-table-wrap">
       <table class="matched-table">
         <thead><tr>
-          <th class="matched-th">Year</th><th class="matched-th">Time</th>
-          <th class="matched-th">Dist</th><th class="matched-th">City</th><th class="matched-th">Place</th>
+          <th class="matched-th">Year</th><th class="matched-th">Time</th><th class="matched-th">Place</th>
         </tr></thead>
         <tbody>${tRows}</tbody>
       </table>
+    </div>`;
+  } else {
+    tableHtml = `<div style="text-align:center;padding:1.5rem;color:var(--muted);font-family:var(--headline);font-size:11px;letter-spacing:0.1em;text-transform:uppercase">All races hidden — tap Customize to show some</div>`;
+  }
+
+  el.innerHTML = `<div class="matched-section">
+    <div class="cr-header-row">
+      <div class="be-section-hd" style="margin-bottom:0">Course Records</div>
+      <button class="cr-customize-btn" onclick="toggleCRCustomize()">⚙ Customize</button>
     </div>
+    <div class="cr-customize-panel${custOpen?' open':''}" id="crCustomizePanel">
+      <div class="cr-customize-grid">${custRows}</div>
+    </div>
+    ${tableHtml}
   </div>`;
+}
+function toggleCRCustomize() {
+  const p = document.getElementById('crCustomizePanel');
+  if (p) p.classList.toggle('open');
+}
+function toggleCRRace(key, visible) {
+  if (visible) crHidden.delete(key); else crHidden.add(key);
+  saveCRHidden();
+  // Re-filter visible list, keep customize panel open
+  _crMulti = _crAll.filter(([k])=>!crHidden.has(k));
+  if (crSelectedIdx >= _crMulti.length) crSelectedIdx = 0;
+  const el = document.getElementById('matchedRaces');
+  if (el) _renderCRSection(el, true);
 }
 function selectCR(i) {
   crSelectedIdx = i;
