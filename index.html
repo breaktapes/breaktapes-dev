@@ -3969,6 +3969,20 @@ function renderDash(){
 let medalCache  = JSON.parse(localStorage.getItem('fl2_medals')  || '{}');
 let medalPhotos = JSON.parse(localStorage.getItem('fl2_medal_photos') || '{}');
 
+// Community medal photos: fetched from Supabase, cached 7 days in localStorage
+const COMM_CACHE_TTL = 7 * 24 * 60 * 60 * 1000;
+let communityPhotos = {};
+let communityPhotosTs = 0;
+(function() {
+  try {
+    const raw = JSON.parse(localStorage.getItem('fl2_comm_medals') || 'null');
+    if (raw && raw.ts && Date.now() - raw.ts < COMM_CACHE_TTL) {
+      communityPhotos = raw.data || {};
+      communityPhotosTs = raw.ts;
+    }
+  } catch(e) {}
+})();
+
 function uploadMedalPhoto(event, raceId) {
   const file = event.target.files[0];
   if (!file) return;
@@ -3991,9 +4005,27 @@ function uploadMedalPhoto(event, raceId) {
       const dataUrl = canvas.toDataURL('image/png');
       medalPhotos[raceId] = dataUrl;
       localStorage.setItem('fl2_medal_photos', JSON.stringify(medalPhotos));
-      if (artEl) artEl.innerHTML = `<img src="${dataUrl}" alt="medal">`;
+      if (artEl) artEl.innerHTML = `<img class="mw-photo" src="${dataUrl}" alt="medal photo">
+        <button class="mw-change-btn" onclick="event.stopPropagation();document.getElementById('mw-file-${raceId}').click()">📷 Change</button>`;
       const card = document.getElementById(`mw-${raceId}`);
       if (card) { const btn = card.querySelector('.mw-upload-btn'); if (btn) btn.textContent = '📷 Change'; }
+      // Share to community in background (first upload wins, no UI block)
+      const race = races.find(r => r.id === raceId);
+      if (race && authUser) {
+        const raceKey = getRaceKey(race);
+        const variant = /comrades/i.test(race.name || '') ? getComradesVariant(race.time) : null;
+        canvas.toBlob(async blob => {
+          if (!blob) return;
+          const communityUrl = await uploadToSupabaseMedals(raceKey, variant, blob);
+          if (communityUrl) {
+            const toast = document.createElement('div');
+            toast.className = 'save-toast';
+            toast.textContent = '🏅 Medal shared with community!';
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+          }
+        }, 'image/png');
+      }
     };
     img.src = e.target.result;
   };
@@ -4035,6 +4067,92 @@ const EXAMPLE_MEDALS = {
 
 function getMedalKey(race) {
   return `${race.name}__${(race.date||'').slice(0,4)}`;
+}
+
+// Community medal helpers
+function getRaceKey(race) {
+  const year = (race.date || '').slice(0, 4);
+  const slug = (race.name || '')
+    .replace(/\s+\d{4}$/, '')       // strip trailing year from race name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return year ? `${slug}-${year}` : slug;
+}
+
+function getComradesVariant(timeStr) {
+  if (!timeStr) return null;
+  const parts = timeStr.split(':');
+  const mins = parseInt(parts[0], 10) * 60 + (parseInt(parts[1], 10) || 0);
+  if (mins < 360) return 'gold';
+  if (mins < 450) return 'silver';
+  if (mins < 570) return 'bill-rowan';
+  if (mins < 600) return 'bronze';
+  if (mins < 660) return 'vic-clapham';
+  if (mins < 720) return 'back';
+  return null;
+}
+
+async function loadCommunityMedals(raceKeys) {
+  if (!raceKeys.length) return;
+  // Check if cache is still fresh
+  if (communityPhotosTs && Date.now() - communityPhotosTs < COMM_CACHE_TTL) return;
+  const client = initSupabaseClient();
+  if (!client) return;
+  try {
+    const { data, error } = await client
+      .from('race_medal_photos')
+      .select('race_key, variant, photo_url')
+      .in('race_key', raceKeys);
+    if (error) throw error;
+    (data || []).forEach(row => {
+      const k = row.variant ? `${row.race_key}::${row.variant}` : row.race_key;
+      communityPhotos[k] = row.photo_url;
+    });
+    communityPhotosTs = Date.now();
+    localStorage.setItem('fl2_comm_medals', JSON.stringify({ ts: communityPhotosTs, data: communityPhotos }));
+  } catch(err) {
+    console.warn('Community medals load failed:', err);
+  }
+}
+
+function getCommunityPhoto(race) {
+  const key = getRaceKey(race);
+  const isComrades = /comrades/i.test(race.name || '');
+  if (isComrades) {
+    const variant = getComradesVariant(race.time);
+    if (variant && communityPhotos[`${key}::${variant}`]) return communityPhotos[`${key}::${variant}`];
+  }
+  return communityPhotos[key] || null;
+}
+
+async function uploadToSupabaseMedals(raceKey, variant, blob) {
+  const client = initSupabaseClient();
+  if (!client || !authUser) return null;
+  const path = variant ? `${raceKey}/${variant}.png` : `${raceKey}/medal.png`;
+  const { data: storageData, error: storageErr } = await client.storage
+    .from('medal-photos')
+    .upload(path, blob, { contentType: 'image/png', upsert: false });
+  if (storageErr && storageErr.statusCode !== '409') {
+    console.warn('Medal storage upload failed:', storageErr);
+    return null;
+  }
+  const { data: urlData } = client.storage.from('medal-photos').getPublicUrl(path);
+  const photoUrl = urlData?.publicUrl;
+  if (!photoUrl) return null;
+  // Insert row (first-upload-wins via unique index)
+  await client.from('race_medal_photos').insert({
+    race_key: raceKey,
+    variant: variant || null,
+    photo_url: photoUrl,
+    uploaded_by: authUser.id,
+  }).select().maybeSingle();  // ignore conflict
+  // Update local community cache
+  const cacheKey = variant ? `${raceKey}::${variant}` : raceKey;
+  communityPhotos[cacheKey] = photoUrl;
+  communityPhotosTs = Date.now();
+  localStorage.setItem('fl2_comm_medals', JSON.stringify({ ts: communityPhotosTs, data: communityPhotos }));
+  return photoUrl;
 }
 
 function getExampleMedal(name, year) {
@@ -4091,12 +4209,14 @@ function renderAchievements(pbIds) {
   </div>`;
 }
 
-function renderMedals() {
+async function renderMedals() {
   const g = document.getElementById('medalGrid');
   if (!races.length) {
     g.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="empty-ico">🏅</div><div class="empty-h">No medals yet</div><div class="empty-p">Add your first race to build your wall.</div><button class="btn-main" style="display:inline-block;width:auto;padding:.6rem 1.5rem" onclick="openRaceModal()">+ Log Race</button></div>`;
     return;
   }
+  // Load community photos for these races (uses localStorage cache, re-fetches after TTL)
+  await loadCommunityMedals(races.map(r => getRaceKey(r)));
 
   const SPORT_ORDER_MW = ['run','cycle','swim','tri','hyrox'];
   const SPORT_LABELS   = {run:'Running',cycle:'Cycling',swim:'Swimming',tri:'Triathlon',hyrox:'HYROX'};
@@ -4118,7 +4238,8 @@ function renderMedals() {
 
   const buildCard = (r, isPB) => {
     const year    = (r.date||'').slice(0,4);
-    const photo   = medalPhotos[r.id];
+    const communityPhoto = getCommunityPhoto(r);
+    const photo   = medalPhotos[r.id] || communityPhoto;
     const cached  = medalCache[getMedalKey(r)];
     const example = getExampleMedal(r.name, year);
     const badge   = r.type === 'hyrox' ? getHyroxBadge(r, year) : null;
@@ -4127,11 +4248,13 @@ function renderMedals() {
     const tierBadge = tier === 'legendary' ? `<span class="mw-tier mw-tier-legendary">★ Legendary</span>`
                     : tier === 'elite'     ? `<span class="mw-tier mw-tier-elite">Elite</span>` : '';
 
-    // Art area: photo > cached SVG > upload placeholder (no more auto AI generation)
+    // Art area: personal photo > community photo > SVG example > upload placeholder
+    const hasPersonalPhoto = !!medalPhotos[r.id];
     let artInner;
     if (photo) {
+      const changeLabel = hasPersonalPhoto ? '📷 Change' : '📷 Add yours';
       artInner = `<img class="mw-photo" src="${photo}" alt="medal photo">
-        <button class="mw-change-btn" onclick="event.stopPropagation();document.getElementById('mw-file-${r.id}').click()">📷 Change</button>`;
+        <button class="mw-change-btn" onclick="event.stopPropagation();document.getElementById('mw-file-${r.id}').click()">${changeLabel}</button>`;
     } else if (cached || example || badge) {
       artInner = (cached || example || badge) +
         `<button class="mw-change-btn" onclick="event.stopPropagation();document.getElementById('mw-file-${r.id}').click()">📷 Add photo</button>`;
