@@ -568,22 +568,19 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
 .cal-cell[data-c="3"] { background:rgba(0,255,136,0.65); border-color:rgba(0,255,136,0.7); }
 .cal-cell[data-c="4"] { background:var(--green); border-color:var(--green); }
 
-/* ── Matched Races ── */
+/* ── Course Records ── */
 .matched-section { margin-bottom:1.5rem; }
-.matched-race-btn {
-  display:flex; align-items:center; justify-content:space-between;
-  background:var(--surface); border:1px solid var(--border); border-radius:6px;
-  padding:0.75rem 1rem; cursor:pointer; width:100%; text-align:left;
-  margin-bottom:0.5rem; transition:border-color 0.15s;
+.cr-pills { display:flex; gap:0.4rem; flex-wrap:wrap; margin-bottom:0.75rem; }
+.cr-pill {
+  font-family:var(--headline); font-size:9px; font-weight:800;
+  letter-spacing:0.1em; text-transform:uppercase; white-space:nowrap;
+  padding:0.35rem 0.75rem; border-radius:4px;
+  border:1px solid var(--border); background:var(--surface);
+  color:var(--muted); cursor:pointer; transition:border-color 0.15s, color 0.15s;
 }
-.matched-race-btn:hover { border-color:var(--border2); }
-.matched-race-btn.open { border-color:var(--green); }
-.matched-name { font-family:var(--headline); font-size:13px; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; color:var(--white); }
-.matched-count { font-family:var(--headline); font-size:9px; font-weight:700; letter-spacing:0.08em; color:var(--muted); margin-top:2px; }
-.matched-chevron { font-size:10px; color:var(--muted); transition:transform 0.2s; }
-.matched-race-btn.open .matched-chevron { transform:rotate(180deg); }
-.matched-detail { display:none; margin:-0.25rem 0 0.75rem; }
-.matched-detail.open { display:block; }
+.cr-pill:hover { border-color:var(--green); color:var(--fg); }
+.cr-pill.active { border-color:var(--green); color:var(--green); }
+.cr-table-wrap { background:var(--surface); border:1px solid var(--border); border-radius:6px; overflow:hidden; }
 .matched-table { width:100%; border-collapse:collapse; }
 .matched-th { font-family:var(--headline); font-size:8px; font-weight:800; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); padding:0.3rem 0.5rem; text-align:left; border-bottom:1px solid var(--border); }
 .matched-td { font-size:11px; padding:0.45rem 0.5rem; border-bottom:1px solid rgba(245,245,245,0.04); color:var(--muted); vertical-align:middle; }
@@ -4353,7 +4350,9 @@ function renderCalHeatmap(elId, hideLabel) {
     <div class="cal-heatmap-wrap"><div class="cal-grid">${monthHdr}${rowsHtml}</div></div></div>`;
 }
 
-/* ── Matched Races ── */
+/* ── Course Records ── */
+let _crMulti = [];
+let crSelectedIdx = 0;
 function renderMatchedRaces() {
   const el = document.getElementById('matchedRaces');
   if (!el) return;
@@ -4364,47 +4363,54 @@ function renderMatchedRaces() {
     const base = r.name.replace(/\s+\d{4}$/,'') + '||' + (r.distance||'');
     (groups[base] = groups[base]||[]).push(r);
   });
-  const multi = Object.entries(groups).filter(([,rs])=>rs.length>=2).sort((a,b)=>b[1].length-a[1].length);
-  if (!multi.length) { el.innerHTML=''; return; }
-  const items = multi.map(([key,rs],gi) => {
-    const [name] = key.split('||');
-    const sorted = [...rs].sort((a,b)=>new Date(a.date)-new Date(b.date));
-    const pbSecs = Math.min(...sorted.map(r=>timeToSecs(r.time)));
-    const tRows = sorted.map((r,ri) => {
-      const secs = timeToSecs(r.time);
-      const isPB = secs===pbSecs;
-      const prev = ri>0 ? timeToSecs(sorted[ri-1].time) : null;
-      let delta = '';
-      if (prev!==null) {
-        const diff = secs-prev;
-        delta = diff<0 ? `<span class="improve">▲ ${secsToHMS(Math.abs(diff))}</span>` : diff>0 ? `<span class="slower">▼ ${secsToHMS(diff)}</span>` : '';
-      }
-      return `<tr>
-        <td class="matched-td year-col">${(r.date||'').slice(0,4)}</td>
-        <td class="matched-td time-col${isPB?' is-pb':''}">${r.time}${isPB?'<span class="pb-chip">PB</span>':''}${delta}</td>
-        <td class="matched-td">${r.distance}</td>
-        <td class="matched-td">${r.city||'—'}</td>
-        <td class="matched-td">${r.placing||'—'}</td>
-      </tr>`;
-    }).join('');
-    return `<div>
-      <button class="matched-race-btn" onclick="toggleMatched(this,'mr-${gi}')">
-        <div><div class="matched-name">${name}</div><div class="matched-count">${rs.length} races</div></div>
-        <span class="matched-chevron">▼</span>
-      </button>
-      <div class="matched-detail" id="mr-${gi}">
-        <table class="matched-table">
-          <thead><tr><th class="matched-th">Year</th><th class="matched-th">Time</th><th class="matched-th">Dist</th><th class="matched-th">City</th><th class="matched-th">Place</th></tr></thead>
-          <tbody>${tRows}</tbody>
-        </table>
-      </div>
-    </div>`;
-  }).join('');
-  el.innerHTML = `<div class="matched-section"><div class="be-section-hd">Matched Races</div>${items}</div>`;
+  _crMulti = Object.entries(groups).filter(([,rs])=>rs.length>=2).sort((a,b)=>b[1].length-a[1].length);
+  if (!_crMulti.length) { el.innerHTML=''; return; }
+  if (crSelectedIdx >= _crMulti.length) crSelectedIdx = 0;
+  _renderCRSection(el);
 }
-function toggleMatched(btn, id) {
-  btn.classList.toggle('open');
-  document.getElementById(id)?.classList.toggle('open');
+function _renderCRSection(el) {
+  const pills = _crMulti.map(([key,rs],i) => {
+    const [name] = key.split('||');
+    return `<button class="cr-pill${i===crSelectedIdx?' active':''}" onclick="selectCR(${i})">${name}</button>`;
+  }).join('');
+  const [,rs] = _crMulti[crSelectedIdx];
+  const sorted = [...rs].sort((a,b)=>new Date(a.date)-new Date(b.date));
+  const pbSecs = Math.min(...sorted.map(r=>timeToSecs(r.time)));
+  const tRows = sorted.map((r,ri) => {
+    const secs = timeToSecs(r.time);
+    const isPB = secs===pbSecs;
+    const prev = ri>0 ? timeToSecs(sorted[ri-1].time) : null;
+    let delta = '';
+    if (prev!==null) {
+      const diff = secs-prev;
+      delta = diff<0 ? `<span class="improve">▲ ${secsToHMS(Math.abs(diff))}</span>` : diff>0 ? `<span class="slower">▼ ${secsToHMS(diff)}</span>` : '';
+    }
+    return `<tr>
+      <td class="matched-td year-col">${(r.date||'').slice(0,4)}</td>
+      <td class="matched-td time-col${isPB?' is-pb':''}">${r.time}${isPB?'<span class="pb-chip">PB</span>':''}${delta}</td>
+      <td class="matched-td">${r.distance}</td>
+      <td class="matched-td">${r.city||'—'}</td>
+      <td class="matched-td">${r.placing||'—'}</td>
+    </tr>`;
+  }).join('');
+  el.innerHTML = `<div class="matched-section">
+    <div class="be-section-hd">Course Records</div>
+    <div class="cr-pills">${pills}</div>
+    <div class="cr-table-wrap">
+      <table class="matched-table">
+        <thead><tr>
+          <th class="matched-th">Year</th><th class="matched-th">Time</th>
+          <th class="matched-th">Dist</th><th class="matched-th">City</th><th class="matched-th">Place</th>
+        </tr></thead>
+        <tbody>${tRows}</tbody>
+      </table>
+    </div>
+  </div>`;
+}
+function selectCR(i) {
+  crSelectedIdx = i;
+  const el = document.getElementById('matchedRaces');
+  if (el) _renderCRSection(el);
 }
 
 /* ── Goals ── */
