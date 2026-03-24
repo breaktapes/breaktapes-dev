@@ -1,0 +1,40 @@
+HOW TO NAME YOUR MEDAL PHOTOS
+==============================
+
+RULE: {race-name-slugified}-{year}.png
+
+Slugify = lowercase, spaces to hyphens, no special chars.
+
+EXAMPLES:
+  Dubai Marathon 2026       → dubai-marathon-2026.png
+  London Marathon 2025      → london-marathon-2025.png
+  Ras Al Khaimah HM 2026    → ras-al-khaimah-half-marathon-2026.png
+  Boston Marathon 2024      → boston-marathon-2024.png
+  Berlin Marathon 2024      → berlin-marathon-2024.png
+  Tokyo Marathon 2025       → tokyo-marathon-2025.png
+  Chicago Marathon 2024     → chicago-marathon-2024.png
+  New York Marathon 2024    → new-york-city-marathon-2024.png
+  UTMB 2024                 → utmb-mont-blanc-2024.png
+  Comrades Marathon 2024    → comrades-marathon-2024-gold.png
+                              comrades-marathon-2024-silver.png
+                              comrades-marathon-2024-bill-rowan.png
+                              comrades-marathon-2024-bronze.png
+                              comrades-marathon-2024-vic-clapham.png
+                              comrades-marathon-2024-back.png
+  Ironman Triathlon 2024    → ironman-triathlon-2024.png
+  Ironman 70.3 Dubai 2024   → ironman-703-dubai-2024.png
+
+TIPS:
+  - White background photos work best (background is auto-removed)
+  - PNG or JPG both fine
+  - Max 5MB per file
+  - First photo uploaded for a race becomes the community photo for ALL users
+  - You can upload multiple years for the same race (different filenames)
+
+COMRADES VARIANTS (by finish time):
+  gold        = under 6:00
+  silver      = 6:00 – 7:30
+  bill-rowan  = 7:30 – 9:30
+  bronze      = 9:30 – 10:00
+  vic-clapham = 10:00 – 11:00
+  back        = 11:00 – 12:00
