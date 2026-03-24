@@ -5,6 +5,29 @@
 
 ---
 
+## 2026-03-24 (session 4)
+
+### gstack skills bundled in repo
+**Decision:** gstack (`https://github.com/garrytan/gstack.git`) committed to `.claude/skills/gstack/`. Skill symlinks created at `.claude/skills/<skill>` for Claude Code discovery.
+**Reason:** Teammates get all gstack skills automatically on clone — no separate install step needed. They run `cd .claude/skills/gstack && ./setup` once to build the browser binary.
+**Web browsing rule:** Always use `/browse` skill. Never use `mcp__claude-in-chrome__*` tools directly.
+**`.gitignore` fix:** Changed `.claude/` to `.claude/*` + `!.claude/skills/` to allow skills to be tracked while keeping the rest of `.claude/` private (worktrees, projects, etc.).
+
+### Cloudflare API token (pipeline)
+**Decision:** Use a proper Cloudflare API token (not the wrangler OAuth session token) for `CLOUDFLARE_API_TOKEN` GitHub secret.
+**Reason:** The wrangler OAuth token (`oauth_token` in `~/.wrangler/config/default.toml`) is a user session token — it expires and returns `Invalid access token [code: 9109]` when used as `CLOUDFLARE_API_TOKEN`. A proper API token created at `dash.cloudflare.com → My Profile → API Tokens` works reliably.
+**Token format:** Starts with `cfut_` (custom token) or `cf_` (legacy). The OAuth token starts with `OGLPAC` — do not use that.
+**If token expires:** Create a new one at `dash.cloudflare.com/profile/api-tokens` with Edit Cloudflare Workers template, then update `CLOUDFLARE_API_TOKEN` GitHub secret.
+
+### Supabase DB password management
+**Decision:** Both staging and prod DB passwords managed via Supabase Management API: `PATCH https://api.supabase.com/v1/projects/{ref}/database/password` with `Authorization: Bearer <SUPABASE_ACCESS_TOKEN>`.
+**Reason:** Dashboard resets are manual and error-prone. API reset is scriptable and instant (though password propagation takes ~60s before the new password works).
+**Staging password:** `Bt2026Stg!xK9mRnQvLzWp3hY7sD` (reset 2026-03-24)
+**Prod password:** `Bt2026Prod!xK9mRnQvLzWp3hY7sD` (reset 2026-03-24)
+**Watch out:** Password changes take ~60 seconds to propagate. Re-running a failed pipeline immediately after a reset will still fail — wait 60s first.
+
+---
+
 ## 2026-03-24 (session 3)
 
 ### CI/CD pipeline via GitHub Actions

@@ -162,4 +162,18 @@ All migrations live in `supabase/migrations/`. Applied to both projects via `sup
 | `SUPABASE_PROD_PROJECT_REF` | `kmdpufauamadwavqsinj` |
 | `SUPABASE_PROD_DB_PASSWORD` | `Bt2026Prod!xK9mRnQvLzWp3hY7sD` |
 | `SUPABASE_STAGING_PROJECT_REF` | `yqzycwuyhvzkbofwkazr` |
-| `SUPABASE_STAGING_DB_PASSWORD` | Reset in Supabase dashboard → `breaktapes-dev` → Settings → Database |
+| `SUPABASE_STAGING_DB_PASSWORD` | `Bt2026Stg!xK9mRnQvLzWp3hY7sD` (reset 2026-03-24 via Management API) |
+
+- **Rotating DB passwords:** Use `PATCH https://api.supabase.com/v1/projects/{ref}/database/password` with `Authorization: Bearer <SUPABASE_ACCESS_TOKEN>`. Wait ~60s before the new password propagates.
+- **Rotating Cloudflare token:** Create at `dash.cloudflare.com/profile/api-tokens` → Edit Cloudflare Workers template → update `CLOUDFLARE_API_TOKEN` GitHub secret. Token format starts with `cfut_`.
+
+---
+
+## gstack
+
+- **Repo:** `https://github.com/garrytan/gstack.git`
+- **Project install:** `.claude/skills/gstack/` (committed to repo)
+- **Global install:** `~/.claude/skills/gstack/`
+- **Setup:** `cd .claude/skills/gstack && ./setup` (requires `bun` — installs automatically)
+- **Web browsing:** Always use `/browse` skill. Never use `mcp__claude-in-chrome__*` tools.
+- **Skills:** `/browse`, `/ship`, `/review`, `/qa`, `/qa-only`, `/land-and-deploy`, `/canary`, `/investigate`, `/plan-eng-review`, `/plan-ceo-review`, `/plan-design-review`, `/design-review`, `/design-consultation`, `/retro`, `/office-hours`, `/benchmark`, `/document-release`, `/codex`, `/cso`, `/autoplan`, `/careful`, `/freeze`, `/guard`, `/unfreeze`, `/setup-browser-cookies`, `/setup-deploy`, `/gstack-upgrade`

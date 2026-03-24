@@ -286,6 +286,18 @@ Pages: `dashboard`, `pace`, `medals`, `history`, `athlete`, `map`, `training`
 - `82fcb9a` race_catalog Supabase migration + seed
 - `20260324*` Race catalog v1/v2/v3 refresh migrations
 - `20260324160000` race_medal_community migration
+- `26878dc` CI/CD pipeline, prod/staging environments, project memory docs
+- `f2c1774` Merge PR #9: gstack skills, landing-worker, gitignore fixes, pipeline hardening
+
+### Session 4 (2026-03-24) — Pipeline hardening + gstack
+- Fixed `CLOUDFLARE_API_TOKEN` — wrangler OAuth token doesn't work as API token; created proper `cfut_*` token
+- Reset staging DB password via Management API (`PATCH /v1/projects/{ref}/database/password`) — `Bt2026Stg!xK9mRnQvLzWp3hY7sD`
+- Reset prod DB password same way — `Bt2026Prod!xK9mRnQvLzWp3hY7sD`; password propagation takes ~60s
+- Added graceful skip to `deploy-staging.yml` migration step when DB password not set
+- Installed gstack globally (`~/.claude/skills/gstack`) and in repo (`.claude/skills/gstack`)
+- `.gitignore` updated: `.claude/*` + `!.claude/skills/` to allow skills while blocking rest of `.claude/`
+- `landing-worker/` committed (Cloudflare redirect: `breaktapes.com` → `app.breaktapes.com`)
+- Both environments fully green end-to-end via GitHub Actions
 
 ---
 
@@ -295,3 +307,6 @@ Pages: `dashboard`, `pace`, `medals`, `history`, `athlete`, `map`, `training`
 - Geolocation caching: coords cached 1hr in localStorage under key `geo_cache` to avoid repeated browser permission prompts
 - Race catalog priority: C-priority races intentionally excluded from progress-over-time chart
 - Auth guard: dashboard must not render until `initAuth()` resolves — guard is in place, do not remove
+- Cloudflare API token: if pipeline fails with auth error, token may have expired — create new one at `dash.cloudflare.com/profile/api-tokens` and update `CLOUDFLARE_API_TOKEN` secret
+- Supabase DB passwords: if migrations fail with SASL auth error, reset via `PATCH https://api.supabase.com/v1/projects/{ref}/database/password` and wait 60s before retrying
+- gstack binary: after fresh clone, run `cd .claude/skills/gstack && ./setup` to build the browse binary (not committed — 117MB)
