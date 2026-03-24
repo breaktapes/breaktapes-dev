@@ -533,6 +533,93 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
   .pr-card-time { font-size:1.25rem; }
 }
 
+/* ── Best Efforts Chart ── */
+.be-section { margin-bottom:1.5rem; }
+.be-section-hd {
+  font-family:var(--headline); font-size:8px; font-weight:800;
+  letter-spacing:0.18em; text-transform:uppercase; color:var(--muted);
+  margin-bottom:0.6rem; opacity:0.6;
+}
+.be-chart-wrap {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:6px; padding:1rem 0.75rem 0.5rem; position:relative; overflow:hidden;
+}
+.be-chart-svg { width:100%; display:block; }
+.be-chart-tip {
+  position:absolute; pointer-events:none; display:none;
+  background:rgba(13,13,13,0.95); border:1px solid var(--border2);
+  border-radius:5px; padding:0.35rem 0.6rem; z-index:10; white-space:nowrap;
+}
+.be-chart-tip .tip-time { font-family:var(--headline); font-size:14px; font-weight:900; color:var(--green); display:block; }
+.be-chart-tip .tip-name { color:var(--muted); font-size:9px; letter-spacing:0.06em; }
+
+/* ── Calendar Heatmap ── */
+.cal-section { margin-bottom:1.5rem; }
+.cal-heatmap-wrap { background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:1rem; overflow-x:auto; }
+.cal-grid { display:flex; flex-direction:column; gap:4px; min-width:340px; }
+.cal-row { display:flex; align-items:center; gap:4px; }
+.cal-label { font-family:var(--headline); font-size:8px; font-weight:800; letter-spacing:0.1em; color:var(--muted); text-transform:uppercase; width:28px; flex-shrink:0; text-align:right; padding-right:4px; }
+.cal-month-labels { display:flex; gap:4px; padding-left:32px; margin-bottom:2px; }
+.cal-month-lbl { font-family:var(--headline); font-size:7px; font-weight:800; letter-spacing:0.04em; color:var(--muted); text-transform:uppercase; flex:0 0 24px; text-align:center; opacity:0.5; }
+.cal-cell { width:24px; height:24px; border-radius:3px; flex-shrink:0; background:var(--surface3); border:1px solid var(--border); cursor:default; transition:opacity 0.15s; }
+.cal-cell:hover { opacity:0.75; }
+.cal-cell[data-c="1"] { background:rgba(0,255,136,0.25); border-color:rgba(0,255,136,0.3); }
+.cal-cell[data-c="2"] { background:rgba(0,255,136,0.45); border-color:rgba(0,255,136,0.5); }
+.cal-cell[data-c="3"] { background:rgba(0,255,136,0.65); border-color:rgba(0,255,136,0.7); }
+.cal-cell[data-c="4"] { background:var(--green); border-color:var(--green); }
+
+/* ── Matched Races ── */
+.matched-section { margin-bottom:1.5rem; }
+.matched-race-btn {
+  display:flex; align-items:center; justify-content:space-between;
+  background:var(--surface); border:1px solid var(--border); border-radius:6px;
+  padding:0.75rem 1rem; cursor:pointer; width:100%; text-align:left;
+  margin-bottom:0.5rem; transition:border-color 0.15s;
+}
+.matched-race-btn:hover { border-color:var(--border2); }
+.matched-race-btn.open { border-color:var(--green); }
+.matched-name { font-family:var(--headline); font-size:13px; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; color:var(--white); }
+.matched-count { font-family:var(--headline); font-size:9px; font-weight:700; letter-spacing:0.08em; color:var(--muted); margin-top:2px; }
+.matched-chevron { font-size:10px; color:var(--muted); transition:transform 0.2s; }
+.matched-race-btn.open .matched-chevron { transform:rotate(180deg); }
+.matched-detail { display:none; margin:-0.25rem 0 0.75rem; }
+.matched-detail.open { display:block; }
+.matched-table { width:100%; border-collapse:collapse; }
+.matched-th { font-family:var(--headline); font-size:8px; font-weight:800; letter-spacing:0.12em; text-transform:uppercase; color:var(--muted); padding:0.3rem 0.5rem; text-align:left; border-bottom:1px solid var(--border); }
+.matched-td { font-size:11px; padding:0.45rem 0.5rem; border-bottom:1px solid rgba(245,245,245,0.04); color:var(--muted); vertical-align:middle; }
+.matched-td.year-col { font-family:var(--headline); font-size:13px; font-weight:900; color:var(--fg); }
+.matched-td.time-col { font-family:var(--headline); font-size:13px; font-weight:900; color:var(--white); }
+.matched-td.time-col.is-pb { color:var(--green); }
+.matched-td .pb-chip { font-size:7px; background:var(--green-dim); color:var(--green); border:1px solid rgba(0,255,136,0.3); border-radius:3px; padding:1px 4px; margin-left:4px; font-family:var(--headline); font-weight:800; letter-spacing:0.1em; }
+.matched-td .improve { font-size:9px; color:var(--green); margin-left:4px; }
+.matched-td .slower { font-size:9px; color:var(--orange); margin-left:4px; }
+
+/* ── Goals ── */
+.goals-section { margin-bottom:1.5rem; }
+.goals-row { display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.75rem; }
+.goal-card { background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:1rem; position:relative; }
+.goal-kicker { font-family:var(--headline); font-size:8px; font-weight:800; letter-spacing:0.18em; text-transform:uppercase; color:var(--muted); margin-bottom:0.35rem; }
+.goal-value { font-family:var(--headline); font-size:1.4rem; font-weight:900; color:var(--white); line-height:1; margin-bottom:0.6rem; }
+.goal-value .goal-unit { font-size:0.85rem; color:var(--muted); font-weight:700; }
+.goal-bar-bg { background:var(--surface3); border-radius:100px; height:4px; overflow:hidden; }
+.goal-bar-fill { height:100%; border-radius:100px; background:var(--green); transition:width 0.6s; }
+.goal-bar-fill.over { background:var(--orange); }
+.goal-pct { font-family:var(--headline); font-size:8px; font-weight:800; color:var(--muted); margin-top:0.3rem; letter-spacing:0.08em; }
+.goal-edit-btn { position:absolute; top:0.7rem; right:0.7rem; font-size:9px; color:var(--muted); background:none; border:none; cursor:pointer; font-family:var(--headline); font-weight:800; letter-spacing:0.1em; text-transform:uppercase; transition:color 0.15s; }
+.goal-edit-btn:hover { color:var(--orange); }
+.goals-dist-list { display:flex; flex-direction:column; gap:0.5rem; margin-bottom:0.5rem; }
+.goal-dist-card { background:var(--surface); border:1px solid var(--border); border-radius:6px; padding:0.75rem 1rem; display:flex; align-items:center; gap:0.75rem; }
+.goal-dist-icon { font-size:1.1rem; }
+.goal-dist-info { flex:1; min-width:0; }
+.goal-dist-name { font-family:var(--headline); font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; color:var(--white); }
+.goal-dist-target { font-size:10px; color:var(--muted); margin-top:2px; }
+.goal-dist-status { font-family:var(--headline); font-size:12px; font-weight:800; white-space:nowrap; }
+.goal-dist-status.achieved { color:var(--green); }
+.goal-dist-status.in-progress { color:var(--orange); }
+.goal-add-btn { display:flex; align-items:center; justify-content:center; gap:0.4rem; background:none; border:1px dashed var(--border2); border-radius:6px; padding:0.6rem; width:100%; cursor:pointer; color:var(--muted); font-family:var(--headline); font-size:9px; font-weight:800; letter-spacing:0.12em; text-transform:uppercase; transition:border-color 0.15s, color 0.15s; }
+.goal-add-btn:hover { border-color:var(--green); color:var(--green); }
+@media(max-width:480px) { .goals-row { grid-template-columns:1fr 1fr; } }
+
 /* ── Recent ── */
 .section-row {
   display:flex; align-items:center; justify-content:space-between;
@@ -2103,6 +2190,8 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
       <div class="s-tile"><div class="s-tile-num" id="ds-k">0</div><div class="s-tile-label">Total KM</div></div>
       <div class="s-tile" onclick="go('medals')" style="cursor:pointer"><div class="s-tile-num" id="ds-m">0</div><div class="s-tile-label">Medals</div></div>
     </div>
+    <!-- Goals -->
+    <div id="goalsSection"></div>
     <!-- Year in Review + H2H -->
     <div class="dash-insight-row">
       <div class="dash-insight-tile" id="yirTile"></div>
@@ -2252,6 +2341,9 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
       <div class="s-tile" onclick="go('medals')" style="cursor:pointer"><div class="s-tile-num" id="hs-m">0</div><div class="s-tile-label">Medals</div></div>
     </div>
     <div id="prStrip"></div>
+    <div id="beChart"></div>
+    <div id="calHeatmap"></div>
+    <div id="matchedRaces"></div>
     <div class="history-list" id="histList"></div>
   </div>
 </div>
@@ -3717,6 +3809,7 @@ function renderDash(){
     </div>`;}).join('') :
     `<div style="text-align:center;padding:2rem;color:var(--muted);font-size:13px;font-family:var(--headline);letter-spacing:.1em;text-transform:uppercase">No races yet — add one above</div>`;
 
+  renderGoals();
   renderDashInsights();
   // Personal Bests on dashboard
   document.getElementById('dashPBs').innerHTML = renderPBSections(calcPBs(), 'dash-pb-card');
@@ -4092,7 +4185,7 @@ function buildTriPBMap() {
   return pb;
 }
 let prSelectedDist = null;
-function selectPRDist(dist) { prSelectedDist = dist; renderPRStrip(); }
+function selectPRDist(dist) { prSelectedDist = dist; renderPRStrip(); renderBEChart(); }
 function renderPRStrip() {
   const el = document.getElementById('prStrip');
   if (!el) return;
@@ -4131,6 +4224,294 @@ function renderPRStrip() {
     </div>`).join('')}</div>`;
   el.innerHTML = tabGroup('Running', runDists) + tabGroup('Triathlon', triDists) + cardsHtml;
 }
+/* ── secsToHMS helper ── */
+function secsToHMS(s) {
+  s = Math.round(s);
+  const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+  if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+  return `${m}:${String(sec).padStart(2,'0')}`;
+}
+
+/* ── Best Efforts Chart (progress over time for selected distance) ── */
+function renderBEChart() {
+  const el = document.getElementById('beChart');
+  if (!el) return;
+  if (!prSelectedDist) { el.innerHTML = ''; return; }
+  const data = races
+    .filter(r => r.distance === prSelectedDist && r.time && timeToSecs(r.time) < Infinity && r.date)
+    .map(r => ({ year: parseInt(r.date.slice(0,4)), secs: timeToSecs(r.time), time: r.time, name: r.name, date: r.date }))
+    .filter(r => r.year > 1900)
+    .sort((a,b) => new Date(a.date)-new Date(b.date));
+  if (data.length < 2) { el.innerHTML = ''; return; }
+  const W = 400, H = 160;
+  const PAD = {l:54,r:16,t:16,b:28};
+  const cW = W-PAD.l-PAD.r, cH = H-PAD.t-PAD.b;
+  const dates = data.map(d => new Date(d.date).getTime());
+  const minT = Math.min(...dates), maxT = Math.max(...dates), tRange = maxT-minT||1;
+  const minS = Math.min(...data.map(d=>d.secs));
+  const maxS = Math.max(...data.map(d=>d.secs));
+  const sRange = maxS-minS||1;
+  const xFn = d => PAD.l + ((new Date(d.date).getTime()-minT)/tRange)*cW;
+  const yFn = s => PAD.t + cH - ((s-minS)/sRange)*cH;
+  // Linear regression for trend
+  const xs = data.map(d=>(new Date(d.date).getTime()-minT)/tRange);
+  const ys = data.map(d=>(d.secs-minS)/sRange);
+  const n = xs.length;
+  const avgX = xs.reduce((a,b)=>a+b,0)/n, avgY = ys.reduce((a,b)=>a+b,0)/n;
+  const num = xs.reduce((s,x,i)=>s+(x-avgX)*(ys[i]-avgY),0);
+  const den = xs.reduce((s,x)=>s+(x-avgX)**2,0)||1;
+  const slope = num/den, intercept = avgY-slope*avgX;
+  const trendY1 = PAD.t+cH-((slope*0+intercept)*cH);
+  const trendY2 = PAD.t+cH-((slope*1+intercept)*cH);
+  // Y-axis ticks
+  const yTickVals = [maxS, (minS+maxS)/2, minS];
+  const yTicksHtml = yTickVals.map(s =>
+    `<text x="${PAD.l-6}" y="${yFn(s)+4}" text-anchor="end" class="be-ax">${secsToHMS(s)}</text>`).join('');
+  const gridHtml = yTickVals.map(s =>
+    `<line x1="${PAD.l}" y1="${yFn(s)}" x2="${W-PAD.r}" y2="${yFn(s)}" stroke="rgba(245,245,245,0.05)" stroke-width="1"/>`).join('');
+  // X-axis: pick up to 5 representative years
+  const years = [...new Set(data.map(d=>d.year))].sort();
+  const step = Math.max(1, Math.ceil(years.length/5));
+  const xLabels = years.filter((_,i)=>i%step===0||i===years.length-1);
+  const xLabelsHtml = xLabels.map(y => {
+    const pt = data.find(d=>d.year===y);
+    if (!pt) return '';
+    return `<text x="${xFn(pt)}" y="${H-6}" text-anchor="middle" class="be-ax">${y}</text>`;
+  }).join('');
+  // Path
+  const linePath = data.map((d,i)=>`${i===0?'M':'L'}${xFn(d)},${yFn(d.secs)}`).join(' ');
+  // Points
+  const pbSecs = Math.min(...data.map(d=>d.secs));
+  const ptsHtml = data.map((d,i) => {
+    const isPB = d.secs===pbSecs;
+    return `<circle r="${isPB?5.5:3.5}" cx="${xFn(d)}" cy="${yFn(d.secs)}"
+      fill="${isPB?'var(--green)':'rgba(245,245,245,0.5)'}"
+      stroke="${isPB?'rgba(0,255,136,0.3)':'rgba(245,245,245,0.15)'}" stroke-width="${isPB?3:1}"
+      data-i="${i}" onmouseenter="showBETip(event,${i})" onmouseleave="hideBETip()" style="cursor:pointer"/>`;
+  }).join('');
+  // Trend colour: slope<0 = getting faster (green), else orange
+  const trendCol = slope < 0 ? 'var(--green)' : 'var(--orange)';
+  el.innerHTML = `<div class="be-section">
+    <div class="be-section-hd">Progress Over Time · ${prSelectedDist}</div>
+    <div class="be-chart-wrap" id="beChartWrap">
+      <div class="be-chart-tip" id="beChartTip"></div>
+      <svg class="be-chart-svg" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+        <style>.be-ax{font-family:'Barlow Condensed',sans-serif;font-size:8.5px;font-weight:700;fill:rgba(245,245,245,0.35);}</style>
+        ${gridHtml}${yTicksHtml}${xLabelsHtml}
+        <path d="${linePath}" fill="none" stroke="rgba(245,245,245,0.1)" stroke-width="1.5"/>
+        <line x1="${PAD.l}" y1="${trendY1}" x2="${W-PAD.r}" y2="${trendY2}"
+          stroke="${trendCol}" stroke-width="1.5" stroke-dasharray="5 4" opacity="0.55"/>
+        ${ptsHtml}
+      </svg>
+    </div>
+  </div>`;
+  window._beData = data;
+}
+function showBETip(e, i) {
+  const d = (window._beData||[])[i];
+  if (!d) return;
+  const tip = document.getElementById('beChartTip');
+  const wrap = document.getElementById('beChartWrap');
+  if (!tip||!wrap) return;
+  tip.innerHTML = `<span class="tip-time">${d.time}</span><span class="tip-name">${d.name.replace(/\s+\d{4}$/,'')} · ${d.year}</span>`;
+  tip.style.display = 'block';
+  const wr = wrap.getBoundingClientRect(), er = e.target.getBoundingClientRect();
+  tip.style.left = (er.left-wr.left+8)+'px';
+  tip.style.top  = (er.top-wr.top-44)+'px';
+}
+function hideBETip() { const t=document.getElementById('beChartTip'); if(t) t.style.display='none'; }
+
+/* ── Calendar Heatmap ── */
+function renderCalHeatmap() {
+  const el = document.getElementById('calHeatmap');
+  if (!el) return;
+  if (!races.length) { el.innerHTML=''; return; }
+  const map = {};
+  races.forEach(r => {
+    if (!r.date) return;
+    const k = r.date.slice(0,7);
+    map[k] = (map[k]||0)+1;
+  });
+  const years = [...new Set(races.map(r=>(r.date||'').slice(0,4)).filter(y=>y>='2000'))].sort().reverse();
+  if (!years.length) { el.innerHTML=''; return; }
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const monthHdr = `<div class="cal-month-labels">${MONTHS.map(m=>`<div class="cal-month-lbl">${m}</div>`).join('')}</div>`;
+  const rowsHtml = years.map(y => {
+    const cells = Array.from({length:12},(_,mi) => {
+      const k = `${y}-${String(mi+1).padStart(2,'0')}`;
+      const c = Math.min(map[k]||0, 4);
+      const title = c ? `${MONTHS[mi]} ${y}: ${map[k]} race${map[k]>1?'s':''}` : '';
+      return `<div class="cal-cell" data-c="${c}" title="${title}"></div>`;
+    }).join('');
+    return `<div class="cal-row"><div class="cal-label">${y}</div>${cells}</div>`;
+  }).join('');
+  el.innerHTML = `<div class="cal-section"><div class="be-section-hd">Race Activity</div>
+    <div class="cal-heatmap-wrap"><div class="cal-grid">${monthHdr}${rowsHtml}</div></div></div>`;
+}
+
+/* ── Matched Races ── */
+function renderMatchedRaces() {
+  const el = document.getElementById('matchedRaces');
+  if (!el) return;
+  const eligible = races.filter(r => r.time && timeToSecs(r.time) < Infinity);
+  if (!eligible.length) { el.innerHTML=''; return; }
+  const groups = {};
+  eligible.forEach(r => {
+    const base = r.name.replace(/\s+\d{4}$/,'');
+    (groups[base] = groups[base]||[]).push(r);
+  });
+  const multi = Object.entries(groups).filter(([,rs])=>rs.length>=2).sort((a,b)=>b[1].length-a[1].length);
+  if (!multi.length) { el.innerHTML=''; return; }
+  const items = multi.map(([name,rs],gi) => {
+    const sorted = [...rs].sort((a,b)=>new Date(a.date)-new Date(b.date));
+    const pbSecs = Math.min(...sorted.map(r=>timeToSecs(r.time)));
+    const tRows = sorted.map((r,ri) => {
+      const secs = timeToSecs(r.time);
+      const isPB = secs===pbSecs;
+      const prev = ri>0 ? timeToSecs(sorted[ri-1].time) : null;
+      let delta = '';
+      if (prev!==null) {
+        const diff = secs-prev;
+        delta = diff<0 ? `<span class="improve">▲ ${secsToHMS(Math.abs(diff))}</span>` : diff>0 ? `<span class="slower">▼ ${secsToHMS(diff)}</span>` : '';
+      }
+      return `<tr>
+        <td class="matched-td year-col">${(r.date||'').slice(0,4)}</td>
+        <td class="matched-td time-col${isPB?' is-pb':''}">${r.time}${isPB?'<span class="pb-chip">PB</span>':''}${delta}</td>
+        <td class="matched-td">${r.distance}</td>
+        <td class="matched-td">${r.city||'—'}</td>
+        <td class="matched-td">${r.placing||'—'}</td>
+      </tr>`;
+    }).join('');
+    return `<div>
+      <button class="matched-race-btn" onclick="toggleMatched(this,'mr-${gi}')">
+        <div><div class="matched-name">${name}</div><div class="matched-count">${rs.length} races</div></div>
+        <span class="matched-chevron">▼</span>
+      </button>
+      <div class="matched-detail" id="mr-${gi}">
+        <table class="matched-table">
+          <thead><tr><th class="matched-th">Year</th><th class="matched-th">Time</th><th class="matched-th">Dist</th><th class="matched-th">City</th><th class="matched-th">Place</th></tr></thead>
+          <tbody>${tRows}</tbody>
+        </table>
+      </div>
+    </div>`;
+  }).join('');
+  el.innerHTML = `<div class="matched-section"><div class="be-section-hd">Matched Races</div>${items}</div>`;
+}
+function toggleMatched(btn, id) {
+  btn.classList.toggle('open');
+  document.getElementById(id)?.classList.toggle('open');
+}
+
+/* ── Goals ── */
+let goals = JSON.parse(localStorage.getItem('fl2_goals')||'{"annual":{},"distGoals":[]}');
+function saveGoals() { localStorage.setItem('fl2_goals', JSON.stringify(goals)); }
+
+function renderGoals() {
+  const el = document.getElementById('goalsSection');
+  if (!el) return;
+  const yr = new Date().getFullYear();
+  const yrRaces = races.filter(r=>(r.date||'').startsWith(yr));
+  const yrKm = Math.round(yrRaces.reduce((s,r)=>s+(r.distKm||0),0));
+  const yrCnt = yrRaces.length;
+  const ag = goals.annual[yr]||{};
+  const kmT = ag.km||0, rcT = ag.races||0;
+  const kmPct = kmT ? Math.min(100,Math.round(yrKm/kmT*100)) : 0;
+  const rcPct = rcT ? Math.min(100,Math.round(yrCnt/rcT*100)) : 0;
+  const annualHtml = `<div class="goals-row">
+    <div class="goal-card">
+      <button class="goal-edit-btn" onclick="openGoalModal('km')">Edit</button>
+      <div class="goal-kicker">${yr} · KM</div>
+      <div class="goal-value">${yrKm}<span class="goal-unit"> / ${kmT||'—'} km</span></div>
+      ${kmT?`<div class="goal-bar-bg"><div class="goal-bar-fill${yrKm>=kmT?' over':''}" style="width:${kmPct}%"></div></div><div class="goal-pct">${kmPct}%${yrKm>=kmT?' · Achieved!':''}</div>`:'<div class="goal-pct">Tap Edit to set target</div>'}
+    </div>
+    <div class="goal-card">
+      <button class="goal-edit-btn" onclick="openGoalModal('races')">Edit</button>
+      <div class="goal-kicker">${yr} · Races</div>
+      <div class="goal-value">${yrCnt}<span class="goal-unit"> / ${rcT||'—'}</span></div>
+      ${rcT?`<div class="goal-bar-bg"><div class="goal-bar-fill${yrCnt>=rcT?' over':''}" style="width:${rcPct}%"></div></div><div class="goal-pct">${rcPct}%${yrCnt>=rcT?' · Achieved!':''}</div>`:'<div class="goal-pct">Tap Edit to set target</div>'}
+    </div>
+  </div>`;
+  const distItems = (goals.distGoals||[]).map((g,i) => {
+    const best = races.filter(r=>r.distance===g.dist&&r.time&&timeToSecs(r.time)<Infinity).sort((a,b)=>timeToSecs(a.time)-timeToSecs(b.time))[0];
+    const bSecs = best ? timeToSecs(best.time) : null;
+    const done = bSecs!==null && bSecs<=g.targetSecs;
+    return `<div class="goal-dist-card">
+      <div class="goal-dist-icon">🎯</div>
+      <div class="goal-dist-info">
+        <div class="goal-dist-name">${g.dist}</div>
+        <div class="goal-dist-target">Sub ${secsToHMS(g.targetSecs)}${g.deadline?' · '+fmtDate(g.deadline):''}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="goal-dist-status ${done?'achieved':'in-progress'}">${done?'✓ Done':bSecs?secsToHMS(bSecs):'—'}</div>
+        <button onclick="deleteDistGoal(${i})" style="font-size:9px;background:none;border:none;color:var(--muted);cursor:pointer;margin-top:2px">✕ Remove</button>
+      </div>
+    </div>`;
+  }).join('');
+  el.innerHTML = `<div class="goals-section">
+    <div class="section-row"><div class="section-h">${yr} Goals</div></div>
+    ${annualHtml}
+    <div class="goals-dist-list">${distItems}</div>
+    <button class="goal-add-btn" onclick="openGoalModal('dist')">+ Add Distance Goal</button>
+  </div>`;
+}
+function deleteDistGoal(i) {
+  goals.distGoals.splice(i,1); saveGoals(); renderGoals();
+}
+function openGoalModal(type) {
+  const yr = new Date().getFullYear();
+  const ag = goals.annual[yr]||{};
+  document.getElementById('goalModalType').value = type;
+  const annSeg = document.getElementById('goalAnnualSeg');
+  const distSeg = document.getElementById('goalDistSeg');
+  if (type==='km') {
+    document.getElementById('goalModalTitle').textContent = `${yr} KM Target`;
+    annSeg.style.display='block'; distSeg.style.display='none';
+    document.getElementById('goalKmInput').value = ag.km||'';
+    document.getElementById('goalKmInput').placeholder = 'e.g. 500 km';
+  } else if (type==='races') {
+    document.getElementById('goalModalTitle').textContent = `${yr} Race Count Target`;
+    annSeg.style.display='block'; distSeg.style.display='none';
+    document.getElementById('goalKmInput').value = ag.races||'';
+    document.getElementById('goalKmInput').placeholder = 'e.g. 10 races';
+  } else {
+    document.getElementById('goalModalTitle').textContent = 'Distance Goal';
+    annSeg.style.display='none'; distSeg.style.display='block';
+    // Populate distance select
+    const distVal = d => DIST_KM[d]||parseFloat(d)||0;
+    const dists = [...new Set(races.filter(r=>r.distance).map(r=>r.distance))]
+      .sort((a,b)=>distVal(a)-distVal(b));
+    document.getElementById('goalDistSelect').innerHTML = dists.map(d=>`<option value="${d}">${d}</option>`).join('');
+    document.getElementById('goalDistH').value='';
+    document.getElementById('goalDistM').value='';
+    document.getElementById('goalDistS').value='';
+    document.getElementById('goalDistDeadline').value='';
+  }
+  document.getElementById('goalModal').classList.add('open');
+}
+function saveGoalModal() {
+  const type = document.getElementById('goalModalType').value;
+  const yr = new Date().getFullYear();
+  if (!goals.annual[yr]) goals.annual[yr]={};
+  if (type==='km') {
+    const v = parseInt(document.getElementById('goalKmInput').value);
+    if (v>0) goals.annual[yr].km=v;
+  } else if (type==='races') {
+    const v = parseInt(document.getElementById('goalKmInput').value);
+    if (v>0) goals.annual[yr].races=v;
+  } else {
+    const dist = document.getElementById('goalDistSelect').value;
+    const h = parseInt(document.getElementById('goalDistH').value)||0;
+    const m = parseInt(document.getElementById('goalDistM').value)||0;
+    const s = parseInt(document.getElementById('goalDistS').value)||0;
+    const secs = h*3600+m*60+s;
+    const dl = document.getElementById('goalDistDeadline').value;
+    if (dist&&secs>0) goals.distGoals.push({dist,targetSecs:secs,deadline:dl});
+  }
+  saveGoals();
+  closeM('goalModal');
+  renderGoals();
+}
+
 function getPodiumPos(str) {
   if (!str) return null;
   const m = String(str).match(/^\s*(\d+)\s*[\/\-]/);
@@ -4148,6 +4529,9 @@ function renderHistory(){
   document.getElementById('hs-k').textContent = Math.round(races.reduce((s,r)=>s+(r.distKm||0),0));
   document.getElementById('hs-m').textContent = races.length;
   renderPRStrip();
+  renderBEChart();
+  renderCalHeatmap();
+  renderMatchedRaces();
   const list = document.getElementById('histList');
   if(!races.length){
     list.innerHTML=`<div class="empty"><div class="empty-ico">📋</div><div class="empty-h">No races logged</div><div class="empty-p">Add your first race.</div></div>`;
@@ -5871,5 +6255,44 @@ async function initApp() {
    ============================ */
 initApp();
 </script>
+
+<!-- GOALS MODAL -->
+<div class="modal-overlay" id="goalModal" onclick="bgClose(event,'goalModal')">
+  <div class="modal">
+    <div class="modal-drag"></div>
+    <div class="modal-head">
+      <div class="modal-h" id="goalModalTitle">Set Goal</div>
+      <div class="modal-sub">Track what matters to you.</div>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="goalModalType">
+      <!-- Annual target (km or races) -->
+      <div id="goalAnnualSeg">
+        <div class="fg"><label class="fl">Target</label><input class="fi" type="number" id="goalKmInput" placeholder="e.g. 500" min="1"></div>
+      </div>
+      <!-- Distance goal -->
+      <div id="goalDistSeg" style="display:none">
+        <div class="fgrid" style="grid-template-columns:1fr;gap:.75rem">
+          <div class="fg"><label class="fl">Distance</label><select class="fi" id="goalDistSelect"></select></div>
+          <div class="fg">
+            <label class="fl">Target Time</label>
+            <div style="display:flex;gap:0.5rem;align-items:center">
+              <input class="fi" type="number" id="goalDistH" placeholder="HH" min="0" max="99" style="width:64px;text-align:center">
+              <span style="color:var(--muted)">:</span>
+              <input class="fi" type="number" id="goalDistM" placeholder="MM" min="0" max="59" style="width:64px;text-align:center">
+              <span style="color:var(--muted)">:</span>
+              <input class="fi" type="number" id="goalDistS" placeholder="SS" min="0" max="59" style="width:64px;text-align:center">
+            </div>
+          </div>
+          <div class="fg"><label class="fl">Deadline (optional)</label><input class="fi" type="date" id="goalDistDeadline"></div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeM('goalModal')">Cancel</button>
+      <button class="btn-main" onclick="saveGoalModal()">Save Goal</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
