@@ -7,3 +7,7 @@
 
 # Supabase local temp state
 supabase/.temp/
+
+# Co-located repos (not part of this project)
+open-wearables/
+gstack/
