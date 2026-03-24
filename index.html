@@ -4654,7 +4654,7 @@ function renderBEChart() {
   if (!el) return;
   if (!prSelectedDist) { el.innerHTML = ''; return; }
   const data = races
-    .filter(r => r.distance === prSelectedDist && r.time && timeToSecs(r.time) < Infinity && r.date)
+    .filter(r => r.distance === prSelectedDist && r.time && timeToSecs(r.time) < Infinity && r.date && r.priority !== 'C')
     .map(r => ({ year: parseInt(r.date.slice(0,4)), secs: timeToSecs(r.time), time: r.time, name: r.name, date: r.date }))
     .filter(r => r.year > 1900)
     .sort((a,b) => new Date(a.date)-new Date(b.date));
