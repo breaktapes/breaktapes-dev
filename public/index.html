@@ -3791,15 +3791,21 @@ async function sendPasswordReset() {
   const btn = document.getElementById('authForgotBtn');
   btn.textContent = 'Sending...';
   btn.disabled = true;
-  const { error } = await supa.auth.resetPasswordForEmail(email, {
-    redirectTo: window.location.origin
-  });
-  btn.disabled = false;
-  if (error) {
+  try {
+    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 8000));
+    const reset = supa.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
+    const { error } = await Promise.race([reset, timeout]);
+    btn.disabled = false;
+    if (error) {
+      btn.textContent = 'Forgot password?';
+      showFieldError('authEmail', 'Could not send reset email. Try again.');
+    } else {
+      btn.textContent = 'Check your email ✓';
+    }
+  } catch (e) {
+    btn.disabled = false;
     btn.textContent = 'Forgot password?';
-    showFieldError('authEmail', 'Could not send reset email. Try again.');
-  } else {
-    btn.textContent = 'Check your email ✓';
+    showFieldError('authEmail', 'Request timed out. Check your connection and try again.');
   }
 }
 
