@@ -3523,8 +3523,18 @@ main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(1
       </div>
       <div class="fgrid" style="grid-template-columns:1fr">
         <div class="fg" id="authNameWrap" style="display:none">
-          <label class="fl">Full Name</label>
-          <input class="fi" id="authName" placeholder="e.g. Ayush Krishna">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
+            <div class="fg" style="margin:0">
+              <label class="fl">First Name</label>
+              <input class="fi" id="authFirstName" placeholder="Alex">
+              <div class="fg-err-msg"></div>
+            </div>
+            <div class="fg" style="margin:0">
+              <label class="fl">Last Name</label>
+              <input class="fi" id="authLastName" placeholder="Finisher">
+              <div class="fg-err-msg"></div>
+            </div>
+          </div>
         </div>
         <div class="fg">
           <label class="fl" for="authEmail">Email</label>
@@ -3595,27 +3605,10 @@ let raceDbLoadPromise = null;
 let raceDbLoaded = false;
 let raceDbError = false;
 
-/* Seed data */
-if (!races) {
-  races = [
-    { id:1, name:"London Marathon",     type:"run",   distance:"Marathon",    time:"3:58:22", city:"London",     country:"United Kingdom", date:"2024-04-21", placing:"8,842 / 54,000", medal:"finisher", distKm:42.2 },
-    { id:2, name:"Ironman 70.3 Dubai",  type:"tri",   distance:"Ironman 70.3",time:"5:32:11", city:"Dubai",      country:"United Arab Emirates",            date:"2024-02-03", placing:"342 / 2,100",   medal:"finisher", distKm:113  },
-    { id:3, name:"UTMB OCC",            type:"ultra", distance:"50K",         time:"9:14:05", city:"Chamonix",   country:"France",         date:"2023-08-28", placing:"512 / 1,400",   medal:"finisher", distKm:55   },
-    { id:4, name:"Dubai 10K",           type:"run",   distance:"10K",         time:"0:48:33", city:"Dubai",      country:"United Arab Emirates",            date:"2024-12-06", placing:"187 / 3,200",   medal:"bronze",   distKm:10   },
-    { id:5, name:"L'Étape du Tour",     type:"cycle", distance:"Gran Fondo",  time:"7:02:45", city:"Albertville",country:"France",         date:"2023-07-09", placing:"2,341 / 12,000",medal:"finisher", distKm:145  },
-    { id:6, name:"Abu Dhabi Half",      type:"run",   distance:"Half Marathon",time:"1:52:18", city:"Abu Dhabi", country:"United Arab Emirates",            date:"2025-02-14", placing:"433 / 8,000",   medal:"silver",   distKm:21.1 },
-  ];
-  sv('fl2_races', races);
-}
-if (!athlete) {
-  athlete = { name:"Alex Finisher", city:"Dubai", nationality:"British", ageGroup:"35–39", since:"2021", primary:"Running", favRace:"London Marathon" };
-  sv('fl2_ath', athlete);
-}
-if (!nextRace) {
-  const d = new Date(); d.setDate(d.getDate() + 62);
-  nextRace = { name:"Boston Marathon", date:d.toISOString().slice(0,10), location:"Boston, USA", distance:"Marathon" };
-  sv('fl2_nr', nextRace);
-}
+/* New users start with empty state — no demo data */
+if (!races) { races = []; sv('fl2_races', races); }
+if (!athlete) { athlete = { name:'' }; sv('fl2_ath', athlete); }
+if (!nextRace) { nextRace = null; }
 function sv(k,v){
   localStorage.setItem(k, JSON.stringify(v));
   if (!suppressRemoteSync && remoteSyncReady && REMOTE_SYNC_KEYS.has(k)) scheduleRemoteStateSync();
@@ -3706,20 +3699,32 @@ async function loadRemoteState() {
       .maybeSingle();
     if (error) throw error;
     if (!data) {
-      const seedPayload = buildRemoteStatePayload();
-      const { error: upsertError } = await client.from('user_state').upsert(seedPayload, { onConflict: 'user_id' });
+      // New user — seed an empty row so subsequent syncs work
+      const emptyPayload = {
+        user_id: authUser.id,
+        races: [],
+        athlete: athlete || { name: authUser.user_metadata?.full_name || '' },
+        next_race: null,
+        upcoming_races: []
+      };
+      // Apply name from auth metadata if athlete has no name yet
+      if (!athlete?.name && authUser.user_metadata?.full_name) {
+        athlete = { name: authUser.user_metadata.full_name };
+        localStorage.setItem('fl2_ath', JSON.stringify(athlete));
+      }
+      const { error: upsertError } = await client.from('user_state').upsert(emptyPayload, { onConflict: 'user_id' });
       if (upsertError) throw upsertError;
       return true;
     }
-    const hasRemoteData =
-      (Array.isArray(data.races) && data.races.length > 0) ||
-      (data.athlete && Object.keys(data.athlete).length > 0) ||
-      (data.next_race && Object.keys(data.next_race).length > 0) ||
+    const hasRemoteData = (Array.isArray(data.races) && data.races.length > 0) ||
+      (data.athlete?.name) || (data.next_race) ||
       (Array.isArray(data.upcoming_races) && data.upcoming_races.length > 0);
     if (!hasRemoteData) {
-      const seedPayload = buildRemoteStatePayload();
-      const { error: upsertError } = await client.from('user_state').upsert(seedPayload, { onConflict: 'user_id' });
-      if (upsertError) throw upsertError;
+      // Existing row but no real data — apply name from auth metadata
+      if (!athlete?.name && authUser.user_metadata?.full_name) {
+        athlete = { name: authUser.user_metadata.full_name };
+        localStorage.setItem('fl2_ath', JSON.stringify(athlete));
+      }
       return true;
     }
     return applyRemoteState(data);
@@ -3858,15 +3863,8 @@ async function submitAuth() {
   if (!client) return;
   const email = document.getElementById('authEmail').value.trim();
   const password = document.getElementById('authPassword').value;
-  const fullName = document.getElementById('authName').value.trim();
-  if (!email) {
-    showFieldError('authEmail', 'Drop an email to get started.');
-    return;
-  }
-  if (!password) {
-    showFieldError('authPassword', 'Need a password to race in.');
-    return;
-  }
+  if (!email) { showFieldError('authEmail', 'Drop an email to get started.'); return; }
+  if (!password) { showFieldError('authPassword', 'Need a password to race in.'); return; }
   const btn = document.getElementById('authSubmitBtn');
   const prev = btn.textContent;
   btn.disabled = true;
@@ -3879,19 +3877,31 @@ async function submitAuth() {
       render(curPage);
       return;
     }
-    const { error } = await client.auth.signUp({
-      email,
-      password,
+    const firstName = (document.getElementById('authFirstName')?.value || '').trim();
+    const lastName = (document.getElementById('authLastName')?.value || '').trim();
+    if (!firstName) { showFieldError('authFirstName', 'First name required.'); btn.disabled = false; btn.textContent = prev; return; }
+    const fullName = [firstName, lastName].filter(Boolean).join(' ');
+    const { data: signUpData, error } = await client.auth.signUp({
+      email, password,
       options: {
-        data: { full_name: fullName || athlete?.name || '' },
+        data: { full_name: fullName, first_name: firstName, last_name: lastName },
         emailRedirectTo: window.location.href.split('?')[0]
       }
     });
     if (error) throw error;
-    alert('Account created. If Supabase email confirmation is enabled, confirm your email, then sign in.');
-    setAuthMode('signin');
-  } catch (error) {
-    alert(error.message || 'Authentication failed.');
+    // Save name immediately to athlete profile
+    athlete = { name: fullName };
+    sv('fl2_ath', athlete);
+    // If session returned (email confirm disabled), sign in directly
+    if (signUpData?.session) {
+      closeM('authModal');
+      render(curPage);
+    } else {
+      setAuthMode('signin');
+      document.getElementById('authHelperText').textContent = 'Account created! Check your email to verify, then sign in.';
+    }
+  } catch (err) {
+    showFieldError('authEmail', err.message || 'Sign up failed. Try again.');
   } finally {
     btn.disabled = false;
     btn.textContent = prev;
@@ -5970,6 +5980,12 @@ function openEditAth(){
 function openM(id){ document.getElementById(id).classList.add('open'); }
 function closeM(id){
   document.getElementById(id).classList.remove('open');
+  if (id === 'authModal') {
+    const fn = document.getElementById('authFirstName');
+    const ln = document.getElementById('authLastName');
+    if (fn) fn.value = '';
+    if (ln) ln.value = '';
+  }
 }
 function toggleReveal(btn) {
   const wrap = btn.closest('.fi-wrap');
