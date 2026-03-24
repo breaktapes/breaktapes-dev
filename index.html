@@ -1748,14 +1748,66 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
 .mw-bronze::before   { background: linear-gradient(90deg,transparent,#CD8C5A,transparent); }
 .mw-finisher::before { background: linear-gradient(90deg,transparent,var(--orange),transparent); }
 
-/* The AI-art area */
+/* Medal art area — photo-first */
 .mw-art {
-  width: 140px; height: 140px;
-  margin: 0 auto 1rem;
+  width: 100%; height: 210px;
+  margin: 0 auto 0.9rem;
   display: flex; align-items: center; justify-content: center;
   position: relative;
+  /* Warm radial backdrop so mix-blend-mode:multiply has light to work against */
+  background: radial-gradient(ellipse 70% 70% at 50% 55%, rgba(255,252,240,0.13) 0%, transparent 72%);
+  border-radius: 10px;
+  overflow: hidden;
 }
-.mw-art svg { width: 100%; height: 100%; }
+.mw-art svg { width: 100%; height: 100%; max-height: 190px; }
+
+/* Real medal photos — white background disappears via multiply on dark */
+.mw-photo {
+  max-height: 195px; max-width: 100%;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+  filter: contrast(1.08) brightness(1.12) drop-shadow(0 4px 18px rgba(0,0,0,0.3));
+  transition: transform 0.35s cubic-bezier(0.4,0,0.2,1), filter 0.35s ease;
+}
+.mw-card:hover .mw-photo {
+  transform: scale(1.05) translateY(-4px);
+  filter: contrast(1.1) brightness(1.15) drop-shadow(0 12px 36px rgba(0,0,0,0.5));
+}
+
+/* Change photo button — top-right of art area, visible on hover */
+.mw-change-btn {
+  display: none;
+  position: absolute; top: 6px; right: 6px;
+  background: rgba(0,0,0,0.65); border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 5px; padding: 3px 8px;
+  font-family: var(--headline); font-size: 8px; font-weight: 800;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: rgba(255,255,255,0.75); cursor: pointer; transition: all 0.15s;
+  z-index: 4; backdrop-filter: blur(4px);
+}
+.mw-card:hover .mw-change-btn { display: block; }
+.mw-change-btn:hover { background: rgba(0,0,0,0.85); color: var(--white); }
+
+/* Upload placeholder — primary CTA when no photo and no AI art */
+.mw-up-placeholder {
+  width: 100%; height: 100%;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 7px;
+  border: 1.5px dashed rgba(255,255,255,0.12);
+  border-radius: 10px; cursor: pointer;
+  transition: all 0.2s ease; color: rgba(255,255,255,0.3);
+}
+.mw-up-placeholder:hover {
+  border-color: rgba(255,107,0,0.5);
+  color: var(--orange);
+  background: rgba(255,77,0,0.04);
+}
+.mw-up-icon { font-size: 30px; line-height: 1; }
+.mw-up-text {
+  font-family: var(--headline); font-size: 9px; font-weight: 900;
+  letter-spacing: 0.16em; text-transform: uppercase;
+}
+.mw-up-hint { font-size: 9px; opacity: 0.6; }
 
 /* Shimmer skeleton while generating */
 .mw-skeleton {
@@ -1807,19 +1859,8 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
 }
 .mw-date { font-size: 10px; color: rgba(245,245,245,0.2); }
 
-/* Medal photo upload */
-.mw-upload-btn {
-  display: none;
-  position: absolute; bottom: 0.6rem; right: 0.6rem;
-  background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18);
-  border-radius: 4px; padding: 3px 7px;
-  font-family: var(--headline); font-size: 9px; font-weight: 800;
-  letter-spacing: 0.08em; text-transform: uppercase;
-  color: rgba(255,255,255,0.6); cursor: pointer; transition: all 0.15s;
-  z-index: 2;
-}
-.mw-card:hover .mw-upload-btn { display: block; }
-.mw-upload-btn:hover { background: rgba(255,255,255,0.15); color: var(--white); }
+/* Legacy upload btn — kept for compatibility but superseded by .mw-change-btn */
+.mw-upload-btn { display: none; }
 
 /* Tier badge (LEGENDARY / ELITE) on card */
 .mw-tier {
@@ -1873,13 +1914,14 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
 }
 .mw-ach-badge.unlocked .mw-ach-name { color: #FFD700; }
 .mw-ach-desc { font-size: 9px; color: var(--muted); }
-.mw-art img {
+/* .mw-art img generic fallback (SVG art uses this, photos use .mw-photo) */
+.mw-art img:not(.mw-photo) {
   width: 100%; height: 100%; object-fit: contain;
-  filter: drop-shadow(0 12px 32px rgba(0,0,0,0.7)) drop-shadow(0 3px 8px rgba(0,0,0,0.5));
+  filter: drop-shadow(0 8px 24px rgba(0,0,0,0.6));
   transition: filter 0.3s ease, transform 0.3s ease;
 }
-.mw-card:hover .mw-art img {
-  filter: drop-shadow(0 18px 48px rgba(0,0,0,0.8)) drop-shadow(0 4px 12px rgba(0,0,0,0.6));
+.mw-card:hover .mw-art img:not(.mw-photo) {
+  filter: drop-shadow(0 14px 40px rgba(0,0,0,0.75));
   transform: scale(1.04);
 }
 
@@ -4068,8 +4110,6 @@ function renderMedals() {
     }
   });
 
-  const needsGen = [];
-
   const buildCard = (r, isPB) => {
     const year    = (r.date||'').slice(0,4);
     const photo   = medalPhotos[r.id];
@@ -4077,28 +4117,36 @@ function renderMedals() {
     const example = getExampleMedal(r.name, year);
     const badge   = r.type === 'hyrox' ? getHyroxBadge(r, year) : null;
     const displayName = r.name.replace(/\s+\d{4}$/,'');
-    let artContent;
-    if (photo)        artContent = `<img src="${photo}" alt="medal">`;
-    else if (cached)  artContent = cached;
-    else if (example) artContent = example;
-    else if (badge)   artContent = badge;
-    else { artContent = `<div class="mw-skeleton"></div><div class="mw-gen-label">Finding medal…</div>`; needsGen.push(r); }
-    const uploadLabel = photo ? '📷 Change' : '📷 Add Photo';
     const tier = getMedalTier(r, isPB);
     const tierBadge = tier === 'legendary' ? `<span class="mw-tier mw-tier-legendary">★ Legendary</span>`
                     : tier === 'elite'     ? `<span class="mw-tier mw-tier-elite">Elite</span>` : '';
+
+    // Art area: photo > cached SVG > upload placeholder (no more auto AI generation)
+    let artInner;
+    if (photo) {
+      artInner = `<img class="mw-photo" src="${photo}" alt="medal photo">
+        <button class="mw-change-btn" onclick="event.stopPropagation();document.getElementById('mw-file-${r.id}').click()">📷 Change</button>`;
+    } else if (cached || example || badge) {
+      artInner = (cached || example || badge) +
+        `<button class="mw-change-btn" onclick="event.stopPropagation();document.getElementById('mw-file-${r.id}').click()">📷 Add photo</button>`;
+    } else {
+      artInner = `<label class="mw-up-placeholder" for="mw-file-${r.id}" onclick="event.stopPropagation()">
+        <span class="mw-up-icon">📷</span>
+        <span class="mw-up-text">Add medal photo</span>
+        <span class="mw-up-hint">Tap to upload yours</span>
+      </label>`;
+    }
     return `<div class="mw-card mw-${r.medal}${isPB?' mw-pb':''}" id="mw-${r.id}" onclick="openRaceDetail(${r.id})">
       <span class="mw-type-pill ${TYPE_PILL[r.type]||'tag-run'}">${TYPE_LABEL[r.type]||r.type}</span>
       ${r.priority==='A'?`<span class="pri-badge pri-a" style="position:absolute;top:8px;left:8px">A</span>`:''}
       ${isPB?`<span class="mw-pb-crown">★ PB</span>`:''}
-      <div class="mw-art" id="mw-art-${r.id}">${artContent}</div>
+      <div class="mw-art" id="mw-art-${r.id}">${artInner}</div>
       <div class="mw-race-name">${displayName}</div>
       <div class="mw-city">📍 ${r.city}, ${r.country}</div>
       <div class="mw-time-chip">${r.time}</div>
       <div class="mw-date">${fmtDate(r.date)}</div>
       ${tierBadge}
       <input type="file" accept="image/*" id="mw-file-${r.id}" style="display:none" onchange="uploadMedalPhoto(event,${r.id})">
-      <button class="mw-upload-btn" onclick="event.stopPropagation();document.getElementById('mw-file-${r.id}').click()">${uploadLabel}</button>
     </div>`;
   };
 
@@ -4130,7 +4178,6 @@ function renderMedals() {
   });
 
   g.innerHTML = html;
-  if (needsGen.length) (async () => { for (const r of needsGen) await autoGenerateMedal(r); })();
 }
 
 // ─── AI Medal Generation ──────────────────────────────────────────────────────
