@@ -3318,6 +3318,7 @@ function openLandingAuth(mode) {
 
 function guestContinue() {
   dismissLanding();
+  render('dashboard');
 }
 
 function openAuthModal() {
@@ -6371,11 +6372,14 @@ async function initApp() {
   raceDbLoadPromise = loadRaceCatalog();
   await initAuth();
   handleStravaCallback();
-  render('dashboard');
   initAllLocationPickers();
   initRaceNamePicker();
   updateAuthUI();
-  if (authUser) dismissLanding();
+  if (authUser) {
+    dismissLanding();
+    render('dashboard');
+  }
+  // If not logged in, landing screen stays until sign-in or guest continue
 }
 
 /* ============================
