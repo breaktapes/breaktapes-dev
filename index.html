@@ -2471,15 +2471,6 @@ main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(1
 }
 .landing-actions .btn-main,
 .landing-actions .btn-ghost { flex: 1; }
-.landing-guest {
-  font-family: var(--headline); font-weight: 700;
-  font-size: 12px; letter-spacing: 0.12em;
-  text-transform: uppercase; color: var(--muted);
-  cursor: pointer; border: none; background: none;
-  padding: 0.5rem; transition: color 0.15s;
-  margin-bottom: 3rem;
-}
-.landing-guest:hover { color: var(--white); }
 .landing-features {
   display: flex; gap: 1.5rem; flex-wrap: wrap;
   justify-content: center; margin-top: 0.5rem;
@@ -2507,7 +2498,6 @@ main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(1
     <button class="btn-main" onclick="openLandingAuth('signin')">Sign In</button>
     <button class="btn-ghost" id="landingSignUpBtn" onclick="openLandingAuth('signup')">Create Account</button>
   </div>
-  <button class="landing-guest" onclick="guestContinue()">Continue as Guest →</button>
   <div class="landing-features">
     <span class="landing-feat"><span class="landing-feat-dot"></span>Race Log</span>
     <span class="landing-feat"><span class="landing-feat-dot"></span>Medal Wall</span>
@@ -3801,16 +3791,10 @@ function openLandingAuth(mode) {
   document.getElementById('authModal').classList.add('open');
 }
 
-function guestContinue() {
-  dismissLanding();
-  render('dashboard');
-}
-
 function openAuthModal() {
   closeMenu();
   setAuthMode(authUser ? 'signin' : authMode);
   if (authUser) document.getElementById('authEmail').value = authUser.email || '';
-  document.getElementById('authEmail').type = 'email';
   document.getElementById('authPassword').type = 'password';
   document.getElementById('authModal').classList.add('open');
 }
