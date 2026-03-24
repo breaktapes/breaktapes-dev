@@ -479,8 +479,14 @@ main { margin-top:56px; min-height:calc(100vh - 56px); }
 }
 
 /* ── PR Strip ── */
+.pr-group { margin-bottom:0.85rem; }
+.pr-group-label {
+  font-family:var(--headline); font-size:8px; font-weight:800;
+  letter-spacing:0.18em; text-transform:uppercase; color:var(--muted);
+  margin-bottom:0.45rem; opacity:0.6;
+}
 .pr-dist-tabs {
-  display:flex; gap:0.4rem; flex-wrap:wrap; margin-bottom:0.75rem;
+  display:flex; gap:0.4rem; flex-wrap:wrap;
 }
 .pr-dist-tab {
   font-family:var(--headline); font-size:9px; font-weight:800;
@@ -4092,11 +4098,13 @@ function renderPRStrip() {
   if (!el) return;
   const eligible = races.filter(r => ['run','tri','ultra'].includes(r.type) && r.time && timeToSecs(r.time) < Infinity);
   if (!eligible.length) { el.innerHTML = ''; return; }
-  // All unique distances, sorted longest first
-  const dists = [...new Set(eligible.map(r => r.distance))]
-    .sort((a, b) => (DIST_KM[b] || 0) - (DIST_KM[a] || 0));
-  if (!dists.length) { el.innerHTML = ''; return; }
-  if (!prSelectedDist || !dists.includes(prSelectedDist)) prSelectedDist = dists[0];
+  // Split into run/ultra and tri, sorted ascending by distance
+  const byDist = (a, b) => (DIST_KM[a] || 0) - (DIST_KM[b] || 0);
+  const runDists = [...new Set(eligible.filter(r => r.type==='run'||r.type==='ultra').map(r => r.distance))].sort(byDist);
+  const triDists = [...new Set(eligible.filter(r => r.type==='tri').map(r => r.distance))].sort(byDist);
+  const allDists = [...runDists, ...triDists];
+  if (!allDists.length) { el.innerHTML = ''; return; }
+  if (!prSelectedDist || !allDists.includes(prSelectedDist)) prSelectedDist = allDists[0];
   // Top 3 fastest for selected distance
   const top3 = eligible
     .filter(r => r.distance === prSelectedDist)
@@ -4105,10 +4113,14 @@ function renderPRStrip() {
   const medals = ['gold','silver','bronze'];
   const ranks  = ['FASTEST','2ND','3RD'];
   const icon   = { run:'🏃', tri:'🏊', ultra:'🏔️' };
-  const tabsHtml = `<div class="pr-dist-tabs">${dists.map(d =>
-    `<button class="pr-dist-tab${d===prSelectedDist?' active':''}" onclick="selectPRDist(this.dataset.d)" data-d="${d.replace(/"/g,'&quot;')}">${d}</button>`
-  ).join('')}</div>`;
-  const cardsHtml = `<div class="pr-strip">${top3.map((r, i) => `
+  const tabGroup = (label, dists) => dists.length ? `
+    <div class="pr-group">
+      <div class="pr-group-label">${label}</div>
+      <div class="pr-dist-tabs">${dists.map(d =>
+        `<button class="pr-dist-tab${d===prSelectedDist?' active':''}" onclick="selectPRDist(this.dataset.d)" data-d="${d.replace(/"/g,'&quot;')}">${d}</button>`
+      ).join('')}</div>
+    </div>` : '';
+  const cardsHtml = `<div class="pr-strip" style="margin-top:0.75rem">${top3.map((r, i) => `
     <div class="pr-card pr-card-${medals[i]}">
       <div class="pr-card-icon">${icon[r.type]||'🏃'}</div>
       <div class="pr-card-rank">${ranks[i]}</div>
@@ -4116,7 +4128,7 @@ function renderPRStrip() {
       <div class="pr-card-name">${r.name.replace(/\s+\d{4}$/,'')}</div>
       <div class="pr-card-date">${fmtDate(r.date)}</div>
     </div>`).join('')}</div>`;
-  el.innerHTML = tabsHtml + cardsHtml;
+  el.innerHTML = tabGroup('Running', runDists) + tabGroup('Triathlon', triDists) + cardsHtml;
 }
 function getPodiumPos(str) {
   if (!str) return null;
