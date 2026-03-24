@@ -21,18 +21,37 @@
 - **Staging Supabase:** `https://yqzycwuyhvzkbofwkazr.supabase.co` (project: `breaktapes-dev`)
 - **Local preview:** `python3 -m http.server 3000` (serves from root; access `index.html` directly)
 
-### Deploy commands
-```bash
-# Production (always from main)
-wrangler deploy --env=""
+### Release pipeline (automated via GitHub Actions)
 
-# Staging (from any branch)
-wrangler deploy --env staging
+```
+feature-branch
+    │
+    ▼  PR merge
+ staging  ──► auto-deploy → dev.breaktapes.com  +  staging DB migrations
+    │
+    ▼  PR merge
+  main  ──────► auto-deploy → app.breaktapes.com  +  prod DB migrations
 ```
 
-> **Important:** After editing `index.html`, copy it to `public/` before deploying:
-> `cp index.html public/index.html && wrangler deploy --env=""`
-> The `public/` directory is the Cloudflare asset source. `index.html` at root is the source of truth for development.
+| Workflow file | Trigger | Action |
+|---|---|---|
+| `.github/workflows/ci.yml` | PR opened/updated targeting `staging` or `main` | Validates HTML, markers, wrangler config |
+| `.github/workflows/deploy-staging.yml` | Push to `staging` branch | Supabase migrations + `wrangler deploy --env staging` |
+| `.github/workflows/deploy-production.yml` | Push to `main` branch | Supabase migrations + `wrangler deploy --env=""` |
+
+### Manual deploy (emergency / local)
+```bash
+cp index.html public/index.html
+
+# Staging
+CLOUDFLARE_API_TOKEN="" CF_API_TOKEN="" wrangler deploy --env staging
+
+# Production
+CLOUDFLARE_API_TOKEN="" CF_API_TOKEN="" wrangler deploy --env=""
+```
+
+### Required GitHub Secrets
+`CLOUDFLARE_API_TOKEN` · `SUPABASE_ACCESS_TOKEN` · `SUPABASE_PROD_PROJECT_REF` · `SUPABASE_PROD_DB_PASSWORD` · `SUPABASE_STAGING_PROJECT_REF` · `SUPABASE_STAGING_DB_PASSWORD`
 
 ---
 

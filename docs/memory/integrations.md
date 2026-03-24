@@ -139,5 +139,27 @@ All migrations live in `supabase/migrations/`. Applied to both projects via `sup
 
 - **Landing redirect worker:** `landing-worker/` — separate worker, routes `breaktapes.com/*` → 301 to `app.breaktapes.com`
 - **DNS:** `dev.breaktapes.com` A record (proxied, 192.0.2.1) created 2026-03-24
-- **Note:** `wrangler deploy` uses the OAuth session (not the `.env` CF_API_TOKEN). If deploy fails with auth error, run with `CLOUDFLARE_API_TOKEN="" CF_API_TOKEN="" wrangler deploy ...`
 - **Note:** `.wranglerignore` is not respected in wrangler v4.76+ — use `assets.directory` pointing to a clean subdirectory instead
+- **Note:** In CI, use `CLOUDFLARE_API_TOKEN` secret. Locally, clear the `.env` token: `CLOUDFLARE_API_TOKEN="" CF_API_TOKEN="" wrangler deploy ...`
+
+## CI/CD Pipeline
+
+- **Workflows:** `.github/workflows/` — three files
+- **Trigger summary:**
+
+| Workflow | Trigger | Target |
+|---|---|---|
+| `ci.yml` | PR to `staging` or `main` | Validates HTML, markers, wrangler |
+| `deploy-staging.yml` | Push to `staging` | Supabase staging migrations + `dev.breaktapes.com` |
+| `deploy-production.yml` | Push to `main` | Supabase prod migrations + `app.breaktapes.com` |
+
+- **Required GitHub Secrets:**
+
+| Secret | Description |
+|---|---|
+| `CLOUDFLARE_API_TOKEN` | Workers Scripts: Edit + Workers Routes: Edit + Zone: Read |
+| `SUPABASE_ACCESS_TOKEN` | `sbp_dad534d00627e43cd72e926af5cb4eee30da2115` |
+| `SUPABASE_PROD_PROJECT_REF` | `kmdpufauamadwavqsinj` |
+| `SUPABASE_PROD_DB_PASSWORD` | `Bt2026Prod!xK9mRnQvLzWp3hY7sD` |
+| `SUPABASE_STAGING_PROJECT_REF` | `yqzycwuyhvzkbofwkazr` |
+| `SUPABASE_STAGING_DB_PASSWORD` | Reset in Supabase dashboard → `breaktapes-dev` → Settings → Database |
