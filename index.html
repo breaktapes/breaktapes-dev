@@ -2427,6 +2427,12 @@ main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(1
 .auth-note {
   margin-top: 0.75rem; font-size: 12px; color: var(--muted); line-height: 1.5;
 }
+.auth-forgot {
+  background: none; border: none; padding: 0;
+  font-size: 12px; color: var(--orange); cursor: pointer;
+  margin-top: 0.5rem; text-decoration: underline;
+}
+.auth-forgot:hover { opacity: 0.8; }
 
 /* =============================================
    LANDING SCREEN
@@ -3532,6 +3538,7 @@ main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(1
         </div>
       </div>
       <div class="auth-note" id="authHelperText">Sign in to load your protected Supabase data and keep it synced.</div>
+      <button class="auth-forgot" id="authForgotBtn" onclick="sendPasswordReset()" style="display:none">Forgot password?</button>
     </div>
     <div class="modal-foot">
       <button class="btn-ghost" onclick="closeM('authModal')">Cancel</button>
@@ -3775,6 +3782,25 @@ function setAuthMode(mode) {
   document.getElementById('authModeSignInBtn').className = signIn ? 'btn-main' : 'btn-ghost';
   document.getElementById('authModeSignUpBtn').className = signIn ? 'btn-ghost' : 'btn-main';
   document.getElementById('authPassword').autocomplete = signIn ? 'current-password' : 'new-password';
+  document.getElementById('authForgotBtn').style.display = signIn ? '' : 'none';
+}
+
+async function sendPasswordReset() {
+  const email = document.getElementById('authEmail').value.trim();
+  if (!email) { showFieldError('authEmail', 'Drop an email to get started.'); return; }
+  const btn = document.getElementById('authForgotBtn');
+  btn.textContent = 'Sending...';
+  btn.disabled = true;
+  const { error } = await supa.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin
+  });
+  btn.disabled = false;
+  if (error) {
+    btn.textContent = 'Forgot password?';
+    showFieldError('authEmail', 'Could not send reset email. Try again.');
+  } else {
+    btn.textContent = 'Check your email ✓';
+  }
 }
 
 function dismissLanding() {
