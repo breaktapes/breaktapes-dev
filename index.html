@@ -1715,6 +1715,7 @@ main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(1
    ============================================= */
 :focus-visible { outline: 2px solid var(--orange); outline-offset: 3px; border-radius: 3px; }
 :focus:not(:focus-visible) { outline: none; }
+select:focus-visible { outline: none; border-color: var(--orange) !important; box-shadow: 0 0 0 1px var(--orange); }
 
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 
@@ -2763,109 +2764,6 @@ main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(1
   </div>
 </div>
 
-<!-- PACE CALCULATOR -->
-<div id="page-pace" class="page">
-  <div class="wrap">
-    <div class="page-kicker">Train Smart</div>
-    <div class="page-h1">Pace<br><span class="accent">Calculator</span></div>
-    <div class="pace-input-card">
-      <div class="rd-label">Sport &amp; Distance</div>
-      <div class="fgrid" style="grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem">
-        <select class="fi" id="pcType" onchange="pcOnTypeChange()">
-          <option value="run">🏃 Running</option>
-          <option value="tri">🏆 Triathlon</option>
-        </select>
-        <select class="fi" id="pcDist" onchange="pcOnDistChange()"></select>
-      </div>
-      <!-- Running: standard time picker -->
-      <div id="pcStandardInput">
-        <div class="rd-label">Target Finish Time</div>
-        <div class="time-picker" style="margin-bottom:1rem">
-          <div class="tp-field">
-            <button class="tp-btn" type="button" onclick="stepTime('pcH',1,0,99)">▲</button>
-            <input class="tp-in" id="pcH" type="number" min="0" max="99" value="0" inputmode="numeric" onchange="clampTime(this,0,99)">
-            <button class="tp-btn" type="button" onclick="stepTime('pcH',-1,0,99)">▼</button>
-            <div class="tp-label">HRS</div>
-          </div>
-          <span class="tp-sep">:</span>
-          <div class="tp-field">
-            <button class="tp-btn" type="button" onclick="stepTime('pcM',1,0,59)">▲</button>
-            <input class="tp-in" id="pcM" type="number" min="0" max="59" value="0" inputmode="numeric" onchange="clampTime(this,0,59)">
-            <button class="tp-btn" type="button" onclick="stepTime('pcM',-1,0,59)">▼</button>
-            <div class="tp-label">MIN</div>
-          </div>
-          <span class="tp-sep">:</span>
-          <div class="tp-field">
-            <button class="tp-btn" type="button" onclick="stepTime('pcS',1,0,59)">▲</button>
-            <input class="tp-in" id="pcS" type="number" min="0" max="59" value="0" inputmode="numeric" onchange="clampTime(this,0,59)">
-            <button class="tp-btn" type="button" onclick="stepTime('pcS',-1,0,59)">▼</button>
-            <div class="tp-label">SEC</div>
-          </div>
-        </div>
-        <div id="pcPBRef" style="display:none;font-size:12px;color:var(--muted);margin-bottom:1rem"></div>
-        <button class="btn-main" style="width:100%" onclick="calcPace()">Calculate Pace</button>
-      </div>
-      <!-- Triathlon: segment-based calculator -->
-      <div id="pcTriInput" style="display:none">
-        <div class="tri-segs">
-          <div class="tri-seg-row">
-            <div class="tri-seg-hd"><span class="tri-seg-icon">🏊</span><div><div class="tri-seg-name">Swim</div><div class="tri-seg-dist" id="pcTriSwimDist">1,500m</div></div></div>
-            <div class="tri-seg-ctrl">
-              <span class="tri-seg-lbl">Pace / 100m</span>
-              <div class="tri-pace-inp">
-                <input class="tri-num" id="pcSwimPaceM" type="number" value="2" min="0" max="9">
-                <span class="tri-colon">:</span>
-                <input class="tri-num" id="pcSwimPaceS" type="number" value="0" min="0" max="59">
-              </div>
-            </div>
-          </div>
-          <div class="tri-seg-row tri-t">
-            <div class="tri-seg-hd"><span class="tri-seg-icon">⏱</span><div><div class="tri-seg-name">T1</div></div></div>
-            <div class="tri-seg-ctrl">
-              <span class="tri-seg-lbl">mm : ss</span>
-              <div class="tri-pace-inp">
-                <input class="tri-num" id="pcT1M" type="number" value="3" min="0" max="59">
-                <span class="tri-colon">:</span>
-                <input class="tri-num" id="pcT1S" type="number" value="0" min="0" max="59">
-              </div>
-            </div>
-          </div>
-          <div class="tri-seg-row">
-            <div class="tri-seg-hd"><span class="tri-seg-icon">🚴</span><div><div class="tri-seg-name">Bike</div><div class="tri-seg-dist" id="pcTriBikeDist">40km</div></div></div>
-            <div class="tri-seg-ctrl">
-              <span class="tri-seg-lbl">Avg Speed km/h</span>
-              <input class="tri-speed-inp" id="pcBikeSpeed" type="number" value="30" min="1" max="80">
-            </div>
-          </div>
-          <div class="tri-seg-row tri-t">
-            <div class="tri-seg-hd"><span class="tri-seg-icon">⏱</span><div><div class="tri-seg-name">T2</div></div></div>
-            <div class="tri-seg-ctrl">
-              <span class="tri-seg-lbl">mm : ss</span>
-              <div class="tri-pace-inp">
-                <input class="tri-num" id="pcT2M" type="number" value="2" min="0" max="59">
-                <span class="tri-colon">:</span>
-                <input class="tri-num" id="pcT2S" type="number" value="0" min="0" max="59">
-              </div>
-            </div>
-          </div>
-          <div class="tri-seg-row">
-            <div class="tri-seg-hd"><span class="tri-seg-icon">🏃</span><div><div class="tri-seg-name">Run</div><div class="tri-seg-dist" id="pcTriRunDist">10km</div></div></div>
-            <div class="tri-seg-ctrl">
-              <span class="tri-seg-lbl">Pace / km</span>
-              <div class="tri-pace-inp">
-                <input class="tri-num" id="pcRunPaceM" type="number" value="5" min="0" max="29">
-                <span class="tri-colon">:</span>
-                <input class="tri-num" id="pcRunPaceS" type="number" value="30" min="0" max="59">
-              </div>
-            </div>
-          </div>
-        </div>
-        <button class="btn-main" style="width:100%;margin-top:1rem" onclick="calcTriPace()">Calculate Time</button>
-      </div>
-    </div>
-    <div id="paceResults" style="display:none"></div>
-  </div>
-</div>
 
 <!-- MEDALS -->
 <div id="page-medals" class="page">
@@ -3035,7 +2933,7 @@ main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(1
     <div id="trainPaceSection">
       <div class="pace-input-card">
         <div class="rd-label">Sport &amp; Distance</div>
-        <div class="fgrid" style="grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem">
+        <div class="pace-sport-dist-grid" style="display:grid;grid-template-columns:auto 1fr;gap:.75rem;margin-bottom:1rem">
           <select class="fi" id="pcType" onchange="pcOnTypeChange()">
             <option value="run">🏃 Running</option>
             <option value="tri">🏆 Triathlon</option>
@@ -3168,51 +3066,6 @@ main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(1
     <div id="trainWearablesSection" style="display:none">
       <div id="owPageWidget"></div>
       <div id="owPageFatigueSection" style="margin-top:1.5rem"></div>
-    </div>
-  </div>
-</div>
-
-<!-- TRAINING (legacy — sidebar/desktop access) -->
-<div id="page-training" class="page">
-  <div class="wrap">
-    <div class="page-kicker">Activity Log</div>
-    <div style="font-family:var(--headline);font-size:32px;font-weight:900;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:1.25rem">Training</div>
-    <!-- Strava card -->
-    <div class="strava-card" id="stravaCard">
-      <div class="strava-logo">🟠</div>
-      <div class="strava-card-text">
-        <div class="strava-card-title" id="stravaCardTitle">Connect Strava</div>
-        <div class="strava-card-sub" id="stravaCardSub">Import your training history and past races automatically</div>
-      </div>
-      <button class="strava-connect-btn" id="stravaBtn" onclick="handleStravaBtn()">Connect</button>
-    </div>
-    <!-- Stats row (shown when connected) -->
-    <div class="training-stats" id="trainingStatsRow" style="display:none">
-      <div class="training-stat"><div class="training-stat-num" id="ts-km">—</div><div class="training-stat-label">Total KM</div></div>
-      <div class="training-stat"><div class="training-stat-num" id="ts-acts">—</div><div class="training-stat-label">Activities</div></div>
-      <div class="training-stat"><div class="training-stat-num" id="ts-hrs">—</div><div class="training-stat-label">Hours</div></div>
-      <div class="training-stat"><div class="training-stat-num" id="ts-elev">—</div><div class="training-stat-label">Elev (m)</div></div>
-    </div>
-    <!-- Filter bar -->
-    <div class="training-bar">
-      <div class="section-h">Activities</div>
-      <div style="display:flex;gap:0.4rem;align-items:center">
-        <div class="training-tabs">
-          <button class="training-tab active" onclick="filterTraining('All',this)">All</button>
-          <button class="training-tab" onclick="filterTraining('Run',this)">Run</button>
-          <button class="training-tab" onclick="filterTraining('Ride',this)">Ride</button>
-          <button class="training-tab" onclick="filterTraining('Swim',this)">Swim</button>
-        </div>
-        <button class="training-sync-btn" id="syncBtn" style="display:none" onclick="syncStrava()">↻ Sync</button>
-      </div>
-    </div>
-    <div id="trainingFeed"></div>
-    <!-- OW Workouts section -->
-    <div id="owTrainingSection" style="margin-top:1.75rem">
-      <div class="training-bar ow-training-header">
-        <div class="section-h">Open Wearables</div>
-      </div>
-      <div id="owTrainingFeed"></div>
     </div>
   </div>
 </div>
@@ -4259,6 +4112,8 @@ async function signOutUser() {
    NAVIGATION
    ============================ */
 function go(page) {
+  if (page === 'pace') { trainTab = 'pace'; page = 'train'; }
+  else if (page === 'training') { trainTab = 'activities'; page = 'train'; }
   document.querySelectorAll('.bn-tab').forEach(b => b.classList.remove('active'));
   const _bn = document.getElementById('bn-' + page);
   if (_bn) _bn.classList.add('active');
