@@ -1046,52 +1046,124 @@ main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(1
 .hist-row {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius:5px; padding:1rem 1.1rem;
-  display:grid; grid-template-columns:42px 1fr 90px 130px 82px 32px;
+  border-radius:8px; padding:0.9rem 1rem;
+  display:grid; grid-template-columns:42px 1fr auto;
   align-items:center; gap:1rem;
-  cursor:pointer; transition:all 0.15s;
+  cursor:pointer; transition:background 0.15s, border-color 0.15s, box-shadow 0.15s;
   animation:cardIn 0.35s ease both;
 }
 .hist-row:hover { background:var(--surface2); border-color:var(--border2); }
+/* A-Race card — orange gradient */
+.hist-row.is-a {
+  background: linear-gradient(135deg, rgba(255,77,0,0.14) 0%, var(--surface) 55%);
+  border-color: rgba(255,77,0,0.28);
+}
+.hist-row.is-a:hover {
+  background: linear-gradient(135deg, rgba(255,77,0,0.20) 0%, var(--surface2) 55%);
+}
+/* A-Race + PB — orange→green gradient, gold border */
+.hist-row.is-a-pb {
+  background: linear-gradient(135deg, rgba(255,77,0,0.16) 0%, rgba(0,255,136,0.10) 100%);
+  border-color: rgba(255,200,50,0.35);
+  box-shadow: 0 0 0 1px rgba(255,200,50,0.12);
+}
+.hist-row.is-a-pb:hover {
+  background: linear-gradient(135deg, rgba(255,77,0,0.22) 0%, rgba(0,255,136,0.15) 100%);
+}
 .hist-icon {
-  width:42px; height:42px; border-radius:4px; flex:none;
+  width:42px; height:50px; border-radius:6px; flex:none;
   display:flex; flex-direction:column; align-items:center; justify-content:center;
-  gap:1px; background:var(--surface2); border:1px solid var(--border2);
+  gap:1px; background:rgba(245,245,245,0.04); border:1px solid var(--border2);
 }
 .hist-icon-mon {
   font-family:var(--headline); font-size:9px; font-weight:800;
   text-transform:uppercase; letter-spacing:0.1em; color:var(--orange);
 }
 .hist-icon-day {
-  font-family:var(--headline); font-size:18px; font-weight:900;
+  font-family:var(--headline); font-size:20px; font-weight:900;
   line-height:1; color:var(--white);
 }
+.hist-info { min-width:0; }
 .hist-name {
-  font-family:var(--headline); font-size:15px; font-weight:800;
+  font-family:var(--headline); font-size:14px; font-weight:800;
   text-transform:uppercase; letter-spacing:0.04em; color:var(--white);
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 }
-.hist-sub { font-size:11px; color:var(--muted); margin-top:2px; }
-.hist-dist {
-  font-family:var(--headline); font-size:12px; font-weight:700;
-  text-transform:uppercase; letter-spacing:0.08em; color:var(--muted);
+.hist-sub {
+  font-size:11px; color:rgba(245,245,245,0.45); margin-top:2px;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
 }
+.hist-sub2 {
+  font-family:var(--headline); font-size:10px; font-weight:700;
+  text-transform:uppercase; letter-spacing:0.08em;
+  color:rgba(245,245,245,0.35); margin-top:3px;
+}
+.hist-time-col { text-align:right; flex-shrink:0; }
 .hist-time {
-  font-family:var(--headline); font-size:16px; font-weight:900;
-  color:var(--white); font-variant-numeric:tabular-nums; letter-spacing:0.02em;
+  font-family:var(--headline); font-size:17px; font-weight:900;
+  color:var(--white); font-variant-numeric:tabular-nums;
+  letter-spacing:0.02em; display:block;
 }
 .hist-time.is-pb { color:var(--green); }
 .hist-pb-tag {
-  font-family:var(--headline); font-size:9px; font-weight:800;
-  color:var(--green); letter-spacing:0.08em; vertical-align:middle;
-  margin-left:4px; opacity:0.85;
+  display:block; font-family:var(--headline); font-size:9px; font-weight:800;
+  color:var(--green); letter-spacing:0.1em; text-align:right;
+  margin-top:2px; opacity:0.9;
 }
-.hist-date { font-size:11px; color:var(--muted); text-align:right; }
-.hist-del {
-  background:none; border:none; cursor:pointer; color:var(--muted2);
-  font-size:13px; padding:4px 6px; border-radius:3px;
-  transition:color 0.15s, background 0.15s; line-height:1;
+
+/* Race View Modal */
+.rv-head { padding-bottom:0.5rem; }
+.rv-name {
+  font-family:var(--headline); font-size:26px; font-weight:900;
+  text-transform:uppercase; letter-spacing:0.04em; color:var(--white);
+  line-height:1.05;
 }
-.hist-del:hover { color:#ff5555; background:rgba(255,85,85,0.1); }
+.rv-location { font-size:13px; color:rgba(245,245,245,0.5); margin-top:4px; }
+.rv-time-block {
+  text-align:center; padding:1.5rem 0 1rem;
+}
+.rv-time {
+  font-family:var(--headline); font-size:52px; font-weight:900;
+  font-variant-numeric:tabular-nums; letter-spacing:0.02em;
+  color:var(--white); line-height:1;
+}
+.rv-time.is-pb { color:var(--green); }
+.rv-time-meta {
+  font-family:var(--headline); font-size:11px; font-weight:800;
+  letter-spacing:0.12em; text-transform:uppercase;
+  color:rgba(245,245,245,0.4); margin-top:6px;
+}
+.rv-time-meta .rv-pb-badge {
+  color:var(--green); margin-left:6px; opacity:0.9;
+}
+.rv-chips {
+  display:flex; flex-wrap:wrap; gap:8px;
+  padding:0.75rem 0 1rem; border-top:1px solid var(--border);
+}
+.rv-chip {
+  font-family:var(--headline); font-size:10px; font-weight:800;
+  text-transform:uppercase; letter-spacing:0.08em;
+  background:var(--surface2); border:1px solid var(--border2);
+  color:rgba(245,245,245,0.6); border-radius:4px; padding:4px 10px;
+}
+.rv-chip.rv-chip-a { background:rgba(255,77,0,0.12); border-color:rgba(255,77,0,0.3); color:var(--orange); }
+.rv-chip.rv-chip-pb { background:rgba(0,255,136,0.1); border-color:rgba(0,255,136,0.25); color:var(--green); }
+.rv-chip.rv-chip-pos { background:var(--surface3); }
+.rv-notes { margin-top:0.5rem; padding-top:1rem; border-top:1px solid var(--border); }
+.rv-notes-label {
+  font-family:var(--headline); font-size:10px; font-weight:800;
+  text-transform:uppercase; letter-spacing:0.1em; color:rgba(245,245,245,0.35);
+  margin-bottom:6px;
+}
+.rv-notes-text { font-size:13px; color:rgba(245,245,245,0.7); line-height:1.5; }
+.btn-danger {
+  font-family:var(--headline); font-size:12px; font-weight:800;
+  letter-spacing:0.08em; text-transform:uppercase;
+  background:none; border:1px solid rgba(255,85,85,0.3);
+  color:#ff7070; border-radius:6px; padding:0.65rem 1.2rem;
+  cursor:pointer; transition:background 0.15s, border-color 0.15s;
+}
+.btn-danger:hover { background:rgba(255,85,85,0.1); border-color:rgba(255,85,85,0.5); }
 
 /* Time Picker */
 .time-picker {
@@ -3429,6 +3501,32 @@ main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(1
 </div>
 
 <!-- ==== RACE DETAIL MODAL ==== -->
+<!-- ==== RACE VIEW MODAL ==== -->
+<div class="modal-overlay" id="raceViewModal" onclick="bgClose(event,'raceViewModal')">
+  <div class="modal" role="dialog" aria-modal="true" aria-label="Race details">
+    <div class="modal-drag"></div>
+    <div class="modal-head rv-head" id="rvHead">
+      <div class="rv-name" id="rvName"></div>
+      <div class="rv-location" id="rvLocation"></div>
+    </div>
+    <div class="modal-body" style="padding-top:0">
+      <div class="rv-time-block" id="rvTimeBlock">
+        <div class="rv-time" id="rvTime"></div>
+        <div class="rv-time-meta" id="rvTimeMeta"></div>
+      </div>
+      <div class="rv-chips" id="rvChips"></div>
+      <div class="rv-notes" id="rvNotes" style="display:none">
+        <div class="rv-notes-label">Notes</div>
+        <div class="rv-notes-text" id="rvNotesText"></div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-danger" onclick="rvDelete()">Delete</button>
+      <button class="btn-main" onclick="rvEdit()">Edit Details</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="raceDetailModal" onclick="bgClose(event,'raceDetailModal')">
   <div class="modal" role="dialog" aria-modal="true" aria-label="Race detail">
     <div class="modal-drag"></div>
@@ -5730,26 +5828,27 @@ function renderHistory(){
       if (dp.run?.id===r.id)  chips.push('Run PB');
       if (chips.length) segPBsHtml = `<div class="hist-seg-pbs">${chips.map(c=>`<span class="seg-pb-chip">${c}</span>`).join('')}</div>`;
     }
+    const isA = r.priority === 'A';
+    const rowClass = isA && isPB ? 'hist-row is-a-pb' : isA ? 'hist-row is-a' : 'hist-row';
+    const dateIcon = (()=>{const d=new Date(r.date+'T00:00:00');return `<span class="hist-icon-mon">${d.toLocaleString('en',{month:'short'}).toUpperCase()}</span><span class="hist-icon-day">${d.getDate()}</span>`;})();
     rows.push(`
-      <div class="hist-row" style="animation-delay:${i*0.04}s" onclick="openRaceDetail(${r.id})">
-        <div class="hist-icon">${(()=>{const d=new Date(r.date+'T00:00:00');const mon=d.toLocaleString('en',{month:'short'}).toUpperCase();const day=d.getDate();return `<span class="hist-icon-mon">${mon}</span><span class="hist-icon-day">${day}</span>`;})()}</div>
-        <div>
-          <div class="hist-name">${r.name.replace(/\s+\d{4}$/,'')}${r.priority==='A'?` <span class="pri-badge pri-a">A</span>`:''}${podiumHtml}</div>
-          <div class="hist-sub">${r.city}, ${r.country}${r.placing?' · '+r.placing:''}</div>
-          <div class="hist-sub-mobile">${r.distance} · ${fmtDate(r.date)}</div>
-          ${segPBsHtml}
+      <div class="${rowClass}" style="animation-delay:${i*0.04}s" onclick="openRaceView(${r.id})">
+        <div class="hist-icon">${dateIcon}</div>
+        <div class="hist-info">
+          <div class="hist-name">${r.name.replace(/\s+\d{4}$/,'')}${podiumHtml}</div>
+          <div class="hist-sub">${r.city ? r.city+', ' : ''}${r.country || ''}</div>
+          <div class="hist-sub2">${r.distance}</div>
         </div>
-        <div class="hist-dist">${r.distance}</div>
-        <div class="hist-time${isPB?' is-pb':''}">${r.time}${isPB?'<span class="hist-pb-tag">PB</span>':''}</div>
-        <div class="hist-date">${fmtDate(r.date)}</div>
-        <button class="hist-del" onclick="event.stopPropagation();deleteRace(${r.id})" title="Delete">✕</button>
+        <div class="hist-time-col">
+          <span class="hist-time${isPB?' is-pb':''}">${r.time}</span>
+          ${isPB?'<span class="hist-pb-tag">PB</span>':''}
+        </div>
       </div>`);
   });
   list.innerHTML = rows.join('');
 }
 
 function deleteRace(id) {
-  if (!confirm('Delete this race from your history?')) return;
   races = races.filter(r => r.id !== id);
   sv('fl2_races', races);
   renderHistory();
@@ -5908,6 +6007,48 @@ function _splitRowHtml(s) {
 function addSplit() {
   document.getElementById('rdSplits').insertAdjacentHTML('beforeend', _splitRowHtml({}));
 }
+let _rvId = null;
+function openRaceView(id) {
+  const r = races.find(r => r.id === id);
+  if (!r) return;
+  _rvId = id;
+  const isPB = (() => { const pb = buildPBMap(); return pb[r.distance] && pb[r.distance].id === id; })();
+  // Head
+  document.getElementById('rvName').textContent = r.name.replace(/\s+\d{4}$/, '');
+  document.getElementById('rvLocation').textContent = [r.city, r.country].filter(Boolean).join(', ');
+  // Time
+  const timeEl = document.getElementById('rvTime');
+  timeEl.textContent = r.time || '—';
+  timeEl.className = 'rv-time' + (isPB ? ' is-pb' : '');
+  const metaParts = [r.distance];
+  document.getElementById('rvTimeMeta').innerHTML = metaParts.join(' · ') + (isPB ? '<span class="rv-pb-badge">· PB</span>' : '');
+  // Chips
+  const chips = [];
+  if (r.priority === 'A') chips.push(`<span class="rv-chip rv-chip-a">A Race</span>`);
+  if (isPB) chips.push(`<span class="rv-chip rv-chip-pb">Personal Best</span>`);
+  if (r.medal) chips.push(`<span class="rv-chip">${r.medal.charAt(0).toUpperCase()+r.medal.slice(1)} Medal</span>`);
+  if (r.placing) chips.push(`<span class="rv-chip rv-chip-pos">${r.placing}</span>`);
+  if (r.ageCategory) chips.push(`<span class="rv-chip rv-chip-pos">${r.ageCategory}${r.ageCategoryPos ? ' · '+r.ageCategoryPos : ''}</span>`);
+  document.getElementById('rvChips').innerHTML = chips.join('');
+  // Notes
+  const notesWrap = document.getElementById('rvNotes');
+  if (r.notes && r.notes.trim()) {
+    document.getElementById('rvNotesText').textContent = r.notes;
+    notesWrap.style.display = '';
+  } else {
+    notesWrap.style.display = 'none';
+  }
+  openM('raceViewModal');
+}
+function rvDelete() {
+  closeM('raceViewModal');
+  setTimeout(() => deleteRace(_rvId), 200);
+}
+function rvEdit() {
+  closeM('raceViewModal');
+  setTimeout(() => openRaceDetail(_rvId), 200);
+}
+
 function openRaceDetail(id) {
   const r = races.find(r => r.id === id);
   if (!r) return;
