@@ -3889,14 +3889,11 @@ function applyRemoteState(row) {
       athlete = row.athlete;
       localStorage.setItem('fl2_ath', JSON.stringify(athlete));
     }
-    if (row.next_race && typeof row.next_race === 'object') {
-      nextRace = row.next_race;
-      localStorage.setItem('fl2_nr', JSON.stringify(nextRace));
-    }
-    if (Array.isArray(row.upcoming_races)) {
-      upcomingRaces = row.upcoming_races;
-      localStorage.setItem('fl2_upcoming', JSON.stringify(upcomingRaces));
-    }
+    // Always apply (even null/empty) so a fresh account clears stale localStorage data
+    nextRace = (row.next_race && typeof row.next_race === 'object') ? row.next_race : null;
+    localStorage.setItem('fl2_nr', JSON.stringify(nextRace));
+    upcomingRaces = Array.isArray(row.upcoming_races) ? row.upcoming_races : [];
+    localStorage.setItem('fl2_upcoming', JSON.stringify(upcomingRaces));
   } finally {
     suppressRemoteSync = false;
   }
