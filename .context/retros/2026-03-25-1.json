@@ -1,0 +1,41 @@
+{
+  "date": "2026-03-25",
+  "window": "7d",
+  "metrics": {
+    "commits": 87,
+    "contributors": 1,
+    "prs_merged": 31,
+    "insertions": 116651,
+    "deletions": 4260,
+    "net_loc": 112391,
+    "test_loc": 0,
+    "test_ratio": 0.0,
+    "active_days": 3,
+    "sessions": 7,
+    "deep_sessions": 6,
+    "avg_session_minutes": 123,
+    "loc_per_session_hour": 8150,
+    "feat_pct": 0.35,
+    "fix_pct": 0.45,
+    "peak_hour": 10,
+    "ai_assisted_commits": 87
+  },
+  "authors": {
+    "Ayush": {
+      "commits": 87,
+      "insertions": 116651,
+      "deletions": 4260,
+      "test_ratio": 0.0,
+      "top_area": "index.html"
+    }
+  },
+  "version_range": ["0.0.0", "0.0.0"],
+  "streak_days": 3,
+  "tweetable": "Week of Mar 23: 87 commits, 116k LOC, 31 PRs, 7 sessions (6 deep), peak: 10am | 3-day streak 🔥 | Built BREAKTAPES from scratch",
+  "test_health": {
+    "total_test_files": 40,
+    "tests_added_this_period": 0,
+    "regression_test_commits": 0,
+    "test_files_changed": 0
+  }
+}
