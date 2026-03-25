@@ -140,6 +140,7 @@ Pages: `dashboard`, `history`, `medals`, `map`, `athlete`, `train`, `training`, 
 | `app_state` | Per-user app state (races, settings, athlete profile) |
 | `race_catalog` | Global race database (~1,068+ rows, searchable) |
 | `race_medal_community` | Community-uploaded medal photos |
+| `beta_feedback` | Staging-only: star ratings + messages from beta testers |
 
 ---
 
@@ -228,7 +229,10 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 ### Supabase Auth
 - Email/password sign-up and sign-in — authenticated-only (no guest mode)
 - Forgot password flow via Supabase `sendPasswordResetEmail` (8s timeout guard)
-- New user onboarding: first/last name collection on first sign-in
+- New user onboarding: profile-first flow — new sign-ups go to `page-athlete`, welcome banner shows X/7 field progress, edit modal auto-opens after 300ms (once per device via `bt_modal_shown` flag), banner resolves to "Profile Complete → Go to Dashboard" when complete
+- Staging invite gate: `BETA_INVITE_CODES` array validated in `submitAuth()` before Supabase call; invite field shown in sign-up form when `_IS_STAGING`; production unaffected
+- Staging feedback widget: floating pill (bottom-right, auth-gated) → `feedbackModal` → `beta_feedback` Supabase table insert
+- `bt_new_user` / `bt_modal_shown` localStorage flags cleared on sign-out to prevent shared-device confusion
 - Auth state managed via `refreshAuthState()` / `initAuth()`
 
 ### Open-Meteo (Weather)
@@ -309,6 +313,26 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 - `26878dc` CI/CD pipeline, prod/staging environments, project memory docs
 - `f2c1774` Merge PR #9: gstack skills, landing-worker, gitignore fixes, pipeline hardening
 
+### Session 6 (2026-03-25) — Beta launch prep
+
+**Branch:** `claude/sleepy-gould` → staging → main
+
+- `d9447d6` — New `beta_feedback` Supabase migration (RLS insert-only, authenticated users)
+- `e2eb8f8` — Beta launch: invite gate + landing redesign + profile onboarding + feedback widget
+
+#### Key components
+- **Invite gate:** `BETA_INVITE_CODES` = `['BREAKTAPES2026','BETA26','RUNFAST','TAPES24']`; validated in `submitAuth()` before Supabase; staging-only
+- **Landing:** radial orange glow + grain texture; headline with `<em>` emphasis; `landing-proof` 3-column grid; `.out` class now includes `translateY(-24px)` slide-up
+- **Profile onboarding:** `go('athlete')` on signup + `bt_new_user` flag; `onboardBanner` with progress counter; `openEditAth()` auto-fires after 300ms (once); `isProfileComplete()` / `getProfileCompleteness()` helpers
+- **Feedback widget:** `#feedbackPill` + `#feedbackModal` + `submitFeedback()` → `beta_feedback` table; `showBtToast()` helper; auth-gated via `updateAuthUI()`
+
+#### Key learnings
+- `bt_new_user` and `bt_modal_shown` must be cleared in `signOutUser()` — shared device edge case
+- `applyEnvRestrictions()` should NOT duplicate pill visibility control (owned by `updateAuthUI()`)
+- Feedback catch block must NOT show success toast on Supabase error — shows real error instead
+
+---
+
 ### Session 5 (2026-03-25) — UI/UX overhaul + race detail form + splits
 
 **Branch:** `claude/pedantic-newton` → staging → main
@@ -352,6 +376,7 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 
 ## Known Issues / Watch Points
 
+- Beta invite codes: `BETA_INVITE_CODES` array is client-visible in source — intentional tradeoff for self-service beta; update the array and redeploy to staging to add/revoke codes
 - Safari autofill: fixed with `autocomplete="off"` + `readonly` trick on inputs; do not revert
 - Geolocation caching: coords cached 1hr in localStorage under key `geo_cache` to avoid repeated browser permission prompts
 - Race catalog priority: C-priority races intentionally excluded from progress-over-time chart
