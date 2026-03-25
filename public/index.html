@@ -859,13 +859,16 @@ main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(1
 .course-info-strip {
   background:var(--surface); border:1px solid var(--border); border-radius:8px;
   padding:0.75rem 1rem; margin-bottom:1rem; font-size:12px; color:var(--muted);
-  display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;
+  display:flex; flex-direction:column; gap:0.45rem;
 }
+.ci-tags { display:flex; gap:0.4rem; flex-wrap:wrap; }
 .course-info-strip .ci-tag {
   background:var(--surface2); border:1px solid var(--border2); border-radius:4px;
   padding:2px 8px; font-family:var(--headline); font-size:10px; font-weight:700;
   letter-spacing:0.08em; text-transform:uppercase; color:var(--white);
 }
+.ci-highlight { line-height:1.55; }
+.ci-tip { color:var(--orange); font-size:11px; line-height:1.55; }
 .course-info-strip .ci-load { color:var(--muted); font-style:italic; }
 /* ── Pace Calculator ── */
 .pace-input-card {
@@ -4289,12 +4292,13 @@ async function fetchCourseInfo(race) {
 }
 function renderCourseStrip(info) {
   const strip = document.getElementById('courseInfoStrip');
+  const tags = [info.terrain, info.surface].filter(Boolean)
+    .map(t=>`<span class="ci-tag">${t}</span>`).join('');
   strip.innerHTML = `
-    <span class="ci-tag">${info.terrain||''}</span>
-    <span class="ci-tag">${info.surface||''}</span>
-    <span style="flex:1;min-width:0">${info.highlight||''}</span>
-    ${info.tip?`<span style="color:var(--orange);font-size:11px">💡 ${info.tip}</span>`:''}`;
-  strip.style.display='flex';
+    ${tags ? `<div class="ci-tags">${tags}</div>` : ''}
+    ${info.highlight ? `<div class="ci-highlight">${info.highlight}</div>` : ''}
+    ${info.tip ? `<div class="ci-tip">💡 ${info.tip}</div>` : ''}`;
+  strip.style.display = '';
 }
 
 /* ============================
