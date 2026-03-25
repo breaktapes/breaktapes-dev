@@ -1715,6 +1715,7 @@ main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(1
    ============================================= */
 :focus-visible { outline: 2px solid var(--orange); outline-offset: 3px; border-radius: 3px; }
 :focus:not(:focus-visible) { outline: none; }
+select:focus-visible { outline: none; border-color: var(--orange) !important; box-shadow: 0 0 0 1px var(--orange); }
 
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 
@@ -2932,7 +2933,7 @@ main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(1
     <div id="trainPaceSection">
       <div class="pace-input-card">
         <div class="rd-label">Sport &amp; Distance</div>
-        <div class="fgrid" style="grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem">
+        <div class="pace-sport-dist-grid" style="display:grid;grid-template-columns:auto 1fr;gap:.75rem;margin-bottom:1rem">
           <select class="fi" id="pcType" onchange="pcOnTypeChange()">
             <option value="run">🏃 Running</option>
             <option value="tri">🏆 Triathlon</option>
