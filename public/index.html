@@ -1663,6 +1663,19 @@ main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(1
 .bn-tab svg { width: 22px; height: 22px; }
 .bn-tab.active svg { stroke: var(--orange); }
 @media (max-width: 360px) { .bn-tab { font-size: 0; } }
+/* Train tab — green identity */
+#bn-train.active { color: var(--green); }
+#bn-train.active svg { stroke: var(--green); }
+/* Train hub — green kicker + sub-tabs */
+#page-train .page-kicker::before { background: var(--green); }
+.train-tab-pill.active {
+  background: rgba(0,255,136,0.12) !important;
+  color: var(--green) !important;
+  border-color: rgba(0,255,136,0.25) !important;
+}
+/* Sidebar section label colors */
+.menu-section-label.race  { color: var(--orange); }
+.menu-section-label.train { color: var(--green); }
 
 /* =============================================
    ATHLETE PAGE — Settings link on mobile
@@ -2531,7 +2544,7 @@ main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(1
     <span class="menu-top-label">Menu</span>
   </div>
   <div class="menu-nav">
-
+    <div class="menu-section-label race">Race</div>
     <button class="menu-item active" id="mi-dashboard" onclick="go('dashboard')">
       <span class="menu-icon">⚡</span>Dashboard
     </button>
@@ -2545,8 +2558,16 @@ main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(1
     <button class="menu-item" id="mi-map" onclick="go('map')">
       <span class="menu-icon">🗺️</span>Race Map
     </button>
-    <button class="menu-item" id="mi-training" onclick="go('training')">
-      <span class="menu-icon">🏋️</span>Training
+    <div class="menu-divider"></div>
+    <div class="menu-section-label train">Train</div>
+    <button class="menu-item" id="mi-train" onclick="go('train')">
+      <span class="menu-icon">⚡</span>Pace Calculator
+    </button>
+    <button class="menu-item" onclick="go('train');switchTrainTab('activities',document.getElementById('ttActivities'))">
+      <span class="menu-icon">🏋️</span>Activity Log
+    </button>
+    <button class="menu-item" onclick="go('train');switchTrainTab('wearables',document.getElementById('ttWearables'))">
+      <span class="menu-icon">📡</span>Open Wearables
     </button>
     <div class="menu-divider"></div>
     <div class="menu-section-label">You</div>
@@ -2555,9 +2576,6 @@ main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(1
     </button>
     <button class="menu-item" onclick="openNextRace()">
       <span class="menu-icon">📅</span>Set Next Race
-    </button>
-    <button class="menu-item" id="mi-pace" onclick="go('pace')">
-      <span class="menu-icon">⏱️</span>Pace Calculator
     </button>
     <button class="menu-item" onclick="openSettings()">
       <span class="menu-icon">⚙️</span>Settings
@@ -2576,8 +2594,8 @@ main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(1
     </div>
     <div class="auth-row">
       <div>
-        <div class="menu-ath-name" id="authFooterTitle">Guest Mode</div>
-        <div class="menu-ath-sub" id="authFooterSub">Sign in to sync your data</div>
+        <div class="menu-ath-name" id="authFooterTitle">Not signed in</div>
+        <div class="menu-ath-sub" id="authFooterSub">Create an account to get started</div>
       </div>
       <span class="auth-pill off" id="authFooterPill">Offline</span>
     </div>
@@ -2630,6 +2648,11 @@ main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(1
       <div class="section-h">Personal Bests</div>
     </div>
     <div class="dash-pb-strip" id="dashPBs"></div>
+    <!-- Your World (map teaser) -->
+    <div class="section-row" style="margin-top:1.75rem">
+      <div class="section-h">Your World</div>
+      <button class="see-all" onclick="go('map')">Race Map →</button>
+    </div>
   </div>
 </div>
 
@@ -2755,7 +2778,12 @@ main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(1
         <div class="page-kicker">All Time</div>
         <div class="page-h1" style="margin-bottom:0">Race<br><span class="accent">History</span></div>
       </div>
-      <button class="btn-main" style="padding:.5rem 1rem;font-size:12px;white-space:nowrap;flex:none;margin-top:0.5rem" onclick="openRaceModal()">+ Add Race</button>
+      <div style="display:flex;gap:0.5rem;align-items:center;flex-shrink:0;margin-top:0.5rem">
+        <button class="btn-ghost" style="padding:.5rem 0.75rem;font-size:12px;white-space:nowrap" onclick="go('map')" aria-label="Race Map">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" style="vertical-align:middle;margin-right:4px"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>Map
+        </button>
+        <button class="btn-main" style="padding:.5rem 1rem;font-size:12px;white-space:nowrap" onclick="openRaceModal()">+ Add Race</button>
+      </div>
     </div>
     <div class="stats-row" style="margin-bottom:1.5rem">
       <div class="s-tile"><div class="s-tile-num" id="hs-r">0</div><div class="s-tile-label">Races</div></div>
@@ -2885,7 +2913,159 @@ main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(1
   <div class="map-error-bar" id="mapError">Some locations could not be geocoded</div>
 </div>
 
-<!-- TRAINING -->
+<!-- TRAIN HUB -->
+<div id="page-train" class="page">
+  <div class="wrap">
+    <div class="page-kicker" style="color:var(--green)">Get Faster</div>
+    <div class="page-h1" style="margin-bottom:1.25rem">Train<br><span style="color:var(--green)">Tools</span></div>
+    <!-- Sub-tab bar -->
+    <div class="training-tabs" id="trainTabBar" style="margin-bottom:1.5rem">
+      <button class="training-tab train-tab-pill active" id="ttPace" onclick="switchTrainTab('pace',this)">Pace</button>
+      <button class="training-tab train-tab-pill" id="ttActivities" onclick="switchTrainTab('activities',this)">Activities</button>
+      <button class="training-tab train-tab-pill" id="ttWearables" onclick="switchTrainTab('wearables',this)">Wearables</button>
+    </div>
+    <!-- Pace sub-tab -->
+    <div id="trainPaceSection">
+      <div class="pace-input-card">
+        <div class="rd-label">Sport &amp; Distance</div>
+        <div class="fgrid" style="grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem">
+          <select class="fi" id="pcType" onchange="pcOnTypeChange()">
+            <option value="run">🏃 Running</option>
+            <option value="tri">🏆 Triathlon</option>
+          </select>
+          <select class="fi" id="pcDist" onchange="pcOnDistChange()"></select>
+        </div>
+        <div id="pcStandardInput">
+          <div class="rd-label">Target Finish Time</div>
+          <div class="time-picker" style="margin-bottom:1rem">
+            <div class="tp-field">
+              <button class="tp-btn" type="button" onclick="stepTime('pcH',1,0,99)">▲</button>
+              <input class="tp-in" id="pcH" type="number" min="0" max="99" value="0" inputmode="numeric" onchange="clampTime(this,0,99)">
+              <button class="tp-btn" type="button" onclick="stepTime('pcH',-1,0,99)">▼</button>
+              <div class="tp-label">HRS</div>
+            </div>
+            <span class="tp-sep">:</span>
+            <div class="tp-field">
+              <button class="tp-btn" type="button" onclick="stepTime('pcM',1,0,59)">▲</button>
+              <input class="tp-in" id="pcM" type="number" min="0" max="59" value="0" inputmode="numeric" onchange="clampTime(this,0,59)">
+              <button class="tp-btn" type="button" onclick="stepTime('pcM',-1,0,59)">▼</button>
+              <div class="tp-label">MIN</div>
+            </div>
+            <span class="tp-sep">:</span>
+            <div class="tp-field">
+              <button class="tp-btn" type="button" onclick="stepTime('pcS',1,0,59)">▲</button>
+              <input class="tp-in" id="pcS" type="number" min="0" max="59" value="0" inputmode="numeric" onchange="clampTime(this,0,59)">
+              <button class="tp-btn" type="button" onclick="stepTime('pcS',-1,0,59)">▼</button>
+              <div class="tp-label">SEC</div>
+            </div>
+          </div>
+          <div id="pcPBRef" style="display:none;font-size:12px;color:var(--muted);margin-bottom:1rem"></div>
+          <button class="btn-main" style="width:100%" onclick="calcPace()">Calculate Pace</button>
+        </div>
+        <div id="pcTriInput" style="display:none">
+          <div class="tri-segs">
+            <div class="tri-seg-row">
+              <div class="tri-seg-hd"><span class="tri-seg-icon">🏊</span><div><div class="tri-seg-name">Swim</div><div class="tri-seg-dist" id="pcTriSwimDist">1,500m</div></div></div>
+              <div class="tri-seg-ctrl">
+                <span class="tri-seg-lbl">Pace / 100m</span>
+                <div class="tri-pace-inp">
+                  <input class="tri-num" id="pcSwimPaceM" type="number" value="2" min="0" max="9">
+                  <span class="tri-colon">:</span>
+                  <input class="tri-num" id="pcSwimPaceS" type="number" value="0" min="0" max="59">
+                </div>
+              </div>
+            </div>
+            <div class="tri-seg-row tri-t">
+              <div class="tri-seg-hd"><span class="tri-seg-icon">⏱</span><div><div class="tri-seg-name">T1</div></div></div>
+              <div class="tri-seg-ctrl">
+                <span class="tri-seg-lbl">mm : ss</span>
+                <div class="tri-pace-inp">
+                  <input class="tri-num" id="pcT1M" type="number" value="3" min="0" max="59">
+                  <span class="tri-colon">:</span>
+                  <input class="tri-num" id="pcT1S" type="number" value="0" min="0" max="59">
+                </div>
+              </div>
+            </div>
+            <div class="tri-seg-row">
+              <div class="tri-seg-hd"><span class="tri-seg-icon">🚴</span><div><div class="tri-seg-name">Bike</div><div class="tri-seg-dist" id="pcTriBikeDist">40km</div></div></div>
+              <div class="tri-seg-ctrl">
+                <span class="tri-seg-lbl">Avg Speed km/h</span>
+                <input class="tri-speed-inp" id="pcBikeSpeed" type="number" value="30" min="1" max="80">
+              </div>
+            </div>
+            <div class="tri-seg-row tri-t">
+              <div class="tri-seg-hd"><span class="tri-seg-icon">⏱</span><div><div class="tri-seg-name">T2</div></div></div>
+              <div class="tri-seg-ctrl">
+                <span class="tri-seg-lbl">mm : ss</span>
+                <div class="tri-pace-inp">
+                  <input class="tri-num" id="pcT2M" type="number" value="2" min="0" max="59">
+                  <span class="tri-colon">:</span>
+                  <input class="tri-num" id="pcT2S" type="number" value="0" min="0" max="59">
+                </div>
+              </div>
+            </div>
+            <div class="tri-seg-row">
+              <div class="tri-seg-hd"><span class="tri-seg-icon">🏃</span><div><div class="tri-seg-name">Run</div><div class="tri-seg-dist" id="pcTriRunDist">10km</div></div></div>
+              <div class="tri-seg-ctrl">
+                <span class="tri-seg-lbl">Pace / km</span>
+                <div class="tri-pace-inp">
+                  <input class="tri-num" id="pcRunPaceM" type="number" value="5" min="0" max="29">
+                  <span class="tri-colon">:</span>
+                  <input class="tri-num" id="pcRunPaceS" type="number" value="30" min="0" max="59">
+                </div>
+              </div>
+            </div>
+          </div>
+          <button class="btn-main" style="width:100%;margin-top:1rem" onclick="calcTriPace()">Calculate Time</button>
+        </div>
+      </div>
+      <div id="paceResults" style="display:none"></div>
+    </div>
+    <!-- Activities sub-tab -->
+    <div id="trainActivitiesSection" style="display:none">
+      <div class="strava-card" id="stravaCard">
+        <div class="strava-logo">🟠</div>
+        <div class="strava-card-text">
+          <div class="strava-card-title" id="stravaCardTitle">Connect Strava</div>
+          <div class="strava-card-sub" id="stravaCardSub">Import your training history and past races automatically</div>
+        </div>
+        <button class="strava-connect-btn" id="stravaBtn" onclick="handleStravaBtn()">Connect</button>
+      </div>
+      <div class="training-stats" id="trainingStatsRow" style="display:none">
+        <div class="training-stat"><div class="training-stat-num" id="ts-km">—</div><div class="training-stat-label">Total KM</div></div>
+        <div class="training-stat"><div class="training-stat-num" id="ts-acts">—</div><div class="training-stat-label">Activities</div></div>
+        <div class="training-stat"><div class="training-stat-num" id="ts-hrs">—</div><div class="training-stat-label">Hours</div></div>
+        <div class="training-stat"><div class="training-stat-num" id="ts-elev">—</div><div class="training-stat-label">Elev (m)</div></div>
+      </div>
+      <div class="training-bar">
+        <div class="section-h">Activities</div>
+        <div style="display:flex;gap:0.4rem;align-items:center">
+          <div class="training-tabs">
+            <button class="training-tab active" onclick="filterTraining('All',this)">All</button>
+            <button class="training-tab" onclick="filterTraining('Run',this)">Run</button>
+            <button class="training-tab" onclick="filterTraining('Ride',this)">Ride</button>
+            <button class="training-tab" onclick="filterTraining('Swim',this)">Swim</button>
+          </div>
+          <button class="training-sync-btn" id="syncBtn" style="display:none" onclick="syncStrava()">↻ Sync</button>
+        </div>
+      </div>
+      <div id="trainingFeed"></div>
+      <div id="owTrainingSection" style="margin-top:1.75rem">
+        <div class="training-bar ow-training-header">
+          <div class="section-h">Open Wearables</div>
+        </div>
+        <div id="owTrainingFeed"></div>
+      </div>
+    </div>
+    <!-- Wearables sub-tab -->
+    <div id="trainWearablesSection" style="display:none">
+      <div id="owPageWidget"></div>
+      <div id="owPageFatigueSection" style="margin-top:1.5rem"></div>
+    </div>
+  </div>
+</div>
+
+<!-- TRAINING (legacy — sidebar/desktop access) -->
 <div id="page-training" class="page">
   <div class="wrap">
     <div class="page-kicker">Activity Log</div>
@@ -3761,7 +3941,7 @@ function updateAuthUI() {
   const signedIn = !!authUser;
   const email = authUser?.email || '';
   document.getElementById('authMenuLabel').textContent = signedIn ? 'Account' : 'Sign In';
-  document.getElementById('authFooterTitle').textContent = signedIn ? (athlete?.name || 'Signed In') : 'Guest Mode';
+  document.getElementById('authFooterTitle').textContent = signedIn ? (athlete?.name || 'Signed In') : 'Not signed in';
   document.getElementById('authFooterSub').textContent = signedIn ? email : 'Sign in to sync your data';
   document.getElementById('authFooterPill').textContent = signedIn ? 'Synced' : 'Offline';
   document.getElementById('authFooterPill').className = `auth-pill ${signedIn ? 'on' : 'off'}`;
@@ -3963,6 +4143,57 @@ function render(p){
   else if(p==='map') renderMap();
   else if(p==='training') renderTraining();
   else if(p==='pace') renderPace();
+  else if(p==='train') renderTrain();
+}
+
+let trainTab = 'pace';
+function switchTrainTab(tab, btnEl) {
+  trainTab = tab;
+  document.querySelectorAll('.train-tab-pill').forEach(b => b.classList.remove('active'));
+  if (btnEl) btnEl.classList.add('active');
+  document.getElementById('trainPaceSection').style.display      = tab === 'pace'       ? '' : 'none';
+  document.getElementById('trainActivitiesSection').style.display = tab === 'activities' ? '' : 'none';
+  document.getElementById('trainWearablesSection').style.display  = tab === 'wearables'  ? '' : 'none';
+  if (tab === 'pace')       { pcOnTypeChange(); document.getElementById('paceResults').style.display = 'none'; }
+  if (tab === 'activities') renderTraining();
+  if (tab === 'wearables')  renderOWPage();
+}
+function renderTrain() {
+  const activeBtn = document.getElementById(
+    trainTab === 'pace' ? 'ttPace' : trainTab === 'activities' ? 'ttActivities' : 'ttWearables'
+  );
+  switchTrainTab(trainTab, activeBtn);
+}
+function renderOWPage() {
+  const cfg = getOWConfig && getOWConfig();
+  const widget = document.getElementById('owPageWidget');
+  const fatigue = document.getElementById('owPageFatigueSection');
+  if (!widget) return;
+  if (!cfg) {
+    widget.innerHTML = `<div class="card" style="padding:2rem;text-align:center">
+      <p style="font-family:var(--headline);font-size:1.1rem;font-weight:700;letter-spacing:0.06em;margin-bottom:0.5rem">CONNECT OPEN WEARABLES</p>
+      <p style="color:var(--muted);font-size:13px;margin-bottom:1rem">See your recovery, HRV, sleep, and fatigue data here.</p>
+      <button class="btn-main" onclick="openSettings()">Connect in Settings →</button>
+    </div>`;
+    if (fatigue) fatigue.innerHTML = '';
+    return;
+  }
+  // Temporarily remap OW element IDs to page-train containers, render, restore
+  const origWidget = document.getElementById('owWidget');
+  const origFatigue = document.getElementById('owFatigueSection');
+  if (origWidget) origWidget.id = '__owWidget_bak';
+  if (origFatigue) origFatigue.id = '__owFatigue_bak';
+  widget.id = 'owWidget';
+  if (fatigue) fatigue.id = 'owFatigueSection';
+  renderOWWidget();
+  renderOWFatigueChart();
+  // Restore after async renders kick off
+  setTimeout(() => {
+    widget.id = 'owPageWidget';
+    if (fatigue) fatigue.id = 'owPageFatigueSection';
+    if (origWidget) origWidget.id = 'owWidget';
+    if (origFatigue) origFatigue.id = 'owFatigueSection';
+  }, 50);
 }
 
 /* ============================
@@ -7729,7 +7960,7 @@ async function initApp() {
     dismissLanding();
     render('dashboard');
   }
-  // If not logged in, landing screen stays until sign-in or guest continue
+  // If not logged in, landing screen stays until sign-in
 }
 
 /* ============================
@@ -7830,9 +8061,9 @@ initApp();
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
     Medals
   </button>
-  <button class="bn-tab" id="bn-map" onclick="go('map')" aria-label="Race Map">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
-    Map
+  <button class="bn-tab" id="bn-train" onclick="go('train')" aria-label="Train">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+    Train
   </button>
   <button class="bn-tab" id="bn-athlete" onclick="go('athlete')" aria-label="Athlete Profile">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
