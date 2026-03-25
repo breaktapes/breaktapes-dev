@@ -1,0 +1,14 @@
+{
+  "name": "breaktapes-health",
+  "version": "1.0.0",
+  "description": "Cloudflare Worker proxy for Open Wearables — keeps OW API key server-side",
+  "main": "src/index.js",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "deploy:dry": "wrangler deploy --dry-run",
+    "dev": "wrangler dev"
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  }
+}

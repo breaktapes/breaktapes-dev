@@ -1538,13 +1538,22 @@ main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(1
 
 /* Athlete PBs */
 .ath-pb-grid {
-  display:grid; grid-template-columns:repeat(auto-fill, minmax(175px,1fr));
-  gap:0.75rem;
+  display: flex;
+  flex-direction: row;
+  gap: 0.75rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 2px;
 }
+.ath-pb-grid::-webkit-scrollbar { display: none; }
 .ath-pb-card {
   background:var(--surface); border:1px solid var(--border);
   border-radius:5px; padding:1rem;
   transition:all 0.15s;
+  flex: 0 0 160px;
+  scroll-snap-align: start;
 }
 .ath-pb-card:hover { border-color:rgba(0,255,136,0.2); }
 .ath-pb-dist {
@@ -2347,11 +2356,17 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 
 /* Dashboard PB strip */
 .dash-pb-strip {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  display: flex;
+  flex-direction: row;
   gap: 0.6rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
   margin-bottom: 1.5rem;
+  padding-bottom: 2px;
 }
+.dash-pb-strip::-webkit-scrollbar { display: none; }
 .dash-pb-card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -2359,6 +2374,8 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   border-radius: 5px;
   padding: 0.85rem 0.9rem;
   transition: all 0.15s;
+  flex: 0 0 160px;
+  scroll-snap-align: start;
 }
 .dash-pb-card:hover { border-color: var(--green); transform: translateY(-2px); }
 .dash-pb-dist {
@@ -2446,6 +2463,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 .strava-connect-btn.connected:hover { background: #00df78; }
 .strava-connect-btn.secondary { background: var(--surface3); color: var(--muted); border: 1px solid var(--border2); }
 .strava-connect-btn.secondary:hover { color: var(--white); border-color: var(--border2); background: var(--surface3); }
+.strava-connect-btn.danger { background: rgba(255,50,50,0.15); color: #ff6b6b; border: 1px solid rgba(255,50,50,0.4); }
 
 .training-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 0.65rem; margin-bottom: 1.5rem; }
 @media(max-width:480px){ .training-stats { grid-template-columns: repeat(2,1fr); } }
@@ -2500,6 +2518,26 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 .training-empty-icon { font-size: 36px; margin-bottom: 0.75rem; }
 .training-empty-h { font-family: var(--headline); font-size: 18px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: var(--white); margin-bottom: 0.3rem; }
 .training-empty-sub { font-size: 13px; }
+
+/* Training feed: month groups + race badge */
+.ta-month-group { margin-bottom: 1.5rem; }
+.ta-month-label {
+  font-family: var(--headline); font-size: 11px; font-weight: 800;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);
+  padding: 0.3rem 0 0.5rem; border-bottom: 1px solid var(--border); margin-bottom: 0.4rem;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.ta-month-count {
+  background: var(--surface3); border: 1px solid var(--border2);
+  border-radius: 10px; padding: 1px 7px; font-size: 10px; color: var(--muted2);
+}
+.ta-race-badge {
+  display: inline-block; margin-left: 6px; padding: 1px 6px;
+  font-family: var(--headline); font-size: 9px; font-weight: 800;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  background: var(--orange-dim); color: var(--orange);
+  border: 1px solid rgba(255,77,0,0.35); border-radius: 3px; vertical-align: middle;
+}
 
 /* =============================================
    LOCATION AUTOCOMPLETE
@@ -2570,6 +2608,65 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 .auth-forgot:hover { opacity: 0.8; }
 
 /* =============================================
+   ONBOARDING BANNER
+   ============================================= */
+.onboard-banner {
+  background: linear-gradient(135deg, rgba(255,77,0,0.12) 0%, rgba(255,77,0,0.06) 100%);
+  border: 1px solid rgba(255,77,0,0.3);
+  border-radius: 8px; padding: 1rem 1.25rem;
+  margin-bottom: 1.25rem;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 1rem;
+}
+.onboard-banner-text { display: flex; flex-direction: column; gap: 2px; }
+.onboard-banner-title {
+  font-family: var(--headline); font-size: 13px; font-weight: 900;
+  text-transform: uppercase; letter-spacing: 0.08em; color: var(--white);
+}
+.onboard-banner-sub { font-size: 12px; color: var(--muted); }
+.onboard-progress {
+  font-family: var(--headline); font-size: 11px; font-weight: 800;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--orange); white-space: nowrap; flex-shrink: 0;
+}
+.onboard-banner-cta {
+  background: var(--orange); color: var(--black);
+  border: none; border-radius: 4px; padding: 0.4rem 0.9rem;
+  font-family: var(--headline); font-size: 11px; font-weight: 900;
+  letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;
+  white-space: nowrap; flex-shrink: 0; transition: opacity 0.15s;
+}
+.onboard-banner-cta:hover { opacity: 0.85; }
+
+/* =============================================
+   FEEDBACK WIDGET (staging)
+   ============================================= */
+.feedback-pill {
+  position: fixed; bottom: calc(72px + env(safe-area-inset-bottom, 0px) + 12px); right: 16px;
+  z-index: 500;
+  background: var(--surface3); border: 1px solid var(--border2);
+  color: var(--muted); border-radius: 20px; padding: 0.5rem 1rem;
+  font-family: var(--headline); font-size: 11px; font-weight: 800;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  display: flex; align-items: center; gap: 0.4rem;
+  cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+.feedback-pill:hover { border-color: var(--orange); color: var(--orange); }
+.feedback-stars {
+  display: flex; gap: 0.5rem; justify-content: center;
+  margin: 0.25rem 0;
+}
+.fb-star {
+  font-size: 28px; background: none; border: none; cursor: pointer;
+  color: var(--muted2); transition: color 0.1s, transform 0.1s;
+  padding: 0.15rem;
+}
+.fb-star.active { color: var(--orange); transform: scale(1.1); }
+.fb-star:hover { color: var(--orange); }
+@keyframes toastIn  { from { opacity:0; transform:translateX(-50%) translateY(8px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
+@keyframes toastOut { from { opacity:1; transform:translateX(-50%) translateY(0); } to { opacity:0; transform:translateX(-50%) translateY(4px); } }
+
+/* =============================================
    LANDING SCREEN
    ============================================= */
 #landing-screen {
@@ -2579,53 +2676,84 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   align-items: center; justify-content: center;
   padding: 2rem 1.5rem;
   text-align: center;
-  transition: opacity 0.35s ease;
+  transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.4,0,0.2,1);
+  overflow: hidden;
 }
-#landing-screen.out { opacity: 0; pointer-events: none; }
+/* Radial glow */
+#landing-screen::before {
+  content: '';
+  position: absolute; inset: 0; z-index: 0;
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 110%, rgba(255,77,0,0.18) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 30% at 80% 10%, rgba(255,77,0,0.06) 0%, transparent 60%);
+  pointer-events: none;
+}
+/* Grain texture */
+#landing-screen::after {
+  content: '';
+  position: absolute; inset: 0; z-index: 1;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.035; mix-blend-mode: overlay; pointer-events: none;
+}
+#landing-screen > * { position: relative; z-index: 2; }
+#landing-screen.out { opacity: 0; transform: translateY(-24px); pointer-events: none; }
 .landing-wordmark {
   font-family: var(--headline);
-  font-size: clamp(28px, 8vw, 48px);
-  font-weight: 900; letter-spacing: 0.08em;
-  text-transform: uppercase; color: var(--white);
-  margin-bottom: 2.5rem;
+  font-size: clamp(14px, 4vw, 18px);
+  font-weight: 900; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--muted);
+  margin-bottom: 2rem;
 }
 .landing-wordmark .slash { color: var(--orange); }
 .landing-headline {
   font-family: var(--headline);
-  font-size: clamp(2.8rem, 13vw, 5.5rem);
-  font-weight: 900; line-height: 0.92;
+  font-size: clamp(3.2rem, 14vw, 6rem);
+  font-weight: 900; line-height: 0.9;
   text-transform: uppercase; letter-spacing: 0.01em;
-  color: var(--white); margin-bottom: 1.25rem;
+  color: var(--white); margin-bottom: 1rem;
 }
 .landing-headline em {
   font-style: normal; color: var(--orange);
 }
 .landing-sub {
   font-size: 15px; color: var(--muted);
-  max-width: 300px; line-height: 1.65;
-  margin: 0 auto 2.5rem;
+  max-width: 280px; line-height: 1.65;
+  margin: 0 auto 2.25rem;
 }
 .landing-actions {
-  display: flex; gap: 0.75rem;
-  width: 100%; max-width: 340px;
-  margin-bottom: 1.25rem;
+  display: flex; flex-direction: column;
+  gap: 0.6rem; align-items: center;
+  width: 100%; max-width: 300px;
+  margin-bottom: 2.5rem;
 }
-.landing-actions .btn-main,
-.landing-actions .btn-ghost { flex: 1; }
-.landing-features {
-  display: flex; gap: 1.5rem; flex-wrap: wrap;
-  justify-content: center; margin-top: 0.5rem;
+.landing-actions .btn-main { width: 100%; font-size: 15px; padding: 0.85rem 1.5rem; letter-spacing: 0.1em; }
+.landing-sign-in-link {
+  font-size: 13px; color: var(--muted);
+  background: none; border: none; cursor: pointer;
+  text-decoration: underline; text-underline-offset: 3px;
+  padding: 0; font-family: var(--body);
 }
-.landing-feat {
-  font-family: var(--headline); font-size: 11px;
-  font-weight: 700; letter-spacing: 0.14em;
-  text-transform: uppercase; color: var(--muted2);
-  display: flex; align-items: center; gap: 0.4rem;
+.landing-sign-in-link:hover { color: var(--white); }
+/* 3-column proof grid */
+.landing-proof {
+  display: grid; grid-template-columns: repeat(3,1fr);
+  gap: 0.75rem; width: 100%; max-width: 380px;
 }
-.landing-feat-dot {
-  width: 4px; height: 4px; border-radius: 50%;
-  background: var(--orange); flex-shrink: 0;
+.landing-proof-item {
+  background: rgba(245,245,245,0.04);
+  border: 1px solid var(--border);
+  border-radius: 8px; padding: 0.9rem 0.6rem;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 0.4rem;
 }
+.landing-proof-icon { font-size: 20px; line-height: 1; }
+.landing-proof-title {
+  font-family: var(--headline);
+  font-size: 10px; font-weight: 900;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--white); line-height: 1.2;
+}
+.landing-proof-desc { font-size: 10px; color: var(--muted); line-height: 1.4; text-align: center; }
 </style>
 </head>
 <body>
@@ -2633,18 +2761,28 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 <!-- ==== LANDING SCREEN ==== -->
 <div id="landing-screen">
   <div class="landing-wordmark">BREAK<span class="slash">/</span>TAPES</div>
-  <div class="landing-headline">Track Every<br><em>Finish Line.</em></div>
-  <p class="landing-sub">Log your marathons, triathlons, ultras and more. Sync across every device.</p>
+  <div class="landing-headline">Your Races.<br><em>All of Them.</em></div>
+  <p class="landing-sub">Log every finish line. Track PRs, medals, and race history in one place.</p>
   <div class="landing-actions">
-    <button class="btn-main" onclick="openLandingAuth('signin')">Sign In</button>
-    <button class="btn-ghost" id="landingSignUpBtn" onclick="openLandingAuth('signup')">Create Account</button>
+    <button class="btn-main" onclick="openLandingAuth('signup')">Get Started — It's Free</button>
+    <button class="landing-sign-in-link" onclick="openLandingAuth('signin')">Already have an account? Sign in</button>
   </div>
-  <div class="landing-features">
-    <span class="landing-feat"><span class="landing-feat-dot"></span>Race Log</span>
-    <span class="landing-feat"><span class="landing-feat-dot"></span>Medal Wall</span>
-    <span class="landing-feat"><span class="landing-feat-dot"></span>Personal Bests</span>
-    <span class="landing-feat"><span class="landing-feat-dot"></span>Race Countdown</span>
-    <span class="landing-feat"><span class="landing-feat-dot"></span>Flatlays</span>
+  <div class="landing-proof">
+    <div class="landing-proof-item">
+      <div class="landing-proof-icon">🏅</div>
+      <div class="landing-proof-title">Medal Wall</div>
+      <div class="landing-proof-desc">Photo-first medal display</div>
+    </div>
+    <div class="landing-proof-item">
+      <div class="landing-proof-icon">⚡</div>
+      <div class="landing-proof-title">Live PRs</div>
+      <div class="landing-proof-desc">Auto-calculated personal bests</div>
+    </div>
+    <div class="landing-proof-item">
+      <div class="landing-proof-icon">🗺️</div>
+      <div class="landing-proof-title">Race Map</div>
+      <div class="landing-proof-desc">Countries and routes mapped</div>
+    </div>
   </div>
 </div>
 
@@ -2688,9 +2826,6 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
     <button class="menu-item" onclick="go('train');switchTrainTab('activities',document.getElementById('ttActivities'))">
       <span class="menu-icon">🏋️</span>Activity Log
     </button>
-    <button class="menu-item" onclick="go('train');switchTrainTab('wearables',document.getElementById('ttWearables'))">
-      <span class="menu-icon">📡</span>Open Wearables
-    </button>
     <div class="menu-divider"></div>
     <div class="menu-section-label">You</div>
     <button class="menu-item" id="mi-athlete" onclick="go('athlete')">
@@ -2713,13 +2848,6 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
         <div class="menu-ath-name" id="mAthName">Athlete</div>
         <div class="menu-ath-sub" id="mAthSub">0 races</div>
       </div>
-    </div>
-    <div class="auth-row">
-      <div>
-        <div class="menu-ath-name" id="authFooterTitle">Not signed in</div>
-        <div class="menu-ath-sub" id="authFooterSub">Create an account to get started</div>
-      </div>
-      <span class="auth-pill off" id="authFooterPill">Offline</span>
     </div>
   </div>
 </nav>
@@ -2748,10 +2876,6 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
       <div class="s-tile"><div class="s-tile-num" id="ds-k">0</div><div class="s-tile-label">Total KM</div></div>
       <div class="s-tile" onclick="go('medals')" style="cursor:pointer"><div class="s-tile-num" id="ds-m">0</div><div class="s-tile-label">Medals</div></div>
     </div>
-    <!-- Open Wearables Recovery -->
-    <div id="owWidget"></div>
-    <!-- OW Fatigue vs Performance (shown when OW connected + enough data) -->
-    <div id="owFatigueSection"></div>
     <!-- Goals -->
     <div id="goalsSection"></div>
     <!-- Year in Review + H2H -->
@@ -2769,7 +2893,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
     <div class="section-row" style="margin-top:1.5rem">
       <div class="section-h">Personal Bests</div>
     </div>
-    <div class="dash-pb-strip" id="dashPBs"></div>
+    <div id="dashPBs"></div>
     <!-- Your World (map teaser) -->
     <div class="section-row" style="margin-top:1.75rem">
       <div class="section-h">Your World</div>
@@ -2826,6 +2950,14 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 <!-- ATHLETE -->
 <div id="page-athlete" class="page">
   <div class="wrap">
+    <!-- Onboarding banner (shown for new users until profile is complete) -->
+    <div id="onboardBanner" class="onboard-banner" style="display:none">
+      <div class="onboard-banner-text">
+        <span class="onboard-banner-title" id="onboardTitle">Welcome to BREAKTAPES</span>
+        <span class="onboard-banner-sub" id="onboardSub">Set up your profile to get started</span>
+      </div>
+      <div class="onboard-progress" id="onboardProgress"></div>
+    </div>
     <!-- Hero -->
     <div class="ath-hero">
       <div class="ath-hero-bg"></div>
@@ -2875,17 +3007,12 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
     <!-- Athlete PBs -->
     <div class="ath-section">
       <div class="ath-section-h">Personal Bests</div>
-      <div class="ath-pb-grid" id="athPBs"></div>
+      <div id="athPBs"></div>
     </div>
     <!-- Race Activity Heatmap -->
     <div class="ath-section">
       <div class="ath-section-h">Race Activity</div>
       <div id="athCalHeatmap"></div>
-    </div>
-    <!-- OW VO2 Max Trend -->
-    <div class="ath-section" id="athVO2Section" style="display:none">
-      <div class="ath-section-h">VO2 Max Trend</div>
-      <div id="athVO2Chart"></div>
     </div>
     <!-- Countries -->
     <div class="ath-section">
@@ -2941,7 +3068,6 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
     <div class="training-tabs" id="trainTabBar" style="margin-bottom:1.5rem">
       <button class="training-tab train-tab-pill active" id="ttPace" onclick="switchTrainTab('pace',this)">Pace</button>
       <button class="training-tab train-tab-pill" id="ttActivities" onclick="switchTrainTab('activities',this)">Activities</button>
-      <button class="training-tab train-tab-pill" id="ttWearables" onclick="switchTrainTab('wearables',this)">Wearables</button>
     </div>
     <!-- Pace sub-tab -->
     <div id="trainPaceSection">
@@ -3085,17 +3211,6 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
         </div>
       </div>
       <div id="trainingFeed"></div>
-      <div id="owTrainingSection" style="margin-top:1.75rem">
-        <div class="training-bar ow-training-header">
-          <div class="section-h">Open Wearables</div>
-        </div>
-        <div id="owTrainingFeed"></div>
-      </div>
-    </div>
-    <!-- Wearables sub-tab -->
-    <div id="trainWearablesSection" style="display:none">
-      <div id="owPageWidget"></div>
-      <div id="owPageFatigueSection" style="margin-top:1.5rem"></div>
     </div>
   </div>
 </div>
@@ -3389,8 +3504,9 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
     <div class="modal-body">
       <div class="settings-info">
         Create a free Strava API application at <strong>strava.com/settings/api</strong>.<br>
-        Set the <strong>Authorization Callback Domain</strong> to <strong>localhost</strong>.<br>
-        Copy the Client ID and Client Secret from your app's settings page.
+        Set the <strong>Authorization Callback Domain</strong> to <strong id="stravaCallbackDomain">…</strong>.<br>
+        Copy the Client ID and Client Secret from your app's settings page.<br>
+        <span style="color:var(--orange);opacity:0.8">Note: your Client Secret is stored locally on this device only.</span>
       </div>
       <div class="fgrid" style="grid-template-columns:1fr">
         <div class="fg"><label class="fl">Client ID</label><input class="fi" id="strClientId" placeholder="e.g. 123456" autocomplete="off"></div>
@@ -3643,12 +3759,6 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
         <div class="rd-label">Race Notes</div>
         <textarea class="ai-ta" id="rdNotes" placeholder="How did it go? Conditions, strategy, reflections…" style="min-height:80px"></textarea>
       </div>
-      <!-- OW Health Context: sleep + training load (async, hidden until loaded) -->
-      <div id="rdOwHealth" style="display:none">
-        <div class="rd-label" style="margin-bottom:0.5rem">Health Context</div>
-        <div id="rdOwSleep" style="margin-bottom:0.5rem"></div>
-        <div id="rdOwTrainingLoad"></div>
-      </div>
     </div>
     <div class="modal-foot">
       <button class="btn-ghost" onclick="_rdIsNew=false;closeM('raceDetailModal')">Cancel</button>
@@ -3678,7 +3788,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
         <div class="fg">
           <label class="fl">Anthropic API Key</label>
           <div class="fi-wrap">
-            <input class="fi" id="setApiKey" type="password" placeholder="sk-ant-..." autocomplete="new-password">
+            <input class="fi" id="setApiKey" type="password" placeholder="sk-ant-..." autocomplete="new-password" disabled>
             <button class="fi-reveal" onclick="toggleReveal(this)" aria-label="Show/hide key">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
@@ -3687,36 +3797,6 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
             </button>
           </div>
           <div class="ai-hint" style="margin-top:6px">Required for AI race import and screenshot parsing. Get your key at console.anthropic.com</div>
-        </div>
-      </div>
-      <div style="margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid var(--border)">
-        <div class="modal-sub" style="margin-bottom:0.85rem;font-size:13px;font-weight:700;color:var(--fg)">Open Wearables</div>
-        <div class="fgrid" style="grid-template-columns:1fr">
-          <div class="fg">
-            <label class="fl">Instance URL</label>
-            <input class="fi" id="owUrl" type="text" placeholder="https://your-instance.example.com" autocomplete="off">
-          </div>
-          <div class="fg" style="margin-top:0.65rem">
-            <label class="fl">API Key</label>
-            <div class="fi-wrap">
-              <input class="fi" id="owKey" type="password" placeholder="ow_..." autocomplete="new-password">
-              <button class="fi-reveal" onclick="toggleReveal(this)" aria-label="Show/hide key">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                  <circle cx="12" cy="12" r="3"/>
-                </svg>
-              </button>
-            </div>
-          </div>
-          <div class="fg" style="margin-top:0.65rem">
-            <label class="fl">User ID</label>
-            <input class="fi" id="owUserId" type="text" placeholder="your-user-id" autocomplete="off">
-            <div class="ai-hint" style="margin-top:6px">Connects Garmin, Whoop, Oura, Apple Health & more. <a href="https://openwearables.io" target="_blank" style="color:var(--orange)">openwearables.io ↗</a></div>
-          </div>
-          <div class="fg" style="margin-top:0.65rem">
-            <button class="btn-ghost" type="button" onclick="testOWConnection()" style="width:100%">Test Connection</button>
-            <div id="owTestResult" style="font-size:12px;margin-top:6px;color:var(--muted)"></div>
-          </div>
         </div>
       </div>
     </div>
@@ -3755,6 +3835,11 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
             </div>
           </div>
         </div>
+        <div class="fg" id="authInviteWrap" style="display:none">
+          <label class="fl">Invite Code</label>
+          <input class="fi" id="authInviteCode" placeholder="e.g. BREAKTAPES2026" autocomplete="off" style="text-transform:uppercase">
+          <div class="fg-err-msg"></div>
+        </div>
         <div class="fg">
           <label class="fl" for="authEmail">Email</label>
           <input class="fi" id="authEmail" type="text" placeholder="you@example.com" autocomplete="off">
@@ -3762,7 +3847,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
         </div>
         <div class="fg">
           <label class="fl" for="authPassword">Password</label>
-          <input class="fi" id="authPassword" type="password" placeholder="At least 6 characters" autocomplete="current-password">
+          <input class="fi" id="authPassword" type="password" placeholder="At least 6 characters" autocomplete="new-password" disabled>
           <div class="fg-err-msg"></div>
         </div>
       </div>
@@ -3802,6 +3887,7 @@ const HIST_PER_PAGE = 20;
 let _histSearchTimer;
 const _IS_PROD    = window.location.hostname === 'app.breaktapes.com';
 const _IS_STAGING = window.location.hostname === 'dev.breaktapes.com';
+const BETA_INVITE_CODES = ['BREAKTAPES2026', 'BETA26', 'RUNFAST', 'TAPES24'];
 const SUPABASE_URL      = _IS_PROD
   ? 'https://kmdpufauamadwavqsinj.supabase.co'
   : 'https://yqzycwuyhvzkbofwkazr.supabase.co';
@@ -3809,6 +3895,23 @@ const SUPABASE_ANON_KEY = _IS_PROD
   ? 'sb_publishable_aXlZ54g7bW8dckyl3N-kCA_Jzy_Nt0B'
   : 'sb_publishable_XiI5lGzh_3rWoA2TxrKnWg_gPtPKSRp';
 const REMOTE_SYNC_KEYS = new Set(['fl2_races', 'fl2_ath', 'fl2_nr', 'fl2_upcoming']);
+// Open Wearables proxy — Cloudflare Worker that adds the OW API key server-side
+// Set to '' until the Railway OW instance + worker secrets are configured
+const OW_PROXY_URL = 'https://health.breaktapes.com';
+// Instantly hide landing screen if a cached Supabase session exists — avoids flash on reload
+(function() {
+  try {
+    const projectRef = SUPABASE_URL.split('https://')[1].split('.')[0];
+    const raw = localStorage.getItem(`sb-${projectRef}-auth-token`);
+    if (raw) {
+      const tok = JSON.parse(raw);
+      if (tok?.access_token) {
+        const el = document.getElementById('landing-screen');
+        if (el) el.style.display = 'none';
+      }
+    }
+  } catch(e) {}
+})();
 let supabaseClient = null;
 let remoteSyncTimer = null;
 let remoteSyncReady = false;
@@ -3915,19 +4018,19 @@ async function loadRemoteState() {
       .maybeSingle();
     if (error) throw error;
     if (!data) {
-      // New user — seed an empty row so subsequent syncs work
+      // New user — reset local state to blank slate, then seed remote row
+      races = [];
+      athlete = { name: authUser.user_metadata?.full_name || '' };
+      nextRace = null; upcomingRaces = [];
+      localStorage.setItem('fl2_races', JSON.stringify(races));
+      localStorage.setItem('fl2_ath', JSON.stringify(athlete));
       const emptyPayload = {
         user_id: authUser.id,
         races: [],
-        athlete: athlete || { name: authUser.user_metadata?.full_name || '' },
+        athlete,
         next_race: null,
         upcoming_races: []
       };
-      // Apply name from auth metadata if athlete has no name yet
-      if (!athlete?.name && authUser.user_metadata?.full_name) {
-        athlete = { name: authUser.user_metadata.full_name };
-        localStorage.setItem('fl2_ath', JSON.stringify(athlete));
-      }
       const { error: upsertError } = await client.from('user_state').upsert(emptyPayload, { onConflict: 'user_id' });
       if (upsertError) throw upsertError;
       return true;
@@ -3977,15 +4080,13 @@ function updateAuthUI() {
   const signedIn = !!authUser;
   const email = authUser?.email || '';
   document.getElementById('authMenuLabel').textContent = signedIn ? 'Account' : 'Sign In';
-  document.getElementById('authFooterTitle').textContent = signedIn ? (athlete?.name || 'Signed In') : 'Not signed in';
-  document.getElementById('authFooterSub').textContent = signedIn ? email : 'Sign in to sync your data';
-  document.getElementById('authFooterPill').textContent = signedIn ? 'Synced' : 'Offline';
-  document.getElementById('authFooterPill').className = `auth-pill ${signedIn ? 'on' : 'off'}`;
   document.getElementById('authSettingsStatus').innerHTML = signedIn
     ? `Signed in as <span class="auth-status-email">${email}</span>. Your races now sync to your private Supabase account.`
     : `You’re currently using this app without an account.`;
   document.getElementById('settingsAuthBtn').textContent = signedIn ? 'Manage Account' : 'Sign In';
   document.getElementById('settingsSignOutBtn').style.display = signedIn ? '' : 'none';
+  const pill = document.getElementById('feedbackPill');
+  if (pill && _IS_STAGING) pill.style.display = signedIn ? '' : 'none';
 }
 
 function setAuthMode(mode) {
@@ -4004,6 +4105,8 @@ function setAuthMode(mode) {
   document.getElementById('authModeSignUpBtn').className = signIn ? 'btn-ghost' : 'btn-main';
   document.getElementById('authPassword').autocomplete = signIn ? 'current-password' : 'new-password';
   document.getElementById('authForgotBtn').style.display = signIn ? '' : 'none';
+  const inviteWrap = document.getElementById('authInviteWrap');
+  if (inviteWrap) inviteWrap.style.display = (_IS_STAGING && !signIn) ? '' : 'none';
 }
 
 async function sendPasswordReset() {
@@ -4034,13 +4137,14 @@ function dismissLanding() {
   const el = document.getElementById('landing-screen');
   if (!el) return;
   el.classList.add('out');
-  setTimeout(() => el.remove(), 350);
+  setTimeout(() => el.remove(), 420);
 }
 
 function openLandingAuth(mode) {
-  setAuthMode(_IS_STAGING ? 'signin' : mode);
+  setAuthMode(mode);
   document.getElementById('authEmail').type = 'email';
-  document.getElementById('authPassword').type = 'password';
+  const pw = document.getElementById('authPassword');
+  pw.type = 'password'; pw.disabled = false;
   document.getElementById('authModal').classList.add('open');
 }
 
@@ -4048,7 +4152,8 @@ function openAuthModal() {
   closeMenu();
   setAuthMode(authUser ? 'signin' : authMode);
   if (authUser) document.getElementById('authEmail').value = authUser.email || '';
-  document.getElementById('authPassword').type = 'password';
+  const pw = document.getElementById('authPassword');
+  pw.type = 'password'; pw.disabled = false;
   document.getElementById('authModal').classList.add('open');
 }
 
@@ -4056,6 +4161,15 @@ async function refreshAuthState(session) {
   authSession = session || null;
   authUser = session?.user || null;
   remoteSyncReady = !!authUser;
+  // Clear stale local state when a different user signs in
+  if (authUser) {
+    const storedUid = localStorage.getItem('bt_auth_uid');
+    if (storedUid && storedUid !== authUser.id) {
+      REMOTE_SYNC_KEYS.forEach(k => localStorage.removeItem(k));
+      races = []; athlete = { name: '' }; nextRace = null; upcomingRaces = [];
+    }
+    localStorage.setItem('bt_auth_uid', authUser.id);
+  }
   updateAuthUI();
   if (authUser) {
     await loadRemoteState();
@@ -4096,6 +4210,13 @@ async function submitAuth() {
     const firstName = (document.getElementById('authFirstName')?.value || '').trim();
     const lastName = (document.getElementById('authLastName')?.value || '').trim();
     if (!firstName) { showFieldError('authFirstName', 'First name required.'); btn.disabled = false; btn.textContent = prev; return; }
+    if (_IS_STAGING) {
+      const code = (document.getElementById('authInviteCode')?.value || '').trim().toUpperCase();
+      if (!BETA_INVITE_CODES.includes(code)) {
+        showFieldError('authInviteCode', 'Invalid invite code — reach out to get access.');
+        btn.disabled = false; btn.textContent = prev; return;
+      }
+    }
     const fullName = [firstName, lastName].filter(Boolean).join(' ');
     const { data: signUpData, error } = await client.auth.signUp({
       email, password,
@@ -4111,7 +4232,8 @@ async function submitAuth() {
     // If session returned (email confirm disabled), sign in directly
     if (signUpData?.session) {
       closeM('authModal');
-      render(curPage);
+      localStorage.setItem('bt_new_user', '1');
+      go('athlete');
     } else {
       setAuthMode('signin');
       document.getElementById('authHelperText').textContent = 'Account created! Check your email to verify, then sign in.';
@@ -4132,8 +4254,14 @@ async function signOutUser() {
     alert(error.message || 'Could not sign out.');
     return;
   }
-  updateAuthUI();
-  closeM('settingsModal');
+  localStorage.removeItem('bt_new_user');
+  localStorage.removeItem('bt_modal_shown');
+  localStorage.removeItem('bt_auth_uid');
+  localStorage.removeItem('fl2_strava');
+  localStorage.removeItem('fl2_strava_acts');
+  localStorage.removeItem('fl2_strava_creds');
+  localStorage.removeItem('fl2_strava_last_sync');
+  window.location.reload();
 }
 
 /* ============================
@@ -4191,14 +4319,12 @@ function switchTrainTab(tab, btnEl) {
   if (btnEl) btnEl.classList.add('active');
   document.getElementById('trainPaceSection').style.display      = tab === 'pace'       ? '' : 'none';
   document.getElementById('trainActivitiesSection').style.display = tab === 'activities' ? '' : 'none';
-  document.getElementById('trainWearablesSection').style.display  = tab === 'wearables'  ? '' : 'none';
   if (tab === 'pace')       { pcOnTypeChange(); document.getElementById('paceResults').style.display = 'none'; }
   if (tab === 'activities') renderTraining();
-  if (tab === 'wearables')  renderOWPage();
 }
 function renderTrain() {
   const activeBtn = document.getElementById(
-    trainTab === 'pace' ? 'ttPace' : trainTab === 'activities' ? 'ttActivities' : 'ttWearables'
+    trainTab === 'pace' ? 'ttPace' : 'ttActivities'
   );
   switchTrainTab(trainTab, activeBtn);
 }
@@ -4554,7 +4680,6 @@ function renderCountdown(){
   clearInterval(cdTimer);
   cdTimer = setInterval(tickCD, 1000);
   fetchCourseInfo(nextRace);
-  renderOWReadiness();
 }
 function tickCD(){
   if(!nextRace) return;
@@ -4660,7 +4785,6 @@ async function renderGreeting() {
 function renderDash(){
   renderGreeting();
   renderCountdown();
-  renderOWWidget();
   document.getElementById('ds-r').textContent = races.length;
   document.getElementById('ds-c').textContent = new Set(races.map(r=>r.country)).size;
   document.getElementById('ds-k').textContent = Math.round(races.reduce((s,r)=>s+(r.distKm||0),0));
@@ -4678,7 +4802,6 @@ function renderDash(){
 </div>`;
     renderGoals();
     renderDashInsights();
-    renderOWFatigueChart();
     document.getElementById('dashPBs').innerHTML = renderPBSections(calcPBs(), 'dash-pb-card');
     return;
   }
@@ -4703,7 +4826,6 @@ function renderDash(){
 
   renderGoals();
   renderDashInsights();
-  renderOWFatigueChart();
   // Personal Bests on dashboard
   document.getElementById('dashPBs').innerHTML = renderPBSections(calcPBs(), 'dash-pb-card');
 }
@@ -5898,8 +6020,6 @@ function openRaceDetailFromParsed(obj) {
   document.getElementById('rdTriSegsSection').style.display = 'none';
   document.getElementById('rdPodiumBanner').style.display = 'none';
   document.getElementById('rdPodiumBanner').innerHTML = '';
-  const rdOwHealth = document.getElementById('rdOwHealth');
-  if (rdOwHealth) rdOwHealth.style.display = 'none';
   // Hint banner — show if no name extracted
   const hint = document.getElementById('rdNewHint');
   const nameField = document.getElementById('rdName');
@@ -6300,18 +6420,7 @@ function openRaceDetail(id) {
   }
   const tbody = document.getElementById('rdSplits');
   tbody.innerHTML = (r.splits || []).map(_splitRowHtml).join('');
-  // Reset OW health context panel
-  const rdOwHealth = document.getElementById('rdOwHealth');
-  if (rdOwHealth) rdOwHealth.style.display = 'none';
-  const rdOwSleep = document.getElementById('rdOwSleep');
-  if (rdOwSleep) rdOwSleep.innerHTML = '';
-  const rdOwTL = document.getElementById('rdOwTrainingLoad');
-  if (rdOwTL) rdOwTL.innerHTML = '';
   openM('raceDetailModal');
-  if (r.date && getOWConfig()) {
-    renderOWSleepBeforeRace(r.date);
-    renderOWTrainingLoad(r.date);
-  }
 }
 function _collectRdFields() {
   // Collect all raceDetailModal form values into a plain object
@@ -6424,7 +6533,53 @@ function saveRaceDetail() {
 /* ============================
    ATHLETE
    ============================ */
+function getProfileCompleteness() {
+  const a = athlete || {};
+  const fields = [
+    a.name && a.name !== 'Athlete',
+    a.city, a.nationality, a.ageGroup, a.favRace, a.since, a.primary
+  ];
+  return { filled: fields.filter(Boolean).length, total: fields.length };
+}
+function isProfileComplete() {
+  const a = athlete || {};
+  const hasName = a.name && a.name !== 'Athlete';
+  const bioFields = [a.city, a.nationality, a.ageGroup, a.favRace, a.since, a.primary].filter(Boolean);
+  return !!hasName && bioFields.length >= 2;
+}
 function renderAthlete(){
+  // Onboarding banner logic
+  const isNewUser = localStorage.getItem('bt_new_user') === '1';
+  const banner = document.getElementById('onboardBanner');
+  if (banner) {
+    if (isNewUser || !isProfileComplete()) {
+      if (isProfileComplete()) {
+        // Profile complete — show "Go to Dashboard" CTA and clear new user flag
+        localStorage.removeItem('bt_new_user');
+        banner.style.display = '';
+        banner.innerHTML = `
+          <div class="onboard-banner-text">
+            <span class="onboard-banner-title">Profile Complete</span>
+            <span class="onboard-banner-sub">You're all set — start logging races.</span>
+          </div>
+          <button class="onboard-banner-cta" onclick="go('dashboard')">Go to Dashboard →</button>
+        `;
+      } else {
+        banner.style.display = '';
+        const { filled, total } = getProfileCompleteness();
+        document.getElementById('onboardTitle').textContent = isNewUser ? 'Welcome to BREAKTAPES' : 'Complete Your Profile';
+        document.getElementById('onboardSub').textContent = 'Set up your profile to get started';
+        document.getElementById('onboardProgress').textContent = `${filled} / ${total} fields`;
+        // Auto-open edit modal once per new user session
+        if (isNewUser && !localStorage.getItem('bt_modal_shown')) {
+          localStorage.setItem('bt_modal_shown', '1');
+          setTimeout(() => openEditAth(), 300);
+        }
+      }
+    } else {
+      banner.style.display = 'none';
+    }
+  }
   const a=athlete;
   const ini=(a.name||'A').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
   document.getElementById('athAviTxt').textContent=ini[0]||'A';
@@ -6455,8 +6610,6 @@ function renderAthlete(){
   document.getElementById('cChips').innerHTML=countries.length?countries.map(c=>`<span class="country-chip">${c}</span>`).join(''):`<span style="color:var(--muted);font-size:12px">No races yet.</span>`;
   // Race activity heatmap
   renderCalHeatmap('athCalHeatmap', true);
-  // OW VO2 Max trend
-  renderOWVO2Chart();
   // Avatar
   const savi=localStorage.getItem('fl2_avi');
   if(savi){
@@ -6608,6 +6761,12 @@ function closeM(id){
     const ln = document.getElementById('authLastName');
     if (fn) fn.value = '';
     if (ln) ln.value = '';
+    const pw = document.getElementById('authPassword');
+    if (pw) { pw.value = ''; pw.disabled = true; }
+  }
+  if (id === 'settingsModal') {
+    const apiKeyEl = document.getElementById('setApiKey');
+    if (apiKeyEl) { apiKeyEl.value = ''; apiKeyEl.disabled = true; }
   }
 }
 function toggleReveal(btn) {
@@ -6688,6 +6847,7 @@ function saveAth(){
     favRace:document.getElementById('eFav').value.trim(),
   };
   sv('fl2_ath',athlete);
+  if (isProfileComplete()) localStorage.removeItem('bt_new_user');
   closeM('eaModal');
   renderAthlete();
 }
@@ -7389,11 +7549,12 @@ function fmtDate(d){
    ============================ */
 function openSettings(){
   closeMenu();
-  document.getElementById('setApiKey').value = getApiKey();
+  const apiKeyEl = document.getElementById('setApiKey');
+  // Re-enable password field only when modal opens (prevents autofill scan)
+  apiKeyEl.disabled = false;
+  apiKeyEl.value = getApiKey();
   const owCfg = getOWConfig();
   if (owCfg) {
-    document.getElementById('owUrl').value    = owCfg.url || '';
-    document.getElementById('owKey').value    = owCfg.key || '';
     document.getElementById('owUserId').value = owCfg.uid || '';
   }
   updateAuthUI();
@@ -7401,16 +7562,7 @@ function openSettings(){
 }
 function saveSettings(){
   localStorage.setItem('fl2_apikey', document.getElementById('setApiKey').value.trim());
-  const owUrl = document.getElementById('owUrl').value.trim().replace(/\/$/, '');
-  const owKey = document.getElementById('owKey').value.trim();
-  const owUid = document.getElementById('owUserId').value.trim();
-  if (owUrl && owKey && owUid) {
-    localStorage.setItem('fl2_ow', JSON.stringify({ url: owUrl, key: owKey, uid: owUid }));
-  } else if (!owUrl && !owKey && !owUid) {
-    localStorage.removeItem('fl2_ow');
-  }
   closeM('settingsModal');
-  if (owUrl && owKey && owUid) renderOWWidget();
 }
 
 /* ============================
@@ -7418,18 +7570,24 @@ function saveSettings(){
    ============================ */
 
 function getOWConfig() {
-  try { return JSON.parse(localStorage.getItem('fl2_ow') || 'null'); }
-  catch { return null; }
+  try {
+    const stored = JSON.parse(localStorage.getItem('fl2_ow') || 'null');
+    if (!stored) return null;
+    // Support legacy {url, key, uid} format and new {uid}-only format
+    const uid = stored.uid || stored;
+    return uid ? { uid } : null;
+  } catch { return null; }
 }
 
 async function owFetch(path, params = {}) {
+  if (!OW_PROXY_URL) return null;             // proxy not yet deployed
   const cfg = getOWConfig();
   if (!cfg) return null;
-  const url = new URL(`${cfg.url}${path}`);
+  const url = new URL(`${OW_PROXY_URL}${path}`);
   Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
   try {
     const res = await fetch(url.toString(), {
-      headers: { 'X-Open-Wearables-API-Key': cfg.key, 'Accept': 'application/json' }
+      headers: { 'X-OW-User-ID': cfg.uid, 'Accept': 'application/json' }
     });
     if (!res.ok) { console.warn(`OW ${path} → ${res.status}`); return null; }
     return await res.json();
@@ -7437,29 +7595,29 @@ async function owFetch(path, params = {}) {
 }
 
 async function testOWConnection() {
-  const url = document.getElementById('owUrl').value.trim().replace(/\/$/, '');
-  const key = document.getElementById('owKey').value.trim();
   const uid = document.getElementById('owUserId').value.trim();
   const el  = document.getElementById('owTestResult');
-  if (!url || !key || !uid) { el.textContent = 'Fill in all three fields first.'; el.style.color = 'var(--muted)'; return; }
+  if (!uid) { el.textContent = 'Enter your OW User ID first.'; el.style.color = 'var(--muted)'; return; }
+  if (!OW_PROXY_URL) { el.textContent = '⚠ Proxy not yet deployed — coming soon.'; el.style.color = 'var(--muted)'; return; }
   el.textContent = 'Testing…'; el.style.color = 'var(--muted)';
-  const end = new Date().toISOString().slice(0, 10);
+  const end   = new Date().toISOString().slice(0, 10);
   const start = new Date(Date.now() - 30*24*60*60*1000).toISOString().slice(0, 10);
   try {
-    const res = await fetch(`${url}/api/v1/users/${uid}/summaries/activity?start_date=${start}&end_date=${end}&limit=1`, {
-      headers: { 'X-Open-Wearables-API-Key': key, 'Accept': 'application/json' }
-    });
+    const res = await fetch(
+      `${OW_PROXY_URL}/api/v1/users/${uid}/summaries/activity?start_date=${start}&end_date=${end}&limit=1`,
+      { headers: { 'X-OW-User-ID': uid, 'Accept': 'application/json' } }
+    );
     if (res.ok) {
       const d = await res.json();
       const count = d?.data?.length ?? '?';
       el.textContent = `✓ Connected — ${count} activity record(s) found`;
       el.style.color = '#4ade80';
     } else {
-      el.textContent = `✗ Error ${res.status} — check URL, key, and user ID`;
+      el.textContent = `✗ Error ${res.status} — check your User ID`;
       el.style.color = '#f87171';
     }
   } catch(e) {
-    el.textContent = `✗ Could not reach instance: ${e.message}`;
+    el.textContent = `✗ Could not reach proxy: ${e.message}`;
     el.style.color = '#f87171';
   }
 }
@@ -7876,16 +8034,35 @@ async function renderOWTrainingFeed() {
 /* ============================
    STRAVA OAUTH
    ============================ */
+let _stravaDisconnectTimer = null;
 function handleStravaBtn(){
   if(stravaData && stravaData.access_token){
-    if(confirm('Disconnect Strava?')){
+    const btn = document.getElementById('stravaBtn');
+    if(_stravaDisconnectTimer){
+      // Second tap — confirmed disconnect
+      clearTimeout(_stravaDisconnectTimer);
+      _stravaDisconnectTimer = null;
       stravaData = null; stravaActivities = [];
       localStorage.removeItem('fl2_strava');
       localStorage.removeItem('fl2_strava_acts');
+      localStorage.removeItem('fl2_strava_creds');
+      localStorage.removeItem('fl2_strava_last_sync');
       sv('fl2_strava_acts', []);
       renderTraining();
+    } else {
+      // First tap — ask for confirmation via button state
+      btn.textContent = 'Disconnect?';
+      btn.classList.add('danger');
+      _stravaDisconnectTimer = setTimeout(() => {
+        _stravaDisconnectTimer = null;
+        btn.textContent = 'Disconnect';
+        btn.classList.remove('danger');
+      }, 3000);
     }
   } else {
+    // Inject current hostname as the callback domain
+    const domain = document.getElementById('stravaCallbackDomain');
+    if(domain) domain.textContent = window.location.hostname || 'localhost';
     // Prefill saved credentials
     const saved = JSON.parse(localStorage.getItem('fl2_strava_creds') || '{}');
     if(saved.clientId) document.getElementById('strClientId').value = saved.clientId;
@@ -7909,12 +8086,17 @@ async function handleStravaCallback(){
   const params = new URLSearchParams(window.location.search);
   const code = params.get('code');
   const error = params.get('error');
-  if(error){ alert('Strava authorization denied.'); return; }
+  if(error){ showBtToast('Strava authorization was denied.'); return; }
   if(!code) return;
-  // Clean URL
+  // Clean URL immediately so a refresh doesn't re-run the callback
   window.history.replaceState({}, '', window.location.pathname);
   const creds = JSON.parse(localStorage.getItem('fl2_strava_creds') || '{}');
-  if(!creds.clientId){ alert('Strava credentials not found. Please reconnect.'); return; }
+  if(!creds.clientId){ showBtToast('Strava credentials not found — please reconnect.'); return; }
+  // Show loading state in the Strava card if it's visible
+  const cardSub = document.getElementById('stravaCardSub');
+  if(cardSub) cardSub.textContent = 'Connecting to Strava…';
+  const strBtn = document.getElementById('stravaBtn');
+  if(strBtn){ strBtn.disabled = true; strBtn.textContent = '…'; }
   try{
     const res = await fetch('https://www.strava.com/oauth/token',{
       method:'POST',
@@ -7922,12 +8104,25 @@ async function handleStravaCallback(){
       body: JSON.stringify({ client_id: creds.clientId, client_secret: creds.clientSecret, code, grant_type:'authorization_code' })
     });
     const data = await res.json();
-    if(data.errors || !data.access_token){ alert('Token exchange failed: '+(data.message||JSON.stringify(data))); return; }
+    if(data.errors || !data.access_token){
+      const msg = data.message && data.message !== 'Bad Request'
+        ? data.message
+        : 'Connection failed — double-check your Client ID and Secret.';
+      showBtToast(msg);
+      if(cardSub) cardSub.textContent = 'Import your training history and past races automatically';
+      if(strBtn){ strBtn.disabled = false; strBtn.textContent = 'Connect'; }
+      return;
+    }
     stravaData = { access_token: data.access_token, refresh_token: data.refresh_token, expires_at: data.expires_at, athlete: data.athlete };
     sv('fl2_strava', stravaData);
+    if(cardSub) cardSub.textContent = 'Fetching your activity history…';
     await fetchStravaActivities();
     go('training');
-  }catch(e){ alert('Strava connection failed: '+e.message); }
+  }catch(e){
+    showBtToast('Strava connection failed: '+e.message);
+    if(cardSub) cardSub.textContent = 'Import your training history and past races automatically';
+    if(strBtn){ strBtn.disabled = false; strBtn.textContent = 'Connect'; }
+  }
 }
 
 async function refreshStravaToken(){
@@ -7959,40 +8154,72 @@ async function stravaFetch(path){
   return res.json();
 }
 
-async function fetchStravaActivities(){
+async function fetchStravaActivities(afterTs = 0){
   try{
-    // Fetch up to 200 recent activities (2 pages of 100)
-    const page1 = await stravaFetch('/athlete/activities?per_page=100&page=1') || [];
-    const page2 = await stravaFetch('/athlete/activities?per_page=100&page=2') || [];
-    stravaActivities = [...page1, ...page2];
+    const all = [];
+    let page = 1;
+    const afterParam = afterTs ? `&after=${afterTs}` : '';
+    while(true){
+      const batch = await stravaFetch(`/athlete/activities?per_page=100&page=${page}${afterParam}`) || [];
+      all.push(...batch);
+      if(batch.length < 100) break;  // last page
+      page++;
+    }
+    if(afterTs && stravaActivities.length){
+      // Incremental sync: prepend new activities, dedupe by id
+      const existingIds = new Set(stravaActivities.map(a => a.id));
+      const newActs = all.filter(a => !existingIds.has(a.id));
+      stravaActivities = [...newActs, ...stravaActivities];
+    } else {
+      stravaActivities = all;
+    }
     sv('fl2_strava_acts', stravaActivities);
-    // Auto-import any races from Strava that aren't already logged
+    localStorage.setItem('fl2_strava_last_sync', Math.floor(Date.now()/1000));
     importStravaRaces();
   }catch(e){ console.error('Strava fetch error:', e); }
 }
 
 async function syncStrava(){
   if(!stravaData){ return; }
-  document.getElementById('syncBtn').textContent = '↻ Syncing…';
-  try{ await fetchStravaActivities(); renderTraining(); }
-  catch(e){ alert('Sync failed: '+e.message); }
-  finally{ document.getElementById('syncBtn').textContent = '↻ Sync'; }
+  const syncBtn = document.getElementById('syncBtn');
+  if(syncBtn) syncBtn.textContent = '↻ Syncing…';
+  try{
+    // Incremental: only fetch since last sync
+    const lastSync = parseInt(localStorage.getItem('fl2_strava_last_sync') || '0', 10);
+    await fetchStravaActivities(lastSync || 0);
+    renderTraining();
+  }
+  catch(e){ showBtToast('Sync failed: '+e.message); }
+  finally{ if(syncBtn) syncBtn.textContent = '↻ Sync'; }
 }
 
 function importStravaRaces(){
-  // Import Strava activities flagged as races that aren't already in races[]
-  const raceTypes = ['Run','Ride','Swim','VirtualRun','VirtualRide'];
-  const stravaRaces = stravaActivities.filter(a => a.workout_type === 1 || a.workout_type === 11); // race workout type
+  // Import Strava activities flagged as races (workout_type 1=race run, 11=race ride)
+  const stravaRaces = stravaActivities.filter(a => a.workout_type === 1 || a.workout_type === 11);
+  let imported = 0;
   for(const a of stravaRaces){
-    const already = races.find(r => r.strava_id === a.id);
-    if(already) continue;
-    const type = a.type==='Run'||a.type==='VirtualRun'?'run': a.type==='Ride'||a.type==='VirtualRide'?'cycle': a.type==='Swim'?'swim':'run';
+    if(races.find(r => r.strava_id === a.id)) continue;
+    const type = a.type==='Run'||a.type==='VirtualRun'?'run': a.type==='Ride'||a.type==='VirtualRide'?'cycle': a.type==='Swim'||a.type==='OpenWaterSwim'?'swim':'run';
     const distKm = Math.round((a.distance||0)/100)/10;
     const dist = closestDistance(type, distKm);
     const elapsed = a.elapsed_time||0;
     const h=Math.floor(elapsed/3600), m=Math.floor((elapsed%3600)/60), s=elapsed%60;
-    races.push({ id:Date.now()+a.id, strava_id:a.id, name:a.name, type, distance:dist, time:`${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`, city: (a.location_city||'Unknown'), country:(a.location_country||'Unknown'), date:(a.start_date_local||'').slice(0,10), placing:'', medal:'finisher', distKm });
+    races.push({
+      id: Date.now() + imported,  // unique per loop iteration
+      strava_id: a.id,
+      name: a.name,
+      type, distance: dist,
+      time: `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`,
+      city: a.location_city || '', country: a.location_country || '',
+      date: (a.start_date_local||'').slice(0,10),
+      placing: '', medal: 'finisher', distKm
+    });
+    imported++;
+  }
+  if(imported > 0){
     sv('fl2_races', races);
+    syncRemoteState();
+    showBtToast(`${imported} race${imported>1?'s':''} imported from Strava`);
   }
 }
 
@@ -8021,20 +8248,33 @@ function renderTraining(){
   if(connected){
     btn.textContent = 'Disconnect';
     btn.className = 'strava-connect-btn secondary';
-    const name = stravaData.athlete ? stravaData.athlete.firstname + ' ' + stravaData.athlete.lastname : 'Athlete';
+    const ath = stravaData.athlete;
+    const name = ath ? (ath.firstname + ' ' + ath.lastname).trim() : 'Athlete';
+    const handle = ath?.username ? '@' + ath.username : (ath ? name : 'Strava connected');
     title.textContent = '✓ Connected — ' + name;
-    sub.textContent = stravaData.athlete ? '@'+stravaData.athlete.username : 'Strava connected';
+    sub.textContent = handle;
     statsRow.style.display = 'grid';
     syncBtn.style.display = '';
-    // Compute stats
-    const acts = filterActs('All');
-    const totalKm = acts.reduce((s,a)=>s+(a.distance||0),0)/1000;
-    const totalSec = acts.reduce((s,a)=>s+(a.moving_time||0),0);
-    const totalElev = acts.reduce((s,a)=>s+(a.total_elevation_gain||0),0);
+    // Compute stats (compute each group once)
+    const allActs  = filterActs('All');
+    const runActs  = filterActs('Run');
+    const rideActs = filterActs('Ride');
+    const swimActs = filterActs('Swim');
+    const totalKm   = allActs.reduce((s,a)=>s+(a.distance||0),0)/1000;
+    const totalSec  = allActs.reduce((s,a)=>s+(a.moving_time||0),0);
+    const totalElev = allActs.reduce((s,a)=>s+(a.total_elevation_gain||0),0);
     document.getElementById('ts-km').textContent   = Math.round(totalKm).toLocaleString();
-    document.getElementById('ts-acts').textContent = acts.length.toLocaleString();
+    document.getElementById('ts-acts').textContent = allActs.length.toLocaleString();
     document.getElementById('ts-hrs').textContent  = Math.round(totalSec/3600).toLocaleString();
     document.getElementById('ts-elev').textContent = Math.round(totalElev).toLocaleString();
+    // Update filter tab counts
+    const tabCounts = { All: allActs.length, Run: runActs.length, Ride: rideActs.length, Swim: swimActs.length };
+    document.querySelectorAll('#trainActivitiesSection .training-tab[onclick]').forEach(btn => {
+      const m = btn.getAttribute('onclick').match(/'(\w+)'/);
+      if (m && tabCounts[m[1]] !== undefined) {
+        btn.textContent = `${m[1]} ${tabCounts[m[1]]}`;
+      }
+    });
   } else {
     btn.textContent = 'Connect';
     btn.className = 'strava-connect-btn';
@@ -8044,19 +8284,26 @@ function renderTraining(){
     syncBtn.style.display = 'none';
   }
   renderTrainingFeed();
-  renderOWTrainingFeed();
 }
 
 const ACTIVITY_ICONS = { Run:'🏃', VirtualRun:'🏃', Ride:'🚴', VirtualRide:'🚴', Swim:'🏊', Walk:'🚶', Hike:'🥾', WeightTraining:'🏋️', Yoga:'🧘', Workout:'💪' };
 
+const STRAVA_TYPE_GROUPS = {
+  Run:  ['Run','VirtualRun','TrailRun'],
+  Ride: ['Ride','VirtualRide','GravelRide','EBikeRide','EMountainBikeRide','Handcycle','Velomobile'],
+  Swim: ['Swim','OpenWaterSwim']
+};
 function filterActs(type){
   if(type==='All') return stravaActivities;
-  return stravaActivities.filter(a=>a.type===type);
+  const group = STRAVA_TYPE_GROUPS[type];
+  if(group) return stravaActivities.filter(a => group.includes(a.type));
+  return stravaActivities.filter(a => a.type === type);
 }
 
 function filterTraining(type, btn){
   trainingFilter = type;
-  document.querySelectorAll('.training-tab').forEach(b=>b.classList.remove('active'));
+  // Scope to activity filter tabs only — not the .train-tab-pill sub-nav buttons
+  document.querySelectorAll('#trainActivitiesSection .training-tab').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   renderTrainingFeed();
 }
@@ -8072,26 +8319,51 @@ function renderTrainingFeed(){
     feed.innerHTML = `<div class="training-empty"><div class="training-empty-icon">📭</div><div class="training-empty-h">No activities</div><div class="training-empty-sub">No ${trainingFilter.toLowerCase()} activities found</div></div>`;
     return;
   }
-  feed.innerHTML = acts.slice(0,100).map(a=>{
-    const icon = ACTIVITY_ICONS[a.type]||'⚡';
-    const km   = a.distance ? (a.distance/1000).toFixed(1)+' km' : '—';
-    const pace = (a.type==='Run'||a.type==='VirtualRun') && a.distance && a.moving_time
-      ? fmtPace(a.moving_time / (a.distance/1000)) : null;
-    const spd  = (a.type==='Ride'||a.type==='VirtualRide') && a.distance && a.moving_time
-      ? ((a.distance/1000)/(a.moving_time/3600)).toFixed(1)+' km/h' : null;
-    const dur  = a.moving_time ? fmtDuration(a.moving_time) : '—';
-    const date = a.start_date_local ? fmtDate(a.start_date_local.slice(0,10)) : '';
-    const typeClass = 't-'+a.type.replace(/Virtual/,'');
-    return `<div class="training-activity ${typeClass}">
-      <div class="ta-icon">${icon}</div>
-      <div class="ta-main">
-        <div class="ta-name">${a.name||'Activity'}</div>
-        <div class="ta-date">${date} · ${a.type}</div>
-      </div>
-      <div class="ta-meta">
-        <div class="ta-stat"><div class="ta-val">${km}</div><div class="ta-lbl">Distance</div></div>
-        <div class="ta-stat"><div class="ta-val">${pace||spd||dur}</div><div class="ta-lbl">${pace?'Pace':spd?'Speed':'Time'}</div></div>
-      </div>
+
+  // Group by month
+  const groups = {};
+  const monthOrder = [];
+  acts.forEach(a => {
+    const d = a.start_date_local ? a.start_date_local.slice(0,7) : 'Unknown';
+    if (!groups[d]) { groups[d] = []; monthOrder.push(d); }
+    groups[d].push(a);
+  });
+
+  feed.innerHTML = monthOrder.map(monthKey => {
+    const label = monthKey === 'Unknown' ? 'Unknown Date' :
+      new Date(monthKey + '-15').toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+    const cards = groups[monthKey].map(a => {
+      const icon = ACTIVITY_ICONS[a.type]||'⚡';
+      const isRun  = a.type==='Run'||a.type==='VirtualRun';
+      const isRide = a.type==='Ride'||a.type==='VirtualRide';
+      const km   = a.distance ? (a.distance/1000).toFixed(1)+' km' : '—';
+      const pace = isRun && a.distance && a.moving_time
+        ? fmtPace(a.moving_time / (a.distance/1000)) : null;
+      const spd  = isRide && a.distance && a.moving_time
+        ? ((a.distance/1000)/(a.moving_time/3600)).toFixed(1)+' km/h' : null;
+      const dur  = a.moving_time ? fmtDuration(a.moving_time) : '—';
+      const date = a.start_date_local ? fmtDate(a.start_date_local.slice(0,10)) : '';
+      const typeClass = 't-'+a.type.replace(/Virtual/,'');
+      const elev = a.total_elevation_gain > 0 ? `<div class="ta-stat"><div class="ta-val">${Math.round(a.total_elevation_gain)}m</div><div class="ta-lbl">Elev</div></div>` : '';
+      const hr   = a.average_heartrate ? `<div class="ta-stat"><div class="ta-val">${Math.round(a.average_heartrate)}<span style="font-size:10px;font-weight:600">bpm</span></div><div class="ta-lbl">Avg HR</div></div>` : '';
+      const raceBadge = (a.workout_type===1||a.workout_type===11) ? `<span class="ta-race-badge">RACE</span>` : '';
+      return `<div class="training-activity ${typeClass}">
+        <div class="ta-icon">${icon}</div>
+        <div class="ta-main">
+          <div class="ta-name">${a.name||'Activity'}${raceBadge}</div>
+          <div class="ta-date">${date} · ${a.type}</div>
+        </div>
+        <div class="ta-meta">
+          <div class="ta-stat"><div class="ta-val">${km}</div><div class="ta-lbl">Distance</div></div>
+          <div class="ta-stat"><div class="ta-val">${pace||spd||dur}</div><div class="ta-lbl">${pace?'Pace':spd?'Speed':'Time'}</div></div>
+          <div class="ta-stat"><div class="ta-val">${dur}</div><div class="ta-lbl">Duration</div></div>
+          ${elev}${hr}
+        </div>
+      </div>`;
+    }).join('');
+    return `<div class="ta-month-group">
+      <div class="ta-month-label">${label} <span class="ta-month-count">${groups[monthKey].length}</span></div>
+      ${cards}
     </div>`;
   }).join('');
 }
@@ -8414,19 +8686,89 @@ function initAllLocationPickers() {
    ============================ */
 function applyEnvRestrictions() {
   if (!_IS_STAGING) return;
-  // Staging: invite-only — hide Sign Up everywhere
-  const signUpBtn = document.getElementById('authModeSignUpBtn');
-  if (signUpBtn) signUpBtn.style.display = 'none';
-  const landingSignUpBtn = document.getElementById('landingSignUpBtn');
-  if (landingSignUpBtn) landingSignUpBtn.style.display = 'none';
-  // Add staging badge below the auth modal title
+  // Add "Beta — invite only" badge below the auth modal subtitle
   const authSub = document.getElementById('authModalSub');
   if (authSub) {
     const badge = document.createElement('div');
     badge.style.cssText = 'margin-top:6px;font-size:10px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:var(--orange);opacity:0.7';
-    badge.textContent = 'Staging — invite only';
+    badge.textContent = 'Beta — invite only';
     authSub.after(badge);
   }
+}
+
+/* ============================
+   FEEDBACK WIDGET
+   ============================ */
+let _fbRating = 0;
+
+function setFbStar(n) {
+  _fbRating = n;
+  document.querySelectorAll('.fb-star').forEach(s => {
+    s.classList.toggle('active', parseInt(s.dataset.v) <= n);
+  });
+}
+
+function openFeedback() {
+  _fbRating = 0;
+  document.querySelectorAll('.fb-star').forEach(s => s.classList.remove('active'));
+  const t = document.getElementById('feedbackText');
+  if (t) t.value = '';
+  openM('feedbackModal');
+}
+
+async function submitFeedback() {
+  const client = initSupabaseClient();
+  const text = (document.getElementById('feedbackText')?.value || '').trim();
+  if (!_fbRating) {
+    const stars = document.getElementById('feedbackStars');
+    if (stars) {
+      stars.style.outline = '1px solid var(--orange)';
+      setTimeout(() => { stars.style.outline = ''; }, 1200);
+    }
+    return;
+  }
+  const btn = document.getElementById('feedbackSubmitBtn');
+  btn.disabled = true; btn.textContent = 'Sending…';
+  try {
+    if (client && authUser) {
+      await client.from('beta_feedback').insert({
+        user_id: authUser.id,
+        rating: _fbRating,
+        message: text || null,
+        page: curPage
+      });
+    }
+    closeM('feedbackModal');
+    showBtToast('Thanks for the feedback!');
+  } catch (err) {
+    console.error('Feedback submit error:', err);
+    btn.disabled = false; btn.textContent = 'Submit';
+    showBtToast('Could not send feedback — try again.');
+    return;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Submit';
+  }
+}
+
+function showBtToast(msg) {
+  const t = document.createElement('div');
+  t.style.cssText = `
+    position:fixed; bottom:calc(80px + env(safe-area-inset-bottom,0px)); left:50%;
+    transform:translateX(-50%); z-index:700;
+    background:var(--surface3); border:1px solid var(--border2); border-top:2px solid var(--orange);
+    color:var(--white); font-family:var(--headline); font-size:12px; font-weight:800;
+    letter-spacing:0.08em; text-transform:uppercase;
+    padding:0.6rem 1.25rem; border-radius:6px;
+    box-shadow:0 4px 20px rgba(0,0,0,0.5);
+    animation:toastIn 0.25s ease forwards;
+    white-space:nowrap;
+  `;
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => {
+    t.style.animation = 'toastOut 0.2s ease forwards';
+    setTimeout(() => t.remove(), 220);
+  }, 2800);
 }
 
 async function initApp() {
@@ -8551,5 +8893,40 @@ initApp();
     Me
   </button>
 </nav>
+
+<!-- ==== FEEDBACK PILL (staging only) ==== -->
+<button id="feedbackPill" class="feedback-pill" onclick="openFeedback()" style="display:none" aria-label="Give Feedback">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+  Feedback
+</button>
+
+<!-- ==== FEEDBACK MODAL (staging only) ==== -->
+<div class="modal-overlay" id="feedbackModal" onclick="bgClose(event,'feedbackModal')">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="feedbackModalTitle">
+    <div class="modal-drag"></div>
+    <div class="modal-head">
+      <div class="modal-h" id="feedbackModalTitle">Give Feedback</div>
+      <div class="modal-sub">Help us make BREAKTAPES better.</div>
+    </div>
+    <div class="modal-body">
+      <div class="feedback-stars" id="feedbackStars">
+        <button class="fb-star" data-v="1" onclick="setFbStar(1)" aria-label="1 star">★</button>
+        <button class="fb-star" data-v="2" onclick="setFbStar(2)" aria-label="2 stars">★</button>
+        <button class="fb-star" data-v="3" onclick="setFbStar(3)" aria-label="3 stars">★</button>
+        <button class="fb-star" data-v="4" onclick="setFbStar(4)" aria-label="4 stars">★</button>
+        <button class="fb-star" data-v="5" onclick="setFbStar(5)" aria-label="5 stars">★</button>
+      </div>
+      <div class="fg" style="margin-top:1rem">
+        <label class="fl">What's on your mind?</label>
+        <textarea class="fi" id="feedbackText" rows="4" placeholder="Bugs, ideas, anything…" style="resize:vertical;min-height:90px;font-family:var(--body)"></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeM('feedbackModal')">Cancel</button>
+      <button class="btn-main" id="feedbackSubmitBtn" onclick="submitFeedback()">Submit</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
