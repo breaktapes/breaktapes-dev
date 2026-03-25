@@ -1538,13 +1538,22 @@ main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(1
 
 /* Athlete PBs */
 .ath-pb-grid {
-  display:grid; grid-template-columns:repeat(auto-fill, minmax(175px,1fr));
-  gap:0.75rem;
+  display: flex;
+  flex-direction: row;
+  gap: 0.75rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding-bottom: 2px;
 }
+.ath-pb-grid::-webkit-scrollbar { display: none; }
 .ath-pb-card {
   background:var(--surface); border:1px solid var(--border);
   border-radius:5px; padding:1rem;
   transition:all 0.15s;
+  flex: 0 0 155px;
+  scroll-snap-align: start;
 }
 .ath-pb-card:hover { border-color:rgba(0,255,136,0.2); }
 .ath-pb-dist {
@@ -2347,11 +2356,17 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 
 /* Dashboard PB strip */
 .dash-pb-strip {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  display: flex;
+  flex-direction: row;
   gap: 0.6rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
   margin-bottom: 1.5rem;
+  padding-bottom: 2px;
 }
+.dash-pb-strip::-webkit-scrollbar { display: none; }
 .dash-pb-card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -2359,6 +2374,8 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   border-radius: 5px;
   padding: 0.85rem 0.9rem;
   transition: all 0.15s;
+  flex: 0 0 140px;
+  scroll-snap-align: start;
 }
 .dash-pb-card:hover { border-color: var(--green); transform: translateY(-2px); }
 .dash-pb-dist {
@@ -3868,7 +3885,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
         </div>
         <div class="fg">
           <label class="fl" for="authPassword">Password</label>
-          <input class="fi" id="authPassword" type="password" placeholder="At least 6 characters" autocomplete="current-password">
+          <input class="fi" id="authPassword" type="password" placeholder="At least 6 characters" autocomplete="new-password" disabled>
           <div class="fg-err-msg"></div>
         </div>
       </div>
@@ -3916,6 +3933,20 @@ const SUPABASE_ANON_KEY = _IS_PROD
   ? 'sb_publishable_aXlZ54g7bW8dckyl3N-kCA_Jzy_Nt0B'
   : 'sb_publishable_XiI5lGzh_3rWoA2TxrKnWg_gPtPKSRp';
 const REMOTE_SYNC_KEYS = new Set(['fl2_races', 'fl2_ath', 'fl2_nr', 'fl2_upcoming']);
+// Instantly hide landing screen if a cached Supabase session exists — avoids flash on reload
+(function() {
+  try {
+    const projectRef = SUPABASE_URL.split('https://')[1].split('.')[0];
+    const raw = localStorage.getItem(`sb-${projectRef}-auth-token`);
+    if (raw) {
+      const tok = JSON.parse(raw);
+      if (tok?.access_token) {
+        const el = document.getElementById('landing-screen');
+        if (el) el.style.display = 'none';
+      }
+    }
+  } catch(e) {}
+})();
 let supabaseClient = null;
 let remoteSyncTimer = null;
 let remoteSyncReady = false;
@@ -4147,7 +4178,8 @@ function dismissLanding() {
 function openLandingAuth(mode) {
   setAuthMode(mode);
   document.getElementById('authEmail').type = 'email';
-  document.getElementById('authPassword').type = 'password';
+  const pw = document.getElementById('authPassword');
+  pw.type = 'password'; pw.disabled = false;
   document.getElementById('authModal').classList.add('open');
 }
 
@@ -4155,7 +4187,8 @@ function openAuthModal() {
   closeMenu();
   setAuthMode(authUser ? 'signin' : authMode);
   if (authUser) document.getElementById('authEmail').value = authUser.email || '';
-  document.getElementById('authPassword').type = 'password';
+  const pw = document.getElementById('authPassword');
+  pw.type = 'password'; pw.disabled = false;
   document.getElementById('authModal').classList.add('open');
 }
 
@@ -6770,6 +6803,8 @@ function closeM(id){
     const ln = document.getElementById('authLastName');
     if (fn) fn.value = '';
     if (ln) ln.value = '';
+    const pw = document.getElementById('authPassword');
+    if (pw) { pw.value = ''; pw.disabled = true; }
   }
 }
 function toggleReveal(btn) {
