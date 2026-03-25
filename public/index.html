@@ -2754,6 +2754,73 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   color: var(--white); line-height: 1.2;
 }
 .landing-proof-desc { font-size: 10px; color: var(--muted); line-height: 1.4; text-align: center; }
+
+/* ---- Dashboard Customize ---- */
+.dash-customize-btn {
+  background: none;
+  border: none;
+  padding: 0.3rem 0.5rem;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1;
+  border-radius: 6px;
+  transition: color 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+.dash-customize-btn:hover { color: var(--white); background: var(--surface3); }
+.dcw-list { list-style: none; margin: 0; padding: 0; }
+.dcw-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.9rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  transition: opacity 0.2s;
+}
+.dcw-row.disabled { opacity: 0.4; }
+.dcw-icon { font-size: 1.1rem; width: 1.5rem; text-align: center; flex-shrink: 0; }
+.dcw-label { flex: 1; font-family: var(--body); font-size: 14px; font-weight: 500; color: var(--white); }
+.dcw-arrows { display: flex; flex-direction: column; gap: 3px; }
+.dcw-arrow {
+  background: none;
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  color: var(--muted);
+  width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 9px; line-height: 1;
+  transition: color 0.15s, border-color 0.15s;
+}
+.dcw-arrow:hover:not(:disabled) { color: var(--white); border-color: rgba(245,245,245,0.3); }
+.dcw-arrow:disabled { opacity: 0.2; cursor: default; }
+.dcw-toggle { position: relative; width: 42px; height: 24px; flex-shrink: 0; cursor: pointer; }
+.dcw-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+.dcw-slider {
+  position: absolute; inset: 0;
+  background: var(--surface3);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  transition: background 0.2s, border-color 0.2s;
+}
+.dcw-slider:before {
+  content: '';
+  position: absolute;
+  width: 18px; height: 18px;
+  left: 2px; top: 2px;
+  background: var(--muted2);
+  border-radius: 50%;
+  transition: transform 0.2s, background 0.2s;
+}
+.dcw-toggle input:checked + .dcw-slider { background: var(--orange); border-color: var(--orange); }
+.dcw-toggle input:checked + .dcw-slider:before { transform: translateX(18px); background: var(--white); }
+.dcw-hint {
+  padding: 1rem 1.25rem 0.5rem;
+  font-size: 11px;
+  color: var(--muted);
+  font-family: var(--body);
+  letter-spacing: 0.04em;
+}
 </style>
 </head>
 <body>
@@ -2865,39 +2932,54 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
         <div class="greeting-text" id="greetingText">Welcome back</div>
         <div class="greeting-weather" id="greetingWeather">Fetching weather…</div>
       </div>
+      <button class="dash-customize-btn" onclick="openDashCustomize()" title="Customize dashboard" aria-label="Customize dashboard">⊞</button>
     </div>
     <!-- Countdown -->
-    <div class="countdown-wrap" id="cdCard"></div>
-    <div class="course-info-strip" id="courseInfoStrip" style="display:none"></div>
+    <div id="dash-widget-countdown">
+      <div class="countdown-wrap" id="cdCard"></div>
+      <div class="course-info-strip" id="courseInfoStrip" style="display:none"></div>
+    </div>
     <!-- Stats -->
-    <div class="stats-row">
-      <div class="s-tile"><div class="s-tile-num" id="ds-r">0</div><div class="s-tile-label">Races</div></div>
-      <div class="s-tile"><div class="s-tile-num" id="ds-c">0</div><div class="s-tile-label">Countries</div></div>
-      <div class="s-tile"><div class="s-tile-num" id="ds-k">0</div><div class="s-tile-label">Total KM</div></div>
-      <div class="s-tile" onclick="go('medals')" style="cursor:pointer"><div class="s-tile-num" id="ds-m">0</div><div class="s-tile-label">Medals</div></div>
+    <div id="dash-widget-stats">
+      <div class="stats-row">
+        <div class="s-tile"><div class="s-tile-num" id="ds-r">0</div><div class="s-tile-label">Races</div></div>
+        <div class="s-tile"><div class="s-tile-num" id="ds-c">0</div><div class="s-tile-label">Countries</div></div>
+        <div class="s-tile"><div class="s-tile-num" id="ds-k">0</div><div class="s-tile-label">Total KM</div></div>
+        <div class="s-tile" onclick="go('medals')" style="cursor:pointer"><div class="s-tile-num" id="ds-m">0</div><div class="s-tile-label">Medals</div></div>
+      </div>
     </div>
     <!-- Goals -->
-    <div id="goalsSection"></div>
+    <div id="dash-widget-goals">
+      <div id="goalsSection"></div>
+    </div>
     <!-- Year in Review + H2H -->
-    <div class="dash-insight-row">
-      <div class="dash-insight-tile" id="yirTile"></div>
-      <div class="dash-insight-tile" id="h2hTile"></div>
+    <div id="dash-widget-insights">
+      <div class="dash-insight-row">
+        <div class="dash-insight-tile" id="yirTile"></div>
+        <div class="dash-insight-tile" id="h2hTile"></div>
+      </div>
     </div>
     <!-- Recent -->
-    <div class="section-row">
-      <div class="section-h">Recent Races</div>
-      <button class="see-all" onclick="go('history')">All Races →</button>
+    <div id="dash-widget-recent">
+      <div class="section-row">
+        <div class="section-h">Recent Races</div>
+        <button class="see-all" onclick="go('history')">All Races →</button>
+      </div>
+      <div class="recent-feed" id="recentFeed"></div>
     </div>
-    <div class="recent-feed" id="recentFeed"></div>
     <!-- Personal Bests -->
-    <div class="section-row" style="margin-top:1.5rem">
-      <div class="section-h">Personal Bests</div>
+    <div id="dash-widget-pbs">
+      <div class="section-row" style="margin-top:1.5rem">
+        <div class="section-h">Personal Bests</div>
+      </div>
+      <div id="dashPBs"></div>
     </div>
-    <div id="dashPBs"></div>
     <!-- Your World (map teaser) -->
-    <div class="section-row" style="margin-top:1.75rem">
-      <div class="section-h">Your World</div>
-      <button class="see-all" onclick="go('map')">Race Map →</button>
+    <div id="dash-widget-world">
+      <div class="section-row" style="margin-top:1.75rem">
+        <div class="section-h">Your World</div>
+        <button class="see-all" onclick="go('map')">Race Map →</button>
+      </div>
     </div>
   </div>
 </div>
@@ -4760,6 +4842,102 @@ async function renderGreeting() {
 }
 
 /* ============================
+   DASHBOARD LAYOUT / CUSTOMIZE
+   ============================ */
+const DASH_WIDGETS = [
+  { id: 'countdown', label: 'Next Race Countdown', icon: '🏁' },
+  { id: 'stats',     label: 'Race Stats',           icon: '📊' },
+  { id: 'goals',     label: 'Goals',                icon: '🎯' },
+  { id: 'insights',  label: 'Year So Far & H2H',    icon: '📈' },
+  { id: 'recent',    label: 'Recent Races',          icon: '🏃' },
+  { id: 'pbs',       label: 'Personal Bests',        icon: '⚡' },
+  { id: 'world',     label: 'Your World',            icon: '🌍' },
+];
+
+function getDashLayout() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('fl2_dash_layout') || 'null');
+    if (saved && Array.isArray(saved) && saved.length) {
+      // Merge: preserve saved order/visibility, append any new widgets at end
+      const ids = new Set(saved.map(w => w.id));
+      const merged = [...saved];
+      DASH_WIDGETS.forEach(w => { if (!ids.has(w.id)) merged.push({ id: w.id, enabled: true }); });
+      return merged;
+    }
+  } catch(e) {}
+  return DASH_WIDGETS.map(w => ({ id: w.id, enabled: true }));
+}
+
+function saveDashLayout(layout) {
+  localStorage.setItem('fl2_dash_layout', JSON.stringify(layout));
+}
+
+function applyDashLayout() {
+  const layout = getDashLayout();
+  const container = document.querySelector('#page-dashboard .wrap');
+  if (!container) return;
+  layout.forEach((item, idx) => {
+    const el = document.getElementById('dash-widget-' + item.id);
+    if (!el) return;
+    el.style.display = item.enabled ? '' : 'none';
+    // Re-append in order to physically reorder in DOM
+    container.appendChild(el);
+  });
+  // Always keep greeting at top (re-append all widgets after greeting)
+  const greeting = document.getElementById('greetingCard');
+  if (greeting) container.insertBefore(greeting, container.firstChild);
+}
+
+function openDashCustomize() {
+  renderDashCustomizeModal();
+  openM('dashCustomizeModal');
+}
+
+function renderDashCustomizeModal() {
+  const layout = getDashLayout();
+  const meta = Object.fromEntries(DASH_WIDGETS.map(w => [w.id, w]));
+  document.getElementById('dcwList').innerHTML = layout.map((item, idx) => {
+    const w = meta[item.id] || { label: item.id, icon: '▪' };
+    return `<li class="dcw-row${item.enabled ? '' : ' disabled'}" data-id="${item.id}">
+      <span class="dcw-icon">${w.icon}</span>
+      <span class="dcw-label">${w.label}</span>
+      <div class="dcw-arrows">
+        <button class="dcw-arrow" onclick="dcwMove('${item.id}',-1)" ${idx === 0 ? 'disabled' : ''}>▲</button>
+        <button class="dcw-arrow" onclick="dcwMove('${item.id}',1)" ${idx === layout.length - 1 ? 'disabled' : ''}>▼</button>
+      </div>
+      <label class="dcw-toggle" title="${item.enabled ? 'Hide' : 'Show'} ${w.label}">
+        <input type="checkbox" ${item.enabled ? 'checked' : ''} onchange="dcwToggle('${item.id}',this.checked)">
+        <span class="dcw-slider"></span>
+      </label>
+    </li>`;
+  }).join('');
+}
+
+function dcwMove(id, dir) {
+  const layout = getDashLayout();
+  const idx = layout.findIndex(w => w.id === id);
+  if (idx < 0) return;
+  const target = idx + dir;
+  if (target < 0 || target >= layout.length) return;
+  [layout[idx], layout[target]] = [layout[target], layout[idx]];
+  saveDashLayout(layout);
+  renderDashCustomizeModal();
+  applyDashLayout();
+}
+
+function dcwToggle(id, enabled) {
+  const layout = getDashLayout();
+  const item = layout.find(w => w.id === id);
+  if (!item) return;
+  item.enabled = enabled;
+  saveDashLayout(layout);
+  applyDashLayout();
+  // Update row class without full re-render to avoid losing focus
+  const row = document.querySelector(`.dcw-row[data-id="${id}"]`);
+  if (row) row.classList.toggle('disabled', !enabled);
+}
+
+/* ============================
    DASHBOARD
    ============================ */
 function renderDash(){
@@ -4783,6 +4961,7 @@ function renderDash(){
     renderGoals();
     renderDashInsights();
     document.getElementById('dashPBs').innerHTML = renderPBSections(calcPBs(), 'dash-pb-card');
+    applyDashLayout();
     return;
   }
   document.getElementById('recentFeed').innerHTML = sorted.length ? sorted.map(r=>{
@@ -4808,6 +4987,7 @@ function renderDash(){
   renderDashInsights();
   // Personal Bests on dashboard
   document.getElementById('dashPBs').innerHTML = renderPBSections(calcPBs(), 'dash-pb-card');
+  applyDashLayout();
 }
 
 /* ============================
@@ -8870,6 +9050,24 @@ initApp();
 </button>
 
 <!-- ==== FEEDBACK MODAL (staging only) ==== -->
+<!-- Dashboard Customize Modal -->
+<div class="modal-overlay" id="dashCustomizeModal" onclick="bgClose(event,'dashCustomizeModal')">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="dashCustomizeModalTitle">
+    <div class="modal-drag"></div>
+    <div class="modal-head">
+      <div class="modal-h" id="dashCustomizeModalTitle">Customize Dashboard</div>
+      <div class="modal-sub">Toggle sections on or off, and reorder them.</div>
+    </div>
+    <div class="modal-body" style="padding:0;overflow-y:auto;max-height:60vh">
+      <p class="dcw-hint">WIDGETS</p>
+      <ul class="dcw-list" id="dcwList"></ul>
+    </div>
+    <div class="modal-foot" style="padding:1rem 1.25rem">
+      <button class="btn-main" onclick="closeM('dashCustomizeModal')">Done</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="feedbackModal" onclick="bgClose(event,'feedbackModal')">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="feedbackModalTitle">
     <div class="modal-drag"></div>
