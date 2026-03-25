@@ -3796,7 +3796,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
         <div class="fg">
           <label class="fl">Anthropic API Key</label>
           <div class="fi-wrap">
-            <input class="fi" id="setApiKey" type="password" placeholder="sk-ant-..." autocomplete="new-password">
+            <input class="fi" id="setApiKey" type="password" placeholder="sk-ant-..." autocomplete="new-password" disabled>
             <button class="fi-reveal" onclick="toggleReveal(this)" aria-label="Show/hide key">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
@@ -3817,7 +3817,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
           <div class="fg" style="margin-top:0.65rem">
             <label class="fl">API Key</label>
             <div class="fi-wrap">
-              <input class="fi" id="owKey" type="password" placeholder="ow_..." autocomplete="new-password">
+              <input class="fi" id="owKey" type="password" placeholder="ow_..." autocomplete="new-password" disabled>
               <button class="fi-reveal" onclick="toggleReveal(this)" aria-label="Show/hide key">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
                   <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
@@ -6816,6 +6816,12 @@ function closeM(id){
     const pw = document.getElementById('authPassword');
     if (pw) { pw.value = ''; pw.disabled = true; }
   }
+  if (id === 'settingsModal') {
+    const apiKeyEl = document.getElementById('setApiKey');
+    const owKeyEl  = document.getElementById('owKey');
+    if (apiKeyEl) { apiKeyEl.value = ''; apiKeyEl.disabled = true; }
+    if (owKeyEl)  { owKeyEl.value  = ''; owKeyEl.disabled  = true; }
+  }
 }
 function toggleReveal(btn) {
   const wrap = btn.closest('.fi-wrap');
@@ -7597,11 +7603,16 @@ function fmtDate(d){
    ============================ */
 function openSettings(){
   closeMenu();
-  document.getElementById('setApiKey').value = getApiKey();
+  const apiKeyEl = document.getElementById('setApiKey');
+  const owKeyEl  = document.getElementById('owKey');
+  // Re-enable password fields only when modal opens (prevents autofill scan)
+  apiKeyEl.disabled = false;
+  owKeyEl.disabled  = false;
+  apiKeyEl.value = getApiKey();
   const owCfg = getOWConfig();
   if (owCfg) {
     document.getElementById('owUrl').value    = owCfg.url || '';
-    document.getElementById('owKey').value    = owCfg.key || '';
+    owKeyEl.value                             = owCfg.key || '';
     document.getElementById('owUserId').value = owCfg.uid || '';
   }
   updateAuthUI();
