@@ -4249,8 +4249,7 @@ async function signOutUser() {
   }
   localStorage.removeItem('bt_new_user');
   localStorage.removeItem('bt_modal_shown');
-  updateAuthUI();
-  closeM('settingsModal');
+  window.location.reload();
 }
 
 /* ============================
