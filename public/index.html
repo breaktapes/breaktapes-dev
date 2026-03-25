@@ -6063,8 +6063,7 @@ function recalcSplits() {
     if (secs < Infinity) {
       cum += secs;
       cumulIn.value = secsToHMS(cum);
-    } else {
-      cumulIn.value = cum ? secsToHMS(cum) : '';
+      // If no split time, leave existing cumulative untouched (preserves screenshot-imported cumulative-only values)
     }
   });
 }
@@ -6712,18 +6711,21 @@ function pushRaceFromJSON(clean){
   render(curPage);
 }
 
-const RESULTS_IMPORT_PROMPT = `You are parsing a race results screenshot. Extract ONLY what is visible. Return a single JSON object, no markdown, no backticks:
-{"time":"H:MM:SS","placing":"178/2490","ageCategory":"M40-44","ageCategoryPos":"22/342","genderPos":"","bib":"","splits":[{"marker":"5K","split":"0:29:28","cumulative":"0:29:28"}]}
+const RESULTS_IMPORT_PROMPT = `You are parsing a race results screenshot. Extract ALL data visible. Return a single JSON object, no markdown, no backticks:
+{"time":"H:MM:SS","placing":"","ageCategory":"","ageCategoryPos":"","genderPos":"","bib":"","splits":[]}
 Rules:
-- time: finish/chip time in H:MM:SS format (e.g. "3:56:00")
-- placing: overall position as "pos/total" (e.g. "178/2490"). If only position shown, use "pos/?"
-- ageCategory: age group label (e.g. "M40-44", "Main Class", "F35-39"). Empty string if not shown.
+- time: finish/chip time in H:MM:SS format (e.g. "3:56:00", "1:24:30"). If only MM:SS visible, prefix "0:" (e.g. "0:48:22").
+- placing: overall position as "pos/total" (e.g. "178/2490"). If only pos shown, use "pos/?". Empty string if not shown.
+- ageCategory: age group label exactly as shown (e.g. "M40-44", "Main Class", "F35-39", "Senior Men"). Empty string if not shown.
 - ageCategoryPos: age group position as "pos/total". Empty string if not shown.
 - genderPos: gender position as "pos/total". Empty string if not shown.
-- bib: bib number as string. Empty string if not shown.
-- splits: array of all splits shown. marker = checkpoint name, split = split/diff time, cumulative = running total. Use empty array [] if no splits visible.
-- For split times: use MM:SS format for times under 1 hour (e.g. "29:28"), H:MM:SS for 1 hour+ (e.g. "1:24:25")
-- If a field is not visible, use empty string "".`;
+- bib: bib/race number as string. Empty string if not shown.
+- splits: EXTRACT EVERY SINGLE SPLIT/CHECKPOINT ROW visible in the results table, in order top-to-bottom. Do not skip any row.
+  - marker: the checkpoint name exactly as shown — e.g. "5K", "10K", "10 Mile", "Half", "30K", "Finish", "Swim", "T1", "Bike", "T2", "Run", "Mile 1", "Loop 1", "Lap 2", or any other label shown.
+  - split: the per-segment or diff/interval time for that checkpoint. Use MM:SS for under 1 hour (e.g. "27:38"), H:MM:SS for 1 hour+ (e.g. "1:02:15"). Empty string "" if not shown in the screenshot.
+  - cumulative: the running total / elapsed time at that checkpoint. Use same format rules. Empty string "" if not shown.
+  - Note: split and cumulative are INDEPENDENTLY optional. Some results show only one, some show both.
+- If a top-level field is not visible in the screenshot, use empty string "".`;
 
 let _resultsImgBase64 = null;
 let _resultsImgType = 'image/jpeg';
@@ -6774,6 +6776,7 @@ async function importResultsScreenshot() {
     if (obj.splits && obj.splits.length) {
       const tbody = document.getElementById('rdSplits');
       tbody.innerHTML = obj.splits.map(s => _splitRowHtml(s)).join('');
+      recalcSplits(); // fill cumulative from split times where available; leaves cumulative-only rows untouched
     }
     // Show success
     const fields = [obj.time, obj.placing, obj.ageCategory].filter(Boolean).length;
