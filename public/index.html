@@ -3493,32 +3493,6 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   </div>
 </div>
 
-<!-- ==== STRAVA SETUP MODAL ==== -->
-<div class="modal-overlay" id="stravaModal" onclick="bgClose(event,'stravaModal')">
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="stravaModalTitle">
-    <div class="modal-drag"></div>
-    <div class="modal-head">
-      <div class="modal-h" id="stravaModalTitle">Connect Strava</div>
-      <div class="modal-sub">Set up your Strava API credentials</div>
-    </div>
-    <div class="modal-body">
-      <div class="settings-info">
-        Create a free Strava API application at <strong>strava.com/settings/api</strong>.<br>
-        Set the <strong>Authorization Callback Domain</strong> to <strong id="stravaCallbackDomain">…</strong>.<br>
-        Copy the Client ID and Client Secret from your app's settings page.<br>
-        <span style="color:var(--orange);opacity:0.8">Note: your Client Secret is stored locally on this device only.</span>
-      </div>
-      <div class="fgrid" style="grid-template-columns:1fr">
-        <div class="fg"><label class="fl">Client ID</label><input class="fi" id="strClientId" placeholder="e.g. 123456" autocomplete="off"></div>
-        <div class="fg"><label class="fl">Client Secret</label><input class="fi" id="strSecret" type="text" placeholder="your_client_secret" autocomplete="new-password"></div>
-      </div>
-    </div>
-    <div class="modal-foot">
-      <button class="btn-ghost" onclick="closeM('stravaModal')">Cancel</button>
-      <button class="btn-main" onclick="startStravaOAuth()">Authorize with Strava →</button>
-    </div>
-  </div>
-</div>
 
 <!-- ==== UPCOMING RACES MODAL ==== -->
 <div class="modal-overlay" id="upcomingModal" onclick="bgClose(event,'upcomingModal')">
@@ -3895,9 +3869,16 @@ const SUPABASE_ANON_KEY = _IS_PROD
   ? 'sb_publishable_aXlZ54g7bW8dckyl3N-kCA_Jzy_Nt0B'
   : 'sb_publishable_XiI5lGzh_3rWoA2TxrKnWg_gPtPKSRp';
 const REMOTE_SYNC_KEYS = new Set(['fl2_races', 'fl2_ath', 'fl2_nr', 'fl2_upcoming']);
-// Open Wearables proxy — Cloudflare Worker that adds the OW API key server-side
-// Set to '' until the Railway OW instance + worker secrets are configured
-const OW_PROXY_URL = 'https://health.breaktapes.com';
+// Breaktapes health Worker — handles Strava token exchange + OW proxy
+const HEALTH_WORKER_URL = 'https://health.breaktapes.com';
+
+// Strava OAuth — Client ID is public (appears in OAuth URL).
+// Client Secret lives in the Worker. Set via: wrangler secret put STRAVA_CLIENT_ID / STRAVA_CLIENT_SECRET
+// Update this value after registering the Breaktapes Strava app at strava.com/settings/api
+const STRAVA_CLIENT_ID = '';   // ← fill in after registering at strava.com/settings/api
+
+// Open Wearables proxy (future use)
+const OW_PROXY_URL = HEALTH_WORKER_URL;
 // Instantly hide landing screen if a cached Supabase session exists — avoids flash on reload
 (function() {
   try {
@@ -4259,7 +4240,6 @@ async function signOutUser() {
   localStorage.removeItem('bt_auth_uid');
   localStorage.removeItem('fl2_strava');
   localStorage.removeItem('fl2_strava_acts');
-  localStorage.removeItem('fl2_strava_creds');
   localStorage.removeItem('fl2_strava_last_sync');
   window.location.reload();
 }
@@ -8045,7 +8025,6 @@ function handleStravaBtn(){
       stravaData = null; stravaActivities = [];
       localStorage.removeItem('fl2_strava');
       localStorage.removeItem('fl2_strava_acts');
-      localStorage.removeItem('fl2_strava_creds');
       localStorage.removeItem('fl2_strava_last_sync');
       sv('fl2_strava_acts', []);
       renderTraining();
@@ -8060,54 +8039,42 @@ function handleStravaBtn(){
       }, 3000);
     }
   } else {
-    // Inject current hostname as the callback domain
-    const domain = document.getElementById('stravaCallbackDomain');
-    if(domain) domain.textContent = window.location.hostname || 'localhost';
-    // Prefill saved credentials
-    const saved = JSON.parse(localStorage.getItem('fl2_strava_creds') || '{}');
-    if(saved.clientId) document.getElementById('strClientId').value = saved.clientId;
-    if(saved.clientSecret) document.getElementById('strSecret').value = saved.clientSecret;
+    if(!STRAVA_CLIENT_ID){
+      showBtToast('Strava connection coming soon!');
+      return;
+    }
     closeMenu();
-    document.getElementById('stravaModal').classList.add('open');
+    startStravaOAuth();
   }
 }
 
 function startStravaOAuth(){
-  const clientId = document.getElementById('strClientId').value.trim();
-  const secret   = document.getElementById('strSecret').value.trim();
-  if(!clientId || !secret){ alert('Enter both Client ID and Client Secret.'); return; }
-  localStorage.setItem('fl2_strava_creds', JSON.stringify({clientId, clientSecret: secret}));
   const redirect = encodeURIComponent(window.location.href.split('?')[0]);
-  const scope = 'activity:read_all,read';
-  window.location.href = `https://www.strava.com/oauth/authorize?client_id=${clientId}&redirect_uri=${redirect}&response_type=code&approval_prompt=auto&scope=${scope}`;
+  window.location.href = `https://www.strava.com/oauth/authorize?client_id=${STRAVA_CLIENT_ID}&redirect_uri=${redirect}&response_type=code&approval_prompt=auto&scope=activity:read_all,read`;
 }
 
 async function handleStravaCallback(){
   const params = new URLSearchParams(window.location.search);
-  const code = params.get('code');
+  const code  = params.get('code');
   const error = params.get('error');
   if(error){ showBtToast('Strava authorization was denied.'); return; }
   if(!code) return;
   // Clean URL immediately so a refresh doesn't re-run the callback
   window.history.replaceState({}, '', window.location.pathname);
-  const creds = JSON.parse(localStorage.getItem('fl2_strava_creds') || '{}');
-  if(!creds.clientId){ showBtToast('Strava credentials not found — please reconnect.'); return; }
-  // Show loading state in the Strava card if it's visible
   const cardSub = document.getElementById('stravaCardSub');
+  const strBtn  = document.getElementById('stravaBtn');
   if(cardSub) cardSub.textContent = 'Connecting to Strava…';
-  const strBtn = document.getElementById('stravaBtn');
   if(strBtn){ strBtn.disabled = true; strBtn.textContent = '…'; }
   try{
-    const res = await fetch('https://www.strava.com/oauth/token',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ client_id: creds.clientId, client_secret: creds.clientSecret, code, grant_type:'authorization_code' })
+    // Token exchange happens server-side in the Worker — secret never touches the browser
+    const res  = await fetch(`${HEALTH_WORKER_URL}/strava/token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code }),
     });
     const data = await res.json();
-    if(data.errors || !data.access_token){
-      const msg = data.message && data.message !== 'Bad Request'
-        ? data.message
-        : 'Connection failed — double-check your Client ID and Secret.';
+    if(!data.access_token){
+      const msg = (data.error || data.message || 'Connection failed — please try again.');
       showBtToast(msg);
       if(cardSub) cardSub.textContent = 'Import your training history and past races automatically';
       if(strBtn){ strBtn.disabled = false; strBtn.textContent = 'Connect'; }
@@ -8118,27 +8085,29 @@ async function handleStravaCallback(){
     if(cardSub) cardSub.textContent = 'Fetching your activity history…';
     await fetchStravaActivities();
     go('training');
-  }catch(e){
-    showBtToast('Strava connection failed: '+e.message);
+  } catch(e){
+    showBtToast('Strava connection failed: ' + e.message);
     if(cardSub) cardSub.textContent = 'Import your training history and past races automatically';
     if(strBtn){ strBtn.disabled = false; strBtn.textContent = 'Connect'; }
   }
 }
 
 async function refreshStravaToken(){
-  const creds = JSON.parse(localStorage.getItem('fl2_strava_creds') || '{}');
-  if(!stravaData || !stravaData.refresh_token) return false;
-  const res = await fetch('https://www.strava.com/oauth/token',{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ client_id: creds.clientId, client_secret: creds.clientSecret, refresh_token: stravaData.refresh_token, grant_type:'refresh_token' })
-  });
-  const data = await res.json();
-  if(!data.access_token) return false;
-  stravaData.access_token = data.access_token;
-  stravaData.expires_at   = data.expires_at;
-  sv('fl2_strava', stravaData);
-  return true;
+  if(!stravaData?.refresh_token) return false;
+  try{
+    const res  = await fetch(`${HEALTH_WORKER_URL}/strava/refresh`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refresh_token: stravaData.refresh_token }),
+    });
+    const data = await res.json();
+    if(!data.access_token) return false;
+    stravaData.access_token = data.access_token;
+    stravaData.expires_at   = data.expires_at;
+    if(data.refresh_token) stravaData.refresh_token = data.refresh_token;
+    sv('fl2_strava', stravaData);
+    return true;
+  } catch(e){ return false; }
 }
 
 async function stravaFetch(path){
