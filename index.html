@@ -2814,13 +2814,6 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
         <div class="menu-ath-sub" id="mAthSub">0 races</div>
       </div>
     </div>
-    <div class="auth-row">
-      <div>
-        <div class="menu-ath-name" id="authFooterTitle">Not signed in</div>
-        <div class="menu-ath-sub" id="authFooterSub">Create an account to get started</div>
-      </div>
-      <span class="auth-pill off" id="authFooterPill">Offline</span>
-    </div>
   </div>
 </nav>
 
@@ -4091,10 +4084,6 @@ function updateAuthUI() {
   const signedIn = !!authUser;
   const email = authUser?.email || '';
   document.getElementById('authMenuLabel').textContent = signedIn ? 'Account' : 'Sign In';
-  document.getElementById('authFooterTitle').textContent = signedIn ? (athlete?.name || 'Signed In') : 'Not signed in';
-  document.getElementById('authFooterSub').textContent = signedIn ? email : 'Sign in to sync your data';
-  document.getElementById('authFooterPill').textContent = signedIn ? 'Synced' : 'Offline';
-  document.getElementById('authFooterPill').className = `auth-pill ${signedIn ? 'on' : 'off'}`;
   document.getElementById('authSettingsStatus').innerHTML = signedIn
     ? `Signed in as <span class="auth-status-email">${email}</span>. Your races now sync to your private Supabase account.`
     : `You’re currently using this app without an account.`;
