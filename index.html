@@ -3326,6 +3326,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
     </div>
     <div class="modal-foot">
       <button class="btn-ghost" onclick="closeM('nrModal')">Cancel</button>
+      <button class="btn-ghost" id="nrRemoveBtn" onclick="clearNextRace()" style="display:none;color:#ff5555;border-color:rgba(255,85,85,0.3)">Remove</button>
       <button class="btn-main" onclick="saveNR()">Save Race</button>
     </div>
   </div>
@@ -6550,6 +6551,7 @@ function addNewUpcoming() {
 }
 function openNextRace(){
   closeMenu();
+  document.getElementById('nrRemoveBtn').style.display = nextRace ? '' : 'none';
   if(nextRace){
     // Find matching entry in upcomingRaces to get its id for editing
     const match = upcomingRaces.find(r => r.name === nextRace.name && r.date === nextRace.date);
@@ -6577,6 +6579,13 @@ function openNextRace(){
   }
   initCityAC();
   openM('nrModal');
+}
+function clearNextRace() {
+  nextRace = null;
+  sv('fl2_nr', null);
+  delete document.getElementById('nrModal').dataset.editId;
+  closeM('nrModal');
+  renderCountdown();
 }
 function openEditAth(){
   const a=athlete;
