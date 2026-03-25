@@ -859,13 +859,16 @@ main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(1
 .course-info-strip {
   background:var(--surface); border:1px solid var(--border); border-radius:8px;
   padding:0.75rem 1rem; margin-bottom:1rem; font-size:12px; color:var(--muted);
-  display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;
+  display:flex; flex-direction:column; gap:0.45rem;
 }
+.ci-tags { display:flex; gap:0.4rem; flex-wrap:wrap; }
 .course-info-strip .ci-tag {
   background:var(--surface2); border:1px solid var(--border2); border-radius:4px;
   padding:2px 8px; font-family:var(--headline); font-size:10px; font-weight:700;
   letter-spacing:0.08em; text-transform:uppercase; color:var(--white);
 }
+.ci-highlight { line-height:1.55; }
+.ci-tip { color:var(--orange); font-size:11px; line-height:1.55; }
 .course-info-strip .ci-load { color:var(--muted); font-style:italic; }
 /* ── Pace Calculator ── */
 .pace-input-card {
@@ -883,6 +886,17 @@ main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(1
 .pace-faster { color:var(--green); font-weight:700; }
 .pace-slower { color:#FF6B6B; font-weight:700; }
 .pace-section-label { font-family:var(--headline); font-size:10px; font-weight:800; letter-spacing:0.18em; text-transform:uppercase; color:var(--muted); margin:1rem 0 0.5rem; }
+/* Custom select for pace calculator — avoids native iOS full-screen picker */
+.pc-sel { position:relative; }
+.pc-sel-btn { width:100%; background:var(--surface3); border:1px solid var(--border2); border-radius:10px; padding:0.6rem 0.85rem; color:var(--white); font-family:var(--body); font-size:15px; text-align:left; cursor:pointer; display:flex; align-items:center; justify-content:space-between; gap:0.5rem; transition:border-color 0.15s; }
+.pc-sel-btn:hover, .pc-sel-btn[aria-expanded="true"] { border-color:rgba(245,245,245,0.3); }
+.pc-sel-btn svg { flex-shrink:0; transition:transform 0.2s; }
+.pc-sel-btn[aria-expanded="true"] svg { transform:rotate(180deg); }
+.pc-sel-list { position:absolute; top:calc(100% + 6px); left:0; min-width:100%; background:var(--surface3); border:1px solid var(--border2); border-radius:12px; overflow:hidden; z-index:300; box-shadow:0 8px 32px rgba(0,0,0,0.7); }
+.pc-sel-item { width:100%; background:none; border:none; border-bottom:1px solid var(--border); padding:0.75rem 1rem; color:var(--white); font-family:var(--body); font-size:15px; text-align:left; cursor:pointer; display:block; white-space:nowrap; }
+.pc-sel-item:last-child { border-bottom:none; }
+.pc-sel-item:hover { background:var(--surface2); }
+.pc-sel-item.pc-sel-active { color:var(--orange); }
 .pace-equiv-row { display:flex; justify-content:space-between; padding:0.45rem 0; border-bottom:1px solid var(--border); font-size:13px; }
 .pace-equiv-row:last-child { border-bottom:none; }
 .pace-equiv-val { font-family:var(--headline); font-weight:800; color:var(--white); }
@@ -1715,6 +1729,7 @@ main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(1
    ============================================= */
 :focus-visible { outline: 2px solid var(--orange); outline-offset: 3px; border-radius: 3px; }
 :focus:not(:focus-visible) { outline: none; }
+select:focus-visible { outline: none; border-color: var(--orange) !important; box-shadow: 0 0 0 1px var(--orange); }
 
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 
@@ -2763,109 +2778,6 @@ main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(1
   </div>
 </div>
 
-<!-- PACE CALCULATOR -->
-<div id="page-pace" class="page">
-  <div class="wrap">
-    <div class="page-kicker">Train Smart</div>
-    <div class="page-h1">Pace<br><span class="accent">Calculator</span></div>
-    <div class="pace-input-card">
-      <div class="rd-label">Sport &amp; Distance</div>
-      <div class="fgrid" style="grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem">
-        <select class="fi" id="pcType" onchange="pcOnTypeChange()">
-          <option value="run">🏃 Running</option>
-          <option value="tri">🏆 Triathlon</option>
-        </select>
-        <select class="fi" id="pcDist" onchange="pcOnDistChange()"></select>
-      </div>
-      <!-- Running: standard time picker -->
-      <div id="pcStandardInput">
-        <div class="rd-label">Target Finish Time</div>
-        <div class="time-picker" style="margin-bottom:1rem">
-          <div class="tp-field">
-            <button class="tp-btn" type="button" onclick="stepTime('pcH',1,0,99)">▲</button>
-            <input class="tp-in" id="pcH" type="number" min="0" max="99" value="0" inputmode="numeric" onchange="clampTime(this,0,99)">
-            <button class="tp-btn" type="button" onclick="stepTime('pcH',-1,0,99)">▼</button>
-            <div class="tp-label">HRS</div>
-          </div>
-          <span class="tp-sep">:</span>
-          <div class="tp-field">
-            <button class="tp-btn" type="button" onclick="stepTime('pcM',1,0,59)">▲</button>
-            <input class="tp-in" id="pcM" type="number" min="0" max="59" value="0" inputmode="numeric" onchange="clampTime(this,0,59)">
-            <button class="tp-btn" type="button" onclick="stepTime('pcM',-1,0,59)">▼</button>
-            <div class="tp-label">MIN</div>
-          </div>
-          <span class="tp-sep">:</span>
-          <div class="tp-field">
-            <button class="tp-btn" type="button" onclick="stepTime('pcS',1,0,59)">▲</button>
-            <input class="tp-in" id="pcS" type="number" min="0" max="59" value="0" inputmode="numeric" onchange="clampTime(this,0,59)">
-            <button class="tp-btn" type="button" onclick="stepTime('pcS',-1,0,59)">▼</button>
-            <div class="tp-label">SEC</div>
-          </div>
-        </div>
-        <div id="pcPBRef" style="display:none;font-size:12px;color:var(--muted);margin-bottom:1rem"></div>
-        <button class="btn-main" style="width:100%" onclick="calcPace()">Calculate Pace</button>
-      </div>
-      <!-- Triathlon: segment-based calculator -->
-      <div id="pcTriInput" style="display:none">
-        <div class="tri-segs">
-          <div class="tri-seg-row">
-            <div class="tri-seg-hd"><span class="tri-seg-icon">🏊</span><div><div class="tri-seg-name">Swim</div><div class="tri-seg-dist" id="pcTriSwimDist">1,500m</div></div></div>
-            <div class="tri-seg-ctrl">
-              <span class="tri-seg-lbl">Pace / 100m</span>
-              <div class="tri-pace-inp">
-                <input class="tri-num" id="pcSwimPaceM" type="number" value="2" min="0" max="9">
-                <span class="tri-colon">:</span>
-                <input class="tri-num" id="pcSwimPaceS" type="number" value="0" min="0" max="59">
-              </div>
-            </div>
-          </div>
-          <div class="tri-seg-row tri-t">
-            <div class="tri-seg-hd"><span class="tri-seg-icon">⏱</span><div><div class="tri-seg-name">T1</div></div></div>
-            <div class="tri-seg-ctrl">
-              <span class="tri-seg-lbl">mm : ss</span>
-              <div class="tri-pace-inp">
-                <input class="tri-num" id="pcT1M" type="number" value="3" min="0" max="59">
-                <span class="tri-colon">:</span>
-                <input class="tri-num" id="pcT1S" type="number" value="0" min="0" max="59">
-              </div>
-            </div>
-          </div>
-          <div class="tri-seg-row">
-            <div class="tri-seg-hd"><span class="tri-seg-icon">🚴</span><div><div class="tri-seg-name">Bike</div><div class="tri-seg-dist" id="pcTriBikeDist">40km</div></div></div>
-            <div class="tri-seg-ctrl">
-              <span class="tri-seg-lbl">Avg Speed km/h</span>
-              <input class="tri-speed-inp" id="pcBikeSpeed" type="number" value="30" min="1" max="80">
-            </div>
-          </div>
-          <div class="tri-seg-row tri-t">
-            <div class="tri-seg-hd"><span class="tri-seg-icon">⏱</span><div><div class="tri-seg-name">T2</div></div></div>
-            <div class="tri-seg-ctrl">
-              <span class="tri-seg-lbl">mm : ss</span>
-              <div class="tri-pace-inp">
-                <input class="tri-num" id="pcT2M" type="number" value="2" min="0" max="59">
-                <span class="tri-colon">:</span>
-                <input class="tri-num" id="pcT2S" type="number" value="0" min="0" max="59">
-              </div>
-            </div>
-          </div>
-          <div class="tri-seg-row">
-            <div class="tri-seg-hd"><span class="tri-seg-icon">🏃</span><div><div class="tri-seg-name">Run</div><div class="tri-seg-dist" id="pcTriRunDist">10km</div></div></div>
-            <div class="tri-seg-ctrl">
-              <span class="tri-seg-lbl">Pace / km</span>
-              <div class="tri-pace-inp">
-                <input class="tri-num" id="pcRunPaceM" type="number" value="5" min="0" max="29">
-                <span class="tri-colon">:</span>
-                <input class="tri-num" id="pcRunPaceS" type="number" value="30" min="0" max="59">
-              </div>
-            </div>
-          </div>
-        </div>
-        <button class="btn-main" style="width:100%;margin-top:1rem" onclick="calcTriPace()">Calculate Time</button>
-      </div>
-    </div>
-    <div id="paceResults" style="display:none"></div>
-  </div>
-</div>
 
 <!-- MEDALS -->
 <div id="page-medals" class="page">
@@ -3035,12 +2947,28 @@ main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(1
     <div id="trainPaceSection">
       <div class="pace-input-card">
         <div class="rd-label">Sport &amp; Distance</div>
-        <div class="fgrid" style="grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1rem">
-          <select class="fi" id="pcType" onchange="pcOnTypeChange()">
-            <option value="run">🏃 Running</option>
-            <option value="tri">🏆 Triathlon</option>
-          </select>
-          <select class="fi" id="pcDist" onchange="pcOnDistChange()"></select>
+        <div class="pace-sport-dist-grid" style="display:grid;grid-template-columns:auto 1fr;gap:.75rem;margin-bottom:1rem">
+          <!-- Custom sport select -->
+          <div class="pc-sel" id="pcTypeSelWrap">
+            <button class="pc-sel-btn" type="button" id="pcTypeBtn" aria-expanded="false" aria-haspopup="listbox" onclick="pcToggleSel('pcType')">
+              <span id="pcTypeDisplay">🏃 Running</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="pc-sel-list" id="pcTypeList" style="display:none" role="listbox">
+              <button class="pc-sel-item pc-sel-active" type="button" onclick="pcPickType('run','🏃 Running')">🏃 Running</button>
+              <button class="pc-sel-item" type="button" onclick="pcPickType('tri','🏆 Triathlon')">🏆 Triathlon</button>
+            </div>
+            <select id="pcType" style="display:none"><option value="run">Running</option><option value="tri">Triathlon</option></select>
+          </div>
+          <!-- Custom distance select -->
+          <div class="pc-sel" id="pcDistSelWrap">
+            <button class="pc-sel-btn" type="button" id="pcDistBtn" aria-expanded="false" aria-haspopup="listbox" onclick="pcToggleSel('pcDist')">
+              <span id="pcDistDisplay">5KM</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="pc-sel-list" id="pcDistList" style="display:none" role="listbox"></div>
+            <select id="pcDist" style="display:none"></select>
+          </div>
         </div>
         <div id="pcStandardInput">
           <div class="rd-label">Target Finish Time</div>
@@ -3168,51 +3096,6 @@ main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(1
     <div id="trainWearablesSection" style="display:none">
       <div id="owPageWidget"></div>
       <div id="owPageFatigueSection" style="margin-top:1.5rem"></div>
-    </div>
-  </div>
-</div>
-
-<!-- TRAINING (legacy — sidebar/desktop access) -->
-<div id="page-training" class="page">
-  <div class="wrap">
-    <div class="page-kicker">Activity Log</div>
-    <div style="font-family:var(--headline);font-size:32px;font-weight:900;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:1.25rem">Training</div>
-    <!-- Strava card -->
-    <div class="strava-card" id="stravaCard">
-      <div class="strava-logo">🟠</div>
-      <div class="strava-card-text">
-        <div class="strava-card-title" id="stravaCardTitle">Connect Strava</div>
-        <div class="strava-card-sub" id="stravaCardSub">Import your training history and past races automatically</div>
-      </div>
-      <button class="strava-connect-btn" id="stravaBtn" onclick="handleStravaBtn()">Connect</button>
-    </div>
-    <!-- Stats row (shown when connected) -->
-    <div class="training-stats" id="trainingStatsRow" style="display:none">
-      <div class="training-stat"><div class="training-stat-num" id="ts-km">—</div><div class="training-stat-label">Total KM</div></div>
-      <div class="training-stat"><div class="training-stat-num" id="ts-acts">—</div><div class="training-stat-label">Activities</div></div>
-      <div class="training-stat"><div class="training-stat-num" id="ts-hrs">—</div><div class="training-stat-label">Hours</div></div>
-      <div class="training-stat"><div class="training-stat-num" id="ts-elev">—</div><div class="training-stat-label">Elev (m)</div></div>
-    </div>
-    <!-- Filter bar -->
-    <div class="training-bar">
-      <div class="section-h">Activities</div>
-      <div style="display:flex;gap:0.4rem;align-items:center">
-        <div class="training-tabs">
-          <button class="training-tab active" onclick="filterTraining('All',this)">All</button>
-          <button class="training-tab" onclick="filterTraining('Run',this)">Run</button>
-          <button class="training-tab" onclick="filterTraining('Ride',this)">Ride</button>
-          <button class="training-tab" onclick="filterTraining('Swim',this)">Swim</button>
-        </div>
-        <button class="training-sync-btn" id="syncBtn" style="display:none" onclick="syncStrava()">↻ Sync</button>
-      </div>
-    </div>
-    <div id="trainingFeed"></div>
-    <!-- OW Workouts section -->
-    <div id="owTrainingSection" style="margin-top:1.75rem">
-      <div class="training-bar ow-training-header">
-        <div class="section-h">Open Wearables</div>
-      </div>
-      <div id="owTrainingFeed"></div>
     </div>
   </div>
 </div>
@@ -3443,6 +3326,7 @@ main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(1
     </div>
     <div class="modal-foot">
       <button class="btn-ghost" onclick="closeM('nrModal')">Cancel</button>
+      <button class="btn-ghost" id="nrRemoveBtn" onclick="clearNextRace()" style="display:none;color:#ff5555;border-color:rgba(255,85,85,0.3)">Remove</button>
       <button class="btn-main" onclick="saveNR()">Save Race</button>
     </div>
   </div>
@@ -4009,14 +3893,11 @@ function applyRemoteState(row) {
       athlete = row.athlete;
       localStorage.setItem('fl2_ath', JSON.stringify(athlete));
     }
-    if (row.next_race && typeof row.next_race === 'object') {
-      nextRace = row.next_race;
-      localStorage.setItem('fl2_nr', JSON.stringify(nextRace));
-    }
-    if (Array.isArray(row.upcoming_races)) {
-      upcomingRaces = row.upcoming_races;
-      localStorage.setItem('fl2_upcoming', JSON.stringify(upcomingRaces));
-    }
+    // Always apply (even null/empty) so a fresh account clears stale localStorage data
+    nextRace = (row.next_race && typeof row.next_race === 'object') ? row.next_race : null;
+    localStorage.setItem('fl2_nr', JSON.stringify(nextRace));
+    upcomingRaces = Array.isArray(row.upcoming_races) ? row.upcoming_races : [];
+    localStorage.setItem('fl2_upcoming', JSON.stringify(upcomingRaces));
   } finally {
     suppressRemoteSync = false;
   }
@@ -4259,6 +4140,8 @@ async function signOutUser() {
    NAVIGATION
    ============================ */
 function go(page) {
+  if (page === 'pace') { trainTab = 'pace'; page = 'train'; }
+  else if (page === 'training') { trainTab = 'activities'; page = 'train'; }
   document.querySelectorAll('.bn-tab').forEach(b => b.classList.remove('active'));
   const _bn = document.getElementById('bn-' + page);
   if (_bn) _bn.classList.add('active');
@@ -4410,17 +4293,62 @@ async function fetchCourseInfo(race) {
 }
 function renderCourseStrip(info) {
   const strip = document.getElementById('courseInfoStrip');
+  const tags = [info.terrain, info.surface].filter(Boolean)
+    .map(t=>`<span class="ci-tag">${t}</span>`).join('');
   strip.innerHTML = `
-    <span class="ci-tag">${info.terrain||''}</span>
-    <span class="ci-tag">${info.surface||''}</span>
-    <span style="flex:1;min-width:0">${info.highlight||''}</span>
-    ${info.tip?`<span style="color:var(--orange);font-size:11px">💡 ${info.tip}</span>`:''}`;
-  strip.style.display='flex';
+    ${tags ? `<div class="ci-tags">${tags}</div>` : ''}
+    ${info.highlight ? `<div class="ci-highlight">${info.highlight}</div>` : ''}
+    ${info.tip ? `<div class="ci-tip">💡 ${info.tip}</div>` : ''}`;
+  strip.style.display = '';
 }
 
 /* ============================
-   PACE CALCULATOR
+   PACE CALCULATOR — custom selects
    ============================ */
+function pcToggleSel(which) {
+  const btn  = document.getElementById(which + 'Btn');
+  const list = document.getElementById(which + 'List');
+  const isOpen = list.style.display !== 'none';
+  // close all pc dropdowns
+  ['pcType','pcDist'].forEach(id => {
+    document.getElementById(id+'List').style.display = 'none';
+    const b = document.getElementById(id+'Btn');
+    if (b) b.setAttribute('aria-expanded','false');
+  });
+  if (!isOpen) {
+    list.style.display = '';
+    btn.setAttribute('aria-expanded','true');
+    // close on outside click
+    setTimeout(() => {
+      const handler = e => {
+        if (!list.contains(e.target) && e.target !== btn) {
+          list.style.display = 'none';
+          btn.setAttribute('aria-expanded','false');
+          document.removeEventListener('click', handler);
+        }
+      };
+      document.addEventListener('click', handler);
+    }, 0);
+  }
+}
+function pcPickType(val, label) {
+  document.getElementById('pcType').value = val;
+  document.getElementById('pcTypeDisplay').textContent = label;
+  document.getElementById('pcTypeList').querySelectorAll('.pc-sel-item').forEach(b => b.classList.remove('pc-sel-active'));
+  event.currentTarget.classList.add('pc-sel-active');
+  document.getElementById('pcTypeList').style.display = 'none';
+  document.getElementById('pcTypeBtn').setAttribute('aria-expanded','false');
+  pcOnTypeChange();
+}
+function pcPickDist(val, label) {
+  document.getElementById('pcDist').value = val;
+  document.getElementById('pcDistDisplay').textContent = label;
+  document.getElementById('pcDistList').querySelectorAll('.pc-sel-item').forEach(b => b.classList.remove('pc-sel-active'));
+  event.currentTarget.classList.add('pc-sel-active');
+  document.getElementById('pcDistList').style.display = 'none';
+  document.getElementById('pcDistBtn').setAttribute('aria-expanded','false');
+  pcOnDistChange();
+}
 function renderPace() {
   pcOnTypeChange();
   document.getElementById('paceResults').style.display = 'none';
@@ -4429,8 +4357,16 @@ function pcOnTypeChange() {
   const type = document.getElementById('pcType').value;
   const sel  = document.getElementById('pcDist');
   const prev = sel.value;
-  sel.innerHTML = (SPORT_DISTANCES[type]||[]).filter(d=>d!=='Custom…').map(d=>`<option value="${d}">${d}</option>`).join('');
+  const dists = (SPORT_DISTANCES[type]||[]).filter(d=>d!=='Custom…');
+  sel.innerHTML = dists.map(d=>`<option value="${d}">${d}</option>`).join('');
   if ([...sel.options].some(o=>o.value===prev)) sel.value = prev;
+  // rebuild custom dist dropdown
+  const list = document.getElementById('pcDistList');
+  if (list) {
+    list.innerHTML = dists.map(d=>`<button class="pc-sel-item${sel.value===d?' pc-sel-active':''}" type="button" onclick="pcPickDist('${d.replace(/'/g,"\\'")}','${d.replace(/'/g,"\\'")}')">${d}</button>`).join('');
+    const chosen = sel.value || dists[0];
+    document.getElementById('pcDistDisplay').textContent = chosen;
+  }
   const isTri = type === 'tri';
   document.getElementById('pcStandardInput').style.display = isTri ? 'none' : '';
   document.getElementById('pcTriInput').style.display      = isTri ? '' : 'none';
@@ -6615,6 +6551,7 @@ function addNewUpcoming() {
 }
 function openNextRace(){
   closeMenu();
+  document.getElementById('nrRemoveBtn').style.display = nextRace ? '' : 'none';
   if(nextRace){
     // Find matching entry in upcomingRaces to get its id for editing
     const match = upcomingRaces.find(r => r.name === nextRace.name && r.date === nextRace.date);
@@ -6642,6 +6579,13 @@ function openNextRace(){
   }
   initCityAC();
   openM('nrModal');
+}
+function clearNextRace() {
+  nextRace = null;
+  sv('fl2_nr', null);
+  delete document.getElementById('nrModal').dataset.editId;
+  closeM('nrModal');
+  renderCountdown();
 }
 function openEditAth(){
   const a=athlete;
