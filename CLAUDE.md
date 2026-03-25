@@ -118,7 +118,7 @@ CLOUDFLARE_API_TOKEN="" CF_API_TOKEN="" wrangler deploy --env=""
 ## Architecture
 
 ### Single-file structure (`index.html`)
-The entire app lives in one HTML file (~5,800+ lines). Sections are organized as:
+The entire app lives in one HTML file (~8,600+ lines). Sections are organized as:
 1. CSS tokens / reset / component styles
 2. HTML markup (pages, modals, landing screen)
 3. JavaScript (data, auth, render functions, integrations)
@@ -126,13 +126,13 @@ The entire app lives in one HTML file (~5,800+ lines). Sections are organized as
 ### Page system
 Pages use `id="page-*"` with `.page` / `.page.active` CSS classes. Navigation is handled by `go(page)` which sets active class and calls `render(page)`.
 
-Pages: `dashboard`, `pace`, `medals`, `history`, `athlete`, `map`, `training`
+Pages: `dashboard`, `history`, `medals`, `map`, `athlete`, `train`, `training`, `pace`
 
 ### State management
 - Local state: `localStorage` via `sv(k,v)` helper
 - Remote state: Supabase `app_state` table (synced on auth)
 - Race data: `RACES` array (in-memory), synced to Supabase
-- Auth: Supabase Auth (email/password), guest mode supported
+- Auth: Supabase Auth (email/password) — authenticated-only app, no guest mode
 
 ### Supabase tables
 | Table | Purpose |
@@ -199,9 +199,10 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 | `render(p)` | Dispatch page render |
 | `renderDash()` | Build dashboard view |
 | `renderMedals()` | Build medal wall |
-| `renderHistory()` | Build race history list |
+| `renderHistory()` | Build race history list (with search + pagination) |
 | `renderAthlete()` | Build athlete profile |
 | `renderMap()` | Init Leaflet map + routes |
+| `renderTrain()` | Build Train hub (Pace / Activities / Wearables sub-tabs) |
 | `renderGreeting()` | Weather + time greeting |
 | `initAuth()` | Bootstrap Supabase auth |
 | `loadRaceCatalog()` | Fetch race DB from Supabase |
@@ -210,15 +211,24 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 | `buildPBMap()` | Compute personal bests |
 | `submitRace()` | Add race to RACES array |
 | `deleteRace(id)` | Remove race |
-| `openRaceDetail(id)` | Open race detail modal |
+| `openRaceDetail(id)` | Open race detail modal (edit existing race) |
+| `openRaceDetailFromParsed(obj)` | Open race detail modal pre-filled from AI/screenshot parsed data (new race flow) |
+| `saveRaceDetail()` | Save race detail modal — branches on `_rdIsNew` flag (create vs update) |
+| `_collectRdFields()` | Collect all raceDetailModal form values into a plain object |
+| `recalcSplits()` | Walk splits table, sum split times, write cumulative cells (preserves rows with no split) |
+| `importResultsScreenshot()` | Claude vision API call to parse race results photo → populate finish time, placing, splits |
+| `rdLookupRace()` | Auto-fill race details — catalog-first (free/instant), falls back to Claude API |
+| `rdApplyCatalogSuggestion(idx)` | Fill race form from catalog entry (name, type, distance, city, country, date) |
+| `rdOnNameInput()` | Race name autocomplete — searches raceDb catalog + user's own races |
 
 ---
 
 ## External Integrations
 
 ### Supabase Auth
-- Email/password sign-up and sign-in
-- Guest mode (no account required, data stays local)
+- Email/password sign-up and sign-in — authenticated-only (no guest mode)
+- Forgot password flow via Supabase `sendPasswordResetEmail` (8s timeout guard)
+- New user onboarding: first/last name collection on first sign-in
 - Auth state managed via `refreshAuthState()` / `initAuth()`
 
 ### Open-Meteo (Weather)
@@ -299,6 +309,35 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 - `26878dc` CI/CD pipeline, prod/staging environments, project memory docs
 - `f2c1774` Merge PR #9: gstack skills, landing-worker, gitignore fixes, pipeline hardening
 
+### Session 5 (2026-03-25) — UI/UX overhaul + race detail form + splits
+
+**Branch:** `claude/pedantic-newton` → staging → main
+
+#### Comprehensive UI/UX overhaul (Phase 1–11 of audit plan)
+- `c57c456` — Mobile bottom nav (5 tabs), iOS safe area, ARIA attributes, password field security fix, API key masking, inline form validation, focus-visible states, history search + pagination, modal swipe-to-close, breakpoint consolidation, empty states, design system docs (`DESIGN.md`)
+- `aa55cbe` — Removed "Continue as Guest" (authenticated-only app); fixed Safari autofill regression in `openAuthModal`
+- `aaf5b08` — Forgot password link in sign-in modal with 8s timeout guard
+- `9fd5e1e` — Forgot password UI (link → confirmation state)
+- `8e4d951` — New user onboarding: first/last name prompt, empty state with CTA
+- `f516685` / `28bfeb3` — One-off Supabase auth config workflow (applied + removed)
+- `92ac3b3` — Create account helper text copy fix
+- `1fddc19` — Race vs Train nav: `page-train` hub (Pace / Activities / Wearables sub-tabs), green identity, sidebar sections, Map demoted from bottom nav
+
+#### Race card + detail form (Phase 13–14 of audit plan)
+- `b7ac3df` — Race card redesign: view-then-edit flow (tap card → race view modal with stats; Edit button opens detail form)
+- `c8962ee` — Race view modal improvements: date below location, labeled ranking cards (Overall/Age Group), splits table; splits auto-calc in detail form (cumulative readonly, recalcs on split input); results screenshot import button (Claude vision → populate finish time, placing, splits)
+- `2eb024d` — Fix splits screenshot import: extract every checkpoint type (5K, 10 Mile, Swim, T1, Bike, etc.); fix `recalcSplits()` to preserve cumulative-only rows
+- `094ca33` — AI + screenshot import now routes through detail form (`openRaceDetailFromParsed`) instead of saving immediately; hint banner when no race name extracted
+- `5255646` — Race name autocomplete searches catalog (`raceDb`) with full detail autofill (name, city, country, date, distance, sport); `rdLookupRace()` tries catalog-first, Claude API fallback
+
+#### Key learnings
+- `races` is a scoped `let` (not on `window`) — test data must be injected via `sv('fl2_races', ...)` + page reload
+- `_rdIsNew` flag branches `saveRaceDetail()` between create (new) and update (existing)
+- Catalog autocomplete stores matches on DOM element `el._catalogMatches` to avoid global state
+- `recalcSplits()` must NOT clear cumulative when split is empty — screenshots may only provide cumulative column
+
+---
+
 ### Session 4 (2026-03-24) — Pipeline hardening + gstack
 - Fixed `CLOUDFLARE_API_TOKEN` — wrangler OAuth token doesn't work as API token; created proper `cfut_*` token
 - Reset staging DB password via Management API (`PATCH /v1/projects/{ref}/database/password`) — `Bt2026Stg!xK9mRnQvLzWp3hY7sD`
@@ -320,3 +359,6 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 - Cloudflare API token: if pipeline fails with auth error, token may have expired — create new one at `dash.cloudflare.com/profile/api-tokens` and update `CLOUDFLARE_API_TOKEN` secret
 - Supabase DB passwords: if migrations fail with SASL auth error, reset via `PATCH https://api.supabase.com/v1/projects/{ref}/database/password` and wait 60s before retrying
 - gstack binary: after fresh clone, run `cd .claude/skills/gstack && ./setup` to build the browse binary (not committed — 117MB)
+- `races` scoping: `races` is declared with `let` (not `var`/`window`) — test data injection via the browser console must use `sv('fl2_races', [...])` + page reload, not `window.races = [...]`
+- `_rdIsNew` flag: when opening race detail from parsed AI/screenshot data, `_rdIsNew = true` routes `saveRaceDetail()` to create a new race. Cancel button must reset this flag to `false`.
+- `recalcSplits()`: must not clear cumulative cells when split input is empty — screenshot imports may only provide the cumulative column with no per-split diff
