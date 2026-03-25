@@ -1358,6 +1358,14 @@ main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(1
 .rd-podium-chip.gold   { background:rgba(255,215,80,0.15); color:#FFD750; border:1px solid rgba(255,215,80,0.3); }
 .rd-podium-chip.silver { background:rgba(192,200,210,0.15); color:#C8D0D8; border:1px solid rgba(192,200,210,0.3); }
 .rd-podium-chip.bronze { background:rgba(205,140,90,0.15); color:#CD8C5A; border:1px solid rgba(205,140,90,0.3); }
+.rd-new-hint {
+  display:flex; align-items:center; gap:8px;
+  background:rgba(255,77,0,0.08); border:1px solid rgba(255,77,0,0.2);
+  border-radius:6px; padding:0.5rem 0.75rem; margin-bottom:0.75rem;
+  font-size:12px; color:rgba(245,245,245,0.65); line-height:1.4;
+}
+.rd-new-hint svg { flex-shrink:0; stroke:var(--orange); }
+.rd-name-input.rd-name-pulse { border-color:rgba(255,77,0,0.5) !important; box-shadow:0 0 0 3px rgba(255,77,0,0.1); }
 
 /* =============================================
    PERSONAL BESTS
@@ -3572,6 +3580,10 @@ main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(1
         <button class="rd-autofill-btn" id="rdAutoFillBtn" onclick="rdLookupRace()" title="Auto-fill details">✦ Auto-fill</button>
         <div class="rd-suggestions" id="rdSuggestions" style="display:none"></div>
       </div>
+      <div class="rd-new-hint" id="rdNewHint" style="display:none">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Type the race name above to auto-fill location and date
+      </div>
       <div class="modal-sub" id="rdSub"></div>
       <div class="rd-podium-banner" id="rdPodiumBanner" style="display:none"></div>
     </div>
@@ -3755,7 +3767,7 @@ main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(1
       </div>
     </div>
     <div class="modal-foot">
-      <button class="btn-ghost" onclick="closeM('raceDetailModal')">Cancel</button>
+      <button class="btn-ghost" onclick="_rdIsNew=false;closeM('raceDetailModal')">Cancel</button>
       <button class="btn-main" onclick="saveRaceDetail()">Save Details</button>
     </div>
   </div>
@@ -5903,6 +5915,68 @@ function deleteRace(id) {
    RACE DETAIL
    ============================ */
 let _rdId = null;
+let _rdIsNew = false;
+
+function openRaceDetailFromParsed(obj) {
+  _rdId = null;
+  _rdIsNew = true;
+  initCityAC();
+  const rdCoSel = document.getElementById('rdCountry');
+  if (!rdCoSel.options.length) {
+    rdCoSel.innerHTML = '<option value="">Select a country…</option>' +
+      COUNTRY_LIST.map(c => `<option value="${c.n}">${c.n}</option>`).join('');
+  }
+  // Populate all fields from parsed object
+  document.getElementById('rdName').value = obj.name || '';
+  document.getElementById('rdType').value = obj.type || 'run';
+  rdOnTypeChange();
+  if (obj.distance) {
+    const dSel = document.getElementById('rdDistSel');
+    if (![...dSel.options].some(o => o.value === obj.distance)) {
+      const opt = document.createElement('option'); opt.value = obj.distance; opt.textContent = obj.distance;
+      dSel.insertBefore(opt, dSel.firstChild);
+    }
+    dSel.value = obj.distance;
+  }
+  document.getElementById('rdDate').value    = obj.date    || '';
+  document.getElementById('rdCity').value    = obj.city    || '';
+  setCountrySelect(document.getElementById('rdCountry'), obj.country || '');
+  document.getElementById('rdPriority').value = '';
+  document.getElementById('rdMedal').value   = obj.medal   || 'finisher';
+  document.getElementById('rdSub').textContent = [obj.distance, obj.city ? obj.city + (obj.country ? ', ' + obj.country : '') : ''].filter(Boolean).join(' · ');
+  // Time
+  const tp = (obj.time || '0:00:00').split(':').map(Number);
+  document.getElementById('rdTmH').value = tp[0] || 0;
+  document.getElementById('rdTmM').value = tp[1] || 0;
+  document.getElementById('rdTmS').value = tp[2] || 0;
+  // Positions
+  document.getElementById('rdPlacing').value    = obj.placing        || '';
+  document.getElementById('rdAgeCat').value     = obj.ageCategory    || '';
+  document.getElementById('rdAgeCatPos').value  = obj.ageCategoryPos || '';
+  document.getElementById('rdGenderPos').value  = obj.genderPos      || '';
+  document.getElementById('rdNotes').value      = '';
+  // Splits
+  document.getElementById('rdSplits').innerHTML = (obj.splits || []).map(_splitRowHtml).join('');
+  if (obj.splits && obj.splits.length) recalcSplits();
+  // UI resets
+  document.getElementById('rdTriSegsSection').style.display = 'none';
+  document.getElementById('rdPodiumBanner').style.display = 'none';
+  document.getElementById('rdPodiumBanner').innerHTML = '';
+  const rdOwHealth = document.getElementById('rdOwHealth');
+  if (rdOwHealth) rdOwHealth.style.display = 'none';
+  // Hint banner — show if no name extracted
+  const hint = document.getElementById('rdNewHint');
+  const nameField = document.getElementById('rdName');
+  if (hint) hint.style.display = !obj.name ? '' : 'none';
+  if (!obj.name) nameField.classList.add('rd-name-pulse');
+  else nameField.classList.remove('rd-name-pulse');
+  openM('raceDetailModal');
+  // Auto-trigger lookup if name was extracted and API key is set
+  setTimeout(() => {
+    nameField.focus();
+    if (obj.name && getApiKey()) rdLookupRace();
+  }, 350);
+}
 /* ── City / Country autocomplete ────────────────────────────────────────── */
 const AC_CITIES = ['Abu Dhabi','Ajman','Amsterdam','Athens','Auckland','Bangkok','Barcelona','Beijing','Beirut','Bengaluru','Berlin','Bogotá','Boston','Brisbane','Brussels','Buenos Aires','Cairo','Cape Town','Casablanca','Chennai','Chicago','Colombo','Copenhagen','Delhi','Dhaka','Dubai','Durban','Frankfurt','Fujairah','Geneva','Gothenburg','Hamburg','Helsinki','Hong Kong','Istanbul','Jakarta','Jaipur','Jeddah','Johannesburg','Karachi','Kathmandu','Kolkata','Kuala Lumpur','Kuwait City','Lagos','Lahore','Las Vegas','Leh','Lima','Lisbon','London','Los Angeles','Lucerne','Madrid','Manama','Marrakech','Melbourne','Mexico City','Miami','Milan','Montreal','Moscow','Mumbai','Munich','Muscat','Nairobi','New York','Nice','Oslo','Paris','Perth','Prague','Ras Al Khaimah','Rio de Janeiro','Riyadh','Rome','San Francisco','Santiago','São Paulo','Seoul','Sharjah','Singapore','Stockholm','Sydney','Taipei','Tokyo','Toronto','Vancouver','Vienna','Warsaw','Washington DC','Zürich'];
 const AC_COUNTRIES = ['Afghanistan','Albania','Algeria','Argentina','Armenia','Australia','Austria','Azerbaijan','Bahrain','Bangladesh','Belgium','Bolivia','Botswana','Brazil','Bulgaria','Cambodia','Cameroon','Canada','Chile','China','Colombia','Croatia','Cyprus','Czech Republic','Denmark','Ecuador','Egypt','Estonia','Ethiopia','Finland','France','Georgia','Germany','Ghana','Greece','Hungary','Iceland','India','Indonesia','Iran','Iraq','Ireland','Israel','Italy','Japan','Jordan','Kazakhstan','Kenya','Kuwait','Latvia','Lebanon','Lithuania','Luxembourg','Malaysia','Maldives','Malta','Mexico','Morocco','Myanmar','Namibia','Nepal','Netherlands','New Zealand','Nigeria','Norway','Oman','Pakistan','Panama','Peru','Philippines','Poland','Portugal','Qatar','Romania','Russia','Rwanda','Saudi Arabia','Serbia','Singapore','South Africa','South Korea','Spain','Sri Lanka','Sweden','Switzerland','Taiwan','Tanzania','Thailand','Turkey','Uganda','Ukraine','United Arab Emirates','United Kingdom','United States','Uruguay','Uzbekistan','Venezuela','Vietnam','Zambia','Zimbabwe'];
@@ -5981,6 +6055,12 @@ function rdSetDist(dist) {
 }
 
 function rdOnNameInput(val) {
+  // Clear the new-race hint and pulse when user starts typing
+  if (_rdIsNew && val.trim()) {
+    const hint = document.getElementById('rdNewHint');
+    if (hint) hint.style.display = 'none';
+    document.getElementById('rdName').classList.remove('rd-name-pulse');
+  }
   const q = val.toLowerCase().trim();
   const el = document.getElementById('rdSuggestions');
   if (q.length < 2) { el.style.display = 'none'; return; }
@@ -6137,6 +6217,11 @@ function openRaceDetail(id) {
   const r = races.find(r => r.id === id);
   if (!r) return;
   _rdId = id;
+  _rdIsNew = false;
+  // Hide new-race hint elements
+  const hint = document.getElementById('rdNewHint');
+  if (hint) hint.style.display = 'none';
+  document.getElementById('rdName').classList.remove('rd-name-pulse');
   initCityAC();
   // Populate country select once
   const rdCoSel = document.getElementById('rdCountry');
@@ -6216,7 +6301,69 @@ function openRaceDetail(id) {
     renderOWTrainingLoad(r.date);
   }
 }
+function _collectRdFields() {
+  // Collect all raceDetailModal form values into a plain object
+  const rh = parseInt(document.getElementById('rdTmH').value)||0;
+  const rm = parseInt(document.getElementById('rdTmM').value)||0;
+  const rs = parseInt(document.getElementById('rdTmS').value)||0;
+  const dist = document.getElementById('rdDistSel').value;
+  const obj = {
+    name:         document.getElementById('rdName').value.trim(),
+    type:         document.getElementById('rdType').value || 'run',
+    distance:     dist !== 'Custom…' ? dist : '',
+    distKm:       DIST_KM[dist] || 0,
+    date:         document.getElementById('rdDate').value || '',
+    city:         document.getElementById('rdCity').value.trim() || '',
+    country:      document.getElementById('rdCountry').value.trim() || '',
+    priority:     document.getElementById('rdPriority').value || null,
+    medal:        document.getElementById('rdMedal').value || 'finisher',
+    time:         (rh>0||rm>0||rs>0) ? `${rh}:${String(rm).padStart(2,'0')}:${String(rs).padStart(2,'0')}` : '',
+    placing:      document.getElementById('rdPlacing').value.trim(),
+    ageCategory:  document.getElementById('rdAgeCat').value.trim(),
+    ageCategoryPos:document.getElementById('rdAgeCatPos').value.trim(),
+    genderPos:    document.getElementById('rdGenderPos').value.trim(),
+    notes:        document.getElementById('rdNotes').value.trim(),
+    splits:       [...document.getElementById('rdSplits').querySelectorAll('tr')].map(tr => {
+      const ins = tr.querySelectorAll('input');
+      return { marker:ins[0].value.trim(), split:ins[1].value.trim(), cumulative:ins[2].value.trim() };
+    }).filter(s => s.marker || s.split || s.cumulative)
+  };
+  if (document.getElementById('rdType').value === 'tri') {
+    const keys = ['swim','t1','bike','t2','run'], rdIds = ['rdSwim','rdT1','rdBike','rdT2','rdRun'];
+    obj.triSegments = {};
+    keys.forEach((k,i) => {
+      const h=parseInt(document.getElementById(rdIds[i]+'H').value)||0;
+      const m=parseInt(document.getElementById(rdIds[i]+'M').value)||0;
+      const s=parseInt(document.getElementById(rdIds[i]+'S').value)||0;
+      obj.triSegments[k]=`${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    });
+  }
+  return obj;
+}
+
 function saveRaceDetail() {
+  // ── NEW RACE (via screenshot/AI import) ─────────────────────────────────
+  if (_rdIsNew) {
+    const fields = _collectRdFields();
+    if (!fields.name) {
+      const nameEl = document.getElementById('rdName');
+      nameEl.classList.add('rd-name-pulse');
+      nameEl.focus();
+      const hint = document.getElementById('rdNewHint');
+      if (hint) { hint.style.display = ''; hint.querySelector('span').textContent = 'Race name is required to save.'; }
+      return;
+    }
+    races.push({ id: Date.now(), ...fields });
+    sv('fl2_races', races);
+    _rdIsNew = false;
+    closeM('raceDetailModal');
+    if (curPage === 'history') renderHistory();
+    else if (curPage === 'medals') renderMedals();
+    else if (curPage === 'dashboard') renderDash();
+    else render(curPage);
+    return;
+  }
+  // ── EDIT EXISTING RACE ───────────────────────────────────────────────────
   const r = races.find(r => r.id === _rdId);
   if (!r) return;
   const newName = document.getElementById('rdName').value.trim();
@@ -6803,8 +6950,10 @@ async function parseAI(){
   try{
     const data = await callClaude([{role:"user", content:`${RACE_EXTRACT_PROMPT}\nText: ${txt}`}]);
     const clean = data.content[0].text.replace(/```json|```/g,'').trim();
-    pushRaceFromJSON(clean);
+    const obj = JSON.parse(clean);
     document.getElementById('aiTxt').value='';
+    closeM('raceModal');
+    setTimeout(() => openRaceDetailFromParsed(obj), 200);
   }catch(e){ alert('Parse failed. Try manual entry.\n'+e.message); }
   finally{ load.classList.remove('show'); }
 }
@@ -6844,10 +6993,12 @@ async function parsePhoto(){
       { type:"text", text: RACE_EXTRACT_PROMPT }
     ]}]);
     const clean = data.content[0].text.replace(/```json|```/g,'').trim();
-    pushRaceFromJSON(clean);
+    const obj = JSON.parse(clean);
     selectedPhotoBase64 = null;
     document.getElementById('photoPreview').style.display = 'none';
     document.getElementById('photoInput').value = '';
+    closeM('raceModal');
+    setTimeout(() => openRaceDetailFromParsed(obj), 200);
   }catch(e){ alert('Could not parse screenshot. Try manual entry.\n'+e.message); }
   finally{ load.classList.remove('show'); }
 }
