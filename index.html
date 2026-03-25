@@ -883,6 +883,17 @@ main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(1
 .pace-faster { color:var(--green); font-weight:700; }
 .pace-slower { color:#FF6B6B; font-weight:700; }
 .pace-section-label { font-family:var(--headline); font-size:10px; font-weight:800; letter-spacing:0.18em; text-transform:uppercase; color:var(--muted); margin:1rem 0 0.5rem; }
+/* Custom select for pace calculator — avoids native iOS full-screen picker */
+.pc-sel { position:relative; }
+.pc-sel-btn { width:100%; background:var(--surface3); border:1px solid var(--border2); border-radius:10px; padding:0.6rem 0.85rem; color:var(--white); font-family:var(--body); font-size:15px; text-align:left; cursor:pointer; display:flex; align-items:center; justify-content:space-between; gap:0.5rem; transition:border-color 0.15s; }
+.pc-sel-btn:hover, .pc-sel-btn[aria-expanded="true"] { border-color:rgba(245,245,245,0.3); }
+.pc-sel-btn svg { flex-shrink:0; transition:transform 0.2s; }
+.pc-sel-btn[aria-expanded="true"] svg { transform:rotate(180deg); }
+.pc-sel-list { position:absolute; top:calc(100% + 6px); left:0; min-width:100%; background:var(--surface3); border:1px solid var(--border2); border-radius:12px; overflow:hidden; z-index:300; box-shadow:0 8px 32px rgba(0,0,0,0.7); }
+.pc-sel-item { width:100%; background:none; border:none; border-bottom:1px solid var(--border); padding:0.75rem 1rem; color:var(--white); font-family:var(--body); font-size:15px; text-align:left; cursor:pointer; display:block; white-space:nowrap; }
+.pc-sel-item:last-child { border-bottom:none; }
+.pc-sel-item:hover { background:var(--surface2); }
+.pc-sel-item.pc-sel-active { color:var(--orange); }
 .pace-equiv-row { display:flex; justify-content:space-between; padding:0.45rem 0; border-bottom:1px solid var(--border); font-size:13px; }
 .pace-equiv-row:last-child { border-bottom:none; }
 .pace-equiv-val { font-family:var(--headline); font-weight:800; color:var(--white); }
@@ -2934,11 +2945,27 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
       <div class="pace-input-card">
         <div class="rd-label">Sport &amp; Distance</div>
         <div class="pace-sport-dist-grid" style="display:grid;grid-template-columns:auto 1fr;gap:.75rem;margin-bottom:1rem">
-          <select class="fi" id="pcType" onchange="pcOnTypeChange()">
-            <option value="run">🏃 Running</option>
-            <option value="tri">🏆 Triathlon</option>
-          </select>
-          <select class="fi" id="pcDist" onchange="pcOnDistChange()"></select>
+          <!-- Custom sport select -->
+          <div class="pc-sel" id="pcTypeSelWrap">
+            <button class="pc-sel-btn" type="button" id="pcTypeBtn" aria-expanded="false" aria-haspopup="listbox" onclick="pcToggleSel('pcType')">
+              <span id="pcTypeDisplay">🏃 Running</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="pc-sel-list" id="pcTypeList" style="display:none" role="listbox">
+              <button class="pc-sel-item pc-sel-active" type="button" onclick="pcPickType('run','🏃 Running')">🏃 Running</button>
+              <button class="pc-sel-item" type="button" onclick="pcPickType('tri','🏆 Triathlon')">🏆 Triathlon</button>
+            </div>
+            <select id="pcType" style="display:none"><option value="run">Running</option><option value="tri">Triathlon</option></select>
+          </div>
+          <!-- Custom distance select -->
+          <div class="pc-sel" id="pcDistSelWrap">
+            <button class="pc-sel-btn" type="button" id="pcDistBtn" aria-expanded="false" aria-haspopup="listbox" onclick="pcToggleSel('pcDist')">
+              <span id="pcDistDisplay">5KM</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </button>
+            <div class="pc-sel-list" id="pcDistList" style="display:none" role="listbox"></div>
+            <select id="pcDist" style="display:none"></select>
+          </div>
         </div>
         <div id="pcStandardInput">
           <div class="rd-label">Target Finish Time</div>
@@ -4274,8 +4301,52 @@ function renderCourseStrip(info) {
 }
 
 /* ============================
-   PACE CALCULATOR
+   PACE CALCULATOR — custom selects
    ============================ */
+function pcToggleSel(which) {
+  const btn  = document.getElementById(which + 'Btn');
+  const list = document.getElementById(which + 'List');
+  const isOpen = list.style.display !== 'none';
+  // close all pc dropdowns
+  ['pcType','pcDist'].forEach(id => {
+    document.getElementById(id+'List').style.display = 'none';
+    const b = document.getElementById(id+'Btn');
+    if (b) b.setAttribute('aria-expanded','false');
+  });
+  if (!isOpen) {
+    list.style.display = '';
+    btn.setAttribute('aria-expanded','true');
+    // close on outside click
+    setTimeout(() => {
+      const handler = e => {
+        if (!list.contains(e.target) && e.target !== btn) {
+          list.style.display = 'none';
+          btn.setAttribute('aria-expanded','false');
+          document.removeEventListener('click', handler);
+        }
+      };
+      document.addEventListener('click', handler);
+    }, 0);
+  }
+}
+function pcPickType(val, label) {
+  document.getElementById('pcType').value = val;
+  document.getElementById('pcTypeDisplay').textContent = label;
+  document.getElementById('pcTypeList').querySelectorAll('.pc-sel-item').forEach(b => b.classList.remove('pc-sel-active'));
+  event.currentTarget.classList.add('pc-sel-active');
+  document.getElementById('pcTypeList').style.display = 'none';
+  document.getElementById('pcTypeBtn').setAttribute('aria-expanded','false');
+  pcOnTypeChange();
+}
+function pcPickDist(val, label) {
+  document.getElementById('pcDist').value = val;
+  document.getElementById('pcDistDisplay').textContent = label;
+  document.getElementById('pcDistList').querySelectorAll('.pc-sel-item').forEach(b => b.classList.remove('pc-sel-active'));
+  event.currentTarget.classList.add('pc-sel-active');
+  document.getElementById('pcDistList').style.display = 'none';
+  document.getElementById('pcDistBtn').setAttribute('aria-expanded','false');
+  pcOnDistChange();
+}
 function renderPace() {
   pcOnTypeChange();
   document.getElementById('paceResults').style.display = 'none';
@@ -4284,8 +4355,16 @@ function pcOnTypeChange() {
   const type = document.getElementById('pcType').value;
   const sel  = document.getElementById('pcDist');
   const prev = sel.value;
-  sel.innerHTML = (SPORT_DISTANCES[type]||[]).filter(d=>d!=='Custom…').map(d=>`<option value="${d}">${d}</option>`).join('');
+  const dists = (SPORT_DISTANCES[type]||[]).filter(d=>d!=='Custom…');
+  sel.innerHTML = dists.map(d=>`<option value="${d}">${d}</option>`).join('');
   if ([...sel.options].some(o=>o.value===prev)) sel.value = prev;
+  // rebuild custom dist dropdown
+  const list = document.getElementById('pcDistList');
+  if (list) {
+    list.innerHTML = dists.map(d=>`<button class="pc-sel-item${sel.value===d?' pc-sel-active':''}" type="button" onclick="pcPickDist('${d.replace(/'/g,"\\'")}','${d.replace(/'/g,"\\'")}')">${d}</button>`).join('');
+    const chosen = sel.value || dists[0];
+    document.getElementById('pcDistDisplay').textContent = chosen;
+  }
   const isTri = type === 'tri';
   document.getElementById('pcStandardInput').style.display = isTri ? 'none' : '';
   document.getElementById('pcTriInput').style.display      = isTri ? '' : 'none';
