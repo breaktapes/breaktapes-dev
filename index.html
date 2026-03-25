@@ -2518,6 +2518,26 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 .training-empty-h { font-family: var(--headline); font-size: 18px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: var(--white); margin-bottom: 0.3rem; }
 .training-empty-sub { font-size: 13px; }
 
+/* Training feed: month groups + race badge */
+.ta-month-group { margin-bottom: 1.5rem; }
+.ta-month-label {
+  font-family: var(--headline); font-size: 11px; font-weight: 800;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);
+  padding: 0.3rem 0 0.5rem; border-bottom: 1px solid var(--border); margin-bottom: 0.4rem;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.ta-month-count {
+  background: var(--surface3); border: 1px solid var(--border2);
+  border-radius: 10px; padding: 1px 7px; font-size: 10px; color: var(--muted2);
+}
+.ta-race-badge {
+  display: inline-block; margin-left: 6px; padding: 1px 6px;
+  font-family: var(--headline); font-size: 9px; font-weight: 800;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  background: var(--orange-dim); color: var(--orange);
+  border: 1px solid rgba(255,77,0,0.35); border-radius: 3px; vertical-align: middle;
+}
+
 /* =============================================
    LOCATION AUTOCOMPLETE
    ============================================= */
@@ -2805,9 +2825,6 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
     <button class="menu-item" onclick="go('train');switchTrainTab('activities',document.getElementById('ttActivities'))">
       <span class="menu-icon">🏋️</span>Activity Log
     </button>
-    <button class="menu-item" onclick="go('train');switchTrainTab('wearables',document.getElementById('ttWearables'))">
-      <span class="menu-icon">📡</span>Open Wearables
-    </button>
     <div class="menu-divider"></div>
     <div class="menu-section-label">You</div>
     <button class="menu-item" id="mi-athlete" onclick="go('athlete')">
@@ -2858,10 +2875,6 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
       <div class="s-tile"><div class="s-tile-num" id="ds-k">0</div><div class="s-tile-label">Total KM</div></div>
       <div class="s-tile" onclick="go('medals')" style="cursor:pointer"><div class="s-tile-num" id="ds-m">0</div><div class="s-tile-label">Medals</div></div>
     </div>
-    <!-- Open Wearables Recovery -->
-    <div id="owWidget"></div>
-    <!-- OW Fatigue vs Performance (shown when OW connected + enough data) -->
-    <div id="owFatigueSection"></div>
     <!-- Goals -->
     <div id="goalsSection"></div>
     <!-- Year in Review + H2H -->
@@ -3000,11 +3013,6 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
       <div class="ath-section-h">Race Activity</div>
       <div id="athCalHeatmap"></div>
     </div>
-    <!-- OW VO2 Max Trend -->
-    <div class="ath-section" id="athVO2Section" style="display:none">
-      <div class="ath-section-h">VO2 Max Trend</div>
-      <div id="athVO2Chart"></div>
-    </div>
     <!-- Countries -->
     <div class="ath-section">
       <div class="ath-section-h">Countries Raced</div>
@@ -3059,7 +3067,6 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
     <div class="training-tabs" id="trainTabBar" style="margin-bottom:1.5rem">
       <button class="training-tab train-tab-pill active" id="ttPace" onclick="switchTrainTab('pace',this)">Pace</button>
       <button class="training-tab train-tab-pill" id="ttActivities" onclick="switchTrainTab('activities',this)">Activities</button>
-      <button class="training-tab train-tab-pill" id="ttWearables" onclick="switchTrainTab('wearables',this)">Wearables</button>
     </div>
     <!-- Pace sub-tab -->
     <div id="trainPaceSection">
@@ -3203,17 +3210,6 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
         </div>
       </div>
       <div id="trainingFeed"></div>
-      <div id="owTrainingSection" style="margin-top:1.75rem">
-        <div class="training-bar ow-training-header">
-          <div class="section-h">Open Wearables</div>
-        </div>
-        <div id="owTrainingFeed"></div>
-      </div>
-    </div>
-    <!-- Wearables sub-tab -->
-    <div id="trainWearablesSection" style="display:none">
-      <div id="owPageWidget"></div>
-      <div id="owPageFatigueSection" style="margin-top:1.5rem"></div>
     </div>
   </div>
 </div>
@@ -3761,12 +3757,6 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
         <div class="rd-label">Race Notes</div>
         <textarea class="ai-ta" id="rdNotes" placeholder="How did it go? Conditions, strategy, reflections…" style="min-height:80px"></textarea>
       </div>
-      <!-- OW Health Context: sleep + training load (async, hidden until loaded) -->
-      <div id="rdOwHealth" style="display:none">
-        <div class="rd-label" style="margin-bottom:0.5rem">Health Context</div>
-        <div id="rdOwSleep" style="margin-bottom:0.5rem"></div>
-        <div id="rdOwTrainingLoad"></div>
-      </div>
     </div>
     <div class="modal-foot">
       <button class="btn-ghost" onclick="_rdIsNew=false;closeM('raceDetailModal')">Cancel</button>
@@ -3805,20 +3795,6 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
             </button>
           </div>
           <div class="ai-hint" style="margin-top:6px">Required for AI race import and screenshot parsing. Get your key at console.anthropic.com</div>
-        </div>
-      </div>
-      <div id="owSettingsSection" style="margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid var(--border);display:none">
-        <div class="modal-sub" style="margin-bottom:0.85rem;font-size:13px;font-weight:700;color:var(--fg)">Open Wearables</div>
-        <div class="fgrid" style="grid-template-columns:1fr">
-          <div class="fg">
-            <label class="fl">Your OW User ID</label>
-            <input class="fi" id="owUserId" type="text" placeholder="e.g. usr_abc123" autocomplete="off">
-            <div class="ai-hint" style="margin-top:6px">Find this in the Breaktapes health portal after connecting your device. Syncs Garmin, Whoop, Apple Health & more.</div>
-          </div>
-          <div class="fg" style="margin-top:0.65rem">
-            <button class="btn-ghost" type="button" onclick="testOWConnection()" style="width:100%">Test Connection</button>
-            <div id="owTestResult" style="font-size:12px;margin-top:6px;color:var(--muted)"></div>
-          </div>
         </div>
       </div>
     </div>
@@ -4337,14 +4313,12 @@ function switchTrainTab(tab, btnEl) {
   if (btnEl) btnEl.classList.add('active');
   document.getElementById('trainPaceSection').style.display      = tab === 'pace'       ? '' : 'none';
   document.getElementById('trainActivitiesSection').style.display = tab === 'activities' ? '' : 'none';
-  document.getElementById('trainWearablesSection').style.display  = tab === 'wearables'  ? '' : 'none';
   if (tab === 'pace')       { pcOnTypeChange(); document.getElementById('paceResults').style.display = 'none'; }
   if (tab === 'activities') renderTraining();
-  if (tab === 'wearables')  renderOWPage();
 }
 function renderTrain() {
   const activeBtn = document.getElementById(
-    trainTab === 'pace' ? 'ttPace' : trainTab === 'activities' ? 'ttActivities' : 'ttWearables'
+    trainTab === 'pace' ? 'ttPace' : 'ttActivities'
   );
   switchTrainTab(trainTab, activeBtn);
 }
@@ -4700,7 +4674,6 @@ function renderCountdown(){
   clearInterval(cdTimer);
   cdTimer = setInterval(tickCD, 1000);
   fetchCourseInfo(nextRace);
-  renderOWReadiness();
 }
 function tickCD(){
   if(!nextRace) return;
@@ -4806,7 +4779,6 @@ async function renderGreeting() {
 function renderDash(){
   renderGreeting();
   renderCountdown();
-  renderOWWidget();
   document.getElementById('ds-r').textContent = races.length;
   document.getElementById('ds-c').textContent = new Set(races.map(r=>r.country)).size;
   document.getElementById('ds-k').textContent = Math.round(races.reduce((s,r)=>s+(r.distKm||0),0));
@@ -4824,7 +4796,6 @@ function renderDash(){
 </div>`;
     renderGoals();
     renderDashInsights();
-    renderOWFatigueChart();
     document.getElementById('dashPBs').innerHTML = renderPBSections(calcPBs(), 'dash-pb-card');
     return;
   }
@@ -4849,7 +4820,6 @@ function renderDash(){
 
   renderGoals();
   renderDashInsights();
-  renderOWFatigueChart();
   // Personal Bests on dashboard
   document.getElementById('dashPBs').innerHTML = renderPBSections(calcPBs(), 'dash-pb-card');
 }
@@ -6044,8 +6014,6 @@ function openRaceDetailFromParsed(obj) {
   document.getElementById('rdTriSegsSection').style.display = 'none';
   document.getElementById('rdPodiumBanner').style.display = 'none';
   document.getElementById('rdPodiumBanner').innerHTML = '';
-  const rdOwHealth = document.getElementById('rdOwHealth');
-  if (rdOwHealth) rdOwHealth.style.display = 'none';
   // Hint banner — show if no name extracted
   const hint = document.getElementById('rdNewHint');
   const nameField = document.getElementById('rdName');
@@ -6446,18 +6414,7 @@ function openRaceDetail(id) {
   }
   const tbody = document.getElementById('rdSplits');
   tbody.innerHTML = (r.splits || []).map(_splitRowHtml).join('');
-  // Reset OW health context panel
-  const rdOwHealth = document.getElementById('rdOwHealth');
-  if (rdOwHealth) rdOwHealth.style.display = 'none';
-  const rdOwSleep = document.getElementById('rdOwSleep');
-  if (rdOwSleep) rdOwSleep.innerHTML = '';
-  const rdOwTL = document.getElementById('rdOwTrainingLoad');
-  if (rdOwTL) rdOwTL.innerHTML = '';
   openM('raceDetailModal');
-  if (r.date && getOWConfig()) {
-    renderOWSleepBeforeRace(r.date);
-    renderOWTrainingLoad(r.date);
-  }
 }
 function _collectRdFields() {
   // Collect all raceDetailModal form values into a plain object
@@ -6647,8 +6604,6 @@ function renderAthlete(){
   document.getElementById('cChips').innerHTML=countries.length?countries.map(c=>`<span class="country-chip">${c}</span>`).join(''):`<span style="color:var(--muted);font-size:12px">No races yet.</span>`;
   // Race activity heatmap
   renderCalHeatmap('athCalHeatmap', true);
-  // OW VO2 Max trend
-  renderOWVO2Chart();
   // Avatar
   const savi=localStorage.getItem('fl2_avi');
   if(savi){
@@ -7601,14 +7556,7 @@ function openSettings(){
 }
 function saveSettings(){
   localStorage.setItem('fl2_apikey', document.getElementById('setApiKey').value.trim());
-  const owUid = document.getElementById('owUserId').value.trim();
-  if (owUid) {
-    localStorage.setItem('fl2_ow', JSON.stringify({ uid: owUid }));
-  } else {
-    localStorage.removeItem('fl2_ow');
-  }
   closeM('settingsModal');
-  if (owUid) renderOWWidget();
 }
 
 /* ============================
@@ -8239,6 +8187,19 @@ function renderTraining(){
     document.getElementById('ts-acts').textContent = acts.length.toLocaleString();
     document.getElementById('ts-hrs').textContent  = Math.round(totalSec/3600).toLocaleString();
     document.getElementById('ts-elev').textContent = Math.round(totalElev).toLocaleString();
+    // Update filter tab counts
+    const tabCounts = {
+      'All': filterActs('All').length,
+      'Run': filterActs('Run').length,
+      'Ride': filterActs('Ride').length,
+      'Swim': filterActs('Swim').length
+    };
+    document.querySelectorAll('#trainActivitiesSection .training-tab[onclick]').forEach(btn => {
+      const m = btn.getAttribute('onclick').match(/'(\w+)'/);
+      if (m && tabCounts[m[1]] !== undefined) {
+        btn.textContent = `${m[1]} ${tabCounts[m[1]]}`;
+      }
+    });
   } else {
     btn.textContent = 'Connect';
     btn.className = 'strava-connect-btn';
@@ -8248,7 +8209,6 @@ function renderTraining(){
     syncBtn.style.display = 'none';
   }
   renderTrainingFeed();
-  renderOWTrainingFeed();
 }
 
 const ACTIVITY_ICONS = { Run:'🏃', VirtualRun:'🏃', Ride:'🚴', VirtualRide:'🚴', Swim:'🏊', Walk:'🚶', Hike:'🥾', WeightTraining:'🏋️', Yoga:'🧘', Workout:'💪' };
@@ -8276,26 +8236,51 @@ function renderTrainingFeed(){
     feed.innerHTML = `<div class="training-empty"><div class="training-empty-icon">📭</div><div class="training-empty-h">No activities</div><div class="training-empty-sub">No ${trainingFilter.toLowerCase()} activities found</div></div>`;
     return;
   }
-  feed.innerHTML = acts.slice(0,100).map(a=>{
-    const icon = ACTIVITY_ICONS[a.type]||'⚡';
-    const km   = a.distance ? (a.distance/1000).toFixed(1)+' km' : '—';
-    const pace = (a.type==='Run'||a.type==='VirtualRun') && a.distance && a.moving_time
-      ? fmtPace(a.moving_time / (a.distance/1000)) : null;
-    const spd  = (a.type==='Ride'||a.type==='VirtualRide') && a.distance && a.moving_time
-      ? ((a.distance/1000)/(a.moving_time/3600)).toFixed(1)+' km/h' : null;
-    const dur  = a.moving_time ? fmtDuration(a.moving_time) : '—';
-    const date = a.start_date_local ? fmtDate(a.start_date_local.slice(0,10)) : '';
-    const typeClass = 't-'+a.type.replace(/Virtual/,'');
-    return `<div class="training-activity ${typeClass}">
-      <div class="ta-icon">${icon}</div>
-      <div class="ta-main">
-        <div class="ta-name">${a.name||'Activity'}</div>
-        <div class="ta-date">${date} · ${a.type}</div>
-      </div>
-      <div class="ta-meta">
-        <div class="ta-stat"><div class="ta-val">${km}</div><div class="ta-lbl">Distance</div></div>
-        <div class="ta-stat"><div class="ta-val">${pace||spd||dur}</div><div class="ta-lbl">${pace?'Pace':spd?'Speed':'Time'}</div></div>
-      </div>
+
+  // Group by month
+  const groups = {};
+  const monthOrder = [];
+  acts.forEach(a => {
+    const d = a.start_date_local ? a.start_date_local.slice(0,7) : 'Unknown';
+    if (!groups[d]) { groups[d] = []; monthOrder.push(d); }
+    groups[d].push(a);
+  });
+
+  feed.innerHTML = monthOrder.map(monthKey => {
+    const label = monthKey === 'Unknown' ? 'Unknown Date' :
+      new Date(monthKey + '-15').toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+    const cards = groups[monthKey].map(a => {
+      const icon = ACTIVITY_ICONS[a.type]||'⚡';
+      const isRun  = a.type==='Run'||a.type==='VirtualRun';
+      const isRide = a.type==='Ride'||a.type==='VirtualRide';
+      const km   = a.distance ? (a.distance/1000).toFixed(1)+' km' : '—';
+      const pace = isRun && a.distance && a.moving_time
+        ? fmtPace(a.moving_time / (a.distance/1000)) : null;
+      const spd  = isRide && a.distance && a.moving_time
+        ? ((a.distance/1000)/(a.moving_time/3600)).toFixed(1)+' km/h' : null;
+      const dur  = a.moving_time ? fmtDuration(a.moving_time) : '—';
+      const date = a.start_date_local ? fmtDate(a.start_date_local.slice(0,10)) : '';
+      const typeClass = 't-'+a.type.replace(/Virtual/,'');
+      const elev = a.total_elevation_gain > 0 ? `<div class="ta-stat"><div class="ta-val">${Math.round(a.total_elevation_gain)}m</div><div class="ta-lbl">Elev</div></div>` : '';
+      const hr   = a.average_heartrate ? `<div class="ta-stat"><div class="ta-val">${Math.round(a.average_heartrate)}<span style="font-size:10px;font-weight:600">bpm</span></div><div class="ta-lbl">Avg HR</div></div>` : '';
+      const raceBadge = (a.workout_type===1||a.workout_type===11) ? `<span class="ta-race-badge">RACE</span>` : '';
+      return `<div class="training-activity ${typeClass}">
+        <div class="ta-icon">${icon}</div>
+        <div class="ta-main">
+          <div class="ta-name">${a.name||'Activity'}${raceBadge}</div>
+          <div class="ta-date">${date} · ${a.type}</div>
+        </div>
+        <div class="ta-meta">
+          <div class="ta-stat"><div class="ta-val">${km}</div><div class="ta-lbl">Distance</div></div>
+          <div class="ta-stat"><div class="ta-val">${pace||spd||dur}</div><div class="ta-lbl">${pace?'Pace':spd?'Speed':'Time'}</div></div>
+          <div class="ta-stat"><div class="ta-val">${dur}</div><div class="ta-lbl">Duration</div></div>
+          ${elev}${hr}
+        </div>
+      </div>`;
+    }).join('');
+    return `<div class="ta-month-group">
+      <div class="ta-month-label">${label} <span class="ta-month-count">${groups[monthKey].length}</span></div>
+      ${cards}
     </div>`;
   }).join('');
 }
@@ -8617,10 +8602,6 @@ function initAllLocationPickers() {
    INIT — check Strava callback
    ============================ */
 function applyEnvRestrictions() {
-  // Open Wearables settings section is staging-only
-  const owSection = document.getElementById('owSettingsSection');
-  if (owSection) owSection.style.display = _IS_STAGING ? '' : 'none';
-
   if (!_IS_STAGING) return;
   // Add "Beta — invite only" badge below the auth modal subtitle
   const authSub = document.getElementById('authModalSub');
