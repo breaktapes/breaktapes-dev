@@ -1552,7 +1552,7 @@ main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(1
   background:var(--surface); border:1px solid var(--border);
   border-radius:5px; padding:1rem;
   transition:all 0.15s;
-  flex: 0 0 155px;
+  flex: 0 0 160px;
   scroll-snap-align: start;
 }
 .ath-pb-card:hover { border-color:rgba(0,255,136,0.2); }
@@ -2374,7 +2374,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   border-radius: 5px;
   padding: 0.85rem 0.9rem;
   transition: all 0.15s;
-  flex: 0 0 140px;
+  flex: 0 0 160px;
   scroll-snap-align: start;
 }
 .dash-pb-card:hover { border-color: var(--green); transform: translateY(-2px); }
@@ -2879,7 +2879,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
     <div class="section-row" style="margin-top:1.5rem">
       <div class="section-h">Personal Bests</div>
     </div>
-    <div class="dash-pb-strip" id="dashPBs"></div>
+    <div id="dashPBs"></div>
     <!-- Your World (map teaser) -->
     <div class="section-row" style="margin-top:1.75rem">
       <div class="section-h">Your World</div>
@@ -2993,7 +2993,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
     <!-- Athlete PBs -->
     <div class="ath-section">
       <div class="ath-section-h">Personal Bests</div>
-      <div class="ath-pb-grid" id="athPBs"></div>
+      <div id="athPBs"></div>
     </div>
     <!-- Race Activity Heatmap -->
     <div class="ath-section">
@@ -3807,7 +3807,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
           <div class="ai-hint" style="margin-top:6px">Required for AI race import and screenshot parsing. Get your key at console.anthropic.com</div>
         </div>
       </div>
-      <div style="margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid var(--border)">
+      <div id="owSettingsSection" style="margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid var(--border);display:none">
         <div class="modal-sub" style="margin-bottom:0.85rem;font-size:13px;font-weight:700;color:var(--fg)">Open Wearables</div>
         <div class="fgrid" style="grid-template-columns:1fr">
           <div class="fg">
@@ -4053,19 +4053,19 @@ async function loadRemoteState() {
       .maybeSingle();
     if (error) throw error;
     if (!data) {
-      // New user — seed an empty row so subsequent syncs work
+      // New user — reset local state to blank slate, then seed remote row
+      races = [];
+      athlete = { name: authUser.user_metadata?.full_name || '' };
+      nextRace = null; upcomingRaces = [];
+      localStorage.setItem('fl2_races', JSON.stringify(races));
+      localStorage.setItem('fl2_ath', JSON.stringify(athlete));
       const emptyPayload = {
         user_id: authUser.id,
         races: [],
-        athlete: athlete || { name: authUser.user_metadata?.full_name || '' },
+        athlete,
         next_race: null,
         upcoming_races: []
       };
-      // Apply name from auth metadata if athlete has no name yet
-      if (!athlete?.name && authUser.user_metadata?.full_name) {
-        athlete = { name: authUser.user_metadata.full_name };
-        localStorage.setItem('fl2_ath', JSON.stringify(athlete));
-      }
       const { error: upsertError } = await client.from('user_state').upsert(emptyPayload, { onConflict: 'user_id' });
       if (upsertError) throw upsertError;
       return true;
@@ -4196,6 +4196,15 @@ async function refreshAuthState(session) {
   authSession = session || null;
   authUser = session?.user || null;
   remoteSyncReady = !!authUser;
+  // Clear stale local state when a different user signs in
+  if (authUser) {
+    const storedUid = localStorage.getItem('bt_auth_uid');
+    if (storedUid && storedUid !== authUser.id) {
+      REMOTE_SYNC_KEYS.forEach(k => localStorage.removeItem(k));
+      races = []; athlete = { name: '' }; nextRace = null; upcomingRaces = [];
+    }
+    localStorage.setItem('bt_auth_uid', authUser.id);
+  }
   updateAuthUI();
   if (authUser) {
     await loadRemoteState();
@@ -4282,6 +4291,7 @@ async function signOutUser() {
   }
   localStorage.removeItem('bt_new_user');
   localStorage.removeItem('bt_modal_shown');
+  localStorage.removeItem('bt_auth_uid');
   window.location.reload();
 }
 
@@ -8611,6 +8621,10 @@ function initAllLocationPickers() {
    INIT — check Strava callback
    ============================ */
 function applyEnvRestrictions() {
+  // Open Wearables settings section is staging-only
+  const owSection = document.getElementById('owSettingsSection');
+  if (owSection) owSection.style.display = _IS_STAGING ? '' : 'none';
+
   if (!_IS_STAGING) return;
   // Add "Beta — invite only" badge below the auth modal subtitle
   const authSub = document.getElementById('authModalSub');
