@@ -11,3 +11,7 @@ supabase/.temp/
 # Co-located repos (not part of this project)
 open-wearables/
 gstack/
+.gstack/
+
+# Worker deps (installed locally, not committed)
+health-proxy/node_modules/

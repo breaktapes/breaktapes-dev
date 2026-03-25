@@ -3811,25 +3811,9 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
         <div class="modal-sub" style="margin-bottom:0.85rem;font-size:13px;font-weight:700;color:var(--fg)">Open Wearables</div>
         <div class="fgrid" style="grid-template-columns:1fr">
           <div class="fg">
-            <label class="fl">Instance URL</label>
-            <input class="fi" id="owUrl" type="text" placeholder="https://your-instance.example.com" autocomplete="off">
-          </div>
-          <div class="fg" style="margin-top:0.65rem">
-            <label class="fl">API Key</label>
-            <div class="fi-wrap">
-              <input class="fi" id="owKey" type="password" placeholder="ow_..." autocomplete="new-password" disabled>
-              <button class="fi-reveal" onclick="toggleReveal(this)" aria-label="Show/hide key">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                  <circle cx="12" cy="12" r="3"/>
-                </svg>
-              </button>
-            </div>
-          </div>
-          <div class="fg" style="margin-top:0.65rem">
-            <label class="fl">User ID</label>
-            <input class="fi" id="owUserId" type="text" placeholder="your-user-id" autocomplete="off">
-            <div class="ai-hint" style="margin-top:6px">Connects Garmin, Whoop, Oura, Apple Health & more. <a href="https://openwearables.io" target="_blank" style="color:var(--orange)">openwearables.io ↗</a></div>
+            <label class="fl">Your OW User ID</label>
+            <input class="fi" id="owUserId" type="text" placeholder="e.g. usr_abc123" autocomplete="off">
+            <div class="ai-hint" style="margin-top:6px">Find this in the Breaktapes health portal after connecting your device. Syncs Garmin, Whoop, Apple Health & more.</div>
           </div>
           <div class="fg" style="margin-top:0.65rem">
             <button class="btn-ghost" type="button" onclick="testOWConnection()" style="width:100%">Test Connection</button>
@@ -3933,6 +3917,9 @@ const SUPABASE_ANON_KEY = _IS_PROD
   ? 'sb_publishable_aXlZ54g7bW8dckyl3N-kCA_Jzy_Nt0B'
   : 'sb_publishable_XiI5lGzh_3rWoA2TxrKnWg_gPtPKSRp';
 const REMOTE_SYNC_KEYS = new Set(['fl2_races', 'fl2_ath', 'fl2_nr', 'fl2_upcoming']);
+// Open Wearables proxy — Cloudflare Worker that adds the OW API key server-side
+// Set to '' until the Railway OW instance + worker secrets are configured
+const OW_PROXY_URL = 'https://health.breaktapes.com';
 // Instantly hide landing screen if a cached Supabase session exists — avoids flash on reload
 (function() {
   try {
@@ -6818,9 +6805,7 @@ function closeM(id){
   }
   if (id === 'settingsModal') {
     const apiKeyEl = document.getElementById('setApiKey');
-    const owKeyEl  = document.getElementById('owKey');
     if (apiKeyEl) { apiKeyEl.value = ''; apiKeyEl.disabled = true; }
-    if (owKeyEl)  { owKeyEl.value  = ''; owKeyEl.disabled  = true; }
   }
 }
 function toggleReveal(btn) {
@@ -7604,15 +7589,11 @@ function fmtDate(d){
 function openSettings(){
   closeMenu();
   const apiKeyEl = document.getElementById('setApiKey');
-  const owKeyEl  = document.getElementById('owKey');
-  // Re-enable password fields only when modal opens (prevents autofill scan)
+  // Re-enable password field only when modal opens (prevents autofill scan)
   apiKeyEl.disabled = false;
-  owKeyEl.disabled  = false;
   apiKeyEl.value = getApiKey();
   const owCfg = getOWConfig();
   if (owCfg) {
-    document.getElementById('owUrl').value    = owCfg.url || '';
-    owKeyEl.value                             = owCfg.key || '';
     document.getElementById('owUserId').value = owCfg.uid || '';
   }
   updateAuthUI();
@@ -7620,16 +7601,14 @@ function openSettings(){
 }
 function saveSettings(){
   localStorage.setItem('fl2_apikey', document.getElementById('setApiKey').value.trim());
-  const owUrl = document.getElementById('owUrl').value.trim().replace(/\/$/, '');
-  const owKey = document.getElementById('owKey').value.trim();
   const owUid = document.getElementById('owUserId').value.trim();
-  if (owUrl && owKey && owUid) {
-    localStorage.setItem('fl2_ow', JSON.stringify({ url: owUrl, key: owKey, uid: owUid }));
-  } else if (!owUrl && !owKey && !owUid) {
+  if (owUid) {
+    localStorage.setItem('fl2_ow', JSON.stringify({ uid: owUid }));
+  } else {
     localStorage.removeItem('fl2_ow');
   }
   closeM('settingsModal');
-  if (owUrl && owKey && owUid) renderOWWidget();
+  if (owUid) renderOWWidget();
 }
 
 /* ============================
@@ -7637,18 +7616,24 @@ function saveSettings(){
    ============================ */
 
 function getOWConfig() {
-  try { return JSON.parse(localStorage.getItem('fl2_ow') || 'null'); }
-  catch { return null; }
+  try {
+    const stored = JSON.parse(localStorage.getItem('fl2_ow') || 'null');
+    if (!stored) return null;
+    // Support legacy {url, key, uid} format and new {uid}-only format
+    const uid = stored.uid || stored;
+    return uid ? { uid } : null;
+  } catch { return null; }
 }
 
 async function owFetch(path, params = {}) {
+  if (!OW_PROXY_URL) return null;             // proxy not yet deployed
   const cfg = getOWConfig();
   if (!cfg) return null;
-  const url = new URL(`${cfg.url}${path}`);
+  const url = new URL(`${OW_PROXY_URL}${path}`);
   Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
   try {
     const res = await fetch(url.toString(), {
-      headers: { 'X-Open-Wearables-API-Key': cfg.key, 'Accept': 'application/json' }
+      headers: { 'X-OW-User-ID': cfg.uid, 'Accept': 'application/json' }
     });
     if (!res.ok) { console.warn(`OW ${path} → ${res.status}`); return null; }
     return await res.json();
@@ -7656,29 +7641,29 @@ async function owFetch(path, params = {}) {
 }
 
 async function testOWConnection() {
-  const url = document.getElementById('owUrl').value.trim().replace(/\/$/, '');
-  const key = document.getElementById('owKey').value.trim();
   const uid = document.getElementById('owUserId').value.trim();
   const el  = document.getElementById('owTestResult');
-  if (!url || !key || !uid) { el.textContent = 'Fill in all three fields first.'; el.style.color = 'var(--muted)'; return; }
+  if (!uid) { el.textContent = 'Enter your OW User ID first.'; el.style.color = 'var(--muted)'; return; }
+  if (!OW_PROXY_URL) { el.textContent = '⚠ Proxy not yet deployed — coming soon.'; el.style.color = 'var(--muted)'; return; }
   el.textContent = 'Testing…'; el.style.color = 'var(--muted)';
-  const end = new Date().toISOString().slice(0, 10);
+  const end   = new Date().toISOString().slice(0, 10);
   const start = new Date(Date.now() - 30*24*60*60*1000).toISOString().slice(0, 10);
   try {
-    const res = await fetch(`${url}/api/v1/users/${uid}/summaries/activity?start_date=${start}&end_date=${end}&limit=1`, {
-      headers: { 'X-Open-Wearables-API-Key': key, 'Accept': 'application/json' }
-    });
+    const res = await fetch(
+      `${OW_PROXY_URL}/api/v1/users/${uid}/summaries/activity?start_date=${start}&end_date=${end}&limit=1`,
+      { headers: { 'X-OW-User-ID': uid, 'Accept': 'application/json' } }
+    );
     if (res.ok) {
       const d = await res.json();
       const count = d?.data?.length ?? '?';
       el.textContent = `✓ Connected — ${count} activity record(s) found`;
       el.style.color = '#4ade80';
     } else {
-      el.textContent = `✗ Error ${res.status} — check URL, key, and user ID`;
+      el.textContent = `✗ Error ${res.status} — check your User ID`;
       el.style.color = '#f87171';
     }
   } catch(e) {
-    el.textContent = `✗ Could not reach instance: ${e.message}`;
+    el.textContent = `✗ Could not reach proxy: ${e.message}`;
     el.style.color = '#f87171';
   }
 }
