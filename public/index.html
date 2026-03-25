@@ -2754,6 +2754,173 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   color: var(--white); line-height: 1.2;
 }
 .landing-proof-desc { font-size: 10px; color: var(--muted); line-height: 1.4; text-align: center; }
+
+/* ---- Dashboard Customize ---- */
+.dash-customize-btn {
+  background: none;
+  border: none;
+  padding: 0.3rem 0.5rem;
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1;
+  border-radius: 6px;
+  transition: color 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+.dash-customize-btn:hover { color: var(--white); background: var(--surface3); }
+.dcw-list { list-style: none; margin: 0; padding: 0; }
+.dcw-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.9rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  transition: opacity 0.2s;
+}
+.dcw-row.disabled { opacity: 0.4; }
+.dcw-icon { font-size: 1.1rem; width: 1.5rem; text-align: center; flex-shrink: 0; }
+.dcw-label { flex: 1; font-family: var(--body); font-size: 14px; font-weight: 500; color: var(--white); }
+.dcw-arrows { display: flex; flex-direction: column; gap: 3px; }
+.dcw-arrow {
+  background: none;
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  color: var(--muted);
+  width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 9px; line-height: 1;
+  transition: color 0.15s, border-color 0.15s;
+}
+.dcw-arrow:hover:not(:disabled) { color: var(--white); border-color: rgba(245,245,245,0.3); }
+.dcw-arrow:disabled { opacity: 0.2; cursor: default; }
+.dcw-toggle { position: relative; width: 42px; height: 24px; flex-shrink: 0; cursor: pointer; }
+.dcw-toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+.dcw-slider {
+  position: absolute; inset: 0;
+  background: var(--surface3);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  transition: background 0.2s, border-color 0.2s;
+}
+.dcw-slider:before {
+  content: '';
+  position: absolute;
+  width: 18px; height: 18px;
+  left: 2px; top: 2px;
+  background: var(--muted2);
+  border-radius: 50%;
+  transition: transform 0.2s, background 0.2s;
+}
+.dcw-toggle input:checked + .dcw-slider { background: var(--orange); border-color: var(--orange); }
+.dcw-toggle input:checked + .dcw-slider:before { transform: translateX(18px); background: var(--white); }
+.dcw-hint {
+  padding: 1rem 1.25rem 0.5rem;
+  font-size: 11px;
+  color: var(--muted);
+  font-family: var(--body);
+  letter-spacing: 0.04em;
+}
+
+/* ===== DASHBOARD ANALYTICS WIDGETS ===== */
+
+/* On This Day */
+.otd-card{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:1rem 1.2rem;cursor:pointer;transition:border-color .2s;margin-top:1.5rem}
+.otd-card:hover{border-color:var(--orange)}
+.otd-eyebrow{color:var(--orange);font-size:10px;font-family:var(--headline);letter-spacing:.12em;text-transform:uppercase;margin-bottom:.4rem}
+.otd-name{font-family:var(--headline);font-size:1.3rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase;margin-bottom:.25rem}
+.otd-meta{color:var(--muted);font-size:12px;margin-bottom:.5rem}
+.otd-time{color:var(--green);font-family:var(--headline);font-size:1.5rem;font-weight:800}
+
+/* Field-Adjusted Placing */
+.fp-card{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:1rem 1.2rem;margin-top:1.5rem}
+.fp-headline{font-family:var(--headline);font-size:1.1rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+.fp-pct{color:var(--green)}
+.fp-sub{color:var(--muted);font-size:11px;margin-top:.25rem}
+.fp-spark{margin-top:.5rem}
+.fp-inline-badge{background:rgba(0,255,136,0.1);color:var(--green);font-size:10px;font-weight:700;border-radius:4px;padding:1px 5px;border:1px solid rgba(0,255,136,0.2);margin-left:4px}
+
+/* Activity Preview */
+.ap-card{display:flex;align-items:center;gap:.75rem;padding:.75rem 0;border-bottom:1px solid var(--border)}
+.ap-card:last-child{border-bottom:none}
+.ap-icon{font-size:20px;width:32px;text-align:center;flex-shrink:0}
+.ap-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px}
+.ap-meta{color:var(--muted);font-size:11px;margin-top:2px}
+.ap-stat{font-family:var(--headline);font-size:1rem;font-weight:700;text-align:right;white-space:nowrap;margin-left:auto}
+.ap-stat-sub{color:var(--muted);font-size:10px;text-align:right}
+
+/* Training Streak */
+.streak-number{font-family:var(--headline);font-size:3rem;font-weight:900;color:var(--orange);line-height:1}
+.streak-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:.25rem}
+.streak-dots{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;margin-top:.75rem}
+.streak-dot{aspect-ratio:1;border-radius:2px;background:var(--surface3)}
+.streak-dot.active{background:var(--orange)}
+.streak-dot.today{outline:2px solid var(--orange);outline-offset:1px}
+.streak-header-pill{display:inline-flex;align-items:center;gap:.4rem;background:rgba(255,77,0,0.12);border:1px solid rgba(255,77,0,0.3);border-radius:20px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--orange);margin-bottom:.75rem}
+
+/* Pacing IQ */
+.piq-card{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:1rem 1.2rem;margin-top:1.5rem}
+.piq-persona-icon{font-size:24px;margin-bottom:.3rem}
+.piq-persona-label{font-family:var(--headline);font-size:1.1rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-bottom:.5rem}
+.piq-dist-bar{display:flex;height:6px;border-radius:3px;overflow:hidden;gap:1px;margin:.5rem 0}
+.piq-dist-seg{border-radius:2px;transition:flex .3s}
+.piq-dist-seg.neg{background:var(--green)}
+.piq-dist-seg.even{background:rgba(245,245,245,0.3)}
+.piq-dist-seg.pos{background:var(--orange)}
+.piq-dist-seg.dead{background:#ff4040}
+.piq-legend{display:flex;flex-wrap:wrap;gap:.4rem .75rem;font-size:10px;color:var(--muted);margin-top:.3rem}
+.piq-badge{display:inline-flex;align-items:center;gap:.3rem;font-size:11px;font-weight:700;border-radius:5px;padding:2px 7px;border:1px solid}
+.piq-badge.neg{background:rgba(0,255,136,0.08);color:var(--green);border-color:rgba(0,255,136,0.2)}
+.piq-badge.even{background:rgba(245,245,245,0.06);color:rgba(245,245,245,0.6);border-color:rgba(245,245,245,0.12)}
+.piq-badge.pos{background:rgba(255,77,0,0.1);color:var(--orange);border-color:rgba(255,77,0,0.25)}
+.piq-badge.dead{background:rgba(255,64,64,0.1);color:#ff4040;border-color:rgba(255,64,64,0.25)}
+
+/* Career Momentum */
+.mom-card{display:flex;align-items:center;gap:1rem;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:1rem 1.2rem;margin-top:1.5rem}
+.mom-score{font-family:var(--headline);font-size:2.8rem;font-weight:900;line-height:1}
+.mom-score.hot{color:var(--green)}
+.mom-score.cold{color:var(--orange)}
+.mom-arrow{font-size:20px}
+.mom-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:.2rem}
+.mom-sub{font-size:10px;color:var(--muted);margin-top:.15rem}
+.mom-spark{flex:1}
+
+/* Race Day Forecast */
+.rdf-strip{background:var(--surface3);border:1px solid var(--border2);border-radius:6px;display:flex;align-items:center;gap:.75rem;padding:10px 12px;margin-top:.75rem}
+.rdf-icon{font-size:22px;flex-shrink:0}
+.rdf-city{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.rdf-temp{font-family:var(--headline);font-size:18px;font-weight:800;margin-top:2px}
+.rdf-meta{font-size:11px;color:var(--muted)}
+.rdf-badge{font-size:11px;font-weight:700;color:var(--orange);margin-left:auto;white-space:nowrap}
+
+/* Age-Grade */
+.ag-widget{display:flex;align-items:center;gap:1rem;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:1rem 1.2rem;margin-top:.5rem}
+.ag-pct{font-family:var(--headline);font-size:2.5rem;font-weight:900;color:var(--green);line-height:1}
+.ag-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:.2rem}
+.ag-trend{font-size:14px;margin-top:.15rem}
+.ag-spark{flex:1}
+
+/* Race DNA */
+.dna-card{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:1rem 1.2rem;margin-top:.5rem}
+.dna-headline{font-family:var(--headline);font-size:1rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;margin-bottom:.5rem}
+.dna-best{color:var(--green)}
+.dna-buckets{display:flex;gap:3px;align-items:flex-end;height:40px}
+.dna-bucket{flex:1;background:var(--surface3);border-radius:3px 3px 0 0;min-height:4px;position:relative}
+.dna-bucket.best{background:var(--green)}
+.dna-bucket.ok{background:rgba(255,77,0,0.6)}
+.dna-bucket-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px}
+.dna-bucket-label{font-size:8px;color:var(--muted);text-align:center}
+.dna-next{font-size:12px;color:var(--muted);margin-top:.75rem}
+.dna-next .match{color:var(--green);font-weight:600}
+
+/* Performance Map */
+.map-mode-btn{font-family:var(--headline);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:rgba(13,13,13,0.88);color:var(--muted);border:1px solid var(--border2);border-radius:5px;padding:5px 10px;cursor:pointer;transition:all .2s}
+.map-mode-btn.active{background:var(--orange);color:#000;border-color:var(--orange)}
+.perf-legend-row{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--white);margin-bottom:3px}
+.perf-legend-row:last-child{margin-bottom:0}
+.perf-legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.fl-dot-perf{border:1.5px solid rgba(245,245,245,0.3)}
+.tip-pct{font-size:10px;color:var(--green);font-weight:700;margin-top:2px}
 </style>
 </head>
 <body>
@@ -2865,39 +3032,107 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
         <div class="greeting-text" id="greetingText">Welcome back</div>
         <div class="greeting-weather" id="greetingWeather">Fetching weather…</div>
       </div>
+      <button class="dash-customize-btn" onclick="openDashCustomize()" title="Customize dashboard" aria-label="Customize dashboard">⊞</button>
     </div>
     <!-- Countdown -->
-    <div class="countdown-wrap" id="cdCard"></div>
-    <div class="course-info-strip" id="courseInfoStrip" style="display:none"></div>
+    <div id="dash-widget-countdown">
+      <div class="countdown-wrap" id="cdCard"></div>
+      <div class="course-info-strip" id="courseInfoStrip" style="display:none"></div>
+      <div id="raceForecastStrip" style="display:none">
+        <div id="raceForecastContent"></div>
+      </div>
+    </div>
     <!-- Stats -->
-    <div class="stats-row">
-      <div class="s-tile"><div class="s-tile-num" id="ds-r">0</div><div class="s-tile-label">Races</div></div>
-      <div class="s-tile"><div class="s-tile-num" id="ds-c">0</div><div class="s-tile-label">Countries</div></div>
-      <div class="s-tile"><div class="s-tile-num" id="ds-k">0</div><div class="s-tile-label">Total KM</div></div>
-      <div class="s-tile" onclick="go('medals')" style="cursor:pointer"><div class="s-tile-num" id="ds-m">0</div><div class="s-tile-label">Medals</div></div>
+    <div id="dash-widget-stats">
+      <div class="stats-row">
+        <div class="s-tile"><div class="s-tile-num" id="ds-r">0</div><div class="s-tile-label">Races</div></div>
+        <div class="s-tile"><div class="s-tile-num" id="ds-c">0</div><div class="s-tile-label">Countries</div></div>
+        <div class="s-tile"><div class="s-tile-num" id="ds-k">0</div><div class="s-tile-label">Total KM</div></div>
+        <div class="s-tile" onclick="go('medals')" style="cursor:pointer"><div class="s-tile-num" id="ds-m">0</div><div class="s-tile-label">Medals</div></div>
+      </div>
     </div>
     <!-- Goals -->
-    <div id="goalsSection"></div>
+    <div id="dash-widget-goals">
+      <div id="goalsSection"></div>
+    </div>
     <!-- Year in Review + H2H -->
-    <div class="dash-insight-row">
-      <div class="dash-insight-tile" id="yirTile"></div>
-      <div class="dash-insight-tile" id="h2hTile"></div>
+    <div id="dash-widget-insights">
+      <div class="dash-insight-row">
+        <div class="dash-insight-tile" id="yirTile"></div>
+        <div class="dash-insight-tile" id="h2hTile"></div>
+      </div>
     </div>
     <!-- Recent -->
-    <div class="section-row">
-      <div class="section-h">Recent Races</div>
-      <button class="see-all" onclick="go('history')">All Races →</button>
+    <div id="dash-widget-recent">
+      <div class="section-row">
+        <div class="section-h">Recent Races</div>
+        <button class="see-all" onclick="go('history')">All Races →</button>
+      </div>
+      <div class="recent-feed" id="recentFeed"></div>
     </div>
-    <div class="recent-feed" id="recentFeed"></div>
     <!-- Personal Bests -->
-    <div class="section-row" style="margin-top:1.5rem">
-      <div class="section-h">Personal Bests</div>
+    <div id="dash-widget-pbs">
+      <div class="section-row" style="margin-top:1.5rem">
+        <div class="section-h">Personal Bests</div>
+      </div>
+      <div id="dashPBs"></div>
     </div>
-    <div id="dashPBs"></div>
     <!-- Your World (map teaser) -->
-    <div class="section-row" style="margin-top:1.75rem">
-      <div class="section-h">Your World</div>
-      <button class="see-all" onclick="go('map')">Race Map →</button>
+    <div id="dash-widget-world">
+      <div class="section-row" style="margin-top:1.75rem">
+        <div class="section-h">Your World</div>
+        <button class="see-all" onclick="go('map')">Race Map →</button>
+      </div>
+    </div>
+    <!-- On This Day -->
+    <div id="dash-widget-on-this-day">
+      <div id="onThisDayContent"></div>
+    </div>
+    <!-- Field-Adjusted Placing -->
+    <div id="dash-widget-field-placing">
+      <div id="fieldPlacingContent"></div>
+    </div>
+    <!-- Activity Preview -->
+    <div id="dash-widget-activity-preview">
+      <div class="section-row" style="margin-top:1.5rem">
+        <div class="section-h">Recent Training</div>
+        <button class="see-all" onclick="go('training')">See All →</button>
+      </div>
+      <div id="activityPreviewFeed"></div>
+    </div>
+    <!-- Training Streak -->
+    <div id="dash-widget-training-streak">
+      <div class="section-row" style="margin-top:1.5rem">
+        <div class="section-h">Training Streak</div>
+        <button class="see-all" onclick="go('training')">Activities →</button>
+      </div>
+      <div id="streakWidgetContent"></div>
+    </div>
+    <!-- Pacing IQ -->
+    <div id="dash-widget-pacing-iq">
+      <div id="pacingIQContent"></div>
+    </div>
+    <!-- Career Momentum -->
+    <div id="dash-widget-momentum">
+      <div id="momentumWidgetContent"></div>
+    </div>
+    <!-- Race Day Forecast (entry in panel; content embedded in countdown) -->
+    <div id="dash-widget-race-forecast" style="display:none"></div>
+    <!-- Age-Grade Score -->
+    <div id="dash-widget-age-grade">
+      <div class="section-row" style="margin-top:1.5rem">
+        <div class="section-h">Age-Grade Score</div>
+      </div>
+      <div id="ageGradeWidgetContent"></div>
+    </div>
+    <!-- Race DNA -->
+    <div id="dash-widget-race-dna">
+      <div class="section-row" style="margin-top:1.5rem">
+        <div class="section-h">Race DNA</div>
+      </div>
+      <div id="raceDNAContent">
+        <div style="color:var(--muted);font-size:12px;padding:0.5rem 0">Analysing race conditions…</div>
+      </div>
     </div>
   </div>
 </div>
@@ -3009,6 +3244,13 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
       <div class="ath-section-h">Personal Bests</div>
       <div id="athPBs"></div>
     </div>
+    <!-- Age-Grade Trajectory -->
+    <div class="ath-section">
+      <div class="section-row" style="margin-top:1.75rem">
+        <div class="section-h">Age-Grade Trajectory</div>
+      </div>
+      <div id="athAgeGradeChart"></div>
+    </div>
     <!-- Race Activity Heatmap -->
     <div class="ath-section">
       <div class="ath-section-h">Race Activity</div>
@@ -3029,6 +3271,15 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 <div id="page-map" class="page">
   <!-- Full-bleed map -->
   <div id="raceMap"></div>
+  <div id="mapModeToggle" style="position:absolute;top:70px;right:12px;z-index:1000;display:flex;gap:4px">
+    <button class="map-mode-btn active" id="mapModeStd" onclick="setMapMode('standard')">Standard</button>
+    <button class="map-mode-btn" id="mapModePerf" onclick="setMapMode('performance')">Performance</button>
+  </div>
+  <div id="perfLegend" style="display:none;position:absolute;bottom:80px;left:12px;z-index:1000;background:rgba(10,10,10,0.88);border:1px solid var(--border2);border-radius:6px;padding:8px 10px">
+    <div class="perf-legend-row"><span class="perf-legend-dot" style="background:var(--green)"></span>Top 10%</div>
+    <div class="perf-legend-row"><span class="perf-legend-dot" style="background:var(--orange)"></span>Mid field</div>
+    <div class="perf-legend-row"><span class="perf-legend-dot" style="background:#ef4444"></span>Lower field</div>
+  </div>
   <div id="mapTip" class="map-hover-tip"></div>
   <!-- Floating stat pills -->
   <div class="map-pill-bar">
@@ -3210,6 +3461,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
           <button class="training-sync-btn" id="syncBtn" style="display:none" onclick="syncStrava()">↻ Sync</button>
         </div>
       </div>
+      <div id="stravaStreakHeader" style="margin-bottom:1rem"></div>
       <div id="trainingFeed"></div>
     </div>
   </div>
@@ -3475,6 +3727,14 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
             <option>50–54</option><option>55–59</option><option>60+</option>
           </select>
         </div>
+        <div class="fg"><label class="fl">Gender</label>
+          <select class="fs" id="eGender">
+            <option value="">Select…</option>
+            <option value="M">Male</option>
+            <option value="F">Female</option>
+            <option value="X">Non-binary / Prefer not to say</option>
+          </select>
+        </div>
         <div class="fg"><label class="fl">Racing Since</label><input class="fi" id="eSince" type="number" placeholder="2019" min="1950" max="2035"></div>
         <div class="fg"><label class="fl">Primary Sport</label>
           <select class="fs" id="ePrim">
@@ -3536,6 +3796,10 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
       <div class="rv-notes" id="rvNotes" style="display:none">
         <div class="rv-notes-label">Notes</div>
         <div class="rv-notes-text" id="rvNotesText"></div>
+      </div>
+      <div id="rvPacingIQ" style="display:none;margin-top:1rem">
+        <div class="rv-splits-label">Pacing Analysis</div>
+        <div id="rvPacingBadge"></div>
       </div>
     </div>
     <div class="modal-foot">
@@ -4241,6 +4505,8 @@ async function signOutUser() {
   localStorage.removeItem('fl2_strava');
   localStorage.removeItem('fl2_strava_acts');
   localStorage.removeItem('fl2_strava_last_sync');
+  localStorage.removeItem('fl2_race_weather');
+  raceWeatherCache = {};
   window.location.reload();
 }
 
@@ -4760,6 +5026,817 @@ async function renderGreeting() {
 }
 
 /* ============================
+   DASHBOARD LAYOUT / CUSTOMIZE
+   ============================ */
+const DASH_WIDGETS = [
+  { id: 'countdown', label: 'Next Race Countdown', icon: '🏁' },
+  { id: 'stats',     label: 'Race Stats',           icon: '📊' },
+  { id: 'goals',     label: 'Goals',                icon: '🎯' },
+  { id: 'insights',  label: 'Year So Far & H2H',    icon: '📈' },
+  { id: 'recent',    label: 'Recent Races',          icon: '🏃' },
+  { id: 'pbs',       label: 'Personal Bests',        icon: '⚡' },
+  { id: 'world',     label: 'Your World',            icon: '🌍' },
+  { id: 'on-this-day',       label: 'On This Day',            icon: '📅' },
+  { id: 'field-placing',     label: 'Field-Adjusted Placing',  icon: '🎯' },
+  { id: 'activity-preview',  label: 'Recent Training',         icon: '⚡' },
+  { id: 'training-streak',   label: 'Training Streak',         icon: '🔥' },
+  { id: 'pacing-iq',         label: 'Pacing IQ',               icon: '🧠' },
+  { id: 'momentum',          label: 'Career Momentum',         icon: '🚀' },
+  { id: 'race-forecast',     label: 'Race Day Forecast',       icon: '🌤️' },
+  { id: 'age-grade',         label: 'Age-Grade Score',         icon: '📈' },
+  { id: 'race-dna',          label: 'Race DNA',                icon: '🧬' },
+];
+
+function getDashLayout() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('fl2_dash_layout') || 'null');
+    if (saved && Array.isArray(saved) && saved.length) {
+      // Merge: preserve saved order/visibility, append any new widgets at end
+      const ids = new Set(saved.map(w => w.id));
+      const merged = [...saved];
+      DASH_WIDGETS.forEach(w => { if (!ids.has(w.id)) merged.push({ id: w.id, enabled: true }); });
+      return merged;
+    }
+  } catch(e) {}
+  return DASH_WIDGETS.map(w => ({ id: w.id, enabled: true }));
+}
+
+function saveDashLayout(layout) {
+  localStorage.setItem('fl2_dash_layout', JSON.stringify(layout));
+}
+
+function applyDashLayout() {
+  const layout = getDashLayout();
+  const container = document.querySelector('#page-dashboard .wrap');
+  if (!container) return;
+  layout.forEach((item, idx) => {
+    const el = document.getElementById('dash-widget-' + item.id);
+    if (!el) return;
+    el.style.display = item.enabled ? '' : 'none';
+    // Re-append in order to physically reorder in DOM
+    container.appendChild(el);
+  });
+  // Always keep greeting at top (re-append all widgets after greeting)
+  const greeting = document.getElementById('greetingCard');
+  if (greeting) container.insertBefore(greeting, container.firstChild);
+}
+
+function openDashCustomize() {
+  renderDashCustomizeModal();
+  openM('dashCustomizeModal');
+}
+
+function renderDashCustomizeModal() {
+  const layout = getDashLayout();
+  const meta = Object.fromEntries(DASH_WIDGETS.map(w => [w.id, w]));
+  document.getElementById('dcwList').innerHTML = layout.map((item, idx) => {
+    const w = meta[item.id] || { label: item.id, icon: '▪' };
+    return `<li class="dcw-row${item.enabled ? '' : ' disabled'}" data-id="${item.id}">
+      <span class="dcw-icon">${w.icon}</span>
+      <span class="dcw-label">${w.label}</span>
+      <div class="dcw-arrows">
+        <button class="dcw-arrow" onclick="dcwMove('${item.id}',-1)" ${idx === 0 ? 'disabled' : ''}>▲</button>
+        <button class="dcw-arrow" onclick="dcwMove('${item.id}',1)" ${idx === layout.length - 1 ? 'disabled' : ''}>▼</button>
+      </div>
+      <label class="dcw-toggle" title="${item.enabled ? 'Hide' : 'Show'} ${w.label}">
+        <input type="checkbox" ${item.enabled ? 'checked' : ''} onchange="dcwToggle('${item.id}',this.checked)">
+        <span class="dcw-slider"></span>
+      </label>
+    </li>`;
+  }).join('');
+}
+
+function dcwMove(id, dir) {
+  const layout = getDashLayout();
+  const idx = layout.findIndex(w => w.id === id);
+  if (idx < 0) return;
+  const target = idx + dir;
+  if (target < 0 || target >= layout.length) return;
+  [layout[idx], layout[target]] = [layout[target], layout[idx]];
+  saveDashLayout(layout);
+  renderDashCustomizeModal();
+  applyDashLayout();
+}
+
+function dcwToggle(id, enabled) {
+  const layout = getDashLayout();
+  const item = layout.find(w => w.id === id);
+  if (!item) return;
+  item.enabled = enabled;
+  saveDashLayout(layout);
+  applyDashLayout();
+  // Update row class without full re-render to avoid losing focus
+  const row = document.querySelector(`.dcw-row[data-id="${id}"]`);
+  if (row) row.classList.toggle('disabled', !enabled);
+}
+
+/* ============================
+   DASHBOARD ANALYTICS — SHARED INFRASTRUCTURE
+   ============================ */
+
+// Sparkline SVG helper
+function renderSparklineSVG(values, width, height, color) {
+  if (!values || values.length < 2) return '';
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = max - min || 1;
+  const pts = values.map((v, i) => {
+    const x = (i / (values.length - 1)) * width;
+    const y = height - ((v - min) / range) * height;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(' ');
+  return `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" style="overflow:visible"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+
+// Centralised geocode helper
+async function geocodeCityIfNeeded(city, country) {
+  if (!city) return null;
+  const key = (city + '||' + (country || '')).toLowerCase();
+  if (geoCache[key]) return geoCache[key];
+  try {
+    await new Promise(r => setTimeout(r, 1100));
+    const q = country ? `${city}, ${country}` : city;
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1`, { headers: { 'Accept-Language': 'en' } });
+    const data = await res.json();
+    if (data && data[0]) {
+      const coord = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+      geoCache[key] = coord;
+      localStorage.setItem('fl2_geocache', JSON.stringify(geoCache));
+      return coord;
+    }
+  } catch (e) {}
+  return null;
+}
+
+// Race weather cache
+let raceWeatherCache = JSON.parse(localStorage.getItem('fl2_race_weather') || '{}');
+
+/* ============================
+   FEATURE 1 — FIELD-ADJUSTED PLACING
+   ============================ */
+function parsePlacing(str) {
+  if (!str) return null;
+  const m = String(str).match(/^(\d+)\s*\/\s*(\d+)$/);
+  if (!m) return null;
+  const pos = parseInt(m[1]), total = parseInt(m[2]);
+  if (!total || pos < 1 || pos > total) return null;
+  return { pos, total, percentile: (1 - pos / total) * 100 };
+}
+
+function computePlacingStats() {
+  const valid = races.map(r => {
+    const p = parsePlacing(r.placing);
+    return p ? { date: r.date, pct: p.percentile } : null;
+  }).filter(Boolean).sort((a, b) => a.date.localeCompare(b.date));
+  if (valid.length < 2) return null;
+  const avg = valid.reduce((s, v) => s + v.pct, 0) / valid.length;
+  const last3 = valid.slice(-3).reduce((s, v) => s + v.pct, 0) / Math.min(3, valid.length);
+  const prev3 = valid.length >= 6 ? valid.slice(-6, -3).reduce((s, v) => s + v.pct, 0) / 3 : null;
+  const trend = prev3 === null ? 'flat' : (last3 - prev3 > 2 ? 'up' : last3 - prev3 < -2 ? 'down' : 'flat');
+  return { avg, trend, recent: valid.slice(-6) };
+}
+
+function renderFieldPlacingWidget() {
+  const el = document.getElementById('fieldPlacingContent');
+  if (!el) return;
+  const stats = computePlacingStats();
+  if (!stats) {
+    el.innerHTML = `<div class="fp-card"><div class="fp-sub">Add race placing (e.g. 45/1200) to unlock percentile tracking.</div></div>`;
+    return;
+  }
+  const arrow = stats.trend === 'up' ? '↑' : stats.trend === 'down' ? '↓' : '→';
+  const arrowCol = stats.trend === 'up' ? 'var(--green)' : stats.trend === 'down' ? '#ef4444' : 'var(--muted)';
+  const sparkVals = stats.recent.map(v => v.pct);
+  el.innerHTML = `<div class="fp-card">
+    <div class="fp-headline">Top <span class="fp-pct">${Math.round(stats.avg)}%</span> on average <span style="color:${arrowCol}">${arrow}</span></div>
+    <div class="fp-sub">Field-adjusted percentile across ${races.filter(r=>parsePlacing(r.placing)).length} races</div>
+    <div class="fp-spark">${renderSparklineSVG(sparkVals, 120, 24, 'var(--green)')}</div>
+  </div>`;
+}
+
+function getPlacingBadge(race) {
+  const p = parsePlacing(race.placing);
+  if (!p) return '';
+  return `<span class="fp-inline-badge">Top ${Math.round(p.percentile)}%</span>`;
+}
+
+/* ============================
+   FEATURE 2 — ON THIS DAY
+   ============================ */
+function getOnThisDayRace() {
+  const now = new Date();
+  const mmdd = (String(now.getMonth() + 1).padStart(2, '0')) + '-' + String(now.getDate()).padStart(2, '0');
+  const thisYear = now.getFullYear();
+  const matches = races.filter(r => r.date && r.date.slice(5) === mmdd && parseInt(r.date.slice(0, 4)) < thisYear);
+  if (!matches.length) return null;
+  const idx = Math.floor(Date.now() / 86400000) % matches.length;
+  return matches[idx];
+}
+
+function renderOnThisDay() {
+  const el = document.getElementById('onThisDayContent');
+  if (!el) return;
+  const r = getOnThisDayRace();
+  if (!r) {
+    const parent = document.getElementById('dash-widget-on-this-day');
+    if (parent) parent.style.display = 'none';
+    return;
+  }
+  const years = new Date().getFullYear() - parseInt(r.date.slice(0, 4));
+  const yearStr = years === 1 ? '1 year' : `${years} years`;
+  el.innerHTML = `<div class="otd-card" onclick="openRaceView && openRaceView('${r.id}')">
+    <div class="otd-eyebrow">📅 On This Day</div>
+    <div class="otd-name">${r.name}</div>
+    <div class="otd-meta">${yearStr} ago · ${r.city || ''}${r.country ? ', ' + r.country : ''}</div>
+    ${r.time ? `<div class="otd-time">${r.time}</div>` : ''}
+  </div>`;
+}
+
+/* ============================
+   FEATURE 3 — ACTIVITY FEED PREVIEW
+   ============================ */
+function renderActivityPreview() {
+  const el = document.getElementById('activityPreviewFeed');
+  if (!el) return;
+  if (!stravaData || !stravaData.access_token) {
+    el.innerHTML = `<div class="ap-card"><div class="ap-icon">⚡</div><div><div class="ap-name" style="color:var(--muted)">Connect Strava to see recent training</div></div></div>`;
+    return;
+  }
+  const acts = (stravaActivities || []).slice(0, 3);
+  if (!acts.length) {
+    el.innerHTML = `<div class="ap-card"><div class="ap-icon">⚡</div><div><div class="ap-name" style="color:var(--muted)">No recent activities found</div></div></div>`;
+    return;
+  }
+  el.innerHTML = acts.map(a => {
+    const icon = ACTIVITY_ICONS ? (ACTIVITY_ICONS[a.type] || '🏃') : '🏃';
+    const km = a.distance ? (a.distance / 1000).toFixed(1) + ' km' : '';
+    const dur = a.moving_time ? fmtDuration(a.moving_time) : '';
+    const paceRaw = (a.type === 'Run' || a.type === 'TrailRun') && a.distance && a.moving_time ? fmtPace(a.moving_time / (a.distance / 1000)) : '';
+    const pace = paceRaw;
+    const stat = pace || dur;
+    const sub = pace ? dur : km;
+    const dateStr = a.start_date_local ? fmtDate(a.start_date_local.slice(0, 10)) : '';
+    return `<div class="ap-card">
+      <div class="ap-icon">${icon}</div>
+      <div style="flex:1;min-width:0">
+        <div class="ap-name">${a.name || a.type}</div>
+        <div class="ap-meta">${[km, dateStr].filter(Boolean).join(' · ')}</div>
+      </div>
+      <div>
+        <div class="ap-stat">${stat}</div>
+        ${sub ? `<div class="ap-stat-sub">${sub}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ============================
+   FEATURE 4 — TRAINING STREAK
+   ============================ */
+function computeStreak(activities) {
+  const activeDates = new Set((activities || []).map(a => (a.start_date_local || a.start_date || '').slice(0, 10)).filter(Boolean));
+  const today = new Date();
+  let current = 0;
+  let longest = 0;
+  let streak = 0;
+  // count backwards from today
+  for (let i = 0; i < 365; i++) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    if (activeDates.has(key)) {
+      streak++;
+      if (streak > longest) longest = streak;
+    } else {
+      if (i === 0) { /* today has no activity, streak is 0 so far */ }
+      else break;
+    }
+  }
+  current = streak;
+  // also compute longest overall
+  const sorted = Array.from(activeDates).sort();
+  let run = 1, lmax = sorted.length ? 1 : 0;
+  for (let i = 1; i < sorted.length; i++) {
+    const prev = new Date(sorted[i - 1]);
+    const curr = new Date(sorted[i]);
+    const diff = (curr - prev) / 86400000;
+    if (diff === 1) { run++; if (run > lmax) lmax = run; }
+    else run = 1;
+  }
+  longest = lmax;
+  return { current, longest, activeDates };
+}
+
+function renderStreakWidget() {
+  const el = document.getElementById('streakWidgetContent');
+  if (!el) return;
+  if (!stravaData || !stravaData.access_token) {
+    el.innerHTML = `<div style="color:var(--muted);font-size:12px;padding:.5rem 0">Connect Strava to unlock training streak.</div>`;
+    return;
+  }
+  const { current, longest, activeDates } = computeStreak(stravaActivities || []);
+  // Build 70-cell dot grid (10 weeks, 7 days each, newest = today)
+  const today = new Date();
+  const dots = [];
+  for (let i = 69; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    const isToday = i === 0;
+    const isActive = activeDates.has(key);
+    dots.push(`<div class="streak-dot${isActive ? ' active' : ''}${isToday ? ' today' : ''}" title="${key}"></div>`);
+  }
+  el.innerHTML = `<div style="display:flex;align-items:flex-end;gap:1.5rem;margin-top:.25rem">
+    <div>
+      <div class="streak-number">${current}</div>
+      <div class="streak-label">Day streak</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:.2rem">Best: ${longest}</div>
+    </div>
+    <div class="streak-dots" style="flex:1">${dots.join('')}</div>
+  </div>`;
+}
+
+function renderStreakHeader() {
+  const { current, longest } = computeStreak(stravaActivities || []);
+  if (!current) return '';
+  return `<div class="streak-header-pill">🔥 ${current}-day streak</div>`;
+}
+
+/* ============================
+   FEATURE 5 — PACING IQ
+   ============================ */
+function classifyPacing(race) {
+  if (!race.splits || race.splits.length < 2) return null;
+  // Find cumulative times from splits
+  const totalSecs = race.time ? timeToSecs(race.time) : null;
+  if (!totalSecs) return null;
+  // Look for split that's closest to 50% of total time
+  let halfIdx = -1;
+  let halfDist = Infinity;
+  race.splits.forEach((s, i) => {
+    const cumSecs = s.cum ? timeToSecs(s.cum) : null;
+    if (!cumSecs) return;
+    const diff = Math.abs(cumSecs - totalSecs / 2);
+    if (diff < halfDist) { halfDist = diff; halfIdx = i; }
+  });
+  if (halfIdx < 0) return null;
+  const firstHalfCum = race.splits[halfIdx]?.cum ? timeToSecs(race.splits[halfIdx].cum) : null;
+  if (!firstHalfCum) return null;
+  const secondHalf = totalSecs - firstHalfCum;
+  const diff = (secondHalf - firstHalfCum) / totalSecs;
+  let classification;
+  if (diff < -0.03) classification = 'neg';
+  else if (Math.abs(diff) <= 0.03) classification = 'even';
+  else if (diff < 0.10) classification = 'pos';
+  else classification = 'dead';
+  return { classification, firstHalf: firstHalfCum, secondHalf, diff };
+}
+
+function computePacingIQ() {
+  const results = races.map(r => classifyPacing(r)).filter(Boolean);
+  if (results.length < 3) return null;
+  const counts = { neg: 0, even: 0, pos: 0, dead: 0 };
+  results.forEach(r => counts[r.classification]++);
+  const persona = Object.entries(counts).sort((a, b) => b[1] - a[1])[0][0];
+  const total = results.length;
+  const distribution = Object.fromEntries(Object.entries(counts).map(([k, v]) => [k, (v / total) * 100]));
+  return { persona, distribution, totalAnalyzed: total };
+}
+
+const PIQ_META = {
+  neg:  { icon: '⚡', label: 'Negative Splitter', desc: 'You run faster in the second half' },
+  even: { icon: '⚖️', label: 'Even Pacer',         desc: 'Consistent effort front to back' },
+  pos:  { icon: '📉', label: 'Positive Splitter',  desc: 'You go out a bit fast' },
+  dead: { icon: '💀', label: 'Death March',         desc: 'Big fade in the second half' },
+};
+
+function renderPacingIQ() {
+  const el = document.getElementById('pacingIQContent');
+  if (!el) return;
+  const iq = computePacingIQ();
+  if (!iq) {
+    el.innerHTML = `<div class="piq-card"><div class="fp-sub">Add splits when logging races to unlock your Pacing IQ.</div></div>`;
+    return;
+  }
+  const m = PIQ_META[iq.persona];
+  const d = iq.distribution;
+  el.innerHTML = `<div class="piq-card">
+    <div class="piq-persona-icon">${m.icon}</div>
+    <div class="piq-persona-label">${m.label}</div>
+    <div class="piq-sub" style="font-size:11px;color:var(--muted);margin-bottom:.5rem">${m.desc} · ${iq.totalAnalyzed} races analysed</div>
+    <div class="piq-dist-bar">
+      ${d.neg ? `<div class="piq-dist-seg neg" style="flex:${d.neg}"></div>` : ''}
+      ${d.even ? `<div class="piq-dist-seg even" style="flex:${d.even}"></div>` : ''}
+      ${d.pos ? `<div class="piq-dist-seg pos" style="flex:${d.pos}"></div>` : ''}
+      ${d.dead ? `<div class="piq-dist-seg dead" style="flex:${d.dead}"></div>` : ''}
+    </div>
+    <div class="piq-legend">
+      <span>⚡ Neg ${Math.round(d.neg||0)}%</span>
+      <span>⚖️ Even ${Math.round(d.even||0)}%</span>
+      <span>📉 Pos ${Math.round(d.pos||0)}%</span>
+      <span>💀 Death ${Math.round(d.dead||0)}%</span>
+    </div>
+  </div>`;
+}
+
+function renderRacePacingBadge(raceId) {
+  const race = races.find(r => r.id === raceId);
+  if (!race) return '';
+  const p = classifyPacing(race);
+  if (!p) return '';
+  const m = PIQ_META[p.classification];
+  return `<span class="piq-badge ${p.classification}">${m.icon} ${m.label}</span>`;
+}
+
+/* ============================
+   FEATURE 6 — CAREER MOMENTUM
+   ============================ */
+function computeMomentum() {
+  const pbMap = buildPBMap();
+  const cutoff = new Date(); cutoff.setFullYear(cutoff.getFullYear() - 1);
+  const qualifying = races
+    .filter(r => r.time && r.date && new Date(r.date + 'T00:00:00') >= cutoff && pbMap[r.distance])
+    .map(r => {
+      const pbSecs = timeToSecs(pbMap[r.distance].time);
+      const raceSecs = timeToSecs(r.time);
+      if (!pbSecs || !raceSecs) return null;
+      const ratio = Math.min(1.5, Math.max(0.5, pbSecs / raceSecs));
+      return { date: r.date, ratio };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.date.localeCompare(b.date));
+  if (qualifying.length < 2) return null;
+  // Weighted avg (more recent = higher weight)
+  let wSum = 0, wTotal = 0;
+  qualifying.forEach((q, i) => {
+    const w = i + 1;
+    wSum += q.ratio * w;
+    wTotal += w;
+  });
+  const score = wSum / wTotal;
+  const last3 = qualifying.slice(-3);
+  const prev3 = qualifying.slice(-6, -3);
+  const l3avg = last3.reduce((s, v) => s + v.ratio, 0) / last3.length;
+  const p3avg = prev3.length ? prev3.reduce((s, v) => s + v.ratio, 0) / prev3.length : null;
+  const arrow = p3avg === null ? 'flat' : (l3avg - p3avg > 0.02 ? 'up' : l3avg - p3avg < -0.02 ? 'down' : 'flat');
+  const recentRatios = qualifying.slice(-6).map(q => q.ratio);
+  return { score, arrow, recentRatios };
+}
+
+function renderMomentumWidget() {
+  const el = document.getElementById('momentumWidgetContent');
+  if (!el) return;
+  const mom = computeMomentum();
+  if (!mom) {
+    el.innerHTML = `<div class="mom-card" style="background:var(--surface2)"><div style="color:var(--muted);font-size:12px">Race more to build your momentum score.</div></div>`;
+    return;
+  }
+  const cls = mom.score >= 0.97 ? 'hot' : mom.score < 0.90 ? 'cold' : '';
+  const arrowIcon = mom.arrow === 'up' ? '↑' : mom.arrow === 'down' ? '↓' : '→';
+  el.innerHTML = `<div class="mom-card">
+    <div>
+      <div class="mom-score ${cls}">${mom.score.toFixed(2)}</div>
+      <div class="mom-label">Momentum</div>
+      <div class="mom-sub">${arrowIcon} vs last block</div>
+    </div>
+    <div class="mom-spark">${renderSparklineSVG(mom.recentRatios, 80, 30, cls === 'hot' ? 'var(--green)' : cls === 'cold' ? 'var(--orange)' : 'var(--white)')}</div>
+  </div>`;
+}
+
+/* ============================
+   FEATURE 7 — RACE DAY FORECAST
+   ============================ */
+const WMO_ICONS = {0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',48:'🌫️',51:'🌦️',53:'🌦️',55:'🌧️',61:'🌧️',63:'🌧️',65:'🌧️',71:'🌨️',73:'🌨️',75:'🌨️',80:'🌦️',81:'🌧️',82:'⛈️',95:'⛈️',96:'⛈️',99:'⛈️'};
+
+async function renderRaceDayForecast() {
+  const strip = document.getElementById('raceForecastStrip');
+  const content = document.getElementById('raceForecastContent');
+  if (!strip || !content) return;
+  if (!nextRace || !nextRace.date || !nextRace.location) { strip.style.display = 'none'; return; }
+  const daysUntil = Math.ceil((new Date(nextRace.date + 'T00:00:00') - new Date()) / 86400000);
+  if (daysUntil < 0) { strip.style.display = 'none'; return; }
+  if (daysUntil > 14) {
+    strip.style.display = '';
+    content.innerHTML = `<div class="rdf-strip"><div class="rdf-icon">🌤️</div><div><div class="rdf-city">${nextRace.location}</div><div class="rdf-meta" style="color:var(--muted)">Forecast available 14 days before race</div></div></div>`;
+    return;
+  }
+  // Parse city/country from location
+  const parts = nextRace.location.split(',').map(s => s.trim());
+  const city = parts[0];
+  const country = parts[parts.length - 1] !== parts[0] ? parts[parts.length - 1] : null;
+  const coord = await geocodeCityIfNeeded(city, country);
+  if (!coord) { strip.style.display = 'none'; return; }
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${coord.lat}&longitude=${coord.lng}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max,weathercode&forecast_days=16&timezone=auto`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!data.daily) { strip.style.display = 'none'; return; }
+    const idx = data.daily.time.indexOf(nextRace.date);
+    if (idx < 0) { strip.style.display = 'none'; return; }
+    const tmax = Math.round(data.daily.temperature_2m_max[idx]);
+    const tmin = Math.round(data.daily.temperature_2m_min[idx]);
+    const precip = data.daily.precipitation_sum[idx];
+    const wind = Math.round(data.daily.windspeed_10m_max[idx]);
+    const wcode = data.daily.weathercode[idx];
+    const icon = WMO_ICONS[wcode] || '🌡️';
+    const label = daysUntil === 0 ? 'RACE DAY' : `${daysUntil} DAY${daysUntil === 1 ? '' : 'S'}`;
+    strip.style.display = '';
+    content.innerHTML = `<div class="rdf-strip">
+      <div class="rdf-icon">${icon}</div>
+      <div style="flex:1">
+        <div class="rdf-city">${city}${country ? ', ' + country : ''}</div>
+        <div class="rdf-temp">${tmin}° – ${tmax}°C</div>
+        <div class="rdf-meta">💧 ${precip}mm · 💨 ${wind} km/h</div>
+      </div>
+      <div class="rdf-badge">${label}</div>
+    </div>`;
+  } catch (e) { strip.style.display = 'none'; }
+}
+
+/* ============================
+   FEATURE 8 — AGE-GRADE SCORE
+   ============================ */
+// World Athletics standards (seconds for 100% at given age)
+const AGE_GRADE_STANDARDS = {
+  M: {
+    '5K':           [[18,757],[35,780],[40,808],[45,852],[50,913],[55,1002],[60,1110],[65,1254],[70,1440]],
+    '10K':          [[18,1571],[35,1620],[40,1680],[45,1770],[50,1890],[55,2070],[60,2295],[65,2580],[70,2970]],
+    'Half Marathon':[[18,3561],[35,3660],[40,3810],[45,4020],[50,4290],[55,4680],[60,5190],[65,5820],[70,6720]],
+    'Marathon':     [[18,7377],[35,7560],[40,7890],[45,8340],[50,8910],[55,9720],[60,10800],[65,12060],[70,13920]],
+  },
+  F: {
+    '5K':           [[18,855],[35,885],[40,922],[45,975],[50,1050],[55,1155],[60,1290],[65,1470],[70,1710]],
+    '10K':          [[18,1771],[35,1830],[40,1908],[45,2010],[50,2160],[55,2370],[60,2640],[65,3000],[70,3480]],
+    'Half Marathon':[[18,3975],[35,4110],[40,4290],[45,4530],[50,4890],[55,5370],[60,6000],[65,6840],[70,7920]],
+    'Marathon':     [[18,8231],[35,8520],[40,8910],[45,9420],[50,10140],[55,11100],[60,12420],[65,14100],[70,16320]],
+  },
+};
+
+function getAthleteAge() {
+  const ag = (athlete || {}).ageGroup || '';
+  const m = ag.match(/^(\d+)[–\-](\d+)$/);
+  if (m) return Math.round((parseInt(m[1]) + parseInt(m[2])) / 2);
+  const m2 = ag.match(/^(\d+)\+$/);
+  if (m2) return parseInt(m2[1]) + 2;
+  return null;
+}
+
+function getAgeGradeStandard(gender, distance, age) {
+  const table = (AGE_GRADE_STANDARDS[gender] || {})[distance];
+  if (!table) return null;
+  let std = null;
+  for (const [ageFrom, secs] of table) {
+    if (age >= ageFrom) std = secs;
+  }
+  return std;
+}
+
+function computeAgeGrade(race) {
+  if (!athlete || !athlete.gender || !athlete.ageGroup) return null;
+  const age = getAthleteAge();
+  if (!age) return null;
+  const std = getAgeGradeStandard(athlete.gender, race.distance, age);
+  if (!std || !race.time) return null;
+  const raceSecs = timeToSecs(race.time);
+  if (!raceSecs) return null;
+  return Math.min(100, (std / raceSecs) * 100);
+}
+
+function computeAgeGradeHistory() {
+  const COVERED = new Set(['5K', '10K', 'Half Marathon', 'Marathon']);
+  const pts = races
+    .filter(r => r.time && r.date && COVERED.has(r.distance))
+    .map(r => {
+      const pct = computeAgeGrade(r);
+      return pct ? { date: r.date, pct, raceName: r.name, distance: r.distance } : null;
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.date.localeCompare(b.date));
+  return pts.length >= 2 ? pts : null;
+}
+
+function renderAgeGradeWidget() {
+  const el = document.getElementById('ageGradeWidgetContent');
+  if (!el) return;
+  if (!athlete || !athlete.gender || !athlete.ageGroup) {
+    el.innerHTML = `<div class="ag-widget"><div style="color:var(--muted);font-size:12px">Add gender + age group to your profile to unlock age-grade tracking.</div></div>`;
+    return;
+  }
+  const hist = computeAgeGradeHistory();
+  if (!hist) {
+    el.innerHTML = `<div class="ag-widget"><div style="color:var(--muted);font-size:12px">Log 5K, 10K, Half Marathon, or Marathon races to see your age-grade trajectory.</div></div>`;
+    return;
+  }
+  const latest = hist[hist.length - 1];
+  const prev = hist.length >= 2 ? hist[hist.length - 2] : null;
+  const trend = prev ? (latest.pct - prev.pct > 0.5 ? '↑' : latest.pct - prev.pct < -0.5 ? '↓' : '→') : '';
+  const sparkVals = hist.map(h => h.pct);
+  el.innerHTML = `<div class="ag-widget">
+    <div>
+      <div class="ag-pct">${latest.pct.toFixed(1)}%</div>
+      <div class="ag-label">Age-Grade</div>
+      <div class="ag-trend" style="color:${trend==='↑'?'var(--green)':trend==='↓'?'#ef4444':'var(--muted)'}">${trend}</div>
+    </div>
+    <div class="ag-spark">${renderSparklineSVG(sparkVals, 100, 35, 'var(--green)')}</div>
+  </div>`;
+}
+
+function renderAgeGradeChart() {
+  const el = document.getElementById('athAgeGradeChart');
+  if (!el) return;
+  const hist = computeAgeGradeHistory();
+  if (!hist || hist.length < 2) {
+    el.innerHTML = `<div style="color:var(--muted);font-size:12px;padding:.5rem 0">Log 5K, 10K, Half Marathon, or Marathon races to see your trajectory.</div>`;
+    return;
+  }
+  const W = 400, H = 170, PAD = { t: 20, r: 20, b: 30, l: 40 };
+  const cW = W - PAD.l - PAD.r, cH = H - PAD.t - PAD.b;
+  const dates = hist.map(h => new Date(h.date + 'T00:00:00').getTime());
+  const minD = Math.min(...dates), maxD = Math.max(...dates);
+  const minP = Math.max(0, Math.min(...hist.map(h => h.pct)) - 5);
+  const maxP = Math.min(100, Math.max(...hist.map(h => h.pct)) + 5);
+  const xS = d => PAD.l + ((d - minD) / (maxD - minD || 1)) * cW;
+  const yS = p => PAD.t + (1 - (p - minP) / (maxP - minP || 1)) * cH;
+  const pts = hist.map(h => `${xS(new Date(h.date+'T00:00:00').getTime()).toFixed(1)},${yS(h.pct).toFixed(1)}`).join(' ');
+  // y-axis labels
+  const yLabels = [minP, (minP+maxP)/2, maxP].map(p =>
+    `<text x="${PAD.l-6}" y="${yS(p)+4}" text-anchor="end" font-size="9" fill="rgba(245,245,245,0.35)">${Math.round(p)}%</text>`
+  ).join('');
+  // x-axis labels (first + last)
+  const fmt = d => new Date(d+'T00:00:00').toLocaleString('en',{month:'short',year:'2-digit'});
+  const xLabels = [hist[0], hist[hist.length-1]].map(h =>
+    `<text x="${xS(new Date(h.date+'T00:00:00').getTime())}" y="${H-8}" text-anchor="middle" font-size="9" fill="rgba(245,245,245,0.35)">${fmt(h.date)}</text>`
+  ).join('');
+  // dots
+  const dots = hist.map(h =>
+    `<circle cx="${xS(new Date(h.date+'T00:00:00').getTime()).toFixed(1)}" cy="${yS(h.pct).toFixed(1)}" r="3" fill="var(--green)" stroke="var(--surface)" stroke-width="1.5"/>`
+  ).join('');
+  el.innerHTML = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block;margin-top:.5rem" xmlns="http://www.w3.org/2000/svg">
+    <polyline points="${pts}" fill="none" stroke="var(--green)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+    ${yLabels}${xLabels}${dots}
+  </svg>`;
+}
+
+/* ============================
+   FEATURE 9 — RACE DNA
+   ============================ */
+async function fetchRaceWeather(race) {
+  const rid = race.id;
+  const cached = raceWeatherCache[rid];
+  const TTL = 30 * 24 * 60 * 60 * 1000;
+  if (cached && cached.fetched && Date.now() - cached.fetched < TTL) return cached;
+  const city = race.city, country = race.country;
+  if (!city || !race.date) return null;
+  const coord = await geocodeCityIfNeeded(city, country);
+  if (!coord) return null;
+  try {
+    await new Promise(r => setTimeout(r, 1100));
+    const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${coord.lat}&longitude=${coord.lng}&start_date=${race.date}&end_date=${race.date}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max&timezone=auto`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!data.daily || !data.daily.temperature_2m_max) return null;
+    const w = {
+      tempMax: data.daily.temperature_2m_max[0],
+      tempMin: data.daily.temperature_2m_min[0],
+      precip:  data.daily.precipitation_sum[0],
+      windMax: data.daily.windspeed_10m_max[0],
+      fetched: Date.now()
+    };
+    raceWeatherCache[rid] = w;
+    localStorage.setItem('fl2_race_weather', JSON.stringify(raceWeatherCache));
+    return w;
+  } catch (e) { return null; }
+}
+
+async function computeRaceDNA() {
+  const pbMap = buildPBMap();
+  // Find races with city data, sorted newest first, limit uncached
+  const racesWithCity = races.filter(r => r.city && r.date && r.time);
+  if (racesWithCity.length < 3) return null;
+  const uncached = racesWithCity.filter(r => !raceWeatherCache[r.id]);
+  const isFirst = uncached.length === racesWithCity.length;
+  const toFetch = uncached.slice(0, isFirst ? 10 : 5);
+  for (const r of toFetch) { await fetchRaceWeather(r); }
+  // Build buckets
+  const buckets = { '<5': [], '5-10': [], '10-15': [], '15-20': [], '20-25': [], '>25': [] };
+  const bucketOrder = ['<5', '5-10', '10-15', '15-20', '20-25', '>25'];
+  racesWithCity.forEach(r => {
+    const w = raceWeatherCache[r.id];
+    if (!w || w.tempMax == null) return;
+    if (!pbMap[r.distance] || !r.time) return;
+    const pbSecs = timeToSecs(pbMap[r.distance].time);
+    const raceSecs = timeToSecs(r.time);
+    if (!pbSecs || !raceSecs) return;
+    const ratio = pbSecs / raceSecs;
+    const t = w.tempMax;
+    const key = t < 5 ? '<5' : t < 10 ? '5-10' : t < 15 ? '10-15' : t < 20 ? '15-20' : t < 25 ? '20-25' : '>25';
+    buckets[key].push(ratio);
+  });
+  const summary = bucketOrder.map(k => ({
+    range: k,
+    avgRatio: buckets[k].length ? buckets[k].reduce((s,v)=>s+v,0)/buckets[k].length : 0,
+    count: buckets[k].length
+  }));
+  const qualified = summary.filter(b => b.count >= 2);
+  if (!qualified.length) return null;
+  const best = qualified.sort((a, b) => b.avgRatio - a.avgRatio)[0];
+  return { bestRange: best.range, racesAnalyzed: racesWithCity.filter(r=>raceWeatherCache[r.id]).length, buckets: summary };
+}
+
+async function renderRaceDNA() {
+  const el = document.getElementById('raceDNAContent');
+  if (!el) return;
+  if (!races.length || races.filter(r=>r.city).length < 3) {
+    el.innerHTML = `<div style="color:var(--muted);font-size:12px;padding:.5rem 0">Log at least 3 races with city data to unlock Race DNA.</div>`;
+    return;
+  }
+  el.innerHTML = `<div style="color:var(--muted);font-size:12px;padding:.5rem 0">Analysing race conditions…</div>`;
+  try {
+    const dna = await computeRaceDNA();
+    if (!dna) {
+      el.innerHTML = `<div style="color:var(--muted);font-size:12px;padding:.5rem 0">Need more race weather data. Check back later.</div>`;
+      return;
+    }
+    const maxAvg = Math.max(...dna.buckets.map(b => b.avgRatio), 0.01);
+    const bucketHtml = dna.buckets.map(b => {
+      const h = b.count ? Math.max(4, Math.round((b.avgRatio / maxAvg) * 36)) : 4;
+      const cls = b.range === dna.bestRange ? 'best' : b.count >= 1 ? 'ok' : '';
+      return `<div class="dna-bucket-wrap">
+        <div class="dna-bucket ${cls}" style="height:${h}px" title="${b.count} races"></div>
+        <div class="dna-bucket-label">${b.range}°</div>
+      </div>`;
+    }).join('');
+    // Forecast check vs next race
+    let nextMatch = '';
+    if (nextRace && nextRace.date) {
+      // quick check: compare best range bucket to a rough forecast
+      nextMatch = `<div class="dna-next">Next race: <span style="color:var(--muted)">${nextRace.name || nextRace.location || ''}</span></div>`;
+    }
+    el.innerHTML = `<div class="dna-card">
+      <div class="dna-headline">You race best in <span class="dna-best">${dna.bestRange}°C</span></div>
+      <div class="dna-buckets">${bucketHtml}</div>
+      <div class="dna-next" style="margin-top:1.5rem">Based on ${dna.racesAnalyzed} races with weather data</div>
+      ${nextMatch}
+    </div>`;
+  } catch (e) {
+    el.innerHTML = `<div style="color:var(--muted);font-size:12px;padding:.5rem 0">Weather data unavailable.</div>`;
+  }
+}
+
+/* ============================
+   FEATURE 10 — PERFORMANCE MAP
+   ============================ */
+let mapMode = 'standard';
+let perfMapMarkers = {};
+
+function getPerformanceColor(percentile) {
+  if (percentile >= 90) return 'var(--green)';
+  if (percentile >= 50) return 'var(--orange)';
+  return '#ef4444';
+}
+
+function getCityPerformanceSummary(cityKey) {
+  const cityRaces = races.filter(r => (r.city + ',' + r.country).toLowerCase() === cityKey.toLowerCase());
+  let bestPct = null, bestTime = null, raceCount = cityRaces.length;
+  cityRaces.forEach(r => {
+    const p = parsePlacing(r.placing);
+    if (p && (bestPct === null || p.percentile > bestPct)) bestPct = p.percentile;
+    if (r.time && (!bestTime || timeToSecs(r.time) < timeToSecs(bestTime))) bestTime = r.time;
+  });
+  return { bestPct, bestTime, raceCount };
+}
+
+function buildPerformanceMarkerHtml(cityKey) {
+  const { bestPct } = getCityPerformanceSummary(cityKey);
+  const color = bestPct !== null ? getPerformanceColor(bestPct) : 'rgba(245,245,245,0.4)';
+  return `<div class="fl-dot fl-dot-perf" style="background:${color};width:10px;height:10px;border-radius:50%;border:1.5px solid rgba(245,245,245,0.3)"></div>`;
+}
+
+function applyMapPerformanceMode(enabled) {
+  Object.entries(perfMapMarkers).forEach(([key, marker]) => {
+    if (!marker.setIcon) return;
+    if (enabled) {
+      const html = buildPerformanceMarkerHtml(key);
+      marker.setIcon(L.divIcon({ html, className: '', iconSize: [10, 10], iconAnchor: [5, 5] }));
+    } else {
+      // Reset to default dot (replicate original fl-dot style)
+      marker.setIcon(L.divIcon({ html: '<div class="fl-dot" style="background:var(--orange);width:8px;height:8px;border-radius:50%;border:1.5px solid rgba(245,245,245,0.25)"></div>', className: '', iconSize: [8, 8], iconAnchor: [4, 4] }));
+    }
+  });
+}
+
+function setMapMode(mode) {
+  mapMode = mode;
+  const stdBtn = document.getElementById('mapModeStd');
+  const perfBtn = document.getElementById('mapModePerf');
+  const legend = document.getElementById('perfLegend');
+  if (stdBtn) stdBtn.classList.toggle('active', mode === 'standard');
+  if (perfBtn) perfBtn.classList.toggle('active', mode === 'performance');
+  if (legend) legend.style.display = mode === 'performance' ? '' : 'none';
+  applyMapPerformanceMode(mode === 'performance');
+}
+
+/* ============================
    DASHBOARD
    ============================ */
 function renderDash(){
@@ -4783,6 +5860,16 @@ function renderDash(){
     renderGoals();
     renderDashInsights();
     document.getElementById('dashPBs').innerHTML = renderPBSections(calcPBs(), 'dash-pb-card');
+    renderOnThisDay();
+    renderFieldPlacingWidget();
+    renderActivityPreview();
+    renderStreakWidget();
+    renderPacingIQ();
+    renderMomentumWidget();
+    renderAgeGradeWidget();
+    renderRaceDayForecast();
+    renderRaceDNA();
+    applyDashLayout();
     return;
   }
   document.getElementById('recentFeed').innerHTML = sorted.length ? sorted.map(r=>{
@@ -4808,6 +5895,18 @@ function renderDash(){
   renderDashInsights();
   // Personal Bests on dashboard
   document.getElementById('dashPBs').innerHTML = renderPBSections(calcPBs(), 'dash-pb-card');
+  // Analytics widgets (sync)
+  renderOnThisDay();
+  renderFieldPlacingWidget();
+  renderActivityPreview();
+  renderStreakWidget();
+  renderPacingIQ();
+  renderMomentumWidget();
+  renderAgeGradeWidget();
+  // Analytics widgets (async, non-blocking)
+  renderRaceDayForecast();
+  renderRaceDNA();
+  applyDashLayout();
 }
 
 /* ============================
@@ -6314,6 +7413,12 @@ function openRaceView(id) {
   } else {
     notesWrap.style.display = 'none';
   }
+  // Pacing badge
+  const pacingBadge = renderRacePacingBadge(id);
+  const rvPacingDiv = document.getElementById('rvPacingIQ');
+  const rvPacingBadge = document.getElementById('rvPacingBadge');
+  if (rvPacingBadge) rvPacingBadge.innerHTML = pacingBadge;
+  if (rvPacingDiv) rvPacingDiv.style.display = pacingBadge ? '' : 'none';
   openM('raceViewModal');
 }
 function rvDelete() {
@@ -6517,7 +7622,7 @@ function getProfileCompleteness() {
   const a = athlete || {};
   const fields = [
     a.name && a.name !== 'Athlete',
-    a.city, a.nationality, a.ageGroup, a.favRace, a.since, a.primary
+    a.city, a.nationality, a.ageGroup, a.gender, a.favRace, a.since, a.primary
   ];
   return { filled: fields.filter(Boolean).length, total: fields.length };
 }
@@ -6585,6 +7690,8 @@ function renderAthlete(){
   document.getElementById('athTags').innerHTML=tags.map(t=>`<span class="ath-tag">${t}</span>`).join('');
   // PBs
   document.getElementById('athPBs').innerHTML = renderPBSections(calcPBs(), 'ath-pb-card');
+  // Age-Grade chart
+  renderAgeGradeChart();
   // Countries
   const countries=[...new Set(races.map(r=>r.country))];
   document.getElementById('cChips').innerHTML=countries.length?countries.map(c=>`<span class="country-chip">${c}</span>`).join(''):`<span style="color:var(--muted);font-size:12px">No races yet.</span>`;
@@ -6728,6 +7835,7 @@ function openEditAth(){
   document.getElementById('eCiWrap').style.display=a.city?'':'none';
   document.getElementById('eNat').value=a.nationality||'';
   document.getElementById('eAG').value=a.ageGroup||'';
+  document.getElementById('eGender').value=a.gender||'';
   document.getElementById('eSince').value=a.since||'';
   document.getElementById('ePrim').value=a.primary||'';
   document.getElementById('eFav').value=a.favRace||'';
@@ -6822,6 +7930,7 @@ function saveAth(){
     city:document.getElementById('eCi').value.trim(),
     nationality:document.getElementById('eNat').value.trim(),
     ageGroup:document.getElementById('eAG').value,
+    gender:document.getElementById('eGender').value,
     since:document.getElementById('eSince').value,
     primary:document.getElementById('ePrim').value,
     favRace:document.getElementById('eFav').value.trim(),
@@ -7215,7 +8324,7 @@ async function renderMap() {
     // Clear old markers
     mapMarkers.forEach(m => leafletMap.removeLayer(m));
     Object.values(countryLayers).forEach(l => leafletMap.removeLayer(l));
-    mapMarkers = []; cityRaceMap = {}; countryLayers = {}; countryRaceMap = {};
+    mapMarkers = []; perfMapMarkers = {}; cityRaceMap = {}; countryLayers = {}; countryRaceMap = {};
   }
 
   if (!races.length) {
@@ -7287,6 +8396,8 @@ async function renderMap() {
       .on('mouseout',  () => hideMapTip())
       .on('click', () => openDrawer(key));
     mapMarkers.push(marker);
+    perfMapMarkers[key] = marker;
+    marker._cityKey = key;
   }
 
   // ── Fit bounds ─────────────────────────────────────
@@ -8275,6 +9386,10 @@ function filterTraining(type, btn){
   document.querySelectorAll('#trainActivitiesSection .training-tab').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   renderTrainingFeed();
+  const streakHeaderEl = document.getElementById('stravaStreakHeader');
+  if (streakHeaderEl && stravaData && stravaData.access_token) {
+    streakHeaderEl.innerHTML = renderStreakHeader();
+  }
 }
 
 function renderTrainingFeed(){
@@ -8870,6 +9985,24 @@ initApp();
 </button>
 
 <!-- ==== FEEDBACK MODAL (staging only) ==== -->
+<!-- Dashboard Customize Modal -->
+<div class="modal-overlay" id="dashCustomizeModal" onclick="bgClose(event,'dashCustomizeModal')">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="dashCustomizeModalTitle">
+    <div class="modal-drag"></div>
+    <div class="modal-head">
+      <div class="modal-h" id="dashCustomizeModalTitle">Customize Dashboard</div>
+      <div class="modal-sub">Toggle sections on or off, and reorder them.</div>
+    </div>
+    <div class="modal-body" style="padding:0;overflow-y:auto;max-height:60vh">
+      <p class="dcw-hint">WIDGETS</p>
+      <ul class="dcw-list" id="dcwList"></ul>
+    </div>
+    <div class="modal-foot" style="padding:1rem 1.25rem">
+      <button class="btn-main" onclick="closeM('dashCustomizeModal')">Done</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="feedbackModal" onclick="bgClose(event,'feedbackModal')">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="feedbackModalTitle">
     <div class="modal-drag"></div>
