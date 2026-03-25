@@ -1552,7 +1552,7 @@ main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(1
   background:var(--surface); border:1px solid var(--border);
   border-radius:5px; padding:1rem;
   transition:all 0.15s;
-  flex: 0 0 155px;
+  flex: 0 0 160px;
   scroll-snap-align: start;
 }
 .ath-pb-card:hover { border-color:rgba(0,255,136,0.2); }
@@ -2374,7 +2374,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   border-radius: 5px;
   padding: 0.85rem 0.9rem;
   transition: all 0.15s;
-  flex: 0 0 140px;
+  flex: 0 0 160px;
   scroll-snap-align: start;
 }
 .dash-pb-card:hover { border-color: var(--green); transform: translateY(-2px); }
@@ -2517,6 +2517,26 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 .training-empty-icon { font-size: 36px; margin-bottom: 0.75rem; }
 .training-empty-h { font-family: var(--headline); font-size: 18px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: var(--white); margin-bottom: 0.3rem; }
 .training-empty-sub { font-size: 13px; }
+
+/* Training feed: month groups + race badge */
+.ta-month-group { margin-bottom: 1.5rem; }
+.ta-month-label {
+  font-family: var(--headline); font-size: 11px; font-weight: 800;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);
+  padding: 0.3rem 0 0.5rem; border-bottom: 1px solid var(--border); margin-bottom: 0.4rem;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.ta-month-count {
+  background: var(--surface3); border: 1px solid var(--border2);
+  border-radius: 10px; padding: 1px 7px; font-size: 10px; color: var(--muted2);
+}
+.ta-race-badge {
+  display: inline-block; margin-left: 6px; padding: 1px 6px;
+  font-family: var(--headline); font-size: 9px; font-weight: 800;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  background: var(--orange-dim); color: var(--orange);
+  border: 1px solid rgba(255,77,0,0.35); border-radius: 3px; vertical-align: middle;
+}
 
 /* =============================================
    LOCATION AUTOCOMPLETE
@@ -2805,9 +2825,6 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
     <button class="menu-item" onclick="go('train');switchTrainTab('activities',document.getElementById('ttActivities'))">
       <span class="menu-icon">🏋️</span>Activity Log
     </button>
-    <button class="menu-item" onclick="go('train');switchTrainTab('wearables',document.getElementById('ttWearables'))">
-      <span class="menu-icon">📡</span>Open Wearables
-    </button>
     <div class="menu-divider"></div>
     <div class="menu-section-label">You</div>
     <button class="menu-item" id="mi-athlete" onclick="go('athlete')">
@@ -2858,10 +2875,6 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
       <div class="s-tile"><div class="s-tile-num" id="ds-k">0</div><div class="s-tile-label">Total KM</div></div>
       <div class="s-tile" onclick="go('medals')" style="cursor:pointer"><div class="s-tile-num" id="ds-m">0</div><div class="s-tile-label">Medals</div></div>
     </div>
-    <!-- Open Wearables Recovery -->
-    <div id="owWidget"></div>
-    <!-- OW Fatigue vs Performance (shown when OW connected + enough data) -->
-    <div id="owFatigueSection"></div>
     <!-- Goals -->
     <div id="goalsSection"></div>
     <!-- Year in Review + H2H -->
@@ -2879,7 +2892,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
     <div class="section-row" style="margin-top:1.5rem">
       <div class="section-h">Personal Bests</div>
     </div>
-    <div class="dash-pb-strip" id="dashPBs"></div>
+    <div id="dashPBs"></div>
     <!-- Your World (map teaser) -->
     <div class="section-row" style="margin-top:1.75rem">
       <div class="section-h">Your World</div>
@@ -2993,17 +3006,12 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
     <!-- Athlete PBs -->
     <div class="ath-section">
       <div class="ath-section-h">Personal Bests</div>
-      <div class="ath-pb-grid" id="athPBs"></div>
+      <div id="athPBs"></div>
     </div>
     <!-- Race Activity Heatmap -->
     <div class="ath-section">
       <div class="ath-section-h">Race Activity</div>
       <div id="athCalHeatmap"></div>
-    </div>
-    <!-- OW VO2 Max Trend -->
-    <div class="ath-section" id="athVO2Section" style="display:none">
-      <div class="ath-section-h">VO2 Max Trend</div>
-      <div id="athVO2Chart"></div>
     </div>
     <!-- Countries -->
     <div class="ath-section">
@@ -3059,7 +3067,6 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
     <div class="training-tabs" id="trainTabBar" style="margin-bottom:1.5rem">
       <button class="training-tab train-tab-pill active" id="ttPace" onclick="switchTrainTab('pace',this)">Pace</button>
       <button class="training-tab train-tab-pill" id="ttActivities" onclick="switchTrainTab('activities',this)">Activities</button>
-      <button class="training-tab train-tab-pill" id="ttWearables" onclick="switchTrainTab('wearables',this)">Wearables</button>
     </div>
     <!-- Pace sub-tab -->
     <div id="trainPaceSection">
@@ -3203,17 +3210,6 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
         </div>
       </div>
       <div id="trainingFeed"></div>
-      <div id="owTrainingSection" style="margin-top:1.75rem">
-        <div class="training-bar ow-training-header">
-          <div class="section-h">Open Wearables</div>
-        </div>
-        <div id="owTrainingFeed"></div>
-      </div>
-    </div>
-    <!-- Wearables sub-tab -->
-    <div id="trainWearablesSection" style="display:none">
-      <div id="owPageWidget"></div>
-      <div id="owPageFatigueSection" style="margin-top:1.5rem"></div>
     </div>
   </div>
 </div>
@@ -3761,12 +3757,6 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
         <div class="rd-label">Race Notes</div>
         <textarea class="ai-ta" id="rdNotes" placeholder="How did it go? Conditions, strategy, reflections…" style="min-height:80px"></textarea>
       </div>
-      <!-- OW Health Context: sleep + training load (async, hidden until loaded) -->
-      <div id="rdOwHealth" style="display:none">
-        <div class="rd-label" style="margin-bottom:0.5rem">Health Context</div>
-        <div id="rdOwSleep" style="margin-bottom:0.5rem"></div>
-        <div id="rdOwTrainingLoad"></div>
-      </div>
     </div>
     <div class="modal-foot">
       <button class="btn-ghost" onclick="_rdIsNew=false;closeM('raceDetailModal')">Cancel</button>
@@ -3796,7 +3786,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
         <div class="fg">
           <label class="fl">Anthropic API Key</label>
           <div class="fi-wrap">
-            <input class="fi" id="setApiKey" type="password" placeholder="sk-ant-..." autocomplete="new-password">
+            <input class="fi" id="setApiKey" type="password" placeholder="sk-ant-..." autocomplete="new-password" disabled>
             <button class="fi-reveal" onclick="toggleReveal(this)" aria-label="Show/hide key">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
@@ -3805,36 +3795,6 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
             </button>
           </div>
           <div class="ai-hint" style="margin-top:6px">Required for AI race import and screenshot parsing. Get your key at console.anthropic.com</div>
-        </div>
-      </div>
-      <div style="margin-top:1.25rem;padding-top:1.25rem;border-top:1px solid var(--border)">
-        <div class="modal-sub" style="margin-bottom:0.85rem;font-size:13px;font-weight:700;color:var(--fg)">Open Wearables</div>
-        <div class="fgrid" style="grid-template-columns:1fr">
-          <div class="fg">
-            <label class="fl">Instance URL</label>
-            <input class="fi" id="owUrl" type="text" placeholder="https://your-instance.example.com" autocomplete="off">
-          </div>
-          <div class="fg" style="margin-top:0.65rem">
-            <label class="fl">API Key</label>
-            <div class="fi-wrap">
-              <input class="fi" id="owKey" type="password" placeholder="ow_..." autocomplete="new-password">
-              <button class="fi-reveal" onclick="toggleReveal(this)" aria-label="Show/hide key">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                  <circle cx="12" cy="12" r="3"/>
-                </svg>
-              </button>
-            </div>
-          </div>
-          <div class="fg" style="margin-top:0.65rem">
-            <label class="fl">User ID</label>
-            <input class="fi" id="owUserId" type="text" placeholder="your-user-id" autocomplete="off">
-            <div class="ai-hint" style="margin-top:6px">Connects Garmin, Whoop, Oura, Apple Health & more. <a href="https://openwearables.io" target="_blank" style="color:var(--orange)">openwearables.io ↗</a></div>
-          </div>
-          <div class="fg" style="margin-top:0.65rem">
-            <button class="btn-ghost" type="button" onclick="testOWConnection()" style="width:100%">Test Connection</button>
-            <div id="owTestResult" style="font-size:12px;margin-top:6px;color:var(--muted)"></div>
-          </div>
         </div>
       </div>
     </div>
@@ -3933,6 +3893,9 @@ const SUPABASE_ANON_KEY = _IS_PROD
   ? 'sb_publishable_aXlZ54g7bW8dckyl3N-kCA_Jzy_Nt0B'
   : 'sb_publishable_XiI5lGzh_3rWoA2TxrKnWg_gPtPKSRp';
 const REMOTE_SYNC_KEYS = new Set(['fl2_races', 'fl2_ath', 'fl2_nr', 'fl2_upcoming']);
+// Open Wearables proxy — Cloudflare Worker that adds the OW API key server-side
+// Set to '' until the Railway OW instance + worker secrets are configured
+const OW_PROXY_URL = 'https://health.breaktapes.com';
 // Instantly hide landing screen if a cached Supabase session exists — avoids flash on reload
 (function() {
   try {
@@ -4053,19 +4016,19 @@ async function loadRemoteState() {
       .maybeSingle();
     if (error) throw error;
     if (!data) {
-      // New user — seed an empty row so subsequent syncs work
+      // New user — reset local state to blank slate, then seed remote row
+      races = [];
+      athlete = { name: authUser.user_metadata?.full_name || '' };
+      nextRace = null; upcomingRaces = [];
+      localStorage.setItem('fl2_races', JSON.stringify(races));
+      localStorage.setItem('fl2_ath', JSON.stringify(athlete));
       const emptyPayload = {
         user_id: authUser.id,
         races: [],
-        athlete: athlete || { name: authUser.user_metadata?.full_name || '' },
+        athlete,
         next_race: null,
         upcoming_races: []
       };
-      // Apply name from auth metadata if athlete has no name yet
-      if (!athlete?.name && authUser.user_metadata?.full_name) {
-        athlete = { name: authUser.user_metadata.full_name };
-        localStorage.setItem('fl2_ath', JSON.stringify(athlete));
-      }
       const { error: upsertError } = await client.from('user_state').upsert(emptyPayload, { onConflict: 'user_id' });
       if (upsertError) throw upsertError;
       return true;
@@ -4196,6 +4159,15 @@ async function refreshAuthState(session) {
   authSession = session || null;
   authUser = session?.user || null;
   remoteSyncReady = !!authUser;
+  // Clear stale local state when a different user signs in
+  if (authUser) {
+    const storedUid = localStorage.getItem('bt_auth_uid');
+    if (storedUid && storedUid !== authUser.id) {
+      REMOTE_SYNC_KEYS.forEach(k => localStorage.removeItem(k));
+      races = []; athlete = { name: '' }; nextRace = null; upcomingRaces = [];
+    }
+    localStorage.setItem('bt_auth_uid', authUser.id);
+  }
   updateAuthUI();
   if (authUser) {
     await loadRemoteState();
@@ -4282,6 +4254,7 @@ async function signOutUser() {
   }
   localStorage.removeItem('bt_new_user');
   localStorage.removeItem('bt_modal_shown');
+  localStorage.removeItem('bt_auth_uid');
   window.location.reload();
 }
 
@@ -4340,14 +4313,12 @@ function switchTrainTab(tab, btnEl) {
   if (btnEl) btnEl.classList.add('active');
   document.getElementById('trainPaceSection').style.display      = tab === 'pace'       ? '' : 'none';
   document.getElementById('trainActivitiesSection').style.display = tab === 'activities' ? '' : 'none';
-  document.getElementById('trainWearablesSection').style.display  = tab === 'wearables'  ? '' : 'none';
   if (tab === 'pace')       { pcOnTypeChange(); document.getElementById('paceResults').style.display = 'none'; }
   if (tab === 'activities') renderTraining();
-  if (tab === 'wearables')  renderOWPage();
 }
 function renderTrain() {
   const activeBtn = document.getElementById(
-    trainTab === 'pace' ? 'ttPace' : trainTab === 'activities' ? 'ttActivities' : 'ttWearables'
+    trainTab === 'pace' ? 'ttPace' : 'ttActivities'
   );
   switchTrainTab(trainTab, activeBtn);
 }
@@ -4703,7 +4674,6 @@ function renderCountdown(){
   clearInterval(cdTimer);
   cdTimer = setInterval(tickCD, 1000);
   fetchCourseInfo(nextRace);
-  renderOWReadiness();
 }
 function tickCD(){
   if(!nextRace) return;
@@ -4809,7 +4779,6 @@ async function renderGreeting() {
 function renderDash(){
   renderGreeting();
   renderCountdown();
-  renderOWWidget();
   document.getElementById('ds-r').textContent = races.length;
   document.getElementById('ds-c').textContent = new Set(races.map(r=>r.country)).size;
   document.getElementById('ds-k').textContent = Math.round(races.reduce((s,r)=>s+(r.distKm||0),0));
@@ -4827,7 +4796,6 @@ function renderDash(){
 </div>`;
     renderGoals();
     renderDashInsights();
-    renderOWFatigueChart();
     document.getElementById('dashPBs').innerHTML = renderPBSections(calcPBs(), 'dash-pb-card');
     return;
   }
@@ -4852,7 +4820,6 @@ function renderDash(){
 
   renderGoals();
   renderDashInsights();
-  renderOWFatigueChart();
   // Personal Bests on dashboard
   document.getElementById('dashPBs').innerHTML = renderPBSections(calcPBs(), 'dash-pb-card');
 }
@@ -6047,8 +6014,6 @@ function openRaceDetailFromParsed(obj) {
   document.getElementById('rdTriSegsSection').style.display = 'none';
   document.getElementById('rdPodiumBanner').style.display = 'none';
   document.getElementById('rdPodiumBanner').innerHTML = '';
-  const rdOwHealth = document.getElementById('rdOwHealth');
-  if (rdOwHealth) rdOwHealth.style.display = 'none';
   // Hint banner — show if no name extracted
   const hint = document.getElementById('rdNewHint');
   const nameField = document.getElementById('rdName');
@@ -6449,18 +6414,7 @@ function openRaceDetail(id) {
   }
   const tbody = document.getElementById('rdSplits');
   tbody.innerHTML = (r.splits || []).map(_splitRowHtml).join('');
-  // Reset OW health context panel
-  const rdOwHealth = document.getElementById('rdOwHealth');
-  if (rdOwHealth) rdOwHealth.style.display = 'none';
-  const rdOwSleep = document.getElementById('rdOwSleep');
-  if (rdOwSleep) rdOwSleep.innerHTML = '';
-  const rdOwTL = document.getElementById('rdOwTrainingLoad');
-  if (rdOwTL) rdOwTL.innerHTML = '';
   openM('raceDetailModal');
-  if (r.date && getOWConfig()) {
-    renderOWSleepBeforeRace(r.date);
-    renderOWTrainingLoad(r.date);
-  }
 }
 function _collectRdFields() {
   // Collect all raceDetailModal form values into a plain object
@@ -6650,8 +6604,6 @@ function renderAthlete(){
   document.getElementById('cChips').innerHTML=countries.length?countries.map(c=>`<span class="country-chip">${c}</span>`).join(''):`<span style="color:var(--muted);font-size:12px">No races yet.</span>`;
   // Race activity heatmap
   renderCalHeatmap('athCalHeatmap', true);
-  // OW VO2 Max trend
-  renderOWVO2Chart();
   // Avatar
   const savi=localStorage.getItem('fl2_avi');
   if(savi){
@@ -6805,6 +6757,10 @@ function closeM(id){
     if (ln) ln.value = '';
     const pw = document.getElementById('authPassword');
     if (pw) { pw.value = ''; pw.disabled = true; }
+  }
+  if (id === 'settingsModal') {
+    const apiKeyEl = document.getElementById('setApiKey');
+    if (apiKeyEl) { apiKeyEl.value = ''; apiKeyEl.disabled = true; }
   }
 }
 function toggleReveal(btn) {
@@ -7587,11 +7543,12 @@ function fmtDate(d){
    ============================ */
 function openSettings(){
   closeMenu();
-  document.getElementById('setApiKey').value = getApiKey();
+  const apiKeyEl = document.getElementById('setApiKey');
+  // Re-enable password field only when modal opens (prevents autofill scan)
+  apiKeyEl.disabled = false;
+  apiKeyEl.value = getApiKey();
   const owCfg = getOWConfig();
   if (owCfg) {
-    document.getElementById('owUrl').value    = owCfg.url || '';
-    document.getElementById('owKey').value    = owCfg.key || '';
     document.getElementById('owUserId').value = owCfg.uid || '';
   }
   updateAuthUI();
@@ -7599,16 +7556,7 @@ function openSettings(){
 }
 function saveSettings(){
   localStorage.setItem('fl2_apikey', document.getElementById('setApiKey').value.trim());
-  const owUrl = document.getElementById('owUrl').value.trim().replace(/\/$/, '');
-  const owKey = document.getElementById('owKey').value.trim();
-  const owUid = document.getElementById('owUserId').value.trim();
-  if (owUrl && owKey && owUid) {
-    localStorage.setItem('fl2_ow', JSON.stringify({ url: owUrl, key: owKey, uid: owUid }));
-  } else if (!owUrl && !owKey && !owUid) {
-    localStorage.removeItem('fl2_ow');
-  }
   closeM('settingsModal');
-  if (owUrl && owKey && owUid) renderOWWidget();
 }
 
 /* ============================
@@ -7616,18 +7564,24 @@ function saveSettings(){
    ============================ */
 
 function getOWConfig() {
-  try { return JSON.parse(localStorage.getItem('fl2_ow') || 'null'); }
-  catch { return null; }
+  try {
+    const stored = JSON.parse(localStorage.getItem('fl2_ow') || 'null');
+    if (!stored) return null;
+    // Support legacy {url, key, uid} format and new {uid}-only format
+    const uid = stored.uid || stored;
+    return uid ? { uid } : null;
+  } catch { return null; }
 }
 
 async function owFetch(path, params = {}) {
+  if (!OW_PROXY_URL) return null;             // proxy not yet deployed
   const cfg = getOWConfig();
   if (!cfg) return null;
-  const url = new URL(`${cfg.url}${path}`);
+  const url = new URL(`${OW_PROXY_URL}${path}`);
   Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
   try {
     const res = await fetch(url.toString(), {
-      headers: { 'X-Open-Wearables-API-Key': cfg.key, 'Accept': 'application/json' }
+      headers: { 'X-OW-User-ID': cfg.uid, 'Accept': 'application/json' }
     });
     if (!res.ok) { console.warn(`OW ${path} → ${res.status}`); return null; }
     return await res.json();
@@ -7635,29 +7589,29 @@ async function owFetch(path, params = {}) {
 }
 
 async function testOWConnection() {
-  const url = document.getElementById('owUrl').value.trim().replace(/\/$/, '');
-  const key = document.getElementById('owKey').value.trim();
   const uid = document.getElementById('owUserId').value.trim();
   const el  = document.getElementById('owTestResult');
-  if (!url || !key || !uid) { el.textContent = 'Fill in all three fields first.'; el.style.color = 'var(--muted)'; return; }
+  if (!uid) { el.textContent = 'Enter your OW User ID first.'; el.style.color = 'var(--muted)'; return; }
+  if (!OW_PROXY_URL) { el.textContent = '⚠ Proxy not yet deployed — coming soon.'; el.style.color = 'var(--muted)'; return; }
   el.textContent = 'Testing…'; el.style.color = 'var(--muted)';
-  const end = new Date().toISOString().slice(0, 10);
+  const end   = new Date().toISOString().slice(0, 10);
   const start = new Date(Date.now() - 30*24*60*60*1000).toISOString().slice(0, 10);
   try {
-    const res = await fetch(`${url}/api/v1/users/${uid}/summaries/activity?start_date=${start}&end_date=${end}&limit=1`, {
-      headers: { 'X-Open-Wearables-API-Key': key, 'Accept': 'application/json' }
-    });
+    const res = await fetch(
+      `${OW_PROXY_URL}/api/v1/users/${uid}/summaries/activity?start_date=${start}&end_date=${end}&limit=1`,
+      { headers: { 'X-OW-User-ID': uid, 'Accept': 'application/json' } }
+    );
     if (res.ok) {
       const d = await res.json();
       const count = d?.data?.length ?? '?';
       el.textContent = `✓ Connected — ${count} activity record(s) found`;
       el.style.color = '#4ade80';
     } else {
-      el.textContent = `✗ Error ${res.status} — check URL, key, and user ID`;
+      el.textContent = `✗ Error ${res.status} — check your User ID`;
       el.style.color = '#f87171';
     }
   } catch(e) {
-    el.textContent = `✗ Could not reach instance: ${e.message}`;
+    el.textContent = `✗ Could not reach proxy: ${e.message}`;
     el.style.color = '#f87171';
   }
 }
@@ -8233,6 +8187,19 @@ function renderTraining(){
     document.getElementById('ts-acts').textContent = acts.length.toLocaleString();
     document.getElementById('ts-hrs').textContent  = Math.round(totalSec/3600).toLocaleString();
     document.getElementById('ts-elev').textContent = Math.round(totalElev).toLocaleString();
+    // Update filter tab counts
+    const tabCounts = {
+      'All': filterActs('All').length,
+      'Run': filterActs('Run').length,
+      'Ride': filterActs('Ride').length,
+      'Swim': filterActs('Swim').length
+    };
+    document.querySelectorAll('#trainActivitiesSection .training-tab[onclick]').forEach(btn => {
+      const m = btn.getAttribute('onclick').match(/'(\w+)'/);
+      if (m && tabCounts[m[1]] !== undefined) {
+        btn.textContent = `${m[1]} ${tabCounts[m[1]]}`;
+      }
+    });
   } else {
     btn.textContent = 'Connect';
     btn.className = 'strava-connect-btn';
@@ -8242,7 +8209,6 @@ function renderTraining(){
     syncBtn.style.display = 'none';
   }
   renderTrainingFeed();
-  renderOWTrainingFeed();
 }
 
 const ACTIVITY_ICONS = { Run:'🏃', VirtualRun:'🏃', Ride:'🚴', VirtualRide:'🚴', Swim:'🏊', Walk:'🚶', Hike:'🥾', WeightTraining:'🏋️', Yoga:'🧘', Workout:'💪' };
@@ -8270,26 +8236,51 @@ function renderTrainingFeed(){
     feed.innerHTML = `<div class="training-empty"><div class="training-empty-icon">📭</div><div class="training-empty-h">No activities</div><div class="training-empty-sub">No ${trainingFilter.toLowerCase()} activities found</div></div>`;
     return;
   }
-  feed.innerHTML = acts.slice(0,100).map(a=>{
-    const icon = ACTIVITY_ICONS[a.type]||'⚡';
-    const km   = a.distance ? (a.distance/1000).toFixed(1)+' km' : '—';
-    const pace = (a.type==='Run'||a.type==='VirtualRun') && a.distance && a.moving_time
-      ? fmtPace(a.moving_time / (a.distance/1000)) : null;
-    const spd  = (a.type==='Ride'||a.type==='VirtualRide') && a.distance && a.moving_time
-      ? ((a.distance/1000)/(a.moving_time/3600)).toFixed(1)+' km/h' : null;
-    const dur  = a.moving_time ? fmtDuration(a.moving_time) : '—';
-    const date = a.start_date_local ? fmtDate(a.start_date_local.slice(0,10)) : '';
-    const typeClass = 't-'+a.type.replace(/Virtual/,'');
-    return `<div class="training-activity ${typeClass}">
-      <div class="ta-icon">${icon}</div>
-      <div class="ta-main">
-        <div class="ta-name">${a.name||'Activity'}</div>
-        <div class="ta-date">${date} · ${a.type}</div>
-      </div>
-      <div class="ta-meta">
-        <div class="ta-stat"><div class="ta-val">${km}</div><div class="ta-lbl">Distance</div></div>
-        <div class="ta-stat"><div class="ta-val">${pace||spd||dur}</div><div class="ta-lbl">${pace?'Pace':spd?'Speed':'Time'}</div></div>
-      </div>
+
+  // Group by month
+  const groups = {};
+  const monthOrder = [];
+  acts.forEach(a => {
+    const d = a.start_date_local ? a.start_date_local.slice(0,7) : 'Unknown';
+    if (!groups[d]) { groups[d] = []; monthOrder.push(d); }
+    groups[d].push(a);
+  });
+
+  feed.innerHTML = monthOrder.map(monthKey => {
+    const label = monthKey === 'Unknown' ? 'Unknown Date' :
+      new Date(monthKey + '-15').toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+    const cards = groups[monthKey].map(a => {
+      const icon = ACTIVITY_ICONS[a.type]||'⚡';
+      const isRun  = a.type==='Run'||a.type==='VirtualRun';
+      const isRide = a.type==='Ride'||a.type==='VirtualRide';
+      const km   = a.distance ? (a.distance/1000).toFixed(1)+' km' : '—';
+      const pace = isRun && a.distance && a.moving_time
+        ? fmtPace(a.moving_time / (a.distance/1000)) : null;
+      const spd  = isRide && a.distance && a.moving_time
+        ? ((a.distance/1000)/(a.moving_time/3600)).toFixed(1)+' km/h' : null;
+      const dur  = a.moving_time ? fmtDuration(a.moving_time) : '—';
+      const date = a.start_date_local ? fmtDate(a.start_date_local.slice(0,10)) : '';
+      const typeClass = 't-'+a.type.replace(/Virtual/,'');
+      const elev = a.total_elevation_gain > 0 ? `<div class="ta-stat"><div class="ta-val">${Math.round(a.total_elevation_gain)}m</div><div class="ta-lbl">Elev</div></div>` : '';
+      const hr   = a.average_heartrate ? `<div class="ta-stat"><div class="ta-val">${Math.round(a.average_heartrate)}<span style="font-size:10px;font-weight:600">bpm</span></div><div class="ta-lbl">Avg HR</div></div>` : '';
+      const raceBadge = (a.workout_type===1||a.workout_type===11) ? `<span class="ta-race-badge">RACE</span>` : '';
+      return `<div class="training-activity ${typeClass}">
+        <div class="ta-icon">${icon}</div>
+        <div class="ta-main">
+          <div class="ta-name">${a.name||'Activity'}${raceBadge}</div>
+          <div class="ta-date">${date} · ${a.type}</div>
+        </div>
+        <div class="ta-meta">
+          <div class="ta-stat"><div class="ta-val">${km}</div><div class="ta-lbl">Distance</div></div>
+          <div class="ta-stat"><div class="ta-val">${pace||spd||dur}</div><div class="ta-lbl">${pace?'Pace':spd?'Speed':'Time'}</div></div>
+          <div class="ta-stat"><div class="ta-val">${dur}</div><div class="ta-lbl">Duration</div></div>
+          ${elev}${hr}
+        </div>
+      </div>`;
+    }).join('');
+    return `<div class="ta-month-group">
+      <div class="ta-month-label">${label} <span class="ta-month-count">${groups[monthKey].length}</span></div>
+      ${cards}
     </div>`;
   }).join('');
 }
