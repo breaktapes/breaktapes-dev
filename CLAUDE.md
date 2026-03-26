@@ -269,12 +269,34 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 
 ---
 
+## Deployment
+
+- After pushing changes to staging, always verify the deployment is live by checking `dev.breaktapes.com` before merging to main/production.
+- Check `gh run list --branch staging --limit 3` and confirm the deploy workflow shows `success` before proceeding.
+
+---
+
+## Git Workflow
+
+- When merging PRs, first check if any open PRs have their base branch set to the branch being merged: `gh pr list --state open` and inspect `baseRefName`. Rebase those PRs onto the new base before squash-merging to avoid auto-closed PRs.
+- If a PR does get auto-closed due to a squash merge, rebase the branch onto the updated base and open a new PR.
+
+---
+
+## UI / Frontend
+
+- For iOS mobile UI changes, always test at a 390px viewport using the Claude Preview MCP screenshot tool before considering the task done. Check for overflow, sizing issues, and native picker rendering.
+- Specify target devices and constraints upfront when requesting UI changes — e.g. "this needs to work on iOS Safari at 390px".
+
+---
+
 ## Development Workflow
 
 - All work happens in Claude Code worktrees (`/Users/akrish/DEV/.claude/worktrees/<branch>`)
 - PRs merge into `main`
 - Branch naming: `claude/<adjective>-<surname>` pattern (e.g. `claude/frosty-wozniak`)
 - Deploy: Cloudflare Pages auto-deploys from `main` (or via `wrangler deploy`)
+- **Never delete a git worktree while the shell is inside it** — always `cd` to the main repo root first.
 
 ---
 
