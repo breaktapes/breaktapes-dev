@@ -77,6 +77,28 @@ body {
   -webkit-font-smoothing: antialiased;
   cursor: auto;
 }
+body.landing-active,
+body.mobile-race-detail-active {
+  overflow: hidden;
+}
+body.landing-active header,
+body.landing-active main,
+body.landing-active .bottom-nav,
+body.landing-active .side-menu,
+body.landing-active .menu-overlay,
+body.landing-active #feedbackPill {
+  visibility: hidden;
+  pointer-events: none;
+}
+@media (max-width: 520px) {
+  body.mobile-race-detail-active header,
+  body.mobile-race-detail-active main,
+  body.mobile-race-detail-active .bottom-nav,
+  body.mobile-race-detail-active #feedbackPill {
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
 
 /* =============================================
    GRAIN + TEXTURE OVERLAY
@@ -4027,7 +4049,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 .tip-pct{font-size:10px;color:var(--green);font-weight:700;margin-top:2px}
 </style>
 </head>
-<body>
+<body class="landing-active">
 
 <!-- ==== LANDING SCREEN ==== -->
 <div id="landing-screen">
@@ -5641,6 +5663,7 @@ const OW_PROXY_URL = HEALTH_WORKER_URL;
       if (tok?.access_token) {
         const el = document.getElementById('landing-screen');
         if (el) el.style.display = 'none';
+        document.body.classList.remove('landing-active');
       }
     }
   } catch(e) {}
@@ -6914,7 +6937,11 @@ function dismissLanding() {
   const el = document.getElementById('landing-screen');
   if (!el) return;
   el.classList.add('out');
-  setTimeout(() => el.remove(), 420);
+  setTimeout(() => {
+    el.remove();
+    document.body.classList.remove('landing-active');
+    syncOverlayShellState();
+  }, 420);
 }
 
 function openLandingAuth(mode) {
@@ -11341,9 +11368,20 @@ function openEditAth(){
   document.getElementById('eFav').value=a.favRace||'';
   openM('eaModal');
 }
-function openM(id){ document.getElementById(id).classList.add('open'); }
+function syncOverlayShellState() {
+  const landingEl = document.getElementById('landing-screen');
+  const landingVisible = !!landingEl && landingEl.style.display !== 'none' && !landingEl.classList.contains('out');
+  const raceDetailOpen = window.innerWidth <= 520 && document.getElementById('raceDetailModal')?.classList.contains('open');
+  document.body.classList.toggle('landing-active', landingVisible);
+  document.body.classList.toggle('mobile-race-detail-active', !!raceDetailOpen);
+}
+function openM(id){
+  document.getElementById(id).classList.add('open');
+  syncOverlayShellState();
+}
 function closeM(id){
   document.getElementById(id).classList.remove('open');
+  syncOverlayShellState();
   if (id === 'authModal') {
     const fn = document.getElementById('authFirstName');
     const ln = document.getElementById('authLastName');
@@ -11360,6 +11398,8 @@ function closeM(id){
     flatlayAddContext = null;
   }
 }
+window.addEventListener('resize', syncOverlayShellState);
+syncOverlayShellState();
 function toggleReveal(btn) {
   const wrap = btn.closest('.fi-wrap');
   const inp = wrap ? wrap.querySelector('input') : null;
