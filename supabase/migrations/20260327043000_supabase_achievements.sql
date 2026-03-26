@@ -29,7 +29,7 @@ create table if not exists public.user_races (
   priority text,
   medal text,
   dist_km numeric,
-  placing text,
+  "placing" text,
   age_category text,
   age_category_pos text,
   gender_pos text,
@@ -317,7 +317,7 @@ set group_key = excluded.group_key,
 
 insert into public.user_races (
   user_id, race_key, name, type, distance, time, city, country, date, priority, medal, dist_km,
-  placing, age_category, age_category_pos, gender_pos, notes, strava_id, tri_segments, splits, raw_race
+  "placing", age_category, age_category_pos, gender_pos, notes, strava_id, tri_segments, splits, raw_race
 )
 select
   us.user_id,
@@ -354,7 +354,7 @@ set name = excluded.name,
     priority = excluded.priority,
     medal = excluded.medal,
     dist_km = excluded.dist_km,
-    placing = excluded.placing,
+    "placing" = excluded."placing",
     age_category = excluded.age_category,
     age_category_pos = excluded.age_category_pos,
     gender_pos = excluded.gender_pos,
