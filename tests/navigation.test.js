@@ -15,7 +15,7 @@ beforeAll(() => {
   loadSPA({ races: [] });
 
   // Bottom-nav tabs (go() does getElementById('bn-' + page))
-  ['dashboard', 'history', 'medals', 'map', 'athlete', 'train', 'pace'].forEach(id => {
+  ['dashboard', 'history', 'flatlay', 'medals', 'map', 'athlete', 'train', 'pace'].forEach(id => {
     const btn = document.createElement('button');
     btn.id = 'bn-' + id;
     btn.className = 'bn-tab active';  // start all active to test toggling
@@ -80,6 +80,11 @@ describe('go() — active page class', () => {
     expect(document.getElementById('page-athlete').classList.contains('active')).toBe(true);
     expect(document.getElementById('page-dashboard').classList.contains('active')).toBe(false);
   });
+
+  test('activates the flatlay page element', () => {
+    go('flatlay');
+    expect(document.getElementById('page-flatlay').classList.contains('active')).toBe(true);
+  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -110,6 +115,11 @@ describe('go() — bottom-nav active state', () => {
   test('activates the correct bn-tab button', () => {
     go('history');
     expect(document.getElementById('bn-history').classList.contains('active')).toBe(true);
+  });
+
+  test('activates the flatlay bottom-nav button', () => {
+    go('flatlay');
+    expect(document.getElementById('bn-flatlay').classList.contains('active')).toBe(true);
   });
 
   test('removes active from all other bn-tab buttons', () => {
