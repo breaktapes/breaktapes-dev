@@ -57,6 +57,17 @@
    ============================================= */
 *, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
  html { scroll-behavior: smooth; background: var(--black); }
+html::before,
+html::after {
+  content:'';
+  position:fixed;
+  left:0;
+  right:0;
+  background:var(--orange);
+  pointer-events:none;
+  z-index:450;
+  display:none;
+}
 body {
   font-family: var(--body);
   background: var(--black);
@@ -2415,6 +2426,16 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 @media (max-width: 767px) {
+  html::before {
+    display:block;
+    top:0;
+    height:calc(var(--header-base-height) + env(safe-area-inset-top, 0px));
+  }
+  html::after {
+    display:block;
+    bottom:0;
+    height:calc(var(--bottom-nav-base-height) + env(safe-area-inset-bottom, 0px));
+  }
   .bottom-nav { display: flex; align-items: flex-start; justify-content: space-around; }
   main { padding-bottom: calc(var(--bottom-nav-base-height) + env(safe-area-inset-bottom, 0px)); }
   .hamburger { display: none; }
