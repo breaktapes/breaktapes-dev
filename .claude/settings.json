@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if pgrep -f 'preview-server' > /dev/null; then pkill -HUP -f 'preview-server'; fi"
+          }
+        ]
+      }
+    ]
+  }
+}
