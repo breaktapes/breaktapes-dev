@@ -15,3 +15,6 @@ gstack/
 
 # Worker deps (installed locally, not committed)
 health-proxy/node_modules/
+
+node_modules/
+coverage/

@@ -4526,6 +4526,7 @@ function go(page) {
   const a = document.getElementById('mi-'+page);
   if(a) a.classList.add('active');
   closeMenu();
+  window.scrollTo(0, 0);
   render(page);
 }
 
@@ -5457,9 +5458,9 @@ function computeMomentum() {
   const qualifying = races
     .filter(r => r.time && r.date && new Date(r.date + 'T00:00:00') >= cutoff && pbMap[r.distance])
     .map(r => {
-      const pbSecs = timeToSecs(pbMap[r.distance].time);
+      const pbSecs = pbMap[r.distance].secs;
       const raceSecs = timeToSecs(r.time);
-      if (!pbSecs || !raceSecs) return null;
+      if (!pbSecs || pbSecs === Infinity || !raceSecs || raceSecs === Infinity) return null;
       const ratio = Math.min(1.5, Math.max(0.5, pbSecs / raceSecs));
       return { date: r.date, ratio };
     })
@@ -5724,9 +5725,9 @@ async function computeRaceDNA() {
     const w = raceWeatherCache[r.id];
     if (!w || w.tempMax == null) return;
     if (!pbMap[r.distance] || !r.time) return;
-    const pbSecs = timeToSecs(pbMap[r.distance].time);
+    const pbSecs = pbMap[r.distance].secs;
     const raceSecs = timeToSecs(r.time);
-    if (!pbSecs || !raceSecs) return;
+    if (!pbSecs || pbSecs === Infinity || !raceSecs || raceSecs === Infinity) return;
     const ratio = pbSecs / raceSecs;
     const t = w.tempMax;
     const key = t < 5 ? '<5' : t < 10 ? '5-10' : t < 15 ? '10-15' : t < 20 ? '15-20' : t < 25 ? '20-25' : '>25';

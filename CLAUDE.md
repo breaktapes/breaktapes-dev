@@ -280,12 +280,14 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 
 - When merging PRs, first check if any open PRs have their base branch set to the branch being merged: `gh pr list --state open` and inspect `baseRefName`. Rebase those PRs onto the new base before squash-merging to avoid auto-closed PRs.
 - If a PR does get auto-closed due to a squash merge, rebase the branch onto the updated base and open a new PR.
+- **Before deleting any git worktrees**, first `cd` to the main repository root directory (`/Users/akrish/DEV/breaktapes-dev` or equivalent). Then clean up worktrees. Never delete the directory the current shell is inside of.
 
 ---
 
 ## UI / Frontend
 
-- For iOS mobile UI changes, always test at a 390px viewport using the Claude Preview MCP screenshot tool before considering the task done. Check for overflow, sizing issues, and native picker rendering.
+- **After every UI change**, take a screenshot at desktop (1280px) and mobile (375px) viewports using the Claude Preview MCP screenshot tool. Compare both and flag any layout issues before the user reviews.
+- For iOS mobile UI changes, always test at a 390px viewport before considering the task done. Check for overflow, sizing issues, and native picker rendering.
 - Specify target devices and constraints upfront when requesting UI changes — e.g. "this needs to work on iOS Safari at 390px".
 
 ---
