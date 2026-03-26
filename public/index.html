@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#000000">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -22,8 +22,8 @@
    TOKENS
    ============================================= */
 :root {
-  --safe-top: env(safe-area-inset-top, 0px);
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: 0px;
+  --safe-bottom: 0px;
   color-scheme: dark;
   --black:      #000000;
   --white:      #F5F5F5;
@@ -68,28 +68,15 @@
    ============================================= */
 *, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
  html { scroll-behavior: smooth; background: var(--black); min-height:100%; overscroll-behavior-y:none; }
-html::before,
-html::after {
-  content:'';
-  position:fixed;
-  left:0;
-  right:0;
-  pointer-events:none;
-  z-index:450;
-  display:none;
-}
 body {
   font-family: var(--body);
   background: var(--black);
   color: var(--white);
-  min-height: 100svh;
+  min-height: 100vh;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   cursor: auto;
   overscroll-behavior-y:none;
-}
-@supports (min-height: 100dvh) {
-  body { min-height: 100dvh; }
 }
 body.landing-active,
 body.mobile-race-detail-active {
@@ -137,20 +124,8 @@ header {
   box-shadow: 0 1px 0 rgba(255,255,255,0.04);
   display: flex; align-items: center; justify-content: space-between;
   padding: 0 1.25rem;
-  padding-top: var(--safe-top);
-  height: calc(var(--header-base-height) + var(--safe-top));
   transform: translateZ(0);
   backface-visibility: hidden;
-}
-header::before {
-  content:'';
-  position:absolute;
-  left:0;
-  right:0;
-  top:-72px;
-  height:72px;
-  background: var(--shell-top-gradient);
-  pointer-events:none;
 }
 
 .logo {
@@ -301,11 +276,8 @@ header::before {
    MAIN / PAGES
    ============================================= */
 main {
-  margin-top: calc(var(--header-base-height) + var(--safe-top));
-  min-height: calc(100svh - var(--header-base-height) - var(--safe-top));
-}
-@supports (min-height: 100dvh) {
-  main { min-height: calc(100dvh - var(--header-base-height) - var(--safe-top)); }
+  margin-top: var(--header-base-height);
+  min-height: calc(100vh - var(--header-base-height));
 }
 
 .page { display:none; }
@@ -1562,8 +1534,8 @@ main {
   }
   #raceDetailModal .race-detail-modal {
     max-width:none;
-    max-height:100svh;
-    min-height:100svh;
+    max-height:100vh;
+    min-height:100vh;
     border-radius:0;
     border-left:none;
     border-right:none;
@@ -1920,6 +1892,18 @@ main {
 .fi::placeholder { color:var(--muted2); }
 .fs option { background:var(--surface2); }
 .fgrid { display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; }
+@media (max-width: 767px) {
+  .fi,
+  .fs,
+  .ai-ta,
+  #authEmail,
+  #authPassword,
+  #authFirstName,
+  #authLastName,
+  #authInviteCode {
+    font-size:16px;
+  }
+}
 
 .modal-foot {
   padding:1rem 1.5rem 1.5rem; flex-shrink:0;
@@ -2544,35 +2528,13 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   position: fixed; bottom: 0; left: 0; right: 0; z-index: 500;
   background: var(--shell-bottom-gradient);
   box-shadow: none;
-  padding-bottom: var(--safe-bottom);
+  padding-bottom: 0;
   transform: translateZ(0);
   backface-visibility: hidden;
 }
-.bottom-nav::after {
-  content:'';
-  position:absolute;
-  left:0;
-  right:0;
-  bottom:-72px;
-  height:72px;
-  background: var(--shell-bottom-gradient);
-  pointer-events:none;
-}
 @media (max-width: 767px) {
-  html::before {
-    display:block;
-    top:0;
-    height:calc(var(--header-base-height) + var(--safe-top) + 72px);
-    background:var(--shell-top-gradient);
-  }
-  html::after {
-    display:block;
-    bottom:0;
-    height:calc(var(--bottom-nav-base-height) + var(--safe-bottom) + 72px);
-    background:var(--shell-bottom-gradient);
-  }
   .bottom-nav { display: flex; align-items: flex-start; justify-content: space-around; }
-  main { padding-bottom: calc(var(--bottom-nav-base-height) + var(--safe-bottom) + 4px); }
+  main { padding-bottom: calc(var(--bottom-nav-base-height) + 4px); }
   .hamburger { display: none; }
 }
 .bn-tab {
@@ -3805,8 +3767,8 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
     linear-gradient(180deg, #050505 0%, #070707 60%, #130905 84%, #1c0b06 100%);
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
-  min-height: 100svh;
-  padding: calc(2rem + var(--safe-top)) 1.5rem calc(2rem + var(--safe-bottom));
+  min-height: 100vh;
+  padding: 2rem 1.5rem 2rem;
   text-align: center;
   transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.4,0,0.2,1);
   overflow: hidden;
@@ -8392,20 +8354,36 @@ async function renderGreeting() {
   }
 
   if (geoFresh) {
-    // Use cached coords — no popup
     fetchWeather(cachedGeo.lat, cachedGeo.lon);
-  } else if (navigator.geolocation) {
-    wEl.textContent = 'Fetching weather…';
-    navigator.geolocation.getCurrentPosition(pos => {
-      const { latitude: lat, longitude: lon } = pos.coords;
-      localStorage.setItem('fl2_geo', JSON.stringify({ lat, lon, ts: Date.now() }));
-      fetchWeather(lat, lon);
-    }, () => {
-      wEl.textContent = 'Weather unavailable (location denied)';
-    });
-  } else {
-    wEl.textContent = 'Weather unavailable';
+    return;
   }
+  if (!navigator.geolocation) {
+    wEl.textContent = 'Weather unavailable';
+    return;
+  }
+  if (navigator.permissions?.query) {
+    try {
+      const perm = await navigator.permissions.query({ name: 'geolocation' });
+      if (perm.state !== 'granted') {
+        wEl.textContent = 'Enable location to show local weather';
+        return;
+      }
+    } catch (_) {
+      wEl.textContent = 'Enable location to show local weather';
+      return;
+    }
+  } else {
+    wEl.textContent = 'Enable location to show local weather';
+    return;
+  }
+  wEl.textContent = 'Fetching weather…';
+  navigator.geolocation.getCurrentPosition(pos => {
+    const { latitude: lat, longitude: lon } = pos.coords;
+    localStorage.setItem('fl2_geo', JSON.stringify({ lat, lon, ts: Date.now() }));
+    fetchWeather(lat, lon);
+  }, () => {
+    wEl.textContent = 'Weather unavailable';
+  });
 }
 
 /* ============================
