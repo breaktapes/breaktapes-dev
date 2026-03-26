@@ -118,7 +118,7 @@ CLOUDFLARE_API_TOKEN="" CF_API_TOKEN="" wrangler deploy --env=""
 ## Architecture
 
 ### Single-file structure (`index.html`)
-The entire app lives in one HTML file (~8,600+ lines). Sections are organized as:
+The entire app lives in one HTML file (~10,035 lines). Sections are organized as:
 1. CSS tokens / reset / component styles
 2. HTML markup (pages, modals, landing screen)
 3. JavaScript (data, auth, render functions, integrations)
@@ -221,6 +221,35 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 | `rdLookupRace()` | Auto-fill race details — catalog-first (free/instant), falls back to Claude API |
 | `rdApplyCatalogSuggestion(idx)` | Fill race form from catalog entry (name, type, distance, city, country, date) |
 | `rdOnNameInput()` | Race name autocomplete — searches raceDb catalog + user's own races |
+| `renderSparklineSVG(values, w, h, color)` | Generate inline SVG sparkline string for widget charts |
+| `geocodeCityIfNeeded(city, country)` | Geocode a city with Nominatim (rate-limited, cached in `fl2_geocache`) |
+| `parsePlacing(str)` | Parse "342/5000" placing strings → `{pos, total, percentile}` |
+| `computeStreak(activities)` | Calculate current + longest training streak from Strava activities |
+| `classifyPacing(race)` | Classify a race as positive/negative/even split from splits data |
+| `computePacingIQ()` | Aggregate pacing persona across all races with splits |
+| `computeMomentum()` | Weighted career momentum score from recent race times vs PBs |
+| `renderRaceDayForecast()` | Fetch Open-Meteo forecast for next race location + date |
+| `computeAgeGrade(race)` | Calculate WA age-grade percentage for a race result |
+| `renderAgeGradeWidget()` | Render age-grade trajectory widget on dashboard |
+| `renderAgeGradeChart()` | Render age-grade history chart on Athlete page |
+| `fetchRaceWeather(race)` | Fetch historical weather for a past race via Open-Meteo archive API |
+| `computeRaceDNA()` | Aggregate race conditions (weather, surface, elevation) across all races |
+| `renderRaceDNA()` | Render Race DNA widget with condition breakdown |
+| `setMapMode(mode)` | Switch map between default and performance overlay modes |
+| `applyMapPerformanceMode(enabled)` | Apply/remove performance color overlay on race map markers |
+| `getPerformanceColor(percentile)` | Map percentile → color for performance map overlay |
+| `getCityPerformanceSummary(cityKey)` | Aggregate performance stats for a city across all races |
+
+---
+
+## Testing
+
+- **Test runner:** Jest + jsdom (`npm test` or `npm run test:coverage`)
+- **Test files:** `tests/utils.test.js` (pure functions), `tests/navigation.test.js` (go() + scroll behaviour)
+- **Loader:** `tests/spa-loader.js` — loads `index.html` into jsdom, exposes globals via `window`
+- **Coverage:** `npm run test:coverage` → `coverage/` directory
+- **67 tests, all green** as of Session 7
+- Functions tested: `timeToSecs`, `secsToHMS`, `buildPBMap`, `parsePlacing`, `computeStreak`, `computeMomentum`, `computePacingIQ`, `computeAgeGrade`, `classifyPacing`, `go()` scroll + page switching + nav state
 
 ---
 
@@ -336,6 +365,42 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 - `20260324160000` race_medal_community migration
 - `26878dc` CI/CD pipeline, prod/staging environments, project memory docs
 - `f2c1774` Merge PR #9: gstack skills, landing-worker, gitignore fixes, pipeline hardening
+
+### Session 7 (2026-03-26) — Analytics dashboard + test suite + repo hygiene
+
+**Branch:** `claude/sleepy-gould` (staging) → main
+
+#### 10 analytics dashboard widgets
+- `582957e` / `9d9d110` — Field-Adjusted Placing, On This Day, Activity Feed Preview, Training Streak, Pacing IQ, Career Momentum Score, Race Day Forecast, Age-Grade Trajectory, Race DNA, Performance Map
+- Dashboard customization: `DASH_WIDGETS` array + `applyDashLayout()` + `fl2_dash_layout` localStorage persist
+- New infrastructure: `renderSparklineSVG()`, `geocodeCityIfNeeded()`, `AGE_GRADE_STANDARDS` (WA standards table for M/F × 5K/10K/HM/Marathon), `fetchRaceWeather()` (Open-Meteo archive API)
+- Performance map: toggle between default and percentile-colored overlay modes via `setMapMode()`
+
+#### Bug fix
+- `a8a09e0` — Scroll to top on tab navigation: `window.scrollTo(0, 0)` added to `go()` before `render()`
+
+#### Test suite
+- `ca32051` — Jest + jsdom test suite: 67 tests across `tests/utils.test.js` + `tests/navigation.test.js`
+- Loader: `tests/spa-loader.js` loads full `index.html` into jsdom, exposes globals
+- Found + fixed `computeMomentum` bug: `buildPBMap()` call was missing `pbMap` variable assignment
+
+#### Tooling
+- `33808eb` — PostToolUse hook in `.claude/settings.json` to auto-reload preview server on file edit
+- `880cf9e` — `/deploy` custom skill for compile-merge-deploy pipeline
+- `d73e0ac` — Ruflo v3 multi-agent setup (coder/reviewer/tester agents, hierarchical-mesh swarm)
+
+#### Repo hygiene (end of session)
+- Synced `staging` back to `main` (post-squash reset) — both branches now at same commit
+- Updated local `main` worktree at `/Users/akrish/DEV` (was 34 commits behind)
+- Deleted 4 stale remote branches + 6 stale local branches + 1 stale worktree (`frosty-wozniak`)
+
+#### Key learnings
+- `computeMomentum()` must call `buildPBMap()` and assign result before use — was silently returning `null`
+- Ruflo `init --force --minimal` overwrites `settings.json` and `CLAUDE.md` — always backup first, merge back after
+- `gh pr merge --squash` tries to checkout the target branch locally; fails if target is checked out in another worktree — use `--repo` flag or GitHub API directly
+- After squash merges from staging → main, reset staging to `origin/main` to keep branches in sync
+
+---
 
 ### Session 6 (2026-03-25) — Beta launch prep
 

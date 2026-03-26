@@ -15,12 +15,20 @@ Then open `http://localhost:3000` in your browser.
 
 ## Project structure
 
-- `index.html` — entire app (single-file SPA, ~8,600 lines of HTML/CSS/JS)
+- `index.html` — entire app (single-file SPA, ~10,000 lines of HTML/CSS/JS)
 - `public/index.html` — deploy copy (always synced: `cp index.html public/index.html`)
 - `supabase/` — Supabase project config + database migrations
+- `tests/` — Jest + jsdom test suite (`npm test`)
 - `CLAUDE.md` — project memory and architecture reference
 - `DESIGN.md` — frontend design system (read before any UI changes)
 - `.claude/skills/` — gstack skills for Claude Code workflows
+
+## Tests
+
+```bash
+npm test              # run all tests (67 tests)
+npm run test:coverage # with coverage report
+```
 
 ## Deploy
 

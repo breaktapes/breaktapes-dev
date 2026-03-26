@@ -18,3 +18,7 @@ health-proxy/node_modules/
 
 node_modules/
 coverage/
+
+# Ruflo runtime
+.claude-flow/
+.swarm/
