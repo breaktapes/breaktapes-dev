@@ -1,0 +1,35 @@
+{
+  "name": "breaktapes",
+  "version": "1.0.0",
+  "private": true,
+  "description": "BREAKTAPES SPA – Jest test suite",
+  "scripts": {
+    "test": "jest",
+    "test:coverage": "jest --coverage",
+    "test:watch": "jest --watch"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "jest-environment-jsdom",
+    "testEnvironmentOptions": {
+      "url": "http://localhost:3000"
+    },
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ],
+    "setupFiles": [
+      "./tests/jest.setup.js"
+    ],
+    "coverageDirectory": "coverage",
+    "coverageReporters": [
+      "text",
+      "lcov",
+      "html"
+    ],
+    "collectCoverageFrom": [],
+    "verbose": true
+  }
+}
