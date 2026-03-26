@@ -142,6 +142,16 @@ header {
   transform: translateZ(0);
   backface-visibility: hidden;
 }
+header::before {
+  content:'';
+  position:absolute;
+  left:0;
+  right:0;
+  top:-72px;
+  height:72px;
+  background: var(--shell-top-gradient);
+  pointer-events:none;
+}
 
 .logo {
   font-family: var(--headline);
@@ -2538,17 +2548,27 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   transform: translateZ(0);
   backface-visibility: hidden;
 }
+.bottom-nav::after {
+  content:'';
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:-72px;
+  height:72px;
+  background: var(--shell-bottom-gradient);
+  pointer-events:none;
+}
 @media (max-width: 767px) {
   html::before {
     display:block;
     top:0;
-    height:calc(var(--header-base-height) + var(--safe-top) + 2px);
+    height:calc(var(--header-base-height) + var(--safe-top) + 72px);
     background:var(--shell-top-gradient);
   }
   html::after {
     display:block;
     bottom:0;
-    height:calc(var(--bottom-nav-base-height) + var(--safe-bottom) + 2px);
+    height:calc(var(--bottom-nav-base-height) + var(--safe-bottom) + 72px);
     background:var(--shell-bottom-gradient);
   }
   .bottom-nav { display: flex; align-items: flex-start; justify-content: space-around; }
