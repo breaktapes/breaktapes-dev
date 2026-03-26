@@ -50,6 +50,8 @@
   --sp-5: 20px; --sp-6: 24px; --sp-8: 32px;
   --header-base-height: 56px;
   --bottom-nav-base-height: 56px;
+  --shell-top-gradient: linear-gradient(180deg, rgba(255,102,34,0.98) 0%, rgba(255,87,20,0.95) 48%, rgba(44,18,10,0.94) 82%, rgba(8,8,8,0.98) 100%);
+  --shell-bottom-gradient: linear-gradient(0deg, rgba(255,102,34,0.98) 0%, rgba(255,87,20,0.95) 48%, rgba(44,18,10,0.94) 82%, rgba(8,8,8,0.98) 100%);
 }
 
 /* =============================================
@@ -63,7 +65,6 @@ html::after {
   position:fixed;
   left:0;
   right:0;
-  background:var(--orange);
   pointer-events:none;
   z-index:450;
   display:none;
@@ -119,12 +120,23 @@ body::after {
 header {
   position: fixed; top:0; left:0; right:0; z-index:500;
   height: var(--header-base-height);
-  background: var(--orange);
-  box-shadow: 0 1px 0 rgba(0,0,0,0.18);
+  background: var(--shell-top-gradient);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.12);
   display: flex; align-items: center; justify-content: space-between;
   padding: 0 1.25rem;
   padding-top: env(safe-area-inset-top, 0px);
   height: calc(var(--header-base-height) + env(safe-area-inset-top, 0px));
+  overflow: visible;
+}
+header::after {
+  content:'';
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:-18px;
+  height:18px;
+  pointer-events:none;
+  background: linear-gradient(180deg, rgba(26,12,7,0.55) 0%, rgba(12,12,12,0.18) 62%, rgba(12,12,12,0) 100%);
 }
 
 .logo {
@@ -952,7 +964,7 @@ main {
 /* ── Recent ── */
 .section-row {
   display:flex; align-items:center; justify-content:space-between;
-  margin-bottom:0.75rem;
+  margin-bottom:0.95rem;
 }
 .section-h {
   font-family: var(--headline);
@@ -972,13 +984,13 @@ main {
 .dash-insight-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.5rem; }
 .dash-insight-tile {
   background:var(--surface); border:1px solid var(--border); border-radius:10px;
-  padding:1rem; position:relative; overflow:hidden;
+  padding:1.2rem 1rem 1rem; position:relative; overflow:hidden;
 }
 .dash-insight-tile::before {
-  content:''; position:absolute; top:0; left:0; right:0; height:2px;
-  background:linear-gradient(90deg,transparent,var(--orange),transparent);
+  content:''; position:absolute; top:0.8rem; left:1rem; right:1rem; height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,104,38,0.88),transparent);
 }
-.di-kicker { font-family:var(--headline); font-size:9px; font-weight:800; letter-spacing:0.18em; text-transform:uppercase; color:var(--orange); margin-bottom:0.5rem; }
+.di-kicker { font-family:var(--headline); font-size:9px; font-weight:800; letter-spacing:0.18em; text-transform:uppercase; color:var(--orange); margin-bottom:0.9rem; }
 .di-big { font-family:var(--headline); font-size:26px; font-weight:900; color:var(--white); line-height:1; }
 .di-sub { font-size:11px; color:var(--muted); margin-top:3px; }
 .di-stats { display:flex; gap:0.75rem; flex-wrap:wrap; margin-top:0.4rem; }
@@ -1449,9 +1461,10 @@ main {
   width:100%; background:transparent; border:none; border-bottom:1px solid var(--border2);
   outline:none; color:var(--white); font-family:var(--headline); font-size:22px; font-weight:900;
   text-transform:uppercase; letter-spacing:0.04em; padding:0 0 0.3rem; margin-bottom:0.3rem;
+  line-height:1.08;
 }
 .rd-name-input:focus { border-bottom-color:var(--orange); }
-.rd-name-wrap { position:relative; }
+.rd-name-wrap { position:relative; padding-right:96px; }
 .rd-autofill-btn {
   position:absolute; right:0; top:0;
   background:rgba(255,90,0,0.12); border:1px solid rgba(255,90,0,0.3);
@@ -1544,6 +1557,28 @@ main {
   }
   #raceDetailModal .modal-head {
     padding-top:0.9rem;
+  }
+  #raceDetailModal .rd-name-wrap {
+    padding-right:0;
+    display:flex;
+    flex-direction:column;
+    gap:0.55rem;
+  }
+  #raceDetailModal .rd-name-input {
+    font-size:17px;
+    letter-spacing:0.035em;
+    margin-bottom:0;
+    padding-bottom:0.45rem;
+  }
+  #raceDetailModal .rd-autofill-btn {
+    position:static;
+    align-self:flex-start;
+    max-width:100%;
+  }
+  #raceDetailModal .modal-sub {
+    margin-top:0.65rem;
+    line-height:1.45;
+    overflow-wrap:anywhere;
   }
   #raceDetailModal .race-detail-body {
     max-height:none;
@@ -2239,8 +2274,8 @@ main {
   box-shadow:inset 0 1px 0 rgba(255,255,255,0.03);
 }
 #page-dashboard .dash-zone-head {
-  margin-bottom:0.25rem;
-  padding-bottom:0.8rem;
+  margin-bottom:0.45rem;
+  padding-bottom:1rem;
   border-bottom:1px solid rgba(245,245,245,0.06);
 }
 #page-dashboard .dash-zone-grid {
@@ -2490,20 +2525,33 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 .bottom-nav {
   display: none;
   position: fixed; bottom: 0; left: 0; right: 0; z-index: 500;
-  background: var(--orange);
-  box-shadow: 0 -1px 0 rgba(0,0,0,0.18);
+  background: var(--shell-bottom-gradient);
+  box-shadow: none;
   padding-bottom: env(safe-area-inset-bottom, 0px);
+  overflow: visible;
+}
+.bottom-nav::before {
+  content:'';
+  position:absolute;
+  left:0;
+  right:0;
+  top:-20px;
+  height:20px;
+  pointer-events:none;
+  background: linear-gradient(0deg, rgba(26,12,7,0.56) 0%, rgba(12,12,12,0.18) 62%, rgba(12,12,12,0) 100%);
 }
 @media (max-width: 767px) {
   html::before {
     display:block;
     top:0;
     height:calc(var(--header-base-height) + env(safe-area-inset-top, 0px));
+    background:var(--shell-top-gradient);
   }
   html::after {
     display:block;
     bottom:0;
     height:calc(var(--bottom-nav-base-height) + env(safe-area-inset-bottom, 0px));
+    background:var(--shell-bottom-gradient);
   }
   .bottom-nav { display: flex; align-items: flex-start; justify-content: space-around; }
   main { padding-bottom: calc(var(--bottom-nav-base-height) + env(safe-area-inset-bottom, 0px)); }
@@ -2514,13 +2562,19 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   align-items: center; justify-content: center;
   gap: 3px; padding: 8px 0 4px; min-height: 48px; min-width: 44px;
   cursor: pointer; background: none; border: none;
-  color: rgba(0,0,0,0.55); transition: color 0.15s;
+  color: rgba(18,10,6,0.78); transition: color 0.15s, transform 0.15s, opacity 0.15s;
   font-family: var(--headline); font-size: 8px; font-weight: 800;
   letter-spacing: 0.1em; text-transform: uppercase;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.14);
 }
 .bn-tab:active { transform: scale(0.92); }
 .bn-tab.active { color: var(--black); }
-.bn-tab svg { width: 22px; height: 22px; }
+.bn-tab svg {
+  width: 24px; height: 24px;
+  stroke-width: 2.2;
+  opacity: 0.96;
+  filter: drop-shadow(0 1px 0 rgba(255,255,255,0.16));
+}
 .bn-tab.active svg { stroke: var(--black); }
 @media (max-width: 360px) { .bn-tab { font-size: 0; } }
 /* Train tab — green identity */
@@ -3731,7 +3785,8 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
    ============================================= */
 #landing-screen {
   position: fixed; inset: 0; z-index: 600;
-  background: var(--black);
+  background:
+    linear-gradient(180deg, #050505 0%, #070707 60%, #130905 84%, #1c0b06 100%);
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
   min-height: 100dvh;
@@ -3747,8 +3802,8 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   content: '';
   position: absolute; inset: 0; z-index: 0;
   background:
-    radial-gradient(ellipse 70% 50% at 50% 110%, rgba(255,77,0,0.18) 0%, transparent 70%),
-    radial-gradient(ellipse 40% 30% at 80% 10%, rgba(255,77,0,0.06) 0%, transparent 60%);
+    radial-gradient(ellipse 92% 56% at 50% 112%, rgba(255,77,0,0.24) 0%, rgba(255,77,0,0.14) 38%, rgba(255,77,0,0.04) 66%, transparent 82%),
+    radial-gradient(ellipse 46% 30% at 82% 10%, rgba(255,77,0,0.07) 0%, transparent 62%);
   pointer-events: none;
 }
 /* Grain texture */
@@ -5394,24 +5449,24 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
             <div class="fg" style="margin:0">
               <label class="fl">First Name</label>
-              <input class="fi" id="authFirstName" placeholder="Alex">
+              <input class="fi" id="authFirstName" placeholder="Alex" autocomplete="off" disabled>
               <div class="fg-err-msg"></div>
             </div>
             <div class="fg" style="margin:0">
               <label class="fl">Last Name</label>
-              <input class="fi" id="authLastName" placeholder="Finisher">
+              <input class="fi" id="authLastName" placeholder="Finisher" autocomplete="off" disabled>
               <div class="fg-err-msg"></div>
             </div>
           </div>
         </div>
         <div class="fg" id="authInviteWrap" style="display:none">
           <label class="fl">Invite Code</label>
-          <input class="fi" id="authInviteCode" placeholder="e.g. BREAKTAPES2026" autocomplete="off" style="text-transform:uppercase">
+          <input class="fi" id="authInviteCode" placeholder="e.g. BREAKTAPES2026" autocomplete="off" style="text-transform:uppercase" disabled>
           <div class="fg-err-msg"></div>
         </div>
         <div class="fg">
           <label class="fl" for="authEmail">Email</label>
-          <input class="fi" id="authEmail" type="text" placeholder="you@example.com" autocomplete="off">
+          <input class="fi" id="authEmail" type="text" placeholder="you@example.com" autocomplete="off" disabled>
           <div class="fg-err-msg"></div>
         </div>
         <div class="fg">
@@ -6905,6 +6960,24 @@ function setAuthMode(mode) {
     if (emailLabel) emailLabel.textContent = 'Email';
     if (emailInput) emailInput.placeholder = 'you@example.com';
   }
+  if (document.getElementById('authModal')?.classList.contains('open')) {
+    setAuthFieldsInteractive(true);
+  }
+}
+
+function setAuthFieldsInteractive(isOpen) {
+  ['authFirstName', 'authLastName', 'authInviteCode', 'authEmail', 'authPassword'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.disabled = !isOpen;
+  });
+  const emailInput = document.getElementById('authEmail');
+  if (emailInput) {
+    emailInput.autocomplete = isOpen ? (authMode === 'signin' ? 'username' : 'email') : 'off';
+  }
+  const pw = document.getElementById('authPassword');
+  if (pw) {
+    pw.autocomplete = isOpen ? (authMode === 'signin' ? 'current-password' : 'new-password') : 'off';
+  }
 }
 
 async function sendPasswordReset() {
@@ -6947,9 +7020,11 @@ function dismissLanding() {
 function openLandingAuth(mode) {
   setAuthMode(mode);
   // On staging sign-in, keep type="text" so usernames (no @) are accepted
-  document.getElementById('authEmail').type = (_IS_STAGING && mode === 'signin') ? 'text' : 'email';
+  const email = document.getElementById('authEmail');
+  email.type = (_IS_STAGING && mode === 'signin') ? 'text' : 'email';
   const pw = document.getElementById('authPassword');
-  pw.type = 'password'; pw.disabled = false;
+  pw.type = 'password';
+  setAuthFieldsInteractive(true);
   document.getElementById('authModal').classList.add('open');
 }
 
@@ -6957,8 +7032,11 @@ function openAuthModal() {
   closeMenu();
   setAuthMode(authUser ? 'signin' : authMode);
   if (authUser) document.getElementById('authEmail').value = authUser.email || '';
+  const email = document.getElementById('authEmail');
+  email.type = (_IS_STAGING && authMode === 'signin') ? 'text' : 'email';
   const pw = document.getElementById('authPassword');
-  pw.type = 'password'; pw.disabled = false;
+  pw.type = 'password';
+  setAuthFieldsInteractive(true);
   document.getElementById('authModal').classList.add('open');
 }
 
@@ -11387,8 +11465,11 @@ function closeM(id){
     const ln = document.getElementById('authLastName');
     if (fn) fn.value = '';
     if (ln) ln.value = '';
+    const email = document.getElementById('authEmail');
+    if (email) email.value = '';
     const pw = document.getElementById('authPassword');
-    if (pw) { pw.value = ''; pw.disabled = true; }
+    if (pw) pw.value = '';
+    setAuthFieldsInteractive(false);
   }
   if (id === 'settingsModal') {
     const apiKeyEl = document.getElementById('setApiKey');
