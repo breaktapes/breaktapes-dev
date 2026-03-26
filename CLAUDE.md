@@ -280,6 +280,7 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 
 - When merging PRs, first check if any open PRs have their base branch set to the branch being merged: `gh pr list --state open` and inspect `baseRefName`. Rebase those PRs onto the new base before squash-merging to avoid auto-closed PRs.
 - If a PR does get auto-closed due to a squash merge, rebase the branch onto the updated base and open a new PR.
+- **Before deleting any git worktrees**, first `cd` to the main repository root directory (`/Users/akrish/DEV/breaktapes-dev` or equivalent). Then clean up worktrees. Never delete the directory the current shell is inside of.
 
 ---
 
