@@ -4526,6 +4526,7 @@ function go(page) {
   const a = document.getElementById('mi-'+page);
   if(a) a.classList.add('active');
   closeMenu();
+  window.scrollTo(0, 0);
   render(page);
 }
 
