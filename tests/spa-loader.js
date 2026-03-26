@@ -94,6 +94,7 @@ function loadSPA({
     <div id="dash-widget-stats"></div>
     <div id="dash-widget-goals"></div>
     <div id="dash-widget-insights"></div>
+    <div id="dash-widget-achievements"></div>
     <div id="dash-widget-world"></div>
     <div id="dash-widget-on-this-day"></div>
     <div id="dash-widget-field-placing"></div>
@@ -117,8 +118,11 @@ function loadSPA({
     <div id="momentumWidgetContent"></div>
     <div id="ageGradeWidgetContent"></div>
     <div id="raceDNAContent"></div>
+    <div id="dashAchievementsSummary"></div>
     <div id="prStrip"></div>
     <div id="beChart"></div>
+    <div id="mwAchievements"></div>
+    <div id="medalGrid"></div>
 
     <!-- athlete page -->
     <div id="athName"></div>

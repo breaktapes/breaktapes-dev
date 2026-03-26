@@ -48,18 +48,20 @@
   /* spacing */
   --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px;
   --sp-5: 20px; --sp-6: 24px; --sp-8: 32px;
+  --header-base-height: 56px;
+  --bottom-nav-base-height: 56px;
 }
 
 /* =============================================
    RESET
    ============================================= */
 *, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
-html { scroll-behavior: smooth; }
+ html { scroll-behavior: smooth; background: var(--black); }
 body {
   font-family: var(--body);
   background: var(--black);
   color: var(--white);
-  min-height: 100vh;
+  min-height: 100dvh;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   cursor: auto;
@@ -83,15 +85,13 @@ body::after {
    ============================================= */
 header {
   position: fixed; top:0; left:0; right:0; z-index:500;
-  height: 56px;
-  background: rgba(0,0,0,0.92);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  border-bottom: 1px solid var(--border2);
+  height: var(--header-base-height);
+  background: var(--orange);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.18);
   display: flex; align-items: center; justify-content: space-between;
   padding: 0 1.25rem;
   padding-top: env(safe-area-inset-top, 0px);
-  height: calc(56px + env(safe-area-inset-top, 0px));
+  height: calc(var(--header-base-height) + env(safe-area-inset-top, 0px));
 }
 
 .logo {
@@ -99,11 +99,11 @@ header {
   font-size: 22px; font-weight: 900;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--white);
+  color: var(--black);
   cursor: pointer;
   line-height: 1;
 }
-.logo .slash { color: var(--orange); }
+.logo .slash { color: var(--white); }
 
 .header-right { display: flex; align-items: center; gap: 0.6rem; }
 
@@ -111,34 +111,34 @@ header {
   font-family: var(--headline);
   font-size: 13px; font-weight: 800;
   letter-spacing: 0.1em; text-transform: uppercase;
-  background: var(--orange); color: var(--black);
+  background: rgba(0,0,0,0.88); color: var(--white);
   border: none; border-radius: 4px;
   padding: 0.45rem 1rem;
   cursor: pointer; transition: all 0.15s;
   white-space: nowrap;
 }
-.cta-btn:hover { background: #FF6620; transform: translateY(-1px); box-shadow: 0 4px 20px var(--orange-glow); }
+.cta-btn:hover { background: #111; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(0,0,0,0.24); }
 .cta-btn:active { transform: translateY(0); }
 
 /* Hamburger */
 .hamburger {
   width: 36px; height: 36px;
-  background: var(--surface2);
-  border: 1px solid var(--border2);
+  background: rgba(0,0,0,0.08);
+  border: 1px solid rgba(0,0,0,0.18);
   border-radius: 4px;
   cursor: pointer;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 5px; transition: all 0.2s; flex-shrink: 0;
 }
-.hamburger:hover { border-color: var(--orange); }
+.hamburger:hover { border-color: rgba(0,0,0,0.34); background: rgba(0,0,0,0.12); }
 .hamburger span {
   display:block; width:16px; height:1.5px;
-  background: var(--white); border-radius:1px;
+  background: var(--black); border-radius:1px;
   transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
 }
-.hamburger.open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); background: var(--orange); }
+.hamburger.open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); background: var(--black); }
 .hamburger.open span:nth-child(2) { opacity:0; transform:scaleX(0); }
-.hamburger.open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); background: var(--orange); }
+.hamburger.open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); background: var(--black); }
 
 /* =============================================
    SLIDE MENU
@@ -241,7 +241,10 @@ header {
 /* =============================================
    MAIN / PAGES
    ============================================= */
-main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(100vh - 56px); }
+main {
+  margin-top: calc(var(--header-base-height) + env(safe-area-inset-top, 0px));
+  min-height: calc(100dvh - var(--header-base-height) - env(safe-area-inset-top, 0px));
+}
 
 .page { display:none; }
 .page.active {
@@ -2407,15 +2410,13 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 .bottom-nav {
   display: none;
   position: fixed; bottom: 0; left: 0; right: 0; z-index: 500;
-  background: rgba(8,8,8,0.96);
-  backdrop-filter: blur(16px) saturate(180%);
-  -webkit-backdrop-filter: blur(16px) saturate(180%);
-  border-top: 1px solid var(--border2);
+  background: var(--orange);
+  box-shadow: 0 -1px 0 rgba(0,0,0,0.18);
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 @media (max-width: 767px) {
   .bottom-nav { display: flex; align-items: flex-start; justify-content: space-around; }
-  main { padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px)); }
+  main { padding-bottom: calc(var(--bottom-nav-base-height) + env(safe-area-inset-bottom, 0px)); }
   .hamburger { display: none; }
 }
 .bn-tab {
@@ -2423,18 +2424,18 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   align-items: center; justify-content: center;
   gap: 3px; padding: 8px 0 4px; min-height: 48px; min-width: 44px;
   cursor: pointer; background: none; border: none;
-  color: var(--muted); transition: color 0.15s;
+  color: rgba(0,0,0,0.55); transition: color 0.15s;
   font-family: var(--headline); font-size: 8px; font-weight: 800;
   letter-spacing: 0.1em; text-transform: uppercase;
 }
 .bn-tab:active { transform: scale(0.92); }
-.bn-tab.active { color: var(--orange); }
+.bn-tab.active { color: var(--black); }
 .bn-tab svg { width: 22px; height: 22px; }
-.bn-tab.active svg { stroke: var(--orange); }
+.bn-tab.active svg { stroke: var(--black); }
 @media (max-width: 360px) { .bn-tab { font-size: 0; } }
 /* Train tab — green identity */
-#bn-train.active { color: var(--green); }
-#bn-train.active svg { stroke: var(--green); }
+#bn-train.active { color: var(--black); }
+#bn-train.active svg { stroke: var(--black); }
 /* Train hub — green kicker + sub-tabs */
 #page-train .page-kicker::before { background: var(--green); }
 .train-tab-pill.active {
@@ -2951,6 +2952,9 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 /* Achievement badges row */
 .mw-ach-wrap {
   margin-bottom: 1.5rem;
+  display:flex;
+  flex-direction:column;
+  gap:1rem;
 }
 .mw-ach-title {
   font-family: var(--headline); font-size: 11px; font-weight: 800;
@@ -2958,29 +2962,306 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   color: var(--muted); padding-bottom: 0.55rem;
   border-bottom: 1px solid var(--border); margin-bottom: 0.85rem;
 }
+.mw-ach-hero {
+  position:relative;
+  overflow:hidden;
+  padding:1.15rem 1.1rem;
+  border-radius:18px;
+  border:1px solid rgba(245,245,245,0.08);
+  background:
+    linear-gradient(135deg, rgba(255,77,0,0.14) 0%, rgba(255,77,0,0.04) 32%, rgba(0,255,136,0.08) 100%),
+    var(--surface);
+  box-shadow:0 18px 40px rgba(0,0,0,0.24);
+}
+.mw-ach-hero::after {
+  content:'';
+  position:absolute;
+  inset:auto -10% -35% auto;
+  width:240px;
+  height:240px;
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(0,255,136,0.14), transparent 70%);
+  pointer-events:none;
+}
+.mw-ach-hero-grid {
+  position:relative;
+  z-index:1;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:1rem;
+  align-items:end;
+}
+.mw-ach-hero-kicker {
+  font-family:var(--headline);
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.22em;
+  text-transform:uppercase;
+  color:rgba(245,245,245,0.52);
+  margin-bottom:.45rem;
+}
+.mw-ach-hero-count {
+  display:flex;
+  align-items:flex-end;
+  gap:.5rem;
+  flex-wrap:wrap;
+}
+.mw-ach-hero-big {
+  font-family:var(--headline);
+  font-size:44px;
+  font-weight:900;
+  line-height:.88;
+  color:var(--white);
+}
+.mw-ach-hero-total {
+  font-family:var(--headline);
+  font-size:15px;
+  font-weight:800;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:rgba(245,245,245,0.54);
+  padding-bottom:.28rem;
+}
+.mw-ach-hero-copy {
+  margin-top:.5rem;
+  max-width:520px;
+  font-size:13px;
+  line-height:1.45;
+  color:rgba(245,245,245,0.7);
+}
+.mw-ach-hero-latest {
+  display:flex;
+  gap:.45rem;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+  align-content:flex-start;
+}
+.mw-ach-hero-chip {
+  display:inline-flex;
+  align-items:center;
+  gap:.38rem;
+  padding:.42rem .68rem;
+  border-radius:999px;
+  border:1px solid rgba(245,245,245,0.1);
+  background:rgba(0,0,0,0.22);
+  font-family:var(--headline);
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--white);
+}
 .mw-ach-grid {
   display: flex; flex-wrap: wrap; gap: 0.5rem;
 }
 .mw-ach-badge {
-  display: flex; align-items: center; gap: 8px;
-  background: var(--surface2); border: 1px solid var(--border);
-  border-radius: 10px; padding: 0.5rem 0.8rem;
-  transition: all 0.2s ease; position: relative;
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  align-items:flex-start;
+  gap:0.8rem;
+  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
+  border:1px solid rgba(245,245,245,0.08);
+  border-radius:16px;
+  padding:0.9rem 0.95rem;
+  transition: all 0.2s ease;
+  position: relative;
 }
 .mw-ach-badge.unlocked {
-  background: rgba(255,215,0,0.05);
-  border-color: rgba(255,215,0,0.28);
-  box-shadow: 0 0 16px rgba(255,215,0,0.07);
+  background:linear-gradient(135deg, rgba(255,77,0,0.08), rgba(0,255,136,0.05));
+  border-color: rgba(255,77,0,0.22);
+  box-shadow:0 12px 28px rgba(0,0,0,0.18);
 }
-.mw-ach-badge.locked { opacity: 0.3; filter: grayscale(1); }
-.mw-ach-icon { font-size: 20px; line-height: 1; }
-.mw-ach-info { display: flex; flex-direction: column; gap: 1px; }
+.mw-ach-badge.locked {
+  opacity: 0.6;
+  background: rgba(255,255,255,0.02);
+}
+.mw-ach-icon {
+  width:42px;
+  height:42px;
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:18px;
+  line-height: 1;
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(245,245,245,0.08);
+}
+.mw-ach-badge.unlocked .mw-ach-icon {
+  background:rgba(255,77,0,0.1);
+  border-color:rgba(255,77,0,0.18);
+}
+.mw-ach-info { display: flex; flex-direction: column; gap: 4px; min-width:0; }
 .mw-ach-name {
-  font-family: var(--headline); font-size: 9px; font-weight: 900;
+  font-family: var(--headline); font-size: 12px; font-weight: 900;
   letter-spacing: 0.1em; text-transform: uppercase; color: var(--white);
+  line-height:1.05;
 }
-.mw-ach-badge.unlocked .mw-ach-name { color: #FFD700; }
-.mw-ach-desc { font-size: 9px; color: var(--muted); }
+.mw-ach-badge.unlocked .mw-ach-name { color: var(--white); }
+.mw-ach-desc { font-size: 11px; color: rgba(245,245,245,0.58); line-height:1.35; }
+.mw-ach-group {
+  margin-bottom: 0;
+  padding:1rem;
+  border-radius:18px;
+  border:1px solid rgba(245,245,245,0.07);
+  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
+}
+.mw-ach-group:last-child {
+  margin-bottom: 0;
+}
+.mw-ach-group-head {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:0.75rem;
+  margin-bottom:0.6rem;
+}
+.mw-ach-group-title {
+  font-family:var(--headline);
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:0.14em;
+  text-transform:uppercase;
+  color:var(--white);
+}
+.mw-ach-group-count {
+  font-family:var(--headline);
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  color:rgba(245,245,245,0.54);
+}
+.mw-ach-stack {
+  display:grid;
+  grid-template-columns:1fr;
+  gap:0.7rem;
+}
+.mw-ach-badge.ladder {
+  width:100%;
+}
+.mw-ach-badge .mw-ach-meta {
+  font-size:9px;
+  color:rgba(245,245,245,0.36);
+  text-transform:uppercase;
+  letter-spacing:0.1em;
+  margin-top:2px;
+}
+.mw-ach-state {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:74px;
+  padding:.34rem .5rem;
+  border-radius:999px;
+  font-family:var(--headline);
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  background:rgba(245,245,245,0.04);
+  border:1px solid rgba(245,245,245,0.08);
+  color:rgba(245,245,245,0.55);
+}
+.mw-ach-badge.unlocked .mw-ach-state {
+  background:rgba(0,255,136,0.12);
+  border-color:rgba(0,255,136,0.22);
+  color:var(--green);
+}
+.dash-ach-card {
+  display:grid;
+  grid-template-columns:minmax(0, 1fr) auto;
+  gap:1rem;
+  padding:1.05rem 1.1rem;
+  border:1px solid rgba(245,245,245,0.08);
+  border-radius:18px;
+  background:
+    linear-gradient(135deg, rgba(255,77,0,0.12) 0%, rgba(255,77,0,0.04) 35%, rgba(0,255,136,0.07) 100%),
+    var(--surface);
+  cursor:pointer;
+  transition:border-color .16s, transform .16s, box-shadow .16s;
+  position:relative;
+  overflow:hidden;
+}
+.dash-ach-card::after {
+  content:'';
+  position:absolute;
+  right:-40px;
+  bottom:-70px;
+  width:180px;
+  height:180px;
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(0,255,136,0.12), transparent 70%);
+  pointer-events:none;
+}
+.dash-ach-card:hover {
+  border-color:rgba(255,77,0,0.24);
+  box-shadow:0 16px 40px rgba(0,0,0,0.28);
+  transform:translateY(-1px);
+}
+.dash-ach-kicker {
+  font-family:var(--headline);
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:0.18em;
+  text-transform:uppercase;
+  color:var(--muted2);
+  margin-bottom:0.45rem;
+}
+.dash-ach-count {
+  font-family:var(--headline);
+  font-size:30px;
+  font-weight:900;
+  line-height:0.95;
+}
+.dash-ach-copy {
+  font-size:12px;
+  color:rgba(245,245,245,0.68);
+  margin-top:0.4rem;
+  max-width:34ch;
+}
+.dash-ach-latest {
+  display:flex;
+  flex-wrap:wrap;
+  gap:0.45rem;
+  justify-content:flex-end;
+  align-content:flex-start;
+  position:relative;
+  z-index:1;
+}
+.dash-ach-chip {
+  display:inline-flex;
+  align-items:center;
+  gap:0.35rem;
+  padding:0.32rem 0.55rem;
+  border-radius:999px;
+  border:1px solid rgba(245,245,245,0.1);
+  background:rgba(0,0,0,0.2);
+  font-family:var(--headline);
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  color:var(--white);
+  white-space:nowrap;
+}
+@media (max-width: 767px) {
+  .mw-ach-hero-grid,
+  .dash-ach-card {
+    grid-template-columns:1fr;
+  }
+  .mw-ach-hero-latest,
+  .dash-ach-latest {
+    justify-content:flex-start;
+  }
+  .mw-ach-badge {
+    grid-template-columns:auto minmax(0,1fr);
+  }
+  .mw-ach-state {
+    grid-column:1 / -1;
+    justify-self:flex-start;
+  }
+}
 /* .mw-art img generic fallback (SVG art uses this, photos use .mw-photo) */
 .mw-art img:not(.mw-photo) {
   width: 100%; height: 100%; object-fit: contain;
@@ -3883,6 +4164,13 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
               <div class="section-h">Personal Bests</div>
             </div>
             <div id="dashPBs"></div>
+          </div>
+          <div id="dash-widget-achievements">
+            <div class="section-row" style="margin-top:1.5rem">
+              <div class="section-h">Achievements</div>
+              <button class="see-all" onclick="go('medals')">Medal Wall →</button>
+            </div>
+            <div id="dashAchievementsSummary"></div>
           </div>
           <!-- Your World (map teaser) -->
           <div id="dash-widget-world">
@@ -4904,6 +5192,44 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
           <button class="btn-ghost" style="padding:0.3rem 0.75rem;font-size:12px" onclick="addSplit()">+ Add Split</button>
         </div>
       </div>
+      <div class="rd-section">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:0.75rem;margin-bottom:0.85rem">
+          <div class="rd-label" style="margin:0">Achievement Context</div>
+          <button class="btn-ghost" type="button" style="padding:0.35rem 0.7rem;font-size:11px" onclick="toggleAchievementContextSection()">
+            <span id="rdAchievementContextToggleLabel">Add context</span>
+          </button>
+        </div>
+        <div id="rdAchievementContextWrap" style="display:none">
+          <div class="fgrid" style="grid-template-columns:1fr 1fr">
+            <div class="fg"><label class="fl">Elevation Gain (m)</label><input class="fi" id="rdAcElevation" type="number" min="0" placeholder="500"></div>
+            <div class="fg"><label class="fl">Temperature (°C)</label><input class="fi" id="rdAcTemp" type="number" step="0.1" placeholder="32"></div>
+          </div>
+          <div class="fgrid" style="grid-template-columns:1fr 1fr 1fr">
+            <div class="fg"><label class="fl">Start Time</label><input class="fi" id="rdAcStartTime" type="time"></div>
+            <div class="fg"><label class="fl">Altitude (m)</label><input class="fi" id="rdAcAltitude" type="number" min="0" placeholder="3000"></div>
+            <div class="fg"><label class="fl">HR Zone 4/5 %</label><input class="fi" id="rdAcHrLoad" type="number" min="0" max="100" placeholder="70"></div>
+          </div>
+          <div class="fgrid" style="grid-template-columns:1fr 1fr 1fr">
+            <div class="fg"><label class="fl">Run Club Years</label><input class="fi" id="rdAcClubYears" type="number" min="0" placeholder="3"></div>
+            <div class="fg"><label class="fl">Bib Number</label><input class="fi" id="rdAcBibNumber" placeholder="2784"></div>
+            <div class="fg"><label class="fl">Cutoff Percentile</label><input class="fi" id="rdAcCutoffPct" type="number" min="0" max="100" placeholder="5"></div>
+          </div>
+          <div class="fgrid" style="grid-template-columns:repeat(3,1fr)">
+            <label class="flatlay-item-row" style="padding:0.65rem 0.8rem"><span>After Sunset</span><input id="rdAcAfterSunset" type="checkbox"></label>
+            <label class="flatlay-item-row" style="padding:0.65rem 0.8rem"><span>Negative Split</span><input id="rdAcNegativeSplit" type="checkbox"></label>
+            <label class="flatlay-item-row" style="padding:0.65rem 0.8rem"><span>Almost DNF</span><input id="rdAcAlmostDnf" type="checkbox"></label>
+            <label class="flatlay-item-row" style="padding:0.65rem 0.8rem"><span>Injury Comeback</span><input id="rdAcComeback" type="checkbox"></label>
+            <label class="flatlay-item-row" style="padding:0.65rem 0.8rem"><span>Solo Race</span><input id="rdAcSolo" type="checkbox"></label>
+            <label class="flatlay-item-row" style="padding:0.65rem 0.8rem"><span>Desert Terrain</span><input id="rdAcDesert" type="checkbox"></label>
+            <label class="flatlay-item-row" style="padding:0.65rem 0.8rem"><span>Mountain Trail</span><input id="rdAcMountain" type="checkbox"></label>
+            <label class="flatlay-item-row" style="padding:0.65rem 0.8rem"><span>Coastal</span><input id="rdAcCoastal" type="checkbox"></label>
+            <label class="flatlay-item-row" style="padding:0.65rem 0.8rem"><span>Open Water</span><input id="rdAcOpenWater" type="checkbox"></label>
+            <label class="flatlay-item-row" style="padding:0.65rem 0.8rem"><span>Official Pacer</span><input id="rdAcPacer" type="checkbox"></label>
+            <label class="flatlay-item-row" style="padding:0.65rem 0.8rem"><span>Helped First Timer</span><input id="rdAcGuide" type="checkbox"></label>
+            <label class="flatlay-item-row" style="padding:0.65rem 0.8rem"><span>Photo Uploaded</span><input id="rdAcPhotoUploaded" type="checkbox"></label>
+          </div>
+        </div>
+      </div>
       <!-- Notes -->
       <div class="rd-section">
         <div class="rd-label">Race Notes</div>
@@ -5267,6 +5593,15 @@ let flatlayCatalogLoaded = false;
 let flatlayCatalogError = false;
 let flatlayDataLoaded = false;
 let flatlayLoadPromise = null;
+let achievementCatalog = [];
+let userRaceRows = [];
+let raceAchievementContexts = [];
+let userAchievementRows = [];
+let achievementDataLoaded = false;
+let achievementDataError = false;
+let achievementLoadPromise = null;
+let achievementSyncTimer = null;
+let achievementSyncInFlight = false;
 let userProducts = [];
 let flatlayLists = [];
 let flatlayListItems = [];
@@ -5385,6 +5720,7 @@ if (!nextRace) { nextRace = null; }
 function sv(k,v){
   localStorage.setItem(k, JSON.stringify(v));
   if (!suppressRemoteSync && remoteSyncReady && REMOTE_SYNC_KEYS.has(k)) scheduleRemoteStateSync();
+  if (!suppressRemoteSync && remoteSyncReady && k === 'fl2_races') scheduleAchievementSync();
 }
 
 function initSupabaseClient() {
@@ -5804,6 +6140,512 @@ function matchesFlatlayFilters(product) {
   return searchOk && categoryOk && subcategoryOk && brandOk;
 }
 
+const WORLD_MAJOR_PATTERNS = [
+  { key: 'tokyo', pattern: /\btokyo marathon\b/i },
+  { key: 'boston', pattern: /\bboston marathon\b/i },
+  { key: 'london', pattern: /\blondon marathon\b/i },
+  { key: 'berlin', pattern: /\bberlin marathon\b/i },
+  { key: 'chicago', pattern: /\bchicago marathon\b/i },
+  { key: 'new_york_city', pattern: /\b(new york city marathon|new york marathon|nyc marathon)\b/i }
+];
+
+const COUNTRY_TO_CONTINENT = {
+  'United Arab Emirates': 'Asia', 'Saudi Arabia': 'Asia', 'Qatar': 'Asia', 'Bahrain': 'Asia', 'Kuwait': 'Asia', 'Oman': 'Asia',
+  'Japan': 'Asia', 'China': 'Asia', 'Hong Kong': 'Asia', 'Taiwan': 'Asia', 'Singapore': 'Asia', 'Thailand': 'Asia', 'South Korea': 'Asia',
+  'India': 'Asia', 'Pakistan': 'Asia', 'Nepal': 'Asia', 'Sri Lanka': 'Asia', 'Indonesia': 'Asia', 'Malaysia': 'Asia', 'Vietnam': 'Asia',
+  'United Kingdom': 'Europe', 'UK': 'Europe', 'Germany': 'Europe', 'France': 'Europe', 'Italy': 'Europe', 'Spain': 'Europe',
+  'Portugal': 'Europe', 'Netherlands': 'Europe', 'Belgium': 'Europe', 'Austria': 'Europe', 'Switzerland': 'Europe', 'Sweden': 'Europe',
+  'Norway': 'Europe', 'Finland': 'Europe', 'Denmark': 'Europe', 'Czech Republic': 'Europe', 'Poland': 'Europe', 'Greece': 'Europe',
+  'Ireland': 'Europe', 'Croatia': 'Europe', 'Hungary': 'Europe', 'Romania': 'Europe', 'Serbia': 'Europe', 'Estonia': 'Europe',
+  'Latvia': 'Europe', 'Lithuania': 'Europe', 'Luxembourg': 'Europe', 'Cyprus': 'Europe', 'Turkey': 'Europe', 'Russia': 'Europe',
+  'United States': 'North America', 'USA': 'North America', 'Canada': 'North America', 'Mexico': 'North America',
+  'Brazil': 'South America', 'Argentina': 'South America', 'Chile': 'South America', 'Peru': 'South America', 'Colombia': 'South America',
+  'Uruguay': 'South America', 'Ecuador': 'South America', 'Bolivia': 'South America', 'Venezuela': 'South America',
+  'South Africa': 'Africa', 'Egypt': 'Africa', 'Morocco': 'Africa', 'Kenya': 'Africa', 'Ethiopia': 'Africa', 'Nigeria': 'Africa',
+  'Tanzania': 'Africa', 'Uganda': 'Africa', 'Rwanda': 'Africa', 'Ghana': 'Africa', 'Zimbabwe': 'Africa', 'Zambia': 'Africa',
+  'Australia': 'Oceania', 'New Zealand': 'Oceania'
+};
+
+function getRaceKeyValue(race) {
+  if (!race) return '';
+  return String(race.id ?? race.race_key ?? '').trim();
+}
+
+function normalizeAchievementDistance(distance = '', type = '') {
+  const raw = String(distance || '').trim().toLowerCase();
+  if (!raw) return '';
+  if (raw === '10k' || raw === '10km') return '10KM';
+  if (raw === '5k' || raw === '5km') return '5KM';
+  if (raw === '50k' || raw === '50km') return '50KM';
+  if (raw === '100k' || raw === '100km') return '100KM';
+  if (raw === 'half marathon') return 'Half Marathon';
+  if (raw === 'marathon') return 'Marathon';
+  if (raw === '100 mile') return '100 Mile';
+  if (raw === '50 mile') return '50 Mile';
+  if (raw === '70.3' || raw === 'middle distance' || raw === 'ironman 70.3' || raw === '70.3 / half ironman') return '70.3 / Half Ironman';
+  if (raw === 'full distance' || raw === 'full distance / ironman' || raw === 'ironman / full' || raw === 'full ironman') return 'Ironman / Full';
+  if (raw === 'olympic' || raw === 'olympic / standard') return 'Olympic / Standard';
+  if (raw === 'sprint') return 'Sprint';
+  if (raw === 'super sprint') return 'Super Sprint';
+  if (raw === 'pto t100' || raw === 't100') return 'PTO T100';
+  if (type === 'tri' && raw.includes('ironman') && raw.includes('70')) return '70.3 / Half Ironman';
+  if (type === 'tri' && raw.includes('ironman')) return 'Ironman / Full';
+  return distance;
+}
+
+function normalizeUserRaceRow(row) {
+  if (!row) return row;
+  const normalized = {
+    ...row,
+    race_key: row.race_key || getRaceKeyValue(row),
+    distance: normalizeAchievementDistance(row.distance, row.type),
+    dist_km: row.dist_km !== null && row.dist_km !== undefined && row.dist_km !== '' ? Number(row.dist_km) : (row.distKm || 0),
+    tri_segments: row.tri_segments || row.triSegments || {},
+    splits: Array.isArray(row.splits) ? row.splits : []
+  };
+  return normalized;
+}
+
+function normalizeAchievementCatalogRow(row) {
+  if (!row) return row;
+  return {
+    ...row,
+    criteria: row.criteria || {}
+  };
+}
+
+function getRaceAchievementContextValue(race) {
+  const base = { ...((race && race.achievementContext) || {}) };
+  if (medalPhotos[getRaceKeyValue(race)]) base.photo_uploaded = true;
+  return base;
+}
+
+function hasAchievementContextData(context = {}) {
+  return Object.values(context).some(value => {
+    if (value === null || value === undefined) return false;
+    if (typeof value === 'boolean') return value;
+    return String(value).trim() !== '';
+  });
+}
+
+function buildUserRacePayload(race) {
+  return {
+    user_id: authUser.id,
+    race_key: getRaceKeyValue(race),
+    name: race.name || 'Race',
+    type: race.type || 'run',
+    distance: normalizeAchievementDistance(race.distance, race.type),
+    time: race.time || null,
+    city: race.city || null,
+    country: race.country || null,
+    date: race.date || null,
+    priority: race.priority || null,
+    medal: race.medal || 'finisher',
+    dist_km: race.distKm || DIST_KM[race.distance] || 0,
+    placing: race.placing || null,
+    age_category: race.ageCategory || null,
+    age_category_pos: race.ageCategoryPos || null,
+    gender_pos: race.genderPos || null,
+    notes: race.notes || null,
+    strava_id: race.strava_id || null,
+    tri_segments: race.triSegments || {},
+    splits: race.splits || [],
+    raw_race: race
+  };
+}
+
+function getAchievementContextPayload(userRaceId, race) {
+  const context = getRaceAchievementContextValue(race);
+  if (!hasAchievementContextData(context)) return null;
+  return {
+    user_race_id: userRaceId,
+    user_id: authUser.id,
+    elevation_gain_m: context.elevation_gain_m ?? context.elevationGainM ?? null,
+    temperature_c: context.temperature_c ?? context.temperatureC ?? null,
+    start_time: context.start_time ?? context.startTime ?? null,
+    after_sunset: context.after_sunset ?? context.afterSunset ?? null,
+    negative_split: context.negative_split ?? context.negativeSplit ?? null,
+    almost_dnf: context.almost_dnf ?? context.almostDnf ?? null,
+    hr_zone_45_pct: context.hr_zone_45_pct ?? context.hrZone45Pct ?? null,
+    injury_comeback: context.injury_comeback ?? context.injuryComeback ?? null,
+    solo_race: context.solo_race ?? context.soloRace ?? null,
+    desert_terrain: context.desert_terrain ?? context.desertTerrain ?? null,
+    mountain_trail: context.mountain_trail ?? context.mountainTrail ?? null,
+    coastal: context.coastal ?? null,
+    altitude_m: context.altitude_m ?? context.altitudeM ?? null,
+    open_water: context.open_water ?? context.openWater ?? null,
+    official_pacer: context.official_pacer ?? context.officialPacer ?? null,
+    helped_first_timer: context.helped_first_timer ?? context.helpedFirstTimer ?? null,
+    run_club_years: context.run_club_years ?? context.runClubYears ?? null,
+    bib_number: context.bib_number ?? context.bibNumber ?? null,
+    cutoff_percentile: context.cutoff_percentile ?? context.cutoffPercentile ?? null,
+    photo_uploaded: context.photo_uploaded ?? context.photoUploaded ?? null
+  };
+}
+
+function hydrateRaceAchievementContextFromRow(row) {
+  if (!row) return {};
+  return {
+    elevationGainM: row.elevation_gain_m ?? null,
+    temperatureC: row.temperature_c ?? null,
+    startTime: row.start_time || '',
+    afterSunset: !!row.after_sunset,
+    negativeSplit: !!row.negative_split,
+    almostDnf: !!row.almost_dnf,
+    hrZone45Pct: row.hr_zone_45_pct ?? null,
+    injuryComeback: !!row.injury_comeback,
+    soloRace: !!row.solo_race,
+    desertTerrain: !!row.desert_terrain,
+    mountainTrail: !!row.mountain_trail,
+    coastal: !!row.coastal,
+    altitudeM: row.altitude_m ?? null,
+    openWater: !!row.open_water,
+    officialPacer: !!row.official_pacer,
+    helpedFirstTimer: !!row.helped_first_timer,
+    runClubYears: row.run_club_years ?? null,
+    bibNumber: row.bib_number || '',
+    cutoffPercentile: row.cutoff_percentile ?? null,
+    photoUploaded: !!row.photo_uploaded
+  };
+}
+
+async function loadAchievementData(force = false) {
+  if (!authUser) return false;
+  if (achievementLoadPromise && !force) return achievementLoadPromise;
+  const client = initSupabaseClient();
+  if (!client) return false;
+  achievementLoadPromise = (async () => {
+    try {
+      const [catalogRes, racesRes, contextRes, unlockedRes] = await Promise.all([
+        client.from('achievement_catalog').select('id, slug, group_key, family_key, kind, name, description, icon, sort_order, criteria, is_active, created_at').eq('is_active', true).order('sort_order', { ascending: true }),
+        client.from('user_races').select('id, user_id, race_key, name, type, distance, time, city, country, date, priority, medal, dist_km, placing, age_category, age_category_pos, gender_pos, notes, strava_id, tri_segments, splits, raw_race, created_at, updated_at').eq('user_id', authUser.id).order('date', { ascending: false }),
+        client.from('race_achievement_context').select('*').eq('user_id', authUser.id),
+        client.from('user_achievements').select('id, user_id, achievement_id, source_race_id, unlocked_at, proof').eq('user_id', authUser.id)
+      ]);
+      if (catalogRes.error) throw catalogRes.error;
+      if (racesRes.error) throw racesRes.error;
+      if (contextRes.error) throw contextRes.error;
+      if (unlockedRes.error) throw unlockedRes.error;
+      achievementCatalog = (catalogRes.data || []).map(normalizeAchievementCatalogRow);
+      userRaceRows = (racesRes.data || []).map(normalizeUserRaceRow);
+      raceAchievementContexts = contextRes.data || [];
+      userAchievementRows = unlockedRes.data || [];
+      achievementDataLoaded = true;
+      achievementDataError = false;
+      return true;
+    } catch (error) {
+      console.warn('Achievement data load failed:', error.message || error);
+      achievementDataLoaded = false;
+      achievementDataError = true;
+      return false;
+    } finally {
+      achievementLoadPromise = null;
+    }
+  })();
+  return achievementLoadPromise;
+}
+
+function scheduleAchievementSync() {
+  clearTimeout(achievementSyncTimer);
+  achievementSyncTimer = setTimeout(() => {
+    syncUserRacesAndAchievements();
+  }, 250);
+}
+
+function getAchievementContextMap() {
+  return new Map(raceAchievementContexts.map(row => [row.user_race_id, row]));
+}
+
+function normalizeWorldMajorKey(name = '') {
+  const hit = WORLD_MAJOR_PATTERNS.find(entry => entry.pattern.test(name || ''));
+  return hit ? hit.key : null;
+}
+
+function timeStringToComparableMinutes(value = '') {
+  const trimmed = String(value || '').trim();
+  const parts = trimmed.split(':').map(Number);
+  if (parts.length < 2 || parts.some(Number.isNaN)) return null;
+  return parts[0] * 60 + parts[1];
+}
+
+function classifyAchievementNegativeSplit(race, context) {
+  if (context?.negative_split) return true;
+  const splits = Array.isArray(race.splits) ? race.splits : [];
+  if (!race.time || splits.length < 2) return false;
+  const totalSecs = timeToSecs(race.time);
+  if (!Number.isFinite(totalSecs)) return false;
+  let bestMid = null;
+  splits.forEach(split => {
+    const cumulative = split.cumulative || split.cum || '';
+    const cumSecs = cumulative ? timeToSecs(cumulative) : Infinity;
+    if (!Number.isFinite(cumSecs)) return;
+    const diff = Math.abs(cumSecs - totalSecs / 2);
+    if (!bestMid || diff < bestMid.diff) bestMid = { diff, cumSecs };
+  });
+  if (!bestMid) return false;
+  const secondHalf = totalSecs - bestMid.cumSecs;
+  return secondHalf < bestMid.cumSecs;
+}
+
+function buildAchievementComputationRows() {
+  const contextMap = getAchievementContextMap();
+  return userRaceRows.map(row => {
+    const contextRow = contextMap.get(row.id);
+    return {
+      ...row,
+      distance: normalizeAchievementDistance(row.distance, row.type),
+      achievementContext: hydrateRaceAchievementContextFromRow(contextRow),
+      worldMajorKey: normalizeWorldMajorKey(row.name || ''),
+      continent: COUNTRY_TO_CONTINENT[row.country] || null,
+      bibNumber: contextRow?.bib_number || '',
+    };
+  });
+}
+
+function buildAchievementPBMap(rows) {
+  const map = {};
+  rows.forEach(row => {
+    if (!row.time || !row.distance) return;
+    const secs = timeToSecs(row.time);
+    if (!Number.isFinite(secs)) return;
+    const key = normalizeAchievementDistance(row.distance, row.type);
+    if (!map[key] || secs < map[key].secs) {
+      map[key] = { secs, raceId: row.id, raceKey: row.race_key, raceName: row.name };
+    }
+  });
+  return map;
+}
+
+function countRacesInRollingWindow(rows, predicate, days) {
+  const sorted = rows.filter(predicate).sort((a, b) => String(a.date).localeCompare(String(b.date)));
+  for (let i = 0; i < sorted.length; i += 1) {
+    for (let j = i + 1; j < sorted.length; j += 1) {
+      const diff = Math.abs((new Date(sorted[j].date + 'T00:00:00') - new Date(sorted[i].date + 'T00:00:00')) / 86400000);
+      if (diff <= days) return [sorted[i], sorted[j]];
+    }
+  }
+  return null;
+}
+
+function evaluateAchievementCriteria(catalogRow, rows, pbMap) {
+  const criteria = catalogRow.criteria || {};
+  const type = criteria.type;
+  const normalizedDistance = criteria.distance ? normalizeAchievementDistance(criteria.distance) : '';
+  if (type === 'pb_seconds') {
+    const pb = pbMap[normalizedDistance];
+    return pb && pb.secs < Number(criteria.seconds)
+      ? { unlocked: true, sourceRaceId: pb.raceId, proof: { distance: normalizedDistance, seconds: pb.secs } }
+      : { unlocked: false };
+  }
+  if (type === 'context_flag') {
+    const match = rows.find(row => {
+      if (criteria.field === 'negative_split') return classifyAchievementNegativeSplit(row, row.achievementContext);
+      return !!row.achievementContext?.[camelCase(criteria.field)];
+    });
+    return match ? { unlocked: true, sourceRaceId: match.id, proof: { race_key: match.race_key } } : { unlocked: false };
+  }
+  if (type === 'context_threshold') {
+    const match = rows.find(row => {
+      const value = row.achievementContext?.[camelCase(criteria.field)];
+      if (value === null || value === undefined || value === '') return false;
+      if (criteria.op === 'gt') return Number(value) > Number(criteria.value);
+      if (criteria.op === 'lte') return Number(value) <= Number(criteria.value);
+      return Number(value) >= Number(criteria.value);
+    });
+    return match ? { unlocked: true, sourceRaceId: match.id, proof: { race_key: match.race_key } } : { unlocked: false };
+  }
+  if (type === 'start_time_before') {
+    const limit = timeStringToComparableMinutes(criteria.value);
+    const match = rows.find(row => {
+      const start = timeStringToComparableMinutes(row.achievementContext?.startTime || '');
+      return start !== null && limit !== null && start < limit;
+    });
+    return match ? { unlocked: true, sourceRaceId: match.id, proof: { race_key: match.race_key } } : { unlocked: false };
+  }
+  if (type === 'city_count') {
+    const count = new Set(rows.map(row => row.city).filter(Boolean)).size;
+    return count >= Number(criteria.value) ? { unlocked: true, proof: { count } } : { unlocked: false };
+  }
+  if (type === 'country_count') {
+    const count = new Set(rows.map(row => row.country).filter(Boolean)).size;
+    return count >= Number(criteria.value) ? { unlocked: true, proof: { count } } : { unlocked: false };
+  }
+  if (type === 'continent_count') {
+    const count = new Set(rows.map(row => row.continent).filter(Boolean)).size;
+    return count >= Number(criteria.value) ? { unlocked: true, proof: { count } } : { unlocked: false };
+  }
+  if (type === 'year_race_count') {
+    const yearly = {};
+    rows.forEach(row => {
+      if (!row.date) return;
+      const year = String(row.date).slice(0, 4);
+      yearly[year] = (yearly[year] || 0) + 1;
+    });
+    const count = Object.values(yearly).some(total => total >= Number(criteria.value));
+    return count ? { unlocked: true, proof: yearly } : { unlocked: false };
+  }
+  if (type === 'distance_count') {
+    const matches = rows.filter(row => normalizeAchievementDistance(row.distance, row.type) === normalizedDistance);
+    return matches.length >= Number(criteria.value)
+      ? { unlocked: true, sourceRaceId: matches[0]?.id || null, proof: { count: matches.length } }
+      : { unlocked: false };
+  }
+  if (type === 'gap_days') {
+    const pair = countRacesInRollingWindow(rows, row => !!row.date, Number(criteria.days));
+    return pair ? { unlocked: true, sourceRaceId: pair[1].id, proof: { race_keys: pair.map(r => r.race_key) } } : { unlocked: false };
+  }
+  if (type === 'ultra_gap_days') {
+    const pair = countRacesInRollingWindow(rows, row => (row.dist_km || 0) >= 50, Number(criteria.days));
+    return pair ? { unlocked: true, sourceRaceId: pair[1].id, proof: { race_keys: pair.map(r => r.race_key) } } : { unlocked: false };
+  }
+  if (type === 'race_count') {
+    return rows.length >= Number(criteria.value) ? { unlocked: true, proof: { count: rows.length } } : { unlocked: false };
+  }
+  if (type === 'bib_count') {
+    const count = rows.filter(row => row.achievementContext?.bibNumber).length;
+    return count >= Number(criteria.value) ? { unlocked: true, proof: { count } } : { unlocked: false };
+  }
+  if (type === 'duplicate_bib') {
+    const seen = new Set();
+    const dupe = rows.find(row => {
+      const bib = String(row.achievementContext?.bibNumber || '').trim();
+      if (!bib) return false;
+      if (seen.has(bib)) return true;
+      seen.add(bib);
+      return false;
+    });
+    return dupe ? { unlocked: true, sourceRaceId: dupe.id, proof: { bib_number: dupe.achievementContext?.bibNumber } } : { unlocked: false };
+  }
+  if (type === 'race_name_match') {
+    const needle = String(criteria.value || '').toLowerCase();
+    const match = rows.find(row => String(row.name || '').toLowerCase().includes(needle));
+    return match ? { unlocked: true, sourceRaceId: match.id, proof: { race_key: match.race_key } } : { unlocked: false };
+  }
+  if (type === 'world_major_count') {
+    const set = new Set(rows.map(row => row.worldMajorKey).filter(Boolean));
+    return set.size >= Number(criteria.value) ? { unlocked: true, proof: { majors: [...set] } } : { unlocked: false };
+  }
+  return { unlocked: false };
+}
+
+function camelCase(value = '') {
+  return String(value).replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+}
+
+function computeUnlockedAchievementsFromSupabase() {
+  const rows = buildAchievementComputationRows();
+  const pbMap = buildAchievementPBMap(rows);
+  return achievementCatalog
+    .map(row => {
+      const result = evaluateAchievementCriteria(row, rows, pbMap);
+      return result.unlocked ? {
+        achievement_id: row.id,
+        source_race_id: result.sourceRaceId || null,
+        proof: result.proof || {}
+      } : null;
+    })
+    .filter(Boolean);
+}
+
+function getUnlockedAchievementIds() {
+  return new Set(userAchievementRows.map(row => row.achievement_id));
+}
+
+function getAchievementCatalogById(id) {
+  return achievementCatalog.find(row => row.id === id) || null;
+}
+
+function getAchievementProgressSummary() {
+  const unlockedIds = getUnlockedAchievementIds();
+  const unlockedCatalog = achievementCatalog.filter(row => unlockedIds.has(row.id));
+  return {
+    total: achievementCatalog.length,
+    unlocked: unlockedCatalog.length,
+    latest: [...userAchievementRows]
+      .sort((a, b) => new Date(b.unlocked_at) - new Date(a.unlocked_at))
+      .slice(0, 3)
+      .map(row => getAchievementCatalogById(row.achievement_id))
+      .filter(Boolean)
+  };
+}
+
+function buildAchievementContextLookupByRaceKey() {
+  const map = new Map();
+  const contextByRaceId = getAchievementContextMap();
+  userRaceRows.forEach(row => {
+    const contextRow = contextByRaceId.get(row.id);
+    if (contextRow) map.set(row.race_key, hydrateRaceAchievementContextFromRow(contextRow));
+  });
+  return map;
+}
+
+async function syncUserRacesAndAchievements(force = false) {
+  if (!authUser || achievementSyncInFlight) return false;
+  const client = initSupabaseClient();
+  if (!client) return false;
+  achievementSyncInFlight = true;
+  try {
+    if (!achievementDataLoaded || force) await loadAchievementData(force);
+    const localKeys = new Set(races.map(getRaceKeyValue));
+    const deleteIds = userRaceRows.filter(row => !localKeys.has(String(row.race_key))).map(row => row.id);
+    if (deleteIds.length) {
+      const { error } = await client.from('user_races').delete().in('id', deleteIds);
+      if (error) throw error;
+    }
+    const payload = races.map(buildUserRacePayload);
+    if (payload.length) {
+      const { error } = await client.from('user_races').upsert(payload, { onConflict: 'user_id,race_key' });
+      if (error) throw error;
+    } else {
+      const { error } = await client.from('user_races').delete().eq('user_id', authUser.id);
+      if (error) throw error;
+    }
+    await loadAchievementData(true);
+    const raceIdByKey = new Map(userRaceRows.map(row => [String(row.race_key), row.id]));
+    const contextPayloads = races
+      .map(race => getAchievementContextPayload(raceIdByKey.get(getRaceKeyValue(race)), race))
+      .filter(Boolean);
+    const liveContextIds = new Set(contextPayloads.map(item => item.user_race_id));
+    const staleContextIds = raceAchievementContexts.filter(row => !liveContextIds.has(row.user_race_id)).map(row => row.user_race_id);
+    if (staleContextIds.length) {
+      const { error } = await client.from('race_achievement_context').delete().in('user_race_id', staleContextIds);
+      if (error) throw error;
+    }
+    if (contextPayloads.length) {
+      const { error } = await client.from('race_achievement_context').upsert(contextPayloads, { onConflict: 'user_race_id' });
+      if (error) throw error;
+    }
+    await loadAchievementData(true);
+    const unlockedPayload = computeUnlockedAchievementsFromSupabase().map(item => ({
+      user_id: authUser.id,
+      achievement_id: item.achievement_id,
+      source_race_id: item.source_race_id,
+      proof: item.proof
+    }));
+    const { error: deleteUnlockError } = await client.from('user_achievements').delete().eq('user_id', authUser.id);
+    if (deleteUnlockError) throw deleteUnlockError;
+    if (unlockedPayload.length) {
+      const { error: insertUnlockError } = await client.from('user_achievements').insert(unlockedPayload);
+      if (insertUnlockError) throw insertUnlockError;
+    }
+    await loadAchievementData(true);
+    const contextLookup = buildAchievementContextLookupByRaceKey();
+    races = races.map(race => ({
+      ...race,
+      achievementContext: contextLookup.get(getRaceKeyValue(race)) || race.achievementContext || {}
+    }));
+    localStorage.setItem('fl2_races', JSON.stringify(races));
+    if (curPage === 'medals' || curPage === 'dashboard') render(curPage);
+    return true;
+  } catch (error) {
+    console.warn('Achievement sync failed:', error.message || error);
+    achievementDataError = true;
+    return false;
+  } finally {
+    achievementSyncInFlight = false;
+  }
+}
+
 function buildRemoteStatePayload() {
   return {
     user_id: authUser.id,
@@ -6038,6 +6880,11 @@ async function refreshAuthState(session) {
       raceStacks = [];
       raceStackItems = [];
       flatlayDataLoaded = false;
+      achievementCatalog = [];
+      userRaceRows = [];
+      raceAchievementContexts = [];
+      userAchievementRows = [];
+      achievementDataLoaded = false;
     }
     localStorage.setItem('bt_auth_uid', authUser.id);
   }
@@ -6045,6 +6892,8 @@ async function refreshAuthState(session) {
   if (authUser) {
     await loadRemoteState();
     await loadFlatlayData(true);
+    await loadAchievementData(true);
+    await syncUserRacesAndAchievements(true);
     dismissLanding();
     render(curPage);
   }
@@ -6152,6 +7001,11 @@ async function signOutUser() {
   localStorage.removeItem('fl2_strava_last_sync');
   localStorage.removeItem('fl2_race_weather');
   raceWeatherCache = {};
+  achievementCatalog = [];
+  userRaceRows = [];
+  raceAchievementContexts = [];
+  userAchievementRows = [];
+  achievementDataLoaded = false;
   window.location.reload();
 }
 
@@ -6426,6 +7280,11 @@ function renderFlatlayProductCard(product, source) {
 }
 
 function getFlatlayProductMeta(product) {
+  if (!product) return '';
+  const metadata = product.metadata || {};
+  const secondary = getFlatlaySecondarySubcategories(product);
+  if (secondary.length) return `Also tagged: ${secondary.join(', ')}`;
+  if (metadata.fuel_type) return String(metadata.fuel_type);
   return '';
 }
 
@@ -7366,6 +8225,7 @@ const DASH_WIDGETS = [
   { id: 'insights',  label: 'Year So Far & H2H',      icon: '📈', zone: 'performance' },
   { id: 'recent',    label: 'Recent Races',           icon: '🏃', zone: 'performance' },
   { id: 'pbs',       label: 'Personal Bests',         icon: '⚡', zone: 'performance' },
+  { id: 'achievements', label: 'Achievements',        icon: '🏆', zone: 'performance' },
   { id: 'world',     label: 'Your World',             icon: '🌍', zone: 'performance' },
   { id: 'on-this-day', label: 'On This Day',          icon: '📅', zone: 'performance' },
   { id: 'field-placing', label: 'Field-Adjusted Placing', icon: '🎯', zone: 'performance' },
@@ -8193,6 +9053,31 @@ async function renderRaceDNA() {
   }
 }
 
+function renderDashboardAchievementSummary() {
+  const el = document.getElementById('dashAchievementsSummary');
+  if (!el) return;
+  if (!authUser) {
+    el.innerHTML = `<div class="dash-ach-card" onclick="openAuthModal()"><div><div class="dash-ach-kicker">Achievements</div><div class="dash-ach-count">--</div><div class="dash-ach-copy">Sign in to track synced unlocks and race milestones.</div></div></div>`;
+    return;
+  }
+  if (!achievementDataLoaded) {
+    el.innerHTML = `<div class="dash-ach-card"><div><div class="dash-ach-kicker">Achievements</div><div class="dash-ach-count">...</div><div class="dash-ach-copy">Loading your achievement state.</div></div></div>`;
+    return;
+  }
+  const summary = getAchievementProgressSummary();
+  const latest = summary.latest.length
+    ? `<div class="dash-ach-latest">${summary.latest.map(item => `<span class="dash-ach-chip"><span>${item.icon}</span><span>${escapeHtml(item.name)}</span></span>`).join('')}</div>`
+    : `<div class="dash-ach-copy">Log races and add context to unlock your first achievement.</div>`;
+  el.innerHTML = `<div class="dash-ach-card" onclick="go('medals')">
+    <div>
+      <div class="dash-ach-kicker">Achievement Progress</div>
+      <div class="dash-ach-count">${summary.unlocked}<span style="font-size:14px;color:rgba(245,245,245,0.52)"> / ${summary.total}</span></div>
+      <div class="dash-ach-copy">Your latest unlocks and long-form ladders live in the Medal Wall.</div>
+    </div>
+    ${latest}
+  </div>`;
+}
+
 /* ============================
    FEATURE 10 — PERFORMANCE MAP
    ============================ */
@@ -8270,6 +9155,7 @@ function renderDash(){
     renderGoals();
     renderDashInsights();
     document.getElementById('dashPBs').innerHTML = renderPBSections(calcPBs(), 'dash-pb-card');
+    renderDashboardAchievementSummary();
     renderOnThisDay();
     renderFieldPlacingWidget();
     renderActivityPreview();
@@ -8305,6 +9191,7 @@ function renderDash(){
   renderDashInsights();
   // Personal Bests on dashboard
   document.getElementById('dashPBs').innerHTML = renderPBSections(calcPBs(), 'dash-pb-card');
+  renderDashboardAchievementSummary();
   // Analytics widgets (sync)
   renderOnThisDay();
   renderFieldPlacingWidget();
@@ -8361,15 +9248,20 @@ function uploadMedalPhoto(event, raceId) {
       const dataUrl = canvas.toDataURL('image/png');
       medalPhotos[raceId] = dataUrl;
       localStorage.setItem('fl2_medal_photos', JSON.stringify(medalPhotos));
+      const race = races.find(entry => getRaceKeyValue(entry) === String(raceId));
+      if (race) {
+        race.achievementContext = { ...(race.achievementContext || {}), photoUploaded: true };
+        sv('fl2_races', races);
+      }
       if (artEl) artEl.innerHTML = `<img class="mw-photo" src="${dataUrl}" alt="medal photo">
         <button class="mw-change-btn" onclick="event.stopPropagation();document.getElementById('mw-file-${raceId}').click()">📷 Change</button>`;
       const card = document.getElementById(`mw-${raceId}`);
       if (card) { const btn = card.querySelector('.mw-upload-btn'); if (btn) btn.textContent = '📷 Change'; }
       // Share to community in background (first upload wins, no UI block)
-      const race = races.find(r => r.id === raceId);
-      if (race && authUser) {
-        const raceKey = getRaceKey(race);
-        const variant = /comrades/i.test(race.name || '') ? getComradesVariant(race.time) : null;
+      const uploadRace = races.find(r => r.id === raceId);
+      if (uploadRace && authUser) {
+        const raceKey = getRaceKey(uploadRace);
+        const variant = /comrades/i.test(uploadRace.name || '') ? getComradesVariant(uploadRace.time) : null;
         canvas.toBlob(async blob => {
           if (!blob) return;
           const communityUrl = await uploadToSupabaseMedals(raceKey, variant, blob);
@@ -8520,21 +9412,6 @@ function getExampleMedal(name, year) {
 
 /* ── Medal Wall: Achievement Badges + Tier System ─────────────────── */
 
-const MW_ACHIEVEMENTS = [
-  { id:'first_race',  icon:'🏁', name:'First Finish',   desc:'Crossed your first finish line',         fn:(r)=>r.length>=1 },
-  { id:'ten_races',   icon:'🔟', name:'10 Races',        desc:'Completed 10 races',                    fn:(r)=>r.length>=10 },
-  { id:'marathoner',  icon:'🏃', name:'Marathoner',      desc:'Finished a marathon',                   fn:(r)=>r.some(x=>x.distance==='marathon'||x.dist==='marathon') },
-  { id:'globe',       icon:'🌍', name:'Globe Trotter',   desc:'Raced in 3+ countries',                 fn:(r)=>new Set(r.map(x=>x.country).filter(Boolean)).size>=3 },
-  { id:'sub2_half',   icon:'⚡', name:'Sub-2 Half',      desc:'Half marathon under 2 hours',           fn:(r)=>r.some(x=>(x.distance||'').includes('half')&&x.time&&timeToSecs(x.time)<7200) },
-  { id:'ultra',       icon:'🦅', name:'Ultra Runner',    desc:'Finished a 50K or longer',              fn:(r)=>r.some(x=>(x.distKm||0)>=50&&x.type==='run') },
-  { id:'ironman',     icon:'🔱', name:'Iron Will',       desc:'Completed a 70.3 or full Ironman',      fn:(r)=>r.some(x=>x.type==='tri'&&((x.distance||'').includes('70.3')||(x.distance||'').includes('ironman'))) },
-  { id:'pb_hunter',   icon:'🎯', name:'PB Hunter',       desc:'5 or more personal bests',              fn:(r,pbIds)=>pbIds.size>=5 },
-  { id:'veteran',     icon:'📅', name:'Veteran',         desc:'Raced across 3+ years',                 fn:(r)=>new Set(r.map(x=>(x.date||'').slice(0,4)).filter(Boolean)).size>=3 },
-  { id:'century',     icon:'💯', name:'Century Club',    desc:'100+ km raced in a single year',        fn:(r)=>{ const m={}; r.forEach(x=>{const y=(x.date||'').slice(0,4);if(y)m[y]=(m[y]||0)+(x.distKm||0);}); return Object.values(m).some(v=>v>=100); } },
-  { id:'podium',      icon:'🥇', name:'Podium',          desc:'Top 3 finish in any race',              fn:(r)=>r.some(x=>{ const p=parseInt((x.placing||'').split('/')[0]); return p>=1&&p<=3; }) },
-  { id:'world_major', icon:'🌟', name:'World Major',     desc:'Completed a World Marathon Major',      fn:(r)=>r.some(x=>/tokyo|london|boston|berlin|chicago|new york|nyc/i.test(x.name||'')) },
-];
-
 const MW_LEGENDARY_RACES = /comrades|utmb|western states|badwater|boston marathon|london marathon|tokyo marathon|berlin marathon|chicago marathon|new york marathon|nyc marathon|ironman(?! 70)/i;
 const MW_ELITE_DIST_KM = 42; // marathon+ is always noteworthy
 
@@ -8544,24 +9421,95 @@ function getMedalTier(r, isPB) {
   return null;
 }
 
-function renderAchievements(pbIds) {
+function formatAchievementGroupTitle(groupKey, familyKey = null) {
+  if (groupKey === 'special') return 'Special Achievements';
+  const familyTitles = {
+    '10k': '10K Ladder',
+    half_marathon: 'Half Marathon Ladder',
+    marathon: 'Marathon Ladder',
+    ultra: 'Ultra Ladder',
+    ironman_703: '70.3 Triathlon Ladder',
+    ironman_full: 'Full Ironman Ladder'
+  };
+  return familyTitles[familyKey || ''] || 'Achievements';
+}
+
+function getAchievementDisplayGroups() {
+  const groups = [];
+  const unlockedIds = getUnlockedAchievementIds();
+  const groupMap = new Map();
+  achievementCatalog.forEach(row => {
+    const key = `${row.group_key}:${row.family_key || ''}`;
+    if (!groupMap.has(key)) {
+      groupMap.set(key, {
+        key,
+        title: formatAchievementGroupTitle(row.group_key, row.family_key),
+        rows: []
+      });
+      groups.push(groupMap.get(key));
+    }
+    groupMap.get(key).rows.push({ ...row, unlocked: unlockedIds.has(row.id) });
+  });
+  return groups;
+}
+
+function renderAchievements() {
   const el = document.getElementById('mwAchievements');
   if (!el || !races.length) { if(el) el.innerHTML=''; return; }
-  const unlocked = MW_ACHIEVEMENTS.filter(a => a.fn(races, pbIds));
-  const unlockedIds = new Set(unlocked.map(a=>a.id));
-  const badges = MW_ACHIEVEMENTS.map(a => {
-    const on = unlockedIds.has(a.id);
-    return `<div class="mw-ach-badge ${on?'unlocked':'locked'}" title="${a.desc}">
-      <span class="mw-ach-icon">${a.icon}</span>
-      <div class="mw-ach-info">
-        <div class="mw-ach-name">${a.name}</div>
-        <div class="mw-ach-desc">${a.desc}</div>
+  if (!authUser) {
+    el.innerHTML = `<div class="mw-ach-wrap"><div class="mw-ach-title">🏆 Achievements</div><div class="flatlay-empty" style="padding:1.1rem 1rem"><h3>Sign in to unlock synced achievements</h3><p>Your medal wall achievements are now backed by Supabase.</p></div></div>`;
+    return;
+  }
+  if (!achievementDataLoaded) {
+    el.innerHTML = `<div class="mw-ach-wrap"><div class="mw-ach-title">🏆 Achievements</div><div style="color:var(--muted);font-size:12px;padding:0.5rem 0">Loading achievements…</div></div>`;
+    return;
+  }
+  if (achievementDataError) {
+    el.innerHTML = `<div class="mw-ach-wrap"><div class="mw-ach-title">🏆 Achievements</div><div style="color:var(--muted);font-size:12px;padding:0.5rem 0">Could not load achievements right now.</div></div>`;
+    return;
+  }
+  const summary = getAchievementProgressSummary();
+  const groups = getAchievementDisplayGroups();
+  const latestChips = summary.latest.length
+    ? `<div class="mw-ach-hero-latest">${summary.latest.map(item => `<span class="mw-ach-hero-chip"><span>${item.icon}</span><span>${escapeHtml(item.name)}</span></span>`).join('')}</div>`
+    : `<div class="mw-ach-hero-copy">Log races and add achievement context to start building your milestone trail.</div>`;
+  const sections = groups.map(group => {
+    const unlocked = group.rows.filter(row => row.unlocked).length;
+    const rows = group.rows.map(row => `
+      <div class="mw-ach-badge ${row.unlocked ? 'unlocked' : 'locked'}${row.kind === 'ladder' ? ' ladder' : ''}" title="${escapeAttr(row.description)}">
+        <span class="mw-ach-icon">${row.icon}</span>
+        <div class="mw-ach-info">
+          <div class="mw-ach-name">${escapeHtml(row.name)}</div>
+          <div class="mw-ach-desc">${escapeHtml(row.description)}</div>
+          ${row.family_key ? `<div class="mw-ach-meta">${escapeHtml(formatAchievementGroupTitle(row.group_key, row.family_key))}</div>` : ''}
+        </div>
+        <div class="mw-ach-state">${row.unlocked ? 'Unlocked' : 'Locked'}</div>
       </div>
+    `).join('');
+    return `<div class="mw-ach-group">
+      <div class="mw-ach-group-head">
+        <div class="mw-ach-group-title">${escapeHtml(group.title)}</div>
+        <div class="mw-ach-group-count">${unlocked}/${group.rows.length}</div>
+      </div>
+      <div class="mw-ach-stack">${rows}</div>
     </div>`;
   }).join('');
   el.innerHTML = `<div class="mw-ach-wrap">
-    <div class="mw-ach-title">🏆 Achievements · ${unlocked.length}/${MW_ACHIEVEMENTS.length} Unlocked</div>
-    <div class="mw-ach-grid">${badges}</div>
+    <div class="mw-ach-hero">
+      <div class="mw-ach-hero-grid">
+        <div>
+          <div class="mw-ach-hero-kicker">Supabase-backed achievements</div>
+          <div class="mw-ach-hero-count">
+            <div class="mw-ach-hero-big">${summary.unlocked}</div>
+            <div class="mw-ach-hero-total">of ${summary.total} unlocked</div>
+          </div>
+          <div class="mw-ach-hero-copy">Track special race moments, milestone ladders, and major-event progress from one synced wall.</div>
+        </div>
+        ${latestChips}
+      </div>
+    </div>
+    <div class="mw-ach-title">🏆 Achievement Groups</div>
+    ${sections}
   </div>`;
 }
 
@@ -8639,7 +9587,7 @@ async function renderMedals() {
   };
 
   // Render achievement badges
-  renderAchievements(pbIds);
+  renderAchievements();
 
   let html = '';
 
@@ -9504,6 +10452,7 @@ function openRaceDetailFromParsed(obj) {
   document.getElementById('rdAgeCatPos').value  = obj.ageCategoryPos || '';
   document.getElementById('rdGenderPos').value  = obj.genderPos      || '';
   document.getElementById('rdNotes').value      = '';
+  populateRaceAchievementContextFields({});
   // Splits
   document.getElementById('rdSplits').innerHTML = (obj.splits || []).map(_splitRowHtml).join('');
   if (obj.splits && obj.splits.length) recalcSplits();
@@ -9770,6 +10719,68 @@ function recalcSplits() {
     }
   });
 }
+function getAchievementContextToggleState() {
+  return document.getElementById('rdAchievementContextWrap')?.style.display !== 'none';
+}
+function updateAchievementContextToggleLabel() {
+  const label = document.getElementById('rdAchievementContextToggleLabel');
+  if (!label) return;
+  label.textContent = getAchievementContextToggleState() ? 'Hide context' : 'Add context';
+}
+function toggleAchievementContextSection(forceOpen) {
+  const wrap = document.getElementById('rdAchievementContextWrap');
+  if (!wrap) return;
+  const shouldOpen = typeof forceOpen === 'boolean' ? forceOpen : wrap.style.display === 'none';
+  wrap.style.display = shouldOpen ? '' : 'none';
+  updateAchievementContextToggleLabel();
+}
+function collectRaceAchievementContextFields() {
+  return {
+    elevationGainM: parseInt(document.getElementById('rdAcElevation').value, 10) || null,
+    temperatureC: document.getElementById('rdAcTemp').value ? Number(document.getElementById('rdAcTemp').value) : null,
+    startTime: document.getElementById('rdAcStartTime').value || '',
+    altitudeM: parseInt(document.getElementById('rdAcAltitude').value, 10) || null,
+    hrZone45Pct: document.getElementById('rdAcHrLoad').value ? Number(document.getElementById('rdAcHrLoad').value) : null,
+    runClubYears: parseInt(document.getElementById('rdAcClubYears').value, 10) || null,
+    bibNumber: document.getElementById('rdAcBibNumber').value.trim(),
+    cutoffPercentile: document.getElementById('rdAcCutoffPct').value ? Number(document.getElementById('rdAcCutoffPct').value) : null,
+    afterSunset: document.getElementById('rdAcAfterSunset').checked,
+    negativeSplit: document.getElementById('rdAcNegativeSplit').checked,
+    almostDnf: document.getElementById('rdAcAlmostDnf').checked,
+    injuryComeback: document.getElementById('rdAcComeback').checked,
+    soloRace: document.getElementById('rdAcSolo').checked,
+    desertTerrain: document.getElementById('rdAcDesert').checked,
+    mountainTrail: document.getElementById('rdAcMountain').checked,
+    coastal: document.getElementById('rdAcCoastal').checked,
+    openWater: document.getElementById('rdAcOpenWater').checked,
+    officialPacer: document.getElementById('rdAcPacer').checked,
+    helpedFirstTimer: document.getElementById('rdAcGuide').checked,
+    photoUploaded: document.getElementById('rdAcPhotoUploaded').checked
+  };
+}
+function populateRaceAchievementContextFields(context = {}) {
+  document.getElementById('rdAcElevation').value = context.elevationGainM ?? '';
+  document.getElementById('rdAcTemp').value = context.temperatureC ?? '';
+  document.getElementById('rdAcStartTime').value = context.startTime || '';
+  document.getElementById('rdAcAltitude').value = context.altitudeM ?? '';
+  document.getElementById('rdAcHrLoad').value = context.hrZone45Pct ?? '';
+  document.getElementById('rdAcClubYears').value = context.runClubYears ?? '';
+  document.getElementById('rdAcBibNumber').value = context.bibNumber || '';
+  document.getElementById('rdAcCutoffPct').value = context.cutoffPercentile ?? '';
+  document.getElementById('rdAcAfterSunset').checked = !!context.afterSunset;
+  document.getElementById('rdAcNegativeSplit').checked = !!context.negativeSplit;
+  document.getElementById('rdAcAlmostDnf').checked = !!context.almostDnf;
+  document.getElementById('rdAcComeback').checked = !!context.injuryComeback;
+  document.getElementById('rdAcSolo').checked = !!context.soloRace;
+  document.getElementById('rdAcDesert').checked = !!context.desertTerrain;
+  document.getElementById('rdAcMountain').checked = !!context.mountainTrail;
+  document.getElementById('rdAcCoastal').checked = !!context.coastal;
+  document.getElementById('rdAcOpenWater').checked = !!context.openWater;
+  document.getElementById('rdAcPacer').checked = !!context.officialPacer;
+  document.getElementById('rdAcGuide').checked = !!context.helpedFirstTimer;
+  document.getElementById('rdAcPhotoUploaded').checked = !!context.photoUploaded;
+  toggleAchievementContextSection(hasAchievementContextData(context));
+}
 let _rvId = null;
 function openRaceView(id) {
   const r = races.find(r => r.id === id);
@@ -9883,6 +10894,7 @@ function openRaceDetail(id) {
   document.getElementById('rdAgeCatPos').value = r.ageCategoryPos || '';
   document.getElementById('rdGenderPos').value = r.genderPos || '';
   document.getElementById('rdNotes').value = r.notes || '';
+  populateRaceAchievementContextFields(r.achievementContext || {});
   // Podium banner
   const ovPos = getPodiumPos(r.placing), agPos = getPodiumPos(r.ageCategoryPos);
   const banner = document.getElementById('rdPodiumBanner');
@@ -9941,6 +10953,7 @@ function _collectRdFields() {
     ageCategoryPos:document.getElementById('rdAgeCatPos').value.trim(),
     genderPos:    document.getElementById('rdGenderPos').value.trim(),
     notes:        document.getElementById('rdNotes').value.trim(),
+    achievementContext: collectRaceAchievementContextFields(),
     splits:       [...document.getElementById('rdSplits').querySelectorAll('tr')].map(tr => {
       const ins = tr.querySelectorAll('input');
       return { marker:ins[0].value.trim(), split:ins[1].value.trim(), cumulative:ins[2].value.trim() };
@@ -10005,6 +11018,7 @@ function saveRaceDetail() {
   r.ageCategoryPos = document.getElementById('rdAgeCatPos').value.trim();
   r.genderPos = document.getElementById('rdGenderPos').value.trim();
   r.notes = document.getElementById('rdNotes').value.trim();
+  r.achievementContext = collectRaceAchievementContextFields();
   if (r.type === 'tri') {
     const keys = ['swim','t1','bike','t2','run'];
     const rdIds = ['rdSwim','rdT1','rdBike','rdT2','rdRun'];
@@ -10504,6 +11518,7 @@ function addManual(){
     placing:document.getElementById('mPl').value||'',
     medal:document.getElementById('mMe').value,
     distKm:DIST_KM[dist]||0,
+    achievementContext:{},
     ...(triSegs ? {triSegments:triSegs} : {})
   });
   sv('fl2_races',races);
@@ -10541,7 +11556,7 @@ async function callClaude(messages){
 
 function pushRaceFromJSON(clean){
   const obj = JSON.parse(clean);
-  races.push({id:Date.now(), ...obj});
+  races.push({id:Date.now(), achievementContext:{}, ...obj});
   sv('fl2_races', races);
   closeM('raceModal');
   render(curPage);
@@ -11712,7 +12727,7 @@ function importStravaRaces(){
       time: `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`,
       city: a.location_city || '', country: a.location_country || '',
       date: (a.start_date_local||'').slice(0,10),
-      placing: '', medal: 'finisher', distKm
+      placing: '', medal: 'finisher', distKm, achievementContext: {}
     });
     imported++;
   }
