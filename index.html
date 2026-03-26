@@ -1489,6 +1489,53 @@ main {
 }
 .rd-new-hint svg { flex-shrink:0; stroke:var(--orange); }
 .rd-name-input.rd-name-pulse { border-color:rgba(255,77,0,0.5) !important; box-shadow:0 0 0 3px rgba(255,77,0,0.1); }
+.race-detail-modal {
+  width:100%;
+}
+.race-detail-body {
+  overflow-y:auto;
+  max-height:60vh;
+}
+.rd-detail-grid-2,
+.rd-detail-grid-3 {
+  grid-template-columns:repeat(var(--rd-grid-cols, 2), minmax(0, 1fr)) !important;
+}
+.rd-detail-grid-3 {
+  --rd-grid-cols: 3;
+}
+@media (max-width: 520px) {
+  #raceDetailModal {
+    align-items:stretch;
+    padding:0;
+  }
+  #raceDetailModal .race-detail-modal {
+    max-width:none;
+    max-height:100dvh;
+    min-height:100dvh;
+    border-radius:0;
+    border-left:none;
+    border-right:none;
+    border-bottom:none;
+  }
+  #raceDetailModal .modal-drag {
+    margin-top:calc(0.5rem + env(safe-area-inset-top, 0px));
+  }
+  #raceDetailModal .modal-head {
+    padding-top:0.9rem;
+  }
+  #raceDetailModal .race-detail-body {
+    max-height:none;
+    min-height:0;
+    padding-bottom:1rem;
+  }
+  #raceDetailModal .modal-foot {
+    padding-bottom:calc(1rem + env(safe-area-inset-bottom, 0px));
+  }
+  .rd-detail-grid-2,
+  .rd-detail-grid-3 {
+    grid-template-columns:1fr !important;
+  }
+}
 
 /* =============================================
    PERSONAL BESTS
@@ -3665,10 +3712,13 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   background: var(--black);
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
-  padding: 2rem 1.5rem;
+  min-height: 100dvh;
+  padding: calc(2rem + env(safe-area-inset-top, 0px)) 1.5rem calc(2rem + env(safe-area-inset-bottom, 0px));
   text-align: center;
   transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.4,0,0.2,1);
   overflow: hidden;
+  isolation: isolate;
+  box-shadow: 0 0 0 100vmax var(--black);
 }
 /* Radial glow */
 #landing-screen::before {
@@ -5031,7 +5081,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 </div>
 
 <div class="modal-overlay" id="raceDetailModal" onclick="bgClose(event,'raceDetailModal')">
-  <div class="modal" role="dialog" aria-modal="true" aria-label="Race detail">
+  <div class="modal race-detail-modal" role="dialog" aria-modal="true" aria-label="Race detail">
     <div class="modal-drag"></div>
     <div class="modal-head">
       <div class="rd-name-wrap">
@@ -5046,11 +5096,11 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
       <div class="modal-sub" id="rdSub"></div>
       <div class="rd-podium-banner" id="rdPodiumBanner" style="display:none"></div>
     </div>
-    <div class="modal-body" style="overflow-y:auto;max-height:60vh">
+    <div class="modal-body race-detail-body">
       <!-- Event Details -->
       <div class="rd-section">
         <div class="rd-label">Event Details</div>
-        <div class="fgrid" style="grid-template-columns:1fr 1fr">
+        <div class="fgrid rd-detail-grid-2">
           <div class="fg"><label class="fl">Sport</label>
             <select class="fi" id="rdType" onchange="rdOnTypeChange()">
               <option value="run">Running</option>
@@ -5064,7 +5114,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
             <select class="fi" id="rdDistSel"></select>
           </div>
         </div>
-        <div class="fgrid" style="grid-template-columns:1fr 1fr">
+        <div class="fgrid rd-detail-grid-2">
           <div class="fg"><label class="fl">Date</label>
             <input class="fi" type="date" id="rdDate">
           </div>
@@ -5077,7 +5127,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
             </select>
           </div>
         </div>
-        <div class="fgrid" style="grid-template-columns:1fr 1fr 1fr">
+        <div class="fgrid rd-detail-grid-3">
           <div class="fg ac-wrap"><label class="fl">City</label><input class="fi" id="rdCity" placeholder="City" autocomplete="off"><div class="ac-drop" id="rdCityDrop"></div></div>
           <div class="fg"><label class="fl">Country</label><select class="fi" id="rdCountry"></select></div>
           <div class="fg"><label class="fl">Priority</label>
