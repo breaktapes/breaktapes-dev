@@ -2639,6 +2639,32 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 .onboard-banner-cta:hover { opacity: 0.85; }
 
 /* =============================================
+   BETA UPGRADE BANNER (staging)
+   ============================================= */
+#betaUpgradeBanner {
+  background: linear-gradient(135deg, rgba(255,77,0,0.14) 0%, rgba(255,77,0,0.07) 100%);
+  border-bottom: 1px solid rgba(255,77,0,0.35);
+  padding: 0.6rem 1.25rem;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 1rem; flex-wrap: wrap; position: relative; z-index: 10;
+}
+#betaUpgradeBanner.hidden { display: none !important; }
+.beta-banner-left { display: flex; flex-direction: column; gap: 2px; }
+.beta-banner-title {
+  font-family: var(--headline); font-size: 11px; font-weight: 900;
+  text-transform: uppercase; letter-spacing: 0.1em; color: var(--orange);
+}
+.beta-banner-sub { font-size: 12px; color: var(--muted); }
+.beta-banner-cta {
+  background: var(--orange); color: var(--black);
+  border: none; border-radius: 4px; padding: 0.35rem 0.85rem;
+  font-family: var(--headline); font-size: 11px; font-weight: 900;
+  letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;
+  white-space: nowrap; flex-shrink: 0; transition: opacity 0.15s;
+}
+.beta-banner-cta:hover { opacity: 0.85; }
+
+/* =============================================
    FEEDBACK WIDGET (staging)
    ============================================= */
 .feedback-pill {
@@ -3018,6 +3044,40 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
     </div>
   </div>
 </nav>
+
+<!-- BETA UPGRADE BANNER (staging only — shown when signed in with @beta.breaktapes.com account) -->
+<div id="betaUpgradeBanner" class="hidden">
+  <div class="beta-banner-left">
+    <span class="beta-banner-title">Beta Account</span>
+    <span class="beta-banner-sub">Add your email to keep all your data when BREAKTAPES launches.</span>
+  </div>
+  <button class="beta-banner-cta" onclick="openBetaEmailModal()">Secure My Data →</button>
+</div>
+
+<!-- BETA EMAIL UPGRADE MODAL -->
+<div class="modal-overlay" id="betaEmailModal" onclick="bgClose(event,'betaEmailModal')">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="betaEmailModalTitle">
+    <div class="modal-drag"></div>
+    <div class="modal-head">
+      <div class="modal-h" id="betaEmailModalTitle">Secure Your Data</div>
+      <div class="modal-sub">Link a real email so you can sign in when BREAKTAPES launches. All your races and profile stay exactly as-is.</div>
+    </div>
+    <div class="modal-body" id="betaEmailModalBody">
+      <div class="fgrid" style="grid-template-columns:1fr">
+        <div class="fg">
+          <label class="fl" for="betaNewEmail">Your Email</label>
+          <input class="fi" id="betaNewEmail" type="email" placeholder="you@example.com" autocomplete="email">
+          <div class="fg-err-msg"></div>
+        </div>
+      </div>
+      <div class="auth-note" id="betaEmailHelperText">You'll get a confirmation link — click it and you're done. Your password stays the same.</div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeM('betaEmailModal')">Later</button>
+      <button class="btn-main" id="betaEmailSubmitBtn" onclick="submitBetaEmailUpgrade()">Send Confirmation</button>
+    </div>
+  </div>
+</div>
 
 <!-- ==== MAIN ==== -->
 <main>
@@ -4327,11 +4387,33 @@ function updateAuthUI() {
   document.getElementById('authMenuLabel').textContent = signedIn ? 'Account' : 'Sign In';
   document.getElementById('authSettingsStatus').innerHTML = signedIn
     ? `Signed in as <span class="auth-status-email">${email}</span>. Your races now sync to your private Supabase account.`
-    : `You’re currently using this app without an account.`;
+    : `You're currently using this app without an account.`;
   document.getElementById('settingsAuthBtn').textContent = signedIn ? 'Manage Account' : 'Sign In';
   document.getElementById('settingsSignOutBtn').style.display = signedIn ? '' : 'none';
   const pill = document.getElementById('feedbackPill');
   if (pill && _IS_STAGING) pill.style.display = signedIn ? '' : 'none';
+  // Beta upgrade banner: show when signed in with a beta account on staging
+  const banner = document.getElementById('betaUpgradeBanner');
+  if (banner) {
+    const isBetaAccount = _IS_STAGING && signedIn && email.endsWith('@beta.breaktapes.com');
+    banner.classList.toggle('hidden', !isBetaAccount);
+    // If the user completed email upgrade on another device, clear the stale pending flag
+    if (!isBetaAccount && localStorage.getItem('bt_email_upgrade_pending')) {
+      localStorage.removeItem('bt_email_upgrade_pending');
+    }
+    if (isBetaAccount) {
+      const pendingEmail = localStorage.getItem('bt_email_upgrade_pending');
+      const sub = banner.querySelector('.beta-banner-sub');
+      const cta = banner.querySelector('.beta-banner-cta');
+      if (pendingEmail) {
+        if (sub) sub.textContent = `Awaiting confirmation at ${pendingEmail} — check your inbox.`;
+        if (cta) { cta.textContent = 'Resend →'; }
+      } else {
+        if (sub) sub.textContent = 'Add your email to keep all your data when BREAKTAPES launches.';
+        if (cta) { cta.textContent = 'Secure My Data →'; }
+      }
+    }
+  }
 }
 
 function setAuthMode(mode) {
@@ -4352,11 +4434,23 @@ function setAuthMode(mode) {
   document.getElementById('authForgotBtn').style.display = signIn ? '' : 'none';
   const inviteWrap = document.getElementById('authInviteWrap');
   if (inviteWrap) inviteWrap.style.display = (_IS_STAGING && !signIn) ? '' : 'none';
+  // On staging sign-in, allow username instead of full email
+  const emailLabel = document.querySelector('label[for="authEmail"]');
+  const emailInput = document.getElementById('authEmail');
+  if (_IS_STAGING && signIn) {
+    if (emailLabel) emailLabel.textContent = 'Username or Email';
+    if (emailInput) emailInput.placeholder = 'e.g. bolt26';
+  } else {
+    if (emailLabel) emailLabel.textContent = 'Email';
+    if (emailInput) emailInput.placeholder = 'you@example.com';
+  }
 }
 
 async function sendPasswordReset() {
-  const email = document.getElementById('authEmail').value.trim();
-  if (!email) { showFieldError('authEmail', 'Drop an email to get started.'); return; }
+  const emailRaw = document.getElementById('authEmail').value.trim();
+  if (!emailRaw) { showFieldError('authEmail', 'Drop an email to get started.'); return; }
+  const isUsernameLogin = _IS_STAGING && !emailRaw.includes('@');
+  const email = isUsernameLogin ? emailRaw.toLowerCase() + '@beta.breaktapes.com' : emailRaw;
   const btn = document.getElementById('authForgotBtn');
   btn.textContent = 'Sending...';
   btn.disabled = true;
@@ -4387,7 +4481,8 @@ function dismissLanding() {
 
 function openLandingAuth(mode) {
   setAuthMode(mode);
-  document.getElementById('authEmail').type = 'email';
+  // On staging sign-in, keep type="text" so usernames (no @) are accepted
+  document.getElementById('authEmail').type = (_IS_STAGING && mode === 'signin') ? 'text' : 'email';
   const pw = document.getElementById('authPassword');
   pw.type = 'password'; pw.disabled = false;
   document.getElementById('authModal').classList.add('open');
@@ -4436,10 +4531,13 @@ async function initAuth() {
 async function submitAuth() {
   const client = initSupabaseClient();
   if (!client) return;
-  const email = document.getElementById('authEmail').value.trim();
+  const emailRaw = document.getElementById('authEmail').value.trim();
   const password = document.getElementById('authPassword').value;
-  if (!email) { showFieldError('authEmail', 'Drop an email to get started.'); return; }
+  if (!emailRaw) { showFieldError('authEmail', 'Drop an email or username to get started.'); return; }
   if (!password) { showFieldError('authPassword', 'Need a password to race in.'); return; }
+  // On staging, plain username (no @) → auto-convert to email format
+  const isUsernameLogin = _IS_STAGING && !emailRaw.includes('@');
+  const email = isUsernameLogin ? emailRaw.toLowerCase() + '@beta.breaktapes.com' : emailRaw;
   const btn = document.getElementById('authSubmitBtn');
   const prev = btn.textContent;
   btn.disabled = true;
@@ -4447,7 +4545,21 @@ async function submitAuth() {
   try {
     if (authMode === 'signin') {
       const { error } = await client.auth.signInWithPassword({ email, password });
-      if (error) throw error;
+      if (error) {
+        // On staging username login: if account doesn't exist yet, auto-provision it
+        if (isUsernameLogin && (error.message?.toLowerCase().includes('invalid') || error.status === 400)) {
+          const { error: signUpErr } = await client.auth.signUp({
+            email, password,
+            options: { data: { full_name: emailRaw, first_name: emailRaw } }
+          });
+          if (signUpErr) throw signUpErr;
+          // Sign in with newly created account
+          const { error: signInErr } = await client.auth.signInWithPassword({ email, password });
+          if (signInErr) throw signInErr;
+        } else {
+          throw error;
+        }
+      }
       closeM('authModal');
       render(curPage);
       return;
@@ -4501,6 +4613,7 @@ async function signOutUser() {
   }
   localStorage.removeItem('bt_new_user');
   localStorage.removeItem('bt_modal_shown');
+  localStorage.removeItem('bt_email_upgrade_pending');
   localStorage.removeItem('bt_auth_uid');
   localStorage.removeItem('fl2_strava');
   localStorage.removeItem('fl2_strava_acts');
@@ -7921,6 +8034,8 @@ function saveNR(){
     nextRace = newRace;
     sv('fl2_nr', nextRace);
   }
+  // Sync immediately (don't rely solely on debounce — prevents data loss on quick refresh)
+  syncRemoteState();
   closeM('nrModal');
   if(curPage==='dashboard') renderCountdown();
 }
@@ -9801,6 +9916,51 @@ function openFeedback() {
   openM('feedbackModal');
 }
 
+function openBetaEmailModal() {
+  if (!_IS_STAGING) return;
+  // Flush any pending data to Supabase before the user upgrades their email
+  if (remoteSyncReady) syncRemoteState();
+  // Reset modal to input state
+  const body = document.getElementById('betaEmailModalBody');
+  const helper = document.getElementById('betaEmailHelperText');
+  const btn = document.getElementById('betaEmailSubmitBtn');
+  const input = document.getElementById('betaNewEmail');
+  if (body) body.style.display = '';
+  if (helper) { helper.textContent = 'You\'ll get a confirmation link — click it and you\'re done. Your password stays the same.'; helper.style.color = ''; }
+  if (btn) { btn.textContent = 'Send Confirmation'; btn.disabled = false; }
+  if (input) { input.value = ''; input.classList.remove('fi-error'); const e2 = input.closest('.fg')?.querySelector('.fg-err-msg'); if (e2) e2.classList.remove('show'); }
+  openM('betaEmailModal');
+}
+
+async function submitBetaEmailUpgrade() {
+  if (!_IS_STAGING) return;
+  const input = document.getElementById('betaNewEmail');
+  const newEmail = input?.value.trim();
+  if (!newEmail || !input.checkValidity()) { showFieldError('betaNewEmail', 'Please enter a valid email address.'); return; }
+  if (newEmail.endsWith('@beta.breaktapes.com')) { showFieldError('betaNewEmail', 'Please use a real email address, not a beta one.'); return; }
+  const btn = document.getElementById('betaEmailSubmitBtn');
+  btn.disabled = true; btn.textContent = 'Sending…';
+  const client = initSupabaseClient();
+  if (!client) { btn.disabled = false; btn.textContent = 'Send Confirmation'; showFieldError('betaNewEmail', 'Could not connect. Please try again.'); return; }
+  try {
+    const { error } = await client.auth.updateUser({ email: newEmail });
+    if (error) throw error;
+    // Show confirmation state
+    const helper = document.getElementById('betaEmailHelperText');
+    if (helper) {
+      helper.textContent = `Confirmation sent to ${newEmail}. Click the link in that email and you're all set — all your races and profile will be there when BREAKTAPES launches.`;
+      helper.style.color = 'var(--green)';
+    }
+    btn.textContent = 'Email Sent ✓'; btn.disabled = true;
+    // Store pending state so banner shows "awaiting confirmation" subtitle
+    localStorage.setItem('bt_email_upgrade_pending', newEmail);
+    updateAuthUI();
+  } catch (err) {
+    btn.disabled = false; btn.textContent = 'Send Confirmation';
+    showFieldError('betaNewEmail', err.message || 'Could not update email. Try again.');
+  }
+}
+
 async function submitFeedback() {
   const client = initSupabaseClient();
   const text = (document.getElementById('feedbackText')?.value || '').trim();
@@ -9893,6 +10053,11 @@ function initModalSwipe(modalEl, closeCallback) {
     else modalEl.style.transform = '';
   });
 }
+
+// Best-effort sync when tab closes or refreshes — prevents upcoming races from being lost
+// Best-effort sync on tab close — real protection is the immediate sync in saveNR().
+// Browsers may cancel in-flight XHR/fetch on unload, but this catches other sync paths.
+window.addEventListener('beforeunload', () => { if (remoteSyncReady) syncRemoteState(); });
 
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.modal-overlay').forEach(overlay => {
