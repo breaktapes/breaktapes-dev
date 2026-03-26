@@ -67,6 +67,7 @@ function loadSPA({
     <div id="page-dashboard"   class="page active"></div>
     <div id="page-history"     class="page"></div>
     <div id="page-medals"      class="page"></div>
+    <div id="page-flatlay"     class="page"></div>
     <div id="page-map"         class="page"></div>
     <div id="page-athlete"     class="page"></div>
     <div id="page-train"       class="page"></div>

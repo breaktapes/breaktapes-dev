@@ -1713,6 +1713,301 @@ main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(1
   transition:all 0.15s;
 }
 .btn-ghost:hover { border-color:var(--muted); color:var(--white); }
+.btn-danger {
+  background:rgba(255,85,85,0.08);
+  border-color:rgba(255,85,85,0.24);
+  color:#ff8d8d;
+}
+.btn-danger:hover {
+  border-color:rgba(255,120,120,0.4);
+  color:#ffd0d0;
+}
+
+/* =============================================
+   FLATLAY
+   ============================================= */
+#page-flatlay .page-kicker::before { background: var(--orange); }
+.flatlay-shell { display:flex; flex-direction:column; gap:1rem; }
+.flatlay-tabs {
+  display:grid;
+  grid-template-columns:repeat(4, minmax(0, 1fr));
+  gap:0.5rem;
+  margin-bottom:0.5rem;
+}
+.flatlay-tab {
+  min-height:44px;
+  border:1px solid var(--border2);
+  border-radius:6px;
+  background:var(--surface2);
+  color:var(--muted);
+  font-family:var(--headline);
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  cursor:pointer;
+}
+.flatlay-tab.active {
+  border-color:rgba(255,77,0,0.35);
+  background:var(--orange-dim);
+  color:var(--orange);
+}
+.flatlay-panel { display:none; }
+.flatlay-panel.active { display:block; }
+.flatlay-search-card,
+.flatlay-list-card,
+.flatlay-stack-card {
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:1rem;
+}
+.flatlay-search-card { margin-bottom:1rem; }
+.flatlay-search-row {
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:0.75rem;
+  align-items:end;
+}
+.flatlay-search-help {
+  margin-top:0.5rem;
+  color:var(--muted);
+  font-size:12px;
+}
+.flatlay-filter-row {
+  display:grid;
+  grid-template-columns:repeat(3, minmax(0, 1fr));
+  gap:0.75rem;
+  margin-top:0.75rem;
+}
+.flatlay-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));
+  gap:0.75rem;
+}
+.flatlay-product-card {
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:0.85rem;
+  display:flex;
+  flex-direction:column;
+  gap:0.65rem;
+}
+.flatlay-product-top,
+.flatlay-list-top,
+.flatlay-stack-top {
+  display:flex;
+  justify-content:space-between;
+  gap:0.75rem;
+  align-items:flex-start;
+}
+.flatlay-product-top {
+  flex-direction:column;
+  align-items:stretch;
+  gap:0.35rem;
+}
+.flatlay-badges {
+  display:flex;
+  gap:0.3rem;
+  flex-wrap:wrap;
+  justify-content:flex-start;
+}
+.flatlay-badge {
+  border:1px solid var(--border2);
+  border-radius:999px;
+  padding:0.14rem 0.4rem;
+  font-family:var(--headline);
+  font-size:8px;
+  font-weight:800;
+  letter-spacing:0.06em;
+  text-transform:uppercase;
+}
+.flatlay-badge.category { color:var(--orange); border-color:rgba(255,77,0,0.2); background:rgba(255,77,0,0.06); }
+.flatlay-badge.subcategory { color:rgba(255,255,255,0.86); border-color:rgba(255,255,255,0.12); background:rgba(255,255,255,0.03); }
+.flatlay-brand {
+  color:var(--muted);
+  font-size:12px;
+  margin-bottom:0.1rem;
+}
+.flatlay-name {
+  color:var(--white);
+  font-family:var(--headline);
+  font-size:15px;
+  font-weight:800;
+  line-height:1.05;
+  letter-spacing:0.03em;
+  text-transform:uppercase;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.flatlay-meta {
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.5;
+}
+.flatlay-actions {
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));
+  gap:0.45rem;
+}
+.flatlay-actions .btn-main,
+.flatlay-actions .btn-ghost {
+  min-height:36px;
+  width:100%;
+  flex:none;
+  border-radius:6px;
+  padding:0.56rem 0.55rem;
+  font-size:10px;
+  letter-spacing:0.07em;
+}
+.flatlay-section-head {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:0.75rem;
+  margin-bottom:0.75rem;
+}
+.flatlay-section-title {
+  color:var(--white);
+  font-family:var(--headline);
+  font-size:18px;
+  font-weight:800;
+  letter-spacing:0.06em;
+  text-transform:uppercase;
+}
+.flatlay-section-sub {
+  color:var(--muted);
+  font-size:12px;
+}
+.flatlay-list-items,
+.flatlay-stack-items {
+  display:flex;
+  flex-direction:column;
+  gap:0.5rem;
+  margin-top:0.9rem;
+}
+.flatlay-item-row {
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:0.5rem;
+  align-items:center;
+  background:var(--surface3);
+  border:1px solid var(--border);
+  border-radius:6px;
+  padding:0.6rem 0.75rem;
+}
+.flatlay-item-name {
+  color:var(--white);
+  font-size:13px;
+  font-weight:600;
+}
+.flatlay-item-sub {
+  color:var(--muted);
+  font-size:11px;
+  margin-top:0.2rem;
+}
+.flatlay-item-actions {
+  display:flex;
+  gap:0.35rem;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+.flatlay-icon-btn {
+  min-width:36px;
+  min-height:36px;
+  border:1px solid var(--border2);
+  border-radius:6px;
+  background:transparent;
+  color:var(--muted);
+  cursor:pointer;
+  font-family:var(--headline);
+  font-size:12px;
+  font-weight:800;
+}
+.flatlay-icon-btn:hover { color:var(--white); border-color:var(--muted); }
+.flatlay-icon-btn.danger {
+  color:#ff8d8d;
+  border-color:rgba(255,85,85,0.2);
+  background:rgba(255,85,85,0.06);
+}
+.flatlay-icon-btn.danger:hover {
+  color:#ffd0d0;
+  border-color:rgba(255,120,120,0.36);
+}
+.flatlay-empty {
+  text-align:center;
+  padding:2.5rem 1rem;
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:8px;
+}
+.flatlay-empty h3 {
+  margin:0 0 0.4rem;
+  color:var(--white);
+  font-family:var(--headline);
+  font-size:22px;
+  font-weight:800;
+  letter-spacing:0.06em;
+  text-transform:uppercase;
+}
+.flatlay-empty p {
+  margin:0 auto;
+  max-width:440px;
+  color:var(--muted);
+  font-size:13px;
+  line-height:1.5;
+}
+.flatlay-template-grid {
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+  gap:0.75rem;
+  margin-bottom:1rem;
+}
+.flatlay-template-card {
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:0.9rem;
+}
+.flatlay-template-title {
+  color:var(--white);
+  font-family:var(--headline);
+  font-size:16px;
+  font-weight:800;
+  letter-spacing:0.06em;
+  text-transform:uppercase;
+  margin-bottom:0.7rem;
+}
+.flatlay-template-list {
+  display:flex;
+  flex-wrap:wrap;
+  gap:0.4rem;
+}
+.flatlay-template-chip {
+  border:1px solid var(--border2);
+  border-radius:999px;
+  padding:0.35rem 0.55rem;
+  background:transparent;
+  color:var(--muted);
+  cursor:pointer;
+  font-family:var(--headline);
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+}
+.flatlay-template-chip:hover {
+  color:var(--orange);
+  border-color:rgba(255,77,0,0.3);
+  background:rgba(255,77,0,0.08);
+}
+@media(max-width:767px){
+  .flatlay-tabs { grid-template-columns:repeat(2, minmax(0, 1fr)); }
+  .flatlay-search-row { grid-template-columns:1fr; }
+  .flatlay-filter-row { grid-template-columns:1fr; }
+}
 
 /* =============================================
    RESPONSIVE
@@ -2639,6 +2934,32 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 .onboard-banner-cta:hover { opacity: 0.85; }
 
 /* =============================================
+   BETA UPGRADE BANNER (staging)
+   ============================================= */
+#betaUpgradeBanner {
+  background: linear-gradient(135deg, rgba(255,77,0,0.14) 0%, rgba(255,77,0,0.07) 100%);
+  border-bottom: 1px solid rgba(255,77,0,0.35);
+  padding: 0.6rem 1.25rem;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 1rem; flex-wrap: wrap; position: relative; z-index: 10;
+}
+#betaUpgradeBanner.hidden { display: none !important; }
+.beta-banner-left { display: flex; flex-direction: column; gap: 2px; }
+.beta-banner-title {
+  font-family: var(--headline); font-size: 11px; font-weight: 900;
+  text-transform: uppercase; letter-spacing: 0.1em; color: var(--orange);
+}
+.beta-banner-sub { font-size: 12px; color: var(--muted); }
+.beta-banner-cta {
+  background: var(--orange); color: var(--black);
+  border: none; border-radius: 4px; padding: 0.35rem 0.85rem;
+  font-family: var(--headline); font-size: 11px; font-weight: 900;
+  letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer;
+  white-space: nowrap; flex-shrink: 0; transition: opacity 0.15s;
+}
+.beta-banner-cta:hover { opacity: 0.85; }
+
+/* =============================================
    FEEDBACK WIDGET (staging)
    ============================================= */
 .feedback-pill {
@@ -2985,6 +3306,9 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
     <button class="menu-item" id="mi-map" onclick="go('map')">
       <span class="menu-icon">🗺️</span>Race Map
     </button>
+    <button class="menu-item" id="mi-flatlay" onclick="go('flatlay')">
+      <span class="menu-icon">🧰</span>The Flatlay
+    </button>
     <div class="menu-divider"></div>
     <div class="menu-section-label train">Train</div>
     <button class="menu-item" id="mi-train" onclick="go('train')">
@@ -3018,6 +3342,40 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
     </div>
   </div>
 </nav>
+
+<!-- BETA UPGRADE BANNER (staging only — shown when signed in with @beta.breaktapes.com account) -->
+<div id="betaUpgradeBanner" class="hidden">
+  <div class="beta-banner-left">
+    <span class="beta-banner-title">Beta Account</span>
+    <span class="beta-banner-sub">Add your email to keep all your data when BREAKTAPES launches.</span>
+  </div>
+  <button class="beta-banner-cta" onclick="openBetaEmailModal()">Secure My Data →</button>
+</div>
+
+<!-- BETA EMAIL UPGRADE MODAL -->
+<div class="modal-overlay" id="betaEmailModal" onclick="bgClose(event,'betaEmailModal')">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="betaEmailModalTitle">
+    <div class="modal-drag"></div>
+    <div class="modal-head">
+      <div class="modal-h" id="betaEmailModalTitle">Secure Your Data</div>
+      <div class="modal-sub">Link a real email so you can sign in when BREAKTAPES launches. All your races and profile stay exactly as-is.</div>
+    </div>
+    <div class="modal-body" id="betaEmailModalBody">
+      <div class="fgrid" style="grid-template-columns:1fr">
+        <div class="fg">
+          <label class="fl" for="betaNewEmail">Your Email</label>
+          <input class="fi" id="betaNewEmail" type="email" placeholder="you@example.com" autocomplete="email">
+          <div class="fg-err-msg"></div>
+        </div>
+      </div>
+      <div class="auth-note" id="betaEmailHelperText">You'll get a confirmation link — click it and you're done. Your password stays the same.</div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeM('betaEmailModal')">Later</button>
+      <button class="btn-main" id="betaEmailSubmitBtn" onclick="submitBetaEmailUpgrade()">Send Confirmation</button>
+    </div>
+  </div>
+</div>
 
 <!-- ==== MAIN ==== -->
 <main>
@@ -3179,6 +3537,84 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
     <div class="hist-match-count" id="histMatchCount" style="display:none"></div>
     <div class="history-list" id="histList"></div>
     <button class="btn-ghost" id="histLoadMore" onclick="histPage++;renderHistory()" style="display:none;width:100%;margin-top:1rem;">Load more races</button>
+  </div>
+</div>
+
+<!-- FLATLAY -->
+<div id="page-flatlay" class="page">
+  <div class="wrap">
+    <div class="page-kicker">Marketplace Mode</div>
+    <div class="page-h1">The<br><span class="accent">Flatlay</span></div>
+    <div class="flatlay-shell">
+      <div class="flatlay-tabs">
+        <button class="flatlay-tab active" id="flatlayTab-discover" onclick="switchFlatlayTab('discover')">Discover</button>
+        <button class="flatlay-tab" id="flatlayTab-library" onclick="switchFlatlayTab('library')">My Library</button>
+        <button class="flatlay-tab" id="flatlayTab-lists" onclick="switchFlatlayTab('lists')">Lists</button>
+        <button class="flatlay-tab" id="flatlayTab-stacks" onclick="switchFlatlayTab('stacks')">Race Stacks</button>
+      </div>
+
+      <div class="flatlay-panel active" id="flatlayPanel-discover">
+        <div class="flatlay-search-card">
+          <div class="flatlay-search-row">
+            <div class="fg" style="margin:0">
+              <label class="fl" for="flatlaySearchInput">Search Products</label>
+              <input class="fi" id="flatlaySearchInput" type="search" placeholder="Search footwear, bikes, nutrition, hydration..." oninput="onFlatlaySearchInput()">
+            </div>
+            <button class="btn-main" type="button" onclick="openCustomProductModal()">+ Custom Product</button>
+          </div>
+          <div class="flatlay-filter-row">
+            <div class="fg" style="margin:0">
+              <label class="fl" for="flatlayCategoryFilter">Category</label>
+              <select class="fi" id="flatlayCategoryFilter" onchange="onFlatlayFilterChange()"></select>
+            </div>
+            <div class="fg" style="margin:0;display:none" id="flatlaySubcategoryFilterWrap">
+              <label class="fl" for="flatlaySubcategoryFilter">Sub Category</label>
+              <select class="fi" id="flatlaySubcategoryFilter" onchange="onFlatlayFilterChange()"></select>
+            </div>
+            <div class="fg" style="margin:0">
+              <label class="fl" for="flatlayBrandFilter">Brand</label>
+              <select class="fi" id="flatlayBrandFilter" onchange="onFlatlayFilterChange()"></select>
+            </div>
+          </div>
+          <div class="flatlay-search-help">Search the shared product catalog, save products into your library, and drop them straight into lists or race stacks.</div>
+        </div>
+        <div class="flatlay-grid" id="flatlaySearchResults"></div>
+      </div>
+
+      <div class="flatlay-panel" id="flatlayPanel-library">
+        <div class="flatlay-section-head">
+          <div>
+            <div class="flatlay-section-title">My Library</div>
+            <div class="flatlay-section-sub">Your saved marketplace products across footwear, apparel, bike, swim, hydration, nutrition, and race-day essentials.</div>
+          </div>
+          <button class="btn-main" type="button" onclick="openCustomProductModal()">+ Add Product</button>
+        </div>
+        <div class="flatlay-grid" id="flatlayLibraryGrid"></div>
+      </div>
+
+      <div class="flatlay-panel" id="flatlayPanel-lists">
+        <div class="flatlay-section-head">
+          <div>
+            <div class="flatlay-section-title">Lists</div>
+            <div class="flatlay-section-sub">Build your own product lists from everything in your library.</div>
+          </div>
+          <button class="btn-main" type="button" onclick="openFlatlayListModal()">+ New List</button>
+        </div>
+        <div class="flatlay-grid" id="flatlayListsGrid"></div>
+      </div>
+
+      <div class="flatlay-panel" id="flatlayPanel-stacks">
+        <div class="flatlay-section-head">
+          <div>
+            <div class="flatlay-section-title">Race Stacks</div>
+            <div class="flatlay-section-sub">Create reusable templates by sport and distance, then layer in your own race-day products.</div>
+          </div>
+          <button class="btn-main" type="button" onclick="openFlatlayStackModal()">+ New Stack</button>
+        </div>
+        <div class="flatlay-template-grid" id="flatlayTemplateGrid"></div>
+        <div class="flatlay-grid" id="flatlayStacksGrid"></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -4099,6 +4535,185 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   </div>
 </div>
 
+<!-- ==== FLATLAY MODALS ==== -->
+<div class="modal-overlay" id="flatlayProductModal" onclick="bgClose(event,'flatlayProductModal')">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="flatlayProductModalTitle">
+    <div class="modal-drag"></div>
+    <div class="modal-head">
+      <div class="modal-h" id="flatlayProductModalTitle">Custom Product</div>
+      <div class="modal-sub">Add a product that is not in the shared catalog yet.</div>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="flatlayProductEditId">
+      <div class="fgrid" style="grid-template-columns:1fr">
+        <div class="fg">
+          <label class="fl" for="flatlayProductCategory">Category</label>
+          <select class="fi" id="flatlayProductCategory" onchange="onFlatlayProductCategoryChange()">
+            <option value="footwear">Footwear</option>
+            <option value="apparel">Apparel</option>
+            <option value="wearables">Wearables</option>
+            <option value="bike">Bike</option>
+            <option value="swim">Swim</option>
+            <option value="hydration">Hydration</option>
+            <option value="nutrition">Nutrition</option>
+            <option value="recovery">Recovery</option>
+            <option value="accessories">Accessories</option>
+          </select>
+        </div>
+        <div class="fg" id="flatlayProductSubcategoryWrap">
+          <label class="fl" for="flatlayProductPrimarySubcategory">Primary Sub Category</label>
+          <select class="fi" id="flatlayProductPrimarySubcategory" onchange="onFlatlayPrimarySubcategoryChange()">
+          </select>
+        </div>
+        <div class="fg" id="flatlayProductSecondarySubcategoryWrap">
+          <label class="fl" for="flatlayProductSecondarySubcategories">Additional Sub Categories</label>
+          <select class="fi" id="flatlayProductSecondarySubcategories" multiple size="5" style="min-height:140px">
+          </select>
+          <div class="fl" style="margin-top:0.35rem;font-size:11px;letter-spacing:0.04em;text-transform:none;color:var(--muted)">Choose any extra tags that also fit this product.</div>
+        </div>
+        <div class="fg">
+          <label class="fl" for="flatlayProductBrand">Brand</label>
+          <input class="fi" id="flatlayProductBrand" placeholder="e.g. Nike">
+          <div class="fg-err-msg"></div>
+        </div>
+        <div class="fg">
+          <label class="fl" for="flatlayProductName">Product Name</label>
+          <input class="fi" id="flatlayProductName" placeholder="e.g. Vaporfly 3">
+          <div class="fg-err-msg"></div>
+        </div>
+        <div class="fg">
+          <label class="fl" for="flatlayProductNotes">Notes</label>
+          <textarea class="fi" id="flatlayProductNotes" rows="3" placeholder="Fit notes, sizing, race-day reminders..." style="resize:vertical;min-height:90px"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeM('flatlayProductModal')">Cancel</button>
+      <button class="btn-main" id="flatlayProductSubmitBtn" onclick="saveFlatlayCustomProduct()">Save Product</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="flatlayListModal" onclick="bgClose(event,'flatlayListModal')">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="flatlayListModalTitle">
+    <div class="modal-drag"></div>
+    <div class="modal-head">
+      <div class="modal-h" id="flatlayListModalTitle">New List</div>
+      <div class="modal-sub">Create a personal list for your products.</div>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="flatlayListEditId">
+      <div class="fgrid" style="grid-template-columns:1fr">
+        <div class="fg">
+          <label class="fl" for="flatlayListName">List Name</label>
+          <input class="fi" id="flatlayListName" placeholder="e.g. Valencia Marathon kit">
+          <div class="fg-err-msg"></div>
+        </div>
+        <div class="fg">
+          <label class="fl" for="flatlayListKind">Type</label>
+          <select class="fi" id="flatlayListKind">
+            <option value="list">List</option>
+            <option value="collection">Collection</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeM('flatlayListModal')">Cancel</button>
+      <button class="btn-main" id="flatlayListSubmitBtn" onclick="saveFlatlayList()">Save List</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="flatlayListPickerModal" onclick="bgClose(event,'flatlayListPickerModal')">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="flatlayListPickerModalTitle">
+    <div class="modal-drag"></div>
+    <div class="modal-head">
+      <div class="modal-h" id="flatlayListPickerModalTitle">Add To List</div>
+      <div class="modal-sub">Choose which list should get this product.</div>
+    </div>
+    <div class="modal-body">
+      <div class="fg">
+        <label class="fl" for="flatlayListPickerSelect">List</label>
+        <select class="fi" id="flatlayListPickerSelect"></select>
+      </div>
+      <button class="btn-ghost" type="button" style="width:100%;margin-top:0.75rem" onclick="closeM('flatlayListPickerModal');openFlatlayListModal()">+ Create New List</button>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeM('flatlayListPickerModal')">Cancel</button>
+      <button class="btn-main" onclick="confirmFlatlayListPick()">Add Product</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="flatlayStackModal" onclick="bgClose(event,'flatlayStackModal')">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="flatlayStackModalTitle">
+    <div class="modal-drag"></div>
+    <div class="modal-head">
+      <div class="modal-h" id="flatlayStackModalTitle">New Race Stack</div>
+      <div class="modal-sub">Create a reusable template or a one-race setup.</div>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="flatlayStackEditId">
+      <div class="fgrid" style="grid-template-columns:1fr">
+        <div class="fg">
+          <label class="fl" for="flatlayStackMode">Stack Type</label>
+          <select class="fi" id="flatlayStackMode" onchange="onFlatlayStackModeChange()">
+            <option value="template">Race Distance</option>
+            <option value="race">Choose my race</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label class="fl" for="flatlayStackName">Stack Name</label>
+          <input class="fi" id="flatlayStackName" placeholder="e.g. Ironman Lake Placid stack">
+          <div class="fg-err-msg"></div>
+        </div>
+        <div class="fg">
+          <label class="fl" for="flatlayStackSportCategory">Sport</label>
+          <select class="fi" id="flatlayStackSportCategory" onchange="populateFlatlayTemplateOptions()"></select>
+        </div>
+        <div class="fg" id="flatlayStackTemplateWrap">
+          <label class="fl" for="flatlayStackDistanceLabel">Template</label>
+          <select class="fi" id="flatlayStackDistanceLabel"></select>
+        </div>
+        <div class="fg" id="flatlayStackRaceLabelWrap" style="display:none">
+          <label class="fl" for="flatlayStackRaceLabel">Choose Race</label>
+          <select class="fi" id="flatlayStackRaceLabel"></select>
+        </div>
+        <div class="fg">
+          <label class="fl" for="flatlayStackNotes">Notes</label>
+          <textarea class="fi" id="flatlayStackNotes" rows="3" placeholder="What makes this stack work?" style="resize:vertical;min-height:90px"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeM('flatlayStackModal')">Cancel</button>
+      <button class="btn-main" id="flatlayStackSubmitBtn" onclick="saveFlatlayStack()">Save Stack</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="flatlayStackPickerModal" onclick="bgClose(event,'flatlayStackPickerModal')">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="flatlayStackPickerModalTitle">
+    <div class="modal-drag"></div>
+    <div class="modal-head">
+      <div class="modal-h" id="flatlayStackPickerModalTitle">Add To Race Stack</div>
+      <div class="modal-sub">Choose the stack that should get this product.</div>
+    </div>
+    <div class="modal-body">
+      <div class="fg">
+        <label class="fl" for="flatlayStackPickerSelect">Race Stack</label>
+        <select class="fi" id="flatlayStackPickerSelect"></select>
+      </div>
+      <button class="btn-ghost" type="button" style="width:100%;margin-top:0.75rem" onclick="closeM('flatlayStackPickerModal');openFlatlayStackModal()">+ Create New Stack</button>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeM('flatlayStackPickerModal')">Cancel</button>
+      <button class="btn-main" onclick="confirmFlatlayStackPick()">Add Product</button>
+    </div>
+  </div>
+</div>
+
 <!-- ==== JS ==== -->
 <script>
 /* ============================
@@ -4171,6 +4786,121 @@ let raceDb = [];
 let raceDbLoadPromise = null;
 let raceDbLoaded = false;
 let raceDbError = false;
+let flatlayCatalog = [];
+let flatlayCatalogLoaded = false;
+let flatlayCatalogError = false;
+let flatlayDataLoaded = false;
+let flatlayLoadPromise = null;
+let userProducts = [];
+let flatlayLists = [];
+let flatlayListItems = [];
+let raceStacks = [];
+let raceStackItems = [];
+let flatlayTab = 'discover';
+let flatlaySearchQuery = '';
+let flatlayCategoryFilter = 'all';
+let flatlaySubcategoryFilter = 'all';
+let flatlayBrandFilter = 'all';
+let flatlayAddContext = null;
+
+const FLATLAY_CATEGORIES = ['footwear', 'apparel', 'wearables', 'bike', 'swim', 'hydration', 'nutrition', 'recovery', 'accessories'];
+const FLATLAY_SUBCATEGORY_OPTIONS = {
+  footwear: [
+    'Race Shoes',
+    'Daily Trainers',
+    'Tempo Shoes',
+    'Trail Shoes',
+    'Recovery Shoes',
+    'Cycling Shoes',
+    'Triathlon Shoes',
+    'Socks'
+  ],
+  apparel: [
+    'Singlets',
+    'Tops & T-Shirts',
+    'Shorts',
+    'Trousers & Leggings',
+    'Trousers & Tights',
+    'Compression & Baselayer',
+    'Jackets & Gilets',
+    'Hoodies & Sweatshirts',
+    'Headwear'
+  ],
+  wearables: [
+    'GPS Watches',
+    'Heart Rate Monitors',
+    'Bike Computers',
+    'Power Meters',
+    'Smart Rings',
+    'Headphones'
+  ],
+  bike: [
+    'Bikes',
+    'Wheels',
+    'Tyres',
+    'Saddles',
+    'Pedals',
+    'Handlebars',
+    'Drivetrain',
+    'Indoor Trainers',
+    'Maintenance',
+    'Tools'
+  ],
+  swim: [
+    'Goggles',
+    'Swim Caps',
+    'Wetsuits',
+    'Swimwear',
+    'Pull Buoys',
+    'Paddles',
+    'Kickboards',
+    'Swim Bags'
+  ],
+  hydration: [
+    'Bottles',
+    'Soft Flasks',
+    'Hydration Packs',
+    'Hydration Vests',
+    'Reservoirs',
+    'Electrolytes'
+  ],
+  nutrition: [
+    'Gels',
+    'Drink Mix',
+    'Bars',
+    'Chews',
+    'Caffeine',
+    'Bicarb',
+    'Recovery Fuel'
+  ],
+  recovery: [
+    'Foam Rollers',
+    'Massage Guns',
+    'Compression Boots',
+    'Mobility Tools',
+    'Resistance Bands',
+    'Ice & Heat Therapy',
+    'Recovery Sandals'
+  ],
+  accessories: [
+    'Eyewear',
+    'Race Belts',
+    'Bags',
+    'Lights',
+    'Phone Holders',
+    'Towels',
+    'Sunscreen',
+    'Anti-Chafe',
+    'Miscellaneous'
+  ]
+};
+const FLATLAY_TEMPLATE_GROUPS = [
+  { key: 'running', label: 'Running', templates: ['5K', '10K', 'Half Marathon', 'Marathon', '50K', '50 Mile', '100K', '100 Mile'] },
+  { key: 'triathlon', label: 'Triathlon', templates: ['Super Sprint', 'Sprint', 'Olympic', '70.3 / Half Ironman', 'T100', 'Full Distance / Ironman'] },
+  { key: 'hyrox', label: 'HYROX', templates: ['HYROX'] },
+  { key: 'swimming', label: 'Swimming', templates: ['Open Water', 'Pool Race', 'Swim Meet'] },
+  { key: 'cycling', label: 'Cycling', templates: ['Road Race', 'Time Trial', 'Gravel Race', 'Gran Fondo'] }
+];
 
 /* New users start with empty state — no demo data */
 if (!races) { races = []; sv('fl2_races', races); }
@@ -4217,6 +4947,385 @@ async function loadRaceCatalog() {
     raceDbError = true;
     return false;
   }
+}
+
+function getFlatlayTemplateGroups() {
+  return FLATLAY_TEMPLATE_GROUPS.map(group => ({
+    key: group.key,
+    label: group.label,
+    templates: [...group.templates]
+  }));
+}
+
+function getFlatlayTemplateGroup(key) {
+  return FLATLAY_TEMPLATE_GROUPS.find(group => group.key === key) || FLATLAY_TEMPLATE_GROUPS[0];
+}
+
+async function loadFlatlayCatalog() {
+  const client = initSupabaseClient();
+  if (!client) { flatlayCatalogError = true; return false; }
+  try {
+    const { data, error } = await client
+      .from('product_catalog')
+      .select('id, category, brand, name, metadata, created_at')
+      .order('brand', { ascending: true })
+      .order('name', { ascending: true });
+    if (error) throw error;
+    flatlayCatalog = (data || []).map(normalizeFlatlayProduct);
+    flatlayCatalogLoaded = true;
+    flatlayCatalogError = false;
+    return true;
+  } catch (error) {
+    console.warn('Flatlay catalog load failed:', error.message || error);
+    flatlayCatalogError = true;
+    return false;
+  }
+}
+
+async function loadFlatlayData(force = false) {
+  if (!authUser) return false;
+  if (flatlayLoadPromise && !force) return flatlayLoadPromise;
+  const client = initSupabaseClient();
+  if (!client) return false;
+  flatlayLoadPromise = (async () => {
+    await loadFlatlayCatalog();
+    try {
+      const [userProductsRes, listsRes, listItemsRes, stacksRes, stackItemsRes] = await Promise.all([
+        client.from('user_products').select('id, user_id, catalog_product_id, category, brand, name, metadata, notes, created_at').eq('user_id', authUser.id).order('created_at', { ascending: false }),
+        client.from('flatlay_lists').select('id, user_id, name, kind, is_shareable, share_slug, created_at, updated_at').eq('user_id', authUser.id).order('updated_at', { ascending: false }),
+        client.from('flatlay_list_items').select('id, list_id, user_product_id, position, notes, created_at').order('position', { ascending: true }),
+        client.from('race_stacks').select('id, user_id, name, stack_mode, sport_category, distance_label, race_label, notes, is_shareable, share_slug, created_at, updated_at').eq('user_id', authUser.id).order('updated_at', { ascending: false }),
+        client.from('race_stack_items').select('id, race_stack_id, user_product_id, position, quantity, notes, created_at').order('position', { ascending: true })
+      ]);
+      if (userProductsRes.error) throw userProductsRes.error;
+      if (listsRes.error) throw listsRes.error;
+      if (listItemsRes.error) throw listItemsRes.error;
+      if (stacksRes.error) throw stacksRes.error;
+      if (stackItemsRes.error) throw stackItemsRes.error;
+
+      userProducts = (userProductsRes.data || []).map(normalizeFlatlayProduct);
+      flatlayLists = listsRes.data || [];
+      const allowedListIds = new Set(flatlayLists.map(list => list.id));
+      flatlayListItems = (listItemsRes.data || []).filter(item => allowedListIds.has(item.list_id));
+      raceStacks = stacksRes.data || [];
+      const allowedStackIds = new Set(raceStacks.map(stack => stack.id));
+      raceStackItems = (stackItemsRes.data || []).filter(item => allowedStackIds.has(item.race_stack_id));
+      flatlayDataLoaded = true;
+      if (curPage === 'flatlay') renderFlatlay();
+      return true;
+    } catch (error) {
+      console.warn('Flatlay data load failed:', error.message || error);
+      flatlayDataLoaded = false;
+      return false;
+    } finally {
+      flatlayLoadPromise = null;
+    }
+  })();
+  return flatlayLoadPromise;
+}
+
+function getLibraryProductById(id) {
+  return userProducts.find(product => product.id === id) || null;
+}
+
+function getCatalogProductById(id) {
+  return flatlayCatalog.find(product => product.id === id) || null;
+}
+
+function findLibraryProductForCatalog(catalogId) {
+  return userProducts.find(product => product.catalog_product_id === catalogId) || null;
+}
+
+function getListItems(listId) {
+  return flatlayListItems
+    .filter(item => item.list_id === listId)
+    .sort((a, b) => a.position - b.position);
+}
+
+function getStackItems(stackId) {
+  return raceStackItems
+    .filter(item => item.race_stack_id === stackId)
+    .sort((a, b) => a.position - b.position);
+}
+
+async function saveCatalogProductToLibraryById(catalogId, silent = false) {
+  if (!authUser) { openAuthModal(); return null; }
+  const existing = findLibraryProductForCatalog(catalogId);
+  if (existing) return existing;
+  const catalogProduct = normalizeFlatlayProduct(getCatalogProductById(catalogId));
+  if (!catalogProduct) return null;
+  const client = initSupabaseClient();
+  if (!client) return null;
+  const payload = {
+    user_id: authUser.id,
+    catalog_product_id: catalogProduct.id,
+    category: catalogProduct.category,
+    brand: catalogProduct.brand || '',
+    name: catalogProduct.name,
+    metadata: catalogProduct.metadata || {},
+    notes: null
+  };
+  const { data, error } = await client
+    .from('user_products')
+    .insert(payload)
+    .select('id, user_id, catalog_product_id, category, brand, name, metadata, notes, created_at')
+    .single();
+  if (error) {
+    console.warn('Save catalog product failed:', error.message || error);
+    showBtToast('Could not save product right now.');
+    return null;
+  }
+  userProducts.unshift(normalizeFlatlayProduct(data));
+  if (!silent) showBtToast('Saved to your library.');
+  if (curPage === 'flatlay') renderFlatlay();
+  return data;
+}
+
+async function resolveFlatlayAddContextProduct() {
+  if (!flatlayAddContext) return null;
+  if (flatlayAddContext.kind === 'user') return getLibraryProductById(flatlayAddContext.id);
+  if (flatlayAddContext.kind === 'catalog') return saveCatalogProductToLibraryById(flatlayAddContext.id, true);
+  return null;
+}
+
+function getFlatlayBrandOptions() {
+  const brands = new Set();
+  [...flatlayCatalog, ...userProducts].forEach(product => {
+    if (product?.brand) brands.add(product.brand);
+  });
+  return Array.from(brands).sort((a, b) => a.localeCompare(b));
+}
+
+function getFlatlayVisibleBrandOptions() {
+  const brands = new Set();
+  [...flatlayCatalog, ...userProducts].forEach(product => {
+    if (!product?.brand) return;
+    if (flatlayCategoryFilter !== 'all' && product.category !== flatlayCategoryFilter) return;
+    if (flatlaySubcategoryFilter !== 'all' && !getFlatlaySubcategories(product).includes(flatlaySubcategoryFilter)) return;
+    brands.add(product.brand);
+  });
+  return Array.from(brands).sort((a, b) => a.localeCompare(b));
+}
+
+function getFlatlaySubcategoryOptions(category) {
+  return FLATLAY_SUBCATEGORY_OPTIONS[category] || [];
+}
+
+function getFlatlayPrimarySubcategory(product) {
+  const metadata = product?.metadata || {};
+  return metadata.primary_subcategory ||
+    metadata.subcategory ||
+    (Array.isArray(metadata.subcategories) && metadata.subcategories[0]) ||
+    '';
+}
+
+function getFlatlaySubcategories(product) {
+  const metadata = product?.metadata || {};
+  const primary = getFlatlayPrimarySubcategory(product);
+  const fromArray = Array.isArray(metadata.subcategories)
+    ? metadata.subcategories.filter(value => typeof value === 'string' && value.trim())
+    : [];
+  const merged = [];
+  if (primary) merged.push(primary);
+  fromArray.forEach(value => {
+    if (!merged.includes(value)) merged.push(value);
+  });
+  if (!merged.length && metadata.subcategory) merged.push(metadata.subcategory);
+  return merged;
+}
+
+function getFlatlaySecondarySubcategories(product) {
+  const primary = getFlatlayPrimarySubcategory(product);
+  return getFlatlaySubcategories(product).filter(value => value !== primary);
+}
+
+function getFlatlayActiveSubcategoryOptions() {
+  if (!flatlayCategoryFilter || flatlayCategoryFilter === 'all') return [];
+  return getFlatlaySubcategoryOptions(flatlayCategoryFilter);
+}
+
+function inferFlatlaySubcategory(category, name = '', metadata = {}) {
+  const current = metadata?.subcategory;
+  if (current) return current;
+  const haystack = `${name} ${metadata?.sport || ''} ${metadata?.fuel_type || ''}`.toLowerCase();
+  switch (category) {
+    case 'footwear':
+    case 'shoes':
+      if (haystack.includes('sock')) return 'Socks';
+      if (haystack.includes('cycling')) return 'Cycling Shoes';
+      if (haystack.includes('tri')) return 'Triathlon Shoes';
+      if (haystack.includes('trail')) return 'Trail Shoes';
+      if (haystack.includes('recovery')) return 'Recovery Shoes';
+      if (haystack.includes('daily') || haystack.includes('trainer')) return 'Daily Trainers';
+      if (haystack.includes('tempo')) return 'Tempo Shoes';
+      return 'Race Shoes';
+    case 'apparel':
+    case 'headwear':
+      if (category === 'headwear' || haystack.includes('cap') || haystack.includes('visor') || haystack.includes('beanie') || haystack.includes('headband') || haystack.includes('buff')) return 'Headwear';
+      if (haystack.includes('singlet')) return 'Singlets';
+      if (haystack.includes('short')) return 'Shorts';
+      if (haystack.includes('legging')) return 'Trousers & Leggings';
+      if (haystack.includes('tight')) return 'Trousers & Tights';
+      if (haystack.includes('compression') || haystack.includes('baselayer') || haystack.includes('base layer')) return 'Compression & Baselayer';
+      if (haystack.includes('jacket') || haystack.includes('gilet') || haystack.includes('vest')) return 'Jackets & Gilets';
+      if (haystack.includes('hoodie') || haystack.includes('sweatshirt')) return 'Hoodies & Sweatshirts';
+      if (haystack.includes('top') || haystack.includes('t-shirt') || haystack.includes('tee')) return 'Tops & T-Shirts';
+      return 'Tops & T-Shirts';
+    case 'wearables':
+      if (haystack.includes('power meter')) return 'Power Meters';
+      if (haystack.includes('heart rate') || haystack.includes('hr monitor')) return 'Heart Rate Monitors';
+      if (haystack.includes('bike computer') || haystack.includes('computer') || haystack.includes('bolt')) return 'Bike Computers';
+      if (haystack.includes('ring')) return 'Smart Rings';
+      if (haystack.includes('headphone') || haystack.includes('earbud')) return 'Headphones';
+      return 'GPS Watches';
+    case 'bike':
+    case 'bikes':
+    case 'bike_components':
+    case 'bike_maintenance':
+    case 'indoor_training':
+      if (category === 'bikes' || /\bp-series\b/.test(haystack)) return 'Bikes';
+      if (category === 'bike_maintenance') return 'Maintenance';
+      if (category === 'indoor_training' || haystack.includes('trainer') || haystack.includes('roller')) return 'Indoor Trainers';
+      if (haystack.includes('wheel')) return 'Wheels';
+      if (haystack.includes('tyre') || haystack.includes('tire')) return 'Tyres';
+      if (haystack.includes('saddle')) return 'Saddles';
+      if (haystack.includes('pedal')) return 'Pedals';
+      if (haystack.includes('handlebar') || haystack.includes('bar ') || haystack.startsWith('bar') || haystack.includes('stem')) return 'Handlebars';
+      if (haystack.includes('pump') || haystack.includes('tool') || haystack.includes('lube') || haystack.includes('tube')) return 'Tools';
+      return 'Drivetrain';
+    case 'swim':
+    case 'swim_gear':
+      if (haystack.includes('goggle')) return 'Goggles';
+      if (haystack.includes('cap')) return 'Swim Caps';
+      if (haystack.includes('wetsuit')) return 'Wetsuits';
+      if (haystack.includes('buoy')) return 'Pull Buoys';
+      if (haystack.includes('paddle')) return 'Paddles';
+      if (haystack.includes('kickboard')) return 'Kickboards';
+      if (haystack.includes('bag')) return 'Swim Bags';
+      return 'Swimwear';
+    case 'hydration':
+      if (haystack.includes('soft flask') || haystack.includes('flask')) return 'Soft Flasks';
+      if (haystack.includes('vest')) return 'Hydration Vests';
+      if (haystack.includes('pack')) return 'Hydration Packs';
+      if (haystack.includes('reservoir')) return 'Reservoirs';
+      if (haystack.includes('electrolyte') || haystack.includes('tablet')) return 'Electrolytes';
+      return 'Bottles';
+    case 'nutrition':
+      if (haystack.includes('bicarb')) return 'Bicarb';
+      if (haystack.includes('drink mix') || metadata?.fuel_type === 'drink_mix') return 'Drink Mix';
+      if (haystack.includes('gel') || metadata?.fuel_type === 'gel') return 'Gels';
+      if (haystack.includes('solid') || haystack.includes('bar')) return 'Bars';
+      if (haystack.includes('chew')) return 'Chews';
+      if (haystack.includes('recovery')) return 'Recovery Fuel';
+      if (haystack.includes('caffeine') || haystack.includes('caf')) return 'Caffeine';
+      return 'Gels';
+    case 'recovery':
+      if (haystack.includes('massage')) return 'Massage Guns';
+      if (haystack.includes('boot')) return 'Compression Boots';
+      if (haystack.includes('mobility')) return 'Mobility Tools';
+      if (haystack.includes('band')) return 'Resistance Bands';
+      if (haystack.includes('ice') || haystack.includes('heat')) return 'Ice & Heat Therapy';
+      if (haystack.includes('sandal')) return 'Recovery Sandals';
+      return 'Foam Rollers';
+    case 'accessories':
+    case 'miscellaneous':
+    case 'eyewear':
+      if (category === 'eyewear') return 'Eyewear';
+      if (haystack.includes('belt')) return 'Race Belts';
+      if (haystack.includes('bag')) return 'Bags';
+      if (haystack.includes('light')) return 'Lights';
+      if (haystack.includes('phone')) return 'Phone Holders';
+      if (haystack.includes('towel')) return 'Towels';
+      if (haystack.includes('sunscreen')) return 'Sunscreen';
+      if (haystack.includes('chafe')) return 'Anti-Chafe';
+      return 'Miscellaneous';
+    default:
+      return '';
+  }
+}
+
+function normalizeFlatlayCategory(category) {
+  switch (category) {
+    case 'shoes':
+    case 'socks':
+      return 'footwear';
+    case 'headwear':
+      return 'apparel';
+    case 'bikes':
+    case 'bike_components':
+    case 'bike_maintenance':
+    case 'indoor_training':
+      return 'bike';
+    case 'swim_gear':
+      return 'swim';
+    case 'miscellaneous':
+    case 'eyewear':
+      return 'accessories';
+    default:
+      return category;
+  }
+}
+
+function normalizeFlatlayProduct(product) {
+  if (!product) return product;
+  const category = normalizeFlatlayCategory(product.category);
+  const metadata = { ...(product.metadata || {}) };
+  const inferredPrimary = inferFlatlaySubcategory(product.category, product.name || '', metadata);
+  const primary = metadata.primary_subcategory || metadata.subcategory || inferredPrimary || '';
+  const subcategories = Array.isArray(metadata.subcategories)
+    ? metadata.subcategories.filter(value => typeof value === 'string' && value.trim())
+    : [];
+  const normalizedSubcategories = [];
+  if (primary) normalizedSubcategories.push(primary);
+  subcategories.forEach(value => {
+    if (!normalizedSubcategories.includes(value)) normalizedSubcategories.push(value);
+  });
+  if (metadata.subcategory && !normalizedSubcategories.includes(metadata.subcategory)) normalizedSubcategories.push(metadata.subcategory);
+  if (primary) metadata.primary_subcategory = primary;
+  if (normalizedSubcategories.length) metadata.subcategories = normalizedSubcategories;
+  return { ...product, category, metadata };
+}
+
+function populateFlatlayFilterControls() {
+  const categorySelect = document.getElementById('flatlayCategoryFilter');
+  const subcategoryWrap = document.getElementById('flatlaySubcategoryFilterWrap');
+  const subcategorySelect = document.getElementById('flatlaySubcategoryFilter');
+  const brandSelect = document.getElementById('flatlayBrandFilter');
+  if (!categorySelect || !subcategoryWrap || !subcategorySelect || !brandSelect) return;
+  categorySelect.innerHTML = [`<option value="all">All categories</option>`]
+    .concat(FLATLAY_CATEGORIES.map(category => `<option value="${escapeAttr(category)}">${escapeHtml(formatFlatlayCategoryOption(category))}</option>`))
+    .join('');
+  const subcategoryOptions = getFlatlayActiveSubcategoryOptions();
+  subcategoryWrap.style.display = subcategoryOptions.length ? '' : 'none';
+  subcategorySelect.innerHTML = [`<option value="all">All sub categories</option>`]
+    .concat(subcategoryOptions.map(subcategory => `<option value="${escapeAttr(subcategory)}">${escapeHtml(subcategory)}</option>`))
+    .join('');
+  const brandOptions = getFlatlayVisibleBrandOptions();
+  brandSelect.innerHTML = [`<option value="all">All brands</option>`]
+    .concat(brandOptions.map(brand => `<option value="${escapeAttr(brand)}">${escapeHtml(brand)}</option>`))
+    .join('');
+  categorySelect.value = flatlayCategoryFilter;
+  subcategorySelect.value = subcategoryOptions.includes(flatlaySubcategoryFilter) ? flatlaySubcategoryFilter : 'all';
+  brandSelect.value = brandOptions.includes(flatlayBrandFilter) ? flatlayBrandFilter : 'all';
+}
+
+function onFlatlayFilterChange() {
+  flatlayCategoryFilter = document.getElementById('flatlayCategoryFilter')?.value || 'all';
+  const subcategoryOptions = getFlatlaySubcategoryOptions(flatlayCategoryFilter);
+  const nextSubcategoryFilter = document.getElementById('flatlaySubcategoryFilter')?.value || 'all';
+  flatlaySubcategoryFilter = subcategoryOptions.includes(nextSubcategoryFilter) ? nextSubcategoryFilter : 'all';
+  flatlayBrandFilter = document.getElementById('flatlayBrandFilter')?.value || 'all';
+  renderFlatlay();
+}
+
+function matchesFlatlayFilters(product) {
+  if (!product) return false;
+  const haystack = `${product.brand || ''} ${product.name || ''} ${product.category || ''} ${getFlatlaySubcategories(product).join(' ')} ${getFlatlayProductMeta(product)}`.toLowerCase();
+  const searchOk = !flatlaySearchQuery || haystack.includes(flatlaySearchQuery);
+  const categoryOk = flatlayCategoryFilter === 'all' || product.category === flatlayCategoryFilter;
+  const subcategoryOk = flatlaySubcategoryFilter === 'all' || getFlatlaySubcategories(product).includes(flatlaySubcategoryFilter);
+  const brandOk = flatlayBrandFilter === 'all' || (product.brand || '') === flatlayBrandFilter;
+  return searchOk && categoryOk && subcategoryOk && brandOk;
 }
 
 function buildRemoteStatePayload() {
@@ -4327,11 +5436,33 @@ function updateAuthUI() {
   document.getElementById('authMenuLabel').textContent = signedIn ? 'Account' : 'Sign In';
   document.getElementById('authSettingsStatus').innerHTML = signedIn
     ? `Signed in as <span class="auth-status-email">${email}</span>. Your races now sync to your private Supabase account.`
-    : `You’re currently using this app without an account.`;
+    : `You're currently using this app without an account.`;
   document.getElementById('settingsAuthBtn').textContent = signedIn ? 'Manage Account' : 'Sign In';
   document.getElementById('settingsSignOutBtn').style.display = signedIn ? '' : 'none';
   const pill = document.getElementById('feedbackPill');
   if (pill && _IS_STAGING) pill.style.display = signedIn ? '' : 'none';
+  // Beta upgrade banner: show when signed in with a beta account on staging
+  const banner = document.getElementById('betaUpgradeBanner');
+  if (banner) {
+    const isBetaAccount = _IS_STAGING && signedIn && email.endsWith('@beta.breaktapes.com');
+    banner.classList.toggle('hidden', !isBetaAccount);
+    // If the user completed email upgrade on another device, clear the stale pending flag
+    if (!isBetaAccount && localStorage.getItem('bt_email_upgrade_pending')) {
+      localStorage.removeItem('bt_email_upgrade_pending');
+    }
+    if (isBetaAccount) {
+      const pendingEmail = localStorage.getItem('bt_email_upgrade_pending');
+      const sub = banner.querySelector('.beta-banner-sub');
+      const cta = banner.querySelector('.beta-banner-cta');
+      if (pendingEmail) {
+        if (sub) sub.textContent = `Awaiting confirmation at ${pendingEmail} — check your inbox.`;
+        if (cta) { cta.textContent = 'Resend →'; }
+      } else {
+        if (sub) sub.textContent = 'Add your email to keep all your data when BREAKTAPES launches.';
+        if (cta) { cta.textContent = 'Secure My Data →'; }
+      }
+    }
+  }
 }
 
 function setAuthMode(mode) {
@@ -4352,11 +5483,23 @@ function setAuthMode(mode) {
   document.getElementById('authForgotBtn').style.display = signIn ? '' : 'none';
   const inviteWrap = document.getElementById('authInviteWrap');
   if (inviteWrap) inviteWrap.style.display = (_IS_STAGING && !signIn) ? '' : 'none';
+  // On staging sign-in, allow username instead of full email
+  const emailLabel = document.querySelector('label[for="authEmail"]');
+  const emailInput = document.getElementById('authEmail');
+  if (_IS_STAGING && signIn) {
+    if (emailLabel) emailLabel.textContent = 'Username or Email';
+    if (emailInput) emailInput.placeholder = 'e.g. bolt26';
+  } else {
+    if (emailLabel) emailLabel.textContent = 'Email';
+    if (emailInput) emailInput.placeholder = 'you@example.com';
+  }
 }
 
 async function sendPasswordReset() {
-  const email = document.getElementById('authEmail').value.trim();
-  if (!email) { showFieldError('authEmail', 'Drop an email to get started.'); return; }
+  const emailRaw = document.getElementById('authEmail').value.trim();
+  if (!emailRaw) { showFieldError('authEmail', 'Drop an email to get started.'); return; }
+  const isUsernameLogin = _IS_STAGING && !emailRaw.includes('@');
+  const email = isUsernameLogin ? emailRaw.toLowerCase() + '@beta.breaktapes.com' : emailRaw;
   const btn = document.getElementById('authForgotBtn');
   btn.textContent = 'Sending...';
   btn.disabled = true;
@@ -4387,7 +5530,8 @@ function dismissLanding() {
 
 function openLandingAuth(mode) {
   setAuthMode(mode);
-  document.getElementById('authEmail').type = 'email';
+  // On staging sign-in, keep type="text" so usernames (no @) are accepted
+  document.getElementById('authEmail').type = (_IS_STAGING && mode === 'signin') ? 'text' : 'email';
   const pw = document.getElementById('authPassword');
   pw.type = 'password'; pw.disabled = false;
   document.getElementById('authModal').classList.add('open');
@@ -4412,12 +5556,19 @@ async function refreshAuthState(session) {
     if (storedUid && storedUid !== authUser.id) {
       REMOTE_SYNC_KEYS.forEach(k => localStorage.removeItem(k));
       races = []; athlete = { name: '' }; nextRace = null; upcomingRaces = [];
+      userProducts = [];
+      flatlayLists = [];
+      flatlayListItems = [];
+      raceStacks = [];
+      raceStackItems = [];
+      flatlayDataLoaded = false;
     }
     localStorage.setItem('bt_auth_uid', authUser.id);
   }
   updateAuthUI();
   if (authUser) {
     await loadRemoteState();
+    await loadFlatlayData(true);
     dismissLanding();
     render(curPage);
   }
@@ -4436,10 +5587,13 @@ async function initAuth() {
 async function submitAuth() {
   const client = initSupabaseClient();
   if (!client) return;
-  const email = document.getElementById('authEmail').value.trim();
+  const emailRaw = document.getElementById('authEmail').value.trim();
   const password = document.getElementById('authPassword').value;
-  if (!email) { showFieldError('authEmail', 'Drop an email to get started.'); return; }
+  if (!emailRaw) { showFieldError('authEmail', 'Drop an email or username to get started.'); return; }
   if (!password) { showFieldError('authPassword', 'Need a password to race in.'); return; }
+  // On staging, plain username (no @) → auto-convert to email format
+  const isUsernameLogin = _IS_STAGING && !emailRaw.includes('@');
+  const email = isUsernameLogin ? emailRaw.toLowerCase() + '@beta.breaktapes.com' : emailRaw;
   const btn = document.getElementById('authSubmitBtn');
   const prev = btn.textContent;
   btn.disabled = true;
@@ -4447,7 +5601,21 @@ async function submitAuth() {
   try {
     if (authMode === 'signin') {
       const { error } = await client.auth.signInWithPassword({ email, password });
-      if (error) throw error;
+      if (error) {
+        // On staging username login: if account doesn't exist yet, auto-provision it
+        if (isUsernameLogin && (error.message?.toLowerCase().includes('invalid') || error.status === 400)) {
+          const { error: signUpErr } = await client.auth.signUp({
+            email, password,
+            options: { data: { full_name: emailRaw, first_name: emailRaw } }
+          });
+          if (signUpErr) throw signUpErr;
+          // Sign in with newly created account
+          const { error: signInErr } = await client.auth.signInWithPassword({ email, password });
+          if (signInErr) throw signInErr;
+        } else {
+          throw error;
+        }
+      }
       closeM('authModal');
       render(curPage);
       return;
@@ -4501,6 +5669,7 @@ async function signOutUser() {
   }
   localStorage.removeItem('bt_new_user');
   localStorage.removeItem('bt_modal_shown');
+  localStorage.removeItem('bt_email_upgrade_pending');
   localStorage.removeItem('bt_auth_uid');
   localStorage.removeItem('fl2_strava');
   localStorage.removeItem('fl2_strava_acts');
@@ -4552,6 +5721,7 @@ function render(p){
   if(p==='dashboard') renderDash();
   else if(p==='medals') renderMedals();
   else if(p==='history') renderHistory();
+  else if(p==='flatlay') renderFlatlay();
   else if(p==='athlete') renderAthlete();
   else if(p==='map') renderMap();
   else if(p==='training') renderTraining();
@@ -4574,6 +5744,677 @@ function renderTrain() {
     trainTab === 'pace' ? 'ttPace' : 'ttActivities'
   );
   switchTrainTab(trainTab, activeBtn);
+}
+
+function switchFlatlayTab(tab) {
+  flatlayTab = tab;
+  document.querySelectorAll('.flatlay-tab').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.flatlay-panel').forEach(panel => panel.classList.remove('active'));
+  const activeBtn = document.getElementById('flatlayTab-' + tab);
+  const activePanel = document.getElementById('flatlayPanel-' + tab);
+  if (activeBtn) activeBtn.classList.add('active');
+  if (activePanel) activePanel.classList.add('active');
+}
+
+function onFlatlaySearchInput() {
+  flatlaySearchQuery = (document.getElementById('flatlaySearchInput')?.value || '').trim().toLowerCase();
+  renderFlatlayDiscover();
+}
+
+function renderFlatlay() {
+  if (!document.getElementById('page-flatlay')) return;
+  switchFlatlayTab(flatlayTab);
+  populateFlatlayFilterControls();
+  if (!authUser) {
+    const locked = `<div class="flatlay-empty"><h3>Sign in to build your Flatlay</h3><p>Save products, build lists, and start shaping race stacks from your own library.</p><button class="btn-main" style="margin-top:1rem;max-width:240px" onclick="openAuthModal()">Sign In</button></div>`;
+    document.getElementById('flatlaySearchResults').innerHTML = locked;
+    document.getElementById('flatlayLibraryGrid').innerHTML = locked;
+    document.getElementById('flatlayListsGrid').innerHTML = locked;
+    document.getElementById('flatlayStacksGrid').innerHTML = locked;
+    document.getElementById('flatlayTemplateGrid').innerHTML = '';
+    return;
+  }
+  if (!flatlayDataLoaded) {
+    document.getElementById('flatlaySearchResults').innerHTML = '<div class="flatlay-empty"><h3>Loading Flatlay</h3><p>Pulling your library, lists, and race stacks from Supabase.</p></div>';
+    loadFlatlayData();
+    return;
+  }
+  renderFlatlayDiscover();
+  renderFlatlayLibrary();
+  renderFlatlayLists();
+  renderFlatlayStacks();
+}
+
+function renderFlatlayDiscover() {
+  const root = document.getElementById('flatlaySearchResults');
+  if (!root) return;
+  if (flatlayCatalogError) {
+    root.innerHTML = '<div class="flatlay-empty"><h3>Catalog unavailable</h3><p>The shared product catalog could not load right now. You can still add a custom product manually.</p></div>';
+    return;
+  }
+  const query = flatlaySearchQuery;
+  const filtered = flatlayCatalog.filter(matchesFlatlayFilters);
+  const matches = (query ? filtered : filtered.slice(0, 24)).slice(0, 48);
+  if (!matches.length) {
+    root.innerHTML = `<div class="flatlay-empty"><h3>No products yet</h3><p>Try a broader search or add a custom product to your own library.</p><button class="btn-main" style="margin-top:1rem;max-width:240px" onclick="openCustomProductModal()">+ Custom Product</button></div>`;
+    return;
+  }
+  root.innerHTML = matches.map(product => renderFlatlayProductCard(product, 'catalog')).join('');
+}
+
+function renderFlatlayLibrary() {
+  const root = document.getElementById('flatlayLibraryGrid');
+  if (!root) return;
+  if (!userProducts.length) {
+    root.innerHTML = `<div class="flatlay-empty"><h3>No products saved yet</h3><p>Start by searching the catalog or adding a custom product to build your own marketplace profile.</p></div>`;
+    return;
+  }
+  const filteredProducts = userProducts.filter(matchesFlatlayFilters);
+  if (!filteredProducts.length) {
+    root.innerHTML = `<div class="flatlay-empty"><h3>No products match</h3><p>Try clearing your brand, category, or search filters.</p></div>`;
+    return;
+  }
+  root.innerHTML = filteredProducts.map(product => renderFlatlayProductCard(product, 'library')).join('');
+}
+
+function renderFlatlayLists() {
+  const root = document.getElementById('flatlayListsGrid');
+  if (!root) return;
+  if (!flatlayLists.length) {
+    root.innerHTML = `<div class="flatlay-empty"><h3>No lists yet</h3><p>Create your first list, then add products from your library into it.</p><button class="btn-main" style="margin-top:1rem;max-width:220px" onclick="openFlatlayListModal()">+ New List</button></div>`;
+    return;
+  }
+  const renderedLists = flatlayLists.map(list => {
+    const items = getListItems(list.id);
+    const visibleItems = items.filter(item => matchesFlatlayFilters(getLibraryProductById(item.user_product_id)));
+    const itemRows = visibleItems.length
+      ? visibleItems.map(item => {
+          const product = getLibraryProductById(item.user_product_id);
+          if (!product) return '';
+          return `<div class="flatlay-item-row">
+            <div>
+              <div class="flatlay-item-name">${escapeHtml(product.brand || 'Custom')} · ${escapeHtml(product.name)}</div>
+              <div class="flatlay-item-sub">${escapeHtml(formatFlatlayCategoryLabel(product))}${product.notes ? ` · ${escapeHtml(product.notes)}` : ''}</div>
+            </div>
+            <div class="flatlay-item-actions">
+              <button class="flatlay-icon-btn" onclick="moveFlatlayListItem('${item.id}', -1)" aria-label="Move up">↑</button>
+              <button class="flatlay-icon-btn" onclick="moveFlatlayListItem('${item.id}', 1)" aria-label="Move down">↓</button>
+              <button class="flatlay-icon-btn danger" onclick="removeFlatlayListItem('${item.id}')" aria-label="Delete product">Delete</button>
+            </div>
+          </div>`;
+        }).join('')
+      : `<div class="flatlay-empty" style="padding:1.25rem 1rem"><h3 style="font-size:16px">No matching products</h3><p>Adjust your filters or add more products to this list.</p></div>`;
+    return `<div class="flatlay-list-card">
+      <div class="flatlay-list-top">
+        <div>
+          <div class="flatlay-name">${escapeHtml(list.name)}</div>
+          <div class="flatlay-meta">${escapeHtml(list.kind)} · ${visibleItems.length}/${items.length} item${items.length === 1 ? '' : 's'}</div>
+        </div>
+        <div class="flatlay-item-actions">
+          <button class="flatlay-icon-btn" onclick="openFlatlayListModal('${list.id}')" aria-label="Edit list">Edit</button>
+          <button class="flatlay-icon-btn" onclick="deleteFlatlayList('${list.id}')" aria-label="Delete list">×</button>
+        </div>
+      </div>
+      <div class="flatlay-list-items">${itemRows}</div>
+    </div>`;
+  }).join('');
+  root.innerHTML = renderedLists;
+}
+
+function renderFlatlayStacks() {
+  const templateRoot = document.getElementById('flatlayTemplateGrid');
+  const stackRoot = document.getElementById('flatlayStacksGrid');
+  if (!templateRoot || !stackRoot) return;
+  templateRoot.innerHTML = getFlatlayTemplateGroups().map(group => `
+    <div class="flatlay-template-card">
+      <div class="flatlay-template-title">${escapeHtml(group.label)}</div>
+      <div class="flatlay-template-list">
+        ${group.templates.map(template => `<button class="flatlay-template-chip" onclick="openFlatlayStackTemplate('${group.key}','${escapeAttr(template)}')">${escapeHtml(template)}</button>`).join('')}
+      </div>
+    </div>
+  `).join('');
+  if (!raceStacks.length) {
+    stackRoot.innerHTML = `<div class="flatlay-empty"><h3>No race stacks yet</h3><p>Use the templates above or create a custom stack for a specific race build.</p></div>`;
+    return;
+  }
+  stackRoot.innerHTML = raceStacks.map(stack => {
+    const items = getStackItems(stack.id);
+    const visibleItems = items.filter(item => matchesFlatlayFilters(getLibraryProductById(item.user_product_id)));
+    const itemRows = visibleItems.length
+      ? visibleItems.map(item => {
+          const product = getLibraryProductById(item.user_product_id);
+          if (!product) return '';
+          return `<div class="flatlay-item-row">
+            <div>
+              <div class="flatlay-item-name">${escapeHtml(product.brand || 'Custom')} · ${escapeHtml(product.name)}</div>
+              <div class="flatlay-item-sub">${escapeHtml(formatFlatlayCategoryLabel(product))}${item.quantity ? ` · ${escapeHtml(item.quantity)}` : ''}</div>
+            </div>
+            <div class="flatlay-item-actions">
+              <button class="flatlay-icon-btn" onclick="moveRaceStackItem('${item.id}', -1)" aria-label="Move up">↑</button>
+              <button class="flatlay-icon-btn" onclick="moveRaceStackItem('${item.id}', 1)" aria-label="Move down">↓</button>
+              <button class="flatlay-icon-btn danger" onclick="removeRaceStackItem('${item.id}')" aria-label="Delete product">Delete</button>
+            </div>
+          </div>`;
+        }).join('')
+      : `<div class="flatlay-empty" style="padding:1.25rem 1rem"><h3 style="font-size:16px">No matching products</h3><p>Adjust your filters or add more products to this stack.</p></div>`;
+    const label = stack.stack_mode === 'template'
+      ? `${stack.sport_category || 'template'} · ${stack.distance_label || 'custom'}`
+      : `${stack.sport_category || 'race'} · ${stack.race_label || 'race stack'}`;
+    return `<div class="flatlay-stack-card">
+      <div class="flatlay-stack-top">
+        <div>
+          <div class="flatlay-name">${escapeHtml(stack.name)}</div>
+          <div class="flatlay-meta">${escapeHtml(label)} · ${visibleItems.length}/${items.length} item${items.length === 1 ? '' : 's'}</div>
+        </div>
+        <div class="flatlay-item-actions">
+          <button class="flatlay-icon-btn" onclick="openFlatlayStackModal('${stack.id}')" aria-label="Edit stack">Edit</button>
+          <button class="flatlay-icon-btn" onclick="deleteRaceStack('${stack.id}')" aria-label="Delete stack">×</button>
+        </div>
+      </div>
+      ${stack.notes ? `<div class="flatlay-meta">${escapeHtml(stack.notes)}</div>` : ''}
+      <div class="flatlay-stack-items">${itemRows}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderFlatlayProductCard(product, source) {
+  const isSaved = source === 'catalog' ? !!findLibraryProductForCatalog(product.id) : true;
+  const custom = source === 'library' && !product.catalog_product_id;
+  const primarySubcategory = getFlatlayPrimarySubcategory(product);
+  const meta = getFlatlayProductMeta(product);
+  return `<div class="flatlay-product-card">
+    <div class="flatlay-product-top">
+      <div>
+        <div class="flatlay-brand">${escapeHtml(product.brand || 'Custom')}</div>
+        <div class="flatlay-name">${escapeHtml(product.name)}</div>
+        <div class="flatlay-badges">
+          <span class="flatlay-badge category">${escapeHtml(formatFlatlayCategoryOption(product.category))}</span>
+          ${primarySubcategory ? `<span class="flatlay-badge subcategory">${escapeHtml(primarySubcategory)}</span>` : ''}
+        </div>
+      </div>
+    </div>
+    ${meta ? `<div class="flatlay-meta">${escapeHtml(meta)}</div>` : ''}
+    <div class="flatlay-actions">
+      ${source === 'catalog'
+        ? `<button class="btn-main" onclick="saveCatalogProductToLibraryById('${product.id}')">${isSaved ? 'Saved' : 'Save to Library'}</button>`
+        : `<button class="btn-main" onclick="openFlatlayListPicker('user','${product.id}')">Add to List</button>`}
+      ${source === 'catalog'
+        ? `<button class="btn-ghost" onclick="openFlatlayListPicker('catalog','${product.id}')">Add to List</button>`
+        : `<button class="btn-ghost" onclick="openFlatlayStackPicker('user','${product.id}')">Add to Stack</button>`}
+      ${source === 'catalog'
+        ? `<button class="btn-ghost" onclick="openFlatlayStackPicker('catalog','${product.id}')">Add to Stack</button>`
+        : `${custom ? `<button class="btn-ghost" onclick="openCustomProductModal('${product.id}')">Edit</button>` : `<button class="btn-ghost" onclick="openFlatlayListPicker('user','${product.id}')">Add Again</button>`}`}
+      ${source === 'library' ? `<button class="btn-ghost btn-danger" onclick="deleteFlatlayLibraryProduct('${product.id}')" aria-label="Delete product">Delete</button>` : ''}
+    </div>
+  </div>`;
+}
+
+function getFlatlayProductMeta(product) {
+  return '';
+}
+
+function formatFlatlayCategoryLabel(product) {
+  const categoryLabel = formatFlatlayCategoryOption(product.category);
+  const subcategories = getFlatlaySubcategories(product);
+  return subcategories.length
+    ? `${categoryLabel} · ${subcategories.join(', ')}`
+    : categoryLabel;
+}
+
+function formatFlatlayCategoryOption(category) {
+  if (!category) return '';
+  return category
+    .split('_')
+    .map(part => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
+}
+
+function getSelectedOptions(select) {
+  if (!select) return [];
+  return Array.from(select.selectedOptions || []).map(option => option.value).filter(Boolean);
+}
+
+function populateFlatlayProductSubcategoryOptions(selectedPrimary = '', selectedSecondary = []) {
+  const category = document.getElementById('flatlayProductCategory')?.value;
+  const primaryWrap = document.getElementById('flatlayProductSubcategoryWrap');
+  const primarySelect = document.getElementById('flatlayProductPrimarySubcategory');
+  const secondaryWrap = document.getElementById('flatlayProductSecondarySubcategoryWrap');
+  const secondarySelect = document.getElementById('flatlayProductSecondarySubcategories');
+  if (!primaryWrap || !primarySelect || !secondaryWrap || !secondarySelect) return;
+  const options = getFlatlaySubcategoryOptions(category);
+  primaryWrap.style.display = options.length ? '' : 'none';
+  secondaryWrap.style.display = options.length ? '' : 'none';
+  if (!options.length) {
+    primarySelect.innerHTML = '';
+    secondarySelect.innerHTML = '';
+    return;
+  }
+  const primaryValue = options.includes(selectedPrimary) ? selectedPrimary : options[0];
+  primarySelect.innerHTML = options.map(option => `<option value="${escapeAttr(option)}">${escapeHtml(option)}</option>`).join('');
+  primarySelect.value = primaryValue;
+  const secondaryOptions = options.filter(option => option !== primaryValue);
+  secondarySelect.innerHTML = secondaryOptions.map(option => `<option value="${escapeAttr(option)}">${escapeHtml(option)}</option>`).join('');
+  Array.from(secondarySelect.options).forEach(option => {
+    option.selected = selectedSecondary.includes(option.value);
+  });
+}
+
+function escapeHtml(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function escapeAttr(value) {
+  return String(value || '').replace(/'/g, '&#39;');
+}
+
+function populateFlatlayTemplateOptions() {
+  const sportSelect = document.getElementById('flatlayStackSportCategory');
+  const templateSelect = document.getElementById('flatlayStackDistanceLabel');
+  if (!sportSelect || !templateSelect) return;
+  const group = getFlatlayTemplateGroup(sportSelect.value);
+  templateSelect.innerHTML = group.templates.map(template => `<option value="${escapeAttr(template)}">${escapeHtml(template)}</option>`).join('');
+}
+
+function getFlatlayRaceChoices() {
+  const upcoming = (upcomingRaces || []).map(race => ({
+    key: `upcoming:${race.id ?? `${race.name}-${race.date}`}`,
+    label: race.name || 'Upcoming race',
+    date: race.date || '',
+    sortDate: race.date || '9999-12-31'
+  }));
+  const past = (races || []).map(race => ({
+    key: `past:${race.id ?? `${race.name}-${race.date}`}`,
+    label: race.name || 'Past race',
+    date: race.date || '',
+    sortDate: race.date || '0000-01-01'
+  }));
+  const merged = [...upcoming, ...past];
+  const seen = new Set();
+  return merged.filter(choice => {
+    const dedupeKey = `${choice.label}|${choice.date}`;
+    if (seen.has(dedupeKey)) return false;
+    seen.add(dedupeKey);
+    return true;
+  }).sort((a, b) => {
+    const aUpcoming = a.key.startsWith('upcoming:');
+    const bUpcoming = b.key.startsWith('upcoming:');
+    if (aUpcoming && !bUpcoming) return -1;
+    if (!aUpcoming && bUpcoming) return 1;
+    return aUpcoming
+      ? a.sortDate.localeCompare(b.sortDate)
+      : b.sortDate.localeCompare(a.sortDate);
+  });
+}
+
+function populateFlatlayRaceOptions(selectedLabel = '') {
+  const select = document.getElementById('flatlayStackRaceLabel');
+  if (!select) return;
+  const choices = getFlatlayRaceChoices();
+  if (!choices.length) {
+    select.innerHTML = '<option value="">No races available yet</option>';
+    return;
+  }
+  select.innerHTML = choices.map(choice => {
+    const value = `${choice.label}${choice.date ? ` · ${choice.date}` : ''}`;
+    return `<option value="${escapeAttr(value)}">${escapeHtml(choice.label)}${choice.date ? ` · ${escapeHtml(fmtDate(choice.date))}` : ''}</option>`;
+  }).join('');
+  if (selectedLabel) {
+    const match = Array.from(select.options).find(option => option.value === selectedLabel);
+    if (match) select.value = selectedLabel;
+  }
+}
+
+function onFlatlayProductCategoryChange() {
+  populateFlatlayProductSubcategoryOptions();
+}
+
+function onFlatlayPrimarySubcategoryChange() {
+  const primary = document.getElementById('flatlayProductPrimarySubcategory')?.value || '';
+  const selectedSecondary = getSelectedOptions(document.getElementById('flatlayProductSecondarySubcategories'))
+    .filter(value => value !== primary);
+  populateFlatlayProductSubcategoryOptions(primary, selectedSecondary);
+}
+
+function onFlatlayStackModeChange() {
+  const mode = document.getElementById('flatlayStackMode').value;
+  const templateWrap = document.getElementById('flatlayStackTemplateWrap');
+  const raceWrap = document.getElementById('flatlayStackRaceLabelWrap');
+  if (templateWrap) templateWrap.style.display = mode === 'template' ? '' : 'none';
+  if (raceWrap) raceWrap.style.display = mode === 'race' ? '' : 'none';
+  if (mode === 'race') populateFlatlayRaceOptions(document.getElementById('flatlayStackRaceLabel')?.value || '');
+}
+
+function openCustomProductModal(id = '') {
+  const product = id ? normalizeFlatlayProduct(getLibraryProductById(id)) : null;
+  document.getElementById('flatlayProductEditId').value = id || '';
+  document.getElementById('flatlayProductModalTitle').textContent = product ? 'Edit Custom Product' : 'Custom Product';
+  document.getElementById('flatlayProductBrand').value = product?.brand || '';
+  document.getElementById('flatlayProductName').value = product?.name || '';
+  document.getElementById('flatlayProductCategory').value = product?.category || 'footwear';
+  document.getElementById('flatlayProductNotes').value = product?.notes || '';
+  populateFlatlayProductSubcategoryOptions(getFlatlayPrimarySubcategory(product), getFlatlaySecondarySubcategories(product));
+  openM('flatlayProductModal');
+}
+
+async function saveFlatlayCustomProduct() {
+  if (!authUser) { openAuthModal(); return; }
+  const editId = document.getElementById('flatlayProductEditId').value;
+  const brand = document.getElementById('flatlayProductBrand').value.trim();
+  const name = document.getElementById('flatlayProductName').value.trim();
+  const category = document.getElementById('flatlayProductCategory').value;
+  const primarySubcategory = document.getElementById('flatlayProductPrimarySubcategory').value;
+  const secondarySubcategories = getSelectedOptions(document.getElementById('flatlayProductSecondarySubcategories'))
+    .filter(value => value !== primarySubcategory);
+  const notes = document.getElementById('flatlayProductNotes').value.trim();
+  if (!brand) { showFieldError('flatlayProductBrand', 'Brand helps people recognise the product.'); return; }
+  if (!name) { showFieldError('flatlayProductName', 'Give this product a name.'); return; }
+  const client = initSupabaseClient();
+  if (!client) return;
+  const payload = {
+    user_id: authUser.id,
+    catalog_product_id: null,
+    category,
+    brand,
+    name,
+    metadata: primarySubcategory ? {
+      primary_subcategory: primarySubcategory,
+      subcategories: [primarySubcategory].concat(secondarySubcategories)
+    } : {},
+    notes: notes || null
+  };
+  if (editId) {
+    const { data, error } = await client.from('user_products').update(payload).eq('id', editId).eq('user_id', authUser.id).select('id, user_id, catalog_product_id, category, brand, name, metadata, notes, created_at').single();
+    if (error) { showBtToast('Could not update product.'); return; }
+    userProducts = userProducts.map(product => product.id === editId ? normalizeFlatlayProduct(data) : product);
+  } else {
+    const { data, error } = await client.from('user_products').insert(payload).select('id, user_id, catalog_product_id, category, brand, name, metadata, notes, created_at').single();
+    if (error) { showBtToast('Could not save product.'); return; }
+    userProducts.unshift(normalizeFlatlayProduct(data));
+  }
+  closeM('flatlayProductModal');
+  showBtToast(editId ? 'Product updated.' : 'Custom product added.');
+  renderFlatlay();
+}
+
+function openFlatlayListModal(id = '') {
+  const list = id ? flatlayLists.find(entry => entry.id === id) : null;
+  document.getElementById('flatlayListEditId').value = id || '';
+  document.getElementById('flatlayListModalTitle').textContent = list ? 'Edit List' : 'New List';
+  document.getElementById('flatlayListName').value = list?.name || '';
+  document.getElementById('flatlayListKind').value = list?.kind || 'list';
+  openM('flatlayListModal');
+}
+
+async function saveFlatlayList() {
+  if (!authUser) { openAuthModal(); return; }
+  const id = document.getElementById('flatlayListEditId').value;
+  const name = document.getElementById('flatlayListName').value.trim();
+  const kind = document.getElementById('flatlayListKind').value;
+  if (!name) { showFieldError('flatlayListName', 'Give this list a name.'); return; }
+  const client = initSupabaseClient();
+  if (!client) return;
+  const payload = { user_id: authUser.id, name, kind };
+  if (id) {
+    const { data, error } = await client.from('flatlay_lists').update(payload).eq('id', id).eq('user_id', authUser.id).select('id, user_id, name, kind, is_shareable, share_slug, created_at, updated_at').single();
+    if (error) { showBtToast('Could not update list.'); return; }
+    flatlayLists = flatlayLists.map(list => list.id === id ? data : list);
+  } else {
+    const { data, error } = await client.from('flatlay_lists').insert(payload).select('id, user_id, name, kind, is_shareable, share_slug, created_at, updated_at').single();
+    if (error) { showBtToast('Could not create list.'); return; }
+    flatlayLists.unshift(data);
+    if (flatlayAddContext?.target === 'list') {
+      const product = await resolveFlatlayAddContextProduct();
+      if (product) await addLibraryProductToList(data.id, product.id);
+    }
+  }
+  closeM('flatlayListModal');
+  showBtToast(id ? 'List updated.' : 'List created.');
+  renderFlatlay();
+}
+
+function populateFlatlayStackSports() {
+  const select = document.getElementById('flatlayStackSportCategory');
+  if (!select) return;
+  select.innerHTML = FLATLAY_TEMPLATE_GROUPS.map(group => `<option value="${group.key}">${group.label}</option>`).join('');
+  populateFlatlayTemplateOptions();
+}
+
+function openFlatlayStackTemplate(groupKey, templateName) {
+  openFlatlayStackModal();
+  document.getElementById('flatlayStackMode').value = 'template';
+  document.getElementById('flatlayStackSportCategory').value = groupKey;
+  populateFlatlayTemplateOptions();
+  document.getElementById('flatlayStackDistanceLabel').value = templateName;
+  document.getElementById('flatlayStackName').value = `${getFlatlayTemplateGroup(groupKey).label} · ${templateName}`;
+  onFlatlayStackModeChange();
+}
+
+function openFlatlayStackModal(id = '') {
+  const stack = id ? raceStacks.find(entry => entry.id === id) : null;
+  document.getElementById('flatlayStackEditId').value = id || '';
+  document.getElementById('flatlayStackModalTitle').textContent = stack ? 'Edit Race Stack' : 'New Race Stack';
+  populateFlatlayStackSports();
+  document.getElementById('flatlayStackMode').value = stack?.stack_mode || 'template';
+  document.getElementById('flatlayStackName').value = stack?.name || '';
+  document.getElementById('flatlayStackSportCategory').value = stack?.sport_category || FLATLAY_TEMPLATE_GROUPS[0].key;
+  populateFlatlayTemplateOptions();
+  document.getElementById('flatlayStackDistanceLabel').value = stack?.distance_label || getFlatlayTemplateGroup(document.getElementById('flatlayStackSportCategory').value).templates[0];
+  populateFlatlayRaceOptions(stack?.race_label || '');
+  document.getElementById('flatlayStackRaceLabel').value = stack?.race_label || document.getElementById('flatlayStackRaceLabel').value;
+  document.getElementById('flatlayStackNotes').value = stack?.notes || '';
+  onFlatlayStackModeChange();
+  openM('flatlayStackModal');
+}
+
+async function saveFlatlayStack() {
+  if (!authUser) { openAuthModal(); return; }
+  const id = document.getElementById('flatlayStackEditId').value;
+  const stackMode = document.getElementById('flatlayStackMode').value;
+  const name = document.getElementById('flatlayStackName').value.trim();
+  const sportCategory = document.getElementById('flatlayStackSportCategory').value;
+  const distanceLabel = document.getElementById('flatlayStackDistanceLabel').value;
+  const raceLabel = document.getElementById('flatlayStackRaceLabel').value.trim();
+  const notes = document.getElementById('flatlayStackNotes').value.trim();
+  if (!name) { showFieldError('flatlayStackName', 'Give this stack a name.'); return; }
+  if (stackMode === 'race' && !raceLabel) { showBtToast('Choose one of your races first.'); return; }
+  const client = initSupabaseClient();
+  if (!client) return;
+  const payload = {
+    user_id: authUser.id,
+    name,
+    stack_mode: stackMode,
+    sport_category: sportCategory,
+    distance_label: stackMode === 'template' ? distanceLabel : null,
+    race_label: stackMode === 'race' ? (raceLabel || name) : null,
+    notes: notes || null
+  };
+  if (id) {
+    const { data, error } = await client.from('race_stacks').update(payload).eq('id', id).eq('user_id', authUser.id).select('id, user_id, name, stack_mode, sport_category, distance_label, race_label, notes, is_shareable, share_slug, created_at, updated_at').single();
+    if (error) { showBtToast('Could not update stack.'); return; }
+    raceStacks = raceStacks.map(stack => stack.id === id ? data : stack);
+  } else {
+    const { data, error } = await client.from('race_stacks').insert(payload).select('id, user_id, name, stack_mode, sport_category, distance_label, race_label, notes, is_shareable, share_slug, created_at, updated_at').single();
+    if (error) { showBtToast('Could not create stack.'); return; }
+    raceStacks.unshift(data);
+    if (flatlayAddContext?.target === 'stack') {
+      const product = await resolveFlatlayAddContextProduct();
+      if (product) await addLibraryProductToStack(data.id, product.id);
+    }
+  }
+  closeM('flatlayStackModal');
+  showBtToast(id ? 'Race stack updated.' : 'Race stack created.');
+  renderFlatlay();
+}
+
+function openFlatlayListPicker(kind, id) {
+  if (!authUser) { openAuthModal(); return; }
+  flatlayAddContext = { target: 'list', kind, id };
+  if (!flatlayLists.length) { openFlatlayListModal(); return; }
+  const select = document.getElementById('flatlayListPickerSelect');
+  select.innerHTML = flatlayLists.map(list => `<option value="${list.id}">${escapeHtml(list.name)}</option>`).join('');
+  openM('flatlayListPickerModal');
+}
+
+function openFlatlayStackPicker(kind, id) {
+  if (!authUser) { openAuthModal(); return; }
+  flatlayAddContext = { target: 'stack', kind, id };
+  if (!raceStacks.length) { openFlatlayStackModal(); return; }
+  const select = document.getElementById('flatlayStackPickerSelect');
+  select.innerHTML = raceStacks.map(stack => `<option value="${stack.id}">${escapeHtml(stack.name)}</option>`).join('');
+  openM('flatlayStackPickerModal');
+}
+
+async function addLibraryProductToList(listId, productId) {
+  const client = initSupabaseClient();
+  const currentItems = getListItems(listId);
+  if (currentItems.some(item => item.user_product_id === productId)) return { duplicate: true };
+  const { data, error } = await client.from('flatlay_list_items').insert({
+    list_id: listId,
+    user_product_id: productId,
+    position: currentItems.length
+  }).select('id, list_id, user_product_id, position, notes, created_at').single();
+  if (error) return { error };
+  flatlayListItems.push(data);
+  return { data };
+}
+
+async function addLibraryProductToStack(stackId, productId) {
+  const client = initSupabaseClient();
+  const currentItems = getStackItems(stackId);
+  if (currentItems.some(item => item.user_product_id === productId)) return { duplicate: true };
+  const { data, error } = await client.from('race_stack_items').insert({
+    race_stack_id: stackId,
+    user_product_id: productId,
+    position: currentItems.length
+  }).select('id, race_stack_id, user_product_id, position, quantity, notes, created_at').single();
+  if (error) return { error };
+  raceStackItems.push(data);
+  return { data };
+}
+
+async function confirmFlatlayListPick() {
+  const listId = document.getElementById('flatlayListPickerSelect').value;
+  const product = await resolveFlatlayAddContextProduct();
+  if (!listId || !product) return;
+  const result = await addLibraryProductToList(listId, product.id);
+  closeM('flatlayListPickerModal');
+  if (result.duplicate) { showBtToast('Product is already in that list.'); return; }
+  if (result.error) { showBtToast('Could not add product to list.'); return; }
+  renderFlatlay();
+  showBtToast('Product added to list.');
+}
+
+async function confirmFlatlayStackPick() {
+  const stackId = document.getElementById('flatlayStackPickerSelect').value;
+  const product = await resolveFlatlayAddContextProduct();
+  if (!stackId || !product) return;
+  const result = await addLibraryProductToStack(stackId, product.id);
+  closeM('flatlayStackPickerModal');
+  if (result.duplicate) { showBtToast('Product is already in that stack.'); return; }
+  if (result.error) { showBtToast('Could not add product to stack.'); return; }
+  renderFlatlay();
+  showBtToast('Product added to stack.');
+}
+
+async function deleteFlatlayList(id) {
+  const client = initSupabaseClient();
+  if (!client) return;
+  const { error } = await client.from('flatlay_lists').delete().eq('id', id).eq('user_id', authUser.id);
+  if (error) { showBtToast('Could not delete list.'); return; }
+  flatlayLists = flatlayLists.filter(list => list.id !== id);
+  flatlayListItems = flatlayListItems.filter(item => item.list_id !== id);
+  renderFlatlay();
+  showBtToast('List removed.');
+}
+
+async function deleteRaceStack(id) {
+  const client = initSupabaseClient();
+  if (!client) return;
+  const { error } = await client.from('race_stacks').delete().eq('id', id).eq('user_id', authUser.id);
+  if (error) { showBtToast('Could not delete stack.'); return; }
+  raceStacks = raceStacks.filter(stack => stack.id !== id);
+  raceStackItems = raceStackItems.filter(item => item.race_stack_id !== id);
+  renderFlatlay();
+  showBtToast('Race stack removed.');
+}
+
+async function deleteFlatlayLibraryProduct(id) {
+  const client = initSupabaseClient();
+  if (!client) return;
+  const { error } = await client.from('user_products').delete().eq('id', id).eq('user_id', authUser.id);
+  if (error) { showBtToast('Could not delete product.'); return; }
+  userProducts = userProducts.filter(product => product.id !== id);
+  flatlayListItems = flatlayListItems.filter(item => item.user_product_id !== id);
+  raceStackItems = raceStackItems.filter(item => item.user_product_id !== id);
+  renderFlatlay();
+  showBtToast('Product removed from library.');
+}
+
+async function removeFlatlayListItem(id) {
+  const client = initSupabaseClient();
+  if (!client) return;
+  const { error } = await client.from('flatlay_list_items').delete().eq('id', id);
+  if (error) { showBtToast('Could not remove product.'); return; }
+  flatlayListItems = flatlayListItems.filter(item => item.id !== id);
+  renderFlatlay();
+}
+
+async function removeRaceStackItem(id) {
+  const client = initSupabaseClient();
+  if (!client) return;
+  const { error } = await client.from('race_stack_items').delete().eq('id', id);
+  if (error) { showBtToast('Could not remove product.'); return; }
+  raceStackItems = raceStackItems.filter(item => item.id !== id);
+  renderFlatlay();
+}
+
+async function moveFlatlayListItem(id, direction) {
+  const item = flatlayListItems.find(entry => entry.id === id);
+  if (!item) return;
+  const siblings = getListItems(item.list_id);
+  const idx = siblings.findIndex(entry => entry.id === id);
+  const swapIdx = idx + direction;
+  if (swapIdx < 0 || swapIdx >= siblings.length) return;
+  const swap = siblings[swapIdx];
+  const client = initSupabaseClient();
+  if (!client) return;
+  const a = item.position;
+  const b = swap.position;
+  const [resA, resB] = await Promise.all([
+    client.from('flatlay_list_items').update({ position: b }).eq('id', item.id),
+    client.from('flatlay_list_items').update({ position: a }).eq('id', swap.id)
+  ]);
+  if (resA.error || resB.error) { showBtToast('Could not reorder list.'); return; }
+  item.position = b;
+  swap.position = a;
+  renderFlatlay();
+}
+
+async function moveRaceStackItem(id, direction) {
+  const item = raceStackItems.find(entry => entry.id === id);
+  if (!item) return;
+  const siblings = getStackItems(item.race_stack_id);
+  const idx = siblings.findIndex(entry => entry.id === id);
+  const swapIdx = idx + direction;
+  if (swapIdx < 0 || swapIdx >= siblings.length) return;
+  const swap = siblings[swapIdx];
+  const client = initSupabaseClient();
+  if (!client) return;
+  const a = item.position;
+  const b = swap.position;
+  const [resA, resB] = await Promise.all([
+    client.from('race_stack_items').update({ position: b }).eq('id', item.id),
+    client.from('race_stack_items').update({ position: a }).eq('id', swap.id)
+  ]);
+  if (resA.error || resB.error) { showBtToast('Could not reorder stack.'); return; }
+  item.position = b;
+  swap.position = a;
+  renderFlatlay();
 }
 function renderOWPage() {
   const cfg = getOWConfig && getOWConfig();
@@ -7857,6 +9698,9 @@ function closeM(id){
     const apiKeyEl = document.getElementById('setApiKey');
     if (apiKeyEl) { apiKeyEl.value = ''; apiKeyEl.disabled = true; }
   }
+  if (id === 'flatlayListPickerModal' || id === 'flatlayStackPickerModal') {
+    flatlayAddContext = null;
+  }
 }
 function toggleReveal(btn) {
   const wrap = btn.closest('.fi-wrap');
@@ -7921,6 +9765,8 @@ function saveNR(){
     nextRace = newRace;
     sv('fl2_nr', nextRace);
   }
+  // Sync immediately (don't rely solely on debounce — prevents data loss on quick refresh)
+  syncRemoteState();
   closeM('nrModal');
   if(curPage==='dashboard') renderCountdown();
 }
@@ -9801,6 +11647,51 @@ function openFeedback() {
   openM('feedbackModal');
 }
 
+function openBetaEmailModal() {
+  if (!_IS_STAGING) return;
+  // Flush any pending data to Supabase before the user upgrades their email
+  if (remoteSyncReady) syncRemoteState();
+  // Reset modal to input state
+  const body = document.getElementById('betaEmailModalBody');
+  const helper = document.getElementById('betaEmailHelperText');
+  const btn = document.getElementById('betaEmailSubmitBtn');
+  const input = document.getElementById('betaNewEmail');
+  if (body) body.style.display = '';
+  if (helper) { helper.textContent = 'You\'ll get a confirmation link — click it and you\'re done. Your password stays the same.'; helper.style.color = ''; }
+  if (btn) { btn.textContent = 'Send Confirmation'; btn.disabled = false; }
+  if (input) { input.value = ''; input.classList.remove('fi-error'); const e2 = input.closest('.fg')?.querySelector('.fg-err-msg'); if (e2) e2.classList.remove('show'); }
+  openM('betaEmailModal');
+}
+
+async function submitBetaEmailUpgrade() {
+  if (!_IS_STAGING) return;
+  const input = document.getElementById('betaNewEmail');
+  const newEmail = input?.value.trim();
+  if (!newEmail || !input.checkValidity()) { showFieldError('betaNewEmail', 'Please enter a valid email address.'); return; }
+  if (newEmail.endsWith('@beta.breaktapes.com')) { showFieldError('betaNewEmail', 'Please use a real email address, not a beta one.'); return; }
+  const btn = document.getElementById('betaEmailSubmitBtn');
+  btn.disabled = true; btn.textContent = 'Sending…';
+  const client = initSupabaseClient();
+  if (!client) { btn.disabled = false; btn.textContent = 'Send Confirmation'; showFieldError('betaNewEmail', 'Could not connect. Please try again.'); return; }
+  try {
+    const { error } = await client.auth.updateUser({ email: newEmail });
+    if (error) throw error;
+    // Show confirmation state
+    const helper = document.getElementById('betaEmailHelperText');
+    if (helper) {
+      helper.textContent = `Confirmation sent to ${newEmail}. Click the link in that email and you're all set — all your races and profile will be there when BREAKTAPES launches.`;
+      helper.style.color = 'var(--green)';
+    }
+    btn.textContent = 'Email Sent ✓'; btn.disabled = true;
+    // Store pending state so banner shows "awaiting confirmation" subtitle
+    localStorage.setItem('bt_email_upgrade_pending', newEmail);
+    updateAuthUI();
+  } catch (err) {
+    btn.disabled = false; btn.textContent = 'Send Confirmation';
+    showFieldError('betaNewEmail', err.message || 'Could not update email. Try again.');
+  }
+}
+
 async function submitFeedback() {
   const client = initSupabaseClient();
   const text = (document.getElementById('feedbackText')?.value || '').trim();
@@ -9894,6 +11785,11 @@ function initModalSwipe(modalEl, closeCallback) {
   });
 }
 
+// Best-effort sync when tab closes or refreshes — prevents upcoming races from being lost
+// Best-effort sync on tab close — real protection is the immediate sync in saveNR().
+// Browsers may cancel in-flight XHR/fetch on unload, but this catches other sync paths.
+window.addEventListener('beforeunload', () => { if (remoteSyncReady) syncRemoteState(); });
+
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.modal-overlay').forEach(overlay => {
     const modal = overlay.querySelector('.modal');
@@ -9964,6 +11860,10 @@ initApp();
   <button class="bn-tab" id="bn-history" onclick="go('history')" aria-label="Race History">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
     History
+  </button>
+  <button class="bn-tab" id="bn-flatlay" onclick="go('flatlay')" aria-label="The Flatlay">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16"/><path d="M6 7v11"/><path d="M18 7v11"/><path d="M4 18h16"/><path d="M9 11h6"/><path d="M9 14h6"/></svg>
+    Flatlay
   </button>
   <button class="bn-tab" id="bn-medals" onclick="go('medals')" aria-label="Medal Wall">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
