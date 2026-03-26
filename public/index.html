@@ -342,6 +342,47 @@ main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(1
 .weather-pill .wp-icon { font-size: 1rem; line-height: 1; }
 .weather-pill .wp-temp { font-size: 0.72rem; color: var(--white); font-weight: 600; }
 .weather-pill .wp-time { font-size: 0.6rem; color: var(--muted2); }
+.dash-shell {
+  display:flex;
+  flex-direction:column;
+  gap:1.5rem;
+}
+.dash-zone {
+  display:flex;
+  flex-direction:column;
+  gap:0.85rem;
+}
+.dash-zone-head {
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:1rem;
+}
+.dash-zone-kicker {
+  font-family:var(--headline);
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:0.18em;
+  text-transform:uppercase;
+  color:var(--muted);
+}
+.dash-zone-title {
+  margin-top:0.22rem;
+  font-family:var(--headline);
+  font-size:20px;
+  font-weight:800;
+  letter-spacing:0.05em;
+  text-transform:uppercase;
+  color:var(--white);
+}
+.dash-zone-grid {
+  display:flex;
+  flex-direction:column;
+  gap:0.85rem;
+}
+.dash-zone-grid > [id^="dash-widget-"] {
+  margin:0;
+}
 
 /* ── Countdown ── */
 .countdown-wrap {
@@ -437,20 +478,74 @@ main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(1
 .cd-upcoming-link:hover { color:var(--orange); }
 .upcoming-row {
   display:flex; align-items:center; gap:12px;
-  padding:12px 0; border-bottom:1px solid var(--border);
+  padding:14px 14px;
+  border:1px solid rgba(245,245,245,0.06);
+  background:rgba(255,255,255,0.015);
 }
-.upcoming-row:last-child { border-bottom:none; }
+.upcoming-row-priority-a {
+  min-height:92px;
+  padding:18px 18px;
+  gap:16px;
+  border-color:rgba(255,77,0,0.14);
+  background:linear-gradient(90deg, rgba(255,77,0,0.055) 0%, rgba(255,255,255,0.018) 44%, rgba(255,255,255,0.02) 100%);
+}
+.upcoming-row-priority-b {
+  min-height:74px;
+}
+.upcoming-row-priority-c {
+  min-height:68px;
+  padding:12px 13px;
+}
 .upcoming-row-main { flex:1; min-width:0; }
 .upcoming-row-name { font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .upcoming-row-meta { font-size:11px; color:var(--muted); margin-top:2px; }
 .upcoming-row-date { font-size:12px; font-weight:700; color:var(--orange); white-space:nowrap; text-align:right; }
 .upcoming-row-days { font-size:10px; color:var(--muted); text-align:right; }
+.upcoming-row-priority-a .upcoming-row-name { font-size:16px; letter-spacing:.045em; }
+.upcoming-row-priority-a .upcoming-row-meta { font-size:12px; margin-top:4px; }
+.upcoming-row-priority-a .upcoming-row-date { font-size:15px; }
+.upcoming-row-priority-a .upcoming-row-days { font-size:11px; }
+.upcoming-row-priority-a .pri-badge {
+  width:24px;
+  height:24px;
+  border-radius:7px;
+  font-size:12px;
+}
+.upcoming-row-priority-c .upcoming-row-name { font-size:12px; }
+.upcoming-row-priority-c .upcoming-row-meta { font-size:10px; }
+.upcoming-row-priority-c .upcoming-row-date { font-size:11px; }
+.upcoming-row-priority-c .upcoming-row-days { font-size:9px; }
 .upcoming-empty { padding:1.5rem 0; color:var(--muted); font-size:13px; text-align:center; }
-.upcoming-row { cursor:pointer; transition:background .12s; border-radius:8px; padding:12px 8px; margin:0 -8px; }
-.upcoming-row:hover { background:rgba(255,255,255,0.04); }
-.upcoming-row-active { border-left:2px solid var(--orange); padding-left:10px; margin-left:-10px; }
+.upcoming-row { cursor:pointer; transition:background .12s, border-color .12s, box-shadow .12s; border-radius:16px; margin:0; }
+.upcoming-row:hover { background:rgba(255,255,255,0.03); border-color:rgba(245,245,245,0.12); }
+.upcoming-row-priority-a:hover {
+  background:linear-gradient(90deg, rgba(255,77,0,0.085) 0%, rgba(255,255,255,0.03) 42%, rgba(255,255,255,0.025) 100%);
+  border-color:rgba(255,77,0,0.22);
+}
+.upcoming-row-active {
+  background:linear-gradient(90deg, rgba(255,77,0,0.12) 0%, rgba(255,77,0,0.03) 34%, rgba(0,255,136,0.035) 100%);
+  border-color:rgba(255,77,0,0.22);
+  box-shadow:inset 0 0 0 1px rgba(255,77,0,0.08);
+}
 .upcoming-row-name { transition:color .12s; }
 .upcoming-row:hover .upcoming-row-name { color:var(--orange); }
+.upcoming-row-status {
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  margin-left:8px;
+  padding:3px 8px;
+  border-radius:999px;
+  border:1px solid rgba(255,77,0,0.18);
+  background:rgba(255,77,0,0.08);
+  color:var(--orange);
+  font-family:var(--headline);
+  font-size:8px;
+  font-weight:800;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  vertical-align:middle;
+}
 .upcoming-del { background:none; border:none; color:var(--muted); font-size:14px; cursor:pointer; padding:4px 6px; border-radius:4px; transition:color .15s; flex-shrink:0; }
 .upcoming-del:hover { color:#ef4444; }
 .cd-edit-btn {
@@ -2003,7 +2098,252 @@ main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(1
   border-color:rgba(255,77,0,0.3);
   background:rgba(255,77,0,0.08);
 }
+
+/* =============================================
+   DASHBOARD POLISH
+   ============================================= */
+#page-dashboard .wrap {
+  display:flex;
+  flex-direction:column;
+  gap:1.1rem;
+}
+#page-dashboard .greeting-card {
+  margin-bottom:0;
+  padding:1.25rem 1.35rem;
+  border-radius:14px;
+  border-color:rgba(245,245,245,0.08);
+  background:
+    radial-gradient(circle at top right, rgba(255,77,0,0.12), transparent 36%),
+    linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)),
+    var(--surface2);
+  box-shadow:0 18px 40px rgba(0,0,0,0.22);
+}
+#page-dashboard .greeting-text {
+  font-size:1.3rem;
+  letter-spacing:0.02em;
+}
+#page-dashboard .greeting-weather {
+  margin-top:0.6rem;
+  gap:0.45rem;
+}
+#page-dashboard .weather-pill {
+  min-width:42px;
+  padding:0.28rem 0.45rem;
+  border-radius:999px;
+  background:rgba(255,255,255,0.03);
+  border-color:rgba(245,245,245,0.08);
+}
+#page-dashboard .dash-customize-btn {
+  border-radius:999px;
+  width:42px;
+  height:42px;
+  padding:0;
+  display:grid;
+  place-items:center;
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(245,245,245,0.08);
+}
+#page-dashboard .dash-shell {
+  gap:1.3rem;
+}
+#page-dashboard .dash-zone {
+  padding:1rem 1.05rem 1.1rem;
+  border-radius:18px;
+  border:1px solid rgba(245,245,245,0.06);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.01)),
+    rgba(255,255,255,0.01);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.03);
+}
+#page-dashboard .dash-zone-head {
+  margin-bottom:0.25rem;
+  padding-bottom:0.8rem;
+  border-bottom:1px solid rgba(245,245,245,0.06);
+}
+#page-dashboard .dash-zone-grid {
+  gap:0.95rem;
+}
+#page-dashboard #dash-widget-recent,
+#page-dashboard #dash-widget-insights,
+#page-dashboard #dash-widget-pbs,
+#page-dashboard #dash-widget-world,
+#page-dashboard #dash-widget-on-this-day,
+#page-dashboard #dash-widget-field-placing,
+#page-dashboard #dash-widget-activity-preview,
+#page-dashboard #dash-widget-training-streak,
+#page-dashboard #dash-widget-pacing-iq,
+#page-dashboard #dash-widget-momentum,
+#page-dashboard #dash-widget-age-grade,
+#page-dashboard #dash-widget-race-dna {
+  display:flex;
+  flex-direction:column;
+  gap:0.75rem;
+}
+#page-dashboard #dash-widget-countdown {
+  display:flex;
+  flex-direction:column;
+  gap:0.9rem;
+}
+#page-dashboard #raceForecastStrip {
+  display:block;
+  margin:0;
+}
+#page-dashboard .dash-zone-kicker {
+  color:var(--orange);
+  letter-spacing:0.16em;
+}
+#page-dashboard .dash-zone-title {
+  margin-top:0.28rem;
+  font-size:17px;
+  letter-spacing:0.06em;
+}
+#page-dashboard .countdown-wrap,
+#page-dashboard .course-info-strip,
+#page-dashboard .s-tile,
+#page-dashboard .goal-card,
+#page-dashboard .goal-dist-card,
+#page-dashboard .dash-insight-tile,
+#page-dashboard .recent-row,
+#page-dashboard .dash-pb-card,
+#page-dashboard .be-chart-wrap,
+#page-dashboard .cal-heatmap-wrap,
+#page-dashboard .cr-table-wrap {
+  border-radius:14px;
+}
+#page-dashboard .countdown-wrap {
+  margin-bottom:0;
+  padding:1.85rem 1.4rem 1.55rem;
+  border-color:rgba(245,245,245,0.08);
+  box-shadow:0 22px 50px rgba(0,0,0,0.28);
+}
+#page-dashboard .course-info-strip {
+  background:rgba(255,255,255,0.02);
+  border-color:rgba(245,245,245,0.06);
+  margin-bottom:0;
+}
+#page-dashboard .stats-row {
+  gap:0.6rem;
+  margin-bottom:0;
+}
+#page-dashboard .s-tile {
+  padding:1rem 0.95rem;
+  background:linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.01));
+  border-color:rgba(245,245,245,0.06);
+}
+#page-dashboard .s-tile-num {
+  font-size:2.15rem;
+}
+#page-dashboard .goals-section,
+#page-dashboard .dash-insight-row {
+  margin-bottom:0;
+}
+#page-dashboard .recent-feed,
+#page-dashboard #dashPBs,
+#page-dashboard #onThisDayContent,
+#page-dashboard #fieldPlacingContent,
+#page-dashboard #activityPreviewFeed,
+#page-dashboard #streakWidgetContent,
+#page-dashboard #pacingIQContent,
+#page-dashboard #momentumWidgetContent,
+#page-dashboard #ageGradeWidgetContent,
+#page-dashboard #raceDNAContent {
+  margin-top:0;
+}
+#page-dashboard .goal-card,
+#page-dashboard .goal-dist-card,
+#page-dashboard .dash-insight-tile,
+#page-dashboard .recent-row {
+  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border-color:rgba(245,245,245,0.06);
+}
+#page-dashboard .section-row {
+  margin:0 0 0.65rem;
+}
+#page-dashboard .section-h {
+  font-size:1rem;
+  letter-spacing:0.08em;
+}
+#page-dashboard .see-all {
+  font-size:10px;
+  padding:0.35rem 0.7rem;
+  border-radius:999px;
+  border:1px solid rgba(255,77,0,0.18);
+  background:rgba(255,77,0,0.06);
+}
+#page-dashboard .see-all:hover {
+  opacity:1;
+  background:rgba(255,77,0,0.12);
+}
+#page-dashboard .dash-insight-row {
+  gap:0.75rem;
+}
+#page-dashboard .dash-insight-tile {
+  padding:1rem 1.05rem;
+}
+#page-dashboard .dash-insight-tile::before {
+  left:1rem;
+  right:1rem;
+  top:0.95rem;
+  height:1px;
+  opacity:0.85;
+}
+#page-dashboard .di-kicker {
+  margin-bottom:0.6rem;
+}
+#page-dashboard .recent-feed {
+  gap:0.65rem;
+}
+#page-dashboard .recent-row {
+  padding:0.9rem 1rem;
+}
+#page-dashboard .recent-type-icon {
+  border-radius:10px;
+  width:40px;
+  height:40px;
+}
+#page-dashboard #dash-widget-pbs .section-row,
+#page-dashboard #dash-widget-world .section-row,
+#page-dashboard #dash-widget-activity-preview .section-row,
+#page-dashboard #dash-widget-training-streak .section-row,
+#page-dashboard #dash-widget-age-grade .section-row,
+#page-dashboard #dash-widget-race-dna .section-row {
+  margin-top:0;
+}
 @media(max-width:767px){
+  #page-dashboard .wrap { gap:0.95rem; }
+  #page-dashboard .greeting-card {
+    padding:1rem 1rem 1.05rem;
+    align-items:flex-start;
+  }
+  #page-dashboard .dash-shell {
+    gap:1rem;
+  }
+  #page-dashboard .dash-zone {
+    padding:0.9rem 0.85rem 0.95rem;
+    border-radius:16px;
+  }
+  #page-dashboard .dash-zone-head {
+    padding-bottom:0.7rem;
+  }
+  #page-dashboard .dash-zone-grid {
+    gap:0.85rem;
+  }
+  #page-dashboard .countdown-wrap {
+    padding:1.55rem 1rem 1.3rem;
+  }
+  #page-dashboard .stats-row,
+  #page-dashboard .dash-insight-row {
+    gap:0.55rem;
+  }
+  #page-dashboard .s-tile {
+    padding:0.9rem 0.8rem;
+  }
+  #page-dashboard .s-tile-num {
+    font-size:1.8rem;
+  }
+  #page-dashboard .recent-row {
+    padding:0.8rem 0.85rem;
+  }
   .flatlay-tabs { grid-template-columns:repeat(2, minmax(0, 1fr)); }
   .flatlay-search-row { grid-template-columns:1fr; }
   .flatlay-filter-row { grid-template-columns:1fr; }
@@ -2013,6 +2353,9 @@ main { margin-top: calc(56px + env(safe-area-inset-top, 0px)); min-height:calc(1
    RESPONSIVE
    ============================================= */
 @media(max-width:767px){
+  .dash-shell { gap:1.25rem; }
+  .dash-zone-head { align-items:flex-start; }
+  .dash-zone-title { font-size:17px; }
   .stats-row  { grid-template-columns:repeat(2,1fr); }
   .ath-stats  { grid-template-columns:repeat(2,1fr); }
   .bio-grid   { grid-template-columns:repeat(2,1fr); }
@@ -2659,20 +3002,45 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   margin-bottom: 1.5rem;
-  padding-bottom: 2px;
+  padding-top: 4px;
+  padding-bottom: 8px;
 }
 .dash-pb-strip::-webkit-scrollbar { display: none; }
 .dash-pb-card {
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 1px solid rgba(245,245,245,0.08);
   border-left: 3px solid var(--green);
-  border-radius: 5px;
+  border-radius: 14px;
   padding: 0.85rem 0.9rem;
-  transition: all 0.15s;
+  position:relative;
+  overflow:hidden;
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
   flex: 0 0 160px;
   scroll-snap-align: start;
+  cursor:pointer;
 }
-.dash-pb-card:hover { border-color: var(--green); transform: translateY(-2px); }
+.dash-pb-card:hover {
+  background:
+    linear-gradient(90deg, rgba(70,22,0,0.42) 0%, rgba(18,18,12,0.88) 45%, rgba(0,52,30,0.38) 100%),
+    var(--surface);
+  border-color: rgba(255,200,50,0.38);
+  box-shadow:
+    0 0 0 1px rgba(0,255,136,0.22),
+    0 14px 32px rgba(0,0,0,0.32);
+  transform: translateY(0);
+}
+.dash-pb-card:hover .dash-pb-dist,
+.dash-pb-card:hover .dash-pb-race {
+  color: rgba(245,245,245,0.78);
+}
+.dash-pb-card:focus-visible {
+  outline:none;
+  border-color: rgba(255,200,50,0.42);
+  box-shadow:
+    0 0 0 1px rgba(0,255,136,0.22),
+    0 0 0 3px rgba(255,200,50,0.12),
+    0 14px 32px rgba(0,0,0,0.32);
+}
 .dash-pb-dist {
   font-family: var(--headline);
   font-size: 9px; font-weight: 800;
@@ -3090,18 +3458,57 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   flex-shrink: 0;
 }
 .dash-customize-btn:hover { color: var(--white); background: var(--surface3); }
-.dcw-list { list-style: none; margin: 0; padding: 0; }
+.dcw-list { list-style: none; margin: 0; padding: 0; display:flex; flex-direction:column; gap:0.9rem; }
+.dcw-group {
+  border:1px solid rgba(245,245,245,0.06);
+  border-radius:12px;
+  background:rgba(255,255,255,0.015);
+  overflow:hidden;
+}
+.dcw-group-head {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:0.75rem;
+  padding:0.8rem 1rem;
+  border-bottom:1px solid rgba(245,245,245,0.06);
+}
+.dcw-group-kicker {
+  font-family:var(--headline);
+  font-size:8px;
+  font-weight:800;
+  letter-spacing:0.16em;
+  text-transform:uppercase;
+  color:var(--orange);
+}
+.dcw-group-title {
+  margin-top:0.18rem;
+  font-family:var(--headline);
+  font-size:14px;
+  font-weight:800;
+  letter-spacing:0.06em;
+  text-transform:uppercase;
+  color:var(--white);
+}
+.dcw-group-controls {
+  display:flex;
+  align-items:center;
+  gap:0;
+}
+.dcw-group-list { list-style:none; margin:0; padding:0; }
 .dcw-row {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.9rem 1.25rem;
+  padding: 0.9rem 1rem;
   border-bottom: 1px solid var(--border);
   transition: opacity 0.2s;
 }
+.dcw-group-list .dcw-row:last-child { border-bottom:none; }
 .dcw-row.disabled { opacity: 0.4; }
 .dcw-icon { font-size: 1.1rem; width: 1.5rem; text-align: center; flex-shrink: 0; }
 .dcw-label { flex: 1; font-family: var(--body); font-size: 14px; font-weight: 500; color: var(--white); }
+.dcw-controls { display:flex; align-items:center; gap:0.45rem; }
 .dcw-arrows { display: flex; flex-direction: column; gap: 3px; }
 .dcw-arrow {
   background: none;
@@ -3207,12 +3614,36 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 .mom-spark{flex:1}
 
 /* Race Day Forecast */
-.rdf-strip{background:var(--surface3);border:1px solid var(--border2);border-radius:6px;display:flex;align-items:center;gap:.75rem;padding:10px 12px;margin-top:.75rem}
-.rdf-icon{font-size:22px;flex-shrink:0}
-.rdf-city{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
-.rdf-temp{font-family:var(--headline);font-size:18px;font-weight:800;margin-top:2px}
-.rdf-meta{font-size:11px;color:var(--muted)}
-.rdf-badge{font-size:11px;font-weight:700;color:var(--orange);margin-left:auto;white-space:nowrap}
+.rdf-strip{
+  background:rgba(255,255,255,0.02);
+  border:1px solid rgba(245,245,245,0.06);
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  gap:.7rem;
+  padding:7px 12px;
+  margin-top:0;
+  min-height:58px;
+}
+.rdf-icon{font-size:20px;flex-shrink:0;line-height:1}
+.rdf-copy{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.rdf-city{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;line-height:1.2}
+.rdf-temp{font-family:var(--headline);font-size:15px;font-weight:800;line-height:1.1}
+.rdf-meta{font-size:10px;color:var(--muted);line-height:1.25}
+.rdf-badge{
+  font-family:var(--headline);
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--orange);
+  margin-left:auto;
+  white-space:nowrap;
+  padding:5px 8px;
+  border-radius:999px;
+  border:1px solid rgba(255,77,0,0.18);
+  background:rgba(255,77,0,0.08);
+}
 
 /* Age-Grade */
 .ag-widget{display:flex;align-items:center;gap:1rem;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:1rem 1.2rem;margin-top:.5rem}
@@ -3392,105 +3823,150 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
       </div>
       <button class="dash-customize-btn" onclick="openDashCustomize()" title="Customize dashboard" aria-label="Customize dashboard">⊞</button>
     </div>
-    <!-- Countdown -->
-    <div id="dash-widget-countdown">
-      <div class="countdown-wrap" id="cdCard"></div>
-      <div class="course-info-strip" id="courseInfoStrip" style="display:none"></div>
-      <div id="raceForecastStrip" style="display:none">
-        <div id="raceForecastContent"></div>
-      </div>
-    </div>
-    <!-- Stats -->
-    <div id="dash-widget-stats">
-      <div class="stats-row">
-        <div class="s-tile"><div class="s-tile-num" id="ds-r">0</div><div class="s-tile-label">Races</div></div>
-        <div class="s-tile"><div class="s-tile-num" id="ds-c">0</div><div class="s-tile-label">Countries</div></div>
-        <div class="s-tile"><div class="s-tile-num" id="ds-k">0</div><div class="s-tile-label">Total KM</div></div>
-        <div class="s-tile" onclick="go('medals')" style="cursor:pointer"><div class="s-tile-num" id="ds-m">0</div><div class="s-tile-label">Medals</div></div>
-      </div>
-    </div>
-    <!-- Goals -->
-    <div id="dash-widget-goals">
-      <div id="goalsSection"></div>
-    </div>
-    <!-- Year in Review + H2H -->
-    <div id="dash-widget-insights">
-      <div class="dash-insight-row">
-        <div class="dash-insight-tile" id="yirTile"></div>
-        <div class="dash-insight-tile" id="h2hTile"></div>
-      </div>
-    </div>
-    <!-- Recent -->
-    <div id="dash-widget-recent">
-      <div class="section-row">
-        <div class="section-h">Recent Races</div>
-        <button class="see-all" onclick="go('history')">All Races →</button>
-      </div>
-      <div class="recent-feed" id="recentFeed"></div>
-    </div>
-    <!-- Personal Bests -->
-    <div id="dash-widget-pbs">
-      <div class="section-row" style="margin-top:1.5rem">
-        <div class="section-h">Personal Bests</div>
-      </div>
-      <div id="dashPBs"></div>
-    </div>
-    <!-- Your World (map teaser) -->
-    <div id="dash-widget-world">
-      <div class="section-row" style="margin-top:1.75rem">
-        <div class="section-h">Your World</div>
-        <button class="see-all" onclick="go('map')">Race Map →</button>
-      </div>
-    </div>
-    <!-- On This Day -->
-    <div id="dash-widget-on-this-day">
-      <div id="onThisDayContent"></div>
-    </div>
-    <!-- Field-Adjusted Placing -->
-    <div id="dash-widget-field-placing">
-      <div id="fieldPlacingContent"></div>
-    </div>
-    <!-- Activity Preview -->
-    <div id="dash-widget-activity-preview">
-      <div class="section-row" style="margin-top:1.5rem">
-        <div class="section-h">Recent Training</div>
-        <button class="see-all" onclick="go('training')">See All →</button>
-      </div>
-      <div id="activityPreviewFeed"></div>
-    </div>
-    <!-- Training Streak -->
-    <div id="dash-widget-training-streak">
-      <div class="section-row" style="margin-top:1.5rem">
-        <div class="section-h">Training Streak</div>
-        <button class="see-all" onclick="go('training')">Activities →</button>
-      </div>
-      <div id="streakWidgetContent"></div>
-    </div>
-    <!-- Pacing IQ -->
-    <div id="dash-widget-pacing-iq">
-      <div id="pacingIQContent"></div>
-    </div>
-    <!-- Career Momentum -->
-    <div id="dash-widget-momentum">
-      <div id="momentumWidgetContent"></div>
-    </div>
-    <!-- Race Day Forecast (entry in panel; content embedded in countdown) -->
-    <div id="dash-widget-race-forecast" style="display:none"></div>
-    <!-- Age-Grade Score -->
-    <div id="dash-widget-age-grade">
-      <div class="section-row" style="margin-top:1.5rem">
-        <div class="section-h">Age-Grade Score</div>
-      </div>
-      <div id="ageGradeWidgetContent"></div>
-    </div>
-    <!-- Race DNA -->
-    <div id="dash-widget-race-dna">
-      <div class="section-row" style="margin-top:1.5rem">
-        <div class="section-h">Race DNA</div>
-      </div>
-      <div id="raceDNAContent">
-        <div style="color:var(--muted);font-size:12px;padding:0.5rem 0">Analysing race conditions…</div>
-      </div>
+    <div class="dash-shell">
+      <section class="dash-zone" id="dash-zone-priority">
+        <div class="dash-zone-head">
+          <div>
+            <div class="dash-zone-kicker">Now</div>
+            <div class="dash-zone-title">Race Day</div>
+          </div>
+        </div>
+        <div class="dash-zone-grid" id="dashZone-priority">
+          <!-- Countdown -->
+          <div id="dash-widget-countdown">
+            <div class="countdown-wrap" id="cdCard"></div>
+            <div class="course-info-strip" id="courseInfoStrip" style="display:none"></div>
+            <div id="raceForecastStrip" style="display:none">
+              <div id="raceForecastContent"></div>
+            </div>
+          </div>
+          <!-- Stats -->
+          <div id="dash-widget-stats">
+            <div class="stats-row">
+              <div class="s-tile"><div class="s-tile-num" id="ds-r">0</div><div class="s-tile-label">Races</div></div>
+              <div class="s-tile"><div class="s-tile-num" id="ds-c">0</div><div class="s-tile-label">Countries</div></div>
+              <div class="s-tile"><div class="s-tile-num" id="ds-k">0</div><div class="s-tile-label">Total KM</div></div>
+              <div class="s-tile" onclick="go('medals')" style="cursor:pointer"><div class="s-tile-num" id="ds-m">0</div><div class="s-tile-label">Medals</div></div>
+            </div>
+          </div>
+          <!-- Race Day Forecast (entry in panel; content embedded in countdown) -->
+          <div id="dash-widget-race-forecast" style="display:none"></div>
+        </div>
+      </section>
+
+      <section class="dash-zone" id="dash-zone-performance">
+        <div class="dash-zone-head">
+          <div>
+            <div class="dash-zone-kicker">Progress</div>
+            <div class="dash-zone-title">Your Racing</div>
+          </div>
+        </div>
+        <div class="dash-zone-grid" id="dashZone-performance">
+          <!-- Year in Review + H2H -->
+          <div id="dash-widget-insights">
+            <div class="dash-insight-row">
+              <div class="dash-insight-tile" id="yirTile"></div>
+              <div class="dash-insight-tile" id="h2hTile"></div>
+            </div>
+          </div>
+          <!-- Recent -->
+          <div id="dash-widget-recent">
+            <div class="section-row">
+              <div class="section-h">Recent Races</div>
+              <button class="see-all" onclick="go('history')">All Races →</button>
+            </div>
+            <div class="recent-feed" id="recentFeed"></div>
+          </div>
+          <!-- Personal Bests -->
+          <div id="dash-widget-pbs">
+            <div class="section-row" style="margin-top:1.5rem">
+              <div class="section-h">Personal Bests</div>
+            </div>
+            <div id="dashPBs"></div>
+          </div>
+          <!-- Your World (map teaser) -->
+          <div id="dash-widget-world">
+            <div class="section-row" style="margin-top:1.75rem">
+              <div class="section-h">Your World</div>
+              <button class="see-all" onclick="go('map')">Race Map →</button>
+            </div>
+          </div>
+          <!-- On This Day -->
+          <div id="dash-widget-on-this-day">
+            <div id="onThisDayContent"></div>
+          </div>
+          <!-- Field-Adjusted Placing -->
+          <div id="dash-widget-field-placing">
+            <div id="fieldPlacingContent"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="dash-zone" id="dash-zone-training">
+        <div class="dash-zone-head">
+          <div>
+            <div class="dash-zone-kicker">Training</div>
+            <div class="dash-zone-title">Build & Consistency</div>
+          </div>
+        </div>
+        <div class="dash-zone-grid" id="dashZone-training">
+          <!-- Goals -->
+          <div id="dash-widget-goals">
+            <div id="goalsSection"></div>
+          </div>
+          <!-- Activity Preview -->
+          <div id="dash-widget-activity-preview">
+            <div class="section-row" style="margin-top:1.5rem">
+              <div class="section-h">Recent Training</div>
+              <button class="see-all" onclick="go('training')">See All →</button>
+            </div>
+            <div id="activityPreviewFeed"></div>
+          </div>
+          <!-- Training Streak -->
+          <div id="dash-widget-training-streak">
+            <div class="section-row" style="margin-top:1.5rem">
+              <div class="section-h">Training Streak</div>
+              <button class="see-all" onclick="go('training')">Activities →</button>
+            </div>
+            <div id="streakWidgetContent"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="dash-zone" id="dash-zone-insights">
+        <div class="dash-zone-head">
+          <div>
+            <div class="dash-zone-kicker">Insights</div>
+            <div class="dash-zone-title">Patterns & Analysis</div>
+          </div>
+        </div>
+        <div class="dash-zone-grid" id="dashZone-insights">
+          <!-- Pacing IQ -->
+          <div id="dash-widget-pacing-iq">
+            <div id="pacingIQContent"></div>
+          </div>
+          <!-- Career Momentum -->
+          <div id="dash-widget-momentum">
+            <div id="momentumWidgetContent"></div>
+          </div>
+          <!-- Age-Grade Score -->
+          <div id="dash-widget-age-grade">
+            <div class="section-row" style="margin-top:1.5rem">
+              <div class="section-h">Age-Grade Score</div>
+            </div>
+            <div id="ageGradeWidgetContent"></div>
+          </div>
+          <!-- Race DNA -->
+          <div id="dash-widget-race-dna">
+            <div class="section-row" style="margin-top:1.5rem">
+              <div class="section-h">Race DNA</div>
+            </div>
+          <div id="raceDNAContent">
+              <div style="color:var(--muted);font-size:12px;padding:0.5rem 0">Analysing race conditions…</div>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   </div>
 </div>
@@ -6322,6 +6798,7 @@ async function confirmFlatlayStackPick() {
 }
 
 async function deleteFlatlayList(id) {
+  if (!confirmDeleteAction('list')) return;
   const client = initSupabaseClient();
   if (!client) return;
   const { error } = await client.from('flatlay_lists').delete().eq('id', id).eq('user_id', authUser.id);
@@ -6333,6 +6810,7 @@ async function deleteFlatlayList(id) {
 }
 
 async function deleteRaceStack(id) {
+  if (!confirmDeleteAction('race stack')) return;
   const client = initSupabaseClient();
   if (!client) return;
   const { error } = await client.from('race_stacks').delete().eq('id', id).eq('user_id', authUser.id);
@@ -6344,6 +6822,7 @@ async function deleteRaceStack(id) {
 }
 
 async function deleteFlatlayLibraryProduct(id) {
+  if (!confirmDeleteAction('product')) return;
   const client = initSupabaseClient();
   if (!client) return;
   const { error } = await client.from('user_products').delete().eq('id', id).eq('user_id', authUser.id);
@@ -6356,6 +6835,7 @@ async function deleteFlatlayLibraryProduct(id) {
 }
 
 async function removeFlatlayListItem(id) {
+  if (!confirmDeleteAction('product from this list')) return;
   const client = initSupabaseClient();
   if (!client) return;
   const { error } = await client.from('flatlay_list_items').delete().eq('id', id);
@@ -6365,6 +6845,7 @@ async function removeFlatlayListItem(id) {
 }
 
 async function removeRaceStackItem(id) {
+  if (!confirmDeleteAction('product from this race stack')) return;
   const client = initSupabaseClient();
   if (!client) return;
   const { error } = await client.from('race_stack_items').delete().eq('id', id);
@@ -6870,57 +7351,105 @@ async function renderGreeting() {
 /* ============================
    DASHBOARD LAYOUT / CUSTOMIZE
    ============================ */
+const DASH_ZONES = [
+  { id: 'priority', label: 'Race Day' },
+  { id: 'performance', label: 'Your Racing' },
+  { id: 'training', label: 'Build & Consistency' },
+  { id: 'insights', label: 'Patterns & Analysis' },
+];
+
 const DASH_WIDGETS = [
-  { id: 'countdown', label: 'Next Race Countdown', icon: '🏁' },
-  { id: 'stats',     label: 'Race Stats',           icon: '📊' },
-  { id: 'goals',     label: 'Goals',                icon: '🎯' },
-  { id: 'insights',  label: 'Year So Far & H2H',    icon: '📈' },
-  { id: 'recent',    label: 'Recent Races',          icon: '🏃' },
-  { id: 'pbs',       label: 'Personal Bests',        icon: '⚡' },
-  { id: 'world',     label: 'Your World',            icon: '🌍' },
-  { id: 'on-this-day',       label: 'On This Day',            icon: '📅' },
-  { id: 'field-placing',     label: 'Field-Adjusted Placing',  icon: '🎯' },
-  { id: 'activity-preview',  label: 'Recent Training',         icon: '⚡' },
-  { id: 'training-streak',   label: 'Training Streak',         icon: '🔥' },
-  { id: 'pacing-iq',         label: 'Pacing IQ',               icon: '🧠' },
-  { id: 'momentum',          label: 'Career Momentum',         icon: '🚀' },
-  { id: 'race-forecast',     label: 'Race Day Forecast',       icon: '🌤️' },
-  { id: 'age-grade',         label: 'Age-Grade Score',         icon: '📈' },
-  { id: 'race-dna',          label: 'Race DNA',                icon: '🧬' },
+  { id: 'countdown', label: 'Next Race Countdown',    icon: '🏁', zone: 'priority' },
+  { id: 'stats',     label: 'Race Stats',             icon: '📊', zone: 'priority' },
+  { id: 'goals',     label: 'Goals',                  icon: '🎯', zone: 'training' },
+  { id: 'race-forecast', label: 'Race Day Forecast',  icon: '🌤️', zone: 'priority' },
+  { id: 'insights',  label: 'Year So Far & H2H',      icon: '📈', zone: 'performance' },
+  { id: 'recent',    label: 'Recent Races',           icon: '🏃', zone: 'performance' },
+  { id: 'pbs',       label: 'Personal Bests',         icon: '⚡', zone: 'performance' },
+  { id: 'world',     label: 'Your World',             icon: '🌍', zone: 'performance' },
+  { id: 'on-this-day', label: 'On This Day',          icon: '📅', zone: 'performance' },
+  { id: 'field-placing', label: 'Field-Adjusted Placing', icon: '🎯', zone: 'performance' },
+  { id: 'activity-preview', label: 'Recent Training', icon: '⚡', zone: 'training' },
+  { id: 'training-streak', label: 'Training Streak',  icon: '🔥', zone: 'training' },
+  { id: 'pacing-iq', label: 'Pacing IQ',              icon: '🧠', zone: 'insights' },
+  { id: 'momentum',  label: 'Career Momentum',        icon: '🚀', zone: 'insights' },
+  { id: 'age-grade', label: 'Age-Grade Score',        icon: '📈', zone: 'insights' },
+  { id: 'race-dna',  label: 'Race DNA',               icon: '🧬', zone: 'insights' },
 ];
 
 function getDashLayout() {
   try {
     const saved = JSON.parse(localStorage.getItem('fl2_dash_layout') || 'null');
     if (saved && Array.isArray(saved) && saved.length) {
-      // Merge: preserve saved order/visibility, append any new widgets at end
       const ids = new Set(saved.map(w => w.id));
-      const merged = [...saved];
-      DASH_WIDGETS.forEach(w => { if (!ids.has(w.id)) merged.push({ id: w.id, enabled: true }); });
+      const merged = saved.map(item => {
+        const meta = DASH_WIDGETS.find(widget => widget.id === item.id);
+        return {
+          id: item.id,
+          enabled: item.enabled !== false,
+          zone: meta?.zone || 'performance',
+        };
+      });
+      DASH_WIDGETS.forEach(w => {
+        if (!ids.has(w.id)) merged.push({ id: w.id, enabled: true, zone: w.zone });
+      });
       return merged;
     }
   } catch(e) {}
-  return DASH_WIDGETS.map(w => ({ id: w.id, enabled: true }));
+  return DASH_WIDGETS.map(w => ({ id: w.id, enabled: true, zone: w.zone }));
 }
 
 function saveDashLayout(layout) {
   localStorage.setItem('fl2_dash_layout', JSON.stringify(layout));
 }
 
+function getDashZoneOrder() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('fl2_dash_zone_order') || 'null');
+    if (saved && Array.isArray(saved) && saved.length) {
+      const known = new Set(DASH_ZONES.map(zone => zone.id));
+      const order = saved.filter(id => known.has(id));
+      DASH_ZONES.forEach(zone => {
+        if (!order.includes(zone.id)) order.push(zone.id);
+      });
+      return order;
+    }
+  } catch(e) {}
+  return DASH_ZONES.map(zone => zone.id);
+}
+
+function saveDashZoneOrder(order) {
+  localStorage.setItem('fl2_dash_zone_order', JSON.stringify(order));
+}
+
 function applyDashLayout() {
   const layout = getDashLayout();
   const container = document.querySelector('#page-dashboard .wrap');
-  if (!container) return;
-  layout.forEach((item, idx) => {
+  const shell = container?.querySelector('.dash-shell');
+  if (!container || !shell) return;
+  const widgetMeta = Object.fromEntries(DASH_WIDGETS.map(widget => [widget.id, widget]));
+  const zoneContainers = Object.fromEntries(DASH_ZONES.map(zone => [zone.id, document.getElementById('dashZone-' + zone.id)]));
+  layout.forEach((item) => {
     const el = document.getElementById('dash-widget-' + item.id);
     if (!el) return;
+    const zoneId = widgetMeta[item.id]?.zone || item.zone || 'performance';
+    const zoneContainer = zoneContainers[zoneId] || zoneContainers.performance;
     el.style.display = item.enabled ? '' : 'none';
-    // Re-append in order to physically reorder in DOM
-    container.appendChild(el);
+    if (zoneContainer) zoneContainer.appendChild(el);
   });
-  // Always keep greeting at top (re-append all widgets after greeting)
+  getDashZoneOrder().forEach(zoneId => {
+    const section = document.getElementById('dash-zone-' + zoneId);
+    if (section) shell.appendChild(section);
+  });
+  DASH_ZONES.forEach(zone => {
+    const section = document.getElementById('dash-zone-' + zone.id);
+    const zoneContainer = zoneContainers[zone.id];
+    if (!section || !zoneContainer) return;
+    const hasVisible = Array.from(zoneContainer.children).some(child => child.style.display !== 'none');
+    section.style.display = hasVisible ? '' : 'none';
+  });
   const greeting = document.getElementById('greetingCard');
-  if (greeting) container.insertBefore(greeting, container.firstChild);
+  if (greeting) container.insertBefore(greeting, shell);
 }
 
 function openDashCustomize() {
@@ -6931,19 +7460,42 @@ function openDashCustomize() {
 function renderDashCustomizeModal() {
   const layout = getDashLayout();
   const meta = Object.fromEntries(DASH_WIDGETS.map(w => [w.id, w]));
-  document.getElementById('dcwList').innerHTML = layout.map((item, idx) => {
-    const w = meta[item.id] || { label: item.id, icon: '▪' };
-    return `<li class="dcw-row${item.enabled ? '' : ' disabled'}" data-id="${item.id}">
-      <span class="dcw-icon">${w.icon}</span>
-      <span class="dcw-label">${w.label}</span>
-      <div class="dcw-arrows">
-        <button class="dcw-arrow" onclick="dcwMove('${item.id}',-1)" ${idx === 0 ? 'disabled' : ''}>▲</button>
-        <button class="dcw-arrow" onclick="dcwMove('${item.id}',1)" ${idx === layout.length - 1 ? 'disabled' : ''}>▼</button>
+  const zoneOrder = getDashZoneOrder();
+  document.getElementById('dcwList').innerHTML = zoneOrder.map((zoneId, zoneIndex) => {
+    const zone = DASH_ZONES.find(entry => entry.id === zoneId) || { id: zoneId, label: zoneId };
+    const items = layout.filter(item => (item.zone || meta[item.id]?.zone || 'performance') === zone.id);
+    return `<li class="dcw-group">
+      <div class="dcw-group-head">
+        <div>
+          <div class="dcw-group-kicker">Section</div>
+          <div class="dcw-group-title">${zone.label}</div>
+        </div>
+        <div class="dcw-group-controls">
+          <div class="dcw-arrows">
+            <button class="dcw-arrow" onclick="dcwMoveSection('${zone.id}',-1)" ${zoneIndex === 0 ? 'disabled' : ''} title="Move section up">▲</button>
+            <button class="dcw-arrow" onclick="dcwMoveSection('${zone.id}',1)" ${zoneIndex === zoneOrder.length - 1 ? 'disabled' : ''} title="Move section down">▼</button>
+          </div>
+        </div>
       </div>
-      <label class="dcw-toggle" title="${item.enabled ? 'Hide' : 'Show'} ${w.label}">
-        <input type="checkbox" ${item.enabled ? 'checked' : ''} onchange="dcwToggle('${item.id}',this.checked)">
-        <span class="dcw-slider"></span>
-      </label>
+      <ul class="dcw-group-list">
+        ${items.map((item, idx) => {
+          const w = meta[item.id] || { label: item.id, icon: '▪' };
+          return `<li class="dcw-row${item.enabled ? '' : ' disabled'}" data-id="${item.id}">
+            <span class="dcw-icon">${w.icon}</span>
+            <span class="dcw-label">${w.label}</span>
+            <div class="dcw-controls">
+              <div class="dcw-arrows">
+                <button class="dcw-arrow" onclick="dcwMove('${item.id}',-1)" ${idx === 0 ? 'disabled' : ''} title="Move up in section">▲</button>
+                <button class="dcw-arrow" onclick="dcwMove('${item.id}',1)" ${idx === items.length - 1 ? 'disabled' : ''} title="Move down in section">▼</button>
+              </div>
+            </div>
+            <label class="dcw-toggle" title="${item.enabled ? 'Hide' : 'Show'} ${w.label}">
+              <input type="checkbox" ${item.enabled ? 'checked' : ''} onchange="dcwToggle('${item.id}',this.checked)">
+              <span class="dcw-slider"></span>
+            </label>
+          </li>`;
+        }).join('')}
+      </ul>
     </li>`;
   }).join('');
 }
@@ -6952,10 +7504,26 @@ function dcwMove(id, dir) {
   const layout = getDashLayout();
   const idx = layout.findIndex(w => w.id === id);
   if (idx < 0) return;
-  const target = idx + dir;
-  if (target < 0 || target >= layout.length) return;
+  const zone = layout[idx].zone;
+  let target = idx + dir;
+  while (target >= 0 && target < layout.length && layout[target].zone !== zone) {
+    target += dir;
+  }
+  if (target < 0 || target >= layout.length || layout[target].zone !== zone) return;
   [layout[idx], layout[target]] = [layout[target], layout[idx]];
   saveDashLayout(layout);
+  renderDashCustomizeModal();
+  applyDashLayout();
+}
+
+function dcwMoveSection(id, dir) {
+  const order = getDashZoneOrder();
+  const idx = order.indexOf(id);
+  if (idx < 0) return;
+  const target = idx + dir;
+  if (target < 0 || target >= order.length) return;
+  [order[idx], order[target]] = [order[target], order[idx]];
+  saveDashZoneOrder(order);
   renderDashCustomizeModal();
   applyDashLayout();
 }
@@ -7359,7 +7927,7 @@ async function renderRaceDayForecast() {
   if (daysUntil < 0) { strip.style.display = 'none'; return; }
   if (daysUntil > 14) {
     strip.style.display = '';
-    content.innerHTML = `<div class="rdf-strip"><div class="rdf-icon">🌤️</div><div><div class="rdf-city">${nextRace.location}</div><div class="rdf-meta" style="color:var(--muted)">Forecast available 14 days before race</div></div></div>`;
+    content.innerHTML = `<div class="rdf-strip"><div class="rdf-icon">🌤️</div><div class="rdf-copy"><div class="rdf-city">${nextRace.location}</div><div class="rdf-meta">Forecast available 14 days before race</div></div></div>`;
     return;
   }
   // Parse city/country from location
@@ -7385,7 +7953,7 @@ async function renderRaceDayForecast() {
     strip.style.display = '';
     content.innerHTML = `<div class="rdf-strip">
       <div class="rdf-icon">${icon}</div>
-      <div style="flex:1">
+      <div class="rdf-copy">
         <div class="rdf-city">${city}${country ? ', ' + country : ''}</div>
         <div class="rdf-temp">${tmin}° – ${tmax}°C</div>
         <div class="rdf-meta">💧 ${precip}mm · 💨 ${wind} km/h</div>
@@ -8678,6 +9246,7 @@ function renderGoals() {
   </div>`;
 }
 function deleteDistGoal(i) {
+  if (!confirmDeleteAction('goal')) return;
   goals.distGoals.splice(i,1); saveGoals(); renderGoals();
 }
 function openGoalModal(type) {
@@ -8885,6 +9454,7 @@ function renderHistory(){
 }
 
 function deleteRace(id) {
+  if (!confirmDeleteAction('race')) return;
   races = races.filter(r => r.id !== id);
   sv('fl2_races', races);
   renderHistory();
@@ -9578,10 +10148,11 @@ function openUpcoming(){
       const isActive = nextRace && r.name === nextRace.name && r.date === nextRace.date;
       const pri = r.priority;
       const loc = r.location || '';
-      return `<div class="upcoming-row${isActive?' upcoming-row-active':''}" onclick="setAsNextRace(${r.id})">
+      const priorityClass = pri ? ` upcoming-row-priority-${pri.toLowerCase()}` : '';
+      return `<div class="upcoming-row${priorityClass}${isActive?' upcoming-row-active':''}" onclick="setAsNextRace(${r.id})">
         ${pri ? `<span class="pri-badge pri-${pri.toLowerCase()}">${pri}</span>` : '<span style="width:18px;flex-shrink:0"></span>'}
         <div class="upcoming-row-main">
-          <div class="upcoming-row-name">${r.name}${isActive?' <span style="color:var(--orange);font-size:11px">● Active</span>':''}</div>
+          <div class="upcoming-row-name">${r.name}${isActive?' <span class="upcoming-row-status">Active</span>':''}</div>
           <div class="upcoming-row-meta">${loc||'—'} · ${r.distance||'—'}</div>
         </div>
         <div style="text-align:right">
@@ -9605,6 +10176,7 @@ function setAsNextRace(id) {
 }
 
 function removeUpcoming(id) {
+  if (!confirmDeleteAction('upcoming race')) return;
   upcomingRaces = upcomingRaces.filter(r => r.id !== id);
   sv('fl2_upcoming', upcomingRaces);
   // If we removed the active race, set the next upcoming as active
@@ -9663,6 +10235,7 @@ function openNextRace(){
   openM('nrModal');
 }
 function clearNextRace() {
+  if (!confirmDeleteAction('next race')) return;
   nextRace = null;
   sv('fl2_nr', null);
   delete document.getElementById('nrModal').dataset.editId;
@@ -10457,7 +11030,7 @@ function renderPBSections(pbGrouped, cardClass){
     const meta=SPORT_META[sport];
     const distVal=d=>{if(DIST_KM[d])return DIST_KM[d];const n=parseFloat(d);return isNaN(n)?Infinity:n;};
     const cards=Object.entries(pbGrouped[sport]).sort(([a],[b])=>distVal(a)-distVal(b)).map(([d,r])=>`
-      <div class="${cardClass} s-${sport}">
+      <div class="${cardClass} s-${sport}"${isDash ? ` onclick="openRaceDetail(${JSON.stringify(r.id)})" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openRaceDetail(${JSON.stringify(r.id)})}"` : ''}>
         <div class="${pfx}-dist">${d}</div>
         <div class="${pfx}-time">${r.time}</div>
         <div class="${pfx}-race">${r.name}${!isDash?' · '+fmtDate(r.date):''}</div>
@@ -11747,6 +12320,10 @@ function showBtToast(msg) {
   }, 2800);
 }
 
+function confirmDeleteAction(subject = 'item') {
+  return window.confirm(`Confirm to delete this ${subject}?`);
+}
+
 async function initApp() {
   raceDbLoadPromise = loadRaceCatalog();
   await initAuth();
@@ -11892,10 +12469,10 @@ initApp();
     <div class="modal-drag"></div>
     <div class="modal-head">
       <div class="modal-h" id="dashCustomizeModalTitle">Customize Dashboard</div>
-      <div class="modal-sub">Toggle sections on or off, and reorder them.</div>
+      <div class="modal-sub">Turn widgets on or off, reorder them within a section, and move whole sections up or down.</div>
     </div>
     <div class="modal-body" style="padding:0;overflow-y:auto;max-height:60vh">
-      <p class="dcw-hint">WIDGETS</p>
+      <p class="dcw-hint">Use `▲` and `▼` on a widget to reorder it within its section. Use `▲` and `▼` in the section header to move the whole section.</p>
       <ul class="dcw-list" id="dcwList"></ul>
     </div>
     <div class="modal-foot" style="padding:1rem 1.25rem">
