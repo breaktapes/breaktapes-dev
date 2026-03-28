@@ -223,6 +223,27 @@ header {
   transition: background 0.15s;
 }
 .menu-athlete:hover { background: var(--surface2); }
+.menu-signout-btn {
+  width: 100%;
+  margin-top: 0.6rem;
+  padding: 0.8rem 0.9rem;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 77, 0, 0.35);
+  background: rgba(255, 77, 0, 0.08);
+  color: var(--orange);
+  cursor: pointer;
+  font-family: var(--headline);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.menu-signout-btn:hover {
+  background: rgba(255, 77, 0, 0.14);
+  border-color: rgba(255, 77, 0, 0.55);
+  color: #ff6a26;
+}
 .menu-avi {
   width:38px; height:38px; border-radius:50%;
   background: var(--surface3);
@@ -484,6 +505,20 @@ main {
   padding:14px 14px;
   border:1px solid rgba(245,245,245,0.06);
   background:rgba(255,255,255,0.015);
+  border-radius:16px;
+}
+.upcoming-row-stack { display:flex; flex-direction:column; gap:14px; }
+.upcoming-gap {
+  display:flex; align-items:center; justify-content:center; gap:10px;
+  color:var(--muted); font-size:11px; letter-spacing:.04em;
+  text-transform:uppercase; line-height:1.2; text-align:center;
+}
+.upcoming-gap::before,
+.upcoming-gap::after {
+  content:"";
+  flex:1;
+  max-width:88px;
+  border-top:1px solid rgba(255,255,255,0.08);
 }
 .upcoming-row-priority-a {
   min-height:92px;
@@ -1652,6 +1687,7 @@ main {
   transition:all 0.15s;
   flex: 0 0 160px;
   scroll-snap-align: start;
+  cursor:pointer;
 }
 .ath-pb-card:hover { border-color:rgba(0,255,136,0.2); }
 .ath-pb-dist {
@@ -3867,17 +3903,120 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 .streak-dot.today{outline:2px solid var(--orange);outline-offset:1px}
 .streak-header-pill{display:inline-flex;align-items:center;gap:.4rem;background:rgba(255,77,0,0.12);border:1px solid rgba(255,77,0,0.3);border-radius:20px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--orange);margin-bottom:.75rem}
 
+/* Insights cluster */
+.insights-shell{
+  margin-top:1.5rem;
+  padding:1.1rem;
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:18px;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.01) 100%),
+    radial-gradient(circle at top left, rgba(255,77,0,0.08), transparent 34%);
+  box-shadow:0 14px 36px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.02);
+}
+.insights-head{
+  display:flex; align-items:flex-end; justify-content:space-between; gap:1rem;
+  padding-bottom:.9rem; margin-bottom:1rem;
+  border-bottom:1px solid rgba(255,255,255,0.06);
+}
+.insights-kicker{
+  font-family:var(--headline); font-size:9px; font-weight:900;
+  letter-spacing:.18em; text-transform:uppercase; color:var(--orange);
+  margin-bottom:.25rem;
+}
+.insights-title{ margin:0; }
+.insights-grid{
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0,1fr));
+  gap:1rem;
+}
+.insights-cell.span-2{ grid-column:1 / -1; }
+.insight-card{
+  position:relative;
+  overflow:hidden;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.015) 100%),
+    var(--surface2);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:16px;
+  padding:1rem 1rem 1.05rem;
+  min-height:148px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+}
+.insight-card::before{
+  content:"";
+  position:absolute; inset:0 auto auto 0;
+  width:100%; height:3px;
+  background:linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 12%, var(--insight-accent, var(--orange)) 42%, transparent 100%);
+  opacity:.9;
+}
+.insight-card-header{
+  display:flex; align-items:flex-start; justify-content:space-between; gap:.75rem;
+  margin-bottom:.85rem;
+}
+.insight-card-kicker{
+  font-family:var(--headline); font-size:10px; font-weight:900;
+  letter-spacing:.14em; text-transform:uppercase; color:var(--muted);
+}
+.insight-card-title{
+  font-family:var(--headline); font-size:1.05rem; font-weight:900;
+  letter-spacing:.03em; text-transform:uppercase; color:var(--white);
+  margin-top:.2rem;
+}
+.insight-card-badge{
+  display:inline-flex; align-items:center; gap:.35rem;
+  border-radius:999px;
+  padding:.28rem .62rem;
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.08);
+  color:var(--white);
+  font-family:var(--headline); font-size:9px; font-weight:900;
+  letter-spacing:.12em; text-transform:uppercase;
+  white-space:nowrap;
+}
+.insight-empty{
+  min-height:96px;
+  display:flex; flex-direction:column; justify-content:center;
+  gap:.4rem;
+  border-radius:12px;
+  padding:.95rem 1rem;
+  background:rgba(255,255,255,0.025);
+  border:1px dashed rgba(255,255,255,0.08);
+}
+.insight-empty-title{
+  font-family:var(--headline); font-size:10px; font-weight:900;
+  letter-spacing:.12em; text-transform:uppercase; color:rgba(255,255,255,0.72);
+}
+.insight-empty-copy{ color:var(--muted); font-size:12px; line-height:1.45; }
+.insight-stat-row{
+  display:flex; align-items:flex-end; justify-content:space-between; gap:.9rem;
+}
+.insight-micro{
+  font-size:10px; color:var(--muted);
+  text-transform:uppercase; letter-spacing:.12em; margin-top:.35rem;
+}
+.insight-foot{
+  margin-top:.9rem; padding-top:.8rem;
+  border-top:1px solid rgba(255,255,255,0.06);
+  font-size:11px; color:var(--muted); line-height:1.45;
+}
+
 /* Pacing IQ */
-.piq-card{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:1rem 1.2rem;margin-top:1.5rem}
-.piq-persona-icon{font-size:24px;margin-bottom:.3rem}
+.piq-card{--insight-accent:var(--orange)}
+.piq-persona-icon{
+  width:42px; height:42px; display:grid; place-items:center;
+  border-radius:12px; font-size:22px;
+  background:rgba(255,77,0,0.12);
+  border:1px solid rgba(255,77,0,0.24);
+}
 .piq-persona-label{font-family:var(--headline);font-size:1.1rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-bottom:.5rem}
-.piq-dist-bar{display:flex;height:6px;border-radius:3px;overflow:hidden;gap:1px;margin:.5rem 0}
+.piq-dist-bar{display:flex;height:8px;border-radius:999px;overflow:hidden;gap:2px;margin:.7rem 0 .45rem;background:rgba(255,255,255,0.03);padding:1px}
 .piq-dist-seg{border-radius:2px;transition:flex .3s}
 .piq-dist-seg.neg{background:var(--green)}
 .piq-dist-seg.even{background:rgba(245,245,245,0.3)}
 .piq-dist-seg.pos{background:var(--orange)}
 .piq-dist-seg.dead{background:#ff4040}
-.piq-legend{display:flex;flex-wrap:wrap;gap:.4rem .75rem;font-size:10px;color:var(--muted);margin-top:.3rem}
+.piq-legend{display:flex;flex-wrap:wrap;gap:.45rem .55rem;font-size:10px;color:var(--muted);margin-top:.5rem}
 .piq-badge{display:inline-flex;align-items:center;gap:.3rem;font-size:11px;font-weight:700;border-radius:5px;padding:2px 7px;border:1px solid}
 .piq-badge.neg{background:rgba(0,255,136,0.08);color:var(--green);border-color:rgba(0,255,136,0.2)}
 .piq-badge.even{background:rgba(245,245,245,0.06);color:rgba(245,245,245,0.6);border-color:rgba(245,245,245,0.12)}
@@ -3885,14 +4024,13 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 .piq-badge.dead{background:rgba(255,64,64,0.1);color:#ff4040;border-color:rgba(255,64,64,0.25)}
 
 /* Career Momentum */
-.mom-card{display:flex;align-items:center;gap:1rem;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:1rem 1.2rem;margin-top:1.5rem}
-.mom-score{font-family:var(--headline);font-size:2.8rem;font-weight:900;line-height:1}
+.mom-card{--insight-accent:var(--orange)}
+.mom-score{font-family:var(--headline);font-size:3.1rem;font-weight:900;line-height:.95}
 .mom-score.hot{color:var(--green)}
 .mom-score.cold{color:var(--orange)}
-.mom-arrow{font-size:20px}
 .mom-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:.2rem}
-.mom-sub{font-size:10px;color:var(--muted);margin-top:.15rem}
-.mom-spark{flex:1}
+.mom-sub{font-size:10px;color:var(--muted);margin-top:.18rem}
+.mom-spark{flex:1; min-width:96px}
 
 /* Race Day Forecast */
 .rdf-strip{
@@ -3927,24 +4065,31 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 }
 
 /* Age-Grade */
-.ag-widget{display:flex;align-items:center;gap:1rem;background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:1rem 1.2rem;margin-top:.5rem}
-.ag-pct{font-family:var(--headline);font-size:2.5rem;font-weight:900;color:var(--green);line-height:1}
+.ag-widget{--insight-accent:var(--green)}
+.ag-pct{font-family:var(--headline);font-size:3rem;font-weight:900;color:var(--green);line-height:.95}
 .ag-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:.2rem}
 .ag-trend{font-size:14px;margin-top:.15rem}
-.ag-spark{flex:1}
+.ag-spark{flex:1; min-width:110px}
 
 /* Race DNA */
-.dna-card{background:var(--surface2);border:1px solid var(--border2);border-radius:10px;padding:1rem 1.2rem;margin-top:.5rem}
-.dna-headline{font-family:var(--headline);font-size:1rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;margin-bottom:.5rem}
+.dna-card{--insight-accent:var(--green)}
+.dna-headline{font-family:var(--headline);font-size:1.05rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;margin-bottom:.35rem}
 .dna-best{color:var(--green)}
-.dna-buckets{display:flex;gap:3px;align-items:flex-end;height:40px}
-.dna-bucket{flex:1;background:var(--surface3);border-radius:3px 3px 0 0;min-height:4px;position:relative}
+.dna-sub{font-size:12px;color:var(--muted);line-height:1.45;margin-bottom:.85rem}
+.dna-buckets{display:flex;gap:6px;align-items:flex-end;height:56px;padding:0 2px}
+.dna-bucket{flex:1;background:linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.05));border-radius:8px 8px 3px 3px;min-height:6px;position:relative}
 .dna-bucket.best{background:var(--green)}
 .dna-bucket.ok{background:rgba(255,77,0,0.6)}
 .dna-bucket-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px}
-.dna-bucket-label{font-size:8px;color:var(--muted);text-align:center}
-.dna-next{font-size:12px;color:var(--muted);margin-top:.75rem}
+.dna-bucket-label{font-size:9px;color:var(--muted);text-align:center}
+.dna-next{font-size:12px;color:var(--muted);margin-top:.85rem}
 .dna-next .match{color:var(--green);font-weight:600}
+@media (max-width: 720px){
+  .insights-shell{padding:.9rem}
+  .insights-grid{grid-template-columns:1fr}
+  .insights-cell.span-2{grid-column:auto}
+  .insight-card{min-height:auto}
+}
 .race-inline-hint{margin-top:.85rem;padding:.8rem .9rem;border:1px solid rgba(255,77,0,0.25);background:rgba(255,77,0,0.08);border-radius:8px;font-size:12px;color:var(--white)}
 .race-inline-hint .hint-title{font-family:var(--headline);font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--orange);margin-bottom:.25rem}
 .race-inline-hint .hint-copy{color:var(--muted);line-height:1.45}
@@ -4075,6 +4220,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
         <div class="menu-ath-sub" id="mAthSub">0 races</div>
       </div>
     </div>
+    <button class="menu-signout-btn" type="button" id="menuSignOutBtn" onclick="signOutUser()" style="display:none">Sign Out</button>
   </div>
 </nav>
 
@@ -4262,18 +4408,17 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
           </div>
           <!-- Age-Grade Score -->
           <div id="dash-widget-age-grade">
-            <div class="section-row" style="margin-top:1.5rem">
-              <div class="section-h">Age-Grade Score</div>
-            </div>
             <div id="ageGradeWidgetContent"></div>
           </div>
           <!-- Race DNA -->
           <div id="dash-widget-race-dna">
-            <div class="section-row" style="margin-top:1.5rem">
-              <div class="section-h">Race DNA</div>
-            </div>
-          <div id="raceDNAContent">
-              <div style="color:var(--muted);font-size:12px;padding:0.5rem 0">Analysing race conditions…</div>
+            <div id="raceDNAContent">
+              <div class="insight-card dna-card">
+                <div class="insight-empty">
+                  <div class="insight-empty-title">Race DNA</div>
+                  <div class="insight-empty-copy">Analysing race conditions…</div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -5032,7 +5177,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
     </div>
     <div class="modal-foot">
       <button class="btn-danger" onclick="rvDelete()">Delete</button>
-      <button class="btn-main" onclick="rvEdit()">Edit Details</button>
+      <button class="btn-main" onclick="rvEdit()">Edit Result</button>
     </div>
   </div>
 </div>
@@ -7044,6 +7189,7 @@ function updateAuthUI() {
     : `You're currently using this app without an account.`;
   document.getElementById('settingsAuthBtn').textContent = signedIn ? 'Manage Account' : 'Sign In';
   document.getElementById('settingsSignOutBtn').style.display = signedIn ? '' : 'none';
+  document.getElementById('menuSignOutBtn').style.display = signedIn ? '' : 'none';
   const pill = document.getElementById('feedbackPill');
   if (pill && _IS_STAGING) pill.style.display = signedIn ? '' : 'none';
   // Beta upgrade banner: show when signed in with a beta account on staging
@@ -9219,15 +9365,32 @@ function renderPacingIQ() {
   if (!el) return;
   const iq = computePacingIQ();
   if (!iq) {
-    el.innerHTML = `<div class="piq-card"><div class="fp-sub">Add splits when logging races to unlock your Pacing IQ.</div></div>`;
+    el.innerHTML = `<div class="insight-card piq-card">
+      <div class="insight-card-header">
+        <div>
+          <div class="insight-card-kicker">Pacing IQ</div>
+          <div class="insight-card-title">Race Rhythm</div>
+        </div>
+        <div class="piq-persona-icon">🧠</div>
+      </div>
+      <div class="insight-empty">
+        <div class="insight-empty-title">Unlock Your Pacing Pattern</div>
+        <div class="insight-empty-copy">Add splits when logging races to reveal whether you pace aggressively, evenly, or fade late.</div>
+      </div>
+    </div>`;
     return;
   }
   const m = PIQ_META[iq.persona];
   const d = iq.distribution;
-  el.innerHTML = `<div class="piq-card">
-    <div class="piq-persona-icon">${m.icon}</div>
-    <div class="piq-persona-label">${m.label}</div>
-    <div class="piq-sub" style="font-size:11px;color:var(--muted);margin-bottom:.5rem">${m.desc} · ${iq.totalAnalyzed} races analysed</div>
+  el.innerHTML = `<div class="insight-card piq-card">
+    <div class="insight-card-header">
+      <div>
+        <div class="insight-card-kicker">Pacing IQ</div>
+        <div class="insight-card-title">${m.label}</div>
+      </div>
+      <div class="piq-persona-icon">${m.icon}</div>
+    </div>
+    <div class="insight-foot" style="margin-top:0;padding-top:0;border-top:none;margin-bottom:.65rem">${m.desc} · ${iq.totalAnalyzed} races analysed</div>
     <div class="piq-dist-bar">
       ${d.neg ? `<div class="piq-dist-seg neg" style="flex:${d.neg}"></div>` : ''}
       ${d.even ? `<div class="piq-dist-seg even" style="flex:${d.even}"></div>` : ''}
@@ -9292,18 +9455,41 @@ function renderMomentumWidget() {
   if (!el) return;
   const mom = computeMomentum();
   if (!mom) {
-    el.innerHTML = `<div class="mom-card" style="background:var(--surface2)"><div style="color:var(--muted);font-size:12px">Race more to build your momentum score.</div></div>`;
+    el.innerHTML = `<div class="insight-card mom-card">
+      <div class="insight-card-header">
+        <div>
+          <div class="insight-card-kicker">Career Momentum</div>
+          <div class="insight-card-title">Form Trend</div>
+        </div>
+        <div class="insight-card-badge">Trend</div>
+      </div>
+      <div class="insight-empty">
+        <div class="insight-empty-title">Build A Baseline</div>
+        <div class="insight-empty-copy">Race a little more across the year to see whether your form is improving, holding steady, or cooling off.</div>
+      </div>
+    </div>`;
     return;
   }
   const cls = mom.score >= 0.97 ? 'hot' : mom.score < 0.90 ? 'cold' : '';
   const arrowIcon = mom.arrow === 'up' ? '↑' : mom.arrow === 'down' ? '↓' : '→';
-  el.innerHTML = `<div class="mom-card">
-    <div>
+  const badge = cls === 'hot' ? 'Hot' : cls === 'cold' ? 'Cooling' : 'Steady';
+  el.innerHTML = `<div class="insight-card mom-card">
+    <div class="insight-card-header">
+      <div>
+        <div class="insight-card-kicker">Career Momentum</div>
+        <div class="insight-card-title">Form Trend</div>
+      </div>
+      <div class="insight-card-badge">${badge}</div>
+    </div>
+    <div class="insight-stat-row">
+      <div>
       <div class="mom-score ${cls}">${mom.score.toFixed(2)}</div>
       <div class="mom-label">Momentum</div>
       <div class="mom-sub">${arrowIcon} vs last block</div>
+      </div>
+      <div class="mom-spark">${renderSparklineSVG(mom.recentRatios, 108, 42, cls === 'hot' ? 'var(--green)' : cls === 'cold' ? 'var(--orange)' : 'var(--white)')}</div>
     </div>
-    <div class="mom-spark">${renderSparklineSVG(mom.recentRatios, 80, 30, cls === 'hot' ? 'var(--green)' : cls === 'cold' ? 'var(--orange)' : 'var(--white)')}</div>
+    <div class="insight-foot">Weighted against your recent personal-best equivalents, this shows whether your results are trending stronger or softer over time.</div>
   </div>`;
 }
 
@@ -9405,25 +9591,60 @@ function renderAgeGradeWidget() {
   const el = document.getElementById('ageGradeWidgetContent');
   if (!el) return;
   if (!athlete || !athlete.gender || !athlete.ageGroup) {
-    el.innerHTML = `<div class="ag-widget"><div style="color:var(--muted);font-size:12px">Add gender + age group to your profile to unlock age-grade tracking.</div></div>`;
+    el.innerHTML = `<div class="insight-card ag-widget">
+      <div class="insight-card-header">
+        <div>
+          <div class="insight-card-kicker">Age-Grade Score</div>
+          <div class="insight-card-title">Performance Context</div>
+        </div>
+        <div class="insight-card-badge">WA</div>
+      </div>
+      <div class="insight-empty">
+        <div class="insight-empty-title">Profile Needed</div>
+        <div class="insight-empty-copy">Add gender and age group in your profile to compare your road-race performances against age-graded standards.</div>
+      </div>
+    </div>`;
     return;
   }
   const hist = computeAgeGradeHistory();
   if (!hist) {
-    el.innerHTML = `<div class="ag-widget"><div style="color:var(--muted);font-size:12px">Log 5K, 10K, Half Marathon, or Marathon races to see your age-grade trajectory.</div></div>`;
+    el.innerHTML = `<div class="insight-card ag-widget">
+      <div class="insight-card-header">
+        <div>
+          <div class="insight-card-kicker">Age-Grade Score</div>
+          <div class="insight-card-title">Performance Context</div>
+        </div>
+        <div class="insight-card-badge">Road</div>
+      </div>
+      <div class="insight-empty">
+        <div class="insight-empty-title">Need Classic Distances</div>
+        <div class="insight-empty-copy">Log 5K, 10K, Half Marathon, or Marathon results to unlock your age-grade trend line.</div>
+      </div>
+    </div>`;
     return;
   }
   const latest = hist[hist.length - 1];
   const prev = hist.length >= 2 ? hist[hist.length - 2] : null;
   const trend = prev ? (latest.pct - prev.pct > 0.5 ? '↑' : latest.pct - prev.pct < -0.5 ? '↓' : '→') : '';
   const sparkVals = hist.map(h => h.pct);
-  el.innerHTML = `<div class="ag-widget">
-    <div>
+  const tone = trend==='↑'?'var(--green)':trend==='↓'?'#ef4444':'var(--muted)';
+  el.innerHTML = `<div class="insight-card ag-widget">
+    <div class="insight-card-header">
+      <div>
+        <div class="insight-card-kicker">Age-Grade Score</div>
+        <div class="insight-card-title">Performance Context</div>
+      </div>
+      <div class="insight-card-badge">${latest.distance}</div>
+    </div>
+    <div class="insight-stat-row">
+      <div>
       <div class="ag-pct">${latest.pct.toFixed(1)}%</div>
       <div class="ag-label">Age-Grade</div>
-      <div class="ag-trend" style="color:${trend==='↑'?'var(--green)':trend==='↓'?'#ef4444':'var(--muted)'}">${trend}</div>
+      <div class="ag-trend" style="color:${tone}">${trend || '→'}</div>
+      </div>
+      <div class="ag-spark">${renderSparklineSVG(sparkVals, 120, 44, 'var(--green)')}</div>
     </div>
-    <div class="ag-spark">${renderSparklineSVG(sparkVals, 100, 35, 'var(--green)')}</div>
+    <div class="insight-foot">Latest benchmark from ${latest.distance} · ${latest.raceName} on ${fmtDate(latest.date)}</div>
   </div>`;
 }
 
@@ -9533,14 +9754,50 @@ async function renderRaceDNA() {
   const el = document.getElementById('raceDNAContent');
   if (!el) return;
   if (!races.length || races.filter(r=>r.city).length < 3) {
-    el.innerHTML = `<div style="color:var(--muted);font-size:12px;padding:.5rem 0">Log at least 3 races with city data to unlock Race DNA.</div>`;
+    el.innerHTML = `<div class="insight-card dna-card">
+      <div class="insight-card-header">
+        <div>
+          <div class="insight-card-kicker">Race DNA</div>
+          <div class="insight-card-title">Temperature Fit</div>
+        </div>
+        <div class="insight-card-badge">Weather</div>
+      </div>
+      <div class="insight-empty">
+        <div class="insight-empty-title">Need More Weather-Tagged Races</div>
+        <div class="insight-empty-copy">Log at least three races with city data so we can learn the conditions where you race best.</div>
+      </div>
+    </div>`;
     return;
   }
-  el.innerHTML = `<div style="color:var(--muted);font-size:12px;padding:.5rem 0">Analysing race conditions…</div>`;
+  el.innerHTML = `<div class="insight-card dna-card">
+    <div class="insight-card-header">
+      <div>
+        <div class="insight-card-kicker">Race DNA</div>
+        <div class="insight-card-title">Temperature Fit</div>
+      </div>
+      <div class="insight-card-badge">Loading</div>
+    </div>
+    <div class="insight-empty">
+      <div class="insight-empty-title">Analysing Race Conditions</div>
+      <div class="insight-empty-copy">Pulling weather context from your logged race history…</div>
+    </div>
+  </div>`;
   try {
     const dna = await computeRaceDNA();
     if (!dna) {
-      el.innerHTML = `<div style="color:var(--muted);font-size:12px;padding:.5rem 0">Need more race weather data. Check back later.</div>`;
+      el.innerHTML = `<div class="insight-card dna-card">
+        <div class="insight-card-header">
+          <div>
+            <div class="insight-card-kicker">Race DNA</div>
+            <div class="insight-card-title">Temperature Fit</div>
+          </div>
+          <div class="insight-card-badge">Weather</div>
+        </div>
+        <div class="insight-empty">
+          <div class="insight-empty-title">Weather Data Still Thin</div>
+          <div class="insight-empty-copy">We need a bit more reliable race-weather history before this becomes trustworthy.</div>
+        </div>
+      </div>`;
       return;
     }
     const maxAvg = Math.max(...dna.buckets.map(b => b.avgRatio), 0.01);
@@ -9560,14 +9817,34 @@ async function renderRaceDNA() {
         ? `<div class="dna-next">Next race: <span style="color:var(--muted)">${nextRace.name || nextRace.location || ''}</span> · <span class="match" style="color:${outlook.tone}">${outlook.label}</span> around ${Math.round(outlook.expected)}°C</div>`
         : `<div class="dna-next">Next race: <span style="color:var(--muted)">${nextRace.name || nextRace.location || ''}</span></div>`;
     }
-    el.innerHTML = `<div class="dna-card">
+    el.innerHTML = `<div class="insight-card dna-card">
+      <div class="insight-card-header">
+        <div>
+          <div class="insight-card-kicker">Race DNA</div>
+          <div class="insight-card-title">Temperature Fit</div>
+        </div>
+        <div class="insight-card-badge">${dna.racesAnalyzed} races</div>
+      </div>
       <div class="dna-headline">You race best in <span class="dna-best">${dna.bestRange}°C</span></div>
+      <div class="dna-sub">This is the temperature band where your race outcomes trend strongest across your weather-tagged history.</div>
       <div class="dna-buckets">${bucketHtml}</div>
-      <div class="dna-next" style="margin-top:1.5rem">Based on ${dna.racesAnalyzed} races with weather data</div>
+      <div class="dna-next" style="margin-top:1rem">Based on ${dna.racesAnalyzed} races with weather data</div>
       ${nextMatch}
     </div>`;
   } catch (e) {
-    el.innerHTML = `<div style="color:var(--muted);font-size:12px;padding:.5rem 0">Weather data unavailable.</div>`;
+    el.innerHTML = `<div class="insight-card dna-card">
+      <div class="insight-card-header">
+        <div>
+          <div class="insight-card-kicker">Race DNA</div>
+          <div class="insight-card-title">Temperature Fit</div>
+        </div>
+        <div class="insight-card-badge">Offline</div>
+      </div>
+      <div class="insight-empty">
+        <div class="insight-empty-title">Weather Data Unavailable</div>
+        <div class="insight-empty-copy">We couldn’t fetch enough weather context right now. Try again in a moment.</div>
+      </div>
+    </div>`;
   }
 }
 
@@ -11696,13 +11973,20 @@ function openUpcoming(){
   if (!items.length) {
     list.innerHTML = '<div class="upcoming-empty">No upcoming races.<br>Tap "+ Add Race" to plan your season.</div>';
   } else {
-    list.innerHTML = items.map(r => {
+    list.innerHTML = `<div class="upcoming-row-stack">${items.map((r, idx) => {
       const daysLeft = Math.ceil((new Date(r.date+'T00:00:00') - new Date()) / 86400000);
       const isActive = nextRace && r.name === nextRace.name && r.date === nextRace.date;
       const pri = r.priority;
       const loc = r.location || '';
       const priorityClass = pri ? ` upcoming-row-priority-${pri.toLowerCase()}` : '';
-      return `<div class="upcoming-row${priorityClass}${isActive?' upcoming-row-active':''}" onclick="setAsNextRace(${r.id})">
+      const previous = idx ? items[idx - 1] : null;
+      const gapDays = previous
+        ? Math.round((new Date(r.date + 'T00:00:00') - new Date(previous.date + 'T00:00:00')) / 86400000)
+        : null;
+      const gapMarkup = previous
+        ? `<div class="upcoming-gap">${gapDays} day${gapDays === 1 ? '' : 's'} between races</div>`
+        : '';
+      return `${gapMarkup}<div class="upcoming-row${priorityClass}${isActive?' upcoming-row-active':''}" onclick="setAsNextRace(${r.id})">
         ${pri ? `<span class="pri-badge pri-${pri.toLowerCase()}">${pri}</span>` : '<span style="width:18px;flex-shrink:0"></span>'}
         <div class="upcoming-row-main">
           <div class="upcoming-row-name">${r.name}${isActive?' <span class="upcoming-row-status">Active</span>':''}</div>
@@ -11714,7 +11998,7 @@ function openUpcoming(){
         </div>
         <button class="upcoming-del" onclick="event.stopPropagation();removeUpcoming(${r.id})" title="Remove">✕</button>
       </div>`;
-    }).join('');
+    }).join('')}</div>`;
   }
   openM('upcomingModal');
 }
@@ -12626,7 +12910,7 @@ function renderPBSections(pbGrouped, cardClass){
     const meta=SPORT_META[sport];
     const distVal=d=>{if(DIST_KM[d])return DIST_KM[d];const n=parseFloat(d);return isNaN(n)?Infinity:n;};
     const cards=Object.entries(pbGrouped[sport]).sort(([a],[b])=>distVal(a)-distVal(b)).map(([d,r])=>`
-      <div class="${cardClass} s-${sport}"${isDash ? ` onclick="openRaceDetail(${JSON.stringify(r.id)})" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openRaceDetail(${JSON.stringify(r.id)})}"` : ''}>
+      <div class="${cardClass} s-${sport}" onclick="openRaceView(${r.id})" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openRaceView(${r.id});}" title="View result">
         <div class="${pfx}-dist">${d}</div>
         <div class="${pfx}-time">${r.time}</div>
         <div class="${pfx}-race">${r.name}${!isDash?' · '+fmtDate(r.date):''}</div>
