@@ -38,7 +38,10 @@ function main() {
   const args = parseArgs(process.argv.slice(2));
   const baseRows = JSON.parse(fs.readFileSync(args.inputJson, 'utf8'));
   const manualRows = loadManualRows(args.manualJson);
-  const preservedRows = baseRows.filter(row => row.source_site !== 'manual-screenshot');
+  const preservedRows = baseRows.filter(row => (
+    row.source_site !== 'manual-screenshot'
+    && row.source_url !== 'https://www.ahotu.com/event/bank-of-america-chicago-marathon'
+  ));
   const mergedRows = dedupeRows([...preservedRows, ...manualRows]);
   const serialized = `${JSON.stringify(mergedRows, null, 2)}\n`;
   fs.writeFileSync(args.outputJson, serialized);

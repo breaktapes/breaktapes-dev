@@ -64,23 +64,6 @@
     "source_priority": 75
   },
   {
-    "name": "Bank of America Chicago Marathon",
-    "discipline": "road-running",
-    "dist": "Marathon",
-    "dist_km": 42.2,
-    "city": "Chicago",
-    "region": "Illinois",
-    "country": "United States",
-    "event_date": "2026-10-10",
-    "event_end_date": "2026-10-11",
-    "series": "Abbott World Marathon Majors",
-    "source_url": "https://www.ahotu.com/event/bank-of-america-chicago-marathon",
-    "course_summary": "Fast road marathon across Chicago neighborhoods with a flat route and strong PB potential if weather cooperates.",
-    "surface": "Road",
-    "elevation_profile": "Flat",
-    "source_priority": 75
-  },
-  {
     "name": "TCS New York City Marathon",
     "discipline": "road-running",
     "dist": "Marathon",
