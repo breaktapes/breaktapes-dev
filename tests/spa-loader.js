@@ -151,6 +151,7 @@ function loadSPA({
   // (before the auth promise resolves) so they're no-ops in the test environment.
   global.initAllLocationPickers = () => {};
   global.initRaceNamePicker     = () => {};
+  global.initUpcomingRacePicker = () => {};
   global.initModalSwipe         = () => {};
   global.handleStravaCallback   = () => {};
   global.applyEnvRestrictions   = () => {};

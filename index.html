@@ -4080,6 +4080,29 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 .dna-bucket-label{font-size:8px;color:var(--muted);text-align:center}
 .dna-next{font-size:12px;color:var(--muted);margin-top:.75rem}
 .dna-next .match{color:var(--green);font-weight:600}
+.race-inline-hint{margin-top:.85rem;padding:.8rem .9rem;border:1px solid rgba(255,77,0,0.25);background:rgba(255,77,0,0.08);border-radius:8px;font-size:12px;color:var(--white)}
+.race-inline-hint .hint-title{font-family:var(--headline);font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--orange);margin-bottom:.25rem}
+.race-inline-hint .hint-copy{color:var(--muted);line-height:1.45}
+.race-inline-hint .hint-actions{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.65rem}
+.race-inline-hint .hint-btn{appearance:none;border:1px solid rgba(255,77,0,0.3);background:rgba(255,77,0,0.14);color:var(--white);border-radius:6px;padding:.45rem .7rem;font-family:var(--headline);font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;cursor:pointer}
+.race-inline-hint .hint-btn.secondary{border-color:var(--border2);background:rgba(245,245,245,0.06);color:var(--muted)}
+.nr-insights{margin-top:1rem;padding:1rem;border:1px solid var(--border2);border-radius:10px;background:var(--surface2)}
+.nr-insights-empty{font-size:12px;color:var(--muted);line-height:1.45}
+.nr-insights-head{font-family:var(--headline);font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--orange);margin-bottom:.5rem}
+.nr-insights-block{margin-top:.85rem}
+.nr-insights-title{font-family:var(--headline);font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--white);margin-bottom:.35rem}
+.nr-insights-copy{font-size:12px;color:var(--muted);line-height:1.45}
+.nr-insights-tags{display:flex;flex-wrap:wrap;gap:.45rem;margin-top:.5rem}
+.nr-insights-tag{display:inline-flex;align-items:center;gap:.3rem;font-size:11px;font-weight:700;border-radius:999px;padding:.25rem .55rem;background:var(--surface3);border:1px solid var(--border2);color:var(--white)}
+.nr-insights-link{display:inline-flex;align-items:center;gap:.35rem;margin-top:.45rem;font-size:11px;font-weight:700;color:var(--orange);text-decoration:none}
+.nr-picker-wrap{position:relative}
+.nr-picker-drop{position:absolute;left:0;right:0;top:calc(100% + 6px);background:var(--surface2);border:1px solid var(--border2);border-radius:8px;box-shadow:0 10px 24px rgba(0,0,0,0.35);max-height:280px;overflow:auto;z-index:60;display:none}
+.nr-picker-drop.open{display:block}
+.nr-picker-opt{padding:.8rem .9rem;border-bottom:1px solid var(--border);cursor:pointer}
+.nr-picker-opt:last-child{border-bottom:none}
+.nr-picker-opt:hover,.nr-picker-opt.hi{background:rgba(255,77,0,0.08)}
+.nr-picker-name{font-size:13px;font-weight:700;color:var(--white)}
+.nr-picker-sub{margin-top:.2rem;font-size:11px;color:var(--muted);line-height:1.4}
 
 /* Performance Map */
 .map-mode-btn{font-family:var(--headline);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;background:rgba(13,13,13,0.88);color:var(--muted);border:1px solid var(--border2);border-radius:5px;padding:5px 10px;cursor:pointer;transition:all .2s}
@@ -4968,6 +4991,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
             </select>
           </div>
         </div>
+        <div id="mFutureHint" class="race-inline-hint" style="display:none"></div>
       </div>
     </div>
     <div class="modal-foot">
@@ -5023,6 +5047,10 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
             <option value="B">⭐ B Race — Important</option>
             <option value="C">🏃 C Race — Training / Fun</option>
           </select>
+        </div>
+        <div id="nrInsights" class="nr-insights">
+          <div class="nr-insights-head">Upcoming Insights</div>
+          <div class="nr-insights-empty">Pick a future race to preview course fit, weather expectations, and your Race DNA outlook.</div>
         </div>
       </div>
     </div>
@@ -5749,6 +5777,9 @@ let flatlayCategoryFilter = 'all';
 let flatlaySubcategoryFilter = 'all';
 let flatlayBrandFilter = 'all';
 let flatlayAddContext = null;
+let _nrPickerReady = false;
+let _nrSelectedCatalogRace = null;
+let _pendingUpcomingRedirect = null;
 
 const FLATLAY_CATEGORIES = ['footwear', 'apparel', 'wearables', 'bike', 'swim', 'hydration', 'nutrition', 'recovery', 'accessories'];
 const FLATLAY_SUBCATEGORY_OPTIONS = {
@@ -5865,28 +5896,283 @@ function initSupabaseClient() {
   return supabaseClient;
 }
 
-async function loadRaceCatalog() {
-  const client = initSupabaseClient();
-  if (!client) { raceDbError = true; return false; }
+function todayYmd() {
+  return new Date().toISOString().slice(0,10);
+}
+
+function isFutureDate(dateStr) {
+  return !!dateStr && dateStr > todayYmd();
+}
+
+function buildLocationLabel(city, country) {
+  return [city, country].filter(Boolean).join(', ');
+}
+
+function mapCatalogRaceRow(r) {
+  return {
+    name:       r.name,
+    aliases:    r.aliases || [],
+    type:       r.type,
+    discipline: r.discipline || '',
+    dist:       r.dist,
+    distKm:     r.dist_km !== null ? Number(r.dist_km) : null,
+    customDist: r.custom_dist || '',
+    city:       r.city,
+    region:     r.region || '',
+    country:    r.country,
+    venue:      r.venue || '',
+    lat:        r.lat !== null && r.lat !== undefined ? Number(r.lat) : null,
+    lng:        r.lng !== null && r.lng !== undefined ? Number(r.lng) : null,
+    timezone:   r.timezone || '',
+    year:       r.year,
+    eventDate:  r.event_date,
+    eventEndDate: r.event_end_date || '',
+    month:      r.month,
+    day:        r.day,
+    sourceSite: r.source_site || '',
+    sourceUrl:  r.source_url || '',
+    registrationUrl: r.registration_url || '',
+    sourcePage: r.source_page ?? null,
+    series:     r.series || '',
+    registrationStatus: r.registration_status || '',
+    swimType:   r.swim_type || '',
+    bikeProfile:r.bike_profile || '',
+    runProfile: r.run_profile || '',
+    airTempHighC: r.air_temp_high_c !== null && r.air_temp_high_c !== undefined ? Number(r.air_temp_high_c) : null,
+    airTempLowC:  r.air_temp_low_c !== null && r.air_temp_low_c !== undefined ? Number(r.air_temp_low_c) : null,
+    waterTempC:   r.water_temp_c !== null && r.water_temp_c !== undefined ? Number(r.water_temp_c) : null,
+    humidityPct:  r.humidity_pct !== null && r.humidity_pct !== undefined ? Number(r.humidity_pct) : null,
+    windKph:      r.wind_kph !== null && r.wind_kph !== undefined ? Number(r.wind_kph) : null,
+    weatherProfileSource: r.weather_profile_source || '',
+    courseSummary: r.course_summary || '',
+    surface:    r.surface || '',
+    elevationProfile: r.elevation_profile || '',
+    sourcePriority: r.source_priority ?? null,
+  };
+}
+
+async function fetchLocalRaceCatalog() {
   try {
-    const { data, error } = await client
+    for (const file of ['./public/upcoming-race-catalog.json', './public/ironman-race-catalog.json']) {
+      const res = await fetch(file, { cache: 'no-store' });
+      if (!res.ok) continue;
+      const data = await res.json();
+      if (!Array.isArray(data) || !data.length) continue;
+      return data.map(mapCatalogRaceRow);
+    }
+    return null;
+  } catch (err) {
+    return null;
+  }
+}
+
+function buildUpcomingRaceFromSource(source, overrides = {}) {
+  const date = overrides.date || source.date || source.eventDate || '';
+  const city = overrides.city ?? source.city ?? '';
+  const country = overrides.country ?? source.country ?? '';
+  return {
+    id: overrides.id || source.id || Date.now(),
+    name: overrides.name || source.name || '',
+    date,
+    location: overrides.location || buildLocationLabel(city, country),
+    distance: overrides.distance || source.distance || source.dist || '',
+    type: overrides.type || source.type || 'run',
+    priority: overrides.priority || source.priority || 'A',
+    city,
+    region: overrides.region ?? source.region ?? '',
+    country,
+    venue: overrides.venue ?? source.venue ?? '',
+    lat: overrides.lat ?? source.lat ?? source.latitude ?? null,
+    lng: overrides.lng ?? source.lng ?? source.longitude ?? null,
+    timezone: overrides.timezone || source.timezone || '',
+    sourceSite: overrides.sourceSite || source.sourceSite || source.source_site || '',
+    sourceUrl: overrides.sourceUrl || source.sourceUrl || source.source_url || '',
+    registrationUrl: overrides.registrationUrl || source.registrationUrl || source.registration_url || overrides.sourceUrl || source.sourceUrl || source.source_url || '',
+    sourcePage: overrides.sourcePage ?? source.sourcePage ?? source.source_page ?? null,
+    series: overrides.series || source.series || '',
+    discipline: overrides.discipline || source.discipline || '',
+    registrationStatus: overrides.registrationStatus || source.registrationStatus || source.registration_status || '',
+    swimType: overrides.swimType || source.swimType || source.swim_type || '',
+    bikeProfile: overrides.bikeProfile || source.bikeProfile || source.bike_profile || '',
+    runProfile: overrides.runProfile || source.runProfile || source.run_profile || '',
+    airTempHighC: overrides.airTempHighC ?? source.airTempHighC ?? source.air_temp_high_c ?? null,
+    airTempLowC: overrides.airTempLowC ?? source.airTempLowC ?? source.air_temp_low_c ?? null,
+    waterTempC: overrides.waterTempC ?? source.waterTempC ?? source.water_temp_c ?? null,
+    humidityPct: overrides.humidityPct ?? source.humidityPct ?? source.humidity_pct ?? null,
+    windKph: overrides.windKph ?? source.windKph ?? source.wind_kph ?? null,
+    weatherProfileSource: overrides.weatherProfileSource || source.weatherProfileSource || source.weather_profile_source || '',
+    courseSummary: overrides.courseSummary || source.courseSummary || source.course_summary || '',
+    surface: overrides.surface || source.surface || '',
+    elevationProfile: overrides.elevationProfile || source.elevationProfile || source.elevation_profile || '',
+    eventEndDate: overrides.eventEndDate || source.eventEndDate || source.event_end_date || '',
+  };
+}
+
+function upsertUpcomingRace(newRace, { setActive = true } = {}) {
+  const normalized = buildUpcomingRaceFromSource(newRace, newRace);
+  const idx = upcomingRaces.findIndex(r =>
+    (normalized.id && r.id === normalized.id) ||
+    (r.name === normalized.name && r.date === normalized.date && (r.location || '') === (normalized.location || ''))
+  );
+  if (idx >= 0) upcomingRaces[idx] = { ...upcomingRaces[idx], ...normalized };
+  else upcomingRaces.push(normalized);
+  upcomingRaces.sort((a,b) => (a.date || '').localeCompare(b.date || ''));
+  sv('fl2_upcoming', upcomingRaces);
+  if (setActive && (normalized.priority === 'A' || !nextRace)) {
+    nextRace = { ...normalized };
+    sv('fl2_nr', nextRace);
+  }
+  return normalized;
+}
+
+function clearHistoryFutureHint(targetId) {
+  const el = document.getElementById(targetId);
+  if (!el) return;
+  el.style.display = 'none';
+  if (targetId === 'rdNewHint') {
+    el.innerHTML = `
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Type the race name above to auto-fill location and date`;
+  } else {
+    el.innerHTML = '';
+  }
+}
+
+function showHistoryFutureHint(targetId, draft, message, closeModalId) {
+  const el = document.getElementById(targetId);
+  if (!el) return;
+  _pendingUpcomingRedirect = { draft, closeModalId };
+  el.innerHTML = `
+    <div class="hint-title">Future Race Detected</div>
+    <div class="hint-copy">${message}</div>
+    <div class="hint-actions">
+      <button class="hint-btn" type="button" onclick="savePendingUpcomingRedirect()">Save To Upcoming</button>
+      <button class="hint-btn secondary" type="button" onclick="clearPendingUpcomingRedirect('${targetId}')">Dismiss</button>
+    </div>`;
+  el.style.display = '';
+}
+
+function clearPendingUpcomingRedirect(targetId) {
+  _pendingUpcomingRedirect = null;
+  clearHistoryFutureHint(targetId);
+}
+
+function savePendingUpcomingRedirect() {
+  if (!_pendingUpcomingRedirect?.draft) return;
+  upsertUpcomingRace(_pendingUpcomingRedirect.draft);
+  if (_pendingUpcomingRedirect.closeModalId) closeM(_pendingUpcomingRedirect.closeModalId);
+  clearPendingUpcomingRedirect('mFutureHint');
+  clearPendingUpcomingRedirect('rdNewHint');
+  renderCountdown();
+  renderRaceDayForecast();
+  renderRaceDNA();
+  showBtToast('Saved to upcoming races');
+}
+
+function migrateFutureHistoryToUpcoming() {
+  const futureRaces = races.filter(r => isFutureDate(r.date));
+  if (!futureRaces.length) return false;
+  futureRaces.forEach(r => {
+    upsertUpcomingRace(buildUpcomingRaceFromSource(r, {
+      id: r.id,
+      name: r.name,
+      date: r.date,
+      distance: r.distance,
+      priority: r.priority || 'A',
+    }), { setActive: !nextRace });
+  });
+  races = races.filter(r => !isFutureDate(r.date));
+  localStorage.setItem('fl2_races', JSON.stringify(races));
+  if (nextRace && !isFutureDate(nextRace.date) && upcomingRaces.some(r => r.name === nextRace.name && r.date === nextRace.date)) {
+    nextRace = upcomingRaces.find(r => r.date >= todayYmd()) || nextRace;
+    localStorage.setItem('fl2_nr', JSON.stringify(nextRace));
+  } else if (!nextRace && upcomingRaces.length) {
+    nextRace = upcomingRaces.find(r => r.date >= todayYmd()) || upcomingRaces[0] || null;
+    localStorage.setItem('fl2_nr', JSON.stringify(nextRace));
+  }
+  return true;
+}
+
+async function loadRaceCatalog() {
+  const isLocalPreview = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+  if (isLocalPreview) {
+    const localData = await fetchLocalRaceCatalog();
+    if (localData?.length) {
+      raceDb = localData;
+      raceDbLoaded = true;
+      raceDbError = false;
+      return true;
+    }
+  }
+  const client = initSupabaseClient();
+  if (!client) {
+    const localData = await fetchLocalRaceCatalog();
+    if (localData?.length) {
+      raceDb = localData;
+      raceDbLoaded = true;
+      raceDbError = false;
+      return true;
+    }
+    raceDbError = true;
+    return false;
+  }
+  try {
+    let { data, error } = await client
       .from('race_catalog')
-      .select('name, aliases, type, dist, dist_km, custom_dist, city, country, year, event_date, month, day')
+      .select('name, aliases, type, discipline, dist, dist_km, custom_dist, city, region, country, venue, lat, lng, timezone, year, event_date, event_end_date, month, day, source_site, source_url, registration_url, source_page, series, registration_status, swim_type, bike_profile, run_profile, air_temp_high_c, air_temp_low_c, water_temp_c, humidity_pct, wind_kph, weather_profile_source, course_summary, surface, elevation_profile, source_priority')
       .order('name', { ascending: true });
+    if (error) {
+      const legacy = await client
+        .from('race_catalog')
+        .select('name, aliases, type, dist, dist_km, custom_dist, city, country, year, event_date, month, day')
+        .order('name', { ascending: true });
+      data = legacy.data;
+      error = legacy.error;
+    }
     if (error) throw error;
-    raceDb = (data || []).map(r => ({
+    if (!data?.length) {
+      const localData = await fetchLocalRaceCatalog();
+      if (localData?.length) data = localData;
+    }
+    raceDb = (data || []).map(r => r.source_site !== undefined || r.sourceSite !== undefined ? mapCatalogRaceRow(r) : ({
       name:       r.name,
       aliases:    r.aliases || [],
       type:       r.type,
+      discipline: r.discipline || '',
       dist:       r.dist,
-      distKm:     r.dist_km !== null ? Number(r.dist_km) : null,
-      customDist: r.custom_dist || '',
+      distKm:     r.dist_km !== null && r.dist_km !== undefined ? Number(r.dist_km) : (r.distKm ?? null),
+      customDist: r.custom_dist || r.customDist || '',
       city:       r.city,
+      region:     r.region || '',
       country:    r.country,
+      venue:      r.venue || '',
+      lat:        r.lat ?? null,
+      lng:        r.lng ?? null,
+      timezone:   r.timezone || '',
       year:       r.year,
-      eventDate:  r.event_date,
+      eventDate:  r.event_date || r.eventDate,
+      eventEndDate: r.event_end_date || r.eventEndDate || '',
       month:      r.month,
       day:        r.day,
+      sourceSite: r.source_site || r.sourceSite || '',
+      sourceUrl:  r.source_url || r.sourceUrl || '',
+      registrationUrl: r.registration_url || r.registrationUrl || '',
+      sourcePage: r.source_page ?? r.sourcePage ?? null,
+      series:     r.series || '',
+      registrationStatus: r.registration_status || r.registrationStatus || '',
+      swimType:   r.swim_type || r.swimType || '',
+      bikeProfile:r.bike_profile || r.bikeProfile || '',
+      runProfile: r.run_profile || r.runProfile || '',
+      airTempHighC: r.air_temp_high_c ?? r.airTempHighC ?? null,
+      airTempLowC:  r.air_temp_low_c ?? r.airTempLowC ?? null,
+      waterTempC:   r.water_temp_c ?? r.waterTempC ?? null,
+      humidityPct:  r.humidity_pct ?? r.humidityPct ?? null,
+      windKph:      r.wind_kph ?? r.windKph ?? null,
+      weatherProfileSource: r.weather_profile_source || r.weatherProfileSource || '',
+      courseSummary: r.course_summary || r.courseSummary || '',
+      surface:    r.surface || '',
+      elevationProfile: r.elevation_profile || r.elevationProfile || '',
+      sourcePriority: r.source_priority ?? r.sourcePriority ?? null,
     }));
     raceDbLoaded = true;
     return true;
@@ -6812,6 +7098,7 @@ function applyRemoteState(row) {
   } finally {
     suppressRemoteSync = false;
   }
+  migrateFutureHistoryToUpcoming();
   return true;
 }
 
@@ -7054,6 +7341,7 @@ async function refreshAuthState(session) {
   updateAuthUI();
   if (authUser) {
     await loadRemoteState();
+    if (migrateFutureHistoryToUpcoming()) scheduleRemoteStateSync();
     await loadFlatlayData(true);
     await loadAchievementData(true);
     await syncUserRacesAndAchievements(true);
@@ -7991,9 +8279,70 @@ function renderDashInsights() {
 
 /* ── Course info for countdown ── */
 let courseCache = JSON.parse(localStorage.getItem('fl2_course_cache')||'{}');
+function getRaceCityCountry(race) {
+  if (!race) return { city: '', country: '' };
+  if (race.city || race.country) return { city: race.city || '', country: race.country || '' };
+  const parts = String(race.location || '').split(',').map(s => s.trim()).filter(Boolean);
+  if (!parts.length) return { city: '', country: '' };
+  if (parts.length === 1) return { city: parts[0], country: '' };
+  return { city: parts.slice(0, -1).join(', '), country: parts[parts.length - 1] };
+}
+
+function getRaceDisplayLocation(race) {
+  const { city, country } = getRaceCityCountry(race);
+  return race?.location || buildLocationLabel(city, country);
+}
+
+function getDisciplineLabel(race) {
+  const labels = {
+    'road-running': 'Road Running',
+    'trail-running': 'Trail Running',
+    cycling: 'Cycling',
+    triathlon: 'Triathlon',
+    swimming: 'Swimming',
+    hyrox: 'HYROX',
+  };
+  return labels[race?.discipline] || '';
+}
+
+function getRaceLocationInsight(race) {
+  if (!race) return null;
+  const parts = [
+    race.venue || '',
+    race.city || '',
+    race.region || '',
+    race.country || '',
+  ].filter(Boolean);
+  if (!parts.length) return null;
+  return {
+    title: parts.join(' · '),
+    detail: getDisciplineLabel(race) || race.series || '',
+  };
+}
+
+function buildCourseInfoFromCatalog(race) {
+  if (!race || (!race.swimType && !race.bikeProfile && !race.runProfile && !race.courseSummary && !race.registrationStatus && !race.surface && !race.elevationProfile && !race.discipline)) return null;
+  const tags = [
+    getDisciplineLabel(race),
+    race.swimType ? `Swim: ${race.swimType}` : '',
+    race.bikeProfile ? `Bike: ${race.bikeProfile}` : '',
+    race.runProfile ? `Run: ${race.runProfile}` : '',
+    race.surface ? `Surface: ${race.surface}` : '',
+    race.elevationProfile ? `Profile: ${race.elevationProfile}` : '',
+  ].filter(Boolean);
+  return {
+    tags,
+    highlight: race.courseSummary || '',
+    tip: race.registrationStatus ? `Status: ${race.registrationStatus}` : '',
+    sourceUrl: race.registrationUrl || race.sourceUrl || '',
+  };
+}
+
 async function fetchCourseInfo(race) {
   const strip = document.getElementById('courseInfoStrip');
   if (!race || !race.name) { strip.style.display='none'; return; }
+  const catalogInfo = buildCourseInfoFromCatalog(race);
+  if (catalogInfo) { renderCourseStrip(catalogInfo); return; }
   const key = `${race.name}_${race.date||''}`;
   if (courseCache[key]) { renderCourseStrip(courseCache[key]); return; }
   const apiKey = getApiKey();
@@ -8001,7 +8350,7 @@ async function fetchCourseInfo(race) {
   strip.innerHTML = `<span class="ci-load">Loading course info…</span>`;
   strip.style.display='flex';
   try {
-    const resp = await callClaude([{role:'user',content:`For the race "${race.name}" (${race.distance||''}, ${race.location||''}), return ONLY a JSON object with: terrain ("Flat","Rolling","Hilly","Technical"), surface ("Road","Trail","Mixed"), highlight (one short sentence about the course), tip (one short race tip). No explanation, just JSON.`}]);
+    const resp = await callClaude([{role:'user',content:`For the race "${race.name}" (${race.distance||''}, ${getRaceDisplayLocation(race)||''}), return ONLY a JSON object with: terrain ("Flat","Rolling","Hilly","Technical"), surface ("Road","Trail","Mixed"), highlight (one short sentence about the course), tip (one short race tip). No explanation, just JSON.`}]);
     const json = JSON.parse(resp.content[0].text.match(/\{[\s\S]*?\}/)[0]);
     courseCache[key] = json;
     sv('fl2_course_cache', courseCache);
@@ -8010,13 +8359,197 @@ async function fetchCourseInfo(race) {
 }
 function renderCourseStrip(info) {
   const strip = document.getElementById('courseInfoStrip');
-  const tags = [info.terrain, info.surface].filter(Boolean)
+  const tags = (info.tags && info.tags.length ? info.tags : [info.terrain, info.surface]).filter(Boolean)
     .map(t=>`<span class="ci-tag">${t}</span>`).join('');
   strip.innerHTML = `
     ${tags ? `<div class="ci-tags">${tags}</div>` : ''}
     ${info.highlight ? `<div class="ci-highlight">${info.highlight}</div>` : ''}
-    ${info.tip ? `<div class="ci-tip">💡 ${info.tip}</div>` : ''}`;
+    ${info.tip ? `<div class="ci-tip">💡 ${info.tip}</div>` : ''}
+    ${info.sourceUrl ? `<a class="nr-insights-link" href="${info.sourceUrl}" target="_blank" rel="noreferrer">View official race page ↗</a>` : ''}`;
   strip.style.display = '';
+}
+
+function bucketRangeToMidpoint(range) {
+  if (!range) return null;
+  if (range === '<5') return 2.5;
+  if (range === '>25') return 27.5;
+  const parts = range.split('-').map(Number);
+  return parts.length === 2 ? (parts[0] + parts[1]) / 2 : null;
+}
+
+async function getUpcomingWeatherInsight(race) {
+  if (!race?.date) return null;
+  const daysUntil = Math.ceil((new Date(race.date + 'T00:00:00') - new Date()) / 86400000);
+  if (daysUntil < 0) return null;
+  const location = getRaceDisplayLocation(race);
+  if (daysUntil > 14) {
+    if (race.airTempHighC != null || race.airTempLowC != null || race.waterTempC != null) {
+      return {
+        mode: 'catalog',
+        location,
+        label: `${daysUntil} DAYS`,
+        tempHigh: race.airTempHighC,
+        tempLow: race.airTempLowC,
+        waterTempC: race.waterTempC,
+        humidityPct: race.humidityPct,
+        wind: race.windKph,
+        note: race.weatherProfileSource === 'source-page'
+          ? 'Using climate expectations published on the race source page until the 14-day forecast window opens.'
+          : 'Using location-based climate expectations until the 14-day forecast window opens.',
+      };
+    }
+    return {
+      mode: 'pending',
+      location,
+      label: `${daysUntil} DAYS`,
+      note: 'Forecast becomes available 14 days before race day.',
+    };
+  }
+  const { city, country } = getRaceCityCountry(race);
+  const coord = await geocodeCityIfNeeded(city, country);
+  if (!coord) {
+    if (race.airTempHighC != null || race.airTempLowC != null || race.waterTempC != null) {
+      return {
+        mode: 'catalog',
+        location,
+        label: daysUntil === 0 ? 'RACE DAY' : `${daysUntil} DAYS`,
+        tempHigh: race.airTempHighC,
+        tempLow: race.airTempLowC,
+        waterTempC: race.waterTempC,
+        humidityPct: race.humidityPct,
+        wind: race.windKph,
+        note: 'Live forecast unavailable, showing catalog climate expectations.',
+      };
+    }
+    return null;
+  }
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${coord.lat}&longitude=${coord.lng}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max,weathercode&forecast_days=16&timezone=auto`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!data.daily) return null;
+    const idx = data.daily.time.indexOf(race.date);
+    if (idx < 0) return null;
+    return {
+      mode: 'forecast',
+      location,
+      label: daysUntil === 0 ? 'RACE DAY' : `${daysUntil} DAY${daysUntil === 1 ? '' : 'S'}`,
+      tempHigh: Math.round(data.daily.temperature_2m_max[idx]),
+      tempLow: Math.round(data.daily.temperature_2m_min[idx]),
+      precip: data.daily.precipitation_sum[idx],
+      wind: Math.round(data.daily.windspeed_10m_max[idx]),
+      weatherCode: data.daily.weathercode[idx],
+      waterTempC: race.waterTempC,
+      note: 'Live race-week forecast from Open-Meteo.',
+    };
+  } catch (e) {
+    return null;
+  }
+}
+
+async function getRaceDnaOutlook(race) {
+  const dna = await computeRaceDNA();
+  if (!dna) return null;
+  const weather = await getUpcomingWeatherInsight(race);
+  if (!weather || (weather.tempHigh == null && weather.tempLow == null)) return null;
+  const expected = ((weather.tempHigh ?? weather.tempLow) + (weather.tempLow ?? weather.tempHigh)) / 2;
+  const preferred = bucketRangeToMidpoint(dna.bestRange);
+  if (preferred == null) return null;
+  const delta = Math.abs(expected - preferred);
+  const label = delta <= 2 ? 'Strong match' : delta <= 6 ? 'Neutral match' : 'Tough conditions';
+  const tone = delta <= 2 ? 'var(--green)' : delta <= 6 ? 'var(--white)' : 'var(--orange)';
+  return {
+    label,
+    tone,
+    expected,
+    bestRange: dna.bestRange,
+    racesAnalyzed: dna.racesAnalyzed,
+  };
+}
+
+function getUpcomingRaceDraft() {
+  const name = (document.getElementById('nrN')?.value || '').trim();
+  const date = document.getElementById('nrDt')?.value || '';
+  const type = document.getElementById('nrType')?.value || 'run';
+  let distance = document.getElementById('nrDis')?.value || '';
+  if (distance === 'Custom…') distance = (document.getElementById('nrCustomDist')?.value || '').trim();
+  const city = (document.getElementById('nrCi')?.value || '').trim();
+  const country = (document.getElementById('nrCo')?.value || '').trim();
+  if (!name && !date && !city && !country) return null;
+  return buildUpcomingRaceFromSource(_nrSelectedCatalogRace || {}, {
+    name,
+    date,
+    type,
+    distance,
+    city,
+    country,
+    location: buildLocationLabel(city, country),
+    priority: document.getElementById('nrPri')?.value || 'A',
+  });
+}
+
+async function renderUpcomingInsights() {
+  const el = document.getElementById('nrInsights');
+  if (!el) return;
+  const race = getUpcomingRaceDraft();
+  if (!race || !race.name || !race.date) {
+    el.innerHTML = `<div class="nr-insights-head">Upcoming Insights</div><div class="nr-insights-empty">Pick a future race to preview course fit, weather expectations, and your Race DNA outlook.</div>`;
+    return;
+  }
+  if (!isFutureDate(race.date)) {
+    el.innerHTML = `<div class="nr-insights-head">Upcoming Insights</div><div class="nr-insights-empty">Upcoming races need a future date. Completed events belong in Race History.</div>`;
+    return;
+  }
+  const renderToken = String(Date.now());
+  el.dataset.renderToken = renderToken;
+  el.innerHTML = `<div class="nr-insights-head">Upcoming Insights</div><div class="nr-insights-empty">Loading course, weather, and Race DNA insight…</div>`;
+  const courseInfo = buildCourseInfoFromCatalog(race);
+  const locationInfo = getRaceLocationInsight(race);
+  const [weather, dna] = await Promise.all([
+    getUpcomingWeatherInsight(race),
+    getRaceDnaOutlook(race),
+  ]);
+  if (el.dataset.renderToken !== renderToken) return;
+  const courseTags = courseInfo?.tags?.length
+    ? `<div class="nr-insights-tags">${courseInfo.tags.map(tag => `<span class="nr-insights-tag">${tag}</span>`).join('')}</div>`
+    : '';
+  const locationBlock = `<div class="nr-insights-block">
+      <div class="nr-insights-title">Location</div>
+      <div class="nr-insights-copy">${locationInfo?.title || getRaceDisplayLocation(race) || 'Location not available yet.'}</div>
+      ${locationInfo?.detail ? `<div class="nr-insights-copy" style="margin-top:.35rem">${locationInfo.detail}</div>` : ''}
+    </div>`;
+  const courseBlock = courseInfo
+    ? `<div class="nr-insights-block">
+        <div class="nr-insights-title">Course</div>
+        <div class="nr-insights-copy">${courseInfo.highlight || 'Using imported course metadata from the official race page.'}</div>
+        ${courseTags}
+        ${race.registrationStatus ? `<div class="nr-insights-copy" style="margin-top:.45rem">Status: ${race.registrationStatus}</div>` : ''}
+        ${(race.registrationUrl || race.sourceUrl) ? `<a class="nr-insights-link" href="${race.registrationUrl || race.sourceUrl}" target="_blank" rel="noreferrer">View official race page ↗</a>` : ''}
+      </div>`
+    : `<div class="nr-insights-block"><div class="nr-insights-title">Course</div><div class="nr-insights-copy">Select an imported catalog race to unlock official course metadata here.</div></div>`;
+  const weatherLine = weather?.tempLow != null || weather?.tempHigh != null
+    ? `${weather.tempLow ?? '—'}° – ${weather.tempHigh ?? '—'}°C${weather?.waterTempC != null ? ` · Water ${weather.waterTempC}°C` : ''}`
+    : 'Weather baseline not available yet.';
+  const weatherMeta = weather?.mode === 'forecast'
+    ? `💧 ${weather.precip ?? 0}mm · 💨 ${weather.wind ?? 0} km/h`
+    : [
+        weather?.humidityPct != null ? `Humidity ${weather.humidityPct}%` : '',
+        weather?.wind != null ? `Wind ${weather.wind} km/h` : '',
+        weather?.note || '',
+      ].filter(Boolean).join(' · ') || 'Forecast becomes available 14 days before race day.';
+  const weatherBlock = `<div class="nr-insights-block">
+      <div class="nr-insights-title">Weather</div>
+      <div class="nr-insights-copy">${weatherLine}</div>
+      <div class="nr-insights-copy" style="margin-top:.35rem">${weatherMeta}</div>
+    </div>`;
+  const dnaBlock = dna
+    ? `<div class="nr-insights-block">
+        <div class="nr-insights-title">Race DNA Outlook</div>
+        <div class="nr-insights-copy"><span style="color:${dna.tone};font-weight:700">${dna.label}</span> for expected race-day conditions around ${Math.round(dna.expected)}°C.</div>
+        <div class="nr-insights-copy" style="margin-top:.35rem">Your best range is ${dna.bestRange}°C based on ${dna.racesAnalyzed} weather-tagged races.</div>
+      </div>`
+    : `<div class="nr-insights-block"><div class="nr-insights-title">Race DNA Outlook</div><div class="nr-insights-copy">Log at least 3 weather-tagged races to unlock a personalized performance outlook.</div></div>`;
+  el.innerHTML = `<div class="nr-insights-head">Upcoming Insights</div>${locationBlock}${courseBlock}${weatherBlock}${dnaBlock}`;
 }
 
 /* ============================
@@ -8256,7 +8789,7 @@ function renderCountdown(){
     <button class="cd-edit-btn" onclick="openNextRace()">✏ Edit</button>
     <div class="cd-eyebrow">${eyebrow}</div>
     <div class="cd-race-name">${nextRace.name}</div>
-    <div class="cd-meta"><span>📍 ${nextRace.location||'—'}</span> &nbsp;·&nbsp; ${nextRace.distance} &nbsp;·&nbsp; ${fmtDate(nextRace.date)}</div>
+    <div class="cd-meta"><span>📍 ${getRaceDisplayLocation(nextRace)||'—'}</span> &nbsp;·&nbsp; ${nextRace.distance} &nbsp;·&nbsp; ${fmtDate(nextRace.date)}</div>
     <div class="cd-units">
       <div class="cd-unit"><span class="cd-num" id="cd-d">${pad(dd)}</span><div class="cd-label">Days</div></div>
       <div class="cd-colon">:</div>
@@ -8271,6 +8804,7 @@ function renderCountdown(){
   clearInterval(cdTimer);
   cdTimer = setInterval(tickCD, 1000);
   fetchCourseInfo(nextRace);
+  renderRaceDayForecast();
 }
 function tickCD(){
   if(!nextRace) return;
@@ -8961,45 +9495,27 @@ async function renderRaceDayForecast() {
   const strip = document.getElementById('raceForecastStrip');
   const content = document.getElementById('raceForecastContent');
   if (!strip || !content) return;
-  if (!nextRace || !nextRace.date || !nextRace.location) { strip.style.display = 'none'; return; }
-  const daysUntil = Math.ceil((new Date(nextRace.date + 'T00:00:00') - new Date()) / 86400000);
-  if (daysUntil < 0) { strip.style.display = 'none'; return; }
-  if (daysUntil > 14) {
-    strip.style.display = '';
-    content.innerHTML = `<div class="rdf-strip"><div class="rdf-icon">🌤️</div><div class="rdf-copy"><div class="rdf-city">${nextRace.location}</div><div class="rdf-meta">Forecast available 14 days before race</div></div></div>`;
-    return;
-  }
-  // Parse city/country from location
-  const parts = nextRace.location.split(',').map(s => s.trim());
-  const city = parts[0];
-  const country = parts[parts.length - 1] !== parts[0] ? parts[parts.length - 1] : null;
-  const coord = await geocodeCityIfNeeded(city, country);
-  if (!coord) { strip.style.display = 'none'; return; }
-  try {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${coord.lat}&longitude=${coord.lng}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max,weathercode&forecast_days=16&timezone=auto`;
-    const res = await fetch(url);
-    const data = await res.json();
-    if (!data.daily) { strip.style.display = 'none'; return; }
-    const idx = data.daily.time.indexOf(nextRace.date);
-    if (idx < 0) { strip.style.display = 'none'; return; }
-    const tmax = Math.round(data.daily.temperature_2m_max[idx]);
-    const tmin = Math.round(data.daily.temperature_2m_min[idx]);
-    const precip = data.daily.precipitation_sum[idx];
-    const wind = Math.round(data.daily.windspeed_10m_max[idx]);
-    const wcode = data.daily.weathercode[idx];
-    const icon = WMO_ICONS[wcode] || '🌡️';
-    const label = daysUntil === 0 ? 'RACE DAY' : `${daysUntil} DAY${daysUntil === 1 ? '' : 'S'}`;
-    strip.style.display = '';
-    content.innerHTML = `<div class="rdf-strip">
-      <div class="rdf-icon">${icon}</div>
-      <div class="rdf-copy">
-        <div class="rdf-city">${city}${country ? ', ' + country : ''}</div>
-        <div class="rdf-temp">${tmin}° – ${tmax}°C</div>
-        <div class="rdf-meta">💧 ${precip}mm · 💨 ${wind} km/h</div>
-      </div>
-      <div class="rdf-badge">${label}</div>
-    </div>`;
-  } catch (e) { strip.style.display = 'none'; }
+  if (!nextRace || !nextRace.date) { strip.style.display = 'none'; return; }
+  const weather = await getUpcomingWeatherInsight(nextRace);
+  if (!weather) { strip.style.display = 'none'; return; }
+  const icon = weather.mode === 'forecast' ? (WMO_ICONS[weather.weatherCode] || '🌡️') : '🌤️';
+  const meta = weather.mode === 'forecast'
+    ? `💧 ${weather.precip ?? 0}mm · 💨 ${weather.wind ?? 0} km/h`
+    : [
+        weather.humidityPct != null ? `Humidity ${weather.humidityPct}%` : '',
+        weather.wind != null ? `Wind ${weather.wind} km/h` : '',
+        weather.note || 'Using race-catalog climate expectations.',
+      ].filter(Boolean).join(' · ');
+  strip.style.display = '';
+  content.innerHTML = `<div class="rdf-strip">
+    <div class="rdf-icon">${icon}</div>
+    <div style="flex:1">
+      <div class="rdf-city">${weather.location || getRaceDisplayLocation(nextRace)}</div>
+      <div class="rdf-temp">${weather.tempLow ?? '—'}° – ${weather.tempHigh ?? '—'}°C${weather.waterTempC != null ? ` · Water ${weather.waterTempC}°C` : ''}</div>
+      <div class="rdf-meta">${meta}</div>
+    </div>
+    <div class="rdf-badge">${weather.label}</div>
+  </div>`;
 }
 
 /* ============================
@@ -9218,8 +9734,10 @@ async function renderRaceDNA() {
     // Forecast check vs next race
     let nextMatch = '';
     if (nextRace && nextRace.date) {
-      // quick check: compare best range bucket to a rough forecast
-      nextMatch = `<div class="dna-next">Next race: <span style="color:var(--muted)">${nextRace.name || nextRace.location || ''}</span></div>`;
+      const outlook = await getRaceDnaOutlook(nextRace);
+      nextMatch = outlook
+        ? `<div class="dna-next">Next race: <span style="color:var(--muted)">${nextRace.name || nextRace.location || ''}</span> · <span class="match" style="color:${outlook.tone}">${outlook.label}</span> around ${Math.round(outlook.expected)}°C</div>`
+        : `<div class="dna-next">Next race: <span style="color:var(--muted)">${nextRace.name || nextRace.location || ''}</span></div>`;
     }
     el.innerHTML = `<div class="dna-card">
       <div class="dna-headline">You race best in <span class="dna-best">${dna.bestRange}°C</span></div>
@@ -11163,6 +11681,11 @@ function saveRaceDetail() {
       if (hint) { hint.style.display = ''; hint.querySelector('span').textContent = 'Race name is required to save.'; }
       return;
     }
+    if (isFutureDate(fields.date)) {
+      queueFutureHistoryRedirect(fields, 'rdNewHint', 'raceDetailModal', 'This result is dated in the future, so it belongs in Upcoming Races instead of history.');
+      return;
+    }
+    clearPendingUpcomingRedirect('rdNewHint');
     races.push({ id: Date.now(), ...fields });
     sv('fl2_races', races);
     _rdIsNew = false;
@@ -11213,6 +11736,17 @@ function saveRaceDetail() {
     const ins = tr.querySelectorAll('input');
     return { marker: ins[0].value.trim(), split: ins[1].value.trim(), cumulative: ins[2].value.trim() };
   }).filter(s => s.marker || s.split || s.cumulative);
+  if (isFutureDate(r.date)) {
+    const upcoming = buildUpcomingRedirectFromHistory(r);
+    upcoming.id = r.id;
+    upsertUpcomingRace(upcoming);
+    races = races.filter(x => x.id !== r.id);
+    sv('fl2_races', races);
+    closeM('raceDetailModal');
+    render(curPage);
+    showBtToast('Moved to upcoming races');
+    return;
+  }
   sv('fl2_races', races);
   closeM('raceDetailModal');
   if (curPage === 'history') renderHistory();
@@ -11327,7 +11861,12 @@ function uploadAvi(e){
 /* ============================
    MODALS
    ============================ */
-function openRaceModal(){ openM('raceModal'); onTypeChange(); initCityAC(); }
+function openRaceModal(){
+  clearPendingUpcomingRedirect('mFutureHint');
+  openM('raceModal');
+  onTypeChange();
+  initCityAC();
+}
 
 function openUpcoming(){
   const list = document.getElementById('upcomingList');
@@ -11393,12 +11932,16 @@ function addNewUpcoming() {
   document.getElementById('nrCustomWrap').style.display = 'none';
   document.getElementById('nrPri').value = 'A';
   delete document.getElementById('nrModal').dataset.editId;
+  clearUpcomingRaceSelection(false);
   initCityAC();
+  initUpcomingRacePicker();
+  renderUpcomingInsights();
   openM('nrModal');
 }
 function openNextRace(){
   closeMenu();
   document.getElementById('nrRemoveBtn').style.display = nextRace ? '' : 'none';
+  initUpcomingRacePicker();
   if(nextRace){
     // Find matching entry in upcomingRaces to get its id for editing
     const match = upcomingRaces.find(r => r.name === nextRace.name && r.date === nextRace.date);
@@ -11414,17 +11957,20 @@ function openNextRace(){
     document.getElementById('nrPri').value=nextRace.priority||'A';
     document.getElementById('nrType').value = nextRace.type||'run';
     onNrTypeChange();
+    _nrSelectedCatalogRace = nextRace.sourceUrl ? { ...nextRace, sourceUrl: nextRace.sourceUrl, sourceSite: nextRace.sourceSite } : null;
     const dis = nextRace.distance||'Marathon';
     const sel = document.getElementById('nrDis');
     const known = Array.from(sel.options).some(o=>o.value===dis||o.text===dis);
     if(known){ sel.value=dis; document.getElementById('nrCustomWrap').style.display='none'; }
     else { sel.value='Custom…'; document.getElementById('nrCustomDist').value=dis; document.getElementById('nrCustomWrap').style.display='block'; }
   } else {
+    clearUpcomingRaceSelection(false);
     document.getElementById('nrType').value = 'run';
     onNrTypeChange();
     document.getElementById('nrCustomWrap').style.display='none';
   }
   initCityAC();
+  renderUpcomingInsights();
   openM('nrModal');
 }
 function clearNextRace() {
@@ -11525,6 +12071,7 @@ function saveNR(){
   const n=document.getElementById('nrN').value.trim();
   const d=document.getElementById('nrDt').value;
   if(!n||!d){alert('Please fill in race name and date.');return;}
+  if(!isFutureDate(d)){alert('Upcoming races must be in the future. Use Race History for completed events.');return;}
   let dist = document.getElementById('nrDis').value;
   if(dist==='Custom…'){
     dist = document.getElementById('nrCustomDist').value.trim();
@@ -11535,22 +12082,24 @@ function saveNR(){
   const pri  = document.getElementById('nrPri').value;
   const type = document.getElementById('nrType').value;
   const editId = document.getElementById('nrModal').dataset.editId;
-  const newRace = { id: editId ? parseInt(editId) : Date.now(), name:n, date:d, location:_nrLoc, distance:dist, type, priority:pri };
-  const idx = upcomingRaces.findIndex(r => r.id === newRace.id);
-  if (idx >= 0) upcomingRaces[idx] = newRace;
-  else upcomingRaces.push(newRace);
-  upcomingRaces.sort((a,b) => a.date.localeCompare(b.date));
-  sv('fl2_upcoming', upcomingRaces);
+  const newRace = buildUpcomingRaceFromSource(_nrSelectedCatalogRace || {}, {
+    id: editId ? parseInt(editId) : Date.now(),
+    name:n,
+    date:d,
+    location:_nrLoc,
+    distance:dist,
+    type,
+    priority:pri,
+    city:_nrCi,
+    country:_nrCo,
+  });
+  upsertUpcomingRace(newRace);
   delete document.getElementById('nrModal').dataset.editId;
-  // Set as active if it's priority A, or if no active race yet
-  if (pri === 'A' || !nextRace) {
-    nextRace = newRace;
-    sv('fl2_nr', nextRace);
-  }
-  // Sync immediately (don't rely solely on debounce — prevents data loss on quick refresh)
-  syncRemoteState();
+  clearUpcomingRaceSelection(false);
   closeM('nrModal');
-  if(curPage==='dashboard') renderCountdown();
+  renderCountdown();
+  renderRaceDayForecast();
+  renderRaceDNA();
 }
 function saveAth(){
   athlete={
@@ -11689,6 +12238,28 @@ function resetTimePicker() {
   ['mTmH','mTmM','mTmS'].forEach(id => { const e = document.getElementById(id); if(e) e.value = 0; });
 }
 
+function buildUpcomingRedirectFromHistory(fields) {
+  return buildUpcomingRaceFromSource(fields, {
+    name: fields.name,
+    date: fields.date,
+    distance: fields.distance,
+    type: fields.type,
+    priority: fields.priority || 'A',
+    city: fields.city,
+    country: fields.country,
+    location: buildLocationLabel(fields.city, fields.country),
+  });
+}
+
+function queueFutureHistoryRedirect(fields, targetId, closeModalId, message) {
+  showHistoryFutureHint(
+    targetId,
+    buildUpcomingRedirectFromHistory(fields),
+    message || 'Future races live in Upcoming Races so they power countdowns and race-day insights instead of history.',
+    closeModalId
+  );
+}
+
 function addManual(){
   const name=document.getElementById('mN').value.trim();
   const time=getFinishTime();
@@ -11702,7 +12273,7 @@ function addManual(){
   }
   const raceType = document.getElementById('mT').value;
   const triSegs = raceType==='tri' ? { swim:getSegTime('tSwim'), t1:getSegTime('tT1'), bike:getSegTime('tBike'), t2:getSegTime('tT2'), run:getSegTime('tRun') } : undefined;
-  races.push({
+  const newRace = {
     id:Date.now(), name,
     type:raceType,
     distance:dist, time,
@@ -11715,7 +12286,13 @@ function addManual(){
     distKm:DIST_KM[dist]||0,
     achievementContext:{},
     ...(triSegs ? {triSegments:triSegs} : {})
-  });
+  };
+  if (isFutureDate(newRace.date)) {
+    queueFutureHistoryRedirect(newRace, 'mFutureHint', 'raceModal', 'This date is still in the future, so it can’t be saved into Race History.');
+    return;
+  }
+  clearPendingUpcomingRedirect('mFutureHint');
+  races.push(newRace);
   sv('fl2_races',races);
   closeM('raceModal');
   render(curPage);
@@ -11751,6 +12328,10 @@ async function callClaude(messages){
 
 function pushRaceFromJSON(clean){
   const obj = JSON.parse(clean);
+  if (isFutureDate(obj.date)) {
+    queueFutureHistoryRedirect(obj, 'mFutureHint', 'raceModal', 'Imported future races are saved to Upcoming Races so they show countdown and course insight.');
+    return;
+  }
   races.push({id:Date.now(), achievementContext:{}, ...obj});
   sv('fl2_races', races);
   closeM('raceModal');
@@ -12914,6 +13495,8 @@ function importStravaRaces(){
     const dist = closestDistance(type, distKm);
     const elapsed = a.elapsed_time||0;
     const h=Math.floor(elapsed/3600), m=Math.floor((elapsed%3600)/60), s=elapsed%60;
+    const parsedDate = (a.start_date_local||'').slice(0,10);
+    if (isFutureDate(parsedDate)) continue;
     races.push({
       id: Date.now() + imported,  // unique per loop iteration
       strava_id: a.id,
@@ -12921,7 +13504,7 @@ function importStravaRaces(){
       type, distance: dist,
       time: `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`,
       city: a.location_city || '', country: a.location_country || '',
-      date: (a.start_date_local||'').slice(0,10),
+      date: parsedDate,
       placing: '', medal: 'finisher', distKm, achievementContext: {}
     });
     imported++;
@@ -13105,7 +13688,13 @@ function fmtRaceDate(dateStr) {
   return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
 }
 
-function raceDbSearch(q) {
+function fmtRaceDateRange(startDate, endDate) {
+  if (!startDate) return '';
+  if (!endDate || endDate === startDate) return fmtRaceDate(startDate);
+  return `${fmtRaceDate(startDate)} – ${fmtRaceDate(endDate)}`;
+}
+
+function searchCatalogRaces(q, mode = 'past') {
   const s = q.toLowerCase().trim();
   if (s.length < 2) return [];
   const yearMatch = s.match(/\b((?:19|20)\d{2})\b/);
@@ -13116,22 +13705,27 @@ function raceDbSearch(q) {
   const todayStr = now.toISOString().slice(0, 10);
   const matches = raceDb.map((race, idx) => ({ ...race, _idx: idx }))
     .filter(r => {
-      // Exclude future-dated races — those belong only in the countdown feature
       const raceDate = getRaceDate(r, r.year || now.getFullYear());
-      if (raceDate && raceDate > todayStr) return false;
+      if (mode === 'past' && raceDate && raceDate > todayStr) return false;
+      if (mode === 'future' && (!raceDate || raceDate <= todayStr)) return false;
       if (queryYear && Number(r.year) !== queryYear) return false;
       if (!queryBase) return true;
       return r.name.toLowerCase().includes(queryBase) ||
         (r.aliases||[]).some(a => a.toLowerCase().includes(queryBase)) ||
         (r.city||'').toLowerCase().includes(queryBase) ||
+        (r.region||'').toLowerCase().includes(queryBase) ||
         (r.country||'').toLowerCase().includes(queryBase) ||
+        (r.venue||'').toLowerCase().includes(queryBase) ||
+        (r.discipline||'').toLowerCase().includes(queryBase) ||
+        (r.series||'').toLowerCase().includes(queryBase) ||
         (r.customDist||'').toLowerCase().includes(queryBase) ||
         (r.dist||'').toLowerCase().includes(queryBase);
     })
     .map(r => ({
       ...r,
       _year: r.year || now.getFullYear(),
-      _date: getRaceDate(r, r.year || now.getFullYear())
+      _date: getRaceDate(r, r.year || now.getFullYear()),
+      _endDate: r.eventEndDate || '',
     }))
     .sort((a, b) => {
       const aHasDate = a._date ? 1 : 0;
@@ -13148,12 +13742,31 @@ function raceDbSearch(q) {
   return matches.slice(0, 12);
 }
 
+function raceDbSearch(q) {
+  return searchCatalogRaces(q, 'past');
+}
+
+function upcomingRaceDbSearch(q) {
+  return searchCatalogRaces(q, 'future');
+}
+
 function nextRaceDate(month, day) {
   const now = new Date();
   let year = now.getFullYear();
   const candidate = new Date(year, month-1, day);
   if (candidate < now) year++;
   return `${year}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+}
+
+function renderCatalogOption(r) {
+  const icon = r.type==='run'?'🏃':r.type==='cycle'?'🚴':r.type==='swim'?'🏊':r.type==='tri'?'🏆':'💪';
+  const distLabel = r.customDist || r.dist;
+  const locationBits = [r.city, r.region, r.country].filter(Boolean).join(', ');
+  const disciplineLabel = getDisciplineLabel(r);
+  return {
+    title: `${icon} ${r.name} <span style="color:var(--orange);font-weight:900">${r._year}</span>`,
+    subtitle: `${fmtRaceDateRange(r._date, r._endDate)} · ${distLabel}${disciplineLabel ? ` · ${disciplineLabel}` : ''} · ${locationBits}`,
+  };
 }
 
 function initRaceNamePicker() {
@@ -13179,11 +13792,10 @@ function initRaceNamePicker() {
     const results = raceDbSearch(q);
     if (!results.length) { dropdown.classList.remove('open'); return; }
     dropdown.innerHTML = results.map(r => {
-      const icon = r.type==='run'?'🏃':r.type==='cycle'?'🚴':r.type==='swim'?'🏊':r.type==='tri'?'🏆':'💪';
-      const distLabel = r.customDist || r.dist;
+      const view = renderCatalogOption(r);
       return `<div class="loc-option" data-idx="${r._idx}" data-year="${r._year}" data-date="${r._date}">
-        <div class="loc-opt-city">${icon} ${r.name} <span style="color:var(--orange);font-weight:900">${r._year}</span></div>
-        <div class="loc-opt-sub">${fmtRaceDate(r._date)} · ${distLabel} · ${r.city}, ${r.country}</div>
+        <div class="loc-opt-city">${view.title}</div>
+        <div class="loc-opt-sub">${view.subtitle}</div>
       </div>`;
     }).join('');
     dropdown.querySelectorAll('.loc-option').forEach(opt => {
@@ -13228,6 +13840,95 @@ function fillRaceFields(race, year, dateStr) {
   if (race.city) document.getElementById('mCiWrap').style.display = '';
   // Exact date
   document.getElementById('mDt').value = dateStr || nextRaceDate(race.month, race.day);
+}
+
+function clearUpcomingRaceSelection(renderInsights = true) {
+  _nrSelectedCatalogRace = null;
+  const input = document.getElementById('nrN');
+  if (input) delete input.dataset.catalogUrl;
+  if (renderInsights) renderUpcomingInsights();
+}
+
+function fillUpcomingFields(race, year, dateStr) {
+  _nrSelectedCatalogRace = { ...race, _year: year, _date: dateStr };
+  const input = document.getElementById('nrN');
+  input.value = `${race.name} ${year}`;
+  input.dataset.catalogUrl = race.sourceUrl || '';
+  document.getElementById('nrDt').value = dateStr || nextRaceDate(race.month, race.day);
+  document.getElementById('nrType').value = race.type || 'run';
+  onNrTypeChange();
+  const distValue = race.dist || 'Custom…';
+  const sel = document.getElementById('nrDis');
+  const known = Array.from(sel.options).some(o => o.value === distValue);
+  if (known) sel.value = distValue;
+  else sel.value = 'Custom…';
+  document.getElementById('nrCustomDist').value = race.customDist || '';
+  document.getElementById('nrCustomWrap').style.display = sel.value === 'Custom…' ? 'block' : 'none';
+  setCountrySelect(document.getElementById('nrCo'), race.country || '');
+  document.getElementById('nrCi').value = race.city || '';
+  document.getElementById('nrCiWrap').style.display = race.city ? '' : 'none';
+  renderUpcomingInsights();
+}
+
+function initUpcomingRacePicker() {
+  if (_nrPickerReady) return;
+  const inputEl = document.getElementById('nrN');
+  if (!inputEl) return;
+  const wrap = document.createElement('div');
+  wrap.className = 'nr-picker-wrap';
+  inputEl.parentNode.insertBefore(wrap, inputEl);
+  wrap.appendChild(inputEl);
+  const dropdown = document.createElement('div');
+  dropdown.className = 'nr-picker-drop';
+  wrap.appendChild(dropdown);
+
+  inputEl.addEventListener('input', () => {
+    if (_nrSelectedCatalogRace && !inputEl.value.startsWith(_nrSelectedCatalogRace.name)) clearUpcomingRaceSelection(false);
+    const q = inputEl.value.trim();
+    if (!raceDbLoaded && !raceDbError) {
+      dropdown.innerHTML = '<div class="nr-picker-opt"><div class="nr-picker-sub">Loading race catalog…</div></div>';
+      dropdown.classList.add('open');
+      return;
+    }
+    if (raceDbError) { dropdown.classList.remove('open'); renderUpcomingInsights(); return; }
+    const results = upcomingRaceDbSearch(q);
+    if (!results.length) { dropdown.classList.remove('open'); renderUpcomingInsights(); return; }
+    dropdown.innerHTML = results.map(r => {
+      const view = renderCatalogOption(r);
+      return `<div class="nr-picker-opt" data-idx="${r._idx}" data-year="${r._year}" data-date="${r._date}">
+        <div class="nr-picker-name">${view.title}</div>
+        <div class="nr-picker-sub">${view.subtitle}</div>
+      </div>`;
+    }).join('');
+    dropdown.querySelectorAll('.nr-picker-opt').forEach(opt => {
+      opt.addEventListener('mousedown', e => {
+        e.preventDefault();
+        const race = raceDb[parseInt(opt.dataset.idx, 10)];
+        if (!race) return;
+        fillUpcomingFields(race, opt.dataset.year, opt.dataset.date);
+        dropdown.classList.remove('open');
+      });
+    });
+    dropdown.classList.add('open');
+    renderUpcomingInsights();
+  });
+
+  ['nrDt','nrType','nrDis','nrCustomDist','nrCi','nrCo','nrPri'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', () => renderUpcomingInsights());
+    if (el && el.tagName === 'SELECT') el.addEventListener('change', () => renderUpcomingInsights());
+  });
+
+  inputEl.addEventListener('keydown', e => {
+    const opts = [...dropdown.querySelectorAll('.nr-picker-opt')];
+    const hi = dropdown.querySelector('.nr-picker-opt.hi');
+    if (e.key==='ArrowDown') { e.preventDefault(); if(!hi) opts[0]?.classList.add('hi'); else { hi.classList.remove('hi'); (hi.nextElementSibling||opts[0])?.classList.add('hi'); } }
+    else if (e.key==='ArrowUp') { e.preventDefault(); if(!hi) opts[opts.length-1]?.classList.add('hi'); else { hi.classList.remove('hi'); (hi.previousElementSibling||opts[opts.length-1])?.classList.add('hi'); } }
+    else if (e.key==='Enter' && hi) { e.preventDefault(); hi.dispatchEvent(new MouseEvent('mousedown', { bubbles: true })); }
+    else if (e.key==='Escape') { dropdown.classList.remove('open'); }
+  });
+  inputEl.addEventListener('blur', () => setTimeout(() => dropdown.classList.remove('open'), 180));
+  _nrPickerReady = true;
 }
 
 /* ============================
@@ -13535,11 +14236,13 @@ function confirmDeleteAction(subject = 'item') {
 }
 
 async function initApp() {
+  migrateFutureHistoryToUpcoming();
   raceDbLoadPromise = loadRaceCatalog();
   await initAuth();
   handleStravaCallback();
   initAllLocationPickers();
   initRaceNamePicker();
+  initUpcomingRacePicker();
   updateAuthUI();
   applyEnvRestrictions();
   if (authUser) {
