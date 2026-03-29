@@ -5755,6 +5755,7 @@ let suppressRemoteSync = false;
 let authMode = 'signin';
 let authSession = null;
 let authUser = null;
+let authSubscription = null;
 
 // Race catalog (replaces hardcoded RACE_DB constant)
 let raceDb = [];
@@ -5899,9 +5900,49 @@ function sv(k,v){
   if (!suppressRemoteSync && remoteSyncReady && k === 'fl2_races') scheduleAchievementSync();
 }
 
+function getSupabaseProjectRef() {
+  try {
+    return SUPABASE_URL.replace('https://', '').split('.')[0];
+  } catch (_err) {
+    return '';
+  }
+}
+
+function getSupabaseStorageKey() {
+  const projectRef = getSupabaseProjectRef();
+  return projectRef ? `sb-${projectRef}-auth-token` : null;
+}
+
+function readCachedSupabaseSession() {
+  try {
+    const storageKey = getSupabaseStorageKey();
+    if (!storageKey) return null;
+    const raw = localStorage.getItem(storageKey);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed?.currentSession?.access_token && parsed?.currentSession?.refresh_token) {
+      return parsed.currentSession;
+    }
+    if (parsed?.access_token && parsed?.refresh_token) {
+      return parsed;
+    }
+  } catch (_err) {}
+  return null;
+}
+
 function initSupabaseClient() {
   if (!window.supabase?.createClient) return null;
-  if (!supabaseClient) supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  if (!supabaseClient) {
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        storage: window.localStorage,
+        storageKey: getSupabaseStorageKey() || undefined,
+      },
+    });
+  }
   return supabaseClient;
 }
 
@@ -7336,11 +7377,25 @@ async function refreshAuthState(session) {
 async function initAuth() {
   const client = initSupabaseClient();
   if (!client) return;
-  const { data } = await client.auth.getSession();
-  await refreshAuthState(data.session);
-  client.auth.onAuthStateChange(async (_event, session) => {
-    await refreshAuthState(session);
-  });
+  let { data } = await client.auth.getSession();
+  let session = data.session;
+  if (!session) {
+    const cachedSession = readCachedSupabaseSession();
+    if (cachedSession?.access_token && cachedSession?.refresh_token) {
+      const { data: restored } = await client.auth.setSession({
+        access_token: cachedSession.access_token,
+        refresh_token: cachedSession.refresh_token,
+      });
+      session = restored?.session || null;
+    }
+  }
+  await refreshAuthState(session);
+  if (!authSubscription) {
+    const { data: sub } = client.auth.onAuthStateChange(async (_event, nextSession) => {
+      await refreshAuthState(nextSession);
+    });
+    authSubscription = sub?.subscription || sub || null;
+  }
 }
 
 async function submitAuth() {
