@@ -736,4 +736,20 @@ describe('catalog search normalization', () => {
     const collapsedQuery = collapseCatalogSearchText(queryBase);
     expect(catalogRaceMatchesQuery(race, queryBase, queryTokens, collapsedQuery)).toBe(true);
   });
+
+  test('resolves custom distance labels from dist_km when the source label is just the race name', () => {
+    expect(resolveCatalogCustomDistance({
+      name: 'Silk Route Ultra',
+      dist: 'Custom…',
+      distKm: 122,
+      customDist: 'Silk Route Ultra',
+    })).toBe('122K');
+
+    expect(resolveCatalogCustomDistance({
+      name: 'Khardung La Challenge',
+      dist: 'Custom…',
+      distKm: 72,
+      customDist: '72K',
+    })).toBe('72K');
+  });
 });

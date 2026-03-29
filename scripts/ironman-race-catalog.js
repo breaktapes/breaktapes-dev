@@ -248,6 +248,11 @@ function titleCaseFromSlug(value = '') {
     .join(' ');
 }
 
+function capitalizeLeadingLetter(value = '') {
+  const str = String(value);
+  return str.replace(/^[a-z]/, match => match.toUpperCase());
+}
+
 function splitCityCountry(label = '') {
   const parts = normalizeWhitespace(label).split(',').map(part => part.trim()).filter(Boolean);
   if (!parts.length) return { city: '', country: '' };
@@ -279,6 +284,9 @@ function normalizeIronmanDistance(series = '', name = '') {
   if (/\b5150\b/.test(value) || value.includes('short course tri')) {
     return { type: 'tri', dist: 'Olympic / Standard', distKm: 51.5, customDist: null };
   }
+  if (/\b4:18:4\b/.test(value) || /\b4184\b/.test(value)) {
+    return { type: 'tri', dist: 'Custom…', distKm: 22.4, customDist: '4:18:4' };
+  }
   if (value.includes('super sprint')) {
     return { type: 'tri', dist: 'Super Sprint', distKm: 12.9, customDist: null };
   }
@@ -289,6 +297,24 @@ function normalizeIronmanDistance(series = '', name = '') {
     return { type: 'tri', dist: 'Ironman / Full', distKm: 226, customDist: null };
   }
   return { type: 'tri', dist: 'Custom…', distKm: null, customDist: series || name };
+}
+
+function formatExactDistanceLabel(distKm) {
+  if (distKm === null || distKm === undefined || Number.isNaN(Number(distKm))) return '';
+  const rounded = Math.round(Number(distKm) * 10) / 10;
+  return `${rounded}K`;
+}
+
+function normalizeCustomDistanceLabel(row) {
+  const custom = String(row.custom_dist ?? row.customDist ?? '').trim();
+  if (row.dist !== 'Custom…') return custom;
+  if (custom && /mile|miler|stage|hour|hr|relay|4:18:4/i.test(custom)) return custom;
+  const normalizedName = normalizeWhitespace(row.name || '').toLowerCase();
+  const normalizedCustom = normalizeWhitespace(custom).toLowerCase();
+  if (row.dist_km != null && (!custom || normalizedCustom === normalizedName || ['trail running', 'triathlon', 'road run', 'open water swim', 'race'].includes(normalizedCustom))) {
+    return formatExactDistanceLabel(row.dist_km);
+  }
+  return custom;
 }
 
 function normalizeAhotuDistance(row) {
@@ -913,8 +939,9 @@ async function fetchTimezoneAndClimate(row, coord, climateCache) {
 function fillRowDefaults(row) {
   const disciplineMeta = DISCIPLINE_META[row.discipline] || {};
   const result = { ...row };
+  result.name = capitalizeLeadingLetter(result.name || '');
   result.aliases = Array.isArray(result.aliases) ? result.aliases : [];
-  result.custom_dist = result.custom_dist ?? '';
+  result.custom_dist = normalizeCustomDistanceLabel(result);
   result.registration_url = result.registration_url || result.source_url || '';
   result.surface = enrichSurface(result);
   result.elevation_profile = enrichElevationProfile(result);
@@ -1104,13 +1131,16 @@ module.exports = {
   buildAhotuCuratedRows,
   buildStaticUtmbRows,
   buildRefreshMigration,
+  capitalizeLeadingLetter,
   dedupeRows,
   enrichRows,
   extractDetailUrls,
   extractHyroxEvents,
   extractUtmbEvents,
+  formatExactDistanceLabel,
   generateCatalog,
   normalizeAhotuDistance,
+  normalizeCustomDistanceLabel,
   normalizeIronmanDistance,
   parseIronmanRow,
   parseRaceDetail,

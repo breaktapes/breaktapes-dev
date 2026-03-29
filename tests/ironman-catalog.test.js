@@ -2,10 +2,12 @@ const {
   buildAhotuCuratedRows,
   buildStaticUtmbRows,
   buildRefreshMigration,
+  capitalizeLeadingLetter,
   dedupeRows,
   extractDetailUrls,
   extractHyroxEvents,
   extractUtmbEvents,
+  normalizeCustomDistanceLabel,
   normalizeIronmanDistance,
   parseRaceDetail,
 } = require('../scripts/ironman-race-catalog');
@@ -109,6 +111,33 @@ describe('upcoming catalog parser', () => {
       distKm: 113,
       customDist: null,
     });
+    expect(normalizeIronmanDistance('', '4:18:4 Elsinore')).toEqual({
+      type: 'tri',
+      dist: 'Custom…',
+      distKm: 22.4,
+      customDist: '4:18:4',
+    });
+  });
+
+  test('normalizeCustomDistanceLabel replaces vague source-backed labels with exact numeric distances when available', () => {
+    expect(normalizeCustomDistanceLabel({
+      name: 'Silk Route Ultra',
+      dist: 'Custom…',
+      dist_km: 122,
+      custom_dist: 'Silk Route Ultra',
+    })).toBe('122K');
+
+    expect(normalizeCustomDistanceLabel({
+      name: 'Challenge Samarkand',
+      dist: 'Custom…',
+      dist_km: null,
+      custom_dist: 'Triathlon',
+    })).toBe('Triathlon');
+  });
+
+  test('capitalizeLeadingLetter normalizes lowercase-starting race names', () => {
+    expect(capitalizeLeadingLetter('mozart 100 by UTMB')).toBe('Mozart 100 by UTMB');
+    expect(capitalizeLeadingLetter('IRONMAN 70.3 Valencia')).toBe('IRONMAN 70.3 Valencia');
   });
 
   test('parseRaceDetail preserves IRONMAN source-page weather and course fields', () => {
