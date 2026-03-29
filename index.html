@@ -1928,6 +1928,77 @@ main {
 .fi::placeholder { color:var(--muted2); }
 .fs option { background:var(--surface2); }
 .fgrid { display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; }
+.ea-form-grid {
+  grid-template-columns:1fr 1fr;
+  gap:0.9rem;
+}
+#eaModal .fg {
+  gap:0.42rem;
+}
+#eaModal .fi,
+#eaModal .fs {
+  min-height:50px;
+  height:50px;
+  box-sizing:border-box;
+  border-radius:10px;
+  padding:0 0.95rem;
+  font-size:14px;
+}
+#eaModal .fs {
+  padding-right:2.5rem;
+}
+#eaModal .fi[type="number"] {
+  padding-right:0.95rem;
+}
+.race-manual-grid {
+  grid-template-columns:1fr 1fr;
+  gap:0.9rem;
+}
+#raceModal #rtManual .fg {
+  gap:0.42rem;
+}
+#raceModal #rtManual .fi,
+#raceModal #rtManual .fs {
+  min-height:48px;
+  height:48px;
+  box-sizing:border-box;
+  border-radius:10px;
+  padding:0 0.95rem;
+  font-size:14px;
+}
+#raceModal #rtManual .fs {
+  padding-right:2.5rem;
+}
+#raceModal #rtManual .fi[type="date"],
+#raceModal #rtManual .fi[type="number"] {
+  padding-right:0.95rem;
+}
+.next-race-grid {
+  grid-template-columns:1fr;
+  gap:0.9rem;
+}
+.next-race-grid-2 {
+  grid-template-columns:1fr 1fr;
+  gap:0.9rem;
+}
+#nrModal .fg {
+  gap:0.42rem;
+}
+#nrModal .fi,
+#nrModal .fs {
+  min-height:48px;
+  height:48px;
+  box-sizing:border-box;
+  border-radius:10px;
+  padding:0 0.95rem;
+  font-size:14px;
+}
+#nrModal .fs {
+  padding-right:2.5rem;
+}
+#nrModal .fi[type="date"] {
+  padding-right:0.95rem;
+}
 @media (max-width: 767px) {
   .fi,
   .fs,
@@ -3213,16 +3284,24 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   display: flex; flex-wrap: wrap; gap: 0.5rem;
 }
 .mw-ach-badge {
-  display:grid;
-  grid-template-columns:auto minmax(0,1fr) auto;
-  align-items:flex-start;
-  gap:0.8rem;
+  appearance:none;
+  width:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  gap:0.45rem;
   background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
   border:1px solid rgba(245,245,245,0.08);
   border-radius:16px;
-  padding:0.9rem 0.95rem;
+  padding:0.65rem 0.55rem;
   transition: all 0.2s ease;
   position: relative;
+  min-height:108px;
+  aspect-ratio:1 / 1;
+  cursor:pointer;
+  color:inherit;
 }
 .mw-ach-badge.unlocked {
   background:linear-gradient(135deg, rgba(255,77,0,0.08), rgba(0,255,136,0.05));
@@ -3234,8 +3313,8 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   background: rgba(255,255,255,0.02);
 }
 .mw-ach-icon {
-  width:42px;
-  height:42px;
+  width:38px;
+  height:38px;
   border-radius:12px;
   display:flex;
   align-items:center;
@@ -3249,14 +3328,26 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   background:rgba(255,77,0,0.1);
   border-color:rgba(255,77,0,0.18);
 }
-.mw-ach-info { display: flex; flex-direction: column; gap: 4px; min-width:0; }
+.mw-ach-info {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:3px;
+  min-width:0;
+  width:100%;
+}
 .mw-ach-name {
-  font-family: var(--headline); font-size: 12px; font-weight: 900;
-  letter-spacing: 0.1em; text-transform: uppercase; color: var(--white);
-  line-height:1.05;
+  font-family: var(--headline); font-size: 9px; font-weight: 900;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--white);
+  line-height:1.15;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+  min-height:2.1em;
 }
 .mw-ach-badge.unlocked .mw-ach-name { color: var(--white); }
-.mw-ach-desc { font-size: 11px; color: rgba(245,245,245,0.58); line-height:1.35; }
+.mw-ach-desc { display:none; }
 .mw-ach-group {
   margin-bottom: 0;
   padding:1rem;
@@ -3292,39 +3383,130 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 }
 .mw-ach-stack {
   display:grid;
-  grid-template-columns:1fr;
-  gap:0.7rem;
+  grid-template-columns:repeat(4, minmax(0,1fr));
+  gap:0.55rem;
 }
 .mw-ach-badge.ladder {
   width:100%;
 }
 .mw-ach-badge .mw-ach-meta {
-  font-size:9px;
+  font-size:8px;
   color:rgba(245,245,245,0.36);
   text-transform:uppercase;
   letter-spacing:0.1em;
-  margin-top:2px;
+  margin-top:1px;
+  display:none;
 }
 .mw-ach-state {
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  min-width:74px;
-  padding:.34rem .5rem;
+  min-width:auto;
+  padding:.24rem .46rem;
   border-radius:999px;
   font-family:var(--headline);
-  font-size:9px;
+  font-size:8px;
   font-weight:800;
   letter-spacing:.12em;
   text-transform:uppercase;
   background:rgba(245,245,245,0.04);
   border:1px solid rgba(245,245,245,0.08);
   color:rgba(245,245,245,0.55);
+  align-self:center;
 }
 .mw-ach-badge.unlocked .mw-ach-state {
   background:rgba(0,255,136,0.12);
   border-color:rgba(0,255,136,0.22);
   color:var(--green);
+}
+.mw-ach-badge:hover {
+  transform:translateY(-2px);
+  border-color:rgba(255,77,0,0.2);
+}
+.mw-ach-badge:focus-visible {
+  outline:2px solid rgba(255,77,0,0.75);
+  outline-offset:2px;
+}
+.mw-ach-detail-wrap {
+  display:flex;
+  flex-direction:column;
+  gap:1rem;
+}
+.mw-ach-detail-hero {
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr);
+  gap:0.9rem;
+  align-items:center;
+  padding:1rem;
+  border-radius:18px;
+  border:1px solid rgba(245,245,245,0.08);
+  background:linear-gradient(135deg, rgba(255,77,0,0.08), rgba(0,255,136,0.04));
+}
+.mw-ach-detail-icon {
+  width:56px;
+  height:56px;
+  border-radius:16px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:28px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(245,245,245,0.08);
+}
+.mw-ach-detail-kicker {
+  font-size:10px;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  color:rgba(245,245,245,0.55);
+  margin-bottom:0.2rem;
+}
+.mw-ach-detail-name {
+  font-family:var(--headline);
+  font-size:24px;
+  line-height:1;
+  text-transform:uppercase;
+  letter-spacing:.03em;
+}
+.mw-ach-detail-desc {
+  color:rgba(245,245,245,0.74);
+  font-size:14px;
+  line-height:1.45;
+}
+.mw-ach-detail-grid {
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0,1fr));
+  gap:0.75rem;
+}
+.mw-ach-detail-card {
+  padding:0.9rem;
+  border-radius:16px;
+  border:1px solid rgba(245,245,245,0.08);
+  background:rgba(255,255,255,0.02);
+}
+.mw-ach-detail-card-label {
+  font-size:10px;
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  color:rgba(245,245,245,0.48);
+  margin-bottom:0.35rem;
+}
+.mw-ach-detail-card-value {
+  font-family:var(--headline);
+  font-size:14px;
+  line-height:1.3;
+  color:var(--white);
+}
+@media (max-width: 640px) {
+  .mw-ach-detail-hero {
+    grid-template-columns:1fr;
+    text-align:center;
+  }
+  .mw-ach-detail-icon {
+    margin:0 auto;
+  }
+  .mw-ach-detail-grid {
+    grid-template-columns:1fr;
+  }
 }
 .dash-ach-card {
   display:grid;
@@ -3412,13 +3594,12 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   .dash-ach-latest {
     justify-content:flex-start;
   }
-  .mw-ach-badge {
-    grid-template-columns:auto minmax(0,1fr);
-  }
-  .mw-ach-state {
-    grid-column:1 / -1;
-    justify-self:flex-start;
-  }
+  .mw-ach-stack { grid-template-columns:repeat(3, minmax(0,1fr)); }
+}
+@media (max-width: 540px) {
+  .mw-ach-group { padding:0.85rem; }
+  .mw-ach-stack { grid-template-columns:repeat(2, minmax(0,1fr)); }
+  .mw-ach-badge { min-height:112px; }
 }
 /* .mw-art img generic fallback (SVG art uses this, photos use .mw-photo) */
 .mw-art img:not(.mw-photo) {
@@ -4134,6 +4315,66 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   margin-top:.9rem; padding-top:.8rem;
   border-top:1px solid rgba(255,255,255,0.06);
   font-size:11px; color:var(--muted); line-height:1.45;
+}
+.pro-pill{
+  display:inline-flex; align-items:center; justify-content:center;
+  padding:.22rem .48rem; border-radius:999px;
+  border:1px solid rgba(255,77,0,0.22);
+  background:rgba(255,77,0,0.08);
+  color:var(--orange);
+  font-family:var(--headline); font-size:8px; letter-spacing:.12em; text-transform:uppercase;
+}
+.pro-lock-card{ position:relative; overflow:hidden; }
+.pro-lock-card::after{
+  content:""; position:absolute; right:-30px; bottom:-40px;
+  width:140px; height:140px; pointer-events:none;
+  background:radial-gradient(circle, rgba(255,77,0,0.14), transparent 68%);
+}
+.pro-lock-copy{ color:rgba(245,245,245,0.72); font-size:12px; line-height:1.5; }
+.pro-lock-actions{
+  display:flex; align-items:center; justify-content:space-between;
+  gap:.75rem; margin-top:1rem;
+}
+.pro-lock-cta{
+  border:none; border-radius:999px; padding:.62rem .9rem;
+  background:var(--orange); color:#111;
+  font-family:var(--headline); font-size:10px; letter-spacing:.12em; text-transform:uppercase;
+  cursor:pointer;
+}
+.pro-lock-note{ color:rgba(245,245,245,0.42); font-size:10px; line-height:1.4; }
+.pro-strip{
+  display:flex; align-items:center; justify-content:space-between; gap:.9rem;
+  padding:.9rem 1rem; border-radius:16px;
+  border:1px solid rgba(255,77,0,0.14);
+  background:linear-gradient(135deg, rgba(255,77,0,0.08), rgba(255,255,255,0.02));
+}
+.pro-strip-copy{ color:rgba(245,245,245,0.72); font-size:11px; line-height:1.45; }
+.pro-modal-grid{
+  display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.8rem; margin-top:1rem;
+}
+.pro-plan{
+  padding:1rem; border-radius:18px;
+  border:1px solid rgba(245,245,245,0.08); background:rgba(255,255,255,0.02);
+}
+.pro-plan.featured{
+  border-color:rgba(255,77,0,0.24);
+  background:linear-gradient(180deg, rgba(255,77,0,0.1), rgba(255,255,255,0.02));
+}
+.pro-plan-kicker{ color:rgba(245,245,245,0.5); font-size:10px; letter-spacing:.16em; text-transform:uppercase; }
+.pro-plan-name{ font-family:var(--headline); font-size:22px; text-transform:uppercase; margin-top:.25rem; }
+.pro-plan-price{ margin-top:.25rem; color:var(--orange); font-family:var(--headline); font-size:18px; }
+.pro-plan-copy{ margin-top:.45rem; color:rgba(245,245,245,0.74); font-size:12px; line-height:1.45; }
+.pro-plan-list{ margin:.75rem 0 0; padding:0; list-style:none; display:grid; gap:.35rem; color:rgba(245,245,245,0.78); font-size:12px; }
+.dcw-pro-badge{
+  margin-left:.45rem; display:inline-flex; align-items:center;
+  padding:.14rem .38rem; border-radius:999px;
+  background:rgba(255,77,0,0.08); color:var(--orange);
+  border:1px solid rgba(255,77,0,0.18);
+  font-family:var(--headline); font-size:8px; letter-spacing:.12em; text-transform:uppercase;
+}
+@media (max-width: 640px) {
+  .pro-modal-grid{ grid-template-columns:1fr; }
+  .pro-lock-actions, .pro-strip{ flex-direction:column; align-items:flex-start; }
 }
 
 /* Pacing IQ */
@@ -5006,7 +5247,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
         <div class="ai-loading" id="photoLoad"><div class="spinner"></div>Reading screenshot...</div>
       </div>
       <div id="rtManual" style="display:none">
-        <div class="fgrid">
+        <div class="fgrid race-manual-grid">
           <div class="fg full" id="mNWrap"><label class="fl">Race Name</label><input class="fi" id="mN" placeholder="Search a race or type your own…" autocomplete="off"></div>
           <div class="fg"><label class="fl">Race Type</label>
             <select class="fs" id="mT" onchange="onTypeChange()">
@@ -5155,10 +5396,10 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
       <div class="modal-sub">Your countdown starts now.</div>
     </div>
     <div class="modal-body">
-      <div class="fgrid" style="grid-template-columns:1fr">
+      <div class="fgrid next-race-grid">
         <div class="fg"><label class="fl">Race Name</label><input class="fi" id="nrN" placeholder="e.g. Boston Marathon 2026"></div>
         <div class="fg"><label class="fl">Date</label><input class="fi" id="nrDt" type="date"></div>
-        <div class="fgrid" style="grid-template-columns:1fr 1fr;gap:.75rem">
+        <div class="fgrid next-race-grid-2">
           <div class="fg"><label class="fl">Sport</label>
             <select class="fs" id="nrType" onchange="onNrTypeChange()">
               <option value="run">🏃 Running</option>
@@ -5216,7 +5457,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
       <div class="modal-sub">Your story. Your stats.</div>
     </div>
     <div class="modal-body">
-      <div class="fgrid" style="grid-template-columns:1fr 1fr;gap:.75rem">
+      <div class="fgrid ea-form-grid">
         <div class="fg full"><label class="fl">Full Name</label><input class="fi" id="eN" placeholder="Your name"></div>
         <div class="fg">
           <label class="fl">Home Country</label>
@@ -5609,29 +5850,29 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
             <div class="fg" style="margin:0">
               <label class="fl">First Name</label>
-              <input class="fi" id="authFirstName" placeholder="Alex" autocomplete="off" disabled>
+              <input class="fi" id="authFirstName" placeholder="Alex" autocomplete="off" readonly tabindex="-1" disabled>
               <div class="fg-err-msg"></div>
             </div>
             <div class="fg" style="margin:0">
               <label class="fl">Last Name</label>
-              <input class="fi" id="authLastName" placeholder="Finisher" autocomplete="off" disabled>
+              <input class="fi" id="authLastName" placeholder="Finisher" autocomplete="off" readonly tabindex="-1" disabled>
               <div class="fg-err-msg"></div>
             </div>
           </div>
         </div>
         <div class="fg" id="authInviteWrap" style="display:none">
           <label class="fl">Invite Code</label>
-          <input class="fi" id="authInviteCode" placeholder="e.g. BREAKTAPES2026" autocomplete="off" style="text-transform:uppercase" disabled>
+          <input class="fi" id="authInviteCode" placeholder="e.g. BREAKTAPES2026" autocomplete="off" style="text-transform:uppercase" readonly tabindex="-1" disabled>
           <div class="fg-err-msg"></div>
         </div>
         <div class="fg">
           <label class="fl" for="authEmail">Email</label>
-          <input class="fi" id="authEmail" type="text" placeholder="you@example.com" autocomplete="off" disabled>
+          <input class="fi" id="authEmail" type="text" placeholder="you@example.com" autocomplete="off" readonly tabindex="-1" disabled>
           <div class="fg-err-msg"></div>
         </div>
         <div class="fg">
           <label class="fl" for="authPassword">Password</label>
-          <input class="fi" id="authPassword" type="password" placeholder="At least 6 characters" autocomplete="new-password" disabled>
+          <input class="fi" id="authPassword" type="text" placeholder="At least 6 characters" autocomplete="off" readonly tabindex="-1" disabled>
           <div class="fg-err-msg"></div>
         </div>
       </div>
@@ -5824,6 +6065,45 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   </div>
 </div>
 
+<div class="modal-overlay" id="achievementDetailModal" onclick="bgClose(event,'achievementDetailModal')">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="achievementDetailTitle">
+    <div class="modal-drag"></div>
+    <div class="modal-head">
+      <div class="modal-h" id="achievementDetailTitle">Achievement</div>
+      <div class="modal-sub">See what it means, whether you have unlocked it, and the race that triggered it when available.</div>
+    </div>
+    <div class="modal-body">
+      <div class="mw-ach-detail-wrap">
+        <div class="mw-ach-detail-hero">
+          <div class="mw-ach-detail-icon" id="achDetailIcon">🏆</div>
+          <div>
+            <div class="mw-ach-detail-kicker">Achievement</div>
+            <div class="mw-ach-detail-name" id="achDetailName">Achievement</div>
+          </div>
+        </div>
+        <div class="mw-ach-detail-desc" id="achDetailDesc">Achievement detail unavailable.</div>
+        <div class="mw-ach-detail-grid">
+          <div class="mw-ach-detail-card">
+            <div class="mw-ach-detail-card-label">Status</div>
+            <div class="mw-ach-detail-card-value" id="achDetailStatus">Locked</div>
+          </div>
+          <div class="mw-ach-detail-card">
+            <div class="mw-ach-detail-card-label">Unlocked At</div>
+            <div class="mw-ach-detail-card-value" id="achDetailUnlockedAt">Not unlocked yet</div>
+          </div>
+          <div class="mw-ach-detail-card" style="grid-column:1 / -1">
+            <div class="mw-ach-detail-card-label">Race</div>
+            <div class="mw-ach-detail-card-value" id="achDetailRace">Race not unlocked yet.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-main" onclick="closeM('achievementDetailModal')">Close</button>
+    </div>
+  </div>
+</div>
+
 <!-- ==== JS ==== -->
 <script>
 /* ============================
@@ -5850,6 +6130,34 @@ const HIST_PER_PAGE = 20;
 let _histSearchTimer;
 const _IS_PROD    = window.location.hostname === 'app.breaktapes.com';
 const _IS_STAGING = window.location.hostname === 'dev.breaktapes.com';
+const PRO_STORAGE_KEY = 'bt_pro_access';
+const PRO_FEATURE_META = {
+  'race-forecast': {
+    name: 'Race Day Forecast',
+    kicker: 'Pro Forecast',
+    description: 'Unlock live forecast overlays, climate context, and race-day condition summaries for your key events.'
+  },
+  'pacing-iq': {
+    name: 'Pacing IQ',
+    kicker: 'Pro Analysis',
+    description: 'See your pacing personality, split tendencies, and whether you fade, hold, or finish strong.'
+  },
+  'momentum': {
+    name: 'Career Momentum',
+    kicker: 'Pro Analysis',
+    description: 'Track whether your form is building, flattening, or slipping against your own race history.'
+  },
+  'age-grade': {
+    name: 'Age-Grade Score',
+    kicker: 'Pro Benchmark',
+    description: 'Benchmark classic road-race results against age-graded standards and trend your performance over time.'
+  },
+  'race-dna': {
+    name: 'Race DNA',
+    kicker: 'Pro Intelligence',
+    description: 'Unlock advanced weather-fit analysis so your race history can explain the conditions where you perform best.'
+  }
+};
 const BETA_INVITE_CODES = ['BREAKTAPES2026', 'BETA26', 'RUNFAST', 'TAPES24'];
 const SUPABASE_URL      = _IS_PROD
   ? 'https://kmdpufauamadwavqsinj.supabase.co'
@@ -5868,6 +6176,47 @@ const STRAVA_CLIENT_ID = '216395';
 
 // Open Wearables proxy (future use)
 const OW_PROXY_URL = HEALTH_WORKER_URL;
+
+function hasProAccess() {
+  if (!_IS_PROD) return true;
+  try { return localStorage.getItem(PRO_STORAGE_KEY) === '1'; } catch (e) { return false; }
+}
+
+function isProFeatureLocked(featureId) {
+  return !!PRO_FEATURE_META[featureId] && !hasProAccess();
+}
+
+function renderProLockedCard(featureId, fallback = {}) {
+  const meta = PRO_FEATURE_META[featureId] || {};
+  const title = fallback.title || meta.name || 'Pro Feature';
+  const kicker = fallback.kicker || meta.kicker || 'Pro';
+  const copy = fallback.copy || meta.description || 'Upgrade to unlock this feature.';
+  return `<div class="insight-card pro-lock-card">
+    <div class="insight-card-header">
+      <div>
+        <div class="insight-card-kicker">${escapeHtml(kicker)}</div>
+        <div class="insight-card-title">${escapeHtml(title)}</div>
+      </div>
+      <div class="pro-pill">Pro</div>
+    </div>
+    <div class="pro-lock-copy">${escapeHtml(copy)}</div>
+    <div class="pro-lock-actions">
+      <button class="pro-lock-cta" type="button" onclick="openProModal('${escapeAttr(featureId)}')">Unlock Pro</button>
+      <div class="pro-lock-note">Dev and staging stay fully unlocked for testing.</div>
+    </div>
+  </div>`;
+}
+
+function renderProLockedStrip(featureId) {
+  const meta = PRO_FEATURE_META[featureId] || {};
+  return `<div class="pro-strip">
+    <div>
+      <div class="insight-card-kicker" style="margin-bottom:.28rem">${escapeHtml(meta.kicker || 'Pro')}</div>
+      <div class="pro-strip-copy">${escapeHtml(meta.description || 'Upgrade to unlock this feature.')}</div>
+    </div>
+    <button class="pro-lock-cta" type="button" onclick="openProModal('${escapeAttr(featureId)}')">Unlock Pro</button>
+  </div>`;
+}
 // Instantly hide landing screen if a cached Supabase session exists — avoids flash on reload
 (function() {
   try {
@@ -7163,6 +7512,27 @@ function getAchievementCatalogById(id) {
   return achievementCatalog.find(row => row.id === id) || null;
 }
 
+function getUserAchievementRowByAchievementId(id) {
+  return userAchievementRows.find(row => row.achievement_id === id) || null;
+}
+
+function getAchievementSourceRace(row) {
+  if (!row?.source_race_id) return null;
+  return userRaceRows.find(race => String(race.id) === String(row.source_race_id))
+    || races.find(race => String(race.id) === String(row.source_race_id))
+    || null;
+}
+
+function formatAchievementSourceRace(row) {
+  const race = getAchievementSourceRace(row);
+  if (!race) return '';
+  const parts = [race.name || 'Race'];
+  if (race.date) parts.push(fmtDate(race.date));
+  const location = [race.city, race.country].filter(Boolean).join(', ');
+  if (location) parts.push(location);
+  return parts.join(' · ');
+}
+
 function getAchievementProgressSummary() {
   const unlockedIds = getUnlockedAchievementIds();
   const unlockedCatalog = achievementCatalog.filter(row => unlockedIds.has(row.id));
@@ -7175,6 +7545,29 @@ function getAchievementProgressSummary() {
       .map(row => getAchievementCatalogById(row.achievement_id))
       .filter(Boolean)
   };
+}
+
+function openAchievementDetail(achievementId) {
+  const row = getAchievementCatalogById(achievementId);
+  if (!row) return;
+  const unlockRow = getUserAchievementRowByAchievementId(achievementId);
+  const unlocked = !!unlockRow;
+  const sourceRaceLabel = formatAchievementSourceRace(unlockRow);
+  const modal = document.getElementById('achievementDetailModal');
+  if (!modal) return;
+  const iconEl = document.getElementById('achDetailIcon');
+  const nameEl = document.getElementById('achDetailName');
+  const descEl = document.getElementById('achDetailDesc');
+  const statusEl = document.getElementById('achDetailStatus');
+  const raceEl = document.getElementById('achDetailRace');
+  const dateEl = document.getElementById('achDetailUnlockedAt');
+  if (iconEl) iconEl.textContent = row.icon || '🏆';
+  if (nameEl) nameEl.textContent = row.name || 'Achievement';
+  if (descEl) descEl.textContent = row.description || 'Achievement detail unavailable.';
+  if (statusEl) statusEl.textContent = unlocked ? 'Unlocked' : 'Locked';
+  if (raceEl) raceEl.textContent = sourceRaceLabel || (unlocked ? 'Unlocked, but no race link was saved for this badge yet.' : 'Race not unlocked yet.');
+  if (dateEl) dateEl.textContent = unlocked && unlockRow?.unlocked_at ? new Date(unlockRow.unlocked_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Not unlocked yet';
+  openM('achievementDetailModal');
 }
 
 function buildAchievementContextLookupByRaceKey() {
@@ -7429,15 +7822,27 @@ function setAuthMode(mode) {
 function setAuthFieldsInteractive(isOpen) {
   ['authFirstName', 'authLastName', 'authInviteCode', 'authEmail', 'authPassword'].forEach(id => {
     const el = document.getElementById(id);
-    if (el) el.disabled = !isOpen;
+    if (!el) return;
+    el.disabled = !isOpen;
+    el.readOnly = !isOpen;
+    el.tabIndex = isOpen ? 0 : -1;
   });
   const emailInput = document.getElementById('authEmail');
   if (emailInput) {
     emailInput.autocomplete = isOpen ? (authMode === 'signin' ? 'username' : 'email') : 'off';
+    if (isOpen) emailInput.name = authMode === 'signin' ? 'username' : 'email';
+    else emailInput.removeAttribute('name');
   }
   const pw = document.getElementById('authPassword');
   if (pw) {
     pw.autocomplete = isOpen ? (authMode === 'signin' ? 'current-password' : 'new-password') : 'off';
+    if (isOpen) {
+      pw.type = 'password';
+      pw.name = 'password';
+    } else {
+      pw.type = 'text';
+      pw.removeAttribute('name');
+    }
   }
 }
 
@@ -9135,7 +9540,7 @@ const DASH_WIDGETS = [
   { id: 'countdown', label: 'Next Race Countdown',    icon: '🏁', zone: 'priority' },
   { id: 'stats',     label: 'Race Stats',             icon: '📊', zone: 'priority' },
   { id: 'goals',     label: 'Goals',                  icon: '🎯', zone: 'training' },
-  { id: 'race-forecast', label: 'Race Day Forecast',  icon: '🌤️', zone: 'priority' },
+  { id: 'race-forecast', label: 'Race Day Forecast',  icon: '🌤️', zone: 'priority', pro: true },
   { id: 'insights',  label: 'Year So Far & H2H',      icon: '📈', zone: 'performance' },
   { id: 'recent',    label: 'Recent Races',           icon: '🏃', zone: 'performance' },
   { id: 'pbs',       label: 'Personal Bests',         icon: '⚡', zone: 'performance' },
@@ -9145,10 +9550,10 @@ const DASH_WIDGETS = [
   { id: 'field-placing', label: 'Field-Adjusted Placing', icon: '🎯', zone: 'performance' },
   { id: 'activity-preview', label: 'Recent Training', icon: '⚡', zone: 'training' },
   { id: 'training-streak', label: 'Training Streak',  icon: '🔥', zone: 'training' },
-  { id: 'pacing-iq', label: 'Pacing IQ',              icon: '🧠', zone: 'insights' },
-  { id: 'momentum',  label: 'Career Momentum',        icon: '🚀', zone: 'insights' },
-  { id: 'age-grade', label: 'Age-Grade Score',        icon: '📈', zone: 'insights' },
-  { id: 'race-dna',  label: 'Race DNA',               icon: '🧬', zone: 'insights' },
+  { id: 'pacing-iq', label: 'Pacing IQ',              icon: '🧠', zone: 'insights', pro: true },
+  { id: 'momentum',  label: 'Career Momentum',        icon: '🚀', zone: 'insights', pro: true },
+  { id: 'age-grade', label: 'Age-Grade Score',        icon: '📈', zone: 'insights', pro: true },
+  { id: 'race-dna',  label: 'Race DNA',               icon: '🧬', zone: 'insights', pro: true },
 ];
 
 function getDashLayout() {
@@ -9256,7 +9661,7 @@ function renderDashCustomizeModal() {
           const w = meta[item.id] || { label: item.id, icon: '▪' };
           return `<li class="dcw-row${item.enabled ? '' : ' disabled'}" data-id="${item.id}">
             <span class="dcw-icon">${w.icon}</span>
-            <span class="dcw-label">${w.label}</span>
+            <span class="dcw-label">${w.label}${w.pro ? '<span class="dcw-pro-badge">Pro</span>' : ''}</span>
             <div class="dcw-controls">
               <div class="dcw-arrows">
                 <button class="dcw-arrow" onclick="dcwMove('${item.id}',-1)" ${idx === 0 ? 'disabled' : ''} title="Move up in section">▲</button>
@@ -9597,6 +10002,10 @@ const PIQ_META = {
 function renderPacingIQ() {
   const el = document.getElementById('pacingIQContent');
   if (!el) return;
+  if (isProFeatureLocked('pacing-iq')) {
+    el.innerHTML = renderProLockedCard('pacing-iq');
+    return;
+  }
   const iq = computePacingIQ();
   if (!iq) {
     el.innerHTML = `<div class="insight-card piq-card">
@@ -9687,6 +10096,10 @@ function computeMomentum() {
 function renderMomentumWidget() {
   const el = document.getElementById('momentumWidgetContent');
   if (!el) return;
+  if (isProFeatureLocked('momentum')) {
+    el.innerHTML = renderProLockedCard('momentum');
+    return;
+  }
   const mom = computeMomentum();
   if (!mom) {
     el.innerHTML = `<div class="insight-card mom-card">
@@ -9737,6 +10150,11 @@ async function renderRaceDayForecast() {
   const content = document.getElementById('raceForecastContent');
   if (!strip || !content) return;
   if (!nextRace || !nextRace.date) { strip.style.display = 'none'; return; }
+  if (isProFeatureLocked('race-forecast')) {
+    strip.style.display = '';
+    content.innerHTML = renderProLockedStrip('race-forecast');
+    return;
+  }
   const weather = await getUpcomingWeatherInsight(nextRace);
   if (!weather) { strip.style.display = 'none'; return; }
   const icon = weather.mode === 'forecast' ? (WMO_ICONS[weather.weatherCode] || '🌡️') : '🌤️';
@@ -9824,6 +10242,10 @@ function computeAgeGradeHistory() {
 function renderAgeGradeWidget() {
   const el = document.getElementById('ageGradeWidgetContent');
   if (!el) return;
+  if (isProFeatureLocked('age-grade')) {
+    el.innerHTML = renderProLockedCard('age-grade');
+    return;
+  }
   if (!athlete || !athlete.gender || !athlete.ageGroup) {
     el.innerHTML = `<div class="insight-card ag-widget">
       <div class="insight-card-header">
@@ -9885,6 +10307,14 @@ function renderAgeGradeWidget() {
 function renderAgeGradeChart() {
   const el = document.getElementById('athAgeGradeChart');
   if (!el) return;
+  if (isProFeatureLocked('age-grade')) {
+    el.innerHTML = renderProLockedCard('age-grade', {
+      title: 'Age-Grade Trajectory',
+      kicker: 'Pro Benchmark',
+      copy: 'Upgrade to trend your classic road-race performances against age-graded standards over time.'
+    });
+    return;
+  }
   const hist = computeAgeGradeHistory();
   if (!hist || hist.length < 2) {
     el.innerHTML = `<div style="color:var(--muted);font-size:12px;padding:.5rem 0">Log 5K, 10K, Half Marathon, or Marathon races to see your trajectory.</div>`;
@@ -9987,6 +10417,10 @@ async function computeRaceDNA() {
 async function renderRaceDNA() {
   const el = document.getElementById('raceDNAContent');
   if (!el) return;
+  if (isProFeatureLocked('race-dna')) {
+    el.innerHTML = renderProLockedCard('race-dna');
+    return;
+  }
   if (!races.length || races.filter(r=>r.city).length < 3) {
     el.innerHTML = `<div class="insight-card dna-card">
       <div class="insight-card-header">
@@ -10505,15 +10939,14 @@ function renderAchievements() {
   const sections = groups.map(group => {
     const unlocked = group.rows.filter(row => row.unlocked).length;
     const rows = group.rows.map(row => `
-      <div class="mw-ach-badge ${row.unlocked ? 'unlocked' : 'locked'}${row.kind === 'ladder' ? ' ladder' : ''}" title="${escapeAttr(row.description)}">
+      <button class="mw-ach-badge ${row.unlocked ? 'unlocked' : 'locked'}${row.kind === 'ladder' ? ' ladder' : ''}" type="button" onclick="openAchievementDetail('${escapeAttr(row.id)}')" title="${escapeAttr(row.description)}">
         <span class="mw-ach-icon">${row.icon}</span>
         <div class="mw-ach-info">
           <div class="mw-ach-name">${escapeHtml(row.name)}</div>
-          <div class="mw-ach-desc">${escapeHtml(row.description)}</div>
           ${row.family_key ? `<div class="mw-ach-meta">${escapeHtml(formatAchievementGroupTitle(row.group_key, row.family_key))}</div>` : ''}
         </div>
         <div class="mw-ach-state">${row.unlocked ? 'Unlocked' : 'Locked'}</div>
-      </div>
+      </button>
     `).join('');
     return `<div class="mw-ach-group">
       <div class="mw-ach-group-head">
@@ -10537,7 +10970,7 @@ function renderAchievements() {
         ${latestChips}
       </div>
     </div>
-    <div class="mw-ach-title">🏆 Achievement Groups</div>
+    <div class="mw-ach-title">🏆 Achievement Icons</div>
     ${sections}
   </div>`;
 }
@@ -14470,6 +14903,53 @@ function openFeedback() {
   openM('feedbackModal');
 }
 
+function openProModal(featureId = '') {
+  const meta = PRO_FEATURE_META[featureId] || {};
+  const title = document.getElementById('proModalTitle');
+  const sub = document.getElementById('proModalSub');
+  const body = document.getElementById('proModalBody');
+  if (title) title.textContent = meta.name ? `${meta.name} — Pro` : 'Unlock BREAKTAPES Pro';
+  if (sub) sub.textContent = meta.description || 'Upgrade to unlock advanced analysis, prediction, and planning features.';
+  if (body) {
+    body.innerHTML = `
+      <div class="pro-modal-grid">
+        <div class="pro-plan">
+          <div class="pro-plan-kicker">Free</div>
+          <div class="pro-plan-name">Core</div>
+          <div class="pro-plan-price">$0</div>
+          <div class="pro-plan-copy">Keep race logging, upcoming races, PBs, achievements, and the free dashboard foundation.</div>
+          <ul class="pro-plan-list">
+            <li>Unlimited race logging</li>
+            <li>Upcoming race tracker</li>
+            <li>PBs and medal wall</li>
+            <li>Basic dashboard widgets</li>
+          </ul>
+        </div>
+        <div class="pro-plan featured">
+          <div class="pro-plan-kicker">Pro</div>
+          <div class="pro-plan-name">Intelligence</div>
+          <div class="pro-plan-price">$7.99/mo · $59.99/yr</div>
+          <div class="pro-plan-copy">Unlock advanced analysis, forecasting, and planning across your racing history.</div>
+          <ul class="pro-plan-list">
+            <li>Pacing IQ and momentum</li>
+            <li>Age-grade and Race DNA</li>
+            <li>Race-day forecast overlays</li>
+            <li>Next-wave prediction and planning tools</li>
+          </ul>
+        </div>
+      </div>
+      <div class="pro-lock-actions" style="margin-top:1.1rem">
+        <button class="pro-lock-cta" type="button" onclick="startProCheckout()">Upgrade to Pro</button>
+        <div class="pro-lock-note">Dev and staging stay unlocked automatically. Production shows this layer until billing is connected.</div>
+      </div>`;
+  }
+  openM('proModal');
+}
+
+function startProCheckout() {
+  showBtToast('Pro checkout layer is ready. Billing integration is the next step.');
+}
+
 function openBetaEmailModal() {
   if (!_IS_STAGING) return;
   // Flush any pending data to Supabase before the user upgrades their email
@@ -14620,6 +15100,7 @@ function initModalSwipe(modalEl, closeCallback) {
 window.addEventListener('beforeunload', () => { if (remoteSyncReady) syncRemoteState(); });
 
 document.addEventListener('DOMContentLoaded', () => {
+  setAuthFieldsInteractive(false);
   document.querySelectorAll('.modal-overlay').forEach(overlay => {
     const modal = overlay.querySelector('.modal');
     if (modal) initModalSwipe(modal, () => closeM(overlay.id));
@@ -14729,6 +15210,20 @@ initApp();
     </div>
     <div class="modal-foot" style="padding:1rem 1.25rem">
       <button class="btn-main" onclick="closeM('dashCustomizeModal')">Done</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="proModal" onclick="bgClose(event,'proModal')">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="proModalTitle">
+    <div class="modal-drag"></div>
+    <div class="modal-head">
+      <div class="modal-h" id="proModalTitle">Unlock BREAKTAPES Pro</div>
+      <div class="modal-sub" id="proModalSub">Upgrade to unlock advanced analysis, prediction, and planning features.</div>
+    </div>
+    <div class="modal-body" id="proModalBody"></div>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeM('proModal')">Close</button>
     </div>
   </div>
 </div>
