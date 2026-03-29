@@ -14,7 +14,7 @@ function parseArgs(argv) {
   const args = {
     inputJson: path.resolve(process.cwd(), 'public/upcoming-race-catalog.json'),
     outputJson: path.resolve(process.cwd(), 'public/upcoming-race-catalog.json'),
-    outputSql: path.resolve(process.cwd(), 'supabase/migrations/20260328190000_race_catalog_ironman_refresh.sql'),
+    outputSql: path.resolve(process.cwd(), 'supabase/migrations/20260329123000_race_catalog_ironman_refresh_v2.sql'),
     today: new Date().toISOString().slice(0, 10),
   };
   for (let i = 0; i < argv.length; i += 1) {
