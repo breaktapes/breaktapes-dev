@@ -1,7 +1,7 @@
 const { loadSPA } = require('./spa-loader');
 
-const futureDate = new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10);
-const pastDate = new Date(Date.now() - 14 * 86400000).toISOString().slice(0, 10);
+const futureDate = '2099-04-12';
+const pastDate = '2020-04-12';
 
 beforeEach(() => {
   document.body.innerHTML = '';

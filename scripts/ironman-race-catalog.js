@@ -613,14 +613,15 @@ function inferHyroxSeries(title) {
 
 function extractHyroxEvents(html) {
   const cards = [];
-  const re = /<h2 class="w-post-elm post_title[\s\S]*?<a href="([^"]+)">([^<]+)<\/a><\/h2>[\s\S]*?event_date_1[^>]*><span class="w-post-elm-value">([^<]+)<\/span>[\s\S]*?(?:event_date_3[^>]*><span class="w-post-elm-value">([^<]+)<\/span>)?/gi;
-  let match;
-  while ((match = re.exec(html)) !== null) {
-    const url = match[1];
-    const title = normalizeWhitespace(match[2]);
+  const blocks = String(html || '').split(/<div class="w-vwrapper usg_vwrapper_1 en_subpage-pt_titlebox">/i).slice(1);
+  for (const block of blocks) {
+    const url = block.match(/<a href="([^"]+)">/i)?.[1] || '';
+    const title = normalizeWhitespace(block.match(/<a href="[^"]+">([^<]+)<\/a>/i)?.[1] || '');
     if (!url || !title || /youngstars/i.test(title) || /youngstars/i.test(url)) continue;
-    const startDate = parseHyroxDate(match[3]);
-    const endDate = match[4] ? parseHyroxDate(match[4], startDate.slice(0, 4)) : '';
+    const startRaw = block.match(/event_date_1[\s\S]*?<span class="w-post-elm-value">([^<]+)<\/span>/i)?.[1] || '';
+    const endRaw = block.match(/event_date_3[\s\S]*?<span class="w-post-elm-value">([^<]+)<\/span>/i)?.[1] || '';
+    const startDate = parseHyroxDate(startRaw);
+    const endDate = endRaw ? parseHyroxDate(endRaw, startDate.slice(0, 4)) : '';
     const city = inferHyroxCity(title, url);
     const citySlug = slugify(city);
     const override = HYROX_CITY_OVERRIDES[citySlug] || {};

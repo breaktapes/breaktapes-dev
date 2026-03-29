@@ -82,10 +82,57 @@ const FIXTURE_ATHLETE = {
   lastName:  'Runner',
   gender:    'F',
   ageGroup:  '35-39',
+  nationality: 'UK',
 };
+
+const FIXTURE_UPCOMING = [
+  {
+    id: 'u1',
+    name: 'Valencia Marathon',
+    distance: 'Marathon',
+    date: `${yyyy + 1}-12-01`,
+    city: 'Valencia',
+    country: 'Spain',
+    priority: 'A',
+    surface: 'Road',
+    terrain: 'Flat',
+    courseType: 'Point-to-point',
+    travelContext: 'Travel',
+    weatherSummary: { tempHigh: 18, tempLow: 10, humidityPct: 60, windKph: 11, label: '10° – 18°C' },
+  },
+  {
+    id: 'u2',
+    name: 'Lisbon Half',
+    distance: 'Half Marathon',
+    date: `${yyyy + 1}-10-12`,
+    city: 'Lisbon',
+    country: 'Portugal',
+    priority: 'B',
+    surface: 'Road',
+    terrain: 'Rolling',
+    courseType: 'Loop',
+    travelContext: 'Travel',
+    weatherSummary: { tempHigh: 22, tempLow: 14, humidityPct: 58, windKph: 14, label: '14° – 22°C' },
+  },
+];
+
+const daysBefore = (dateStr, days) => {
+  const d = new Date(`${dateStr}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() - days);
+  return d.toISOString().slice(0, 10);
+};
+
+const FIXTURE_ACTIVITIES = [
+  { id: 'a1', start_date_local: `${daysBefore(recentDate1, 7)}T07:00:00Z`, distance: 22000 },
+  { id: 'a2', start_date_local: `${daysBefore(recentDate2, 5)}T07:00:00Z`, distance: 18000 },
+  { id: 'a3', start_date_local: `${daysBefore(`${yyyy - 1}-04-01`, 4)}T07:00:00Z`, distance: 26000 },
+];
 
 beforeAll(() => {
   loadSPA({ races: FIXTURE_RACES, athlete: FIXTURE_ATHLETE });
+  upcomingRaces = FIXTURE_UPCOMING;
+  nextRace = FIXTURE_UPCOMING[0];
+  stravaActivities = FIXTURE_ACTIVITIES;
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -525,5 +572,146 @@ describe('computeAgeGrade', () => {
     const race = { distance: '5K', time: '0:10:00' };  // 10min 5K → faster than world record
     const grade = computeAgeGrade(race);
     expect(grade).toBeLessThanOrEqual(100);
+  });
+});
+
+describe('computeRaceFacts', () => {
+  test('normalizes temperature, humidity, wind, and pacing buckets', () => {
+    const facts = computeRaceFacts({
+      surface: 'Road',
+      terrain: 'Flat',
+      courseType: 'Loop',
+      travelContext: 'Travel',
+      weatherSummary: { tempHigh: 26, tempLow: 18, humidityPct: 75, windKph: 23 },
+      splits: FIXTURE_RACES[3].splits,
+      time: FIXTURE_RACES[3].time,
+    });
+    expect(facts.temperatureBucket).toBe('warm');
+    expect(facts.humidityBucket).toBe('humid');
+    expect(facts.windBucket).toBe('windy');
+    expect(facts.travelDistanceBucket).toBe('travel');
+    expect(facts.surfaceTags).toContain('Road');
+  });
+});
+
+describe('computePrediction', () => {
+  test('returns deterministic prediction metrics for an upcoming race', () => {
+    const prediction = computePrediction(FIXTURE_UPCOMING[0], FIXTURE_RACES);
+    expect(prediction).not.toBeNull();
+    expect(prediction.pbLikelihood).toBeGreaterThanOrEqual(8);
+    expect(prediction.pbLikelihood).toBeLessThanOrEqual(88);
+    expect(prediction.courseFit).toBeGreaterThanOrEqual(35);
+    expect(prediction.likelyFinishRange.low).toMatch(/:/);
+    expect(prediction.likelyFinishRange.high).toMatch(/:/);
+  });
+});
+
+describe('computeSeasonPlan', () => {
+  test('builds taper and recovery windows for upcoming races', () => {
+    const plan = computeSeasonPlan(FIXTURE_UPCOMING);
+    expect(plan).not.toBeNull();
+    expect(plan.plan).toHaveLength(2);
+    expect(plan.plan[0]).toHaveProperty('taperDays');
+    expect(plan.plan[0]).toHaveProperty('recoveryDays');
+  });
+});
+
+describe('computeRecoveryRisk', () => {
+  test('estimates recovery days from recent race load', () => {
+    const recovery = computeRecoveryRisk(FIXTURE_RACES);
+    expect(recovery).not.toBeNull();
+    expect(recovery.estimatedRecoveryDays).toBeGreaterThanOrEqual(2);
+    expect(['low', 'moderate', 'high']).toContain(recovery.overRacingRisk);
+  });
+});
+
+describe('computeTrendAnalysis', () => {
+  test('reports split and consistency trends', () => {
+    const trends = computeTrendAnalysis(FIXTURE_RACES);
+    expect(trends).not.toBeNull();
+    expect(trends).toHaveProperty('negativeSplitRate');
+    expect(trends).toHaveProperty('fadeRate');
+    expect(trends.consistencyScore).toBeGreaterThanOrEqual(0);
+    expect(trends.consistencyScore).toBeLessThanOrEqual(100);
+  });
+});
+
+describe('computeRecommendationSet', () => {
+  test('ranks upcoming races by fit and spacing', () => {
+    const recommendations = computeRecommendationSet(FIXTURE_UPCOMING, FIXTURE_RACES);
+    expect(recommendations).not.toBeNull();
+    expect(recommendations.length).toBeGreaterThan(0);
+    expect(recommendations[0]).toHaveProperty('score');
+    expect(recommendations[0]).toHaveProperty('reason');
+  });
+});
+
+describe('computeTrainingRaceCorrelation', () => {
+  test('links training load windows to race outcomes when activities exist', () => {
+    const correlation = computeTrainingRaceCorrelation(FIXTURE_RACES, FIXTURE_ACTIVITIES);
+    expect(correlation).not.toBeNull();
+    expect(correlation.sampleSize).toBeGreaterThanOrEqual(2);
+    expect(correlation.alignmentScore).toBeGreaterThanOrEqual(0);
+    expect(correlation.alignmentScore).toBeLessThanOrEqual(100);
+  });
+});
+
+describe('saveSeasonPlanDraft', () => {
+  test('persists a named season plan draft', () => {
+    const saved = saveSeasonPlanDraft('Test Season', [{ id: 'u1', name: 'Valencia Marathon' }]);
+    expect(saved.name).toBe('Test Season');
+    expect(JSON.parse(localStorage.getItem('fl2_season_plans'))[0].name).toBe('Test Season');
+  });
+});
+
+describe('saveRaceComparisonDraft', () => {
+  test('stores selected race ids and comparison rows', () => {
+    const saved = saveRaceComparisonDraft('Compare', ['u1', 'u2']);
+    expect(saved.name).toBe('Compare');
+    expect(saved.raceIds).toEqual(['u1', 'u2']);
+    expect(JSON.parse(localStorage.getItem('fl2_race_comparisons'))[0].name).toBe('Compare');
+  });
+});
+
+describe('buildSeasonReport', () => {
+  test('creates a report bundle and persists it to athleteExports', () => {
+    const report = buildSeasonReport();
+    expect(report).toHaveProperty('raceCount');
+    expect(report).toHaveProperty('upcomingCount');
+    expect(report).toHaveProperty('recommendations');
+    expect(JSON.parse(localStorage.getItem('fl2_athlete_exports'))[0].exportType).toBe('season-report');
+  });
+});
+
+describe('buildSeasonReportHtml', () => {
+  test('renders a printable report shell with headline content', () => {
+    const html = buildSeasonReportHtml(buildSeasonReport());
+    expect(html).toContain('Season Report');
+    expect(html).toContain('BREAKTAPES Pro');
+    expect(html).toContain('Personal Bests');
+  });
+});
+
+describe('backup snapshots', () => {
+  test('creates and restores app-state snapshots', () => {
+    const originalRaceCount = JSON.parse(localStorage.getItem('fl2_races')).length;
+    const snapshot = createAppStateSnapshot('Regression Snapshot');
+    localStorage.setItem('fl2_races', JSON.stringify([]));
+    const restored = restoreAppStateVersion(snapshot.id);
+    expect(restored).toBe(true);
+    expect(JSON.parse(localStorage.getItem('fl2_races')).length).toBe(originalRaceCount);
+    expect(JSON.parse(localStorage.getItem('fl2_app_state_versions'))[0].label).toBe('Regression Snapshot');
+  });
+});
+
+describe('extractJson helpers', () => {
+  test('extractJsonObject reads fenced JSON', () => {
+    const parsed = extractJsonObject('```json\\n{\"ok\":true}\\n```');
+    expect(parsed.ok).toBe(true);
+  });
+
+  test('extractJsonArray reads embedded arrays', () => {
+    const parsed = extractJsonArray('prefix [{"name":"A"}] suffix');
+    expect(parsed[0].name).toBe('A');
   });
 });
