@@ -6216,11 +6216,13 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
     <div class="modal-drag"></div>
     <div class="modal-head">
       <div class="modal-h" id="eaModalTitle">Edit Profile</div>
-      <div class="modal-sub">Your story. Your stats.</div>
+      <div class="modal-sub" id="eaModalSub">Your story. Your stats.</div>
     </div>
     <div class="modal-body">
       <div class="fgrid ea-form-grid">
-        <div class="fg full"><label class="fl">Full Name</label><input class="fi" id="eN" placeholder="Your name"></div>
+        <div class="fg"><label class="fl">First Name</label><input class="fi" id="eFirst" placeholder="Alex"></div>
+        <div class="fg"><label class="fl">Last Name</label><input class="fi" id="eLast" placeholder="Finisher"></div>
+        <div class="fg full"><label class="fl">Username</label><input class="fi" id="eUser" placeholder="alexrunner" autocapitalize="none" autocorrect="off" spellcheck="false"></div>
         <div class="fg">
           <label class="fl">Home Country</label>
           <select class="fs" id="eCountry"></select>
@@ -6252,7 +6254,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
       </div>
     </div>
     <div class="modal-foot">
-      <button class="btn-ghost" onclick="closeM('eaModal')">Cancel</button>
+      <button class="btn-ghost" id="eaCancelBtn" onclick="closeM('eaModal')">Cancel</button>
       <button class="btn-main" onclick="saveAth()">Save Profile</button>
     </div>
   </div>
@@ -6602,7 +6604,9 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
         <div class="auth-note">Supabase auth protects each athlete’s cloud data. Your Anthropic key and Strava secret stay local in this browser.</div>
         <div style="display:flex;gap:0.6rem;flex-wrap:wrap;margin-top:0.85rem">
           <button class="btn-main" type="button" id="settingsAuthBtn" onclick="openAuthModal()">Sign In</button>
+          <button class="btn-ghost" type="button" id="settingsPwBtn" onclick="openPasswordModal()" style="display:none">Change Password</button>
           <button class="btn-ghost" type="button" id="settingsSignOutBtn" onclick="signOutUser()" style="display:none">Sign Out</button>
+          <button class="btn-ghost" type="button" id="settingsDeleteBtn" onclick="openDeleteAccountModal()" style="display:none;border-color:rgba(255,107,107,0.45);color:#ff8e8e">Delete Account</button>
         </div>
       </div>
       <div class="fgrid" style="grid-template-columns:1fr">
@@ -6624,6 +6628,77 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
     <div class="modal-foot">
       <button class="btn-ghost" onclick="closeM('settingsModal')">Cancel</button>
       <button class="btn-main" onclick="saveSettings()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="pwModal" onclick="bgClose(event,'pwModal')">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="pwModalTitle">
+    <div class="modal-drag"></div>
+    <div class="modal-head">
+      <div class="modal-h" id="pwModalTitle">Change Password</div>
+      <div class="modal-sub">Update your account password for future sign-ins.</div>
+    </div>
+    <div class="modal-body">
+      <div class="fgrid" style="grid-template-columns:1fr">
+        <div class="fg">
+          <label class="fl" for="pwNew">New Password</label>
+          <div class="fi-wrap">
+            <input class="fi" id="pwNew" type="password" placeholder="At least 8 characters" autocomplete="new-password">
+            <button class="fi-reveal" type="button" onclick="toggleReveal(this)" aria-label="Show/hide password">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+          <div class="fg-err-msg"></div>
+        </div>
+        <div class="fg">
+          <label class="fl" for="pwConfirm">Confirm Password</label>
+          <div class="fi-wrap">
+            <input class="fi" id="pwConfirm" type="password" placeholder="Repeat the new password" autocomplete="new-password">
+            <button class="fi-reveal" type="button" onclick="toggleReveal(this)" aria-label="Show/hide password">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+          <div class="fg-err-msg"></div>
+        </div>
+      </div>
+      <div class="auth-note" id="pwHelperText" style="margin-top:0.85rem">Use at least 8 characters. You’ll keep the same email and profile data.</div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeM('pwModal')">Cancel</button>
+      <button class="btn-main" id="pwSubmitBtn" onclick="submitPasswordChange()">Update Password</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="deleteAccountModal" onclick="bgClose(event,'deleteAccountModal')">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="deleteAccountModalTitle">
+    <div class="modal-drag"></div>
+    <div class="modal-head">
+      <div class="modal-h" id="deleteAccountModalTitle">Delete Account</div>
+      <div class="modal-sub">This permanently removes your account and synced BREAKTAPES data.</div>
+    </div>
+    <div class="modal-body">
+      <div class="card" style="padding:1rem;border-color:rgba(255,107,107,0.28);background:linear-gradient(180deg,rgba(255,107,107,0.08),rgba(255,107,107,0.03));">
+        <div style="font-family:var(--headline);font-size:12px;font-weight:900;letter-spacing:0.14em;text-transform:uppercase;color:#ff9d9d">This cannot be undone</div>
+        <div class="auth-note" style="margin-top:0.55rem;color:var(--text)">Type <strong>DELETE</strong> below to confirm permanent account removal.</div>
+      </div>
+      <div class="fg" style="margin-top:1rem">
+        <label class="fl" for="deleteAccountConfirm">Type DELETE</label>
+        <input class="fi" id="deleteAccountConfirm" placeholder="DELETE" autocapitalize="characters" autocomplete="off" spellcheck="false">
+        <div class="fg-err-msg"></div>
+      </div>
+      <div class="auth-note" id="deleteAccountHelperText" style="margin-top:0.6rem">We’ll remove your login and synced profile, race, planning, and Flatlay data.</div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-ghost" onclick="closeM('deleteAccountModal')">Cancel</button>
+      <button class="btn-main" id="deleteAccountSubmitBtn" onclick="submitDeleteAccount()" style="background:#ff6b6b;border-color:#ff6b6b;color:#140808">Delete Permanently</button>
     </div>
   </div>
 </div>
@@ -8946,7 +9021,9 @@ function updateAuthUI() {
     ? `Signed in as <span class="auth-status-email">${email}</span>. Your races now sync to your private Supabase account.${_IS_PROD && proAccessGranted ? ' <span class="auth-status-email" style="color:var(--orange)">Pro beta unlocked.</span>' : ''}`
     : `You're currently using this app without an account.`;
   document.getElementById('settingsAuthBtn').textContent = signedIn ? 'Manage Account' : 'Sign In';
+  document.getElementById('settingsPwBtn').style.display = signedIn ? '' : 'none';
   document.getElementById('settingsSignOutBtn').style.display = signedIn ? '' : 'none';
+  document.getElementById('settingsDeleteBtn').style.display = signedIn ? '' : 'none';
   document.getElementById('menuSignOutBtn').style.display = signedIn ? '' : 'none';
   const pill = document.getElementById('feedbackPill');
   if (pill && _IS_STAGING) pill.style.display = signedIn ? '' : 'none';
@@ -9122,6 +9199,7 @@ async function refreshAuthState(session) {
     await syncUserRacesAndAchievements(true);
     dismissLanding();
     render(curPage);
+    maybeOpenBetaProfileOnboarding();
   }
 }
 
@@ -9182,7 +9260,8 @@ async function submitAuth() {
         }
       }
       closeM('authModal');
-      render(curPage);
+      const { data: sessionData } = await client.auth.getSession();
+      await refreshAuthState(sessionData?.session || null);
       return;
     }
     const firstName = (document.getElementById('authFirstName')?.value || '').trim();
@@ -11812,6 +11891,37 @@ function getAthleteAgeGroup() {
     if (derived) return derived;
   }
   return String((athlete || {}).ageGroup || '').trim();
+}
+
+function getAthleteNameParts() {
+  const a = athlete || {};
+  const firstName = String(a.firstName || '').trim();
+  const lastName = String(a.lastName || '').trim();
+  if (firstName || lastName) return { firstName, lastName };
+  const parts = String(a.name || '').trim().split(/\s+/).filter(Boolean);
+  return {
+    firstName: parts[0] || '',
+    lastName: parts.slice(1).join(' ')
+  };
+}
+
+function isBetaCredentialUser() {
+  return !!authUser && /@beta\.breaktapes\.com$/i.test(String(authUser.email || '').trim());
+}
+
+function needsBetaProfileOnboarding() {
+  if (!isBetaCredentialUser()) return false;
+  const a = athlete || {};
+  return !String(a.firstName || '').trim()
+    || !String(a.lastName || '').trim()
+    || !String(a.username || '').trim();
+}
+
+function maybeOpenBetaProfileOnboarding() {
+  if (!authUser || !needsBetaProfileOnboarding()) return;
+  const modal = document.getElementById('eaModal');
+  if (modal?.classList.contains('open')) return;
+  setTimeout(() => openEditAth(true), 180);
 }
 
 function normalizeBqAgeBand(ageGroup) {
@@ -16462,7 +16572,21 @@ function clearNextRace() {
 }
 function openEditAth(){
   const a=athlete;
-  document.getElementById('eN').value=a.name||'';
+  const forceRequired = arguments[0] === true;
+  const modal = document.getElementById('eaModal');
+  const { firstName, lastName } = getAthleteNameParts();
+  if (modal) {
+    modal.dataset.required = forceRequired ? '1' : '';
+    delete modal.dataset.allowClose;
+  }
+  document.getElementById('eaModalTitle').textContent = forceRequired ? 'Complete Your Beta Profile' : 'Edit Profile';
+  document.getElementById('eaModalSub').textContent = forceRequired
+    ? 'Before you start testing, add your first name, last name, and a username.'
+    : 'Your story. Your stats.';
+  document.getElementById('eaCancelBtn').style.display = forceRequired ? 'none' : '';
+  document.getElementById('eFirst').value = firstName;
+  document.getElementById('eLast').value = lastName;
+  document.getElementById('eUser').value = a.username || '';
   document.getElementById('eCountry').value=a.country||'';
   document.getElementById('eCi').value=a.city||'';
   document.getElementById('eCiWrap').style.display=a.city?'':'none';
@@ -16478,6 +16602,13 @@ function openEditAth(){
 }
 function openM(id){ document.getElementById(id).classList.add('open'); }
 function closeM(id){
+  if (id === 'eaModal') {
+    const modal = document.getElementById('eaModal');
+    if (modal?.dataset.required === '1' && modal.dataset.allowClose !== '1') {
+      showBtToast('Complete your beta profile to continue');
+      return;
+    }
+  }
   document.getElementById(id).classList.remove('open');
   if (id === 'authModal') {
     const fn = document.getElementById('authFirstName');
@@ -16490,6 +16621,13 @@ function closeM(id){
   if (id === 'settingsModal') {
     const apiKeyEl = document.getElementById('setApiKey');
     if (apiKeyEl) { apiKeyEl.value = ''; apiKeyEl.disabled = true; }
+  }
+  if (id === 'eaModal') {
+    const modal = document.getElementById('eaModal');
+    if (modal) {
+      delete modal.dataset.required;
+      delete modal.dataset.allowClose;
+    }
   }
   if (id === 'flatlayListPickerModal' || id === 'flatlayStackPickerModal') {
     flatlayAddContext = null;
@@ -16671,10 +16809,29 @@ function planWishlistRace(id) {
   showBtToast('Added to Upcoming Races');
 }
 function saveAth(){
+  const modal = document.getElementById('eaModal');
+  const isRequired = modal?.dataset.required === '1';
+  const firstName = document.getElementById('eFirst').value.trim();
+  const lastName = document.getElementById('eLast').value.trim();
+  const usernameRaw = document.getElementById('eUser').value.trim().toLowerCase();
+  if (isRequired) {
+    if (!firstName) { showFieldError('eFirst', 'First name required.'); return; }
+    if (!lastName) { showFieldError('eLast', 'Last name required.'); return; }
+    if (!usernameRaw) { showFieldError('eUser', 'Username required.'); return; }
+  }
+  if (usernameRaw && !/^[a-z0-9._]{3,20}$/.test(usernameRaw)) {
+    showFieldError('eUser', 'Use 3-20 lowercase letters, numbers, dots, or underscores.');
+    return;
+  }
   const dob = document.getElementById('eDob').value || '';
   const derivedAgeGroup = dob ? ageToAgeGroup(getAthleteAgeFromDobValue(dob)) : '';
+  const composedName = [firstName, lastName].filter(Boolean).join(' ').trim() || athlete.name || 'Athlete';
   athlete={
-    name:document.getElementById('eN').value.trim()||'Athlete',
+    ...athlete,
+    firstName,
+    lastName,
+    username: usernameRaw,
+    name: composedName,
     country:document.getElementById('eCountry').value.trim(),
     city:document.getElementById('eCi').value.trim(),
     nationality:document.getElementById('eNat').value.trim(),
@@ -16687,6 +16844,7 @@ function saveAth(){
   };
   sv('fl2_ath',athlete);
   if (isProfileComplete()) localStorage.removeItem('bt_new_user');
+  if (modal) modal.dataset.allowClose = '1';
   closeM('eaModal');
   renderAthlete();
 }
@@ -17512,6 +17670,128 @@ function openSettings(){
   updateAiFeatureVisibility();
   document.getElementById('settingsModal').classList.add('open');
 }
+
+function openPasswordModal() {
+  if (!authUser) { openAuthModal(); return; }
+  const helper = document.getElementById('pwHelperText');
+  const btn = document.getElementById('pwSubmitBtn');
+  ['pwNew', 'pwConfirm'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.value = '';
+      el.type = 'password';
+      el.classList.remove('fi-error');
+      const err = el.closest('.fg')?.querySelector('.fg-err-msg');
+      if (err) err.classList.remove('show');
+    }
+  });
+  if (helper) {
+    helper.textContent = 'Use at least 8 characters. You’ll keep the same email and profile data.';
+    helper.style.color = '';
+  }
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = 'Update Password';
+  }
+  openM('pwModal');
+}
+
+function openDeleteAccountModal() {
+  if (!authUser) { openAuthModal(); return; }
+  const input = document.getElementById('deleteAccountConfirm');
+  const helper = document.getElementById('deleteAccountHelperText');
+  const btn = document.getElementById('deleteAccountSubmitBtn');
+  if (input) {
+    input.value = '';
+    input.classList.remove('fi-error');
+    const err = input.closest('.fg')?.querySelector('.fg-err-msg');
+    if (err) err.classList.remove('show');
+  }
+  if (helper) {
+    helper.textContent = 'We’ll remove your login and synced profile, race, planning, and Flatlay data.';
+    helper.style.color = '';
+  }
+  if (btn) {
+    btn.disabled = false;
+    btn.textContent = 'Delete Permanently';
+  }
+  openM('deleteAccountModal');
+}
+
+async function submitPasswordChange() {
+  if (!authUser) { openAuthModal(); return; }
+  const client = initSupabaseClient();
+  if (!client) return;
+  const pw = document.getElementById('pwNew').value;
+  const confirmPw = document.getElementById('pwConfirm').value;
+  if (!pw) { showFieldError('pwNew', 'Enter a new password.'); return; }
+  if (pw.length < 8) { showFieldError('pwNew', 'Use at least 8 characters.'); return; }
+  if (!confirmPw) { showFieldError('pwConfirm', 'Confirm the new password.'); return; }
+  if (pw !== confirmPw) { showFieldError('pwConfirm', 'Passwords do not match.'); return; }
+  const btn = document.getElementById('pwSubmitBtn');
+  const helper = document.getElementById('pwHelperText');
+  const prev = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Updating…';
+  try {
+    const { error } = await client.auth.updateUser({ password: pw });
+    if (error) throw error;
+    if (helper) {
+      helper.textContent = 'Password updated. Use the new password the next time you sign in.';
+      helper.style.color = 'var(--green)';
+    }
+    showBtToast('Password updated');
+    setTimeout(() => closeM('pwModal'), 450);
+  } catch (err) {
+    if (helper) {
+      helper.textContent = err.message || 'Could not update password. Try again.';
+      helper.style.color = 'var(--orange)';
+    }
+    btn.disabled = false;
+    btn.textContent = prev;
+  }
+}
+
+async function submitDeleteAccount() {
+  if (!authUser) { openAuthModal(); return; }
+  const client = initSupabaseClient();
+  if (!client) return;
+  const confirmValue = document.getElementById('deleteAccountConfirm').value.trim().toUpperCase();
+  if (confirmValue !== 'DELETE') {
+    showFieldError('deleteAccountConfirm', 'Type DELETE to confirm.');
+    return;
+  }
+  const helper = document.getElementById('deleteAccountHelperText');
+  const btn = document.getElementById('deleteAccountSubmitBtn');
+  const prev = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Deleting…';
+  try {
+    const { error } = await client.rpc('delete_my_account', { confirm_text: 'DELETE' });
+    if (error) throw error;
+    localStorage.removeItem('bt_new_user');
+    localStorage.removeItem('bt_modal_shown');
+    localStorage.removeItem('bt_email_upgrade_pending');
+    localStorage.removeItem('bt_auth_uid');
+    localStorage.removeItem(PRO_STORAGE_KEY);
+    REMOTE_SYNC_KEYS.forEach(k => localStorage.removeItem(k));
+    localStorage.removeItem('fl2_wishlist');
+    if (getSupabaseSessionStorageKey()) localStorage.removeItem(getSupabaseSessionStorageKey());
+    if (helper) {
+      helper.textContent = 'Account deleted. Reloading BREAKTAPES…';
+      helper.style.color = 'var(--green)';
+    }
+    setTimeout(() => window.location.reload(), 500);
+  } catch (err) {
+    if (helper) {
+      helper.textContent = err.message || 'Could not delete account. Try again.';
+      helper.style.color = 'var(--orange)';
+    }
+    btn.disabled = false;
+    btn.textContent = prev;
+  }
+}
+
 function saveSettings(){
   localStorage.setItem('fl2_apikey', document.getElementById('setApiKey').value.trim());
   updateAiFeatureVisibility();
