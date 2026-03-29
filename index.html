@@ -7252,9 +7252,6 @@ const FLATLAY_TEMPLATE_GROUPS = [
   { key: 'swimming', label: 'Swimming', templates: ['Open Water', 'Pool Race', 'Swim Meet'] },
   { key: 'cycling', label: 'Cycling', templates: ['Road Race', 'Time Trial', 'Gravel Race', 'Gran Fondo'] }
 ];
-let _nrPickerReady = false;
-let _nrSelectedCatalogRace = null;
-let _pendingUpcomingRedirect = null;
 
 /* New users start with empty state — no demo data */
 if (!races) { races = []; sv('fl2_races', races); }
