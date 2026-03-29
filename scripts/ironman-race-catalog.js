@@ -1025,6 +1025,7 @@ function dedupeRows(rows) {
       slugify(row.name),
       slugify(row.city),
       slugify(row.country),
+      row.event_date || '',
       row.year || '',
       row.type || '',
       slugify(row.dist || ''),
