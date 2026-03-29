@@ -34,13 +34,39 @@ function loadManualRows(manualJson) {
   return files.flatMap(file => JSON.parse(fs.readFileSync(file, 'utf8')));
 }
 
+function slugify(value) {
+  return String(value || '')
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+function replacementKeysForRow(row) {
+  const keys = [];
+  const sourceUrl = String(row.source_url || row.registration_url || '').trim().toLowerCase();
+  if (sourceUrl) keys.push(`url::${sourceUrl}::${row.year || ''}`);
+  keys.push([
+    'identity',
+    slugify(row.name || ''),
+    slugify(row.city || ''),
+    slugify(row.country || ''),
+    row.year || '',
+    slugify(row.series || ''),
+  ].join('::'));
+  return keys;
+}
+
 function main() {
   const args = parseArgs(process.argv.slice(2));
   const baseRows = JSON.parse(fs.readFileSync(args.inputJson, 'utf8'));
   const manualRows = loadManualRows(args.manualJson);
+  const replacementKeys = new Set(manualRows.flatMap(replacementKeysForRow));
   const preservedRows = baseRows.filter(row => (
     row.source_site !== 'manual-screenshot'
     && row.source_url !== 'https://www.ahotu.com/event/bank-of-america-chicago-marathon'
+    && !replacementKeysForRow(row).some(key => replacementKeys.has(key))
   ));
   const mergedRows = dedupeRows([...preservedRows, ...manualRows]);
   const serialized = `${JSON.stringify(mergedRows, null, 2)}\n`;
