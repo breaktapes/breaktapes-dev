@@ -1961,8 +1961,19 @@ main {
   margin-top:.55rem;
   color:var(--muted);
   font-size:12px;
-  line-height:1.45;
-  max-width:38ch;
+  line-height:1.5;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.ath-focus-meta-name{
+  color:rgba(245,245,245,0.75);
+  font-weight:600;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  font-size:12px;
+  margin-top:.55rem;
 }
 .ath-focus-pills{
   display:grid;
@@ -5685,6 +5696,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
             <div class="ath-focus-kicker">Current Focus</div>
             <div class="ath-focus-value" id="athFocusValue">No Goal Set</div>
             <div class="ath-focus-label" id="athFocusLabel">Set your next race to unlock your athlete briefing.</div>
+            <div class="ath-focus-meta-name" id="athFocusName"></div>
             <div class="ath-focus-meta" id="athFocusMeta">Your best race form, current mission, and qualification context live here.</div>
           </div>
         </div>
@@ -16509,6 +16521,7 @@ function renderAthlete(){
   document.getElementById('as-c').textContent=new Set(races.map(r=>r.country)).size;
   document.getElementById('as-y').textContent=a.since?new Date().getFullYear()-parseInt(a.since):'—';
   const bqSummary = computeBQSummary();
+  const focusNameEl = document.getElementById('athFocusName');
   const focusValueEl = document.getElementById('athFocusValue');
   const focusLabelEl = document.getElementById('athFocusLabel');
   const focusMetaEl = document.getElementById('athFocusMeta');
@@ -16518,7 +16531,10 @@ function renderAthlete(){
       const daysAway = Math.max(0, Math.ceil((new Date(`${nextRace.date}T00:00:00`) - new Date()) / 86400000));
       focusValueEl.textContent = `${daysAway} DAYS`;
       focusLabelEl.textContent = 'To your next goal race';
-      focusMetaEl.textContent = `${nextRace.name} · ${nextRace.distance || 'Race'} · ${fmtDate(nextRace.date)}${nextRace.location ? ` · ${nextRace.location}` : ''}`;
+      if (focusNameEl) focusNameEl.textContent = nextRace.name;
+      const parts = [nextRace.distance || 'Race', fmtDate(nextRace.date)];
+      if (nextRace.location) parts.push(nextRace.location);
+      focusMetaEl.textContent = parts.join(' · ');
     } else if (bqSummary.state === 'ready') {
       focusValueEl.textContent = bqSummary.best.time;
       focusLabelEl.textContent = bqSummary.qualifies ? 'Boston qualifier on pace' : 'Boston standard in sight';
