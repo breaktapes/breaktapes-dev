@@ -1059,6 +1059,8 @@ main {
   letter-spacing:0.1em; text-transform:uppercase;
   color:var(--orange); background:none; border:none;
   cursor:pointer; transition:opacity 0.15s;
+  min-height:44px; padding:0 4px;
+  display:inline-flex; align-items:center;
 }
 .see-all:hover { opacity:0.7; }
 
@@ -1544,7 +1546,8 @@ main {
 .tp-field { display:flex; flex-direction:column; align-items:center; gap:1px; }
 .tp-btn {
   background:none; border:none; cursor:pointer; color:var(--muted2);
-  font-size:9px; padding:3px 10px; border-radius:2px; line-height:1;
+  font-size:9px; padding:8px 10px; border-radius:2px; line-height:1;
+  min-height:28px; min-width:44px;
   transition:color 0.12s;
 }
 .tp-btn:hover { color:var(--orange); }
@@ -4681,7 +4684,8 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   font-size: 13px; color: var(--muted);
   background: none; border: none; cursor: pointer;
   text-decoration: underline; text-underline-offset: 3px;
-  padding: 0; font-family: var(--body);
+  padding: 14px 8px; font-family: var(--body);
+  min-height: 44px; display: inline-flex; align-items: center;
 }
 .landing-sign-in-link:hover { color: var(--white); }
 /* 3-column proof grid */
