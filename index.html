@@ -5281,7 +5281,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
       </div>
       <div id="rtManual" style="display:none">
         <div class="fgrid race-manual-grid">
-          <div class="fg full" id="mNWrap"><label class="fl">Race Name</label><input class="fi" id="mN" placeholder="Search a race or type your own…" autocomplete="off"></div>
+          <div class="fg full" id="mNWrap"><label class="fl">Race Name</label><input class="fi" id="mN" type="search" placeholder="Search a race or type your own…" autocomplete="new-password" autocorrect="off" autocapitalize="none" spellcheck="false" data-lpignore="true" data-1p-ignore="true"></div>
           <div class="fg"><label class="fl">Race Type</label>
             <select class="fs" id="mT" onchange="onTypeChange()">
               <option value="run">🏃 Running</option>
@@ -5430,7 +5430,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
     </div>
     <div class="modal-body">
       <div class="fgrid next-race-grid">
-        <div class="fg"><label class="fl">Race Name</label><input class="fi" id="nrN" placeholder="e.g. Boston Marathon 2026"></div>
+        <div class="fg"><label class="fl">Race Name</label><input class="fi" id="nrN" type="search" placeholder="e.g. Boston Marathon 2026" autocomplete="new-password" autocorrect="off" autocapitalize="none" spellcheck="false" data-lpignore="true" data-1p-ignore="true"></div>
         <div class="fg"><label class="fl">Date</label><input class="fi" id="nrDt" type="date"></div>
         <div class="fgrid next-race-grid-2">
           <div class="fg"><label class="fl">Sport</label>
@@ -5604,7 +5604,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
     <div class="modal-drag"></div>
     <div class="modal-head">
       <div class="rd-name-wrap">
-        <input class="rd-name-input" id="rdName" type="text" placeholder="Race name…" autocomplete="off" oninput="rdOnNameInput(this.value)">
+        <input class="rd-name-input" id="rdName" type="search" placeholder="Race name…" autocomplete="new-password" autocorrect="off" autocapitalize="none" spellcheck="false" data-lpignore="true" data-1p-ignore="true" oninput="rdOnNameInput(this.value)">
         <button class="rd-autofill-btn" id="rdAutoFillBtn" onclick="rdLookupRace()" title="Auto-fill details">✦ Auto-fill</button>
         <div class="rd-suggestions" id="rdSuggestions" style="display:none"></div>
       </div>
