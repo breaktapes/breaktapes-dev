@@ -4417,7 +4417,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
         <button class="btn-ghost" style="padding:.5rem 0.75rem;font-size:12px;white-space:nowrap" onclick="go('map')" aria-label="Race Map">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" style="vertical-align:middle;margin-right:4px"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>Map
         </button>
-        <button class="btn-main" style="padding:.5rem 1rem;font-size:12px;white-space:nowrap" onclick="openRaceModal()">+ Add Race</button>
+        <button class="btn-main" style="padding:.5rem 1rem;font-size:12px;white-space:nowrap" onclick="openRaceModal()">+ Log Race</button>
       </div>
     </div>
     <div class="stats-row" style="margin-bottom:1.5rem">
@@ -4442,7 +4442,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 <!-- FLATLAY -->
 <div id="page-flatlay" class="page">
   <div class="wrap">
-    <div class="page-kicker">Marketplace Mode</div>
+    <div class="page-kicker">Gear Up</div>
     <div class="page-h1">The<br><span class="accent">Flatlay</span></div>
     <div class="flatlay-shell">
       <div class="flatlay-tabs">
@@ -5462,7 +5462,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
           <div class="fg-err-msg"></div>
         </div>
       </div>
-      <div class="auth-note" id="authHelperText">Sign in to load your protected Supabase data and keep it synced.</div>
+      <div class="auth-note" id="authHelperText">Your races stay safe and sync across all your devices.</div>
       <button class="auth-forgot" id="authForgotBtn" onclick="sendPasswordReset()" style="display:none">Forgot password?</button>
     </div>
     <div class="modal-foot">
@@ -6929,7 +6929,7 @@ function setAuthMode(mode) {
   document.getElementById('authSubmitBtn').textContent = signIn ? 'Sign In' : 'Create Account';
   document.getElementById('authNameWrap').style.display = signIn ? 'none' : '';
   document.getElementById('authHelperText').textContent = signIn
-    ? 'Sign in to load your protected Supabase data and keep it synced.'
+    ? 'Your races stay safe and sync across all your devices.'
     : 'Your race history is private and synced across every device.';
   document.getElementById('authModeSignInBtn').className = signIn ? 'btn-main' : 'btn-ghost';
   document.getElementById('authModeSignUpBtn').className = signIn ? 'btn-ghost' : 'btn-main';
@@ -10477,7 +10477,7 @@ function renderHistory(){
   if(!races.length){
     list.innerHTML=`<div class="hist-empty" style="text-align:center;padding:3rem 1rem;">
   <p style="font-family:var(--headline);font-size:1.6rem;font-weight:700;color:var(--muted);line-height:1.2;margin-bottom:1rem;">No races yet.<br>Every finish line starts with one.</p>
-  <button class="cta-btn" onclick="openRaceModal()">+ Log your first race</button>
+  <button class="cta-btn" onclick="openRaceModal()">+ Log a Race</button>
 </div>`;
     if (matchCountEl) matchCountEl.style.display = 'none';
     if (loadMoreBtn) loadMoreBtn.style.display = 'none';
