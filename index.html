@@ -3284,42 +3284,6 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 }
 .bn-tab.active svg { stroke: var(--orange); }
 @media (max-width: 360px) { .bn-tab { font-size: 0; } }
-/* More sheet */
-.more-sheet-overlay {
-  display: none; position: fixed; inset: 0; z-index: 490;
-}
-.more-sheet-overlay.open { display: block; }
-.more-sheet {
-  position: fixed;
-  bottom: calc(var(--bottom-nav-base-height) + env(safe-area-inset-bottom, 0px) + 6px);
-  left: 0; right: 0; z-index: 495;
-  background: #111;
-  border: 1px solid rgba(245,245,245,0.1);
-  border-top: 2px solid rgba(245,245,245,0.08);
-  border-radius: 16px 16px 0 0;
-  padding: 0.5rem 0.5rem 0.25rem;
-  display: flex; flex-direction: row; justify-content: space-around;
-  opacity: 0; pointer-events: none;
-  transform: translateY(10px);
-  transition: opacity 0.16s ease, transform 0.16s ease;
-}
-.more-sheet.open { opacity: 1; pointer-events: auto; transform: translateY(0); }
-.more-sheet-item {
-  flex: 1; display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  gap: 3px; padding: 8px 0 4px; min-height: 48px; min-width: 44px;
-  cursor: pointer; background: none; border: none;
-  color: rgba(245,245,245,0.68);
-  font-family: var(--headline); font-size: 8px; font-weight: 800;
-  letter-spacing: 0.1em; text-transform: uppercase;
-  transition: color 0.15s, transform 0.15s;
-}
-.more-sheet-item:active { transform: scale(0.92); }
-.more-sheet-item.active { color: var(--orange); }
-.more-sheet-item svg { width: 24px; height: 24px; stroke-width: 2.2; }
-.more-sheet-item.active svg { stroke: var(--orange); }
-@media (min-width: 768px) { .more-sheet, .more-sheet-overlay { display: none !important; } }
-
 /* Train tab — green identity */
 #bn-train.active { color: var(--orange); }
 #bn-train.active svg { stroke: var(--orange); }
@@ -9517,18 +9481,7 @@ function go(page) {
   window.scrollTo(0, 0);
   render(page);
 }
-function toggleMoreSheet() {
-  const sheet = document.getElementById('moreSheet');
-  if (sheet.classList.contains('open')) { closeMoreSheet(); }
-  else {
-    sheet.classList.add('open');
-    document.getElementById('moreSheetOverlay').classList.add('open');
-  }
-}
-function closeMoreSheet() {
-  document.getElementById('moreSheet')?.classList.remove('open');
-  document.getElementById('moreSheetOverlay')?.classList.remove('open');
-}
+function closeMoreSheet() { /* no-op — More now opens the side menu */ }
 
 /* ============================
    MENU
@@ -19689,22 +19642,11 @@ initApp();
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
     Medals
   </button>
-  <button class="bn-tab" id="bn-more" onclick="toggleMoreSheet()" aria-label="More">
+  <button class="bn-tab" id="bn-more" onclick="toggleMenu()" aria-label="More">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="5" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.2" fill="currentColor" stroke="none"/></svg>
     More
   </button>
 </nav>
-<div id="moreSheetOverlay" class="more-sheet-overlay" onclick="closeMoreSheet()"></div>
-<div id="moreSheet" class="more-sheet" role="menu" aria-label="More navigation">
-  <button class="more-sheet-item" id="ms-train" onclick="go('train');closeMoreSheet()" role="menuitem">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-    Train
-  </button>
-  <button class="more-sheet-item" id="ms-athlete" onclick="go('athlete');closeMoreSheet()" role="menuitem">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-    Me
-  </button>
-</div>
 
 <!-- ==== FEEDBACK PILL (staging only) ==== -->
 <button id="feedbackPill" class="feedback-pill" onclick="openFeedback()" style="display:none" aria-label="Give Feedback">
