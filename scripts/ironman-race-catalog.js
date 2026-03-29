@@ -1000,6 +1000,8 @@ function dedupeRows(rows) {
       slugify(row.country),
       row.year || '',
       row.type || '',
+      slugify(row.dist || ''),
+      slugify(row.custom_dist || row.customDist || ''),
     ].join('::');
     const existing = map.get(key);
     if (!existing) {

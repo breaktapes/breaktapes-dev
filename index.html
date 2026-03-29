@@ -6599,6 +6599,49 @@ function buildLocationLabel(city, country) {
   return [city, country].filter(Boolean).join(', ');
 }
 
+function normalizeCatalogVariantToken(value) {
+  return String(value || '')
+    .toLowerCase()
+    .replace(/km/g, 'k')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+}
+
+function catalogVariantGroupKey(r) {
+  const source = (r.sourceUrl || r.registrationUrl || '').trim().toLowerCase();
+  if (source) return `${source}::${r.year || ''}`;
+  return [
+    (r.name || '').trim().toLowerCase(),
+    (r.city || '').trim().toLowerCase(),
+    (r.country || '').trim().toLowerCase(),
+    r.year || '',
+    (r.series || '').trim().toLowerCase(),
+  ].join('::');
+}
+
+function annotateCatalogVariantCounts(rows) {
+  const counts = new Map();
+  rows.forEach((row) => {
+    const key = catalogVariantGroupKey(row);
+    counts.set(key, (counts.get(key) || 0) + 1);
+  });
+  return rows.map((row) => ({
+    ...row,
+    _variantCount: counts.get(catalogVariantGroupKey(row)) || 1,
+  }));
+}
+
+function catalogNameIncludesDistance(name, distLabel) {
+  const normalizedName = normalizeCatalogVariantToken(name);
+  const normalizedDist = normalizeCatalogVariantToken(distLabel);
+  if (!normalizedName || !normalizedDist) return false;
+  if (normalizedName.includes(normalizedDist)) return true;
+  if (normalizedDist === 'marathon' && normalizedName.includes('full marathon')) return true;
+  if (normalizedDist === 'half marathon' && normalizedName.includes('21 1k')) return true;
+  if (normalizedDist === '10 mile' && normalizedName.includes('10 miler')) return true;
+  return false;
+}
+
 function mapCatalogRaceRow(r) {
   return {
     name:       r.name,
@@ -6649,7 +6692,7 @@ async function fetchLocalRaceCatalog() {
       if (!res.ok) continue;
       const data = await res.json();
       if (!Array.isArray(data) || !data.length) continue;
-      return data.map(mapCatalogRaceRow);
+      return annotateCatalogVariantCounts(data.map(mapCatalogRaceRow));
     }
     return null;
   } catch (err) {
@@ -6926,7 +6969,7 @@ async function loadRaceCatalog() {
       const localData = await fetchLocalRaceCatalog();
       if (localData?.length) data = localData;
     }
-    raceDb = (data || []).map(r => r.source_site !== undefined || r.sourceSite !== undefined ? mapCatalogRaceRow(r) : ({
+    raceDb = annotateCatalogVariantCounts((data || []).map(r => r.source_site !== undefined || r.sourceSite !== undefined ? mapCatalogRaceRow(r) : ({
       name:       r.name,
       aliases:    r.aliases || [],
       type:       r.type,
@@ -6965,7 +7008,7 @@ async function loadRaceCatalog() {
       surface:    r.surface || '',
       elevationProfile: r.elevation_profile || r.elevationProfile || '',
       sourcePriority: r.source_priority ?? r.sourcePriority ?? null,
-    }));
+    })));
     raceDbLoaded = true;
     return true;
   } catch (err) {
@@ -16479,8 +16522,9 @@ function renderCatalogOption(r) {
   const distLabel = r.customDist || r.dist;
   const locationBits = [r.city, r.region, r.country].filter(Boolean).join(', ');
   const disciplineLabel = getDisciplineLabel(r);
+  const showVariantInTitle = (r._variantCount || 1) > 1 && !catalogNameIncludesDistance(r.name, distLabel);
   return {
-    title: `${icon} ${r.name} <span style="color:var(--orange);font-weight:900">${r._year}</span>`,
+    title: `${icon} ${r.name}${showVariantInTitle ? ` (${distLabel})` : ''} <span style="color:var(--orange);font-weight:900">${r._year}</span>`,
     subtitle: `${fmtRaceDateRange(r._date, r._endDate)} · ${distLabel}${disciplineLabel ? ` · ${disciplineLabel}` : ''} · ${locationBits}`,
   };
 }

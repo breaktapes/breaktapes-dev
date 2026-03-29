@@ -2,6 +2,7 @@ const {
   buildAhotuCuratedRows,
   buildStaticUtmbRows,
   buildRefreshMigration,
+  dedupeRows,
   extractDetailUrls,
   extractHyroxEvents,
   extractUtmbEvents,
@@ -230,5 +231,47 @@ describe('upcoming catalog parser', () => {
     expect(sql).toContain('weather_profile_source');
     expect(sql).toContain('registration_url');
     expect(sql).toContain('IRONMAN 70.3 Valencia');
+  });
+
+  test('dedupeRows preserves same-name variants when distance differs', () => {
+    const rows = dedupeRows([
+      {
+        name: 'City Marathon Weekend',
+        city: 'Example City',
+        country: 'Exampleland',
+        year: 2026,
+        type: 'run',
+        dist: 'Marathon',
+        custom_dist: '',
+        source_priority: 50,
+      },
+      {
+        name: 'City Marathon Weekend',
+        city: 'Example City',
+        country: 'Exampleland',
+        year: 2026,
+        type: 'run',
+        dist: 'Half Marathon',
+        custom_dist: '',
+        source_priority: 50,
+      },
+      {
+        name: 'City Marathon Weekend',
+        city: 'Example City',
+        country: 'Exampleland',
+        year: 2026,
+        type: 'run',
+        dist: 'Custom…',
+        custom_dist: '10KM',
+        source_priority: 50,
+      },
+    ]);
+
+    expect(rows).toHaveLength(3);
+    expect(rows.map((row) => `${row.dist}:${row.custom_dist || ''}`).sort()).toEqual([
+      'Custom…:10KM',
+      'Half Marathon:',
+      'Marathon:',
+    ]);
   });
 });
