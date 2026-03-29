@@ -9138,11 +9138,13 @@ function updateAuthUI() {
   document.getElementById('authSettingsStatus').innerHTML = signedIn
     ? `Signed in as <span class="auth-status-email">${email}</span>. Your races now sync to your private Supabase account.${_IS_PROD && proAccessGranted ? ' <span class="auth-status-email" style="color:var(--orange)">Pro beta unlocked.</span>' : ''}`
     : `You're currently using this app without an account.`;
-  document.getElementById('settingsAuthBtn').textContent = signedIn ? 'Manage Account' : 'Sign In';
+  document.getElementById('settingsAuthBtn').style.display = signedIn ? 'none' : '';
   document.getElementById('settingsPwBtn').style.display = signedIn ? '' : 'none';
   document.getElementById('settingsSignOutBtn').style.display = signedIn ? '' : 'none';
   document.getElementById('settingsDeleteBtn').style.display = signedIn ? '' : 'none';
   document.getElementById('menuSignOutBtn').style.display = signedIn ? '' : 'none';
+  const miAuth = document.getElementById('mi-auth');
+  if (miAuth) miAuth.style.display = signedIn ? 'none' : '';
   const pill = document.getElementById('feedbackPill');
   if (pill && _IS_STAGING) pill.style.display = signedIn ? '' : 'none';
   // Beta upgrade banner: show when signed in with a beta account on staging
@@ -9267,6 +9269,7 @@ function dismissLanding() {
 }
 
 function openLandingAuth(mode) {
+  if (authUser) { go('dashboard'); return; }
   setAuthMode(mode);
   // On staging sign-in, keep type="text" so usernames (no @) are accepted
   const email = document.getElementById('authEmail');
@@ -9278,9 +9281,9 @@ function openLandingAuth(mode) {
 }
 
 function openAuthModal() {
+  if (authUser) return;
   closeMenu();
-  setAuthMode(authUser ? 'signin' : authMode);
-  if (authUser) document.getElementById('authEmail').value = authUser.email || '';
+  setAuthMode(authMode);
   const email = document.getElementById('authEmail');
   email.type = (_IS_STAGING && authMode === 'signin') ? 'text' : 'email';
   const pw = document.getElementById('authPassword');
