@@ -119,11 +119,11 @@ body::after {
    ============================================= */
 header {
   position: fixed; top:0; left:0; right:0; z-index:500;
-  height: var(--header-base-height);
+  height: calc(var(--header-base-height) + env(safe-area-inset-top, 0px));
   background: var(--shell-top-gradient);
   box-shadow: 0 1px 0 rgba(255,255,255,0.04);
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0 1.25rem;
+  display: flex; align-items: flex-end; justify-content: space-between;
+  padding: env(safe-area-inset-top, 0px) 1.25rem 10px;
   transform: translateZ(0);
   backface-visibility: hidden;
 }
@@ -297,8 +297,8 @@ header {
    MAIN / PAGES
    ============================================= */
 main {
-  margin-top: var(--header-base-height);
-  min-height: calc(100vh - var(--header-base-height));
+  margin-top: calc(var(--header-base-height) + env(safe-area-inset-top, 0px));
+  min-height: calc(100vh - var(--header-base-height) - env(safe-area-inset-top, 0px));
 }
 
 .page { display:none; }
@@ -2032,64 +2032,52 @@ main {
 
 /* Bio card */
 .bio-card {
-  background:
-    linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.012)),
-    rgba(255,255,255,0.01);
-  border:1px solid rgba(255,255,255,0.07);
-  border-radius:18px;
-  padding:1.15rem;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.03),
-    0 20px 44px rgba(0,0,0,0.18);
+  background: transparent;
+  padding: 0;
 }
 .bio-grid {
-  display:grid; grid-template-columns:repeat(3,1fr); gap:.75rem;
+  display:grid; grid-template-columns:repeat(3,1fr); gap:.6rem;
 }
 .bio-grid > div{
   position:relative;
   overflow:hidden;
-  padding:1rem 1rem 1.05rem;
-  border-radius:16px;
+  padding:1rem 0.85rem 1rem;
+  border-radius:14px;
   background:
-    radial-gradient(circle at top left, rgba(255,255,255,0.05), transparent 42%),
-    linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.02)),
-    rgba(255,255,255,0.028);
+    linear-gradient(135deg, rgba(255,77,0,0.06) 0%, rgba(255,255,255,0.025) 60%),
+    rgba(255,255,255,0.03);
   border:1px solid rgba(255,255,255,0.09);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.04),
-    0 12px 28px rgba(0,0,0,0.2);
-  transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
+    inset 0 1px 0 rgba(255,255,255,0.05),
+    0 8px 24px rgba(0,0,0,0.22);
+  transition:transform .18s ease, border-color .18s ease;
+  display:flex; flex-direction:column; gap:4px;
 }
-.bio-grid > div::before{
+.bio-grid > div::after{
   content:"";
   position:absolute;
-  inset:0 auto auto 0;
-  width:100%;
-  height:3px;
-  background:linear-gradient(90deg, rgba(255,255,255,0.06), rgba(255,77,0,0.4), transparent 70%);
-  opacity:.85;
+  inset:auto 0 0 0;
+  height:2px;
+  background:linear-gradient(90deg, var(--orange), transparent 80%);
+  opacity:.55;
 }
 .bio-grid > div:hover{
   transform:translateY(-2px);
-  border-color:rgba(255,77,0,0.16);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.05),
-    0 16px 32px rgba(0,0,0,0.24);
+  border-color:rgba(255,77,0,0.22);
 }
 .bio-lbl {
-  font-family:var(--headline); font-size:9px; font-weight:800;
-  letter-spacing:0.18em; text-transform:uppercase; color:var(--muted);
-  margin-bottom:6px;
+  font-family:var(--headline); font-size:8px; font-weight:800;
+  letter-spacing:0.22em; text-transform:uppercase; color:var(--orange);
+  opacity:0.7;
 }
 .bio-val {
-  font-family:var(--headline); font-size:15px; font-weight:900;
-  text-transform:uppercase; letter-spacing:0.04em; color:var(--white);
-  line-height:1.35;
-  text-shadow:0 6px 18px rgba(0,0,0,0.18);
+  font-family:var(--headline); font-size:14px; font-weight:900;
+  text-transform:uppercase; letter-spacing:0.05em; color:var(--white);
+  line-height:1.25;
 }
-.bio-edit-row {
-  display:flex; justify-content:flex-end;
-  margin-top:1.15rem; padding-top:1rem; border-top:1px solid rgba(255,255,255,0.07);
+@media (max-width:767px){
+  .bio-val { font-size:13px; }
+  .bio-grid { grid-template-columns:repeat(2,1fr); gap:.5rem; }
 }
 
 /* Athlete PBs */
@@ -2367,7 +2355,8 @@ main {
 @media (max-width: 720px){
   .ath-identity-block{
     flex-direction:column;
-    align-items:flex-start;
+    align-items:center;
+    text-align:center;
   }
   .ath-stats{
     grid-template-columns:repeat(2,1fr);
@@ -2386,11 +2375,12 @@ main {
   }
   .ath-goal-main{
     grid-template-columns:1fr;
-    align-items:flex-start;
+    align-items:center;
+    text-align:center;
   }
   .ath-goal-count{
     min-width:0;
-    text-align:left;
+    text-align:center;
   }
   .ath-cost-total{
     grid-template-columns:1fr;
@@ -2408,7 +2398,7 @@ main {
     flex-direction:column;
   }
   .ath-champ-side{
-    text-align:left;
+    text-align:center;
     min-width:0;
   }
 }
@@ -3266,13 +3256,13 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   position: fixed; bottom: 0; left: 0; right: 0; z-index: 500;
   background: var(--shell-bottom-gradient);
   box-shadow: none;
-  padding-bottom: 0;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   transform: translateZ(0);
   backface-visibility: hidden;
 }
 @media (max-width: 767px) {
   .bottom-nav { display: flex; align-items: flex-start; justify-content: space-around; }
-  main { padding-bottom: calc(var(--bottom-nav-base-height) + 4px); }
+  main { padding-bottom: calc(var(--bottom-nav-base-height) + env(safe-area-inset-bottom, 0px) + 8px); }
   .hamburger { display: none; }
 }
 .bn-tab {
@@ -3310,8 +3300,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 /* =============================================
    ATHLETE PAGE — Settings link on mobile
    ============================================= */
-.athlete-settings-link { display: none; text-align: center; margin-top: 2rem; }
-@media (max-width: 767px) { .athlete-settings-link { display: block; } }
+.athlete-settings-link { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; text-align: center; margin-top: 2rem; padding-bottom: 1.5rem; }
 
 /* =============================================
    HISTORY SEARCH
@@ -3338,6 +3327,9 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   .ath-tags   { justify-content:center; }
   .ath-name-row { justify-content:center; }
   .bio-edit-row { justify-content:center; }
+  .bio-grid > div { text-align:center; }
+  .ath-section-h { justify-content:center; }
+  .ath-feature-kicker, .ath-feature-title, .ath-feature-copy { text-align:center; }
 }
 @media (min-width: 768px) and (max-width: 1023px) {
   /* Tablet: two-column layout where applicable */
@@ -5718,9 +5710,6 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
           <div><div class="bio-lbl">Racing Since</div><div class="bio-val" id="bSince">—</div></div>
           <div><div class="bio-lbl">Primary Sport</div><div class="bio-val" id="bPrim">—</div></div>
         </div>
-        <div class="bio-edit-row">
-          <button class="btn-ghost" onclick="openEditAth()">✏️ Edit Profile</button>
-        </div>
       </div>
     </div>
     <!-- Athlete PBs -->
@@ -5766,6 +5755,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
       <div class="country-chips" id="cChips"></div>
     </div>
     <div class="athlete-settings-link">
+      <button class="btn-ghost" onclick="openEditAth()" aria-label="Edit profile" style="margin-bottom:0.5rem">✏️ Edit Profile</button>
       <button class="btn-ghost" onclick="openSettings ? openSettings() : document.getElementById('settingsModal') && document.getElementById('settingsModal').classList.add('open')" aria-label="Open settings">⚙ Settings</button>
     </div>
   </div>
@@ -12437,30 +12427,27 @@ function renderAthleteGoalRacePanel() {
   }
   const prediction = computePrediction(nextRace, races);
   const daysAway = Math.max(0, Math.ceil((new Date(`${nextRace.date}T00:00:00`) - new Date()) / 86400000));
+  const projectionPills = prediction ? `
+    <div class="ath-goal-grid">
+      <div class="ath-goal-pill">
+        <div class="ath-goal-pill-k">Projected Finish</div>
+        <div class="ath-goal-pill-v">${prediction.likelyFinishRange.center}</div>
+      </div>
+      <div class="ath-goal-pill">
+        <div class="ath-goal-pill-k">Course Fit</div>
+        <div class="ath-goal-pill-v">${prediction.courseFit}</div>
+      </div>
+    </div>
+    <div class="ath-feature-copy">Range ${prediction.likelyFinishRange.low}–${prediction.likelyFinishRange.high} from ${prediction.comparableCount} comparable race${prediction.comparableCount === 1 ? '' : 's'}.</div>` : `<div class="ath-feature-copy" style="opacity:0.5;font-size:11px">Log comparable races to unlock finish projections.</div>`;
   el.innerHTML = `<div class="ath-feature-kicker">Goal Race</div>
-    <div class="ath-feature-title">Target race intelligence</div>
     <div class="ath-goal-main">
       <div>
         <div class="ath-goal-race">${escapeHtml(nextRace.name)}</div>
         <div class="ath-goal-date">${fmtDate(nextRace.date)}${nextRace.location ? ` · ${escapeHtml(nextRace.location)}` : ''}</div>
       </div>
-      <div class="ath-goal-count">${daysAway}</div>
+      <div class="ath-goal-count">${daysAway}<span style="font-size:0.35em;display:block;letter-spacing:0.12em;opacity:0.7;margin-top:2px">DAYS</span></div>
     </div>
-    <div class="ath-goal-grid">
-      <div class="ath-goal-pill">
-        <div class="ath-goal-pill-k">Countdown</div>
-        <div class="ath-goal-pill-v">${daysAway} Days</div>
-      </div>
-      <div class="ath-goal-pill">
-        <div class="ath-goal-pill-k">Projected Finish</div>
-        <div class="ath-goal-pill-v">${prediction?.likelyFinishRange?.center || '—'}</div>
-      </div>
-      <div class="ath-goal-pill">
-        <div class="ath-goal-pill-k">Course Fit</div>
-        <div class="ath-goal-pill-v">${prediction ? `${prediction.courseFit}` : '—'}</div>
-      </div>
-    </div>
-    <div class="ath-feature-copy">${prediction ? `Likely range ${prediction.likelyFinishRange.low} to ${prediction.likelyFinishRange.high} from ${prediction.comparableCount} comparable race${prediction.comparableCount === 1 ? '' : 's'}.` : 'Log comparable race results to unlock projections.'}</div>`;
+    ${projectionPills}`;
 }
 
 function computeAthleteChampionshipTracker() {
@@ -12649,14 +12636,11 @@ function renderAthletePerformanceTimeline() {
   }
   const metrics = [
     ['speed', 'Speed'],
-    ['endurance', 'Endurance'],
-    ['terrain', 'Terrain'],
-    ['heat', 'Heat'],
-    ['frequency', 'Frequency'],
+    ['endurance', 'Distance'],
+    ['frequency', 'Races'],
   ];
   el.innerHTML = `<div class="ath-feature-kicker">Performance Timeline</div>
-    <div class="ath-feature-title">How your racing evolved</div>
-    <div class="ath-feature-copy">A season-by-season view of the athlete you are becoming across pace, distance, terrain, hot conditions, and race density.</div>
+    <div class="ath-feature-title">Season by season</div>
     <div class="ath-timeline-list">${timeline.map(row => `<div class="ath-timeline-row">
       <div class="ath-timeline-year">${escapeHtml(row.year)}</div>
       <div class="ath-timeline-metrics">${metrics.map(([key, label]) => `<div class="ath-timeline-metric">
@@ -16522,7 +16506,7 @@ function renderAthlete(){
   if (focusValueEl && focusLabelEl && focusMetaEl) {
     if (nextRace?.date) {
       const daysAway = Math.max(0, Math.ceil((new Date(`${nextRace.date}T00:00:00`) - new Date()) / 86400000));
-      focusValueEl.textContent = `${daysAway} Days`;
+      focusValueEl.textContent = `${daysAway} DAYS`;
       focusLabelEl.textContent = 'To your next goal race';
       focusMetaEl.textContent = `${nextRace.name} · ${nextRace.distance || 'Race'} · ${fmtDate(nextRace.date)}${nextRace.location ? ` · ${nextRace.location}` : ''}`;
     } else if (bqSummary.state === 'ready') {
