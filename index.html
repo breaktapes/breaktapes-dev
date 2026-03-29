@@ -5281,7 +5281,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
       </div>
       <div id="rtManual" style="display:none">
         <div class="fgrid race-manual-grid">
-          <div class="fg full" id="mNWrap"><label class="fl">Race Name</label><input class="fi" id="mN" type="search" placeholder="Search a race or type your own…" autocomplete="new-password" autocorrect="off" autocapitalize="none" spellcheck="false" data-lpignore="true" data-1p-ignore="true"></div>
+          <div class="fg full" id="mNWrap"><label class="fl">Race Name</label><input class="fi" id="mN" type="search" name="mN-search" placeholder="Search a race or type your own…" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" inputmode="search" enterkeyhint="search" aria-autocomplete="list" data-form-type="other" data-lpignore="true" data-1p-ignore="true"></div>
           <div class="fg"><label class="fl">Race Type</label>
             <select class="fs" id="mT" onchange="onTypeChange()">
               <option value="run">🏃 Running</option>
@@ -5430,7 +5430,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
     </div>
     <div class="modal-body">
       <div class="fgrid next-race-grid">
-        <div class="fg"><label class="fl">Race Name</label><input class="fi" id="nrN" type="search" placeholder="e.g. Boston Marathon 2026" autocomplete="new-password" autocorrect="off" autocapitalize="none" spellcheck="false" data-lpignore="true" data-1p-ignore="true"></div>
+        <div class="fg"><label class="fl">Race Name</label><input class="fi" id="nrN" type="search" name="nrN-search" placeholder="e.g. Boston Marathon 2026" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" inputmode="search" enterkeyhint="search" aria-autocomplete="list" data-form-type="other" data-lpignore="true" data-1p-ignore="true"></div>
         <div class="fg"><label class="fl">Date</label><input class="fi" id="nrDt" type="date"></div>
         <div class="fgrid next-race-grid-2">
           <div class="fg"><label class="fl">Sport</label>
@@ -5604,7 +5604,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
     <div class="modal-drag"></div>
     <div class="modal-head">
       <div class="rd-name-wrap">
-        <input class="rd-name-input" id="rdName" type="search" placeholder="Race name…" autocomplete="new-password" autocorrect="off" autocapitalize="none" spellcheck="false" data-lpignore="true" data-1p-ignore="true" oninput="rdOnNameInput(this.value)">
+        <input class="rd-name-input" id="rdName" type="search" name="rdName-search" placeholder="Race name…" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" inputmode="search" enterkeyhint="search" aria-autocomplete="list" data-form-type="other" data-lpignore="true" data-1p-ignore="true" oninput="rdOnNameInput(this.value)">
         <button class="rd-autofill-btn" id="rdAutoFillBtn" onclick="rdLookupRace()" title="Auto-fill details">✦ Auto-fill</button>
         <div class="rd-suggestions" id="rdSuggestions" style="display:none"></div>
       </div>
@@ -16459,6 +16459,7 @@ function searchCatalogRaces(q, mode = 'past') {
   const yearMatch = s.match(/\b((?:19|20)\d{2})\b/);
   const queryYear = yearMatch ? parseInt(yearMatch[1], 10) : null;
   const queryBase = s.replace(/\b(?:19|20)\d{2}\b/, '').replace(/\s+/g,' ').trim();
+  const queryTokens = queryBase.split(' ').filter(Boolean);
 
   const now = new Date();
   const todayStr = now.toISOString().slice(0, 10);
@@ -16469,16 +16470,19 @@ function searchCatalogRaces(q, mode = 'past') {
       if (mode === 'future' && (!raceDate || raceDate <= todayStr)) return false;
       if (queryYear && Number(r.year) !== queryYear) return false;
       if (!queryBase) return true;
-      return r.name.toLowerCase().includes(queryBase) ||
-        (r.aliases||[]).some(a => a.toLowerCase().includes(queryBase)) ||
-        (r.city||'').toLowerCase().includes(queryBase) ||
-        (r.region||'').toLowerCase().includes(queryBase) ||
-        (r.country||'').toLowerCase().includes(queryBase) ||
-        (r.venue||'').toLowerCase().includes(queryBase) ||
-        (r.discipline||'').toLowerCase().includes(queryBase) ||
-        (r.series||'').toLowerCase().includes(queryBase) ||
-        (r.customDist||'').toLowerCase().includes(queryBase) ||
-        (r.dist||'').toLowerCase().includes(queryBase);
+      const haystack = [
+        r.name,
+        ...(r.aliases || []),
+        r.city,
+        r.region,
+        r.country,
+        r.venue,
+        r.discipline,
+        r.series,
+        r.customDist,
+        r.dist,
+      ].filter(Boolean).join(' ').toLowerCase();
+      return haystack.includes(queryBase) || queryTokens.every(token => haystack.includes(token));
     })
     .map(r => ({
       ...r,
@@ -16529,8 +16533,31 @@ function renderCatalogOption(r) {
   };
 }
 
+function hardenCatalogSearchInput(inputEl) {
+  if (!inputEl || inputEl.dataset.catalogSearchHardened === '1') return;
+  inputEl.dataset.catalogSearchHardened = '1';
+  inputEl.setAttribute('type', 'search');
+  inputEl.setAttribute('autocomplete', 'off');
+  inputEl.setAttribute('autocorrect', 'off');
+  inputEl.setAttribute('autocapitalize', 'none');
+  inputEl.setAttribute('spellcheck', 'false');
+  inputEl.setAttribute('inputmode', 'search');
+  inputEl.setAttribute('enterkeyhint', 'search');
+  inputEl.setAttribute('aria-autocomplete', 'list');
+  inputEl.setAttribute('data-form-type', 'other');
+  inputEl.setAttribute('data-lpignore', 'true');
+  inputEl.setAttribute('data-1p-ignore', 'true');
+  if (!inputEl.getAttribute('name')) inputEl.setAttribute('name', `${inputEl.id || 'race-search'}-search`);
+  inputEl.readOnly = true;
+  const unlock = () => { inputEl.readOnly = false; };
+  inputEl.addEventListener('focus', unlock, { once: true });
+  inputEl.addEventListener('pointerdown', unlock, { once: true });
+  inputEl.addEventListener('touchstart', unlock, { once: true, passive: true });
+}
+
 function initRaceNamePicker() {
   const inputEl = document.getElementById('mN');
+  hardenCatalogSearchInput(inputEl);
   const wrap = document.createElement('div');
   wrap.className = 'loc-wrap';
   inputEl.parentNode.insertBefore(wrap, inputEl);
@@ -16634,6 +16661,7 @@ function initUpcomingRacePicker() {
   if (_nrPickerReady) return;
   const inputEl = document.getElementById('nrN');
   if (!inputEl) return;
+  hardenCatalogSearchInput(inputEl);
   const wrap = document.createElement('div');
   wrap.className = 'nr-picker-wrap';
   inputEl.parentNode.insertBefore(wrap, inputEl);
@@ -17089,6 +17117,7 @@ window.addEventListener('beforeunload', () => { if (remoteSyncReady) syncRemoteS
 
 document.addEventListener('DOMContentLoaded', () => {
   setAuthFieldsInteractive(false);
+  ['mN', 'nrN', 'rdName'].forEach(id => hardenCatalogSearchInput(document.getElementById(id)));
   document.querySelectorAll('.modal-overlay').forEach(overlay => {
     const modal = overlay.querySelector('.modal');
     if (modal) initModalSwipe(modal, () => closeM(overlay.id));
