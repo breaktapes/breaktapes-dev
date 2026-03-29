@@ -715,3 +715,25 @@ describe('extractJson helpers', () => {
     expect(parsed[0].name).toBe('A');
   });
 });
+
+describe('catalog search normalization', () => {
+  test('matches collapsed race names like Khardungla against Khardung La Challenge', () => {
+    const race = {
+      name: 'Khardung La Challenge',
+      aliases: ['Ladakh Khardung La Challenge'],
+      type: 'run',
+      discipline: 'ultra-running',
+      dist: 'Custom…',
+      customDist: 'Khardung La Challenge',
+      city: 'Leh',
+      region: '',
+      country: 'India',
+      venue: '',
+      series: 'Ladakh Marathon',
+    };
+    const queryBase = normalizeCatalogSearchText('Khardungla');
+    const queryTokens = queryBase.split(' ').filter(Boolean);
+    const collapsedQuery = collapseCatalogSearchText(queryBase);
+    expect(catalogRaceMatchesQuery(race, queryBase, queryTokens, collapsedQuery)).toBe(true);
+  });
+});
