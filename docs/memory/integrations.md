@@ -153,6 +153,8 @@ All migrations live in `supabase/migrations/`. Applied to both projects via `sup
 | `deploy-staging.yml` | Push to `staging` | Supabase staging migrations + `dev.breaktapes.com` |
 | `deploy-production.yml` | Push to `main` | Supabase prod migrations + `app.breaktapes.com` |
 
+- **Reference note:** For any future push/pull/deploy shorthand, `staging` always means `dev.breaktapes.com` and `main` always means `app.breaktapes.com`.
+
 - **Required GitHub Secrets:**
 
 | Secret | Description |
