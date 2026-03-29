@@ -11474,6 +11474,17 @@ function saveRaceComparisonDraft(name, raceIds) {
   return comparison;
 }
 
+function deleteSavedRaceComparison(comparisonId) {
+  const comparison = raceComparisons.find(item => String(item.id) === String(comparisonId));
+  if (!comparison) return;
+  if (!confirmDeleteAction('saved comparison')) return;
+  raceComparisons = raceComparisons.filter(item => String(item.id) !== String(comparisonId));
+  persistLocalPremiumState();
+  if (remoteSyncReady) schedulePremiumStateSync();
+  renderSavedRaceComparisons();
+  showBtToast(`Deleted ${comparison.name || 'comparison'}`);
+}
+
 function buildSeasonReport() {
   const year = new Date().getFullYear();
   const racesThisYear = races.filter(r => (r.date || '').startsWith(String(year)));
@@ -11932,7 +11943,10 @@ function renderSavedRaceComparisons() {
         <div style="font-weight:700">${escapeHtml(item.name || 'Comparison')}</div>
         <div style="font-size:11px;color:var(--muted)">${(item.rows || []).length} races compared</div>
       </div>
-      <button class="btn-ghost" type="button" onclick="loadSavedRaceComparison('${escapeAttr(item.id)}')">Load</button>
+      <div style="display:flex;gap:0.45rem;align-items:center">
+        <button class="btn-ghost" type="button" onclick="loadSavedRaceComparison('${escapeAttr(item.id)}')">Load</button>
+        <button class="btn-ghost" type="button" style="color:#ff7a7a;border-color:rgba(255,122,122,0.22)" onclick="deleteSavedRaceComparison('${escapeAttr(item.id)}')">Delete</button>
+      </div>
     </div>`).join('');
 }
 
@@ -16383,7 +16397,7 @@ function searchCatalogRaces(q, mode = 'past') {
     .filter(r => {
       const raceDate = getRaceDate(r, r.year || now.getFullYear());
       if (mode === 'past' && raceDate && raceDate > todayStr) return false;
-      if (mode === 'future' && (!raceDate || raceDate <= todayStr)) return false;
+      if (mode === 'future' && (!raceDate || raceDate < todayStr)) return false;
       if (queryYear && Number(r.year) !== queryYear) return false;
       return catalogRaceMatchesQuery(r, queryBase, queryTokens, collapsedQuery);
     })

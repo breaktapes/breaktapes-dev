@@ -303,4 +303,37 @@ describe('upcoming catalog parser', () => {
       'Marathon:',
     ]);
   });
+
+  test('dedupeRows preserves same-name editions when the event date differs', () => {
+    const rows = dedupeRows([
+      {
+        name: 'City Marathon Weekend',
+        city: 'Example City',
+        country: 'Exampleland',
+        year: 2026,
+        event_date: '2026-03-29',
+        type: 'run',
+        dist: 'Marathon',
+        custom_dist: '',
+        source_priority: 50,
+      },
+      {
+        name: 'City Marathon Weekend',
+        city: 'Example City',
+        country: 'Exampleland',
+        year: 2026,
+        event_date: '2027-03-28',
+        type: 'run',
+        dist: 'Marathon',
+        custom_dist: '',
+        source_priority: 50,
+      },
+    ]);
+
+    expect(rows).toHaveLength(2);
+    expect(rows.map((row) => row.event_date)).toEqual([
+      '2026-03-29',
+      '2027-03-28',
+    ]);
+  });
 });

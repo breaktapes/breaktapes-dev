@@ -28,7 +28,7 @@ function loadManualRows(manualJson) {
   const files = manualJson
     ? [manualJson]
     : fs.readdirSync(__dirname)
-      .filter(name => /^manual-race-imports.*\.json$/.test(name))
+      .filter(name => /^manual-race-imports.*\.json$/.test(name) || /^generated-finishers-events.*\.json$/.test(name))
       .sort()
       .map(name => path.resolve(__dirname, name));
   return files.flatMap(file => JSON.parse(fs.readFileSync(file, 'utf8')));
