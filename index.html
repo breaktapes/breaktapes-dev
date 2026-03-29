@@ -1923,10 +1923,33 @@ main {
   border-radius:4px; color:var(--white); padding:0.6rem 0.8rem;
   font-family:var(--body); font-size:13px; outline:none;
   transition:border-color 0.2s; width:100%;
+  box-sizing:border-box;
+  line-height:1.2;
 }
 .fi:focus,.fs:focus { border-color:rgba(255,77,0,0.4); }
 .fi::placeholder { color:var(--muted2); }
 .fs option { background:var(--surface2); }
+.fi[type="date"] {
+  min-height:46px;
+  -webkit-appearance:none;
+  appearance:none;
+  text-align:left;
+  font-variant-numeric:tabular-nums;
+}
+.fi[type="date"]::-webkit-date-and-time-value {
+  text-align:left;
+}
+.fi[type="date"]::-webkit-datetime-edit {
+  display:flex;
+  align-items:center;
+  min-height:100%;
+  padding:0;
+  color:inherit;
+}
+.fi[type="date"]::-webkit-calendar-picker-indicator {
+  opacity:0.72;
+  cursor:pointer;
+}
 .fgrid { display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; }
 .ea-form-grid {
   grid-template-columns:1fr 1fr;
@@ -2009,6 +2032,15 @@ main {
   #authLastName,
   #authInviteCode {
     font-size:16px;
+  }
+  .fi,
+  .fs {
+    min-height:48px;
+  }
+  .fi[type="date"] {
+    min-height:48px;
+    padding-top:0;
+    padding-bottom:0;
   }
 }
 
@@ -16633,8 +16665,8 @@ function fillRaceFields(race, year, dateStr) {
   const sel = document.getElementById('mD');
   const opt = Array.from(sel.options).find(o => o.value === race.dist);
   if (opt) { sel.value = race.dist; onDistChange(); }
-  if (race.dist === 'Custom…' && race.customDist) {
-    document.getElementById('mCustomDist').value = race.customDist;
+  if (race.dist === 'Custom…') {
+    document.getElementById('mCustomDist').value = resolveCatalogCustomDistance(race);
     document.getElementById('mCustomWrap').style.display = 'block';
   }
   // Location
@@ -16652,6 +16684,21 @@ function clearUpcomingRaceSelection(renderInsights = true) {
   if (renderInsights) renderUpcomingInsights();
 }
 
+function formatCatalogCustomDistance(distKm) {
+  if (distKm === null || distKm === undefined || Number.isNaN(Number(distKm))) return '';
+  const rounded = Math.round(Number(distKm) * 10) / 10;
+  return `${rounded}K`;
+}
+
+function resolveCatalogCustomDistance(race) {
+  if (!race) return '';
+  const custom = String(race.customDist || '').trim();
+  const normalizedName = normalizeCatalogSearchText(race.name || '');
+  const normalizedCustom = normalizeCatalogSearchText(custom);
+  if (custom && normalizedCustom && normalizedCustom !== normalizedName) return custom;
+  return formatCatalogCustomDistance(race.distKm);
+}
+
 function fillUpcomingFields(race, year, dateStr) {
   _nrSelectedCatalogRace = { ...race, _year: year, _date: dateStr };
   const input = document.getElementById('nrN');
@@ -16665,7 +16712,7 @@ function fillUpcomingFields(race, year, dateStr) {
   const known = Array.from(sel.options).some(o => o.value === distValue);
   if (known) sel.value = distValue;
   else sel.value = 'Custom…';
-  document.getElementById('nrCustomDist').value = race.customDist || '';
+  document.getElementById('nrCustomDist').value = resolveCatalogCustomDistance(race);
   document.getElementById('nrCustomWrap').style.display = sel.value === 'Custom…' ? 'block' : 'none';
   setCountrySelect(document.getElementById('nrCo'), race.country || '');
   document.getElementById('nrCi').value = race.city || '';
