@@ -11,7 +11,7 @@ function parseArgs(argv) {
     manualJson: '',
     outputJson: path.resolve(process.cwd(), 'public/upcoming-race-catalog.json'),
     outputFallbackJson: path.resolve(process.cwd(), 'public/ironman-race-catalog.json'),
-    outputSql: path.resolve(process.cwd(), 'supabase/migrations/20260328190000_race_catalog_ironman_refresh.sql'),
+    outputSql: path.resolve(process.cwd(), 'supabase/migrations/20260329123000_race_catalog_ironman_refresh_v2.sql'),
   };
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
