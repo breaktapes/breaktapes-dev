@@ -6123,6 +6123,7 @@ let _histSearchTimer;
 const _IS_PROD    = window.location.hostname === 'app.breaktapes.com';
 const _IS_STAGING = window.location.hostname === 'dev.breaktapes.com';
 const PRO_STORAGE_KEY = 'bt_pro_access';
+let proAccessGranted = false;
 const PRO_FEATURE_META = {
   'race-forecast': {
     name: 'Race Day Forecast',
@@ -6238,6 +6239,7 @@ const OW_PROXY_URL = HEALTH_WORKER_URL;
 
 function hasProAccess() {
   if (!_IS_PROD) return true;
+  if (authUser) return proAccessGranted === true;
   try { return localStorage.getItem(PRO_STORAGE_KEY) === '1'; } catch (e) { return false; }
 }
 
@@ -7865,6 +7867,14 @@ function buildRemoteStatePayload() {
   };
 }
 
+function cacheProAccessState(value) {
+  proAccessGranted = value === true;
+  try {
+    if (proAccessGranted) localStorage.setItem(PRO_STORAGE_KEY, '1');
+    else localStorage.removeItem(PRO_STORAGE_KEY);
+  } catch (e) {}
+}
+
 function persistLocalPremiumState() {
   localStorage.setItem('fl2_season_plans', JSON.stringify(seasonPlans));
   localStorage.setItem('fl2_race_comparisons', JSON.stringify(raceComparisons));
@@ -8021,7 +8031,7 @@ async function loadRemoteState() {
   try {
     const { data, error } = await client
       .from('user_state')
-      .select('races, athlete, next_race, upcoming_races, updated_at')
+      .select('races, athlete, next_race, upcoming_races, pro_access, updated_at')
       .eq('user_id', authUser.id)
       .maybeSingle();
     if (error) throw error;
@@ -8037,12 +8047,16 @@ async function loadRemoteState() {
         races: [],
         athlete,
         next_race: null,
-        upcoming_races: []
+        upcoming_races: [],
+        pro_access: false
       };
       const { error: upsertError } = await client.from('user_state').upsert(emptyPayload, { onConflict: 'user_id' });
       if (upsertError) throw upsertError;
+      cacheProAccessState(false);
+      updateAuthUI();
       return true;
     }
+    cacheProAccessState(data.pro_access === true);
     const hasRemoteData = (Array.isArray(data.races) && data.races.length > 0) ||
       (data.athlete?.name) || (data.next_race) ||
       (Array.isArray(data.upcoming_races) && data.upcoming_races.length > 0);
@@ -8052,9 +8066,12 @@ async function loadRemoteState() {
         athlete = { name: authUser.user_metadata.full_name };
         localStorage.setItem('fl2_ath', JSON.stringify(athlete));
       }
+      updateAuthUI();
       return true;
     }
-    return applyRemoteState(data);
+    const applied = applyRemoteState(data);
+    updateAuthUI();
+    return applied;
   } catch (error) {
     console.warn('Supabase load failed:', error.message || error);
     return false;
@@ -8090,7 +8107,7 @@ function updateAuthUI() {
   const email = authUser?.email || '';
   document.getElementById('authMenuLabel').textContent = signedIn ? 'Account' : 'Sign In';
   document.getElementById('authSettingsStatus').innerHTML = signedIn
-    ? `Signed in as <span class="auth-status-email">${email}</span>. Your races now sync to your private Supabase account.`
+    ? `Signed in as <span class="auth-status-email">${email}</span>. Your races now sync to your private Supabase account.${_IS_PROD && proAccessGranted ? ' <span class="auth-status-email" style="color:var(--orange)">Pro beta unlocked.</span>' : ''}`
     : `You're currently using this app without an account.`;
   document.getElementById('settingsAuthBtn').textContent = signedIn ? 'Manage Account' : 'Sign In';
   document.getElementById('settingsSignOutBtn').style.display = signedIn ? '' : 'none';
@@ -8236,10 +8253,12 @@ async function refreshAuthState(session) {
   authSession = session || null;
   authUser = session?.user || null;
   remoteSyncReady = !!authUser;
+  if (!authUser) cacheProAccessState(false);
   // Clear stale local state when a different user signs in
   if (authUser) {
     const storedUid = localStorage.getItem('bt_auth_uid');
     if (storedUid && storedUid !== authUser.id) {
+      cacheProAccessState(false);
       REMOTE_SYNC_KEYS.forEach(k => localStorage.removeItem(k));
       races = []; athlete = { name: '' }; nextRace = null; upcomingRaces = [];
       userProducts = [];
@@ -8380,6 +8399,7 @@ async function signOutUser() {
   localStorage.removeItem('bt_modal_shown');
   localStorage.removeItem('bt_email_upgrade_pending');
   localStorage.removeItem('bt_auth_uid');
+  localStorage.removeItem(PRO_STORAGE_KEY);
   localStorage.removeItem('fl2_strava');
   localStorage.removeItem('fl2_strava_acts');
   localStorage.removeItem('fl2_strava_last_sync');
@@ -16861,6 +16881,10 @@ function openProModal(featureId = '') {
 }
 
 function startProCheckout() {
+  if (_IS_PROD) {
+    showBtToast('Pro beta is enabled per user in Supabase right now. Toggle pro_access on the user_state row to unlock it.');
+    return;
+  }
   showBtToast('Pro checkout layer is ready. Billing integration is the next step.');
 }
 
