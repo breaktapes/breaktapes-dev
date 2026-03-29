@@ -16288,13 +16288,42 @@ function fmtRaceDateRange(startDate, endDate) {
   return `${fmtRaceDate(startDate)} – ${fmtRaceDate(endDate)}`;
 }
 
+function normalizeCatalogSearchText(value) {
+  return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+}
+
+function collapseCatalogSearchText(value) {
+  return normalizeCatalogSearchText(value).replace(/\s+/g, '');
+}
+
+function catalogRaceMatchesQuery(race, queryBase, queryTokens, collapsedQuery) {
+  if (!queryBase) return true;
+  const haystack = normalizeCatalogSearchText([
+    race.name,
+    ...(race.aliases || []),
+    race.city,
+    race.region,
+    race.country,
+    race.venue,
+    race.discipline,
+    race.series,
+    race.customDist,
+    race.dist,
+  ].filter(Boolean).join(' '));
+  const collapsedHaystack = collapseCatalogSearchText(haystack);
+  return haystack.includes(queryBase)
+    || queryTokens.every(token => haystack.includes(token))
+    || (!!collapsedQuery && collapsedHaystack.includes(collapsedQuery));
+}
+
 function searchCatalogRaces(q, mode = 'past') {
-  const s = q.toLowerCase().trim();
+  const s = String(q || '').toLowerCase().trim();
   if (s.length < 2) return [];
   const yearMatch = s.match(/\b((?:19|20)\d{2})\b/);
   const queryYear = yearMatch ? parseInt(yearMatch[1], 10) : null;
-  const queryBase = s.replace(/\b(?:19|20)\d{2}\b/, '').replace(/\s+/g,' ').trim();
+  const queryBase = normalizeCatalogSearchText(s.replace(/\b(?:19|20)\d{2}\b/, ''));
   const queryTokens = queryBase.split(' ').filter(Boolean);
+  const collapsedQuery = queryBase.replace(/\s+/g, '');
 
   const now = new Date();
   const todayStr = now.toISOString().slice(0, 10);
@@ -16304,20 +16333,7 @@ function searchCatalogRaces(q, mode = 'past') {
       if (mode === 'past' && raceDate && raceDate > todayStr) return false;
       if (mode === 'future' && (!raceDate || raceDate <= todayStr)) return false;
       if (queryYear && Number(r.year) !== queryYear) return false;
-      if (!queryBase) return true;
-      const haystack = [
-        r.name,
-        ...(r.aliases || []),
-        r.city,
-        r.region,
-        r.country,
-        r.venue,
-        r.discipline,
-        r.series,
-        r.customDist,
-        r.dist,
-      ].filter(Boolean).join(' ').toLowerCase();
-      return haystack.includes(queryBase) || queryTokens.every(token => haystack.includes(token));
+      return catalogRaceMatchesQuery(r, queryBase, queryTokens, collapsedQuery);
     })
     .map(r => ({
       ...r,
