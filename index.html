@@ -14584,7 +14584,7 @@ async function renderMedals() {
   const medalRaces = races.filter(r => hasRaceMedal(r));
   if (!medalRaces.length) {
     g.innerHTML = `<div style="text-align:center;padding:3rem 1rem;grid-column:1/-1;">
-  <p style="font-family:var(--headline);font-size:1.4rem;font-weight:700;color:var(--muted);margin-bottom:1rem;">No medals yet. Finished races with medals will show up here.</p>
+  <p style="font-family:var(--headline);font-size:1.4rem;font-weight:700;color:var(--muted);margin-bottom:1rem;">Your wall is waiting.<br>Every finish line earns its place.</p>
   <button class="cta-btn" onclick="openRaceModal()">+ Log a race</button>
 </div>`;
     return;
