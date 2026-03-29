@@ -6870,7 +6870,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
           <div class="fg-err-msg"></div>
         </div>
       </div>
-      <div class="auth-note" id="authHelperText">Sign in to load your protected Supabase data and keep it synced.</div>
+      <div class="auth-note" id="authHelperText">Your races stay safe and sync across all your devices.</div>
       <button class="auth-forgot" id="authForgotBtn" onclick="sendPasswordReset()" style="display:none">Forgot password?</button>
     </div>
     <div class="modal-foot">
@@ -9185,7 +9185,7 @@ function setAuthMode(mode) {
   document.getElementById('authSubmitBtn').textContent = signIn ? 'Sign In' : 'Create Account';
   document.getElementById('authNameWrap').style.display = signIn ? 'none' : '';
   document.getElementById('authHelperText').textContent = signIn
-    ? 'Sign in to load your protected Supabase data and keep it synced.'
+    ? 'Your races stay safe and sync across all your devices.'
     : 'Your race history is private and synced across every device.';
   document.getElementById('authModeSignInBtn').className = signIn ? 'btn-main' : 'btn-ghost';
   document.getElementById('authModeSignUpBtn').className = signIn ? 'btn-ghost' : 'btn-main';
