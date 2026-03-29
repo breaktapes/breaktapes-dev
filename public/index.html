@@ -6718,12 +6718,13 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
     <div class="modal-body">
       <div class="auth-status-card">
         <div id="authSettingsStatus">You’re currently using this app without an account.</div>
-        <div class="auth-note">Supabase auth protects each athlete’s cloud data. Your Anthropic key and Strava secret stay local in this browser.</div>
         <div style="display:flex;gap:0.6rem;flex-wrap:wrap;margin-top:0.85rem">
           <button class="btn-main" type="button" id="settingsAuthBtn" onclick="openAuthModal()">Sign In</button>
           <button class="btn-ghost" type="button" id="settingsPwBtn" onclick="openPasswordModal()" style="display:none">Change Password</button>
           <button class="btn-ghost" type="button" id="settingsSignOutBtn" onclick="signOutUser()" style="display:none">Sign Out</button>
-          <button class="btn-ghost" type="button" id="settingsDeleteBtn" onclick="openDeleteAccountModal()" style="display:none;border-color:rgba(255,107,107,0.45);color:#ff8e8e">Delete Account</button>
+        </div>
+        <div style="margin-top:0.5rem">
+          <button class="btn-ghost" type="button" id="settingsDeleteBtn" onclick="openDeleteAccountModal()" style="display:none;border-color:rgba(255,107,107,0.3);color:#ff8e8e;font-size:11px;padding:0.35rem 0.75rem">Delete Account</button>
         </div>
       </div>
       <div class="fgrid" style="grid-template-columns:1fr">
@@ -9136,7 +9137,7 @@ function updateAuthUI() {
   const email = authUser?.email || '';
   document.getElementById('authMenuLabel').textContent = signedIn ? 'Account' : 'Sign In';
   document.getElementById('authSettingsStatus').innerHTML = signedIn
-    ? `Signed in as <span class="auth-status-email">${email}</span>. Your races now sync to your private Supabase account.${_IS_PROD && proAccessGranted ? ' <span class="auth-status-email" style="color:var(--orange)">Pro beta unlocked.</span>' : ''}`
+    ? `Signed in as <span class="auth-status-email">${email}</span>${_IS_PROD && proAccessGranted ? ' <span style="color:var(--orange);font-size:11px;font-weight:600"> · Pro beta unlocked</span>' : ''}`
     : `You're currently using this app without an account.`;
   document.getElementById('settingsAuthBtn').style.display = signedIn ? 'none' : '';
   document.getElementById('settingsPwBtn').style.display = signedIn ? '' : 'none';
