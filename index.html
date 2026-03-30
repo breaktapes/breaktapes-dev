@@ -2,8 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#000000">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BREAKTAPES">
 <title>BREAKTAPES</title>
+<link rel="manifest" href="/site.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
@@ -16,6 +22,9 @@
    TOKENS
    ============================================= */
 :root {
+  --safe-top: 0px;
+  --safe-bottom: 0px;
+  color-scheme: dark;
   --black:      #000000;
   --white:      #F5F5F5;
   --orange:     #FF4D00;
@@ -50,21 +59,46 @@
   --sp-5: 20px; --sp-6: 24px; --sp-8: 32px;
   --header-base-height: 56px;
   --bottom-nav-base-height: 56px;
+  --shell-top-gradient: var(--black);
+  --shell-bottom-gradient: var(--black);
 }
 
 /* =============================================
    RESET
    ============================================= */
 *, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
- html { scroll-behavior: smooth; background: var(--black); }
+ html { scroll-behavior: smooth; background: var(--black); min-height:100%; overscroll-behavior-y:none; overflow-x:hidden; }
 body {
   font-family: var(--body);
   background: var(--black);
   color: var(--white);
-  min-height: 100dvh;
+  min-height: 100vh;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   cursor: auto;
+  overscroll-behavior-y:none;
+}
+body.landing-active,
+body.mobile-race-detail-active {
+  overflow: hidden;
+}
+body.landing-active header,
+body.landing-active main,
+body.landing-active .bottom-nav,
+body.landing-active .side-menu,
+body.landing-active .menu-overlay,
+body.landing-active #feedbackPill {
+  visibility: hidden;
+  pointer-events: none;
+}
+@media (max-width: 520px) {
+  body.mobile-race-detail-active header,
+  body.mobile-race-detail-active main,
+  body.mobile-race-detail-active .bottom-nav,
+  body.mobile-race-detail-active #feedbackPill {
+    visibility: hidden;
+    pointer-events: none;
+  }
 }
 
 /* =============================================
@@ -85,13 +119,13 @@ body::after {
    ============================================= */
 header {
   position: fixed; top:0; left:0; right:0; z-index:500;
-  height: var(--header-base-height);
-  background: var(--orange);
-  box-shadow: 0 1px 0 rgba(0,0,0,0.18);
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0 1.25rem;
-  padding-top: env(safe-area-inset-top, 0px);
   height: calc(var(--header-base-height) + env(safe-area-inset-top, 0px));
+  background: var(--shell-top-gradient);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.04);
+  display: flex; align-items: flex-end; justify-content: space-between;
+  padding: env(safe-area-inset-top, 0px) 1.25rem 10px;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .logo {
@@ -99,11 +133,11 @@ header {
   font-size: 22px; font-weight: 900;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--black);
+  color: var(--white);
   cursor: pointer;
   line-height: 1;
 }
-.logo .slash { color: var(--white); }
+.logo .slash { color: var(--orange); }
 
 .header-right { display: flex; align-items: center; gap: 0.6rem; }
 
@@ -111,34 +145,34 @@ header {
   font-family: var(--headline);
   font-size: 13px; font-weight: 800;
   letter-spacing: 0.1em; text-transform: uppercase;
-  background: rgba(0,0,0,0.88); color: var(--white);
+  background: var(--orange); color: var(--black);
   border: none; border-radius: 4px;
   padding: 0.45rem 1rem;
   cursor: pointer; transition: all 0.15s;
   white-space: nowrap;
 }
-.cta-btn:hover { background: #111; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(0,0,0,0.24); }
+.cta-btn:hover { background: #FF6620; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(255,77,0,0.18); }
 .cta-btn:active { transform: translateY(0); }
 
 /* Hamburger */
 .hamburger {
   width: 36px; height: 36px;
-  background: rgba(0,0,0,0.08);
-  border: 1px solid rgba(0,0,0,0.18);
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.1);
   border-radius: 4px;
   cursor: pointer;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 5px; transition: all 0.2s; flex-shrink: 0;
 }
-.hamburger:hover { border-color: rgba(0,0,0,0.34); background: rgba(0,0,0,0.12); }
+.hamburger:hover { border-color: rgba(255,255,255,0.22); background: rgba(255,255,255,0.06); }
 .hamburger span {
   display:block; width:16px; height:1.5px;
-  background: var(--black); border-radius:1px;
+  background: rgba(245,245,245,0.88); border-radius:1px;
   transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
 }
-.hamburger.open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); background: var(--black); }
+.hamburger.open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); background: rgba(245,245,245,0.88); }
 .hamburger.open span:nth-child(2) { opacity:0; transform:scaleX(0); }
-.hamburger.open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); background: var(--black); }
+.hamburger.open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); background: rgba(245,245,245,0.88); }
 
 /* =============================================
    SLIDE MENU
@@ -264,7 +298,7 @@ header {
    ============================================= */
 main {
   margin-top: calc(var(--header-base-height) + env(safe-area-inset-top, 0px));
-  min-height: calc(100dvh - var(--header-base-height) - env(safe-area-inset-top, 0px));
+  min-height: calc(100vh - var(--header-base-height) - env(safe-area-inset-top, 0px));
 }
 
 .page { display:none; }
@@ -1012,7 +1046,7 @@ main {
 /* ── Recent ── */
 .section-row {
   display:flex; align-items:center; justify-content:space-between;
-  margin-bottom:0.75rem;
+  margin-bottom:0.95rem;
 }
 .section-h {
   font-family: var(--headline);
@@ -1025,6 +1059,8 @@ main {
   letter-spacing:0.1em; text-transform:uppercase;
   color:var(--orange); background:none; border:none;
   cursor:pointer; transition:opacity 0.15s;
+  min-height:44px; padding:0 4px;
+  display:inline-flex; align-items:center;
 }
 .see-all:hover { opacity:0.7; }
 
@@ -1032,13 +1068,13 @@ main {
 .dash-insight-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.5rem; }
 .dash-insight-tile {
   background:var(--surface); border:1px solid var(--border); border-radius:10px;
-  padding:1rem; position:relative; overflow:hidden;
+  padding:1.2rem 1rem 1rem; position:relative; overflow:hidden;
 }
 .dash-insight-tile::before {
-  content:''; position:absolute; top:0; left:0; right:0; height:2px;
-  background:linear-gradient(90deg,transparent,var(--orange),transparent);
+  content:''; position:absolute; top:0.8rem; left:1rem; right:1rem; height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,104,38,0.88),transparent);
 }
-.di-kicker { font-family:var(--headline); font-size:9px; font-weight:800; letter-spacing:0.18em; text-transform:uppercase; color:var(--orange); margin-bottom:0.5rem; }
+.di-kicker { font-family:var(--headline); font-size:9px; font-weight:800; letter-spacing:0.18em; text-transform:uppercase; color:var(--orange); margin-bottom:0.9rem; }
 .di-big { font-family:var(--headline); font-size:26px; font-weight:900; color:var(--white); line-height:1; }
 .di-sub { font-size:11px; color:var(--muted); margin-top:3px; }
 .di-stats { display:flex; gap:0.75rem; flex-wrap:wrap; margin-top:0.4rem; }
@@ -1510,7 +1546,8 @@ main {
 .tp-field { display:flex; flex-direction:column; align-items:center; gap:1px; }
 .tp-btn {
   background:none; border:none; cursor:pointer; color:var(--muted2);
-  font-size:9px; padding:3px 10px; border-radius:2px; line-height:1;
+  font-size:9px; padding:8px 10px; border-radius:2px; line-height:1;
+  min-height:28px; min-width:44px;
   transition:color 0.12s;
 }
 .tp-btn:hover { color:var(--orange); }
@@ -1611,9 +1648,10 @@ main {
   width:100%; background:transparent; border:none; border-bottom:1px solid var(--border2);
   outline:none; color:var(--white); font-family:var(--headline); font-size:22px; font-weight:900;
   text-transform:uppercase; letter-spacing:0.04em; padding:0 0 0.3rem; margin-bottom:0.3rem;
+  line-height:1.08;
 }
 .rd-name-input:focus { border-bottom-color:var(--orange); }
-.rd-name-wrap { position:relative; }
+.rd-name-wrap { position:relative; padding-right:96px; }
 .rd-autofill-btn {
   position:absolute; right:0; top:0;
   background:rgba(255,90,0,0.12); border:1px solid rgba(255,90,0,0.3);
@@ -1673,6 +1711,75 @@ main {
 }
 .rd-new-hint svg { flex-shrink:0; stroke:var(--orange); }
 .rd-name-input.rd-name-pulse { border-color:rgba(255,77,0,0.5) !important; box-shadow:0 0 0 3px rgba(255,77,0,0.1); }
+.race-detail-modal {
+  width:100%;
+}
+.race-detail-body {
+  overflow-y:auto;
+  max-height:60vh;
+}
+.rd-detail-grid-2,
+.rd-detail-grid-3 {
+  grid-template-columns:repeat(var(--rd-grid-cols, 2), minmax(0, 1fr)) !important;
+}
+.rd-detail-grid-3 {
+  --rd-grid-cols: 3;
+}
+@media (max-width: 520px) {
+  #raceDetailModal {
+    align-items:stretch;
+    padding:0;
+  }
+  #raceDetailModal .race-detail-modal {
+    max-width:none;
+    max-height:100vh;
+    min-height:100vh;
+    border-radius:0;
+    border-left:none;
+    border-right:none;
+    border-bottom:none;
+  }
+  #raceDetailModal .modal-drag {
+    margin-top:calc(0.5rem + env(safe-area-inset-top, 0px));
+  }
+  #raceDetailModal .modal-head {
+    padding-top:0.9rem;
+  }
+  #raceDetailModal .rd-name-wrap {
+    padding-right:0;
+    display:flex;
+    flex-direction:column;
+    gap:0.55rem;
+  }
+  #raceDetailModal .rd-name-input {
+    font-size:17px;
+    letter-spacing:0.035em;
+    margin-bottom:0;
+    padding-bottom:0.45rem;
+  }
+  #raceDetailModal .rd-autofill-btn {
+    position:static;
+    align-self:flex-start;
+    max-width:100%;
+  }
+  #raceDetailModal .modal-sub {
+    margin-top:0.65rem;
+    line-height:1.45;
+    overflow-wrap:anywhere;
+  }
+  #raceDetailModal .race-detail-body {
+    max-height:none;
+    min-height:0;
+    padding-bottom:1rem;
+  }
+  #raceDetailModal .modal-foot {
+    padding-bottom:calc(1rem + env(safe-area-inset-bottom, 0px));
+  }
+  .rd-detail-grid-2,
+  .rd-detail-grid-3 {
+    grid-template-columns:1fr !important;
+  }
+}
 
 /* =============================================
    PERSONAL BESTS
@@ -1825,6 +1932,11 @@ main {
   background:radial-gradient(circle, rgba(255,77,0,0.16), transparent 68%);
   pointer-events:none;
 }
+.ath-focus-kicker-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
 .ath-focus-kicker{
   font-family:var(--headline);
   font-size:10px;
@@ -1832,6 +1944,99 @@ main {
   letter-spacing:.16em;
   text-transform:uppercase;
   color:var(--muted);
+}
+.ath-focus-change-btn{
+  font-family:var(--headline);
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--orange);
+  background:none;
+  border:none;
+  cursor:pointer;
+  padding:0;
+  opacity:.8;
+}
+.ath-focus-change-btn:hover{opacity:1}
+.focus-race-sheet{
+  position:fixed;
+  inset:0;
+  z-index:800;
+  display:none;
+  align-items:flex-end;
+}
+.focus-race-sheet.open{display:flex}
+.focus-race-sheet-backdrop{
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,.6);
+}
+.focus-race-sheet-inner{
+  position:relative;
+  width:100%;
+  max-height:60svh;
+  background:var(--surface2);
+  border-radius:20px 20px 0 0;
+  border-top:1px solid var(--border2);
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+.focus-race-sheet-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:1rem 1.25rem .75rem;
+  border-bottom:1px solid var(--border);
+  font-family:var(--headline);
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--muted);
+}
+.focus-race-sheet-header button{
+  background:none;
+  border:none;
+  color:var(--muted);
+  font-size:18px;
+  cursor:pointer;
+  line-height:1;
+}
+.focus-race-list{
+  overflow-y:auto;
+  padding:.5rem 0 env(safe-area-inset-bottom,.75rem);
+}
+.focus-race-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:.85rem 1.25rem;
+  cursor:pointer;
+  border-bottom:1px solid var(--border);
+  gap:1rem;
+}
+.focus-race-item:last-child{border-bottom:none}
+.focus-race-item:hover{background:rgba(255,255,255,.04)}
+.focus-race-item.active{background:var(--orange-dim)}
+.focus-race-item-name{
+  font-family:var(--headline);
+  font-size:14px;
+  font-weight:800;
+  text-transform:uppercase;
+  color:var(--white);
+}
+.focus-race-item.active .focus-race-item-name{color:var(--orange)}
+.focus-race-item-meta{
+  font-size:11px;
+  color:var(--muted);
+  margin-top:.2rem;
+}
+.focus-race-item-check{
+  color:var(--orange);
+  font-size:16px;
+  flex-shrink:0;
 }
 .ath-focus-value{
   margin-top:.45rem;
@@ -1854,8 +2059,19 @@ main {
   margin-top:.55rem;
   color:var(--muted);
   font-size:12px;
-  line-height:1.45;
-  max-width:38ch;
+  line-height:1.5;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.ath-focus-meta-name{
+  color:rgba(245,245,245,0.75);
+  font-weight:600;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  font-size:12px;
+  margin-top:.55rem;
 }
 .ath-focus-pills{
   display:grid;
@@ -1925,64 +2141,52 @@ main {
 
 /* Bio card */
 .bio-card {
-  background:
-    linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.012)),
-    rgba(255,255,255,0.01);
-  border:1px solid rgba(255,255,255,0.07);
-  border-radius:18px;
-  padding:1.15rem;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.03),
-    0 20px 44px rgba(0,0,0,0.18);
+  background: transparent;
+  padding: 0;
 }
 .bio-grid {
-  display:grid; grid-template-columns:repeat(3,1fr); gap:.75rem;
+  display:grid; grid-template-columns:repeat(3,1fr); gap:.6rem;
 }
 .bio-grid > div{
   position:relative;
   overflow:hidden;
-  padding:1rem 1rem 1.05rem;
-  border-radius:16px;
+  padding:1rem 0.85rem 1rem;
+  border-radius:14px;
   background:
-    radial-gradient(circle at top left, rgba(255,255,255,0.05), transparent 42%),
-    linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.02)),
-    rgba(255,255,255,0.028);
+    linear-gradient(135deg, rgba(255,77,0,0.06) 0%, rgba(255,255,255,0.025) 60%),
+    rgba(255,255,255,0.03);
   border:1px solid rgba(255,255,255,0.09);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.04),
-    0 12px 28px rgba(0,0,0,0.2);
-  transition:transform .18s ease, border-color .18s ease, box-shadow .18s ease, background .18s ease;
+    inset 0 1px 0 rgba(255,255,255,0.05),
+    0 8px 24px rgba(0,0,0,0.22);
+  transition:transform .18s ease, border-color .18s ease;
+  display:flex; flex-direction:column; gap:4px;
 }
-.bio-grid > div::before{
+.bio-grid > div::after{
   content:"";
   position:absolute;
-  inset:0 auto auto 0;
-  width:100%;
-  height:3px;
-  background:linear-gradient(90deg, rgba(255,255,255,0.06), rgba(255,77,0,0.4), transparent 70%);
-  opacity:.85;
+  inset:auto 0 0 0;
+  height:2px;
+  background:linear-gradient(90deg, var(--orange), transparent 80%);
+  opacity:.55;
 }
 .bio-grid > div:hover{
   transform:translateY(-2px);
-  border-color:rgba(255,77,0,0.16);
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,0.05),
-    0 16px 32px rgba(0,0,0,0.24);
+  border-color:rgba(255,77,0,0.22);
 }
 .bio-lbl {
-  font-family:var(--headline); font-size:9px; font-weight:800;
-  letter-spacing:0.18em; text-transform:uppercase; color:var(--muted);
-  margin-bottom:6px;
+  font-family:var(--headline); font-size:8px; font-weight:800;
+  letter-spacing:0.22em; text-transform:uppercase; color:var(--orange);
+  opacity:0.7;
 }
 .bio-val {
-  font-family:var(--headline); font-size:15px; font-weight:900;
-  text-transform:uppercase; letter-spacing:0.04em; color:var(--white);
-  line-height:1.35;
-  text-shadow:0 6px 18px rgba(0,0,0,0.18);
+  font-family:var(--headline); font-size:14px; font-weight:900;
+  text-transform:uppercase; letter-spacing:0.05em; color:var(--white);
+  line-height:1.25;
 }
-.bio-edit-row {
-  display:flex; justify-content:flex-end;
-  margin-top:1.15rem; padding-top:1rem; border-top:1px solid rgba(255,255,255,0.07);
+@media (max-width:767px){
+  .bio-val { font-size:13px; }
+  .bio-grid { grid-template-columns:repeat(2,1fr); gap:.5rem; }
 }
 
 /* Athlete PBs */
@@ -2260,7 +2464,8 @@ main {
 @media (max-width: 720px){
   .ath-identity-block{
     flex-direction:column;
-    align-items:flex-start;
+    align-items:center;
+    text-align:center;
   }
   .ath-stats{
     grid-template-columns:repeat(2,1fr);
@@ -2279,11 +2484,12 @@ main {
   }
   .ath-goal-main{
     grid-template-columns:1fr;
-    align-items:flex-start;
+    align-items:center;
+    text-align:center;
   }
   .ath-goal-count{
     min-width:0;
-    text-align:left;
+    text-align:center;
   }
   .ath-cost-total{
     grid-template-columns:1fr;
@@ -2301,7 +2507,7 @@ main {
     flex-direction:column;
   }
   .ath-champ-side{
-    text-align:left;
+    text-align:center;
     min-width:0;
   }
 }
@@ -2325,9 +2531,8 @@ main {
    MODALS
    ============================================= */
 .modal-overlay {
-  position:fixed; inset:0; z-index:600;
-  background:rgba(0,0,0,0.82);
-  backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+  position:fixed; inset:0; z-index:700;
+  background:rgba(0,0,0,0.88);
   display:flex; align-items:flex-end; justify-content:center;
   opacity:0; pointer-events:none; transition:opacity 0.25s;
 }
@@ -2341,7 +2546,9 @@ main {
   border:1px solid var(--border2);
   border-top:2px solid var(--orange);
   border-radius:8px 8px 0 0;
-  width:100%; max-width:500px; max-height:calc(92vh - env(safe-area-inset-bottom, 0px));
+  width:100%; max-width:500px;
+  max-height:calc(92vh - env(safe-area-inset-bottom, 0px));
+  max-height:calc(92svh - env(safe-area-inset-bottom, 0px));
   overflow:hidden; display:flex; flex-direction:column;
   transform:translateY(30px); transition:transform 0.3s cubic-bezier(0.4,0,0.2,1);
 }
@@ -2906,8 +3113,8 @@ main {
   box-shadow:inset 0 1px 0 rgba(255,255,255,0.03);
 }
 #page-dashboard .dash-zone-head {
-  margin-bottom:0.25rem;
-  padding-bottom:0.8rem;
+  margin-bottom:0.45rem;
+  padding-bottom:1rem;
   border-bottom:1px solid rgba(245,245,245,0.06);
 }
 #page-dashboard .dash-zone-grid {
@@ -3157,13 +3364,15 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 .bottom-nav {
   display: none;
   position: fixed; bottom: 0; left: 0; right: 0; z-index: 500;
-  background: var(--orange);
-  box-shadow: 0 -1px 0 rgba(0,0,0,0.18);
+  background: var(--shell-bottom-gradient);
+  box-shadow: none;
   padding-bottom: env(safe-area-inset-bottom, 0px);
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 @media (max-width: 767px) {
   .bottom-nav { display: flex; align-items: flex-start; justify-content: space-around; }
-  main { padding-bottom: calc(var(--bottom-nav-base-height) + env(safe-area-inset-bottom, 0px)); }
+  main { padding-bottom: calc(var(--bottom-nav-base-height) + env(safe-area-inset-bottom, 0px) + 8px); }
   .hamburger { display: none; }
 }
 .bn-tab {
@@ -3171,18 +3380,22 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   align-items: center; justify-content: center;
   gap: 3px; padding: 8px 0 4px; min-height: 48px; min-width: 44px;
   cursor: pointer; background: none; border: none;
-  color: rgba(0,0,0,0.55); transition: color 0.15s;
+  color: rgba(245,245,245,0.68); transition: color 0.15s, transform 0.15s, opacity 0.15s;
   font-family: var(--headline); font-size: 8px; font-weight: 800;
   letter-spacing: 0.1em; text-transform: uppercase;
 }
 .bn-tab:active { transform: scale(0.92); }
-.bn-tab.active { color: var(--black); }
-.bn-tab svg { width: 22px; height: 22px; }
-.bn-tab.active svg { stroke: var(--black); }
+.bn-tab.active { color: var(--orange); }
+.bn-tab svg {
+  width: 24px; height: 24px;
+  stroke-width: 2.2;
+  opacity: 0.96;
+}
+.bn-tab.active svg { stroke: var(--orange); }
 @media (max-width: 360px) { .bn-tab { font-size: 0; } }
 /* Train tab — green identity */
-#bn-train.active { color: var(--black); }
-#bn-train.active svg { stroke: var(--black); }
+#bn-train.active { color: var(--orange); }
+#bn-train.active svg { stroke: var(--orange); }
 /* Train hub — green kicker + sub-tabs */
 #page-train .page-kicker::before { background: var(--green); }
 .train-tab-pill.active {
@@ -3197,8 +3410,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 /* =============================================
    ATHLETE PAGE — Settings link on mobile
    ============================================= */
-.athlete-settings-link { display: none; text-align: center; margin-top: 2rem; }
-@media (max-width: 767px) { .athlete-settings-link { display: block; } }
+.athlete-settings-link { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; text-align: center; margin-top: 2rem; padding-bottom: 1.5rem; }
 
 /* =============================================
    HISTORY SEARCH
@@ -3225,6 +3437,9 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   .ath-tags   { justify-content:center; }
   .ath-name-row { justify-content:center; }
   .bio-edit-row { justify-content:center; }
+  .bio-grid > div { text-align:center; }
+  .ath-section-h { justify-content:center; }
+  .ath-feature-kicker, .ath-feature-title, .ath-feature-copy { text-align:center; }
 }
 @media (min-width: 768px) and (max-width: 1023px) {
   /* Tablet: two-column layout where applicable */
@@ -3252,7 +3467,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 /* Arc canvas sits above tiles, below markers */
 /* ── Floating stat pills (top-left) ── */
 .map-pill-bar {
-  position: absolute; bottom: calc(1rem + env(safe-area-inset-bottom, 0px)); left: 1rem; z-index: 800;
+  position: absolute; bottom: calc(var(--bottom-nav-base-height) + env(safe-area-inset-bottom, 0px) + 1rem); left: 1rem; z-index: 800;
   display: flex; gap: 0.45rem; flex-wrap: wrap;
   pointer-events: none;
 }
@@ -3281,7 +3496,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 /* ── Zoom controls override ── */
 .leaflet-control-zoom {
   border: none !important;
-  margin: 0 1rem 1rem 0 !important;
+  margin: 0 1rem calc(var(--bottom-nav-base-height) + env(safe-area-inset-bottom, 0px) + 0.5rem) 0 !important;
 }
 .leaflet-control-zoom a {
   width: 36px !important; height: 36px !important; line-height: 36px !important;
@@ -3809,14 +4024,14 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   align-items:center;
   justify-content:center;
   text-align:center;
-  gap:0.45rem;
+  gap:0.3rem;
   background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
   border:1px solid rgba(245,245,245,0.08);
-  border-radius:16px;
-  padding:0.65rem 0.55rem;
+  border-radius:12px;
+  padding:0.5rem 0.4rem;
   transition: all 0.2s ease;
   position: relative;
-  min-height:108px;
+  min-height:78px;
   aspect-ratio:1 / 1;
   cursor:pointer;
   color:inherit;
@@ -3831,13 +4046,13 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   background: rgba(255,255,255,0.02);
 }
 .mw-ach-icon {
-  width:38px;
-  height:38px;
-  border-radius:12px;
+  width:28px;
+  height:28px;
+  border-radius:8px;
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:18px;
+  font-size:14px;
   line-height: 1;
   background:rgba(255,255,255,0.03);
   border:1px solid rgba(245,245,245,0.08);
@@ -4116,8 +4331,8 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 }
 @media (max-width: 540px) {
   .mw-ach-group { padding:0.85rem; }
-  .mw-ach-stack { grid-template-columns:repeat(2, minmax(0,1fr)); }
-  .mw-ach-badge { min-height:112px; }
+  .mw-ach-stack { grid-template-columns:repeat(3, minmax(0,1fr)); }
+  .mw-ach-badge { min-height:78px; }
 }
 /* .mw-art img generic fallback (SVG art uses this, photos use .mw-photo) */
 .mw-art img:not(.mw-photo) {
@@ -4498,21 +4713,33 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
    ============================================= */
 #landing-screen {
   position: fixed; inset: 0; z-index: 600;
-  background: var(--black);
+  background:
+    linear-gradient(180deg, #050505 0%, #070707 60%, #130905 84%, #1c0b06 100%);
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
-  padding: 2rem 1.5rem;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 2rem 1.5rem 2rem;
   text-align: center;
   transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.4,0,0.2,1);
   overflow: hidden;
+}
+@supports (min-height: 100dvh) {
+  #landing-screen { min-height: 100dvh; }
+  @media (max-width: 520px) {
+    #raceDetailModal .race-detail-modal {
+      max-height:100dvh;
+      min-height:100dvh;
+    }
+  }
 }
 /* Radial glow */
 #landing-screen::before {
   content: '';
   position: absolute; inset: 0; z-index: 0;
   background:
-    radial-gradient(ellipse 70% 50% at 50% 110%, rgba(255,77,0,0.18) 0%, transparent 70%),
-    radial-gradient(ellipse 40% 30% at 80% 10%, rgba(255,77,0,0.06) 0%, transparent 60%);
+    radial-gradient(ellipse 92% 56% at 50% 112%, rgba(255,77,0,0.24) 0%, rgba(255,77,0,0.14) 38%, rgba(255,77,0,0.04) 66%, transparent 82%),
+    radial-gradient(ellipse 46% 30% at 82% 10%, rgba(255,77,0,0.07) 0%, transparent 62%);
   pointer-events: none;
 }
 /* Grain texture */
@@ -4558,7 +4785,8 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   font-size: 13px; color: var(--muted);
   background: none; border: none; cursor: pointer;
   text-decoration: underline; text-underline-offset: 3px;
-  padding: 0; font-family: var(--body);
+  padding: 14px 8px; font-family: var(--body);
+  min-height: 44px; display: inline-flex; align-items: center;
 }
 .landing-sign-in-link:hover { color: var(--white); }
 /* 3-column proof grid */
@@ -5045,7 +5273,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 .tip-pct{font-size:10px;color:var(--green);font-weight:700;margin-top:2px}
 </style>
 </head>
-<body>
+<body class="landing-active">
 
 <!-- ==== LANDING SCREEN ==== -->
 <div id="landing-screen">
@@ -5407,7 +5635,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
         <button class="btn-ghost" style="padding:.5rem 0.75rem;font-size:12px;white-space:nowrap" onclick="go('map')" aria-label="Race Map">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" style="vertical-align:middle;margin-right:4px"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>Map
         </button>
-        <button class="btn-main" style="padding:.5rem 1rem;font-size:12px;white-space:nowrap" onclick="openRaceModal()">+ Add Race</button>
+        <button class="btn-main" style="padding:.5rem 1rem;font-size:12px;white-space:nowrap" onclick="openRaceModal()">+ Log Race</button>
       </div>
     </div>
     <div class="stats-row" style="margin-bottom:1.5rem">
@@ -5453,7 +5681,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 <!-- FLATLAY -->
 <div id="page-flatlay" class="page">
   <div class="wrap">
-    <div class="page-kicker">Marketplace Mode</div>
+    <div class="page-kicker">Gear Up</div>
     <div class="page-h1">The<br><span class="accent">Flatlay</span></div>
     <div class="flatlay-shell">
       <div class="flatlay-tabs">
@@ -5563,9 +5791,13 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
             </div>
           </div>
           <div class="ath-focus-card">
-            <div class="ath-focus-kicker">Current Focus</div>
+            <div class="ath-focus-kicker-row">
+              <div class="ath-focus-kicker">Current Focus</div>
+              <button class="ath-focus-change-btn" id="focusChangeBtn" onclick="openFocusRacePicker()" style="display:none">Change</button>
+            </div>
             <div class="ath-focus-value" id="athFocusValue">No Goal Set</div>
             <div class="ath-focus-label" id="athFocusLabel">Set your next race to unlock your athlete briefing.</div>
+            <div class="ath-focus-meta-name" id="athFocusName"></div>
             <div class="ath-focus-meta" id="athFocusMeta">Your best race form, current mission, and qualification context live here.</div>
           </div>
         </div>
@@ -5590,9 +5822,6 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
           <div><div class="bio-lbl">Favourite Race</div><div class="bio-val" id="bFav">—</div></div>
           <div><div class="bio-lbl">Racing Since</div><div class="bio-val" id="bSince">—</div></div>
           <div><div class="bio-lbl">Primary Sport</div><div class="bio-val" id="bPrim">—</div></div>
-        </div>
-        <div class="bio-edit-row">
-          <button class="btn-ghost" onclick="openEditAth()">✏️ Edit Profile</button>
         </div>
       </div>
     </div>
@@ -5639,6 +5868,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
       <div class="country-chips" id="cChips"></div>
     </div>
     <div class="athlete-settings-link">
+      <button class="btn-ghost" onclick="openEditAth()" aria-label="Edit profile" style="margin-bottom:0.5rem">✏️ Edit Profile</button>
       <button class="btn-ghost" onclick="openSettings ? openSettings() : document.getElementById('settingsModal') && document.getElementById('settingsModal').classList.add('open')" aria-label="Open settings">⚙ Settings</button>
     </div>
   </div>
@@ -6325,7 +6555,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 </div>
 
 <div class="modal-overlay" id="raceDetailModal" onclick="bgClose(event,'raceDetailModal')">
-  <div class="modal" role="dialog" aria-modal="true" aria-label="Race detail">
+  <div class="modal race-detail-modal" role="dialog" aria-modal="true" aria-label="Race detail">
     <div class="modal-drag"></div>
     <div class="modal-head">
       <div class="rd-name-wrap">
@@ -6340,11 +6570,11 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
       <div class="modal-sub" id="rdSub"></div>
       <div class="rd-podium-banner" id="rdPodiumBanner" style="display:none"></div>
     </div>
-    <div class="modal-body" style="overflow-y:auto;max-height:60vh">
+    <div class="modal-body race-detail-body">
       <!-- Event Details -->
       <div class="rd-section">
         <div class="rd-label">Event Details</div>
-        <div class="fgrid" style="grid-template-columns:1fr 1fr">
+        <div class="fgrid rd-detail-grid-2">
           <div class="fg"><label class="fl">Sport</label>
             <select class="fi" id="rdType" onchange="rdOnTypeChange()">
               <option value="run">Running</option>
@@ -6358,7 +6588,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
             <select class="fi" id="rdDistSel"></select>
           </div>
         </div>
-        <div class="fgrid" style="grid-template-columns:1fr 1fr">
+        <div class="fgrid rd-detail-grid-2">
           <div class="fg"><label class="fl">Date</label>
             <input class="fi" type="date" id="rdDate">
           </div>
@@ -6371,7 +6601,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
             </select>
           </div>
         </div>
-        <div class="fgrid" style="grid-template-columns:1fr 1fr 1fr">
+        <div class="fgrid rd-detail-grid-3">
           <div class="fg ac-wrap"><label class="fl">City</label><input class="fi" id="rdCity" placeholder="City" autocomplete="off"><div class="ac-drop" id="rdCityDrop"></div></div>
           <div class="fg"><label class="fl">Country</label><select class="fi" id="rdCountry"></select></div>
           <div class="fg"><label class="fl">Priority</label>
@@ -6601,12 +6831,13 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
     <div class="modal-body">
       <div class="auth-status-card">
         <div id="authSettingsStatus">You’re currently using this app without an account.</div>
-        <div class="auth-note">Supabase auth protects each athlete’s cloud data. Your Anthropic key and Strava secret stay local in this browser.</div>
         <div style="display:flex;gap:0.6rem;flex-wrap:wrap;margin-top:0.85rem">
           <button class="btn-main" type="button" id="settingsAuthBtn" onclick="openAuthModal()">Sign In</button>
           <button class="btn-ghost" type="button" id="settingsPwBtn" onclick="openPasswordModal()" style="display:none">Change Password</button>
           <button class="btn-ghost" type="button" id="settingsSignOutBtn" onclick="signOutUser()" style="display:none">Sign Out</button>
-          <button class="btn-ghost" type="button" id="settingsDeleteBtn" onclick="openDeleteAccountModal()" style="display:none;border-color:rgba(255,107,107,0.45);color:#ff8e8e">Delete Account</button>
+        </div>
+        <div style="margin-top:0.5rem">
+          <button class="btn-ghost" type="button" id="settingsDeleteBtn" onclick="openDeleteAccountModal()" style="display:none;border-color:rgba(255,107,107,0.3);color:#ff8e8e;font-size:11px;padding:0.35rem 0.75rem">Delete Account</button>
         </div>
       </div>
       <div class="fgrid" style="grid-template-columns:1fr">
@@ -6747,7 +6978,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
           <div class="fg-err-msg"></div>
         </div>
       </div>
-      <div class="auth-note" id="authHelperText">Sign in to load your protected Supabase data and keep it synced.</div>
+      <div class="auth-note" id="authHelperText">Your races stay safe and sync across all your devices.</div>
       <button class="auth-forgot" id="authForgotBtn" onclick="sendPasswordReset()" style="display:none">Forgot password?</button>
     </div>
     <div class="modal-foot">
@@ -6941,7 +7172,6 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
     <div class="modal-drag"></div>
     <div class="modal-head">
       <div class="modal-h" id="achievementDetailTitle">Achievement</div>
-      <div class="modal-sub">See what it means, whether you have unlocked it, and the race that triggered it when available.</div>
     </div>
     <div class="modal-body">
       <div class="mw-ach-detail-wrap">
@@ -7178,6 +7408,7 @@ function renderProLockedStrip(featureId) {
       if (tok?.access_token) {
         const el = document.getElementById('landing-screen');
         if (el) el.style.display = 'none';
+        document.body.classList.remove('landing-active');
       }
     }
   } catch(e) {}
@@ -9018,13 +9249,15 @@ function updateAuthUI() {
   const email = authUser?.email || '';
   document.getElementById('authMenuLabel').textContent = signedIn ? 'Account' : 'Sign In';
   document.getElementById('authSettingsStatus').innerHTML = signedIn
-    ? `Signed in as <span class="auth-status-email">${email}</span>. Your races now sync to your private Supabase account.${_IS_PROD && proAccessGranted ? ' <span class="auth-status-email" style="color:var(--orange)">Pro beta unlocked.</span>' : ''}`
+    ? `Signed in as <span class="auth-status-email">${email}</span>${_IS_PROD && proAccessGranted ? ' <span style="color:var(--orange);font-size:11px;font-weight:600"> · Pro beta unlocked</span>' : ''}`
     : `You're currently using this app without an account.`;
-  document.getElementById('settingsAuthBtn').textContent = signedIn ? 'Manage Account' : 'Sign In';
+  document.getElementById('settingsAuthBtn').style.display = signedIn ? 'none' : '';
   document.getElementById('settingsPwBtn').style.display = signedIn ? '' : 'none';
   document.getElementById('settingsSignOutBtn').style.display = signedIn ? '' : 'none';
   document.getElementById('settingsDeleteBtn').style.display = signedIn ? '' : 'none';
   document.getElementById('menuSignOutBtn').style.display = signedIn ? '' : 'none';
+  const miAuth = document.getElementById('mi-auth');
+  if (miAuth) miAuth.style.display = signedIn ? 'none' : '';
   const pill = document.getElementById('feedbackPill');
   if (pill && _IS_STAGING) pill.style.display = signedIn ? '' : 'none';
   // Beta upgrade banner: show when signed in with a beta account on staging
@@ -9061,7 +9294,7 @@ function setAuthMode(mode) {
   document.getElementById('authSubmitBtn').textContent = signIn ? 'Sign In' : 'Create Account';
   document.getElementById('authNameWrap').style.display = signIn ? 'none' : '';
   document.getElementById('authHelperText').textContent = signIn
-    ? 'Sign in to load your protected Supabase data and keep it synced.'
+    ? 'Your races stay safe and sync across all your devices.'
     : 'Your race history is private and synced across every device.';
   document.getElementById('authModeSignInBtn').className = signIn ? 'btn-main' : 'btn-ghost';
   document.getElementById('authModeSignUpBtn').className = signIn ? 'btn-ghost' : 'btn-main';
@@ -9141,24 +9374,34 @@ function dismissLanding() {
   const el = document.getElementById('landing-screen');
   if (!el) return;
   el.classList.add('out');
-  setTimeout(() => el.remove(), 420);
+  setTimeout(() => {
+    el.remove();
+    document.body.classList.remove('landing-active');
+    syncOverlayShellState();
+  }, 420);
 }
 
 function openLandingAuth(mode) {
+  if (authUser) { go('dashboard'); return; }
   setAuthMode(mode);
   // On staging sign-in, keep type="text" so usernames (no @) are accepted
-  document.getElementById('authEmail').type = (_IS_STAGING && mode === 'signin') ? 'text' : 'email';
+  const email = document.getElementById('authEmail');
+  email.type = (_IS_STAGING && mode === 'signin') ? 'text' : 'email';
   const pw = document.getElementById('authPassword');
-  pw.type = 'password'; pw.disabled = false;
+  pw.type = 'password';
+  setAuthFieldsInteractive(true);
   document.getElementById('authModal').classList.add('open');
 }
 
 function openAuthModal() {
+  if (authUser) return;
   closeMenu();
-  setAuthMode(authUser ? 'signin' : authMode);
-  if (authUser) document.getElementById('authEmail').value = authUser.email || '';
+  setAuthMode(authMode);
+  const email = document.getElementById('authEmail');
+  email.type = (_IS_STAGING && authMode === 'signin') ? 'text' : 'email';
   const pw = document.getElementById('authPassword');
-  pw.type = 'password'; pw.disabled = false;
+  pw.type = 'password';
+  setAuthFieldsInteractive(true);
   document.getElementById('authModal').classList.add('open');
 }
 
@@ -9336,9 +9579,14 @@ async function signOutUser() {
 function go(page) {
   if (page === 'pace') { trainTab = 'pace'; page = 'train'; }
   else if (page === 'training') { trainTab = 'activities'; page = 'train'; }
+  closeMoreSheet();
   document.querySelectorAll('.bn-tab').forEach(b => b.classList.remove('active'));
-  const _bn = document.getElementById('bn-' + page);
+  const _morePages = ['train', 'athlete'];
+  const _bn = _morePages.includes(page) ? document.getElementById('bn-more') : document.getElementById('bn-' + page);
   if (_bn) _bn.classList.add('active');
+  document.querySelectorAll('.more-sheet-item').forEach(b => b.classList.remove('active'));
+  const _ms = document.getElementById('ms-' + page);
+  if (_ms) _ms.classList.add('active');
   curPage = page;
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
@@ -9349,6 +9597,7 @@ function go(page) {
   window.scrollTo(0, 0);
   render(page);
 }
+function closeMoreSheet() { /* no-op — More now opens the side menu */ }
 
 /* ============================
    MENU
@@ -11080,20 +11329,36 @@ async function renderGreeting() {
   }
 
   if (geoFresh) {
-    // Use cached coords — no popup
     fetchWeather(cachedGeo.lat, cachedGeo.lon);
-  } else if (navigator.geolocation) {
-    wEl.textContent = 'Fetching weather…';
-    navigator.geolocation.getCurrentPosition(pos => {
-      const { latitude: lat, longitude: lon } = pos.coords;
-      localStorage.setItem('fl2_geo', JSON.stringify({ lat, lon, ts: Date.now() }));
-      fetchWeather(lat, lon);
-    }, () => {
-      wEl.textContent = 'Weather unavailable (location denied)';
-    });
-  } else {
-    wEl.textContent = 'Weather unavailable';
+    return;
   }
+  if (!navigator.geolocation) {
+    wEl.textContent = 'Weather unavailable';
+    return;
+  }
+  if (navigator.permissions?.query) {
+    try {
+      const perm = await navigator.permissions.query({ name: 'geolocation' });
+      if (perm.state !== 'granted') {
+        wEl.textContent = 'Enable location to show local weather';
+        return;
+      }
+    } catch (_) {
+      wEl.textContent = 'Enable location to show local weather';
+      return;
+    }
+  } else {
+    wEl.textContent = 'Enable location to show local weather';
+    return;
+  }
+  wEl.textContent = 'Fetching weather…';
+  navigator.geolocation.getCurrentPosition(pos => {
+    const { latitude: lat, longitude: lon } = pos.coords;
+    localStorage.setItem('fl2_geo', JSON.stringify({ lat, lon, ts: Date.now() }));
+    fetchWeather(lat, lon);
+  }, () => {
+    wEl.textContent = 'Weather unavailable';
+  });
 }
 
 /* ============================
@@ -12236,15 +12501,19 @@ function computeSignatureDistances() {
       if (!race?.time) return;
       const ageGrade = computeAgeGrade(race);
       const secs = timeToSecs(race.time);
-      const speedScore = Number.isFinite(secs) && (race.distKm || DIST_KM[race.distance] || 0)
-        ? ((race.distKm || DIST_KM[race.distance] || 0) / (secs / 3600))
-        : 0;
+      const distKm = race.distKm || DIST_KM[race.distance] || 0;
+      const speedScore = Number.isFinite(secs) && distKm ? (distKm / (secs / 3600)) : 0;
+      const isRunning = ['run','ultra','hyrox'].includes(race.type);
+      const paceSecsPerKm = (isRunning && distKm > 0 && secs > 0) ? secs / distKm : 0;
+      const paceLabel = paceSecsPerKm > 0
+        ? `${Math.floor(paceSecsPerKm/60)}:${String(Math.round(paceSecsPerKm%60)).padStart(2,'0')}/km`
+        : `${speedScore.toFixed(1)} km/h`;
       entries.push({
         distance,
         race,
         score: ageGrade || speedScore,
-        label: ageGrade ? `${ageGrade.toFixed(1)}% age-grade` : `${speedScore.toFixed(1)} km/h`,
-        metric: ageGrade ? 'age-grade' : 'speed',
+        label: ageGrade ? `${ageGrade.toFixed(1)}% age-grade` : paceLabel,
+        metric: ageGrade ? 'age-grade' : isRunning ? 'pace' : 'speed',
       });
     });
   });
@@ -12263,7 +12532,7 @@ function renderAthleteSignatureDistances() {
   }
   el.innerHTML = `<div class="ath-feature-kicker">Signature Distances</div>
     <div class="ath-feature-title">Your strongest zones</div>
-    <div class="ath-feature-copy">Ranked by age-grade when available, with speed-based fallback for unsupported distances.</div>
+    <div class="ath-feature-copy">Ranked by age-grade when available, with pace-based fallback for unsupported distances.</div>
     <div class="ath-signature-list">${top.map(item => `<div class="ath-signature-row">
       <div>
         <div class="ath-signature-dist">${escapeHtml(item.distance)}</div>
@@ -12271,6 +12540,36 @@ function renderAthleteSignatureDistances() {
       </div>
       <div class="ath-signature-score">${escapeHtml(item.label)}</div>
     </div>`).join('')}</div>`;
+}
+
+function openFocusRacePicker() {
+  if (upcomingRaces.length < 2) return;
+  const currentId = localStorage.getItem('fl2_focus_race_id');
+  const list = document.getElementById('focusRaceList');
+  if (!list) return;
+  list.innerHTML = upcomingRaces.map(r => {
+    const daysAway = r.date ? Math.max(0, Math.ceil((new Date(`${r.date}T00:00:00`) - new Date()) / 86400000)) : null;
+    const isActive = String(r.id) === String(currentId) || (!currentId && r.id === upcomingRaces[0]?.id);
+    const meta = [r.distance, r.date ? fmtDate(r.date) : null, daysAway != null ? `${daysAway} days` : null].filter(Boolean).join(' · ');
+    return `<div class="focus-race-item${isActive ? ' active' : ''}" onclick="setFocusRace('${r.id}')">
+      <div>
+        <div class="focus-race-item-name">${escapeHtml(r.name || 'Race')}</div>
+        <div class="focus-race-item-meta">${escapeHtml(meta)}</div>
+      </div>
+      ${isActive ? '<div class="focus-race-item-check">✓</div>' : ''}
+    </div>`;
+  }).join('');
+  document.getElementById('focusRaceSheet').classList.add('open');
+}
+
+function closeFocusRacePicker() {
+  document.getElementById('focusRaceSheet')?.classList.remove('open');
+}
+
+function setFocusRace(id) {
+  localStorage.setItem('fl2_focus_race_id', String(id));
+  closeFocusRacePicker();
+  renderAthlete();
 }
 
 function renderAthleteGoalRacePanel() {
@@ -12284,30 +12583,27 @@ function renderAthleteGoalRacePanel() {
   }
   const prediction = computePrediction(nextRace, races);
   const daysAway = Math.max(0, Math.ceil((new Date(`${nextRace.date}T00:00:00`) - new Date()) / 86400000));
+  const projectionPills = prediction ? `
+    <div class="ath-goal-grid">
+      <div class="ath-goal-pill">
+        <div class="ath-goal-pill-k">Projected Finish</div>
+        <div class="ath-goal-pill-v">${prediction.likelyFinishRange.center}</div>
+      </div>
+      <div class="ath-goal-pill">
+        <div class="ath-goal-pill-k">Course Fit</div>
+        <div class="ath-goal-pill-v">${prediction.courseFit}</div>
+      </div>
+    </div>
+    <div class="ath-feature-copy">Range ${prediction.likelyFinishRange.low}–${prediction.likelyFinishRange.high} from ${prediction.comparableCount} comparable race${prediction.comparableCount === 1 ? '' : 's'}.</div>` : `<div class="ath-feature-copy" style="opacity:0.5;font-size:11px">Log comparable races to unlock finish projections.</div>`;
   el.innerHTML = `<div class="ath-feature-kicker">Goal Race</div>
-    <div class="ath-feature-title">Target race intelligence</div>
     <div class="ath-goal-main">
       <div>
         <div class="ath-goal-race">${escapeHtml(nextRace.name)}</div>
         <div class="ath-goal-date">${fmtDate(nextRace.date)}${nextRace.location ? ` · ${escapeHtml(nextRace.location)}` : ''}</div>
       </div>
-      <div class="ath-goal-count">${daysAway}</div>
+      <div class="ath-goal-count">${daysAway}<span style="font-size:0.35em;display:block;letter-spacing:0.12em;opacity:0.7;margin-top:2px">DAYS</span></div>
     </div>
-    <div class="ath-goal-grid">
-      <div class="ath-goal-pill">
-        <div class="ath-goal-pill-k">Countdown</div>
-        <div class="ath-goal-pill-v">${daysAway} Days</div>
-      </div>
-      <div class="ath-goal-pill">
-        <div class="ath-goal-pill-k">Projected Finish</div>
-        <div class="ath-goal-pill-v">${prediction?.likelyFinishRange?.center || '—'}</div>
-      </div>
-      <div class="ath-goal-pill">
-        <div class="ath-goal-pill-k">Course Fit</div>
-        <div class="ath-goal-pill-v">${prediction ? `${prediction.courseFit}` : '—'}</div>
-      </div>
-    </div>
-    <div class="ath-feature-copy">${prediction ? `Likely range ${prediction.likelyFinishRange.low} to ${prediction.likelyFinishRange.high} from ${prediction.comparableCount} comparable race${prediction.comparableCount === 1 ? '' : 's'}.` : 'Log comparable race results to unlock projections.'}</div>`;
+    ${projectionPills}`;
 }
 
 function computeAthleteChampionshipTracker() {
@@ -12496,14 +12792,11 @@ function renderAthletePerformanceTimeline() {
   }
   const metrics = [
     ['speed', 'Speed'],
-    ['endurance', 'Endurance'],
-    ['terrain', 'Terrain'],
-    ['heat', 'Heat'],
-    ['frequency', 'Frequency'],
+    ['endurance', 'Distance'],
+    ['frequency', 'Races'],
   ];
   el.innerHTML = `<div class="ath-feature-kicker">Performance Timeline</div>
-    <div class="ath-feature-title">How your racing evolved</div>
-    <div class="ath-feature-copy">A season-by-season view of the athlete you are becoming across pace, distance, terrain, hot conditions, and race density.</div>
+    <div class="ath-feature-title">Season by season</div>
     <div class="ath-timeline-list">${timeline.map(row => `<div class="ath-timeline-row">
       <div class="ath-timeline-year">${escapeHtml(row.year)}</div>
       <div class="ath-timeline-metrics">${metrics.map(([key, label]) => `<div class="ath-timeline-metric">
@@ -13999,7 +14292,7 @@ function getCityPerformanceSummary(cityKey) {
 
 function buildPerformanceMarkerHtml(cityKey) {
   const { bestPct } = getCityPerformanceSummary(cityKey);
-  const color = bestPct !== null ? getPerformanceColor(bestPct) : 'rgba(245,245,245,0.4)';
+  const color = bestPct !== null ? getPerformanceColor(bestPct) : 'var(--orange)';
   return `<div class="fl-dot fl-dot-perf" style="background:${color};width:10px;height:10px;border-radius:50%;border:1.5px solid rgba(245,245,245,0.3)"></div>`;
 }
 
@@ -14435,7 +14728,7 @@ async function renderMedals() {
   const medalRaces = races.filter(r => hasRaceMedal(r));
   if (!medalRaces.length) {
     g.innerHTML = `<div style="text-align:center;padding:3rem 1rem;grid-column:1/-1;">
-  <p style="font-family:var(--headline);font-size:1.4rem;font-weight:700;color:var(--muted);margin-bottom:1rem;">No medals yet. Finished races with medals will show up here.</p>
+  <p style="font-family:var(--headline);font-size:1.4rem;font-weight:700;color:var(--muted);margin-bottom:1rem;">Your wall is waiting.<br>Every finish line earns its place.</p>
   <button class="cta-btn" onclick="openRaceModal()">+ Log a race</button>
 </div>`;
     return;
@@ -15351,7 +15644,7 @@ function renderHistory(){
   if(!races.length){
     list.innerHTML=`<div class="hist-empty" style="text-align:center;padding:3rem 1rem;">
   <p style="font-family:var(--headline);font-size:1.6rem;font-weight:700;color:var(--muted);line-height:1.2;margin-bottom:1rem;">No races yet.<br>Every finish line starts with one.</p>
-  <button class="cta-btn" onclick="openRaceModal()">+ Log your first race</button>
+  <button class="cta-btn" onclick="openRaceModal()">+ Log a Race</button>
 </div>`;
     if (matchCountEl) matchCountEl.style.display = 'none';
     if (loadMoreBtn) loadMoreBtn.style.display = 'none';
@@ -16362,16 +16655,24 @@ function renderAthlete(){
   document.getElementById('as-c').textContent=new Set(races.map(r=>r.country)).size;
   document.getElementById('as-y').textContent=a.since?new Date().getFullYear()-parseInt(a.since):'—';
   const bqSummary = computeBQSummary();
+  const focusNameEl = document.getElementById('athFocusName');
   const focusValueEl = document.getElementById('athFocusValue');
   const focusLabelEl = document.getElementById('athFocusLabel');
   const focusMetaEl = document.getElementById('athFocusMeta');
+  const focusChangeBtnEl = document.getElementById('focusChangeBtn');
+  const savedFocusId = localStorage.getItem('fl2_focus_race_id');
+  const focusRace = (savedFocusId && upcomingRaces.find(r => String(r.id) === String(savedFocusId))) || nextRace;
+  if (focusChangeBtnEl) focusChangeBtnEl.style.display = upcomingRaces.length >= 2 ? '' : 'none';
   const recentMarathon = getMarathonHistoryForBQ().slice(-1)[0];
   if (focusValueEl && focusLabelEl && focusMetaEl) {
-    if (nextRace?.date) {
-      const daysAway = Math.max(0, Math.ceil((new Date(`${nextRace.date}T00:00:00`) - new Date()) / 86400000));
-      focusValueEl.textContent = `${daysAway} Days`;
+    if (focusRace?.date) {
+      const daysAway = Math.max(0, Math.ceil((new Date(`${focusRace.date}T00:00:00`) - new Date()) / 86400000));
+      focusValueEl.textContent = `${daysAway} DAYS`;
       focusLabelEl.textContent = 'To your next goal race';
-      focusMetaEl.textContent = `${nextRace.name} · ${nextRace.distance || 'Race'} · ${fmtDate(nextRace.date)}${nextRace.location ? ` · ${nextRace.location}` : ''}`;
+      if (focusNameEl) focusNameEl.textContent = focusRace.name;
+      const parts = [focusRace.distance || 'Race', fmtDate(focusRace.date)];
+      if (focusRace.location) parts.push(focusRace.location);
+      focusMetaEl.textContent = parts.join(' · ');
     } else if (bqSummary.state === 'ready') {
       focusValueEl.textContent = bqSummary.best.time;
       focusLabelEl.textContent = bqSummary.qualifies ? 'Boston qualifier on pace' : 'Boston standard in sight';
@@ -16600,7 +16901,17 @@ function openEditAth(){
   document.getElementById('eFav').value=a.favRace||'';
   openM('eaModal');
 }
-function openM(id){ document.getElementById(id).classList.add('open'); }
+function syncOverlayShellState() {
+  const landingEl = document.getElementById('landing-screen');
+  const landingVisible = !!landingEl && landingEl.style.display !== 'none' && !landingEl.classList.contains('out');
+  const raceDetailOpen = window.innerWidth <= 520 && document.getElementById('raceDetailModal')?.classList.contains('open');
+  document.body.classList.toggle('landing-active', landingVisible);
+  document.body.classList.toggle('mobile-race-detail-active', !!raceDetailOpen);
+}
+function openM(id){
+  document.getElementById(id).classList.add('open');
+  syncOverlayShellState();
+}
 function closeM(id){
   if (id === 'eaModal') {
     const modal = document.getElementById('eaModal');
@@ -16610,13 +16921,17 @@ function closeM(id){
     }
   }
   document.getElementById(id).classList.remove('open');
+  syncOverlayShellState();
   if (id === 'authModal') {
     const fn = document.getElementById('authFirstName');
     const ln = document.getElementById('authLastName');
     if (fn) fn.value = '';
     if (ln) ln.value = '';
+    const email = document.getElementById('authEmail');
+    if (email) email.value = '';
     const pw = document.getElementById('authPassword');
-    if (pw) { pw.value = ''; pw.disabled = true; }
+    if (pw) pw.value = '';
+    setAuthFieldsInteractive(false);
   }
   if (id === 'settingsModal') {
     const apiKeyEl = document.getElementById('setApiKey');
@@ -16633,6 +16948,8 @@ function closeM(id){
     flatlayAddContext = null;
   }
 }
+window.addEventListener('resize', syncOverlayShellState);
+syncOverlayShellState();
 function toggleReveal(btn) {
   const wrap = btn.closest('.fi-wrap');
   const inp = wrap ? wrap.querySelector('input') : null;
@@ -19483,13 +19800,9 @@ initApp();
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
     Medals
   </button>
-  <button class="bn-tab" id="bn-train" onclick="go('train')" aria-label="Train">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-    Train
-  </button>
-  <button class="bn-tab" id="bn-athlete" onclick="go('athlete')" aria-label="Athlete Profile">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-    Me
+  <button class="bn-tab" id="bn-more" onclick="toggleMenu()" aria-label="More">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="5" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.2" fill="currentColor" stroke="none"/></svg>
+    More
   </button>
 </nav>
 
@@ -19729,6 +20042,18 @@ initApp();
       <button class="btn-ghost" onclick="closeM('feedbackModal')">Cancel</button>
       <button class="btn-main" id="feedbackSubmitBtn" onclick="submitFeedback()">Submit</button>
     </div>
+  </div>
+</div>
+
+<!-- Focus Race Picker Sheet -->
+<div class="focus-race-sheet" id="focusRaceSheet">
+  <div class="focus-race-sheet-backdrop" onclick="closeFocusRacePicker()"></div>
+  <div class="focus-race-sheet-inner">
+    <div class="focus-race-sheet-header">
+      <span>Select Focus Race</span>
+      <button onclick="closeFocusRacePicker()">×</button>
+    </div>
+    <div class="focus-race-list" id="focusRaceList"></div>
   </div>
 </div>
 
