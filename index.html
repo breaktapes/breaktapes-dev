@@ -3577,13 +3577,101 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 .fg-err-msg.show { display: block; }
 
 /* =============================================
-   CONTRAST FIXES
+   CONTRAST FIXES — use CSS vars so themes work
    ============================================= */
-.fi::placeholder { color: rgba(245,245,245,0.40); }
-.fl { color: rgba(245,245,245,0.55); }
-.hist-sub { color: rgba(245,245,245,0.45); }
-.s-tile-label { color: rgba(245,245,245,0.45); }
-.menu-section-label { color: rgba(245,245,245,0.35); }
+.fi::placeholder { color: var(--muted2); }
+.fl { color: var(--muted); }
+.hist-sub { color: var(--muted); }
+.s-tile-label { color: var(--muted); }
+.menu-section-label { color: var(--muted2); }
+
+/* =============================================
+   LIGHT MODE TEXT OVERRIDES
+   Fixes all the hardcoded rgba(245,245,245,...) rules
+   that don't flip automatically in light mode.
+   ============================================= */
+[data-theme="light"] {
+  /* Core body/surface text */
+  color: #1A1A1A;
+  background: #F5F0E8;
+
+  /* Any element relying on rgba(245,245,245,...) for color */
+  --_lm-text-hi:    rgba(26,26,26,0.90);
+  --_lm-text-mid:   rgba(26,26,26,0.65);
+  --_lm-text-lo:    rgba(26,26,26,0.45);
+  --_lm-text-xlo:   rgba(26,26,26,0.30);
+}
+
+/* Hardcoded-rgba text patterns — light override */
+[data-theme="light"] .rv-location,
+[data-theme="light"] .rv-date,
+[data-theme="light"] .rv-notes-text,
+[data-theme="light"] .rv-rank-value span,
+[data-theme="light"] .rv-splits-table td { color: rgba(26,26,26,0.70); }
+
+[data-theme="light"] .rv-rank-label,
+[data-theme="light"] .rv-splits-label,
+[data-theme="light"] .rv-splits-table th,
+[data-theme="light"] .rv-splits-table td:last-child { color: rgba(26,26,26,0.45); }
+
+[data-theme="light"] .hist-sub-mobile,
+[data-theme="light"] .race-meta,
+[data-theme="light"] .race-placing { color: rgba(26,26,26,0.55); }
+
+[data-theme="light"] .map-pill-label,
+[data-theme="light"] .tp-label { color: rgba(26,26,26,0.50); }
+
+[data-theme="light"] .matched-td { color: rgba(26,26,26,0.60); }
+
+[data-theme="light"] .pro-lock-copy,
+[data-theme="light"] .pro-strip-copy { color: rgba(26,26,26,0.72); }
+
+[data-theme="light"] .pro-lock-note,
+[data-theme="light"] .pro-plan-kicker { color: rgba(26,26,26,0.50); }
+
+[data-theme="light"] .pro-plan-copy,
+[data-theme="light"] .pro-plan-list { color: rgba(26,26,26,0.74); }
+
+[data-theme="light"] .bn-tab { color: rgba(26,26,26,0.55); }
+[data-theme="light"] .bn-tab.active { color: var(--orange); }
+
+[data-theme="light"] .menu-item { color: rgba(26,26,26,0.70); }
+[data-theme="light"] .menu-item:hover { background: var(--surface2); color: #1A1A1A; }
+
+[data-theme="light"] .auth-note,
+[data-theme="light"] .auth-status-card,
+[data-theme="light"] .settings-info { color: rgba(26,26,26,0.65); }
+
+[data-theme="light"] .card { background: var(--surface); border-color: rgba(0,0,0,0.09); }
+
+[data-theme="light"] .insight-card { background: var(--surface); }
+
+[data-theme="light"] .upcoming-row { background: var(--surface); border-color: rgba(0,0,0,0.09); }
+
+[data-theme="light"] .piq-dist-seg.even { background: rgba(26,26,26,0.25); }
+[data-theme="light"] .piq-badge.even { background: rgba(26,26,26,0.06); color: rgba(26,26,26,0.55); border-color: rgba(26,26,26,0.12); }
+
+[data-theme="light"] .drawer-race-sub { color: rgba(26,26,26,0.45); }
+
+[data-theme="light"] .mw-date { color: rgba(26,26,26,0.35); }
+
+/* Hamburger bars in light mode */
+[data-theme="light"] .hamburger span,
+[data-theme="light"] .hamburger.open span:nth-child(1),
+[data-theme="light"] .hamburger.open span:nth-child(3) { background: rgba(26,26,26,0.80); }
+
+[data-theme="light"] .hamburger:hover { border-color: rgba(0,0,0,0.20); background: rgba(0,0,0,0.05); }
+
+/* Leaflet map controls in light mode */
+[data-theme="light"] .leaflet-control-zoom a { border: 1px solid rgba(0,0,0,0.15) !important; color: rgba(26,26,26,0.70) !important; background: var(--surface) !important; }
+
+/* SVG icons inherit currentColor — ensure they're dark */
+[data-theme="light"] .bn-tab svg,
+[data-theme="light"] .menu-item svg,
+[data-theme="light"] header svg { color: inherit; }
+
+/* Age grade / sparkline axis text (SVG) */
+[data-theme="light"] .be-ax { fill: rgba(26,26,26,0.45) !important; }
 
 /* =============================================
    BOTTOM NAV
