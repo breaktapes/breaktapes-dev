@@ -465,6 +465,32 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 
 ---
 
+### Session 8 (2026-03-30) — Mobile UI polish, focus picker, map controls
+
+**Branch:** `claude/modest-ardinghelli` → staging (#54) → main (#55)
+
+#### Changes shipped
+- **Signature Distances**: avg pace (min/km) shown instead of km/h for running distances (`computeSignatureDistances()`); cycling/tri still shows km/h
+- **Focus card race picker**: "Change" button on athlete card (shown when 2+ upcoming races); `openFocusRacePicker()` / `closeFocusRacePicker()` / `setFocusRace(id)` functions; selection persisted in `fl2_focus_race_id` localStorage; `renderAthlete()` reads saved ID, falls back to `nextRace`
+- **Achievement modal**: removed subtitle copy under "ACHIEVEMENT" heading
+- **Achievement badges**: smaller (78px min-height, 28px icon, 3-col on mobile instead of 2-col)
+- **Map stat pills**: `bottom` offset now accounts for `--bottom-nav-base-height` + safe area
+- **Leaflet zoom controls**: margin raised above bottom nav using CSS calc
+- **Performance map**: fixed invisible markers — fallback color is now `var(--orange)` when no placing data (was near-transparent grey)
+- **More tab** in bottom nav: replaced TRAIN with MORE (···) → `toggleMenu()` opens full hamburger menu
+- **Auth guard**: `openAuthModal()` and `openLandingAuth()` return early if `authUser` is set
+- **Settings auth section**: cleaned up (only "Signed in as [email]", no jargon)
+- **Focus card layout**: race name on own line (`athFocusName`), distance · date · location on second line (`athFocusMeta`) with ellipsis overflow
+
+#### Key learnings
+- `fl2_focus_race_id` is stored as plain string (not JSON) — read with `localStorage.getItem()` not `sv()`
+- When staging and main diverge post-squash, resolve merge conflicts by taking staging (`git checkout --theirs`) then re-sync staging to main via `git push origin origin/main:staging --force`
+- `gh pr merge` from a worktree may fail if the target branch is checked out in another worktree — always pass `--repo owner/repo` flag
+- Leaflet zoom controls use `!important` overrides; use `margin` (not `bottom`) to reposition them above the bottom nav
+- Performance map markers become invisible when placing data is absent because the color computed to `rgba(245,245,245,0.4)` — always set a visible fallback
+
+---
+
 ## Known Issues / Watch Points
 
 - Beta invite codes: `BETA_INVITE_CODES` array is client-visible in source — intentional tradeoff for self-service beta; update the array and redeploy to staging to add/revoke codes
