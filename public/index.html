@@ -1932,6 +1932,11 @@ main {
   background:radial-gradient(circle, rgba(255,77,0,0.16), transparent 68%);
   pointer-events:none;
 }
+.ath-focus-kicker-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
 .ath-focus-kicker{
   font-family:var(--headline);
   font-size:10px;
@@ -1939,6 +1944,99 @@ main {
   letter-spacing:.16em;
   text-transform:uppercase;
   color:var(--muted);
+}
+.ath-focus-change-btn{
+  font-family:var(--headline);
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--orange);
+  background:none;
+  border:none;
+  cursor:pointer;
+  padding:0;
+  opacity:.8;
+}
+.ath-focus-change-btn:hover{opacity:1}
+.focus-race-sheet{
+  position:fixed;
+  inset:0;
+  z-index:800;
+  display:none;
+  align-items:flex-end;
+}
+.focus-race-sheet.open{display:flex}
+.focus-race-sheet-backdrop{
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,.6);
+}
+.focus-race-sheet-inner{
+  position:relative;
+  width:100%;
+  max-height:60svh;
+  background:var(--surface2);
+  border-radius:20px 20px 0 0;
+  border-top:1px solid var(--border2);
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+.focus-race-sheet-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:1rem 1.25rem .75rem;
+  border-bottom:1px solid var(--border);
+  font-family:var(--headline);
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:var(--muted);
+}
+.focus-race-sheet-header button{
+  background:none;
+  border:none;
+  color:var(--muted);
+  font-size:18px;
+  cursor:pointer;
+  line-height:1;
+}
+.focus-race-list{
+  overflow-y:auto;
+  padding:.5rem 0 env(safe-area-inset-bottom,.75rem);
+}
+.focus-race-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:.85rem 1.25rem;
+  cursor:pointer;
+  border-bottom:1px solid var(--border);
+  gap:1rem;
+}
+.focus-race-item:last-child{border-bottom:none}
+.focus-race-item:hover{background:rgba(255,255,255,.04)}
+.focus-race-item.active{background:var(--orange-dim)}
+.focus-race-item-name{
+  font-family:var(--headline);
+  font-size:14px;
+  font-weight:800;
+  text-transform:uppercase;
+  color:var(--white);
+}
+.focus-race-item.active .focus-race-item-name{color:var(--orange)}
+.focus-race-item-meta{
+  font-size:11px;
+  color:var(--muted);
+  margin-top:.2rem;
+}
+.focus-race-item-check{
+  color:var(--orange);
+  font-size:16px;
+  flex-shrink:0;
 }
 .ath-focus-value{
   margin-top:.45rem;
@@ -1961,8 +2059,19 @@ main {
   margin-top:.55rem;
   color:var(--muted);
   font-size:12px;
-  line-height:1.45;
-  max-width:38ch;
+  line-height:1.5;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.ath-focus-meta-name{
+  color:rgba(245,245,245,0.75);
+  font-weight:600;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  font-size:12px;
+  margin-top:.55rem;
 }
 .ath-focus-pills{
   display:grid;
@@ -3358,7 +3467,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 /* Arc canvas sits above tiles, below markers */
 /* ── Floating stat pills (top-left) ── */
 .map-pill-bar {
-  position: absolute; bottom: calc(1rem + env(safe-area-inset-bottom, 0px)); left: 1rem; z-index: 800;
+  position: absolute; bottom: calc(var(--bottom-nav-base-height) + env(safe-area-inset-bottom, 0px) + 1rem); left: 1rem; z-index: 800;
   display: flex; gap: 0.45rem; flex-wrap: wrap;
   pointer-events: none;
 }
@@ -3387,7 +3496,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 /* ── Zoom controls override ── */
 .leaflet-control-zoom {
   border: none !important;
-  margin: 0 1rem 1rem 0 !important;
+  margin: 0 1rem calc(var(--bottom-nav-base-height) + env(safe-area-inset-bottom, 0px) + 0.5rem) 0 !important;
 }
 .leaflet-control-zoom a {
   width: 36px !important; height: 36px !important; line-height: 36px !important;
@@ -3915,14 +4024,14 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   align-items:center;
   justify-content:center;
   text-align:center;
-  gap:0.45rem;
+  gap:0.3rem;
   background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
   border:1px solid rgba(245,245,245,0.08);
-  border-radius:16px;
-  padding:0.65rem 0.55rem;
+  border-radius:12px;
+  padding:0.5rem 0.4rem;
   transition: all 0.2s ease;
   position: relative;
-  min-height:108px;
+  min-height:78px;
   aspect-ratio:1 / 1;
   cursor:pointer;
   color:inherit;
@@ -3937,13 +4046,13 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   background: rgba(255,255,255,0.02);
 }
 .mw-ach-icon {
-  width:38px;
-  height:38px;
-  border-radius:12px;
+  width:28px;
+  height:28px;
+  border-radius:8px;
   display:flex;
   align-items:center;
   justify-content:center;
-  font-size:18px;
+  font-size:14px;
   line-height: 1;
   background:rgba(255,255,255,0.03);
   border:1px solid rgba(245,245,245,0.08);
@@ -4222,8 +4331,8 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 }
 @media (max-width: 540px) {
   .mw-ach-group { padding:0.85rem; }
-  .mw-ach-stack { grid-template-columns:repeat(2, minmax(0,1fr)); }
-  .mw-ach-badge { min-height:112px; }
+  .mw-ach-stack { grid-template-columns:repeat(3, minmax(0,1fr)); }
+  .mw-ach-badge { min-height:78px; }
 }
 /* .mw-art img generic fallback (SVG art uses this, photos use .mw-photo) */
 .mw-art img:not(.mw-photo) {
@@ -5682,9 +5791,13 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
             </div>
           </div>
           <div class="ath-focus-card">
-            <div class="ath-focus-kicker">Current Focus</div>
+            <div class="ath-focus-kicker-row">
+              <div class="ath-focus-kicker">Current Focus</div>
+              <button class="ath-focus-change-btn" id="focusChangeBtn" onclick="openFocusRacePicker()" style="display:none">Change</button>
+            </div>
             <div class="ath-focus-value" id="athFocusValue">No Goal Set</div>
             <div class="ath-focus-label" id="athFocusLabel">Set your next race to unlock your athlete briefing.</div>
+            <div class="ath-focus-meta-name" id="athFocusName"></div>
             <div class="ath-focus-meta" id="athFocusMeta">Your best race form, current mission, and qualification context live here.</div>
           </div>
         </div>
@@ -6718,12 +6831,13 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
     <div class="modal-body">
       <div class="auth-status-card">
         <div id="authSettingsStatus">You’re currently using this app without an account.</div>
-        <div class="auth-note">Supabase auth protects each athlete’s cloud data. Your Anthropic key and Strava secret stay local in this browser.</div>
         <div style="display:flex;gap:0.6rem;flex-wrap:wrap;margin-top:0.85rem">
           <button class="btn-main" type="button" id="settingsAuthBtn" onclick="openAuthModal()">Sign In</button>
           <button class="btn-ghost" type="button" id="settingsPwBtn" onclick="openPasswordModal()" style="display:none">Change Password</button>
           <button class="btn-ghost" type="button" id="settingsSignOutBtn" onclick="signOutUser()" style="display:none">Sign Out</button>
-          <button class="btn-ghost" type="button" id="settingsDeleteBtn" onclick="openDeleteAccountModal()" style="display:none;border-color:rgba(255,107,107,0.45);color:#ff8e8e">Delete Account</button>
+        </div>
+        <div style="margin-top:0.5rem">
+          <button class="btn-ghost" type="button" id="settingsDeleteBtn" onclick="openDeleteAccountModal()" style="display:none;border-color:rgba(255,107,107,0.3);color:#ff8e8e;font-size:11px;padding:0.35rem 0.75rem">Delete Account</button>
         </div>
       </div>
       <div class="fgrid" style="grid-template-columns:1fr">
@@ -7058,7 +7172,6 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
     <div class="modal-drag"></div>
     <div class="modal-head">
       <div class="modal-h" id="achievementDetailTitle">Achievement</div>
-      <div class="modal-sub">See what it means, whether you have unlocked it, and the race that triggered it when available.</div>
     </div>
     <div class="modal-body">
       <div class="mw-ach-detail-wrap">
@@ -9136,13 +9249,15 @@ function updateAuthUI() {
   const email = authUser?.email || '';
   document.getElementById('authMenuLabel').textContent = signedIn ? 'Account' : 'Sign In';
   document.getElementById('authSettingsStatus').innerHTML = signedIn
-    ? `Signed in as <span class="auth-status-email">${email}</span>. Your races now sync to your private Supabase account.${_IS_PROD && proAccessGranted ? ' <span class="auth-status-email" style="color:var(--orange)">Pro beta unlocked.</span>' : ''}`
+    ? `Signed in as <span class="auth-status-email">${email}</span>${_IS_PROD && proAccessGranted ? ' <span style="color:var(--orange);font-size:11px;font-weight:600"> · Pro beta unlocked</span>' : ''}`
     : `You're currently using this app without an account.`;
-  document.getElementById('settingsAuthBtn').textContent = signedIn ? 'Manage Account' : 'Sign In';
+  document.getElementById('settingsAuthBtn').style.display = signedIn ? 'none' : '';
   document.getElementById('settingsPwBtn').style.display = signedIn ? '' : 'none';
   document.getElementById('settingsSignOutBtn').style.display = signedIn ? '' : 'none';
   document.getElementById('settingsDeleteBtn').style.display = signedIn ? '' : 'none';
   document.getElementById('menuSignOutBtn').style.display = signedIn ? '' : 'none';
+  const miAuth = document.getElementById('mi-auth');
+  if (miAuth) miAuth.style.display = signedIn ? 'none' : '';
   const pill = document.getElementById('feedbackPill');
   if (pill && _IS_STAGING) pill.style.display = signedIn ? '' : 'none';
   // Beta upgrade banner: show when signed in with a beta account on staging
@@ -9267,6 +9382,7 @@ function dismissLanding() {
 }
 
 function openLandingAuth(mode) {
+  if (authUser) { go('dashboard'); return; }
   setAuthMode(mode);
   // On staging sign-in, keep type="text" so usernames (no @) are accepted
   const email = document.getElementById('authEmail');
@@ -9278,9 +9394,9 @@ function openLandingAuth(mode) {
 }
 
 function openAuthModal() {
+  if (authUser) return;
   closeMenu();
-  setAuthMode(authUser ? 'signin' : authMode);
-  if (authUser) document.getElementById('authEmail').value = authUser.email || '';
+  setAuthMode(authMode);
   const email = document.getElementById('authEmail');
   email.type = (_IS_STAGING && authMode === 'signin') ? 'text' : 'email';
   const pw = document.getElementById('authPassword');
@@ -9463,9 +9579,14 @@ async function signOutUser() {
 function go(page) {
   if (page === 'pace') { trainTab = 'pace'; page = 'train'; }
   else if (page === 'training') { trainTab = 'activities'; page = 'train'; }
+  closeMoreSheet();
   document.querySelectorAll('.bn-tab').forEach(b => b.classList.remove('active'));
-  const _bn = document.getElementById('bn-' + page);
+  const _morePages = ['train', 'athlete'];
+  const _bn = _morePages.includes(page) ? document.getElementById('bn-more') : document.getElementById('bn-' + page);
   if (_bn) _bn.classList.add('active');
+  document.querySelectorAll('.more-sheet-item').forEach(b => b.classList.remove('active'));
+  const _ms = document.getElementById('ms-' + page);
+  if (_ms) _ms.classList.add('active');
   curPage = page;
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
@@ -9476,6 +9597,7 @@ function go(page) {
   window.scrollTo(0, 0);
   render(page);
 }
+function closeMoreSheet() { /* no-op — More now opens the side menu */ }
 
 /* ============================
    MENU
@@ -12379,15 +12501,19 @@ function computeSignatureDistances() {
       if (!race?.time) return;
       const ageGrade = computeAgeGrade(race);
       const secs = timeToSecs(race.time);
-      const speedScore = Number.isFinite(secs) && (race.distKm || DIST_KM[race.distance] || 0)
-        ? ((race.distKm || DIST_KM[race.distance] || 0) / (secs / 3600))
-        : 0;
+      const distKm = race.distKm || DIST_KM[race.distance] || 0;
+      const speedScore = Number.isFinite(secs) && distKm ? (distKm / (secs / 3600)) : 0;
+      const isRunning = ['run','ultra','hyrox'].includes(race.type);
+      const paceSecsPerKm = (isRunning && distKm > 0 && secs > 0) ? secs / distKm : 0;
+      const paceLabel = paceSecsPerKm > 0
+        ? `${Math.floor(paceSecsPerKm/60)}:${String(Math.round(paceSecsPerKm%60)).padStart(2,'0')}/km`
+        : `${speedScore.toFixed(1)} km/h`;
       entries.push({
         distance,
         race,
         score: ageGrade || speedScore,
-        label: ageGrade ? `${ageGrade.toFixed(1)}% age-grade` : `${speedScore.toFixed(1)} km/h`,
-        metric: ageGrade ? 'age-grade' : 'speed',
+        label: ageGrade ? `${ageGrade.toFixed(1)}% age-grade` : paceLabel,
+        metric: ageGrade ? 'age-grade' : isRunning ? 'pace' : 'speed',
       });
     });
   });
@@ -12406,7 +12532,7 @@ function renderAthleteSignatureDistances() {
   }
   el.innerHTML = `<div class="ath-feature-kicker">Signature Distances</div>
     <div class="ath-feature-title">Your strongest zones</div>
-    <div class="ath-feature-copy">Ranked by age-grade when available, with speed-based fallback for unsupported distances.</div>
+    <div class="ath-feature-copy">Ranked by age-grade when available, with pace-based fallback for unsupported distances.</div>
     <div class="ath-signature-list">${top.map(item => `<div class="ath-signature-row">
       <div>
         <div class="ath-signature-dist">${escapeHtml(item.distance)}</div>
@@ -12414,6 +12540,36 @@ function renderAthleteSignatureDistances() {
       </div>
       <div class="ath-signature-score">${escapeHtml(item.label)}</div>
     </div>`).join('')}</div>`;
+}
+
+function openFocusRacePicker() {
+  if (upcomingRaces.length < 2) return;
+  const currentId = localStorage.getItem('fl2_focus_race_id');
+  const list = document.getElementById('focusRaceList');
+  if (!list) return;
+  list.innerHTML = upcomingRaces.map(r => {
+    const daysAway = r.date ? Math.max(0, Math.ceil((new Date(`${r.date}T00:00:00`) - new Date()) / 86400000)) : null;
+    const isActive = String(r.id) === String(currentId) || (!currentId && r.id === upcomingRaces[0]?.id);
+    const meta = [r.distance, r.date ? fmtDate(r.date) : null, daysAway != null ? `${daysAway} days` : null].filter(Boolean).join(' · ');
+    return `<div class="focus-race-item${isActive ? ' active' : ''}" onclick="setFocusRace('${r.id}')">
+      <div>
+        <div class="focus-race-item-name">${escapeHtml(r.name || 'Race')}</div>
+        <div class="focus-race-item-meta">${escapeHtml(meta)}</div>
+      </div>
+      ${isActive ? '<div class="focus-race-item-check">✓</div>' : ''}
+    </div>`;
+  }).join('');
+  document.getElementById('focusRaceSheet').classList.add('open');
+}
+
+function closeFocusRacePicker() {
+  document.getElementById('focusRaceSheet')?.classList.remove('open');
+}
+
+function setFocusRace(id) {
+  localStorage.setItem('fl2_focus_race_id', String(id));
+  closeFocusRacePicker();
+  renderAthlete();
 }
 
 function renderAthleteGoalRacePanel() {
@@ -14136,7 +14292,7 @@ function getCityPerformanceSummary(cityKey) {
 
 function buildPerformanceMarkerHtml(cityKey) {
   const { bestPct } = getCityPerformanceSummary(cityKey);
-  const color = bestPct !== null ? getPerformanceColor(bestPct) : 'rgba(245,245,245,0.4)';
+  const color = bestPct !== null ? getPerformanceColor(bestPct) : 'var(--orange)';
   return `<div class="fl-dot fl-dot-perf" style="background:${color};width:10px;height:10px;border-radius:50%;border:1.5px solid rgba(245,245,245,0.3)"></div>`;
 }
 
@@ -16499,16 +16655,24 @@ function renderAthlete(){
   document.getElementById('as-c').textContent=new Set(races.map(r=>r.country)).size;
   document.getElementById('as-y').textContent=a.since?new Date().getFullYear()-parseInt(a.since):'—';
   const bqSummary = computeBQSummary();
+  const focusNameEl = document.getElementById('athFocusName');
   const focusValueEl = document.getElementById('athFocusValue');
   const focusLabelEl = document.getElementById('athFocusLabel');
   const focusMetaEl = document.getElementById('athFocusMeta');
+  const focusChangeBtnEl = document.getElementById('focusChangeBtn');
+  const savedFocusId = localStorage.getItem('fl2_focus_race_id');
+  const focusRace = (savedFocusId && upcomingRaces.find(r => String(r.id) === String(savedFocusId))) || nextRace;
+  if (focusChangeBtnEl) focusChangeBtnEl.style.display = upcomingRaces.length >= 2 ? '' : 'none';
   const recentMarathon = getMarathonHistoryForBQ().slice(-1)[0];
   if (focusValueEl && focusLabelEl && focusMetaEl) {
-    if (nextRace?.date) {
-      const daysAway = Math.max(0, Math.ceil((new Date(`${nextRace.date}T00:00:00`) - new Date()) / 86400000));
+    if (focusRace?.date) {
+      const daysAway = Math.max(0, Math.ceil((new Date(`${focusRace.date}T00:00:00`) - new Date()) / 86400000));
       focusValueEl.textContent = `${daysAway} DAYS`;
       focusLabelEl.textContent = 'To your next goal race';
-      focusMetaEl.textContent = `${nextRace.name} · ${nextRace.distance || 'Race'} · ${fmtDate(nextRace.date)}${nextRace.location ? ` · ${nextRace.location}` : ''}`;
+      if (focusNameEl) focusNameEl.textContent = focusRace.name;
+      const parts = [focusRace.distance || 'Race', fmtDate(focusRace.date)];
+      if (focusRace.location) parts.push(focusRace.location);
+      focusMetaEl.textContent = parts.join(' · ');
     } else if (bqSummary.state === 'ready') {
       focusValueEl.textContent = bqSummary.best.time;
       focusLabelEl.textContent = bqSummary.qualifies ? 'Boston qualifier on pace' : 'Boston standard in sight';
@@ -19636,9 +19800,9 @@ initApp();
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
     Medals
   </button>
-  <button class="bn-tab" id="bn-train" onclick="go('train')" aria-label="Train">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
-    Train
+  <button class="bn-tab" id="bn-more" onclick="toggleMenu()" aria-label="More">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="5" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.2" fill="currentColor" stroke="none"/></svg>
+    More
   </button>
 </nav>
 
@@ -19878,6 +20042,18 @@ initApp();
       <button class="btn-ghost" onclick="closeM('feedbackModal')">Cancel</button>
       <button class="btn-main" id="feedbackSubmitBtn" onclick="submitFeedback()">Submit</button>
     </div>
+  </div>
+</div>
+
+<!-- Focus Race Picker Sheet -->
+<div class="focus-race-sheet" id="focusRaceSheet">
+  <div class="focus-race-sheet-backdrop" onclick="closeFocusRacePicker()"></div>
+  <div class="focus-race-sheet-inner">
+    <div class="focus-race-sheet-header">
+      <span>Select Focus Race</span>
+      <button onclick="closeFocusRacePicker()">×</button>
+    </div>
+    <div class="focus-race-list" id="focusRaceList"></div>
   </div>
 </div>
 
