@@ -366,12 +366,12 @@ INSERT INTO race_catalog (
 ('Cape Epic 2025',ARRAY['Absa Cape Epic 2025'],'cycle','Gran Fondo',700.0,'Cape Town','South Africa',2025,3,16,'2025-03-16','cycling','Trail','Mountain','Cape Epic','manual',85),
 ('Cape Epic 2024',ARRAY['Absa Cape Epic 2024'],'cycle','Gran Fondo',700.0,'Cape Town','South Africa',2024,3,17,'2024-03-17','cycling','Trail','Mountain','Cape Epic','manual',85),
 
-("L'Étape du Tour",ARRAY['Etape du Tour 2025'],'cycle','Gran Fondo',175.0,'Albertville','France',2025,7,6,'2025-07-06','cycling','Road','Mountain','L''Étape du Tour','manual',85),
-("L'Étape du Tour 2024",ARRAY['Etape du Tour 2024'],'cycle','Gran Fondo',175.0,'Albertville','France',2024,7,7,'2024-07-07','cycling','Road','Mountain','L''Étape du Tour','manual',80),
+('L''Étape du Tour',ARRAY['Etape du Tour 2025'],'cycle','Gran Fondo',175.0,'Albertville','France',2025,7,6,'2025-07-06','cycling','Road','Mountain','L''Étape du Tour','manual',85),
+('L''Étape du Tour 2024',ARRAY['Etape du Tour 2024'],'cycle','Gran Fondo',175.0,'Albertville','France',2024,7,7,'2024-07-07','cycling','Road','Mountain','L''Étape du Tour','manual',80),
 
-("La Marmotte",ARRAY['Marmotte Gran Fondo Alps'],'cycle','Gran Fondo',174.0,'Bourg-d''Oisans','France',2025,7,5,'2025-07-05','cycling','Road','Mountain','La Marmotte','manual',85),
+('La Marmotte',ARRAY['Marmotte Gran Fondo Alps'],'cycle','Gran Fondo',174.0,'Bourg-d''Oisans','France',2025,7,5,'2025-07-05','cycling','Road','Mountain','La Marmotte','manual',85),
 
-("Ötztaler Radmarathon",ARRAY['Oetztaler Radmarathon','Ötztaler 2025'],'cycle','Gran Fondo',238.0,'Sölden','Austria',2025,8,31,'2025-08-31','cycling','Road','Mountain','Ötztaler Radmarathon','manual',85),
+('Ötztaler Radmarathon',ARRAY['Oetztaler Radmarathon','Ötztaler 2025'],'cycle','Gran Fondo',238.0,'Sölden','Austria',2025,8,31,'2025-08-31','cycling','Road','Mountain','Ötztaler Radmarathon','manual',85),
 
 ('Fred Whitton Challenge',ARRAY['Fred Whitton 2025'],'cycle','Gran Fondo',179.0,'Coniston','United Kingdom',2025,5,11,'2025-05-11','cycling','Road','Mountain','Fred Whitton Challenge','manual',80),
 
