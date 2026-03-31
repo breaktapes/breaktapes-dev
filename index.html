@@ -16,6 +16,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/fit-file-parser@1.9.0/dist/fit-file-parser.min.js"></script>
 
 <style>
 /* =============================================
@@ -7580,6 +7581,7 @@ let stravaActivities = JSON.parse(localStorage.getItem('fl2_strava_acts') || 'nu
 let whoopData          = null;  // { access_token, refresh_token, expires_at, profile }
 let garminData         = null;  // { access_token, refresh_token, expires_at, profile }
 let appleHealthSummary = null;  // { recordCount, lastImport }
+let garminFitActivities = JSON.parse(localStorage.getItem('fl2_garmin_fit') || '[]');
 let trainingFilter = 'All';
 let selectedPhotoBase64 = null;
 let curPage = 'dashboard';
@@ -9916,6 +9918,7 @@ async function signOutUser() {
   localStorage.removeItem('fl2_strava_last_sync');
   localStorage.removeItem('fl2_race_weather');
   whoopData = null; garminData = null; appleHealthSummary = null;
+  garminFitActivities = []; localStorage.removeItem('fl2_garmin_fit');
   localStorage.removeItem('fl2_wishlist');
   raceWeatherCache = {};
   achievementCatalog = [];
@@ -19291,7 +19294,7 @@ function renderWearables() {
         </button>
       </div>
 
-      <div class="integration-card ${garminConnected ? 'connected' : ''}">
+      <div class="integration-card ${garminFitActivities.length ? 'connected' : ''}">
         <div class="integration-logo garmin-logo">
           <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
             <polygon points="13,4 25,22 1,22" fill="#0099D4"/>
@@ -19299,13 +19302,14 @@ function renderWearables() {
         </div>
         <div class="integration-info">
           <div class="integration-name">Garmin Connect</div>
-          <div class="integration-sub">${garminConnected
-            ? `Connected${garminProfile.displayName ? ' · ' + garminProfile.displayName : ''}`
-            : 'Activities, daily stats &amp; VO2 max'}</div>
+          <div class="integration-sub">${garminFitActivities.length
+            ? `${garminFitActivities.length} activit${garminFitActivities.length === 1 ? 'y' : 'ies'} imported · <a href="#" onclick="clearGarminFitActivities();return false;" style="color:var(--muted);text-decoration:underline;font-size:11px">clear</a>`
+            : 'Import .fit files from Garmin Connect'}</div>
         </div>
-        <button class="strava-connect-btn ${garminConnected ? 'secondary' : ''}" onclick="handleGarminBtn()">
-          ${garminConnected ? 'Disconnect' : GARMIN_CLIENT_ID ? 'Connect' : 'Coming Soon'}
-        </button>
+        <label class="strava-connect-btn ${garminFitActivities.length ? 'secondary' : ''}" style="cursor:pointer;display:inline-flex;align-items:center">
+          ${garminFitActivities.length ? 'Add More' : 'Import .FIT'}
+          <input type="file" accept=".fit,.FIT" multiple style="display:none" onchange="handleGarminFitImport(this.files)">
+        </label>
       </div>
 
       <div class="integration-card">
@@ -19355,6 +19359,17 @@ function renderWearables() {
       </div>
     </div>
 
+    ${!garminFitActivities.length ? `
+    <div class="integration-help">
+      <div class="integration-help-h">How to export from Garmin Connect</div>
+      <ol class="integration-help-steps">
+        <li>Open <strong>Garmin Connect</strong> app or website</li>
+        <li>Go to <strong>Activities</strong> &rarr; open any activity</li>
+        <li>Tap the <strong>&hellip; menu</strong> &rarr; <strong>Export to FIT</strong></li>
+        <li>Upload the <strong>.fit file</strong> above — select multiple at once</li>
+      </ol>
+    </div>` : ''}
+
     ${!appleConnected ? `
     <div class="integration-help">
       <div class="integration-help-h">How to export Apple Health</div>
@@ -19365,10 +19380,10 @@ function renderWearables() {
       </ol>
     </div>` : ''}
 
-    ${whoopConnected || garminConnected ? `<div id="wearablesFeed" style="margin-top:1.75rem"></div>` : ''}
+    ${whoopConnected || garminConnected || garminFitActivities.length ? `<div id="wearablesFeed" style="margin-top:1.75rem"></div>` : ''}
   `;
 
-  if (whoopConnected || garminConnected) renderWearablesFeed();
+  if (whoopConnected || garminConnected || garminFitActivities.length) renderWearablesFeed();
 }
 
 async function renderWearablesFeed() {
@@ -19397,6 +19412,8 @@ async function renderWearablesFeed() {
     duration_s: a.durationInSeconds,
     avg_hr:     a.averageHeartRateInBeatsPerMinute,
   }));
+  // FIT file imported Garmin activities
+  garminFitActivities.slice(0, 50).forEach(a => activities.push(a));
 
   activities.sort((a, b) => new Date(b.start || 0) - new Date(a.start || 0));
 
@@ -19408,7 +19425,9 @@ async function renderWearablesFeed() {
   const cards = activities.slice(0, 20).map(a => {
     const badge = a._source === 'whoop'
       ? '<span style="font-size:10px;font-weight:700;color:#fff;background:#00b4d8;border-radius:3px;padding:1px 5px;margin-left:4px">WHOOP</span>'
-      : '<span style="font-size:10px;font-weight:700;color:#fff;background:#1a9e5c;border-radius:3px;padding:1px 5px;margin-left:4px">GARMIN</span>';
+      : a._source === 'garmin_fit'
+        ? '<span style="font-size:10px;font-weight:700;color:#fff;background:#0099D4;border-radius:3px;padding:1px 5px;margin-left:4px">GARMIN</span>'
+        : '<span style="font-size:10px;font-weight:700;color:#fff;background:#1a9e5c;border-radius:3px;padding:1px 5px;margin-left:4px">GARMIN</span>';
     const dateStr = a.start ? fmtDate(a.start.slice(0, 10)) : '';
     const km      = a.distance_m ? (a.distance_m / 1000).toFixed(1) + ' km' : '';
     const dur     = a.duration_s ? fmtDuration(a.duration_s) : '';
@@ -19424,6 +19443,104 @@ async function renderWearablesFeed() {
   }).join('');
 
   el.innerHTML = `<div class="section-h" style="margin-bottom:0.75rem">Recent Activities</div>${cards}`;
+}
+
+/* ============================
+   GARMIN FIT FILE IMPORT
+   ============================ */
+
+const FIT_SPORT_NAMES = {
+  running: 'Running', cycling: 'Cycling', swimming: 'Swimming',
+  training: 'Training', walking: 'Walking', hiking: 'Hiking',
+  rowing: 'Rowing', cross_country_skiing: 'Cross-Country Skiing',
+  downhill_skiing: 'Downhill Skiing', snowboarding: 'Snowboarding',
+  paddling: 'Paddling', mountaineering: 'Mountaineering',
+  strength_training: 'Strength Training', yoga: 'Yoga',
+  tennis: 'Tennis', golf: 'Golf', basketball: 'Basketball',
+  soccer: 'Soccer', multisport: 'Multisport', generic: 'Activity',
+};
+
+async function parseFitFile(file) {
+  return new Promise((resolve, reject) => {
+    if (typeof FitParser === 'undefined') {
+      reject(new Error('FIT parser not loaded'));
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const parser = new FitParser({ force: true, speedUnit: 'km/h', lengthUnit: 'm', temperatureUnit: 'celsius', mode: 'cascade' });
+        parser.parse(e.target.result, (err, data) => {
+          if (err) { reject(err); return; }
+          const sessions = data?.activity?.sessions || [];
+          const activities = sessions.map(s => ({
+            _source:    'garmin_fit',
+            _id:        `${file.name}-${s.start_time?.getTime?.() || Math.random()}`,
+            type:       FIT_SPORT_NAMES[s.sport] || s.sport || 'Activity',
+            start:      s.start_time ? s.start_time.toISOString() : null,
+            duration_s: s.total_elapsed_time ? Math.round(s.total_elapsed_time) : null,
+            distance_m: s.total_distance   ? Math.round(s.total_distance)   : null,
+            avg_hr:     s.avg_heart_rate   || null,
+            calories:   s.total_calories   || null,
+            file:       file.name,
+          })).filter(a => a.start);
+          resolve(activities);
+        });
+      } catch(e) { reject(e); }
+    };
+    reader.onerror = () => reject(reader.error);
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+async function handleGarminFitImport(fileList) {
+  if (!fileList || !fileList.length) return;
+  const files = Array.from(fileList).filter(f => f.name.endsWith('.fit') || f.name.endsWith('.FIT'));
+  if (!files.length) { showBtToast('Please select .fit files exported from Garmin Connect.', 'error'); return; }
+
+  showBtToast(`Parsing ${files.length} file${files.length > 1 ? 's' : ''}…`);
+
+  let allNew = [];
+  let errors = 0;
+  for (const file of files) {
+    try {
+      const acts = await parseFitFile(file);
+      allNew = allNew.concat(acts);
+    } catch(e) {
+      console.warn('FIT parse error:', file.name, e);
+      errors++;
+    }
+  }
+
+  if (!allNew.length && errors) {
+    showBtToast('Could not parse any FIT files. Make sure they are valid Garmin exports.', 'error');
+    return;
+  }
+
+  // Deduplicate by _id against existing
+  const existingIds = new Set(garminFitActivities.map(a => a._id));
+  const dedupedNew  = allNew.filter(a => !existingIds.has(a._id));
+
+  garminFitActivities = [...garminFitActivities, ...dedupedNew]
+    .sort((a, b) => new Date(b.start) - new Date(a.start));
+
+  localStorage.setItem('fl2_garmin_fit', JSON.stringify(garminFitActivities));
+
+  const msg = dedupedNew.length
+    ? `${dedupedNew.length} activit${dedupedNew.length === 1 ? 'y' : 'ies'} imported from Garmin`
+    : 'No new activities found (already imported)';
+  showBtToast(msg, dedupedNew.length ? 'success' : 'info');
+
+  if (errors) showBtToast(`${errors} file${errors > 1 ? 's' : ''} could not be parsed.`, 'error');
+
+  renderWearables();
+}
+
+function clearGarminFitActivities() {
+  garminFitActivities = [];
+  localStorage.removeItem('fl2_garmin_fit');
+  renderWearables();
+  showBtToast('Garmin activities cleared.');
 }
 
 /* ============================
