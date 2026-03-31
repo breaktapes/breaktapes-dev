@@ -4796,6 +4796,30 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 .strava-connect-btn.secondary:hover { color: var(--white); border-color: var(--border2); background: var(--surface3); }
 .strava-connect-btn.danger { background: rgba(255,50,50,0.15); color: #ff6b6b; border: 1px solid rgba(255,50,50,0.4); }
 
+/* ── Wearables integration cards ── */
+.wearables-grid { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem; }
+.integration-card { display: flex; align-items: center; gap: 1rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 0.9rem 1rem; transition: border-color 0.15s; }
+.integration-card.connected { border-color: rgba(0,255,136,0.25); }
+.integration-logo { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 900; flex-shrink: 0; }
+.whoop-logo  { background: #000; }
+.garmin-logo { background: #fff; }
+.apple-logo  { background: #fff; }
+.coros-logo  { background: #111; }
+.oura-logo   { background: #f0ece6; }
+.integration-info { flex: 1; min-width: 0; }
+.integration-name { font-family: var(--headline); font-size: 15px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+.integration-sub  { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.integration-help { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 1rem 1.1rem; margin-top: 0.5rem; }
+.integration-help-h { font-family: var(--headline); font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.6rem; color: var(--muted); }
+.integration-help-steps { margin: 0; padding-left: 1.2rem; font-size: 13px; color: var(--muted); line-height: 1.8; }
+.integration-help-steps strong { color: var(--white); }
+.training-act-card { display: flex; align-items: center; gap: 0.75rem; padding: 0.7rem 0; border-bottom: 1px solid var(--border); }
+.training-act-card:last-child { border-bottom: none; }
+.act-icon { font-size: 22px; flex-shrink: 0; }
+.act-info { flex: 1; min-width: 0; }
+.act-name { font-family: var(--headline); font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.04em; display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+.act-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
 .training-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 0.65rem; margin-bottom: 1.5rem; }
 @media(max-width:480px){ .training-stats { grid-template-columns: repeat(2,1fr); } }
 .training-stat { background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; padding: 0.8rem; text-align: center; }
@@ -6241,6 +6265,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
     <div class="training-tabs" id="trainTabBar" style="margin-bottom:1.5rem">
       <button class="training-tab train-tab-pill active" id="ttPace" onclick="switchTrainTab('pace',this)">Pace</button>
       <button class="training-tab train-tab-pill" id="ttActivities" onclick="switchTrainTab('activities',this)">Activities</button>
+      <button class="training-tab train-tab-pill" id="ttWearables" onclick="switchTrainTab('wearables',this)">Wearables</button>
     </div>
     <!-- Pace sub-tab -->
     <div id="trainPaceSection">
@@ -6385,6 +6410,9 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
       </div>
       <div id="stravaStreakHeader" style="margin-bottom:1rem"></div>
       <div id="trainingFeed"></div>
+    </div>
+    <!-- Wearables sub-tab -->
+    <div id="trainWearablesSection" style="display:none">
     </div>
   </div>
 </div>
@@ -7549,6 +7577,9 @@ if (!upcomingRaces.length && nextRace?.date) {
 }
 let stravaData = JSON.parse(localStorage.getItem('fl2_strava') || 'null');
 let stravaActivities = JSON.parse(localStorage.getItem('fl2_strava_acts') || 'null') || [];
+let whoopData          = null;  // { access_token, refresh_token, expires_at, profile }
+let garminData         = null;  // { access_token, refresh_token, expires_at, profile }
+let appleHealthSummary = null;  // { recordCount, lastImport }
 let trainingFilter = 'All';
 let selectedPhotoBase64 = null;
 let curPage = 'dashboard';
@@ -7665,6 +7696,10 @@ const SUPABASE_ANON_KEY = _IS_PROD
 const REMOTE_SYNC_KEYS = new Set(['fl2_races', 'fl2_ath', 'fl2_nr', 'fl2_upcoming']);
 // Breaktapes health Worker — handles Strava token exchange + OW proxy
 const HEALTH_WORKER_URL = 'https://health.breaktapes.com';
+// Wearable OAuth client IDs (public values — secrets stay in health worker)
+// Fill these in once you have developer credentials:
+const WHOOP_CLIENT_ID  = '';   // developer-dashboard.whoop.com
+const GARMIN_CLIENT_ID = '';   // developer.garmin.com (pending approval)
 
 // Strava OAuth — Client ID is public (appears in OAuth URL).
 // Client Secret lives in the Worker. Set via: wrangler secret put STRAVA_CLIENT_ID / STRAVA_CLIENT_SECRET
@@ -9880,6 +9915,7 @@ async function signOutUser() {
   localStorage.removeItem('fl2_strava_acts');
   localStorage.removeItem('fl2_strava_last_sync');
   localStorage.removeItem('fl2_race_weather');
+  whoopData = null; garminData = null; appleHealthSummary = null;
   localStorage.removeItem('fl2_wishlist');
   raceWeatherCache = {};
   achievementCatalog = [];
@@ -9952,15 +9988,16 @@ function switchTrainTab(tab, btnEl) {
   trainTab = tab;
   document.querySelectorAll('.train-tab-pill').forEach(b => b.classList.remove('active'));
   if (btnEl) btnEl.classList.add('active');
-  document.getElementById('trainPaceSection').style.display      = tab === 'pace'       ? '' : 'none';
-  document.getElementById('trainActivitiesSection').style.display = tab === 'activities' ? '' : 'none';
+  document.getElementById('trainPaceSection').style.display       = tab === 'pace'       ? '' : 'none';
+  document.getElementById('trainActivitiesSection').style.display  = tab === 'activities' ? '' : 'none';
+  document.getElementById('trainWearablesSection').style.display   = tab === 'wearables'  ? '' : 'none';
   if (tab === 'pace')       { pcOnTypeChange(); document.getElementById('paceResults').style.display = 'none'; }
   if (tab === 'activities') renderTraining();
+  if (tab === 'wearables')  renderWearables();
 }
 function renderTrain() {
-  const activeBtn = document.getElementById(
-    trainTab === 'pace' ? 'ttPace' : 'ttActivities'
-  );
+  const idMap = { pace: 'ttPace', activities: 'ttActivities', wearables: 'ttWearables' };
+  const activeBtn = document.getElementById(idMap[trainTab] || 'ttPace');
   switchTrainTab(trainTab, activeBtn);
 }
 
@@ -18900,6 +18937,496 @@ async function renderOWTrainingFeed() {
 }
 
 /* ============================
+   WEARABLE INTEGRATIONS
+   ============================ */
+
+// ── Supabase helpers ─────────────────────────────────────────────────────────
+async function saveWearableToken(provider, tokenObj) {
+  const client = initSupabaseClient();
+  if (!client || !authUser) return;
+  await client.from('wearable_tokens').upsert({
+    user_id:       authUser.id,
+    provider,
+    access_token:  tokenObj.access_token,
+    refresh_token: tokenObj.refresh_token || null,
+    expires_at:    tokenObj.expires_at ? new Date(tokenObj.expires_at * 1000).toISOString() : null,
+    profile:       tokenObj.profile || {},
+    updated_at:    new Date().toISOString(),
+  }, { onConflict: 'user_id,provider' });
+}
+
+async function removeWearableToken(provider) {
+  const client = initSupabaseClient();
+  if (!client || !authUser) return;
+  await client.from('wearable_tokens').delete()
+    .eq('user_id', authUser.id).eq('provider', provider);
+}
+
+async function loadWearableTokens() {
+  const client = initSupabaseClient();
+  if (!client || !authUser) return;
+  const { data } = await client.from('wearable_tokens').select('*').eq('user_id', authUser.id);
+  if (!data) return;
+  data.forEach(row => {
+    const obj = {
+      access_token:  row.access_token,
+      refresh_token: row.refresh_token,
+      expires_at:    row.expires_at ? Math.floor(new Date(row.expires_at).getTime() / 1000) : null,
+      profile:       row.profile || {},
+    };
+    if (row.provider === 'whoop')  whoopData  = obj;
+    if (row.provider === 'garmin') garminData = obj;
+  });
+}
+
+// ── WHOOP OAuth ───────────────────────────────────────────────────────────────
+const WHOOP_REDIRECT_URI = window.location.origin;
+const WHOOP_SCOPES = 'read:recovery read:sleep read:workout read:profile read:body_measurement';
+
+function startWhoopOAuth() {
+  if (!WHOOP_CLIENT_ID) { showBtToast('WHOOP client ID not configured yet.', 'error'); return; }
+  const params = new URLSearchParams({
+    response_type: 'code',
+    client_id:     WHOOP_CLIENT_ID,
+    redirect_uri:  WHOOP_REDIRECT_URI,
+    scope:         WHOOP_SCOPES,
+    state:         'whoop',
+  });
+  window.location.href = `https://api.prod.whoop.com/oauth/oauth2/auth?${params}`;
+}
+
+async function handleWhoopCallback() {
+  const p = new URLSearchParams(window.location.search);
+  if (p.get('state') !== 'whoop' || !p.get('code')) return;
+  const code = p.get('code');
+  history.replaceState({}, '', window.location.pathname);
+  try {
+    const res = await fetch(`${HEALTH_WORKER_URL}/whoop/token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, redirect_uri: WHOOP_REDIRECT_URI }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Token exchange failed');
+    whoopData = {
+      access_token:  data.access_token,
+      refresh_token: data.refresh_token,
+      expires_at:    Math.floor(Date.now() / 1000) + (data.expires_in || 3600),
+      profile:       data.profile || {},
+    };
+    await saveWearableToken('whoop', whoopData);
+    showBtToast('WHOOP connected!', 'success');
+    if (trainTab === 'wearables') renderWearables();
+  } catch(e) {
+    console.error('WHOOP auth failed', e);
+    showBtToast('WHOOP connection failed: ' + e.message, 'error');
+  }
+}
+
+async function refreshWhoopToken() {
+  if (!whoopData?.refresh_token) return null;
+  const res = await fetch(`${HEALTH_WORKER_URL}/whoop/refresh`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refresh_token: whoopData.refresh_token }),
+  });
+  const data = await res.json();
+  if (!res.ok) { whoopData = null; await removeWearableToken('whoop'); return null; }
+  whoopData = {
+    ...whoopData,
+    access_token:  data.access_token,
+    refresh_token: data.refresh_token || whoopData.refresh_token,
+    expires_at:    Math.floor(Date.now() / 1000) + (data.expires_in || 3600),
+  };
+  await saveWearableToken('whoop', whoopData);
+  return whoopData.access_token;
+}
+
+async function getWhoopToken() {
+  if (!whoopData) return null;
+  if (whoopData.expires_at && Math.floor(Date.now() / 1000) > whoopData.expires_at - 60)
+    return await refreshWhoopToken();
+  return whoopData.access_token;
+}
+
+async function fetchWhoopActivities(limit = 25) {
+  const token = await getWhoopToken();
+  if (!token) return [];
+  const res = await fetch(`https://api.prod.whoop.com/developer/v1/activity/workout?limit=${limit}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) return [];
+  return (await res.json()).records || [];
+}
+
+async function fetchWhoopRecovery(limit = 7) {
+  const token = await getWhoopToken();
+  if (!token) return [];
+  const res = await fetch(`https://api.prod.whoop.com/developer/v1/recovery?limit=${limit}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) return [];
+  return (await res.json()).records || [];
+}
+
+function handleWhoopBtn() {
+  if (whoopData?.access_token) {
+    if (!confirm('Disconnect WHOOP?')) return;
+    whoopData = null;
+    removeWearableToken('whoop');
+    renderWearables();
+  } else {
+    startWhoopOAuth();
+  }
+}
+
+// ── Garmin OAuth (PKCE) ───────────────────────────────────────────────────────
+const GARMIN_REDIRECT_URI = window.location.origin;
+
+async function startGarminOAuth() {
+  if (!GARMIN_CLIENT_ID) { showBtToast('Garmin developer approval is still pending.', 'error'); return; }
+  const verifier = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32))))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier));
+  const challenge = btoa(String.fromCharCode(...new Uint8Array(buf)))
+    .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+  sessionStorage.setItem('garmin_pkce_verifier', verifier);
+  const params = new URLSearchParams({
+    response_type:         'code',
+    client_id:             GARMIN_CLIENT_ID,
+    redirect_uri:          GARMIN_REDIRECT_URI,
+    scope:                 'ACTIVITY_EXPORT USER_METRICS HEALTH_SNAPSHOT',
+    state:                 'garmin',
+    code_challenge:        challenge,
+    code_challenge_method: 'S256',
+  });
+  window.location.href = `https://connect.garmin.com/oauthConfirm?${params}`;
+}
+
+async function handleGarminCallback() {
+  const p = new URLSearchParams(window.location.search);
+  if (p.get('state') !== 'garmin' || !p.get('code')) return;
+  const code = p.get('code');
+  const code_verifier = sessionStorage.getItem('garmin_pkce_verifier');
+  history.replaceState({}, '', window.location.pathname);
+  sessionStorage.removeItem('garmin_pkce_verifier');
+  if (!code_verifier) { showBtToast('Garmin auth failed: missing verifier', 'error'); return; }
+  try {
+    const res = await fetch(`${HEALTH_WORKER_URL}/garmin/token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, redirect_uri: GARMIN_REDIRECT_URI, code_verifier }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Token exchange failed');
+    garminData = {
+      access_token:  data.access_token,
+      refresh_token: data.refresh_token,
+      expires_at:    Math.floor(Date.now() / 1000) + (data.expires_in || 3600),
+      profile:       data.profile || {},
+    };
+    await saveWearableToken('garmin', garminData);
+    showBtToast('Garmin connected!', 'success');
+    if (trainTab === 'wearables') renderWearables();
+  } catch(e) {
+    console.error('Garmin auth failed', e);
+    showBtToast('Garmin connection failed: ' + e.message, 'error');
+  }
+}
+
+async function refreshGarminToken() {
+  if (!garminData?.refresh_token) return null;
+  const res = await fetch(`${HEALTH_WORKER_URL}/garmin/refresh`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refresh_token: garminData.refresh_token }),
+  });
+  const data = await res.json();
+  if (!res.ok) { garminData = null; await removeWearableToken('garmin'); return null; }
+  garminData = {
+    ...garminData,
+    access_token:  data.access_token,
+    refresh_token: data.refresh_token || garminData.refresh_token,
+    expires_at:    Math.floor(Date.now() / 1000) + (data.expires_in || 3600),
+  };
+  await saveWearableToken('garmin', garminData);
+  return garminData.access_token;
+}
+
+async function getGarminToken() {
+  if (!garminData) return null;
+  if (garminData.expires_at && Math.floor(Date.now() / 1000) > garminData.expires_at - 60)
+    return await refreshGarminToken();
+  return garminData.access_token;
+}
+
+async function fetchGarminActivities(limit = 25) {
+  const token = await getGarminToken();
+  if (!token) return [];
+  const start = Math.floor((Date.now() - 90 * 24 * 60 * 60 * 1000) / 1000);
+  const res = await fetch(
+    `https://apis.garmin.com/wellness-api/rest/activities?startTimeInSeconds=${start}&limit=${limit}`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.activityList || data || [];
+}
+
+function handleGarminBtn() {
+  if (garminData?.access_token) {
+    if (!confirm('Disconnect Garmin?')) return;
+    garminData = null;
+    removeWearableToken('garmin');
+    renderWearables();
+  } else {
+    startGarminOAuth();
+  }
+}
+
+// ── Apple Health import ───────────────────────────────────────────────────────
+async function handleAppleHealthImport(file) {
+  if (!file) return;
+  const label = document.getElementById('appleHealthImportLabel');
+  if (label) label.textContent = 'Importing…';
+  try {
+    let records = [];
+    if (file.name.endsWith('.zip')) {
+      showBtToast('Unzip the export first, then upload export.xml', 'error'); return;
+    } else if (file.name.endsWith('.xml') || file.type.includes('xml')) {
+      records = await parseAppleHealthXML(file);
+    } else if (file.name.endsWith('.json') || file.type.includes('json')) {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      records = Array.isArray(parsed) ? parsed : (parsed.data || parsed.records || []);
+    } else {
+      showBtToast('Upload export.xml from your Apple Health export zip.', 'error'); return;
+    }
+    if (!records.length) { showBtToast('No health records found in file.', 'error'); return; }
+    await saveAppleHealthData(records);
+    appleHealthSummary = { recordCount: records.length, lastImport: new Date().toISOString() };
+    showBtToast(`Imported ${records.length.toLocaleString()} health records`, 'success');
+    renderWearables();
+  } catch(e) {
+    console.error('Apple Health import failed', e);
+    showBtToast('Import failed: ' + e.message, 'error');
+  } finally {
+    if (label) label.textContent = appleHealthSummary?.recordCount ? 'Re-import' : 'Import File';
+  }
+}
+
+async function parseAppleHealthXML(file) {
+  const text = await file.text();
+  const doc = new DOMParser().parseFromString(text, 'application/xml');
+  return Array.from(doc.querySelectorAll('Record')).map(n => ({
+    type:       n.getAttribute('type'),
+    value:      n.getAttribute('value'),
+    unit:       n.getAttribute('unit'),
+    startDate:  n.getAttribute('startDate'),
+    endDate:    n.getAttribute('endDate'),
+    sourceName: n.getAttribute('sourceName'),
+  }));
+}
+
+async function saveAppleHealthData(records) {
+  const client = initSupabaseClient();
+  if (!client || !authUser) return;
+  const byDate = {};
+  records.forEach(r => {
+    const d = (r.startDate || '').slice(0, 10);
+    if (!d) return;
+    if (!byDate[d]) byDate[d] = [];
+    byDate[d].push(r);
+  });
+  const rows = Object.entries(byDate).map(([date, recs]) => ({
+    user_id:     authUser.id,
+    date,
+    records:     recs,
+    imported_at: new Date().toISOString(),
+  }));
+  for (let i = 0; i < rows.length; i += 100) {
+    await client.from('apple_health_data')
+      .upsert(rows.slice(i, i + 100), { onConflict: 'user_id,date' });
+  }
+}
+
+async function loadAppleHealthSummary() {
+  const client = initSupabaseClient();
+  if (!client || !authUser) return;
+  const { count } = await client.from('apple_health_data')
+    .select('date', { count: 'exact', head: true }).eq('user_id', authUser.id);
+  if (count) appleHealthSummary = { recordCount: count, lastImport: null };
+}
+
+// ── Render wearables tab ──────────────────────────────────────────────────────
+const WHOOP_SPORTS = {0:'Running',1:'Cycling',16:'Baseball',17:'Basketball',18:'Rowing',27:'Rugby',28:'Sailing',29:'Skiing',30:'Soccer',31:'Softball',33:'Swimming',34:'Tennis',36:'Volleyball',39:'Boxing',42:'Dance',43:'Pilates',44:'Yoga',45:'Weightlifting',48:'Functional Fitness',49:'Duathlon',51:'Gymnastics',52:'Hiking',56:'Mountain Biking',57:'Powerlifting',59:'Triathlon',60:'Walking',61:'Surfing',62:'Elliptical',64:'Meditation'};
+function whoopSportName(id) { return WHOOP_SPORTS[id] || 'Workout'; }
+
+function renderWearables() {
+  const el = document.getElementById('trainWearablesSection');
+  if (!el) return;
+  const whoopConnected  = !!(whoopData?.access_token);
+  const garminConnected = !!(garminData?.access_token);
+  const appleConnected  = !!(appleHealthSummary?.recordCount);
+  const whoopProfile    = whoopData?.profile  || {};
+  const garminProfile   = garminData?.profile || {};
+
+  el.innerHTML = `
+    <div class="wearables-grid">
+      <div class="integration-card ${whoopConnected ? 'connected' : ''}">
+        <div class="integration-logo whoop-logo">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+            <circle cx="14" cy="14" r="11.5" stroke="white" stroke-width="2.2" fill="none"/>
+            <polyline points="6,10 9.5,20 13,12 16.5,20 22,10" stroke="white" stroke-width="2.2" stroke-linejoin="miter" stroke-linecap="round" fill="none"/>
+          </svg>
+        </div>
+        <div class="integration-info">
+          <div class="integration-name">WHOOP</div>
+          <div class="integration-sub">${whoopConnected
+            ? `Connected${whoopProfile.first_name ? ' · ' + whoopProfile.first_name + ' ' + (whoopProfile.last_name || '') : ''}`
+            : 'Recovery score, HRV, sleep &amp; strain'}</div>
+        </div>
+        <button class="strava-connect-btn ${whoopConnected ? 'secondary' : ''}" onclick="handleWhoopBtn()">
+          ${whoopConnected ? 'Disconnect' : WHOOP_CLIENT_ID ? 'Connect' : 'Coming Soon'}
+        </button>
+      </div>
+
+      <div class="integration-card ${garminConnected ? 'connected' : ''}">
+        <div class="integration-logo garmin-logo">
+          <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+            <polygon points="13,4 25,22 1,22" fill="#0099D4"/>
+          </svg>
+        </div>
+        <div class="integration-info">
+          <div class="integration-name">Garmin Connect</div>
+          <div class="integration-sub">${garminConnected
+            ? `Connected${garminProfile.displayName ? ' · ' + garminProfile.displayName : ''}`
+            : 'Activities, daily stats &amp; VO2 max'}</div>
+        </div>
+        <button class="strava-connect-btn ${garminConnected ? 'secondary' : ''}" onclick="handleGarminBtn()">
+          ${garminConnected ? 'Disconnect' : GARMIN_CLIENT_ID ? 'Connect' : 'Coming Soon'}
+        </button>
+      </div>
+
+      <div class="integration-card">
+        <div class="integration-logo coros-logo">
+          <svg width="26" height="28" viewBox="0 0 26 28" fill="none">
+            <path d="M13 3L21 7.5V17.5L13 22L7.5 19" stroke="#E8192C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+            <path d="M7.5 19L11 14L5 10.5L13 6" stroke="#E8192C" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+        </div>
+        <div class="integration-info">
+          <div class="integration-name">COROS</div>
+          <div class="integration-sub">GPS watches &amp; training analytics</div>
+        </div>
+        <button class="strava-connect-btn" disabled style="opacity:0.5;cursor:default">Coming Soon</button>
+      </div>
+
+      <div class="integration-card">
+        <div class="integration-logo oura-logo">
+          <svg width="24" height="30" viewBox="0 0 24 30" fill="none">
+            <rect x="7" y="2" width="10" height="3" rx="1.5" fill="#1a1a1a"/>
+            <circle cx="12" cy="20" r="8" stroke="#1a1a1a" stroke-width="3" fill="none"/>
+          </svg>
+        </div>
+        <div class="integration-info">
+          <div class="integration-name">Oura Ring</div>
+          <div class="integration-sub">Sleep, HRV &amp; readiness scores</div>
+        </div>
+        <button class="strava-connect-btn" disabled style="opacity:0.5;cursor:default">Coming Soon</button>
+      </div>
+
+      <div class="integration-card ${appleConnected ? 'connected' : ''}">
+        <div class="integration-logo apple-logo">
+          <svg width="26" height="26" viewBox="380 162 490 436" fill="none">
+            <path d="M735.43 171C687.54 171 648.83 187.29 624.82 222.12C624.55 222.52 624.28 222.92 624.01 223.32C623.73 222.93 623.45 222.52 623.18 222.12C599.19 187.31 560.51 171 521.14 171C482.61 171 448.59 185.81 424.19 210.27C399.77 234.74 385 268.88 385 307.47C385 363.26 410.97 419.49 452.34 468.36C496.34 520.35 557.77 564 624.01 589.93C678.4 571.43 743.14 524.64 791.52 467.48C833.36 418.05 863 360.85 863 307.47C863 269.38 848.61 235.63 825.78 211.22C802.39 186.2 770.13 171 735.43 171Z" fill="#FF3B5C"/>
+          </svg>
+        </div>
+        <div class="integration-info">
+          <div class="integration-name">Apple Health</div>
+          <div class="integration-sub">${appleConnected
+            ? `${(appleHealthSummary.recordCount || 0).toLocaleString()} records imported`
+            : 'Import from iPhone Health export'}</div>
+        </div>
+        <label class="strava-connect-btn" style="cursor:pointer;display:inline-flex;align-items:center" id="appleHealthImportLabel">
+          ${appleConnected ? 'Re-import' : 'Import File'}
+          <input type="file" accept=".xml,.json,.zip" style="display:none" onchange="handleAppleHealthImport(this.files[0])">
+        </label>
+      </div>
+    </div>
+
+    ${!appleConnected ? `
+    <div class="integration-help">
+      <div class="integration-help-h">How to export Apple Health</div>
+      <ol class="integration-help-steps">
+        <li>Open the <strong>Health</strong> app on your iPhone</li>
+        <li>Tap your profile photo &rarr; <strong>Export All Health Data</strong></li>
+        <li>Unzip the file &rarr; upload <strong>export.xml</strong> above</li>
+      </ol>
+    </div>` : ''}
+
+    ${whoopConnected || garminConnected ? `<div id="wearablesFeed" style="margin-top:1.75rem"></div>` : ''}
+  `;
+
+  if (whoopConnected || garminConnected) renderWearablesFeed();
+}
+
+async function renderWearablesFeed() {
+  const el = document.getElementById('wearablesFeed');
+  if (!el) return;
+  el.innerHTML = `<div class="section-h" style="margin-bottom:0.75rem">Recent Activities</div><div class="training-empty"><div class="spinner" style="margin:0 auto 0.5rem"></div></div>`;
+
+  let activities = [];
+  const [whoopActs, garminActs] = await Promise.all([
+    whoopData?.access_token  ? fetchWhoopActivities(15)  : [],
+    garminData?.access_token ? fetchGarminActivities(15) : [],
+  ]);
+
+  whoopActs.forEach(a => activities.push({
+    _source:    'whoop',
+    type:       whoopSportName(a.sport_id),
+    start:      a.start,
+    duration_s: a.score?.strain != null ? null : null,
+    score:      a.score,
+  }));
+  garminActs.forEach(a => activities.push({
+    _source:    'garmin',
+    type:       a.activityType?.typeKey || 'Activity',
+    start:      a.startTimeInSeconds ? new Date(a.startTimeInSeconds * 1000).toISOString() : null,
+    distance_m: a.distanceInMeters,
+    duration_s: a.durationInSeconds,
+    avg_hr:     a.averageHeartRateInBeatsPerMinute,
+  }));
+
+  activities.sort((a, b) => new Date(b.start || 0) - new Date(a.start || 0));
+
+  if (!activities.length) {
+    el.innerHTML = `<div class="section-h" style="margin-bottom:0.75rem">Recent Activities</div><div class="training-empty"><div class="training-empty-icon">📭</div><div class="training-empty-h">No recent activities</div><div class="training-empty-sub">Activities will appear after your first sync</div></div>`;
+    return;
+  }
+
+  const cards = activities.slice(0, 20).map(a => {
+    const badge = a._source === 'whoop'
+      ? '<span style="font-size:10px;font-weight:700;color:#fff;background:#00b4d8;border-radius:3px;padding:1px 5px;margin-left:4px">WHOOP</span>'
+      : '<span style="font-size:10px;font-weight:700;color:#fff;background:#1a9e5c;border-radius:3px;padding:1px 5px;margin-left:4px">GARMIN</span>';
+    const dateStr = a.start ? fmtDate(a.start.slice(0, 10)) : '';
+    const km      = a.distance_m ? (a.distance_m / 1000).toFixed(1) + ' km' : '';
+    const dur     = a.duration_s ? fmtDuration(a.duration_s) : '';
+    const hr      = a.avg_hr    ? a.avg_hr + ' bpm avg' : '';
+    const icon    = ACTIVITY_ICONS[a.type] || ACTIVITY_ICONS[a.type?.replace(/\s/g,'')] || '⚡';
+    return `<div class="training-act-card">
+      <div class="act-icon">${icon}</div>
+      <div class="act-info">
+        <div class="act-name">${escapeHtml(a.type)}${badge}</div>
+        <div class="act-meta">${[dateStr, km, dur, hr].filter(Boolean).join(' · ')}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  el.innerHTML = `<div class="section-h" style="margin-bottom:0.75rem">Recent Activities</div>${cards}`;
+}
+
+/* ============================
    STRAVA OAUTH
    ============================ */
 let _stravaDisconnectTimer = null;
@@ -19998,6 +20525,9 @@ async function initApp() {
   await initAuth();
   initTheme(); // re-run after auth so Pro status is known (guards Pro themes)
   handleStravaCallback();
+  handleWhoopCallback();
+  handleGarminCallback();
+  if (authUser) { loadWearableTokens(); loadAppleHealthSummary(); }
   initAllLocationPickers();
   initRaceNamePicker();
   initUpcomingRacePicker();
