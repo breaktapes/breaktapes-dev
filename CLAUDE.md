@@ -143,6 +143,8 @@ Pages: `dashboard`, `history`, `medals`, `map`, `athlete`, `train`, `training`, 
 | `race_catalog` | Global race database (~1,068+ rows, searchable) |
 | `race_medal_community` | Community-uploaded medal photos |
 | `beta_feedback` | Staging-only: star ratings + messages from beta testers |
+| `wearable_tokens` | OAuth tokens for WHOOP/Garmin — per-user, per-provider, RLS protected |
+| `apple_health_data` | Apple Health imported records grouped by date — per-user, RLS protected |
 
 ---
 
@@ -241,6 +243,24 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 | `applyMapPerformanceMode(enabled)` | Apply/remove performance color overlay on race map markers |
 | `getPerformanceColor(percentile)` | Map percentile → color for performance map overlay |
 | `getCityPerformanceSummary(cityKey)` | Aggregate performance stats for a city across all races |
+| `saveWearableToken(provider, tokenObj)` | Supabase upsert to `wearable_tokens` for authenticated user |
+| `removeWearableToken(provider)` | Delete wearable token for provider from Supabase |
+| `loadWearableTokens()` | Load all wearable tokens for current user into `whoopData`/`garminData` |
+| `startWhoopOAuth()` | Redirect to WHOOP OAuth consent with state='whoop' |
+| `handleWhoopCallback()` | Detect `?state=whoop&code=`, POST to `/whoop/token`, save to Supabase |
+| `refreshWhoopToken()` | Rotate WHOOP access token using refresh token (auto-called 60s before expiry) |
+| `fetchWhoopActivities(limit)` | GET WHOOP workout activities via access token |
+| `fetchWhoopRecovery(limit)` | GET WHOOP recovery scores via access token |
+| `startGarminOAuth()` | Generate PKCE verifier/challenge, store verifier in sessionStorage, redirect to Garmin |
+| `handleGarminCallback()` | Detect `?state=garmin&code=`, POST to `/garmin/token` with PKCE verifier |
+| `refreshGarminToken()` | Rotate Garmin access token using refresh token |
+| `fetchGarminActivities(limit)` | GET Garmin wellness activities (90-day window) |
+| `handleAppleHealthImport(file)` | Handle .xml/.json upload, parse records, save to Supabase |
+| `parseAppleHealthXML(file)` | DOMParser on Apple Health `export.xml`, extract HKRecord elements |
+| `saveAppleHealthData(records)` | Group records by date, upsert in 100-row batches to `apple_health_data` |
+| `renderWearables()` | Render 5 integration cards in Wearables tab (WHOOP, Garmin, COROS, Oura, Apple Health) |
+| `renderWearablesFeed()` | Parallel fetch WHOOP+Garmin activities, sort by date, render activity cards |
+| `whoopSportName(id)` | Map WHOOP sport_id integer to human-readable sport name |
 
 ---
 
@@ -250,8 +270,9 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 - **Test files:** `tests/utils.test.js` (pure functions), `tests/navigation.test.js` (go() + scroll behaviour)
 - **Loader:** `tests/spa-loader.js` — loads `index.html` into jsdom, exposes globals via `window`
 - **Coverage:** `npm run test:coverage` → `coverage/` directory
-- **67 tests, all green** as of Session 7
-- Functions tested: `timeToSecs`, `secsToHMS`, `buildPBMap`, `parsePlacing`, `computeStreak`, `computeMomentum`, `computePacingIQ`, `computeAgeGrade`, `classifyPacing`, `go()` scroll + page switching + nav state
+- **144 tests, all green** as of Session 10
+- Functions tested: `timeToSecs`, `secsToHMS`, `buildPBMap`, `parsePlacing`, `computeStreak`, `computeMomentum`, `computePacingIQ`, `computeAgeGrade`, `classifyPacing`, `go()` scroll + page switching + nav state, `whoopSportName`, `parseAppleHealthXML`, all wearable function smoke tests
+- `tests/wearables.test.js` added in Session 10 — 15 tests for wearable integration functions
 
 ---
 
@@ -287,6 +308,27 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 - OAuth integration for activity sync
 - Token refresh handled client-side
 - Activities imported and matched to races by distance/type
+
+### WHOOP
+- OAuth 2.0 integration — direct developer access (no approval required)
+- Register at `developer-dashboard.whoop.com`, set `WHOOP_CLIENT_ID` constant in `index.html`
+- Secrets: `WHOOP_CLIENT_SECRET` + `WHOOP_CLIENT_ID` via `wrangler secret put` in `health-proxy/`
+- Tokens stored in Supabase `wearable_tokens` (provider = 'whoop')
+- Data: workout activities + recovery scores via WHOOP Developer API v1
+
+### Garmin
+- OAuth 2.0 + PKCE — developer approval required (apply at `developer.garmin.com`)
+- PKCE flow: code_verifier generated in browser, code_challenge sent to Garmin, verifier in `sessionStorage` for callback
+- Token exchange and client secret kept server-side in `health-proxy/`
+- Tokens stored in Supabase `wearable_tokens` (provider = 'garmin')
+- Data: activities via Garmin Wellness API (`/wellness-api/rest/activities`)
+
+### Apple Health
+- No OAuth — file-based import only (no web OAuth exists for HealthKit)
+- User exports `export.xml` from iPhone Health app, uploads via file input in Wearables tab
+- `parseAppleHealthXML()` uses `DOMParser` on `export.xml`, extracts all `<Record>` elements
+- Records grouped by `startDate` prefix (date) and upserted to `apple_health_data` in 100-row batches
+- Requires `authUser` — upload button only shown when authenticated
 
 ---
 
@@ -516,6 +558,29 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 
 ---
 
+### Session 10 (2026-03-31) — Wearable integrations
+
+**Branch:** `claude/eloquent-ishizaka` → staging (#61) → main (pending)
+
+#### Changes shipped
+- **WHOOP OAuth** — direct OAuth 2.0, no Terra. `startWhoopOAuth()` → `handleWhoopCallback()` → token saved to Supabase `wearable_tokens`. Activity feed via `/developer/v1/activity/workout`. Recovery via `/developer/v1/recovery`. Auto-refresh 60s before expiry via `refreshWhoopToken()`.
+- **Garmin OAuth + PKCE** — `startGarminOAuth()` generates 64-byte verifier, derives SHA-256 challenge via `crypto.subtle.digest`, stores verifier in `sessionStorage`. `handleGarminCallback()` retrieves verifier and POSTs to `/garmin/token`. Activity feed via Garmin Wellness API (90-day window).
+- **Apple Health import** — no OAuth (HealthKit has no web OAuth). File upload → `parseAppleHealthXML()` with `DOMParser` → records grouped by date → `saveAppleHealthData()` upserts in 100-row batches to `apple_health_data`.
+- **Wearables tab in Train page** — 5 integration cards: WHOOP (live), Garmin (live), COROS (coming soon), Oura (coming soon), Apple Health (live). Brand SVG logos for all 5.
+- **health-proxy routes** — `POST /whoop/token|refresh`, `POST /garmin/token|refresh` added. Client secrets server-side only.
+- **Supabase migration** `20260331000000_wearable_tokens.sql` — `wearable_tokens` + `apple_health_data` tables with RLS.
+- **gstack upgrade** v0.14.0.0 → v0.14.5.0 vendored.
+- **15 new tests** — `tests/wearables.test.js`: `whoopSportName`, `parseAppleHealthXML`, smoke tests for all 9 wearable functions. Total: 144 tests.
+
+#### Key learnings
+- `sessionStorage` (not localStorage) is the right place for PKCE `code_verifier` — survives OAuth redirect but clears on tab/session close, preventing replay
+- jsdom's `File` object lacks `.text()` method — polyfill with `file.text = () => Promise.resolve(content)` in tests
+- `loadSPA()` doesn't return the global object — it populates `global` directly; reference functions without `g.` prefix in tests
+- gstack vendored copy in `.claude/skills/gstack/` is gitignored by pattern `gstack/`; use `git add -f` to stage. Do NOT stage `node_modules` inside it — use `git diff --name-only | grep -v node_modules` to select files
+- Apple Health file format: `export.xml` uses `<Record>` elements with type/value/unit/startDate/endDate/sourceName attributes
+
+---
+
 ## Known Issues / Watch Points
 
 - Beta invite codes: `BETA_INVITE_CODES` array is client-visible in source — intentional tradeoff for self-service beta; update the array and redeploy to staging to add/revoke codes
@@ -529,3 +594,7 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 - `races` scoping: `races` is declared with `let` (not `var`/`window`) — test data injection via the browser console must use `sv('fl2_races', [...])` + page reload, not `window.races = [...]`
 - `_rdIsNew` flag: when opening race detail from parsed AI/screenshot data, `_rdIsNew = true` routes `saveRaceDetail()` to create a new race. Cancel button must reset this flag to `false`.
 - `recalcSplits()`: must not clear cumulative cells when split input is empty — screenshot imports may only provide the cumulative column with no per-split diff
+- WHOOP integration: `WHOOP_CLIENT_ID` constant in `index.html` is intentionally blank until credentials are obtained — the Connect button will not work until filled
+- Garmin integration: requires developer approval at `developer.garmin.com` before OAuth will function — `GARMIN_CLIENT_ID` constant is blank placeholder
+- health-proxy must be redeployed (`wrangler deploy` in `health-proxy/`) after any new routes are added — the worker does not auto-deploy with the main app
+- Apple Health `.zip` export: not supported (raw `export.xml` required). App shows error toast for .zip files.
