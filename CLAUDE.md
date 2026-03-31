@@ -491,6 +491,31 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 
 ---
 
+### Session 9 (2026-03-31) — Pro theme system + light mode fix
+
+**Branch:** `claude/modest-fermat` → staging (#57) → main (#58)
+
+#### Changes shipped
+- **New visual identity**: CARBON + CHROME — brick vermilion `#E84E1B`, warm stone `#E8E0D5`, dark surfaces. Replaces the old orange `#FF4D00` / white `#F5F5F5` defaults.
+- **9-theme system**: Carbon+Chrome (default, free), Light Mode (free), + 7 Pro themes: Deep Space, Race Night, Obsidian, Acid Track, Titanium, Ember, Polar Circuit. Each defined as a `[data-theme="x"]` CSS block overriding `:root` vars.
+- **Theme picker in Settings**: `.theme-picker-grid` with swatch + name + PRO pill per row; live preview on tap; `renderThemePicker()` called from `openSettings()`; `bt_theme` localStorage persistence.
+- **Pro gating**: `setTheme()` checks `hasProAccess()` for Pro themes; locked themes open `openProModal('themes')`.
+- **RGB channel vars**: Added `--orange-ch` and `--green-ch` CSS vars (e.g. `232, 78, 27`) so `rgba(var(--orange-ch), 0.12)` gradients switch with themes. Bulk-replaced ~80+ hardcoded `rgba(255,77,0,...)` → `rgba(var(--orange-ch),...)` via `sed`.
+- **Light mode text fix**: Comprehensive `[data-theme="light"]` override block covering all major text-bearing surfaces (race modals, history rows, map pills, nav, side menu, auth settings, cards, SVG axis labels, hamburger bars, Leaflet controls). Also converted 5 hardcoded contrast-fix rules to use `var(--muted)`/`var(--muted2)`.
+- **Side-menu z-index**: Raised `.menu-overlay` to z-550, `.side-menu` to z-600 — was behind bottom nav at z-500.
+- **Auth buttons**: Change Password / Sign Out / Delete Account stacked full-width in a column, equal height.
+- **Ember theme**: `--green` overridden to warm amber `#FFB347` — neon green clashed with volcanic surfaces.
+- **DESIGN.md**: Added full `## Theme System` section and updated Decisions Log.
+
+#### Key learnings
+- `--orange-ch`/`--green-ch` RGB channel vars enable `rgba(var(--orange-ch), alpha)` in gradients — the only way to make theme-aware rgba() work without touching hundreds of individual rules
+- Light mode needs explicit text overrides for every class that uses hardcoded `rgba(245,245,245,...)` — CSS var override alone isn't enough because `:root --white` can't override inline colour declarations
+- `sed` bulk replace of `rgba(255,77,0,` → `rgba(var(--orange-ch),` is reliable for this pattern; run on index.html directly
+- `openSettings()` can fail with null error if elements inside the modal don't exist at call time — guard all `getElementById` calls or call `renderThemePicker()` before the null-risk line
+- After a squash merge from staging → main, force-push `origin/main:staging` to re-sync staging and prevent divergence
+
+---
+
 ## Known Issues / Watch Points
 
 - Beta invite codes: `BETA_INVITE_CODES` array is client-visible in source — intentional tradeoff for self-service beta; update the array and redeploy to staging to add/revoke codes
