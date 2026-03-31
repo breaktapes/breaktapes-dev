@@ -1,21 +1,30 @@
 /**
  * breaktapes-health — Cloudflare Worker
  *
- * Two responsibilities:
- *  1. Strava OAuth — keeps STRAVA_CLIENT_SECRET server-side so users never
- *     have to create their own Strava developer app.
- *  2. Open Wearables proxy — adds OW_API_KEY server-side (future use).
+ * Responsibilities:
+ *  1. Strava OAuth  — keeps STRAVA_CLIENT_SECRET server-side
+ *  2. WHOOP  OAuth  — keeps WHOOP_CLIENT_SECRET server-side
+ *  3. Garmin OAuth  — keeps GARMIN_CLIENT_SECRET + PKCE server-side
+ *  4. Open Wearables proxy (legacy)
  *
  * Secrets (set via `wrangler secret put`):
- *   STRAVA_CLIENT_ID     — from strava.com/settings/api
- *   STRAVA_CLIENT_SECRET — from strava.com/settings/api  ← never reaches browser
- *   OW_BASE_URL          — Railway OW URL (optional, future)
- *   OW_API_KEY           — OW admin key  (optional, future)
+ *   STRAVA_CLIENT_ID      — strava.com/settings/api
+ *   STRAVA_CLIENT_SECRET  — strava.com/settings/api
+ *   WHOOP_CLIENT_ID       — developer-dashboard.whoop.com
+ *   WHOOP_CLIENT_SECRET   — developer-dashboard.whoop.com
+ *   GARMIN_CLIENT_ID      — developer.garmin.com
+ *   GARMIN_CLIENT_SECRET  — developer.garmin.com
+ *   OW_BASE_URL           — Railway OW URL (optional, legacy)
+ *   OW_API_KEY            — OW admin key  (optional, legacy)
  *
  * Routes:
- *   POST /strava/token    — exchange auth code → access + refresh tokens
- *   POST /strava/refresh  — exchange refresh token → new access token
- *   GET  /*               — OW API proxy
+ *   POST /strava/token    — exchange auth code → Strava tokens
+ *   POST /strava/refresh  — rotate Strava refresh token
+ *   POST /whoop/token     — exchange auth code → WHOOP tokens
+ *   POST /whoop/refresh   — rotate WHOOP refresh token
+ *   POST /garmin/token    — exchange auth code (PKCE) → Garmin tokens
+ *   POST /garmin/refresh  — rotate Garmin refresh token
+ *   GET  /*               — OW API proxy (legacy)
  */
 
 const ALLOWED_ORIGINS = new Set([
@@ -55,7 +64,7 @@ export default {
       return new Response(null, { status: 204, headers: corsHeaders(origin) });
     }
 
-    // ── POST /strava/token — initial code → token exchange ────────────────
+    // ── POST /strava/token ────────────────────────────────────────────────
     if (path === '/strava/token' && request.method === 'POST') {
       if (!env.STRAVA_CLIENT_ID || !env.STRAVA_CLIENT_SECRET) {
         return json({ error: 'Strava integration not configured on this server.' }, 503, origin);
@@ -76,7 +85,7 @@ export default {
       return json(await resp.json(), resp.status, origin);
     }
 
-    // ── POST /strava/refresh — refresh token rotation ─────────────────────
+    // ── POST /strava/refresh ──────────────────────────────────────────────
     if (path === '/strava/refresh' && request.method === 'POST') {
       if (!env.STRAVA_CLIENT_ID || !env.STRAVA_CLIENT_SECRET) {
         return json({ error: 'Strava integration not configured on this server.' }, 503, origin);
@@ -97,7 +106,124 @@ export default {
       return json(await resp.json(), resp.status, origin);
     }
 
-    // ── OW API proxy (GET only) ───────────────────────────────────────────
+    // ── POST /whoop/token ─────────────────────────────────────────────────
+    if (path === '/whoop/token' && request.method === 'POST') {
+      if (!env.WHOOP_CLIENT_ID || !env.WHOOP_CLIENT_SECRET) {
+        return json({ error: 'WHOOP integration not configured on this server.' }, 503, origin);
+      }
+      const { code, redirect_uri } = await request.json().catch(() => ({}));
+      if (!code || !redirect_uri) return json({ error: 'Missing code or redirect_uri' }, 400, origin);
+
+      const body = new URLSearchParams({
+        grant_type:    'authorization_code',
+        code,
+        redirect_uri,
+        client_id:     env.WHOOP_CLIENT_ID,
+        client_secret: env.WHOOP_CLIENT_SECRET,
+      });
+      const resp = await fetch('https://api.prod.whoop.com/oauth/oauth2/token', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body:    body.toString(),
+      });
+      const data = await resp.json();
+      if (!resp.ok) return json(data, resp.status, origin);
+
+      // Fetch WHOOP user profile to attach to token response
+      let profile = {};
+      try {
+        const profileResp = await fetch('https://api.prod.whoop.com/developer/v1/user/profile/basic', {
+          headers: { Authorization: `Bearer ${data.access_token}` },
+        });
+        if (profileResp.ok) profile = await profileResp.json();
+      } catch (_) {}
+
+      return json({ ...data, profile }, resp.status, origin);
+    }
+
+    // ── POST /whoop/refresh ───────────────────────────────────────────────
+    if (path === '/whoop/refresh' && request.method === 'POST') {
+      if (!env.WHOOP_CLIENT_ID || !env.WHOOP_CLIENT_SECRET) {
+        return json({ error: 'WHOOP integration not configured on this server.' }, 503, origin);
+      }
+      const { refresh_token } = await request.json().catch(() => ({}));
+      if (!refresh_token) return json({ error: 'Missing refresh_token' }, 400, origin);
+
+      const body = new URLSearchParams({
+        grant_type:    'refresh_token',
+        refresh_token,
+        client_id:     env.WHOOP_CLIENT_ID,
+        client_secret: env.WHOOP_CLIENT_SECRET,
+      });
+      const resp = await fetch('https://api.prod.whoop.com/oauth/oauth2/token', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body:    body.toString(),
+      });
+      return json(await resp.json(), resp.status, origin);
+    }
+
+    // ── POST /garmin/token ────────────────────────────────────────────────
+    if (path === '/garmin/token' && request.method === 'POST') {
+      if (!env.GARMIN_CLIENT_ID || !env.GARMIN_CLIENT_SECRET) {
+        return json({ error: 'Garmin integration not configured on this server.' }, 503, origin);
+      }
+      const { code, redirect_uri, code_verifier } = await request.json().catch(() => ({}));
+      if (!code || !redirect_uri || !code_verifier) {
+        return json({ error: 'Missing code, redirect_uri, or code_verifier' }, 400, origin);
+      }
+
+      const body = new URLSearchParams({
+        grant_type:    'authorization_code',
+        code,
+        redirect_uri,
+        code_verifier,
+        client_id:     env.GARMIN_CLIENT_ID,
+        client_secret: env.GARMIN_CLIENT_SECRET,
+      });
+      const resp = await fetch('https://connectapi.garmin.com/oauth-service/oauth/token', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body:    body.toString(),
+      });
+      const data = await resp.json();
+      if (!resp.ok) return json(data, resp.status, origin);
+
+      // Fetch Garmin user summary to attach display name
+      let profile = {};
+      try {
+        const profileResp = await fetch('https://apis.garmin.com/wellness-api/rest/user/id', {
+          headers: { Authorization: `Bearer ${data.access_token}` },
+        });
+        if (profileResp.ok) profile = await profileResp.json();
+      } catch (_) {}
+
+      return json({ ...data, profile }, resp.status, origin);
+    }
+
+    // ── POST /garmin/refresh ──────────────────────────────────────────────
+    if (path === '/garmin/refresh' && request.method === 'POST') {
+      if (!env.GARMIN_CLIENT_ID || !env.GARMIN_CLIENT_SECRET) {
+        return json({ error: 'Garmin integration not configured on this server.' }, 503, origin);
+      }
+      const { refresh_token } = await request.json().catch(() => ({}));
+      if (!refresh_token) return json({ error: 'Missing refresh_token' }, 400, origin);
+
+      const body = new URLSearchParams({
+        grant_type:    'refresh_token',
+        refresh_token,
+        client_id:     env.GARMIN_CLIENT_ID,
+        client_secret: env.GARMIN_CLIENT_SECRET,
+      });
+      const resp = await fetch('https://connectapi.garmin.com/oauth-service/oauth/token', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body:    body.toString(),
+      });
+      return json(await resp.json(), resp.status, origin);
+    }
+
+    // ── OW API proxy (GET only, legacy) ───────────────────────────────────
     if (request.method !== 'GET') {
       return json({ error: 'Method not allowed' }, 405, origin);
     }
@@ -121,8 +247,8 @@ export default {
       return json({ error: 'OW instance unreachable', detail: err.message }, 502, origin);
     }
 
-    const body = await owResponse.text();
-    return new Response(body, {
+    const owBody = await owResponse.text();
+    return new Response(owBody, {
       status: owResponse.status,
       headers: {
         'Content-Type': owResponse.headers.get('Content-Type') || 'application/json',
