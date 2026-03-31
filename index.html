@@ -3766,7 +3766,8 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
    RACE MAP PAGE  —  Flighty-style
    ============================================= */
 #page-map {
-  height: calc(100vh - 56px - env(safe-area-inset-top, 0px));
+  height: calc(100svh - var(--header-base-height) - env(safe-area-inset-top, 0px));
+  height: calc(100vh - var(--header-base-height) - env(safe-area-inset-top, 0px)); /* fallback for older browsers */
   display: none;
   position: relative;
   overflow: hidden;
@@ -3781,12 +3782,14 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 }
 
 /* Arc canvas sits above tiles, below markers */
-/* ── Floating stat pills (top-left) ── */
+/* ── Floating stat pills (bottom-left) ── */
+/* position:fixed escapes page-map's stacking context + iOS 100vh overflow issues */
 .map-pill-bar {
-  position: absolute; bottom: calc(var(--bottom-nav-base-height) + env(safe-area-inset-bottom, 0px) + 1rem); left: 1rem; z-index: 800;
-  display: flex; gap: 0.45rem; flex-wrap: wrap;
+  position: fixed; bottom: calc(var(--bottom-nav-base-height) + env(safe-area-inset-bottom, 0px) + 1rem); left: 1rem; z-index: 600;
+  display: none; gap: 0.45rem; flex-wrap: wrap;
   pointer-events: none;
 }
+#page-map.active .map-pill-bar { display: flex; }
 .map-pill {
   display: flex; flex-direction: column; align-items: center;
   background: rgba(5,6,8,0.75);
@@ -3810,9 +3813,15 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 }
 
 /* ── Zoom controls override ── */
+/* Move the Leaflet bottom-right control pane to fixed so it clears the nav */
+#page-map .leaflet-bottom.leaflet-right {
+  position: fixed !important;
+  bottom: calc(var(--bottom-nav-base-height) + env(safe-area-inset-bottom, 0px) + 0.5rem) !important;
+  right: 1rem !important;
+}
 .leaflet-control-zoom {
   border: none !important;
-  margin: 0 1rem calc(var(--bottom-nav-base-height) + env(safe-area-inset-bottom, 0px) + 0.5rem) 0 !important;
+  margin: 0 !important;
 }
 .leaflet-control-zoom a {
   width: 36px !important; height: 36px !important; line-height: 36px !important;
@@ -6218,11 +6227,11 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 <div id="page-map" class="page">
   <!-- Full-bleed map -->
   <div id="raceMap"></div>
-  <div id="mapModeToggle" style="position:absolute;top:70px;right:12px;z-index:1000;display:flex;gap:4px">
+  <div id="mapModeToggle" style="position:fixed;top:calc(var(--header-base-height) + env(safe-area-inset-top,0px) + 8px);right:12px;z-index:600;display:flex;gap:4px">
     <button class="map-mode-btn active" id="mapModeStd" onclick="setMapMode('standard')">Standard</button>
     <button class="map-mode-btn" id="mapModePerf" onclick="setMapMode('performance')">Performance</button>
   </div>
-  <div id="perfLegend" style="display:none;position:absolute;bottom:80px;left:12px;z-index:1000;background:rgba(10,10,10,0.88);border:1px solid var(--border2);border-radius:6px;padding:8px 10px">
+  <div id="perfLegend" style="display:none;position:fixed;bottom:calc(var(--bottom-nav-base-height) + env(safe-area-inset-bottom,0px) + 5.5rem);left:12px;z-index:600;background:rgba(10,10,10,0.88);border:1px solid var(--border2);border-radius:6px;padding:8px 10px">
     <div class="perf-legend-row"><span class="perf-legend-dot" style="background:var(--green)"></span>Top 10%</div>
     <div class="perf-legend-row"><span class="perf-legend-dot" style="background:var(--orange)"></span>Mid field</div>
     <div class="perf-legend-row"><span class="perf-legend-dot" style="background:#ef4444"></span>Lower field</div>
@@ -16310,9 +16319,13 @@ function rdOnNameInput(val) {
   if (q.length < 2) { el.style.display = 'none'; return; }
 
   // Search race catalog first (prioritise starts-with, then contains)
+  // Also match when user types "Race Name YEAR" (e.g. "Comrades Marathon 2000") by checking if q starts with the catalog name
   const catalogMatches = raceDbLoaded
-    ? raceDb.filter(r => r.name.toLowerCase().includes(q) ||
-        (r.aliases || []).some(a => a.toLowerCase().includes(q)))
+    ? raceDb.filter(r => {
+        const rn = r.name.toLowerCase();
+        return rn.includes(q) || q.startsWith(rn) ||
+          (r.aliases || []).some(a => { const al = a.toLowerCase(); return al.includes(q) || q.startsWith(al); });
+      })
         .sort((a, b) => {
           const aStarts = a.name.toLowerCase().startsWith(q) ? 0 : 1;
           const bStarts = b.name.toLowerCase().startsWith(q) ? 0 : 1;
