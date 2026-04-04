@@ -4873,8 +4873,8 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 .ta-icon { font-size: 18px; width: 26px; text-align: center; flex-shrink: 0; }
 .ta-main { flex: 1; min-width: 0; }
 .ta-name { font-family: var(--headline); font-size: 14px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.ta-date { font-size: 11px; color: var(--muted); margin-top: 1px; }
-.ta-meta { display: flex; gap: 1rem; flex-shrink: 0; }
+.ta-date { font-size: 11px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ta-meta { display: flex; gap: 0.75rem; flex-shrink: 0; }
 .ta-stat { display: flex; flex-direction: column; align-items: flex-end; }
 .ta-val { font-family: var(--headline); font-size: 14px; font-weight: 800; line-height:1.1; }
 .ta-lbl { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
@@ -7715,7 +7715,7 @@ const GARMIN_CLIENT_ID = '';   // developer.garmin.com (pending approval)
 // Strava OAuth — Client ID is public (appears in OAuth URL).
 // Client Secret lives in the Worker. Set via: wrangler secret put STRAVA_CLIENT_ID / STRAVA_CLIENT_SECRET
 // Update this value after registering the Breaktapes Strava app at strava.com/settings/api
-const STRAVA_CLIENT_ID = '216395';
+const STRAVA_CLIENT_ID = '215012';
 
 // Open Wearables proxy (future use)
 const OW_PROXY_URL = HEALTH_WORKER_URL;
@@ -19866,20 +19866,21 @@ function renderTrainingFeed(){
       const dur  = a.moving_time ? fmtDuration(a.moving_time) : '—';
       const date = a.start_date_local ? fmtDate(a.start_date_local.slice(0,10)) : '';
       const typeClass = 't-'+a.type.replace(/Virtual/,'');
-      const elev = a.total_elevation_gain > 0 ? `<div class="ta-stat"><div class="ta-val">${Math.round(a.total_elevation_gain)}m</div><div class="ta-lbl">Elev</div></div>` : '';
-      const hr   = a.average_heartrate ? `<div class="ta-stat"><div class="ta-val">${Math.round(a.average_heartrate)}<span style="font-size:10px;font-weight:600">bpm</span></div><div class="ta-lbl">Avg HR</div></div>` : '';
+      const elevStr = a.total_elevation_gain > 0 ? `${Math.round(a.total_elevation_gain)}m elev` : '';
+      const hrStr   = a.average_heartrate ? `${Math.round(a.average_heartrate)} bpm` : '';
       const raceBadge = (a.workout_type===1||a.workout_type===11) ? `<span class="ta-race-badge">RACE</span>` : '';
+      const subtitle = [date, a.type, dur, elevStr, hrStr].filter(Boolean).join(' · ');
+      const primaryVal = pace || spd || dur;
+      const primaryLbl = pace ? 'Pace' : spd ? 'Speed' : 'Time';
       return `<div class="training-activity ${typeClass}">
         <div class="ta-icon">${icon}</div>
         <div class="ta-main">
           <div class="ta-name">${a.name||'Activity'}${raceBadge}</div>
-          <div class="ta-date">${date} · ${a.type}</div>
+          <div class="ta-date">${subtitle}</div>
         </div>
         <div class="ta-meta">
-          <div class="ta-stat"><div class="ta-val">${km}</div><div class="ta-lbl">Distance</div></div>
-          <div class="ta-stat"><div class="ta-val">${pace||spd||dur}</div><div class="ta-lbl">${pace?'Pace':spd?'Speed':'Time'}</div></div>
-          <div class="ta-stat"><div class="ta-val">${dur}</div><div class="ta-lbl">Duration</div></div>
-          ${elev}${hr}
+          <div class="ta-stat"><div class="ta-val">${km}</div><div class="ta-lbl">Dist</div></div>
+          ${primaryVal ? `<div class="ta-stat"><div class="ta-val">${primaryVal}</div><div class="ta-lbl">${primaryLbl}</div></div>` : ''}
         </div>
       </div>`;
     }).join('');
