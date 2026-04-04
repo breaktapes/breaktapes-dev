@@ -6406,17 +6406,12 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
         <div class="training-stat"><div class="training-stat-num" id="ts-hrs">—</div><div class="training-stat-label">Hours</div></div>
         <div class="training-stat"><div class="training-stat-num" id="ts-elev">—</div><div class="training-stat-label">Elev (m)</div></div>
       </div>
-      <div class="training-bar">
-        <div class="section-h">Activities</div>
-        <div style="display:flex;gap:0.4rem;align-items:center">
-          <div class="training-tabs">
-            <button class="training-tab active" onclick="filterTraining('All',this)">All</button>
-            <button class="training-tab" onclick="filterTraining('Run',this)">Run</button>
-            <button class="training-tab" onclick="filterTraining('Ride',this)">Ride</button>
-            <button class="training-tab" onclick="filterTraining('Swim',this)">Swim</button>
-          </div>
-          <button class="training-sync-btn" id="syncBtn" style="display:none" onclick="syncStrava()">↻ Sync</button>
-        </div>
+      <div class="training-tabs" id="actFilterBar" style="margin-bottom:1.25rem">
+        <button class="training-tab train-tab-pill active" onclick="filterTraining('All',this)">All</button>
+        <button class="training-tab train-tab-pill" onclick="filterTraining('Run',this)">Run</button>
+        <button class="training-tab train-tab-pill" onclick="filterTraining('Ride',this)">Ride</button>
+        <button class="training-tab train-tab-pill" onclick="filterTraining('Swim',this)">Swim</button>
+        <button class="training-sync-btn" id="syncBtn" style="display:none;margin-left:auto" onclick="syncStrava()">↻ Sync</button>
       </div>
       <div id="stravaStreakHeader" style="margin-bottom:1rem"></div>
       <div id="trainingFeed"></div>
@@ -19787,7 +19782,7 @@ function renderTraining(){
     document.getElementById('ts-elev').textContent = Math.round(totalElev).toLocaleString();
     // Update filter tab counts
     const tabCounts = { All: allActs.length, Run: runActs.length, Ride: rideActs.length, Swim: swimActs.length };
-    document.querySelectorAll('#trainActivitiesSection .training-tab[onclick]').forEach(btn => {
+    document.querySelectorAll('#actFilterBar .training-tab[onclick]').forEach(btn => {
       const m = btn.getAttribute('onclick').match(/'(\w+)'/);
       if (m && tabCounts[m[1]] !== undefined) {
         btn.textContent = `${m[1]} ${tabCounts[m[1]]}`;
@@ -19820,8 +19815,7 @@ function filterActs(type){
 
 function filterTraining(type, btn){
   trainingFilter = type;
-  // Scope to activity filter tabs only — not the .train-tab-pill sub-nav buttons
-  document.querySelectorAll('#trainActivitiesSection .training-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#actFilterBar .training-tab').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
   renderTrainingFeed();
   const streakHeaderEl = document.getElementById('stravaStreakHeader');
