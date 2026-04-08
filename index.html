@@ -1728,6 +1728,17 @@ main {
 .rv-rank-value span { font-size:11px; color:rgba(245,245,245,0.4); font-weight:700; }
 .rv-splits { padding-top:0.75rem; border-top:1px solid var(--border); }
 .rv-splits-label { font-family:var(--headline); font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:0.1em; color:rgba(245,245,245,0.35); margin-bottom:8px; }
+.compare-race-card{padding:.7rem .85rem;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);margin-bottom:.55rem}
+.compare-race-head{display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem}
+.compare-race-name{font-family:var(--headline);font-size:.9rem;font-weight:900;text-transform:uppercase;color:var(--white);line-height:1.1;flex:1;min-width:0}
+.compare-race-fit{font-family:var(--headline);font-size:1.1rem;font-weight:900;color:var(--orange);line-height:1;white-space:nowrap;text-align:right}
+.compare-fit-lbl{font-size:.55rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block;margin-top:.15rem;text-align:right}
+.compare-race-meta{font-size:11px;color:var(--muted);margin-top:.3rem;line-height:1.4}
+.compare-race-tags{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.5rem}
+.compare-tag{font-size:10px;padding:.18rem .5rem;border-radius:5px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);color:var(--muted2)}
+.compare-tag strong{color:var(--white);font-weight:600}
+.compare-best-row{font-size:11px;color:var(--muted);padding:.5rem 0 .2rem;border-top:1px solid var(--border)}
+.compare-best-row strong{color:var(--orange)}
 .rv-splits-table { width:100%; border-collapse:collapse; font-size:12px; }
 .rv-splits-table th { font-size:9px; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; color:rgba(245,245,245,0.3); padding:0.2rem 0.4rem; text-align:left; border-bottom:1px solid var(--border2); }
 .rv-splits-table td { padding:0.3rem 0.4rem; border-bottom:1px solid var(--border); color:rgba(245,245,245,0.75); font-variant-numeric:tabular-nums; }
@@ -2472,7 +2483,7 @@ main {
   flex-direction:column;
   overflow:hidden;
   border-radius:18px;
-  padding:1rem 1rem 1.05rem;
+  padding:1.1rem;
   background:
     linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.018)),
     rgba(255,255,255,0.02);
@@ -2515,7 +2526,7 @@ main {
 .ath-signature-list{display:grid;gap:.55rem;margin-top:.8rem}
 .ath-signature-row{
   display:flex;align-items:center;justify-content:space-between;gap:.75rem;
-  padding:.7rem .78rem;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);
+  padding:.75rem .8rem;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);
 }
 .ath-signature-dist{font-family:var(--headline);font-size:.95rem;font-weight:900;color:var(--white);text-transform:uppercase}
 .ath-signature-meta{font-size:10px;color:var(--muted);margin-top:.18rem}
@@ -2555,13 +2566,21 @@ main {
   line-height:.9;
 }
 .ath-goal-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.55rem;margin-top:.8rem}
+.ath-goal-body{margin-top:.55rem}
+.ath-goal-strip{display:grid;grid-template-columns:repeat(3,1fr);margin-top:.85rem;padding-top:.75rem;border-top:1px solid rgba(255,255,255,0.08)}
+.ath-goal-strip-item{text-align:center;padding:0 .5rem}
+.ath-goal-strip-item+.ath-goal-strip-item{border-left:1px solid rgba(255,255,255,0.08)}
+.ath-goal-strip-v{font-family:var(--headline);font-size:1.05rem;font-weight:900;color:var(--white);line-height:1;letter-spacing:.02em}
+.ath-goal-strip-v.accent{color:var(--orange)}
+.ath-goal-strip-k{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:.28rem}
 .ath-goal-pill,.ath-champ-pill{
-  min-height:96px;
-  padding:.78rem .8rem;
+  min-height:72px;
+  padding:.6rem .75rem;
   border-radius:12px;
   background:rgba(255,255,255,0.03);
   border:1px solid rgba(255,255,255,0.06);
 }
+.ath-champ-progress .ath-goal-pill{min-height:unset;padding:.45rem .7rem}
 .ath-goal-pill-k,.ath-champ-pill-k{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.14em}
 .ath-goal-pill-v,.ath-champ-pill-v{
   margin-top:.35rem;
@@ -5464,7 +5483,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
     var(--surface2);
   border:1px solid rgba(var(--orange-ch),0.24);
   border-radius:16px;
-  padding:1rem 1rem 1.05rem;
+  padding:1.25rem 1rem 1.05rem;
   min-height:148px;
   box-shadow:
     0 4px 20px rgba(0,0,0,0.28),
@@ -6331,7 +6350,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
     </div>
     <!-- Age-Grade Trajectory -->
     <div class="ath-section">
-      <div class="section-row" style="margin-top:1.75rem">
+      <div class="section-row" style="margin-top:0.5rem">
         <div class="section-h">Age-Grade Trajectory</div>
       </div>
       <div id="athAgeGradeChart"></div>
@@ -7289,6 +7308,15 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
       <div class="rd-section">
         <div class="rd-label">Race Notes</div>
         <textarea class="ai-ta" id="rdNotes" placeholder="How did it go? Conditions, strategy, reflections…" style="min-height:80px"></textarea>
+      </div>
+      <div class="rd-section">
+        <div class="rd-label">Race Costs <span style="font-size:10px;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.55rem">
+          <div class="fg"><label class="fl" style="font-size:10px">Entry Fee</label><input class="fi" id="rdCostReg" type="number" step="1" placeholder="0" min="0"></div>
+          <div class="fg"><label class="fl" style="font-size:10px">Travel</label><input class="fi" id="rdCostFlight" type="number" step="1" placeholder="0" min="0"></div>
+          <div class="fg"><label class="fl" style="font-size:10px">Hotel</label><input class="fi" id="rdCostHotel" type="number" step="1" placeholder="0" min="0"></div>
+          <div class="fg"><label class="fl" style="font-size:10px">Gear</label><input class="fi" id="rdCostGear" type="number" step="1" placeholder="0" min="0"></div>
+        </div>
       </div>
     </div>
     <div class="modal-foot">
@@ -11280,15 +11308,30 @@ function getComparablePerformanceRaces(targetRace = {}) {
 
 function computePrediction(targetRace = nextRace, sourceRaces = races) {
   if (!targetRace?.date) return null;
+  const targetDistKm = targetRace.distKm || getDistanceKmValue(targetRace.distance) || 0;
   const comparable = (sourceRaces || []).filter(r => r.time && r.distance === targetRace.distance);
-  if (!comparable.length) return null;
-  const secs = comparable.map(r => timeToSecs(r.time)).filter(v => Number.isFinite(v));
-  if (!secs.length) return null;
-  const sorted = [...secs].sort((a, b) => a - b);
+  // Riegel cross-distance projection when no exact matches
+  let riegelProjections = [];
+  if (!comparable.length && targetDistKm > 0) {
+    const withTimes = (sourceRaces || [])
+      .filter(r => { const dk = r.distKm || getDistanceKmValue(r.distance) || 0; return r.time && dk > 0 && Number.isFinite(timeToSecs(r.time)); })
+      .sort((a, b) => (b.date || '').localeCompare(a.date || '')).slice(0, 6);
+    riegelProjections = withTimes.map(r => {
+      const dk = r.distKm || getDistanceKmValue(r.distance) || 0;
+      return Math.round(timeToSecs(r.time) * Math.pow(targetDistKm / dk, 1.06));
+    }).filter(v => Number.isFinite(v) && v > 0);
+  }
+  const allSecs = comparable.length
+    ? comparable.map(r => timeToSecs(r.time)).filter(v => Number.isFinite(v))
+    : riegelProjections;
+  if (!allSecs.length) return null;
+  const sorted = [...allSecs].sort((a, b) => a - b);
   const pbSecs = sorted[0];
   const baseline = Math.round(sorted.reduce((sum, val) => sum + val, 0) / sorted.length);
-  const latestRace = comparable.sort((a, b) => (b.date || '').localeCompare(a.date || ''))[0];
-  const latestSecs = latestRace ? timeToSecs(latestRace.time) : baseline;
+  const latestRace = comparable.length
+    ? comparable.sort((a, b) => (b.date || '').localeCompare(a.date || ''))[0]
+    : null;
+  const latestSecs = latestRace ? timeToSecs(latestRace.time) : (riegelProjections[0] || baseline);
   const trendBoost = latestSecs < baseline ? 0.06 : latestSecs > baseline ? -0.05 : 0;
   const targetFacts = computeRaceFacts(targetRace);
   const matchingSurface = comparable.filter(r => {
@@ -11299,9 +11342,11 @@ function computePrediction(targetRace = nextRace, sourceRaces = races) {
   const pbLikelihood = Math.max(8, Math.min(88, Math.round(32 + matchingSurface * 8 + trendBoost * 120)));
   const center = Math.round((baseline * 0.55) + (latestSecs * 0.25) + (pbSecs * 0.20));
   const variance = Math.max(45, Math.round(center * 0.04));
-  const confidence = Math.max(0.28, Math.min(0.92, Number((0.34 + comparable.length * 0.08 + (matchingSurface ? 0.08 : 0)).toFixed(2))));
+  const confidence = Math.max(0.28, Math.min(0.92, Number((0.34 + allSecs.length * 0.08 + (matchingSurface ? 0.08 : 0)).toFixed(2))));
+  const isRiegel = !comparable.length && riegelProjections.length > 0;
   return {
-    comparableCount: comparable.length,
+    comparableCount: comparable.length || riegelProjections.length,
+    isRiegel,
     pbLikelihood,
     courseFit,
     confidence,
@@ -11412,14 +11457,30 @@ function computeRecommendationSet(upcoming = upcomingRaces, sourceRaces = races)
 function computeRaceCompareSet(upcoming = upcomingRaces, sourceRaces = races) {
   const picks = (upcoming || []).filter(r => r.date).slice(0, 3);
   if (picks.length < 2) return null;
+  const homeCity = (localStorage.getItem('fl2_compare_home') || athlete?.city || '').toLowerCase().trim();
   return picks.map(race => {
     const prediction = computePrediction(race, sourceRaces);
+    const terrain = [race.surface, race.elevationProfile, race.terrain].filter(Boolean).join(' · ') || '—';
+    let travel = race.travelContext || '';
+    if (!travel && homeCity) {
+      const raceCity = (race.city || race.location || '').toLowerCase();
+      const raceCountry = (race.country || '').toLowerCase();
+      const homeBase = homeCity.split(',')[0].trim();
+      if (raceCity && raceCity.includes(homeBase)) travel = 'Local';
+      else if (raceCountry && (homeCity.includes(raceCountry) || raceCountry.includes(homeBase))) travel = 'Domestic';
+      else if (race.city || race.country) travel = 'International ✈';
+    }
     return {
       id: race.id,
       name: race.name,
+      date: race.date,
+      distance: race.distance || '',
+      location: [race.city, race.country].filter(Boolean).join(', '),
       courseFit: prediction?.courseFit ?? 0,
-      travel: race.travelContext || 'Unknown',
-      weather: race.weatherSummary?.label || race.courseSummary || 'Awaiting weather',
+      projected: prediction?.likelyFinishRange?.center || '',
+      travel: travel || 'Unknown',
+      weather: race.weatherSummary?.label || race.courseSummary || '',
+      terrain,
     };
   });
 }
@@ -13091,19 +13152,18 @@ function computeSignatureDistances() {
       if (!race?.time) return;
       const ageGrade = computeAgeGrade(race);
       const secs = timeToSecs(race.time);
-      const distKm = race.distKm || DIST_KM[race.distance] || 0;
+      const distKm = race.distKm || getDistanceKmValue(race.distance) || 0;
       const speedScore = Number.isFinite(secs) && distKm ? (distKm / (secs / 3600)) : 0;
-      const isRunning = ['run','ultra','hyrox'].includes(race.type);
-      const paceSecsPerKm = (isRunning && distKm > 0 && secs > 0) ? secs / distKm : 0;
+      const paceSecsPerKm = (distKm > 0 && secs > 0) ? secs / distKm : 0;
       const paceLabel = paceSecsPerKm > 0
         ? `${Math.floor(paceSecsPerKm/60)}:${String(Math.round(paceSecsPerKm%60)).padStart(2,'0')}/km`
-        : `${speedScore.toFixed(1)} km/h`;
+        : '—';
       entries.push({
         distance,
         race,
         score: ageGrade || speedScore,
         label: ageGrade ? `${ageGrade.toFixed(1)}% age-grade` : paceLabel,
-        metric: ageGrade ? 'age-grade' : isRunning ? 'pace' : 'speed',
+        metric: ageGrade ? 'age-grade' : 'pace',
       });
     });
   });
@@ -13173,27 +13233,30 @@ function renderAthleteGoalRacePanel() {
   }
   const prediction = computePrediction(nextRace, races);
   const daysAway = Math.max(0, Math.ceil((new Date(`${nextRace.date}T00:00:00`) - new Date()) / 86400000));
-  const projectionPills = prediction ? `
-    <div class="ath-goal-grid">
-      <div class="ath-goal-pill">
-        <div class="ath-goal-pill-k">Projected Finish</div>
-        <div class="ath-goal-pill-v">${prediction.likelyFinishRange.center}</div>
-      </div>
-      <div class="ath-goal-pill">
-        <div class="ath-goal-pill-k">Course Fit</div>
-        <div class="ath-goal-pill-v">${prediction.courseFit}</div>
-      </div>
-    </div>
-    <div class="ath-feature-copy">Range ${prediction.likelyFinishRange.low}–${prediction.likelyFinishRange.high} from ${prediction.comparableCount} comparable race${prediction.comparableCount === 1 ? '' : 's'}.</div>` : `<div class="ath-feature-copy" style="opacity:0.5;font-size:11px">Log comparable races to unlock finish projections.</div>`;
+  const location = nextRace.location || [nextRace.city, nextRace.country].filter(Boolean).join(', ') || '';
+  const projLabel = prediction?.isRiegel ? 'Projected*' : prediction ? 'Projected' : 'Projected';
+  const projVal = prediction?.likelyFinishRange?.center || '—';
+  const fitVal = prediction?.courseFit ?? '—';
   el.innerHTML = `<div class="ath-feature-kicker">Goal Race</div>
-    <div class="ath-goal-main">
-      <div>
-        <div class="ath-goal-race">${escapeHtml(nextRace.name)}</div>
-        <div class="ath-goal-date">${fmtDate(nextRace.date)}${nextRace.location ? ` · ${escapeHtml(nextRace.location)}` : ''}</div>
-      </div>
-      <div class="ath-goal-count">${daysAway}<span style="font-size:0.35em;display:block;letter-spacing:0.12em;opacity:0.7;margin-top:2px">DAYS</span></div>
+    <div class="ath-goal-body">
+      <div class="ath-goal-race">${escapeHtml(nextRace.name)}</div>
+      <div class="ath-goal-date">${fmtDate(nextRace.date)}${location ? ` · ${escapeHtml(location)}` : ''}</div>
     </div>
-    ${projectionPills}`;
+    <div class="ath-goal-strip">
+      <div class="ath-goal-strip-item">
+        <div class="ath-goal-strip-v accent">${daysAway}</div>
+        <div class="ath-goal-strip-k">Days</div>
+      </div>
+      <div class="ath-goal-strip-item">
+        <div class="ath-goal-strip-v">${escapeHtml(projVal)}</div>
+        <div class="ath-goal-strip-k">${projLabel}</div>
+      </div>
+      <div class="ath-goal-strip-item">
+        <div class="ath-goal-strip-v">${fitVal}</div>
+        <div class="ath-goal-strip-k">Course Fit</div>
+      </div>
+    </div>
+    ${prediction?.isRiegel ? `<div class="ath-feature-copy" style="margin-top:.5rem;font-size:10px;opacity:.55">*Riegel projection from ${prediction.comparableCount} race${prediction.comparableCount===1?'':'s'} at other distances</div>` : ''}`;
 }
 
 function computeAthleteChampionshipTracker() {
@@ -13338,7 +13401,8 @@ function computePerformanceTimeline(sourceRaces = races) {
   });
   return [...years.entries()].sort((a, b) => a[0].localeCompare(b[0])).slice(-5).map(([year, yearRaces]) => {
     const timed = yearRaces.filter(r => r.time && Number.isFinite(timeToSecs(r.time)) && (r.distKm || DIST_KM[r.distance]));
-    const speeds = timed.map(r => ((r.distKm || DIST_KM[r.distance]) / (timeToSecs(r.time) / 3600))).filter(Number.isFinite);
+    const timedPaces = timed.map(r => { const dk = r.distKm || DIST_KM[r.distance] || 0; return dk > 0 ? timeToSecs(r.time) / dk : null; }).filter(v => v != null && Number.isFinite(v));
+    const avgPaceSecs = timedPaces.length ? timedPaces.reduce((a, b) => a + b, 0) / timedPaces.length : 0;
     const avgDist = yearRaces.reduce((sum, r) => sum + (r.distKm || DIST_KM[r.distance] || 0), 0) / Math.max(1, yearRaces.length);
     const terrainHits = yearRaces.filter(r => {
       const facts = computeRaceFacts(r);
@@ -13353,14 +13417,14 @@ function computePerformanceTimeline(sourceRaces = races) {
     return {
       year,
       labels: {
-        speed: `${Math.round((speeds.reduce((a, b) => a + b, 0) / Math.max(1, speeds.length)) || 0)} km/h`,
+        speed: avgPaceSecs > 0 ? `${Math.floor(avgPaceSecs/60)}:${String(Math.round(avgPaceSecs%60)).padStart(2,'0')}/km` : '—',
         endurance: `${Math.round(avgDist)} km`,
         terrain: `${terrainHits}/${yearRaces.length} technical`,
         heat: hotRaces.length ? `${hotControlled}/${hotRaces.length} controlled` : 'No hot races',
         frequency: `${yearRaces.length} races`,
       },
       metrics: {
-        speed: clampMetric(((speeds.reduce((a, b) => a + b, 0) / Math.max(1, speeds.length)) / 18) * 100),
+        speed: avgPaceSecs > 0 ? clampMetric(Math.max(0, (600 - avgPaceSecs) / 400 * 100)) : 0,
         endurance: clampMetric((avgDist / 50) * 100),
         terrain: clampMetric((terrainHits / Math.max(1, yearRaces.length)) * 100),
         heat: hotRaces.length ? clampMetric((hotControlled / hotRaces.length) * 100) : 0,
@@ -13381,7 +13445,7 @@ function renderAthletePerformanceTimeline() {
     return;
   }
   const metrics = [
-    ['speed', 'Speed'],
+    ['speed', 'Pace'],
     ['endurance', 'Distance'],
     ['frequency', 'Races'],
   ];
@@ -14543,13 +14607,19 @@ function runRaceCompareModal() {
     return;
   }
   saveRaceComparisonDraft(document.getElementById('raceCompareName')?.value.trim(), ids);
-  out.innerHTML = `<div class="card" style="padding:0">
-    <table class="rv-splits-table">
-      <thead><tr><th>Race</th><th>Course Fit</th><th>Travel</th><th>Weather</th><th>Terrain</th></tr></thead>
-      <tbody>${rows.map(row => `<tr><td>${escapeHtml(row.name)}</td><td>${row.courseFit}</td><td>${escapeHtml(row.travel || '—')}</td><td>${escapeHtml(row.weather || '—')}</td><td>${escapeHtml(row.terrain || '—')}</td></tr>`).join('')}</tbody>
-    </table>
-  </div>
-  <div class="nr-insights-copy" style="margin-top:0.75rem">Best fit right now: <strong>${escapeHtml((rows.slice().sort((a, b) => (b.courseFit || 0) - (a.courseFit || 0))[0] || {}).name || '—')}</strong></div>`;
+  const bestFit = rows.slice().sort((a, b) => (b.courseFit || 0) - (a.courseFit || 0))[0];
+  out.innerHTML = rows.map(row => `<div class="compare-race-card">
+    <div class="compare-race-head">
+      <div class="compare-race-name">${escapeHtml(row.name)}</div>
+      <div class="compare-race-fit">${row.courseFit}<span class="compare-fit-lbl">fit</span></div>
+    </div>
+    <div class="compare-race-meta">${[row.date ? fmtDate(row.date) : '', escapeHtml(row.distance), escapeHtml(row.location)].filter(Boolean).join(' · ')}${row.projected ? ` · <strong style="color:var(--white)">${escapeHtml(row.projected)}</strong>` : ''}</div>
+    <div class="compare-race-tags">
+      <div class="compare-tag"><strong>Travel</strong> ${escapeHtml(row.travel)}</div>
+      <div class="compare-tag"><strong>Terrain</strong> ${escapeHtml(row.terrain)}</div>
+      ${row.weather ? `<div class="compare-tag"><strong>Weather</strong> ${escapeHtml(row.weather)}</div>` : ''}
+    </div>
+  </div>`).join('') + `<div class="compare-best-row">Best fit: <strong>${escapeHtml(bestFit?.name || '—')}</strong></div>`;
   renderSavedRaceComparisons();
 }
 
@@ -14560,6 +14630,8 @@ function openRaceCompareModal() {
   if (out) out.innerHTML = `<div class="insight-empty"><div class="insight-empty-copy">Pick races to compare course, climate, logistics, and fit.</div></div>`;
   const nameEl = document.getElementById('raceCompareName');
   if (nameEl) nameEl.value = 'Best Next Race';
+  const homeEl = document.getElementById('raceCompareHome');
+  if (homeEl) homeEl.value = localStorage.getItem('fl2_compare_home') || athlete?.city || '';
   openM('raceCompareModal');
 }
 
@@ -16419,6 +16491,10 @@ function openRaceDetailFromParsed(obj) {
   document.getElementById('rdAgeCatPos').value  = obj.ageCategoryPos || '';
   document.getElementById('rdGenderPos').value  = obj.genderPos      || '';
   document.getElementById('rdNotes').value      = '';
+  document.getElementById('rdCostReg').value    = '';
+  document.getElementById('rdCostFlight').value = '';
+  document.getElementById('rdCostHotel').value  = '';
+  document.getElementById('rdCostGear').value   = '';
   document.getElementById('rdStartTime').value = obj.startTime || '';
   document.getElementById('rdSurface').value = obj.surface || '';
   document.getElementById('rdTerrain').value = obj.terrain || '';
@@ -16970,6 +17046,10 @@ function openRaceDetail(id) {
   document.getElementById('rdAgeCatPos').value = r.ageCategoryPos || '';
   document.getElementById('rdGenderPos').value = r.genderPos || '';
   document.getElementById('rdNotes').value = r.notes || '';
+  document.getElementById('rdCostReg').value    = r.registrationCost || r.costs?.registration || '';
+  document.getElementById('rdCostFlight').value = r.flightCost || r.costs?.flight || '';
+  document.getElementById('rdCostHotel').value  = r.hotelCost || r.costs?.hotel || '';
+  document.getElementById('rdCostGear').value   = r.gearCost || r.costs?.gear || '';
   document.getElementById('rdStartTime').value = r.startTime || r.achievementContext?.startTime || '';
   document.getElementById('rdSurface').value = r.surface || '';
   document.getElementById('rdTerrain').value = r.terrain || '';
@@ -17043,6 +17123,10 @@ function _collectRdFields() {
     ageCategoryPos:document.getElementById('rdAgeCatPos').value.trim(),
     genderPos:    document.getElementById('rdGenderPos').value.trim(),
     notes:        document.getElementById('rdNotes').value.trim(),
+    registrationCost: document.getElementById('rdCostReg').value ? Number(document.getElementById('rdCostReg').value) : 0,
+    flightCost:   document.getElementById('rdCostFlight').value ? Number(document.getElementById('rdCostFlight').value) : 0,
+    hotelCost:    document.getElementById('rdCostHotel').value ? Number(document.getElementById('rdCostHotel').value) : 0,
+    gearCost:     document.getElementById('rdCostGear').value ? Number(document.getElementById('rdCostGear').value) : 0,
     startTime:    document.getElementById('rdStartTime').value || '',
     surface:      document.getElementById('rdSurface').value.trim(),
     terrain:      document.getElementById('rdTerrain').value.trim(),
@@ -21150,6 +21234,10 @@ initApp();
       <div class="fg" style="margin-bottom:0.9rem">
         <label class="fl">Comparison Name</label>
         <input class="fi" id="raceCompareName" placeholder="Best next race">
+      </div>
+      <div class="fg" style="margin-bottom:0.9rem">
+        <label class="fl">Your Home City <span style="font-size:10px;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(for travel estimates)</span></label>
+        <input class="fi" id="raceCompareHome" placeholder="e.g. Dubai, UAE" oninput="localStorage.setItem('fl2_compare_home',this.value.trim())">
       </div>
       <div id="raceCompareSelection" style="display:grid;gap:0.55rem"></div>
       <div class="section-row" style="margin-top:1rem"><div class="section-h">Saved Comparisons</div></div>
