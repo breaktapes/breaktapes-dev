@@ -12147,8 +12147,8 @@ function getDashLayout() {
         if (item) item.enabled = false;
         localStorage.setItem('fl2_dash_layout', JSON.stringify(saved));
       }
+      localStorage.setItem('fl2_dash_migration_v2', '1');
     } catch(e) {}
-    localStorage.setItem('fl2_dash_migration_v2', '1');
   }
   try {
     const saved = JSON.parse(localStorage.getItem('fl2_dash_layout') || 'null');
@@ -12206,7 +12206,7 @@ function saveDashZoneOrder(order) {
 function getDashZoneCollapse() {
   try {
     const saved = JSON.parse(localStorage.getItem('fl2_dash_zone_collapse') || 'null');
-    if (saved && typeof saved === 'object') return saved;
+    if (saved && typeof saved === 'object' && !Array.isArray(saved)) return saved;
   } catch(e) {}
   // Default: NOW and RECENTLY expanded; TRENDING and CONTEXT collapsed
   return { priority: false, performance: false, training: true, insights: true };
@@ -12314,7 +12314,7 @@ function renderAthleteBriefing() {
   // State 2: pre-race (upcoming race exists)
   if (upcoming) {
     const daysAway = Math.round((new Date(upcoming.date+'T00:00:00') - today) / 86400000);
-    const daysLabel = daysAway === 0 ? 'Today!' : daysAway === 1 ? 'Tomorrow' : `in ${daysAway} days`;
+    const daysLabel = daysAway <= 0 ? 'Today!' : daysAway === 1 ? 'Tomorrow' : `in ${daysAway} days`;
     const distLabel = upcoming.distance ? ` · ${upcoming.distance}` : '';
     const loc = [upcoming.city, upcoming.country].filter(Boolean).join(', ');
 
@@ -12361,7 +12361,7 @@ function renderAthleteBriefing() {
 
       el.innerHTML = `<div class="ab-card">
         <div class="ab-state-label">🏁 Just Finished</div>
-        <div class="ab-hero">${last.name.replace(/\s+\d{4}$/,'')}</div>
+        <div class="ab-hero">${(last.name||'').replace(/\s+\d{4}$/,'')}</div>
         <div class="ab-sub">${fmtDate(last.date)}${last.distance ? ' · ' + last.distance : ''}</div>
         ${resultLine ? `<div class="ab-pills"><span class="ab-pill${isPB ? ' green' : ''}">${resultLine}</span></div>` : ''}
         <span class="ab-cta-link" onclick="openRaceModal()">+ Add Next Race →</span>
@@ -12372,7 +12372,7 @@ function renderAthleteBriefing() {
 
   // State 4: no upcoming, last race > 7 days ago
   const last = past[0];
-  const lastInfo = last ? `Last: ${last.name.replace(/\s+\d{4}$/,'')}${last.time ? ' · ' + last.time : ''} · ${fmtDate(last.date)}` : '';
+  const lastInfo = last ? `Last: ${(last.name||'').replace(/\s+\d{4}$/,'')}${last.time ? ' · ' + last.time : ''} · ${fmtDate(last.date)}` : '';
   el.innerHTML = `<div class="ab-card">
     <div class="ab-state-label">🎯 What's Next?</div>
     <div class="ab-hero">No Upcoming Race</div>
