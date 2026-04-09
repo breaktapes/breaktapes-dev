@@ -53,6 +53,9 @@
   /* error states */
   --error:      #ff5555;
   --error-dim:  #ff7070;
+  /* flatlay marketplace — fully distinct zone, warm cream tiles */
+  --flatlay-tile: #F2EDE6;
+  --flatlay-text: #111111;
   /* text scale */
   --text-xs:    10px;
   --text-sm:    12px;
@@ -94,6 +97,8 @@
   --muted2:     rgba(26,26,26,0.30);
   --shell-top-gradient: #F5F0E8;
   --shell-bottom-gradient: #F5F0E8;
+  --flatlay-tile: #ffffff;
+  --flatlay-text: #111111;
 }
 
 /* Deep Space — Pro */
@@ -3121,8 +3126,8 @@ main {
 }
 /* ── Marketplace product card ────────────────── */
 .mk-card {
-  background:var(--surface2);
-  border:1px solid var(--border);
+  background:var(--flatlay-tile);
+  border:1px solid rgba(0,0,0,0.06);
   border-radius:10px;
   overflow:hidden;
   display:flex;
@@ -3151,7 +3156,7 @@ main {
   font-size:clamp(2.5rem,10vw,5rem);
   font-weight:900;
   letter-spacing:-0.03em;
-  color:rgba(245,245,245,0.14);
+  color:rgba(17,17,17,0.12);
   text-transform:uppercase;
   user-select:none;
 }
@@ -3163,8 +3168,8 @@ main {
   flex:1;
 }
 .mk-brand {
-  font-size:9px;
-  color:var(--muted);
+  font-size:10px;
+  color:rgba(17,17,17,0.45);
   text-transform:uppercase;
   letter-spacing:0.1em;
   font-weight:600;
@@ -3173,7 +3178,7 @@ main {
   font-family:var(--headline);
   font-size:12px;
   font-weight:800;
-  color:var(--white);
+  color:var(--flatlay-text);
   line-height:1.1;
   letter-spacing:0.02em;
   text-transform:uppercase;
@@ -3240,9 +3245,9 @@ main {
 .mk-btn-icon {
   min-height:30px;
   padding:0 0.55rem;
-  background:var(--surface3);
-  color:var(--muted);
-  border:1px solid var(--border2);
+  background:rgba(17,17,17,0.06);
+  color:rgba(17,17,17,0.55);
+  border:1px solid rgba(17,17,17,0.12);
   border-radius:5px;
   font-family:var(--headline);
   font-size:8px;
@@ -3252,7 +3257,7 @@ main {
   cursor:pointer;
   white-space:nowrap;
 }
-.mk-btn-icon:hover{color:var(--white);border-color:rgba(245,245,245,0.2)}
+.mk-btn-icon:hover{color:rgba(17,17,17,0.85);border-color:rgba(17,17,17,0.25)}
 .mk-btn-icon.danger{color:rgba(255,100,100,0.7);border-color:rgba(255,100,100,0.15)}
 .mk-btn-icon.danger:hover{color:#ff6464}
 /* Picker option rows */
