@@ -735,45 +735,8 @@ describe('investigate skill structure', () => {
   }
 });
 
-// --- Contributor mode preamble structure validation ---
-
-describe('Contributor mode preamble structure', () => {
-  const skillsWithPreamble = [
-    'SKILL.md', 'browse/SKILL.md', 'qa/SKILL.md',
-    'qa-only/SKILL.md',
-    'setup-browser-cookies/SKILL.md',
-    'ship/SKILL.md', 'review/SKILL.md',
-    'plan-ceo-review/SKILL.md', 'plan-eng-review/SKILL.md',
-    'retro/SKILL.md',
-    'plan-design-review/SKILL.md',
-    'design-review/SKILL.md',
-    'design-consultation/SKILL.md',
-    'document-release/SKILL.md',
-    'canary/SKILL.md',
-    'benchmark/SKILL.md',
-    'land-and-deploy/SKILL.md',
-    'setup-deploy/SKILL.md',
-  ];
-
-  for (const skill of skillsWithPreamble) {
-    test(`${skill} has 0-10 rating in contributor mode`, () => {
-      const content = fs.readFileSync(path.join(ROOT, skill), 'utf-8');
-      expect(content).toContain('0-10');
-      expect(content).toContain('Rating');
-    });
-
-    test(`${skill} has "what would make this a 10" field`, () => {
-      const content = fs.readFileSync(path.join(ROOT, skill), 'utf-8');
-      expect(content).toContain('What would make this a 10');
-    });
-
-    test(`${skill} uses periodic reflection (not per-command)`, () => {
-      const content = fs.readFileSync(path.join(ROOT, skill), 'utf-8');
-      expect(content).toContain('workflow step');
-      expect(content).not.toContain('After you use gstack-provided CLIs');
-    });
-  }
-});
+// Contributor mode was removed in v0.13.10.0 — replaced by operational self-improvement.
+// Tests for contributor mode preamble structure are no longer applicable.
 
 describe('Enum & Value Completeness in review checklist', () => {
   const checklist = fs.readFileSync(path.join(ROOT, 'review', 'checklist.md'), 'utf-8');
@@ -1556,6 +1519,26 @@ describe('Test failure triage in ship skill', () => {
   test('ship/SKILL.md uses in-branch language for stop condition', () => {
     const content = fs.readFileSync(path.join(ROOT, 'ship', 'SKILL.md'), 'utf-8');
     expect(content).toContain('In-branch test failures');
+  });
+});
+
+describe('no compiled binaries in git', () => {
+  test('git tracks no Mach-O or ELF binaries', () => {
+    const result = require('child_process').execSync(
+      'git ls-files -z | xargs -0 file --mime-type 2>/dev/null | grep -E "application/(x-mach-binary|x-executable|x-pie-executable|x-sharedlib)" || true',
+      { cwd: ROOT, encoding: 'utf-8' }
+    ).trim();
+    const files = result ? result.split('\n').map((l: string) => l.split(':')[0].trim()) : [];
+    expect(files).toEqual([]);
+  });
+
+  test('git tracks no files larger than 2MB', () => {
+    const result = require('child_process').execSync(
+      'git ls-files -z | xargs -0 -I{} sh -c \'size=$(wc -c < "{}" 2>/dev/null | tr -d " "); [ "$size" -gt 2097152 ] 2>/dev/null && echo "{}:${size}"\' || true',
+      { cwd: ROOT, encoding: 'utf-8' }
+    ).trim();
+    const files = result ? result.split('\n').filter(Boolean) : [];
+    expect(files).toEqual([]);
   });
 });
 
