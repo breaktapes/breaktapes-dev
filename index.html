@@ -675,6 +675,91 @@ main {
   margin:0;
 }
 
+/* ── Athlete Briefing Card ── */
+#athleteBriefing {
+  margin:0 0 1rem;
+}
+.ab-card {
+  background: var(--black);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 1.1rem 1.15rem 1rem;
+  position: relative;
+  overflow: hidden;
+}
+.ab-card::before {
+  content:'';
+  position:absolute;
+  inset:0;
+  background: linear-gradient(135deg, rgba(var(--orange-ch),0.06) 0%, transparent 60%);
+  pointer-events:none;
+}
+.ab-state-label {
+  font-family: var(--headline);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--orange);
+  margin-bottom: 0.4rem;
+}
+.ab-hero {
+  font-family: var(--headline);
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--white);
+  line-height: 1.15;
+  margin-bottom: 0.2rem;
+}
+.ab-sub {
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 0.65rem;
+}
+.ab-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.ab-pill {
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: rgba(245,245,245,0.07);
+  color: rgba(245,245,245,0.75);
+  white-space: nowrap;
+}
+.ab-pill.green { background: rgba(0,255,136,0.1); color: var(--green); }
+.ab-pill.orange { background: rgba(var(--orange-ch),0.15); color: var(--orange); }
+.ab-cta-link {
+  display: inline-block;
+  margin-top: 0.55rem;
+  font-size: 12px;
+  color: var(--orange);
+  font-family: var(--headline);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ── Dash zone collapse toggle ── */
+.dash-zone-chevron {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 2px 4px;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+.dash-zone.dash-zone-collapsed .dash-zone-chevron { transform: rotate(-90deg); }
+.dash-zone.dash-zone-collapsed .dash-zone-grid { display: none; }
+
 /* ── Countdown ── */
 .countdown-wrap {
   position: relative;
@@ -5910,13 +5995,15 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
       </div>
       <button class="dash-customize-btn" onclick="openDashCustomize()" title="Customize dashboard" aria-label="Customize dashboard">⊞</button>
     </div>
+    <div id="athleteBriefing"></div>
     <div class="dash-shell">
-      <section class="dash-zone" id="dash-zone-priority">
+      <section class="dash-zone" id="dash-zone-priority" data-zone="priority">
         <div class="dash-zone-head">
           <div>
             <div class="dash-zone-kicker">Now</div>
             <div class="dash-zone-title">Race Day</div>
           </div>
+          <button class="dash-zone-chevron" aria-label="Toggle section" tabindex="-1">▾</button>
         </div>
         <div class="dash-zone-grid" id="dashZone-priority">
           <!-- Countdown -->
@@ -5944,12 +6031,13 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
         </div>
       </section>
 
-      <section class="dash-zone" id="dash-zone-performance">
+      <section class="dash-zone" id="dash-zone-performance" data-zone="performance">
         <div class="dash-zone-head">
           <div>
-            <div class="dash-zone-kicker">Progress</div>
+            <div class="dash-zone-kicker">Recently</div>
             <div class="dash-zone-title">Your Racing</div>
           </div>
+          <button class="dash-zone-chevron" aria-label="Toggle section" tabindex="-1">▾</button>
         </div>
         <div class="dash-zone-grid" id="dashZone-performance">
           <!-- Year in Review + H2H -->
@@ -6005,12 +6093,13 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
         </div>
       </section>
 
-      <section class="dash-zone" id="dash-zone-training">
+      <section class="dash-zone" id="dash-zone-training" data-zone="training">
         <div class="dash-zone-head">
           <div>
-            <div class="dash-zone-kicker">Training</div>
+            <div class="dash-zone-kicker">Trending</div>
             <div class="dash-zone-title">Build & Consistency</div>
           </div>
+          <button class="dash-zone-chevron" aria-label="Toggle section" tabindex="-1">▾</button>
         </div>
         <div class="dash-zone-grid" id="dashZone-training">
           <!-- Goals -->
@@ -6045,12 +6134,13 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
         </div>
       </section>
 
-      <section class="dash-zone" id="dash-zone-insights">
+      <section class="dash-zone" id="dash-zone-insights" data-zone="insights">
         <div class="dash-zone-head">
           <div>
-            <div class="dash-zone-kicker">Insights</div>
+            <div class="dash-zone-kicker">Context</div>
             <div class="dash-zone-title">Patterns & Analysis</div>
           </div>
+          <button class="dash-zone-chevron" aria-label="Toggle section" tabindex="-1">▾</button>
         </div>
         <div class="dash-zone-grid" id="dashZone-insights">
           <!-- Pacing IQ -->
@@ -12003,44 +12093,63 @@ async function renderGreeting() {
    DASHBOARD LAYOUT / CUSTOMIZE
    ============================ */
 const DASH_ZONES = [
-  { id: 'priority', label: 'Race Day' },
-  { id: 'performance', label: 'Your Racing' },
-  { id: 'training', label: 'Build & Consistency' },
-  { id: 'insights', label: 'Patterns & Analysis' },
+  { id: 'priority',    label: 'Now — Race Context' },
+  { id: 'performance', label: 'Recently — Your Racing' },
+  { id: 'training',    label: 'Trending — Build & Consistency' },
+  { id: 'insights',    label: 'Context — Patterns & Analysis' },
 ];
 
+// Narrative layout: NOW → RECENTLY → TRENDING → CONTEXT
+// enabled:false = hidden by default (user can re-enable in customize)
+// pro:true widgets default to enabled only when user has Pro access (see getDashLayout)
 const DASH_WIDGETS = [
-  { id: 'countdown', label: 'Next Race Countdown',    icon: '🏁', zone: 'priority' },
-  { id: 'stats',     label: 'Race Stats',             icon: '📊', zone: 'priority' },
-  { id: 'goals',     label: 'Goals',                  icon: '🎯', zone: 'training' },
+  // NOW zone — immediate race context
+  { id: 'stats',     label: 'Race Stats',             icon: '📊', zone: 'training' },
   { id: 'race-forecast', label: 'Race Day Forecast',  icon: '🌤️', zone: 'priority', pro: true },
   { id: 'prediction-widget', label: 'Race Prediction', icon: '🔮', zone: 'priority', pro: true },
-  { id: 'insights',  label: 'Year So Far & H2H',      icon: '📈', zone: 'performance' },
+  { id: 'countdown', label: 'Next Race Countdown',    icon: '🏁', zone: 'priority', enabled: false },
+  // RECENTLY zone — what happened lately
   { id: 'recent',    label: 'Recent Races',           icon: '🏃', zone: 'performance' },
-  { id: 'pbs',       label: 'Personal Bests',         icon: '⚡', zone: 'performance' },
-  { id: 'achievements', label: 'Achievements',        icon: '🏆', zone: 'performance' },
-  { id: 'world',     label: 'Your World',             icon: '🌍', zone: 'performance' },
-  { id: 'on-this-day', label: 'On This Day',          icon: '📅', zone: 'performance' },
-  { id: 'field-placing', label: 'Field-Adjusted Placing', icon: '🎯', zone: 'performance' },
-  { id: 'race-compare-widget', label: 'Race Comparer', icon: '🆚', zone: 'performance', pro: true },
-  { id: 'story-mode-widget', label: 'Story Mode', icon: '🎞️', zone: 'performance', pro: true },
-  { id: 'activity-preview', label: 'Recent Training', icon: '⚡', zone: 'training' },
-  { id: 'training-streak', label: 'Training Streak',  icon: '🔥', zone: 'training' },
-  { id: 'season-planner-widget', label: 'Season Planner', icon: '🗓️', zone: 'training', pro: true },
-  { id: 'recovery-intelligence-widget', label: 'Recovery Intelligence', icon: '🫀', zone: 'training', pro: true },
-  { id: 'training-correlation-widget', label: 'Training Correlation', icon: '📶', zone: 'training', pro: true },
-  { id: 'pacing-iq', label: 'Pacing IQ',              icon: '🧠', zone: 'insights', pro: true },
-  { id: 'momentum',  label: 'Career Momentum',        icon: '🚀', zone: 'insights', pro: true },
-  { id: 'age-grade', label: 'Age-Grade Score',        icon: '📈', zone: 'insights', pro: true },
+  { id: 'activity-preview', label: 'Recent Training', icon: '⚡', zone: 'performance' },
+  { id: 'training-streak', label: 'Training Streak',  icon: '🔥', zone: 'performance' },
+  { id: 'achievements', label: 'Achievements',        icon: '🏆', zone: 'performance', enabled: false },
+  { id: 'world',     label: 'Your World',             icon: '🌍', zone: 'performance', enabled: false },
+  { id: 'on-this-day', label: 'On This Day',          icon: '📅', zone: 'performance', enabled: false },
+  { id: 'field-placing', label: 'Field-Adjusted Placing', icon: '🎯', zone: 'performance', enabled: false },
+  { id: 'race-compare-widget', label: 'Race Comparer', icon: '🆚', zone: 'performance', pro: true, enabled: false },
+  { id: 'story-mode-widget', label: 'Story Mode', icon: '🎞️', zone: 'performance', pro: true, enabled: false },
+  // TRENDING zone — trajectory and improvement
+  { id: 'insights',  label: 'Year So Far & H2H',      icon: '📈', zone: 'training' },
+  { id: 'pbs',       label: 'Personal Bests',         icon: '⚡', zone: 'training' },
+  { id: 'goals',     label: 'Goals',                  icon: '🎯', zone: 'training' },
+  { id: 'season-planner-widget', label: 'Season Planner', icon: '🗓️', zone: 'training', pro: true, enabled: false },
+  { id: 'recovery-intelligence-widget', label: 'Recovery Intelligence', icon: '🫀', zone: 'training', pro: true, enabled: false },
+  { id: 'training-correlation-widget', label: 'Training Correlation', icon: '📶', zone: 'training', pro: true, enabled: false },
+  // CONTEXT zone — deep analytics
   { id: 'bq',        label: 'Boston Qualifier',       icon: '🦄', zone: 'insights' },
-  { id: 'race-dna',  label: 'Race DNA',               icon: '🧬', zone: 'insights', pro: true },
-  { id: 'deep-trends-widget', label: 'Deep Trends', icon: '📉', zone: 'insights', pro: true },
-  { id: 'why-result-widget', label: 'Why Result', icon: '🧾', zone: 'insights', pro: true },
-  { id: 'recommendations-widget', label: 'Recommendations', icon: '🧭', zone: 'insights', pro: true },
-  { id: 'coach-activity-widget', label: 'Coach Activity', icon: '🗣️', zone: 'insights', pro: true },
+  { id: 'pacing-iq', label: 'Pacing IQ',              icon: '🧠', zone: 'insights', pro: true, enabled: false },
+  { id: 'momentum',  label: 'Career Momentum',        icon: '🚀', zone: 'insights', pro: true, enabled: false },
+  { id: 'age-grade', label: 'Age-Grade Score',        icon: '📈', zone: 'insights', pro: true, enabled: false },
+  { id: 'race-dna',  label: 'Race DNA',               icon: '🧬', zone: 'insights', pro: true, enabled: false },
+  { id: 'deep-trends-widget', label: 'Deep Trends', icon: '📉', zone: 'insights', pro: true, enabled: false },
+  { id: 'why-result-widget', label: 'Why Result', icon: '🧾', zone: 'insights', pro: true, enabled: false },
+  { id: 'recommendations-widget', label: 'Recommendations', icon: '🧭', zone: 'insights', pro: true, enabled: false },
+  { id: 'coach-activity-widget', label: 'Coach Activity', icon: '🗣️', zone: 'insights', pro: true, enabled: false },
 ];
 
 function getDashLayout() {
+  // Migration v2: force countdown disabled (replaced by briefing card), run once
+  if (!localStorage.getItem('fl2_dash_migration_v2')) {
+    try {
+      const saved = JSON.parse(localStorage.getItem('fl2_dash_layout') || 'null');
+      if (saved && Array.isArray(saved)) {
+        const item = saved.find(w => w.id === 'countdown');
+        if (item) item.enabled = false;
+        localStorage.setItem('fl2_dash_layout', JSON.stringify(saved));
+      }
+      localStorage.setItem('fl2_dash_migration_v2', '1');
+    } catch(e) {}
+  }
   try {
     const saved = JSON.parse(localStorage.getItem('fl2_dash_layout') || 'null');
     if (saved && Array.isArray(saved) && saved.length) {
@@ -12050,16 +12159,25 @@ function getDashLayout() {
         return {
           id: item.id,
           enabled: item.enabled !== false,
-          zone: meta?.zone || 'performance',
+          zone: meta?.zone || item.zone || 'performance',
         };
       });
+      // New widgets added since last save: default to their declared enabled state
       DASH_WIDGETS.forEach(w => {
-        if (!ids.has(w.id)) merged.push({ id: w.id, enabled: true, zone: w.zone });
+        if (!ids.has(w.id)) {
+          const defaultEnabled = w.enabled !== false && (!w.pro || hasProAccess());
+          merged.push({ id: w.id, enabled: defaultEnabled, zone: w.zone });
+        }
       });
       return merged;
     }
   } catch(e) {}
-  return DASH_WIDGETS.map(w => ({ id: w.id, enabled: true, zone: w.zone }));
+  // Fresh default: use each widget's declared enabled state
+  return DASH_WIDGETS.map(w => ({
+    id: w.id,
+    enabled: w.enabled !== false && (!w.pro || hasProAccess()),
+    zone: w.zone,
+  }));
 }
 
 function saveDashLayout(layout) {
@@ -12083,6 +12201,19 @@ function getDashZoneOrder() {
 
 function saveDashZoneOrder(order) {
   localStorage.setItem('fl2_dash_zone_order', JSON.stringify(order));
+}
+
+function getDashZoneCollapse() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('fl2_dash_zone_collapse') || 'null');
+    if (saved && typeof saved === 'object' && !Array.isArray(saved)) return saved;
+  } catch(e) {}
+  // Default: NOW and RECENTLY expanded; TRENDING and CONTEXT collapsed
+  return { priority: false, performance: false, training: true, insights: true };
+}
+
+function saveDashZoneCollapse(state) {
+  localStorage.setItem('fl2_dash_zone_collapse', JSON.stringify(state));
 }
 
 function applyDashLayout() {
@@ -12111,13 +12242,143 @@ function applyDashLayout() {
     const hasVisible = Array.from(zoneContainer.children).some(child => child.style.display !== 'none');
     section.style.display = hasVisible ? '' : 'none';
   });
+  // Apply collapse state (after all reordering is done)
+  const collapseState = getDashZoneCollapse();
+  DASH_ZONES.forEach(zone => {
+    const section = document.getElementById('dash-zone-' + zone.id);
+    if (!section) return;
+    const collapsed = !!collapseState[zone.id];
+    section.classList.toggle('dash-zone-collapsed', collapsed);
+    const chevron = section.querySelector('.dash-zone-chevron');
+    if (chevron) chevron.textContent = collapsed ? '▸' : '▾';
+  });
   const greeting = document.getElementById('greetingCard');
   if (greeting) container.insertBefore(greeting, shell);
+  // Keep briefing card before shell
+  const briefing = document.getElementById('athleteBriefing');
+  if (briefing && briefing.parentNode === container) container.insertBefore(briefing, shell);
 }
 
 function openDashCustomize() {
   renderDashCustomizeModal();
   openM('dashCustomizeModal');
+}
+
+function initDashAccordion() {
+  // One delegated listener on the page — safe to call on every renderDash() since
+  // we guard with a flag so we only attach once per page lifecycle
+  const page = document.getElementById('page-dashboard');
+  if (!page || page._accordionInit) return;
+  page._accordionInit = true;
+  page.addEventListener('click', function(e) {
+    const btn = e.target.closest('.dash-zone-chevron');
+    if (!btn) return;
+    const section = btn.closest('.dash-zone[data-zone]');
+    if (!section) return;
+    const zoneId = section.dataset.zone;
+    const state = getDashZoneCollapse();
+    state[zoneId] = !state[zoneId];
+    saveDashZoneCollapse(state);
+    applyDashLayout();
+  });
+}
+
+function renderAthleteBriefing() {
+  const el = document.getElementById('athleteBriefing');
+  if (!el) return;
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  // Upcoming: nextRace if future, else first upcomingRaces entry with future date
+  const upList = Array.isArray(upcomingRaces) ? upcomingRaces : [];
+  const upcoming = (nextRace?.date && new Date(nextRace.date+'T00:00:00') >= today)
+    ? nextRace
+    : (upList.find(r => r.date && new Date(r.date+'T00:00:00') >= today) || null);
+
+  // Past races: historical races with past dates, sorted newest first
+  const past = (races || [])
+    .filter(r => r.date && new Date(r.date+'T00:00:00') < today)
+    .sort((a,b) => new Date(b.date+'T00:00:00') - new Date(a.date+'T00:00:00'));
+
+  // State 1: new user (no past races and no upcoming race)
+  if (!past.length && !upcoming) {
+    el.innerHTML = `<div class="ab-card">
+      <div class="ab-state-label">👋 Welcome</div>
+      <div class="ab-hero">Your Story Starts Here</div>
+      <div class="ab-sub">Add your first race to begin tracking your journey.</div>
+      <span class="ab-cta-link" onclick="openRaceModal()">+ Add First Race →</span>
+    </div>`;
+    return;
+  }
+
+  // State 2: pre-race (upcoming race exists)
+  if (upcoming) {
+    const daysAway = Math.round((new Date(upcoming.date+'T00:00:00') - today) / 86400000);
+    const daysLabel = daysAway <= 0 ? 'Today!' : daysAway === 1 ? 'Tomorrow' : `in ${daysAway} days`;
+    const distLabel = upcoming.distance ? ` · ${upcoming.distance}` : '';
+    const loc = [upcoming.city, upcoming.country].filter(Boolean).join(', ');
+
+    const pills = [];
+    // Streak pill (Strava if available)
+    if (stravaActivities && stravaActivities.length) {
+      const { current } = computeStreak(stravaActivities);
+      if (current > 0) pills.push(`<span class="ab-pill green">🔥 ${current}-day streak</span>`);
+    }
+    // Last result pill
+    if (past.length) {
+      const last = past[0];
+      if (last.time) {
+        const pbMap = buildPBMap();
+        const isPB = pbMap[last.distance] && pbMap[last.distance].id === last.id;
+        const distShort = last.distance || '';
+        pills.push(`<span class="ab-pill${isPB ? ' green' : ''}">Last: ${last.time}${distShort ? ' ' + distShort : ''}${isPB ? ' ↑ PB' : ''}</span>`);
+      }
+    }
+
+    el.innerHTML = `<div class="ab-card">
+      <div class="ab-state-label">📍 Pre-Race</div>
+      <div class="ab-hero">${(upcoming.name||'').replace(/\s+\d{4}$/,'')} ${daysLabel}</div>
+      <div class="ab-sub">${upcoming.date ? fmtDate(upcoming.date) : ''}${distLabel}${loc ? ' · ' + loc : ''}</div>
+      ${pills.length ? `<div class="ab-pills">${pills.join('')}</div>` : ''}
+    </div>`;
+    return;
+  }
+
+  // State 3: post-race (most recent past race within 7 days, no upcoming)
+  if (past.length) {
+    const last = past[0];
+    const daysSince = Math.round((today - new Date(last.date+'T00:00:00')) / 86400000);
+    if (daysSince <= 7) {
+      const pbMap = buildPBMap();
+      const isPB = last.time && pbMap[last.distance] && pbMap[last.distance].id === last.id;
+      const placing = last.placing ? parsePlacing(last.placing) : null;
+      const placingStr = placing && placing.pos ? `${placing.pos}/${placing.total}` : '';
+      const resultLine = [
+        last.time || '',
+        placingStr,
+        isPB ? '↑ PB' : ''
+      ].filter(Boolean).join(' · ');
+
+      el.innerHTML = `<div class="ab-card">
+        <div class="ab-state-label">🏁 Just Finished</div>
+        <div class="ab-hero">${(last.name||'').replace(/\s+\d{4}$/,'')}</div>
+        <div class="ab-sub">${fmtDate(last.date)}${last.distance ? ' · ' + last.distance : ''}</div>
+        ${resultLine ? `<div class="ab-pills"><span class="ab-pill${isPB ? ' green' : ''}">${resultLine}</span></div>` : ''}
+        <span class="ab-cta-link" onclick="openRaceModal()">+ Add Next Race →</span>
+      </div>`;
+      return;
+    }
+  }
+
+  // State 4: no upcoming, last race > 7 days ago
+  const last = past[0];
+  const lastInfo = last ? `Last: ${(last.name||'').replace(/\s+\d{4}$/,'')}${last.time ? ' · ' + last.time : ''} · ${fmtDate(last.date)}` : '';
+  el.innerHTML = `<div class="ab-card">
+    <div class="ab-state-label">🎯 What's Next?</div>
+    <div class="ab-hero">No Upcoming Race</div>
+    ${lastInfo ? `<div class="ab-sub">${lastInfo}</div>` : ''}
+    <span class="ab-cta-link" onclick="openRaceModal()">+ Add Next Race →</span>
+  </div>`;
 }
 
 function renderDashCustomizeModal() {
@@ -14974,6 +15235,7 @@ function setMapMode(mode) {
    DASHBOARD
    ============================ */
 function renderDash(){
+  renderAthleteBriefing();
   renderGreeting();
   renderCountdown();
   document.getElementById('ds-r').textContent = races.length;
@@ -15016,6 +15278,7 @@ function renderDash(){
     renderRecommendationsWidget();
     renderCoachActivityWidget();
     applyDashLayout();
+    initDashAccordion();
     return;
   }
   document.getElementById('recentFeed').innerHTML = sorted.length ? sorted.map(r=>{
@@ -15065,6 +15328,7 @@ function renderDash(){
   renderRecommendationsWidget();
   renderCoachActivityWidget();
   applyDashLayout();
+  initDashAccordion();
 }
 
 /* ============================
