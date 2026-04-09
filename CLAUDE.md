@@ -261,6 +261,11 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 | `renderWearables()` | Render 5 integration cards in Wearables tab (WHOOP, Garmin, COROS, Oura, Apple Health) |
 | `renderWearablesFeed()` | Parallel fetch WHOOP+Garmin activities, sort by date, render activity cards |
 | `whoopSportName(id)` | Map WHOOP sport_id integer to human-readable sport name |
+| `renderAthleteBriefing()` | State-aware hero card at top of dashboard — 4 states: Welcome / Pre-Race / Just Finished / No Upcoming Race |
+| `getDashZoneCollapse()` | Read `fl2_dash_zone_collapse` from localStorage; returns default state (NOW+RECENTLY expanded) if unset or invalid |
+| `saveDashZoneCollapse(state)` | Persist accordion collapse state object to `fl2_dash_zone_collapse` in localStorage |
+| `initDashAccordion()` | Attach single delegated click listener on dashboard page for zone accordion; idempotent (guards with `_accordionInit` flag) |
+| `getDashLayout()` | Return array of `{id, enabled}` widget config; migration v2 handles legacy layout formats |
 
 ---
 
@@ -270,9 +275,11 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 - **Test files:** `tests/utils.test.js` (pure functions), `tests/navigation.test.js` (go() + scroll behaviour)
 - **Loader:** `tests/spa-loader.js` — loads `index.html` into jsdom, exposes globals via `window`
 - **Coverage:** `npm run test:coverage` → `coverage/` directory
-- **144 tests, all green** as of Session 10
-- Functions tested: `timeToSecs`, `secsToHMS`, `buildPBMap`, `parsePlacing`, `computeStreak`, `computeMomentum`, `computePacingIQ`, `computeAgeGrade`, `classifyPacing`, `go()` scroll + page switching + nav state, `whoopSportName`, `parseAppleHealthXML`, all wearable function smoke tests
+- **174 tests, all green** as of Session 11
+- Functions tested: `timeToSecs`, `secsToHMS`, `buildPBMap`, `parsePlacing`, `computeStreak`, `computeMomentum`, `computePacingIQ`, `computeAgeGrade`, `classifyPacing`, `go()` scroll + page switching + nav state, `whoopSportName`, `parseAppleHealthXML`, all wearable function smoke tests, `getDashZoneCollapse`, `saveDashZoneCollapse`, `getDashLayout`, `renderAthleteBriefing`
 - `tests/wearables.test.js` added in Session 10 — 15 tests for wearable integration functions
+- `tests/dash-layout.test.js` added in Session 11 — 13 tests for `getDashZoneCollapse`, `saveDashZoneCollapse`, `getDashLayout` migration v2
+- `tests/athlete-briefing.test.js` added in Session 11 — 17 tests for `renderAthleteBriefing` all 4 states
 
 ---
 
@@ -578,6 +585,27 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 - `loadSPA()` doesn't return the global object — it populates `global` directly; reference functions without `g.` prefix in tests
 - gstack vendored copy in `.claude/skills/gstack/` is gitignored by pattern `gstack/`; use `git add -f` to stage. Do NOT stage `node_modules` inside it — use `git diff --name-only | grep -v node_modules` to select files
 - Apple Health file format: `export.xml` uses `<Record>` elements with type/value/unit/startDate/endDate/sourceName attributes
+
+---
+
+### Session 11 (2026-04-09) — Athlete Briefing Card + narrative dashboard layout
+
+**Branch:** `claude/busy-poincare` → staging (pending)
+
+#### Changes shipped
+- **Athlete Briefing Card** — `renderAthleteBriefing()` replaces the static greeting hero. Four states driven by race data: Welcome (no races yet), Pre-Race (upcoming race with countdown + streak/last-result pills), Just Finished (race within past 7 days — shows time, placing, Add Next Race CTA), No Upcoming Race (shows last race + Add Next Race CTA). Null-guard on `last.name` prevents crash on AI-parsed races with missing name.
+- **Narrative dashboard accordion** — four named zones replace the flat widget list: NOW (Race Day context), RECENTLY (Your Racing summary), TRENDING (Build & Consistency), CONTEXT (Patterns & Analysis). Zone labels use `getDashZoneCollapse()` / `saveDashZoneCollapse()` persisted in `fl2_dash_zone_collapse`.
+- **`initDashAccordion()`** — single delegated click listener on `#page-dashboard`; idempotent via `_accordionInit` flag so safe to call on every `renderDash()`.
+- **`getDashLayout()` migration v2** — detects stale layout formats, rewrites with new zone structure, writes v2 migration flag inside the try block (prevents silent abandonment on `QuotaExceededError`).
+- **`DASH_WIDGETS` reordered** — Race Stats moved to TRENDING (career summary, not race-day context); widget defaults trimmed to 8 enabled (countdown disabled by default).
+- **30 new tests** — `tests/dash-layout.test.js` (13) + `tests/athlete-briefing.test.js` (17). Total: 174.
+- **Version bump** — v0.1.0.0 → v0.2.0.0.
+
+#### Key learnings
+- `getDashZoneCollapse` must guard against JSON arrays (`!Array.isArray(saved)`) — `JSON.parse('[]')` is truthy and would corrupt the state object
+- Migration v2 flag write must be inside the `try` block, not after it — `QuotaExceededError` silently abandoned the migration when the flag write was outside
+- `daysAway` can go negative on same-day or clock-skew races — guard with `Math.max(0, daysAway)` or explicit `<= 0` → "Today!" branch to avoid "in -1 days" display
+- `renderAthleteBriefing()` must null-guard `last.name` — AI-parsed races saved before name validation was enforced may have `name: undefined`
 
 ---
 
