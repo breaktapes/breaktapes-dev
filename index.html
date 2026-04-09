@@ -1304,8 +1304,7 @@ main {
   padding:1.2rem 1rem 1rem; position:relative; overflow:hidden;
 }
 .dash-insight-tile::before {
-  content:''; position:absolute; top:0.8rem; left:1rem; right:1rem; height:1px;
-  background:linear-gradient(90deg,transparent,rgba(255,104,38,0.88),transparent);
+  content:none;
 }
 .di-kicker { font-family:var(--headline); font-size:9px; font-weight:800; letter-spacing:0.18em; text-transform:uppercase; color:var(--orange); margin-bottom:0.9rem; }
 .di-big { font-family:var(--headline); font-size:26px; font-weight:900; color:var(--white); line-height:1; }
@@ -3615,13 +3614,6 @@ main {
 }
 #page-dashboard .dash-insight-tile {
   padding:1rem 1.05rem;
-}
-#page-dashboard .dash-insight-tile::before {
-  left:1rem;
-  right:1rem;
-  top:0.95rem;
-  height:1px;
-  opacity:0.85;
 }
 #page-dashboard .di-kicker {
   margin-bottom:0.6rem;
@@ -13470,6 +13462,7 @@ function computeRacePersonality(sourceRaces = races) {
   const finished = (sourceRaces || []).filter(r => r.date);
   if (!finished.length) return [];
   const trend = computeTrendAnalysis(finished);
+  if (!trend) return [];
   const longRaces = finished.filter(r => (r.distKm || DIST_KM[r.distance] || 0) >= 21);
   const hotRaces = finished.filter(r => {
     const temp = getRaceTemperatureC(r);
