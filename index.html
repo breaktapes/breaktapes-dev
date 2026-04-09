@@ -4246,13 +4246,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   margin: 0 auto 0.9rem;
   display: flex; align-items: center; justify-content: center;
   position: relative;
-  /* Bright radial spotlight: center is light (medal shows through multiply), edges fade dark */
-  background:
-    radial-gradient(ellipse 65% 72% at 50% 58%,
-      var(--spot-b, rgba(255,225,100,0.88)) 0%,
-      var(--spot-m, rgba(200,150,20,0.42)) 44%,
-      transparent 68%
-    );
+  background: var(--surface2);
   border-radius: 10px;
   overflow: hidden;
 }
@@ -15109,10 +15103,29 @@ function uploadMedalPhoto(event, raceId) {
       canvas.height = Math.round(img.height * scale);
       canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
 
-      // BFS flood-fill background removal
-      removeBackgroundFloodFill(canvas);
-
-      const dataUrl = canvas.toDataURL('image/png');
+      // Try local rmbg proxy first (ML quality); fall back to canvas flood-fill
+      let dataUrl = null;
+      try {
+        const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+        const resp = await fetch('http://localhost:7437/remove-bg', {
+          method: 'POST', body: blob,
+          headers: { 'Content-Type': 'image/png' },
+          signal: AbortSignal.timeout(30000),
+        });
+        if (resp.ok) {
+          const pngBlob = await resp.blob();
+          dataUrl = await new Promise((res, rej) => {
+            const fr = new FileReader();
+            fr.onload = () => res(fr.result);
+            fr.onerror = rej;
+            fr.readAsDataURL(pngBlob);
+          });
+        }
+      } catch {}
+      if (!dataUrl) {
+        removeBackgroundFloodFill(canvas);
+        dataUrl = canvas.toDataURL('image/png');
+      }
       medalPhotos[raceId] = dataUrl;
       localStorage.setItem('fl2_medal_photos', JSON.stringify(medalPhotos));
       const race = races.find(entry => getRaceKeyValue(entry) === String(raceId));
