@@ -1,0 +1,36 @@
+name = "breaktapes-og"
+main = "index.js"
+compatibility_date = "2024-09-23"
+account_id = "b09f233e618dc7f23bcb247c947eb303"
+
+# Routes to health.breaktapes.com/og/*
+# The health Worker handles OAuth proxying; this Worker handles og:image generation.
+# Add this route in Cloudflare dashboard under Workers → breaktapes-og → Triggers.
+routes = [
+  { pattern = "health.breaktapes.com/og/*", zone_id = "7d1d8be858893e977e57b0455ed2388f" }
+]
+
+[vars]
+SUPABASE_URL = "https://kmdpufauamadwavqsinj.supabase.co"
+APP_URL = "https://app.breaktapes.com"
+
+# Secrets (set via `wrangler secret put`):
+#   SUPABASE_ANON_KEY
+
+# KV for og:image cache (optional but recommended — avoids regenerating on every request):
+#   1. wrangler kv:namespace create "og-cache"
+#   2. Add the returned IDs below and uncomment:
+# [[kv_namespaces]]
+# binding = "OG_KV"
+# id = "<KV_NAMESPACE_ID>"
+# preview_id = "<KV_PREVIEW_ID>"
+
+[env.staging]
+name = "breaktapes-og-staging"
+routes = [
+  { pattern = "health.breaktapes.com/og/staging/*", zone_id = "7d1d8be858893e977e57b0455ed2388f" }
+]
+
+[env.staging.vars]
+SUPABASE_URL = "https://yqzycwuyhvzkbofwkazr.supabase.co"
+APP_URL = "https://dev.breaktapes.com"
