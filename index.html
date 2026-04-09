@@ -12215,83 +12215,115 @@ const DASH_WIDGETS = [
   { id: 'coach-activity-widget', label: 'Coach Activity', icon: '🗣️', zone: 'insights', pro: true, enabled: false },
 ];
 
+const DASH_STORAGE_KEYS = {
+  layout: 'fl2_dash_layout',
+  migrationV2: 'fl2_dash_migration_v2',
+  zoneOrder: 'fl2_dash_zone_order',
+  zoneCollapse: 'fl2_dash_zone_collapse',
+};
+
+const DEFAULT_DASH_ZONE_COLLAPSE = {
+  priority: false,
+  performance: false,
+  training: true,
+  insights: true,
+};
+
+const DASH_WIDGET_META = Object.fromEntries(DASH_WIDGETS.map(widget => [widget.id, widget]));
+
+function readDashStorage(key) {
+  try {
+    return JSON.parse(localStorage.getItem(key) || 'null');
+  } catch(e) {
+    return null;
+  }
+}
+
+function writeDashStorage(key, value) {
+  localStorage.setItem(key, JSON.stringify(value));
+}
+
+function isDashWidgetEnabledByDefault(widget) {
+  return widget.enabled !== false && (!widget.pro || hasProAccess());
+}
+
+function runDashLayoutMigrationV2() {
+  if (localStorage.getItem(DASH_STORAGE_KEYS.migrationV2)) return;
+  const savedLayout = readDashStorage(DASH_STORAGE_KEYS.layout);
+  if (Array.isArray(savedLayout)) {
+    const countdown = savedLayout.find(widget => widget.id === 'countdown');
+    if (countdown) {
+      countdown.enabled = false;
+      writeDashStorage(DASH_STORAGE_KEYS.layout, savedLayout);
+    }
+  }
+  localStorage.setItem(DASH_STORAGE_KEYS.migrationV2, '1');
+}
+
 function getDashLayout() {
   // Migration v2: force countdown disabled (replaced by briefing card), run once
-  if (!localStorage.getItem('fl2_dash_migration_v2')) {
-    try {
-      const saved = JSON.parse(localStorage.getItem('fl2_dash_layout') || 'null');
-      if (saved && Array.isArray(saved)) {
-        const item = saved.find(w => w.id === 'countdown');
-        if (item) item.enabled = false;
-        localStorage.setItem('fl2_dash_layout', JSON.stringify(saved));
+  runDashLayoutMigrationV2();
+
+  const savedLayout = readDashStorage(DASH_STORAGE_KEYS.layout);
+  if (Array.isArray(savedLayout) && savedLayout.length) {
+    const knownIds = new Set(savedLayout.map(widget => widget.id));
+    const mergedLayout = savedLayout.map(item => ({
+      id: item.id,
+      enabled: item.enabled !== false,
+      zone: DASH_WIDGET_META[item.id]?.zone || item.zone || 'performance',
+    }));
+
+    // New widgets added since last save: default to their declared enabled state.
+    DASH_WIDGETS.forEach(widget => {
+      if (!knownIds.has(widget.id)) {
+        mergedLayout.push({
+          id: widget.id,
+          enabled: isDashWidgetEnabledByDefault(widget),
+          zone: widget.zone,
+        });
       }
-      localStorage.setItem('fl2_dash_migration_v2', '1');
-    } catch(e) {}
+    });
+    return mergedLayout;
   }
-  try {
-    const saved = JSON.parse(localStorage.getItem('fl2_dash_layout') || 'null');
-    if (saved && Array.isArray(saved) && saved.length) {
-      const ids = new Set(saved.map(w => w.id));
-      const merged = saved.map(item => {
-        const meta = DASH_WIDGETS.find(widget => widget.id === item.id);
-        return {
-          id: item.id,
-          enabled: item.enabled !== false,
-          zone: meta?.zone || item.zone || 'performance',
-        };
-      });
-      // New widgets added since last save: default to their declared enabled state
-      DASH_WIDGETS.forEach(w => {
-        if (!ids.has(w.id)) {
-          const defaultEnabled = w.enabled !== false && (!w.pro || hasProAccess());
-          merged.push({ id: w.id, enabled: defaultEnabled, zone: w.zone });
-        }
-      });
-      return merged;
-    }
-  } catch(e) {}
+
   // Fresh default: use each widget's declared enabled state
-  return DASH_WIDGETS.map(w => ({
-    id: w.id,
-    enabled: w.enabled !== false && (!w.pro || hasProAccess()),
-    zone: w.zone,
+  return DASH_WIDGETS.map(widget => ({
+    id: widget.id,
+    enabled: isDashWidgetEnabledByDefault(widget),
+    zone: widget.zone,
   }));
 }
 
 function saveDashLayout(layout) {
-  localStorage.setItem('fl2_dash_layout', JSON.stringify(layout));
+  writeDashStorage(DASH_STORAGE_KEYS.layout, layout);
 }
 
 function getDashZoneOrder() {
-  try {
-    const saved = JSON.parse(localStorage.getItem('fl2_dash_zone_order') || 'null');
-    if (saved && Array.isArray(saved) && saved.length) {
-      const known = new Set(DASH_ZONES.map(zone => zone.id));
-      const order = saved.filter(id => known.has(id));
-      DASH_ZONES.forEach(zone => {
-        if (!order.includes(zone.id)) order.push(zone.id);
-      });
-      return order;
-    }
-  } catch(e) {}
+  const savedOrder = readDashStorage(DASH_STORAGE_KEYS.zoneOrder);
+  if (Array.isArray(savedOrder) && savedOrder.length) {
+    const knownZones = new Set(DASH_ZONES.map(zone => zone.id));
+    const order = savedOrder.filter(id => knownZones.has(id));
+    DASH_ZONES.forEach(zone => {
+      if (!order.includes(zone.id)) order.push(zone.id);
+    });
+    return order;
+  }
   return DASH_ZONES.map(zone => zone.id);
 }
 
 function saveDashZoneOrder(order) {
-  localStorage.setItem('fl2_dash_zone_order', JSON.stringify(order));
+  writeDashStorage(DASH_STORAGE_KEYS.zoneOrder, order);
 }
 
 function getDashZoneCollapse() {
-  try {
-    const saved = JSON.parse(localStorage.getItem('fl2_dash_zone_collapse') || 'null');
-    if (saved && typeof saved === 'object' && !Array.isArray(saved)) return saved;
-  } catch(e) {}
+  const savedState = readDashStorage(DASH_STORAGE_KEYS.zoneCollapse);
+  if (savedState && typeof savedState === 'object' && !Array.isArray(savedState)) return savedState;
   // Default: NOW and RECENTLY expanded; TRENDING and CONTEXT collapsed
-  return { priority: false, performance: false, training: true, insights: true };
+  return { ...DEFAULT_DASH_ZONE_COLLAPSE };
 }
 
 function saveDashZoneCollapse(state) {
-  localStorage.setItem('fl2_dash_zone_collapse', JSON.stringify(state));
+  writeDashStorage(DASH_STORAGE_KEYS.zoneCollapse, state);
 }
 
 function applyDashLayout() {
@@ -12299,12 +12331,11 @@ function applyDashLayout() {
   const container = document.querySelector('#page-dashboard .wrap');
   const shell = container?.querySelector('.dash-shell');
   if (!container || !shell) return;
-  const widgetMeta = Object.fromEntries(DASH_WIDGETS.map(widget => [widget.id, widget]));
   const zoneContainers = Object.fromEntries(DASH_ZONES.map(zone => [zone.id, document.getElementById('dashZone-' + zone.id)]));
   layout.forEach((item) => {
     const el = document.getElementById('dash-widget-' + item.id);
     if (!el) return;
-    const zoneId = widgetMeta[item.id]?.zone || item.zone || 'performance';
+    const zoneId = DASH_WIDGET_META[item.id]?.zone || item.zone || 'performance';
     const zoneContainer = zoneContainers[zoneId] || zoneContainers.performance;
     el.style.display = item.enabled ? '' : 'none';
     if (zoneContainer) zoneContainer.appendChild(el);
@@ -12461,11 +12492,10 @@ function renderAthleteBriefing() {
 
 function renderDashCustomizeModal() {
   const layout = getDashLayout();
-  const meta = Object.fromEntries(DASH_WIDGETS.map(w => [w.id, w]));
   const zoneOrder = getDashZoneOrder();
   document.getElementById('dcwList').innerHTML = zoneOrder.map((zoneId, zoneIndex) => {
     const zone = DASH_ZONES.find(entry => entry.id === zoneId) || { id: zoneId, label: zoneId };
-    const items = layout.filter(item => (item.zone || meta[item.id]?.zone || 'performance') === zone.id);
+    const items = layout.filter(item => (item.zone || DASH_WIDGET_META[item.id]?.zone || 'performance') === zone.id);
     return `<li class="dcw-group">
       <div class="dcw-group-head">
         <div>
@@ -12481,7 +12511,7 @@ function renderDashCustomizeModal() {
       </div>
       <ul class="dcw-group-list">
         ${items.map((item, idx) => {
-          const w = meta[item.id] || { label: item.id, icon: '▪' };
+          const w = DASH_WIDGET_META[item.id] || { label: item.id, icon: '▪' };
           return `<li class="dcw-row${item.enabled ? '' : ' disabled'}" data-id="${item.id}">
             <span class="dcw-icon">${w.icon}</span>
             <span class="dcw-label">${w.label}${w.pro ? '<span class="dcw-pro-badge">Pro</span>' : ''}</span>

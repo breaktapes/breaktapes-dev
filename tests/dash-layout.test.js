@@ -153,3 +153,23 @@ describe('getDashLayout — returns defaults when no saved layout', () => {
     expect(countdown.enabled).toBe(false);
   });
 });
+
+describe('getDashLayout — saved layouts merge newly introduced widgets', () => {
+  beforeAll(() => loadSPA({ races: [] }));
+
+  it('preserves saved widgets and appends any missing widget metadata', () => {
+    localStorage.setItem('fl2_dash_migration_v2', '1');
+    localStorage.setItem('fl2_dash_layout', JSON.stringify([
+      { id: 'stats', enabled: true, zone: 'priority' },
+      { id: 'countdown', enabled: false, zone: 'priority' },
+    ]));
+
+    const layout = global.getDashLayout();
+    const ids = layout.map(widget => widget.id);
+
+    expect(ids).toContain('stats');
+    expect(ids).toContain('countdown');
+    expect(ids).toContain('recent');
+    expect(layout.length).toBeGreaterThan(2);
+  });
+});
