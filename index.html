@@ -2053,6 +2053,46 @@ main {
 .rd-detail-grid-3 {
   --rd-grid-cols: 3;
 }
+.rd-grid-2 { grid-template-columns:repeat(2, minmax(0, 1fr)) !important; }
+.rd-grid-3 { grid-template-columns:repeat(3, minmax(0, 1fr)) !important; }
+.rd-grid-4 { grid-template-columns:repeat(4, minmax(0, 1fr)) !important; }
+.rd-mobile-span-2 {}
+.rd-flag-grid {
+  display:grid;
+  grid-template-columns:repeat(3, minmax(0, 1fr));
+  gap:0.55rem;
+}
+.rd-flag-card {
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:0.75rem;
+  min-height:74px;
+  padding:0.8rem 0.85rem;
+  border-radius:12px;
+  background:linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.025));
+  border:1px solid rgba(255,255,255,0.08);
+  box-sizing:border-box;
+  transition:border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+}
+.rd-flag-card:hover {
+  border-color:rgba(var(--orange-ch),0.24);
+  background:linear-gradient(180deg, rgba(var(--orange-ch),0.08), rgba(255,255,255,0.03));
+  transform:translateY(-1px);
+}
+.rd-flag-copy {
+  font-family:var(--body);
+  font-size:13px;
+  line-height:1.25;
+  color:rgba(245,245,245,0.82);
+}
+.rd-flag-card input[type="checkbox"] {
+  width:16px;
+  height:16px;
+  margin:0;
+  flex-shrink:0;
+  accent-color:var(--orange);
+}
 @media (max-width: 520px) {
   #raceDetailModal {
     align-items:stretch;
@@ -2106,6 +2146,30 @@ main {
   .rd-detail-grid-2,
   .rd-detail-grid-3 {
     grid-template-columns:1fr !important;
+  }
+  #raceDetailModal .rd-grid-2,
+  #raceDetailModal .rd-grid-3,
+  #raceDetailModal .rd-grid-4 {
+    grid-template-columns:repeat(2, minmax(0, 1fr)) !important;
+    gap:0.65rem;
+  }
+  #raceDetailModal .rd-mobile-span-2 {
+    grid-column:1 / -1;
+  }
+  #raceDetailModal .rd-flag-grid {
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:0.65rem;
+  }
+  #raceDetailModal .rd-flag-card {
+    min-height:84px;
+    padding:0.85rem 0.9rem;
+  }
+  #raceDetailModal .rd-flag-copy {
+    font-size:12px;
+    line-height:1.3;
+  }
+  #raceDetailModal .rd-section {
+    margin-bottom:1.1rem;
   }
 }
 
@@ -2659,7 +2723,7 @@ main {
 .ath-goal-strip{display:grid;grid-template-columns:repeat(3,1fr);margin-top:.85rem;padding-top:.75rem;border-top:1px solid rgba(255,255,255,0.08)}
 .ath-goal-strip-item{text-align:center;padding:0 .5rem}
 .ath-goal-strip-item+.ath-goal-strip-item{border-left:1px solid rgba(255,255,255,0.08)}
-.ath-goal-strip-v{font-family:'Geist Mono',monospace;font-size:1rem;font-weight:400;color:var(--white);line-height:1;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.ath-goal-strip-v{font-family:var(--headline);font-size:1rem;font-weight:900;color:var(--white);line-height:1;letter-spacing:.02em}
 .ath-goal-strip-v.accent{color:var(--orange)}
 .ath-goal-strip-k{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:.28rem}
 .ath-goal-pill,.ath-champ-pill{
@@ -2993,6 +3057,22 @@ main {
   cursor:pointer;
 }
 .fgrid { display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; }
+.cost-field-row {
+  display:grid;
+  grid-template-columns:92px minmax(0,1fr);
+  gap:0.45rem;
+}
+.cost-currency {
+  padding-left:0.6rem;
+  padding-right:1.8rem;
+  font-family:var(--headline);
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:0.06em;
+}
+.cost-amount {
+  font-variant-numeric:tabular-nums;
+}
 .ea-form-grid {
   grid-template-columns:1fr 1fr;
   gap:0.9rem;
@@ -7355,56 +7435,56 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
           </button>
         </div>
         <div id="rdAchievementContextWrap" style="display:none">
-          <div class="fgrid" style="grid-template-columns:1fr 1fr">
+          <div class="fgrid rd-grid-2">
             <div class="fg"><label class="fl">Elevation Gain (m)</label><input class="fi" id="rdAcElevation" type="number" min="0" placeholder="500"></div>
             <div class="fg"><label class="fl">Temperature (°C)</label><input class="fi" id="rdAcTemp" type="number" step="0.1" placeholder="32"></div>
           </div>
-          <div class="fgrid" style="grid-template-columns:1fr 1fr 1fr">
-            <div class="fg"><label class="fl">Start Time</label><input class="fi" id="rdAcStartTime" type="time"></div>
+          <div class="fgrid rd-grid-3">
+            <div class="fg rd-mobile-span-2"><label class="fl">Start Time</label><input class="fi" id="rdAcStartTime" type="time"></div>
             <div class="fg"><label class="fl">Altitude (m)</label><input class="fi" id="rdAcAltitude" type="number" min="0" placeholder="3000"></div>
             <div class="fg"><label class="fl">HR Zone 4/5 %</label><input class="fi" id="rdAcHrLoad" type="number" min="0" max="100" placeholder="70"></div>
           </div>
-          <div class="fgrid" style="grid-template-columns:1fr 1fr 1fr">
+          <div class="fgrid rd-grid-3">
             <div class="fg"><label class="fl">Run Club Years</label><input class="fi" id="rdAcClubYears" type="number" min="0" placeholder="3"></div>
             <div class="fg"><label class="fl">Bib Number</label><input class="fi" id="rdAcBibNumber" placeholder="2784"></div>
             <div class="fg"><label class="fl">Cutoff Percentile</label><input class="fi" id="rdAcCutoffPct" type="number" min="0" max="100" placeholder="5"></div>
           </div>
-          <div class="fgrid" style="grid-template-columns:repeat(3,1fr)">
-            <label class="flatlay-item-row" style="padding:0.65rem 0.8rem"><span>After Sunset</span><input id="rdAcAfterSunset" type="checkbox"></label>
-            <label class="flatlay-item-row" style="padding:0.65rem 0.8rem"><span>Negative Split</span><input id="rdAcNegativeSplit" type="checkbox"></label>
-            <label class="flatlay-item-row" style="padding:0.65rem 0.8rem"><span>Almost DNF</span><input id="rdAcAlmostDnf" type="checkbox"></label>
-            <label class="flatlay-item-row" style="padding:0.65rem 0.8rem"><span>Injury Comeback</span><input id="rdAcComeback" type="checkbox"></label>
-            <label class="flatlay-item-row" style="padding:0.65rem 0.8rem"><span>Solo Race</span><input id="rdAcSolo" type="checkbox"></label>
-            <label class="flatlay-item-row" style="padding:0.65rem 0.8rem"><span>Desert Terrain</span><input id="rdAcDesert" type="checkbox"></label>
-            <label class="flatlay-item-row" style="padding:0.65rem 0.8rem"><span>Mountain Trail</span><input id="rdAcMountain" type="checkbox"></label>
-            <label class="flatlay-item-row" style="padding:0.65rem 0.8rem"><span>Coastal</span><input id="rdAcCoastal" type="checkbox"></label>
-            <label class="flatlay-item-row" style="padding:0.65rem 0.8rem"><span>Open Water</span><input id="rdAcOpenWater" type="checkbox"></label>
-            <label class="flatlay-item-row" style="padding:0.65rem 0.8rem"><span>Official Pacer</span><input id="rdAcPacer" type="checkbox"></label>
-            <label class="flatlay-item-row" style="padding:0.65rem 0.8rem"><span>Helped First Timer</span><input id="rdAcGuide" type="checkbox"></label>
-            <label class="flatlay-item-row" style="padding:0.65rem 0.8rem"><span>Photo Uploaded</span><input id="rdAcPhotoUploaded" type="checkbox"></label>
+          <div class="rd-flag-grid">
+            <label class="rd-flag-card"><span class="rd-flag-copy">After Sunset</span><input id="rdAcAfterSunset" type="checkbox"></label>
+            <label class="rd-flag-card"><span class="rd-flag-copy">Negative Split</span><input id="rdAcNegativeSplit" type="checkbox"></label>
+            <label class="rd-flag-card"><span class="rd-flag-copy">Almost DNF</span><input id="rdAcAlmostDnf" type="checkbox"></label>
+            <label class="rd-flag-card"><span class="rd-flag-copy">Injury Comeback</span><input id="rdAcComeback" type="checkbox"></label>
+            <label class="rd-flag-card"><span class="rd-flag-copy">Solo Race</span><input id="rdAcSolo" type="checkbox"></label>
+            <label class="rd-flag-card"><span class="rd-flag-copy">Desert Terrain</span><input id="rdAcDesert" type="checkbox"></label>
+            <label class="rd-flag-card"><span class="rd-flag-copy">Mountain Trail</span><input id="rdAcMountain" type="checkbox"></label>
+            <label class="rd-flag-card"><span class="rd-flag-copy">Coastal</span><input id="rdAcCoastal" type="checkbox"></label>
+            <label class="rd-flag-card"><span class="rd-flag-copy">Open Water</span><input id="rdAcOpenWater" type="checkbox"></label>
+            <label class="rd-flag-card"><span class="rd-flag-copy">Official Pacer</span><input id="rdAcPacer" type="checkbox"></label>
+            <label class="rd-flag-card"><span class="rd-flag-copy">Helped First Timer</span><input id="rdAcGuide" type="checkbox"></label>
+            <label class="rd-flag-card"><span class="rd-flag-copy">Photo Uploaded</span><input id="rdAcPhotoUploaded" type="checkbox"></label>
           </div>
         </div>
       </div>
       <!-- Notes -->
       <div class="rd-section">
         <div class="rd-label">Race Conditions</div>
-        <div class="fgrid" style="grid-template-columns:1fr 1fr 1fr">
-          <div class="fg"><label class="fl">Start Time</label><input class="fi" id="rdStartTime" type="time"></div>
+        <div class="fgrid rd-grid-3">
+          <div class="fg rd-mobile-span-2"><label class="fl">Start Time</label><input class="fi" id="rdStartTime" type="time"></div>
           <div class="fg"><label class="fl">Surface</label><input class="fi" id="rdSurface" placeholder="Road, trail, track…"></div>
           <div class="fg"><label class="fl">Terrain</label><input class="fi" id="rdTerrain" placeholder="Flat, rolling, mountain…"></div>
         </div>
-        <div class="fgrid" style="grid-template-columns:1fr 1fr 1fr">
-          <div class="fg"><label class="fl">Course Type</label><input class="fi" id="rdCourseType" placeholder="Loop, point-to-point…"></div>
+        <div class="fgrid rd-grid-3">
+          <div class="fg rd-mobile-span-2"><label class="fl">Course Type</label><input class="fi" id="rdCourseType" placeholder="Loop, point-to-point…"></div>
           <div class="fg"><label class="fl">Elevation Profile</label><input class="fi" id="rdElevationProfile" placeholder="Flat, rolling, hilly…"></div>
           <div class="fg"><label class="fl">Travel Context</label><input class="fi" id="rdTravelContext" placeholder="Local, regional, flight…"></div>
         </div>
-        <div class="fgrid" style="grid-template-columns:1fr 1fr 1fr 1fr">
+        <div class="fgrid rd-grid-4">
           <div class="fg"><label class="fl">Temp High °C</label><input class="fi" id="rdTempHigh" type="number" step="0.1" placeholder="24"></div>
           <div class="fg"><label class="fl">Temp Low °C</label><input class="fi" id="rdTempLow" type="number" step="0.1" placeholder="15"></div>
           <div class="fg"><label class="fl">Humidity %</label><input class="fi" id="rdHumidity" type="number" min="0" max="100" placeholder="72"></div>
           <div class="fg"><label class="fl">Wind km/h</label><input class="fi" id="rdWind" type="number" step="0.1" placeholder="18"></div>
         </div>
-        <div class="fgrid" style="grid-template-columns:1fr 1fr">
+        <div class="fgrid rd-grid-2">
           <div class="fg"><label class="fl">Result Confidence</label><input class="fi" id="rdResultConfidence" type="number" min="0" max="100" placeholder="90"></div>
           <div class="fg"><label class="fl">Import Provenance</label><input class="fi" id="rdImportProvenance" placeholder="manual, screenshot, Strava…"></div>
         </div>
@@ -7425,10 +7505,34 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
       <div class="rd-section">
         <div class="rd-label">Race Costs <span style="font-size:10px;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:.55rem">
-          <div class="fg"><label class="fl" style="font-size:10px">Entry Fee</label><input class="fi" id="rdCostReg" type="number" step="1" placeholder="0" min="0"></div>
-          <div class="fg"><label class="fl" style="font-size:10px">Travel</label><input class="fi" id="rdCostFlight" type="number" step="1" placeholder="0" min="0"></div>
-          <div class="fg"><label class="fl" style="font-size:10px">Hotel</label><input class="fi" id="rdCostHotel" type="number" step="1" placeholder="0" min="0"></div>
-          <div class="fg"><label class="fl" style="font-size:10px">Gear</label><input class="fi" id="rdCostGear" type="number" step="1" placeholder="0" min="0"></div>
+          <div class="fg">
+            <label class="fl" style="font-size:10px">Entry Fee</label>
+            <div class="cost-field-row">
+              <select class="fs cost-currency" id="rdCostRegCurrency" aria-label="Entry fee currency"></select>
+              <input class="fi cost-amount" id="rdCostReg" type="number" step="1" placeholder="0" min="0">
+            </div>
+          </div>
+          <div class="fg">
+            <label class="fl" style="font-size:10px">Travel</label>
+            <div class="cost-field-row">
+              <select class="fs cost-currency" id="rdCostFlightCurrency" aria-label="Travel currency"></select>
+              <input class="fi cost-amount" id="rdCostFlight" type="number" step="1" placeholder="0" min="0">
+            </div>
+          </div>
+          <div class="fg">
+            <label class="fl" style="font-size:10px">Hotel</label>
+            <div class="cost-field-row">
+              <select class="fs cost-currency" id="rdCostHotelCurrency" aria-label="Hotel currency"></select>
+              <input class="fi cost-amount" id="rdCostHotel" type="number" step="1" placeholder="0" min="0">
+            </div>
+          </div>
+          <div class="fg">
+            <label class="fl" style="font-size:10px">Gear</label>
+            <div class="cost-field-row">
+              <select class="fs cost-currency" id="rdCostGearCurrency" aria-label="Gear currency"></select>
+              <input class="fi cost-amount" id="rdCostGear" type="number" step="1" placeholder="0" min="0">
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -13725,25 +13829,133 @@ function getRaceTemperatureC(race = {}) {
   return race.weatherSummary?.tempHigh ?? race.airTempHighC ?? race.weatherSummary?.tempLow ?? race.airTempLowC ?? null;
 }
 
+const DEFAULT_COST_CURRENCY = 'USD';
+const COST_CURRENCY_OPTIONS = [
+  { code: 'USD', label: 'USD $' },
+  { code: 'EUR', label: 'EUR €' },
+  { code: 'GBP', label: 'GBP £' },
+  { code: 'ZAR', label: 'ZAR R' },
+  { code: 'AUD', label: 'AUD A$' },
+  { code: 'CAD', label: 'CAD C$' },
+  { code: 'AED', label: 'AED د.إ' },
+  { code: 'JPY', label: 'JPY ¥' },
+];
+const RACE_COST_FIELDS = [
+  { key: 'registration', legacyKey: 'registrationCost', amountId: 'rdCostReg', currencyId: 'rdCostRegCurrency' },
+  { key: 'flight', legacyKey: 'flightCost', amountId: 'rdCostFlight', currencyId: 'rdCostFlightCurrency' },
+  { key: 'hotel', legacyKey: 'hotelCost', amountId: 'rdCostHotel', currencyId: 'rdCostHotelCurrency' },
+  { key: 'gear', legacyKey: 'gearCost', amountId: 'rdCostGear', currencyId: 'rdCostGearCurrency' },
+];
+const RACE_COST_FIELD_META = Object.fromEntries(RACE_COST_FIELDS.map(field => [field.key, field]));
+
+function initRaceCostCurrencySelects() {
+  const optionsHtml = COST_CURRENCY_OPTIONS
+    .map(option => `<option value="${option.code}">${option.label}</option>`)
+    .join('');
+  RACE_COST_FIELDS.forEach(field => {
+    const select = document.getElementById(field.currencyId);
+    if (!select) return;
+    if (!select.options.length) select.innerHTML = optionsHtml;
+    if (!select.value) select.value = DEFAULT_COST_CURRENCY;
+  });
+}
+
+function getRaceCostAmount(race = {}, key) {
+  const field = RACE_COST_FIELD_META[key];
+  if (!field) return 0;
+  const raw = race[field.legacyKey] ?? race.costs?.[key];
+  const amount = Number(raw);
+  return Number.isFinite(amount) && amount > 0 ? amount : 0;
+}
+
+function getRaceCostCurrency(race = {}, key) {
+  const currency = race.costs?.[`${key}Currency`];
+  return COST_CURRENCY_OPTIONS.some(option => option.code === currency) ? currency : DEFAULT_COST_CURRENCY;
+}
+
+function populateRaceCostFields(race = {}) {
+  initRaceCostCurrencySelects();
+  RACE_COST_FIELDS.forEach(field => {
+    const amountEl = document.getElementById(field.amountId);
+    const currencyEl = document.getElementById(field.currencyId);
+    if (amountEl) {
+      const amount = getRaceCostAmount(race, field.key);
+      amountEl.value = amount > 0 ? amount : '';
+    }
+    if (currencyEl) currencyEl.value = getRaceCostCurrency(race, field.key);
+  });
+}
+
+function collectRaceCostFields() {
+  const amounts = {};
+  const costs = {};
+  RACE_COST_FIELDS.forEach(field => {
+    const amountEl = document.getElementById(field.amountId);
+    const currencyEl = document.getElementById(field.currencyId);
+    const amount = amountEl?.value ? Number(amountEl.value) : 0;
+    const normalizedAmount = Number.isFinite(amount) && amount > 0 ? amount : 0;
+    amounts[field.legacyKey] = normalizedAmount;
+    costs[field.key] = normalizedAmount;
+    costs[`${field.key}Currency`] = currencyEl?.value || DEFAULT_COST_CURRENCY;
+  });
+  return { amounts, costs };
+}
+
+function getRaceCostEntries(race = {}) {
+  return RACE_COST_FIELDS.map(field => {
+    const amount = getRaceCostAmount(race, field.key);
+    if (amount <= 0) return null;
+    return {
+      fieldKey: field.key,
+      amount,
+      currency: getRaceCostCurrency(race, field.key),
+    };
+  }).filter(Boolean);
+}
+
+function sumCostEntriesByCurrency(entries = []) {
+  const totals = new Map();
+  entries.forEach(entry => {
+    totals.set(entry.currency, (totals.get(entry.currency) || 0) + entry.amount);
+  });
+  return [...totals.entries()]
+    .map(([currency, amount]) => ({ currency, amount }))
+    .sort((a, b) => b.amount - a.amount || a.currency.localeCompare(b.currency));
+}
+
+function divideCurrencyTotals(totals = [], divisor = 0) {
+  if (!divisor) return [];
+  return totals.map(total => ({
+    currency: total.currency,
+    amount: total.amount / divisor,
+  }));
+}
+
 function getRaceTotalCost(race = {}) {
-  const readNum = value => {
-    const n = Number(value);
-    return Number.isFinite(n) ? n : 0;
-  };
-  const costs = race.costs || {};
-  const total = readNum(race.totalCost) || (
-    readNum(race.registrationCost ?? costs.registration) +
-    readNum(race.flightCost ?? costs.flight) +
-    readNum(race.hotelCost ?? costs.hotel) +
-    readNum(race.gearCost ?? costs.gear)
-  );
+  const total = getRaceCostEntries(race).reduce((sum, entry) => sum + entry.amount, 0);
   return total > 0 ? total : 0;
 }
 
-function formatMoneyCompact(amount) {
+function formatMoneyCompact(amount, currency = DEFAULT_COST_CURRENCY) {
   if (!Number.isFinite(amount) || amount <= 0) return '—';
-  if (amount >= 1000) return `$${(amount / 1000).toFixed(1)}k`;
-  return `$${Math.round(amount)}`;
+  const compact = amount >= 1000;
+  try {
+    return new Intl.NumberFormat('en', {
+      style: 'currency',
+      currency,
+      notation: compact ? 'compact' : 'standard',
+      maximumFractionDigits: compact ? 1 : 0,
+    }).format(amount);
+  } catch(_err) {
+    return compact
+      ? `${currency} ${(amount / 1000).toFixed(1)}k`
+      : `${currency} ${Math.round(amount)}`;
+  }
+}
+
+function formatCurrencyTotalsCompact(totals = []) {
+  if (!totals.length) return '—';
+  return totals.map(total => formatMoneyCompact(total.amount, total.currency)).join(' · ');
 }
 
 function computePerformanceTimeline(sourceRaces = races) {
@@ -13892,25 +14104,25 @@ function renderAthleteRacePersonality() {
 function computeRaceCostTracker(sourceRaces = races) {
   const finished = (sourceRaces || []).filter(r => r.date);
   const withCosts = finished.map(race => {
-    const total = getRaceTotalCost(race);
-    return total > 0 ? { race, total } : null;
+    const entries = getRaceCostEntries(race);
+    return entries.length ? { race, entries } : null;
   }).filter(Boolean);
   if (!withCosts.length) return null;
-  const total = withCosts.reduce((sum, item) => sum + item.total, 0);
+  const total = sumCostEntriesByCurrency(withCosts.flatMap(item => item.entries));
   const pbIds = new Set(Object.values(buildPBMap()).filter(Boolean).map(r => r.id));
   const pbCostCount = withCosts.filter(item => pbIds.has(item.race.id)).length;
-  const registration = withCosts.reduce((sum, item) => sum + Number(item.race.registrationCost ?? item.race.costs?.registration ?? 0), 0);
-  const travel = withCosts.reduce((sum, item) => sum + Number(item.race.flightCost ?? item.race.costs?.flight ?? 0) + Number(item.race.hotelCost ?? item.race.costs?.hotel ?? 0), 0);
-  const gear = withCosts.reduce((sum, item) => sum + Number(item.race.gearCost ?? item.race.costs?.gear ?? 0), 0);
+  const registration = withCosts.flatMap(item => item.entries.filter(entry => entry.fieldKey === 'registration'));
+  const travel = withCosts.flatMap(item => item.entries.filter(entry => entry.fieldKey === 'flight' || entry.fieldKey === 'hotel'));
+  const gear = withCosts.flatMap(item => item.entries.filter(entry => entry.fieldKey === 'gear'));
   return {
     raceCount: withCosts.length,
     total,
-    avg: total / withCosts.length,
-    perPb: pbCostCount ? total / pbCostCount : null,
+    avg: divideCurrencyTotals(total, withCosts.length),
+    perPb: divideCurrencyTotals(total, pbCostCount),
     rows: [
-      { name: 'Registration', value: registration, detail: `${withCosts.filter(item => Number(item.race.registrationCost ?? item.race.costs?.registration ?? 0) > 0).length} race fees tracked` },
-      { name: 'Travel + Hotel', value: travel, detail: `${withCosts.filter(item => Number(item.race.flightCost ?? item.race.costs?.flight ?? 0) + Number(item.race.hotelCost ?? item.race.costs?.hotel ?? 0) > 0).length} trip budgets tracked` },
-      { name: 'Gear', value: gear, detail: `${withCosts.filter(item => Number(item.race.gearCost ?? item.race.costs?.gear ?? 0) > 0).length} race gear entries logged` },
+      { name: 'Registration', totals: sumCostEntriesByCurrency(registration), detail: `${withCosts.filter(item => item.entries.some(entry => entry.fieldKey === 'registration')).length} race fees tracked` },
+      { name: 'Travel + Hotel', totals: sumCostEntriesByCurrency(travel), detail: `${withCosts.filter(item => item.entries.some(entry => entry.fieldKey === 'flight' || entry.fieldKey === 'hotel')).length} trip budgets tracked` },
+      { name: 'Gear', totals: sumCostEntriesByCurrency(gear), detail: `${withCosts.filter(item => item.entries.some(entry => entry.fieldKey === 'gear')).length} race gear entries logged` },
     ],
   };
 }
@@ -13933,20 +14145,20 @@ function renderAthleteRaceCostTracker() {
         <div class="ath-cost-name">${escapeHtml(row.name)}</div>
         <div class="ath-cost-sub">${escapeHtml(row.detail)}</div>
       </div>
-      <div class="ath-cost-value">${formatMoneyCompact(row.value)}</div>
+      <div class="ath-cost-value">${formatCurrencyTotalsCompact(row.totals)}</div>
     </div>`).join('')}</div>
     <div class="ath-cost-total">
       <div class="ath-goal-pill">
         <div class="ath-goal-pill-k">Tracked Spend</div>
-        <div class="ath-goal-pill-v">${formatMoneyCompact(summary.total)}</div>
+        <div class="ath-goal-pill-v">${formatCurrencyTotalsCompact(summary.total)}</div>
       </div>
       <div class="ath-goal-pill">
         <div class="ath-goal-pill-k">Cost Per Race</div>
-        <div class="ath-goal-pill-v">${formatMoneyCompact(summary.avg)}</div>
+        <div class="ath-goal-pill-v">${formatCurrencyTotalsCompact(summary.avg)}</div>
       </div>
       <div class="ath-goal-pill">
         <div class="ath-goal-pill-k">Cost Per PB</div>
-        <div class="ath-goal-pill-v">${summary.perPb ? formatMoneyCompact(summary.perPb) : '—'}</div>
+        <div class="ath-goal-pill-v">${summary.perPb.length ? formatCurrencyTotalsCompact(summary.perPb) : '—'}</div>
       </div>
     </div>`;
 }
@@ -16870,10 +17082,7 @@ function openRaceDetailFromParsed(obj) {
   document.getElementById('rdAgeCatPos').value  = obj.ageCategoryPos || '';
   document.getElementById('rdGenderPos').value  = obj.genderPos      || '';
   document.getElementById('rdNotes').value      = '';
-  document.getElementById('rdCostReg').value    = '';
-  document.getElementById('rdCostFlight').value = '';
-  document.getElementById('rdCostHotel').value  = '';
-  document.getElementById('rdCostGear').value   = '';
+  populateRaceCostFields(obj);
   document.getElementById('rdStartTime').value = obj.startTime || '';
   document.getElementById('rdSurface').value = obj.surface || '';
   document.getElementById('rdTerrain').value = obj.terrain || '';
@@ -17425,10 +17634,7 @@ function openRaceDetail(id) {
   document.getElementById('rdAgeCatPos').value = r.ageCategoryPos || '';
   document.getElementById('rdGenderPos').value = r.genderPos || '';
   document.getElementById('rdNotes').value = r.notes || '';
-  document.getElementById('rdCostReg').value    = r.registrationCost || r.costs?.registration || '';
-  document.getElementById('rdCostFlight').value = r.flightCost || r.costs?.flight || '';
-  document.getElementById('rdCostHotel').value  = r.hotelCost || r.costs?.hotel || '';
-  document.getElementById('rdCostGear').value   = r.gearCost || r.costs?.gear || '';
+  populateRaceCostFields(r);
   document.getElementById('rdStartTime').value = r.startTime || r.achievementContext?.startTime || '';
   document.getElementById('rdSurface').value = r.surface || '';
   document.getElementById('rdTerrain').value = r.terrain || '';
@@ -17486,6 +17692,7 @@ function _collectRdFields() {
   const rm = parseInt(document.getElementById('rdTmM').value)||0;
   const rs = parseInt(document.getElementById('rdTmS').value)||0;
   const dist = document.getElementById('rdDistSel').value;
+  const raceCostState = collectRaceCostFields();
   const obj = {
     name:         document.getElementById('rdName').value.trim(),
     type:         document.getElementById('rdType').value || 'run',
@@ -17502,10 +17709,8 @@ function _collectRdFields() {
     ageCategoryPos:document.getElementById('rdAgeCatPos').value.trim(),
     genderPos:    document.getElementById('rdGenderPos').value.trim(),
     notes:        document.getElementById('rdNotes').value.trim(),
-    registrationCost: document.getElementById('rdCostReg').value ? Number(document.getElementById('rdCostReg').value) : 0,
-    flightCost:   document.getElementById('rdCostFlight').value ? Number(document.getElementById('rdCostFlight').value) : 0,
-    hotelCost:    document.getElementById('rdCostHotel').value ? Number(document.getElementById('rdCostHotel').value) : 0,
-    gearCost:     document.getElementById('rdCostGear').value ? Number(document.getElementById('rdCostGear').value) : 0,
+    ...raceCostState.amounts,
+    costs:        raceCostState.costs,
     startTime:    document.getElementById('rdStartTime').value || '',
     surface:      document.getElementById('rdSurface').value.trim(),
     terrain:      document.getElementById('rdTerrain').value.trim(),
@@ -17592,6 +17797,9 @@ function saveRaceDetail() {
   r.ageCategoryPos = document.getElementById('rdAgeCatPos').value.trim();
   r.genderPos = document.getElementById('rdGenderPos').value.trim();
   r.notes = document.getElementById('rdNotes').value.trim();
+  const raceCostState = collectRaceCostFields();
+  Object.assign(r, raceCostState.amounts);
+  r.costs = { ...(r.costs || {}), ...raceCostState.costs };
   r.startTime = document.getElementById('rdStartTime').value || '';
   r.surface = document.getElementById('rdSurface').value.trim();
   r.terrain = document.getElementById('rdTerrain').value.trim();
@@ -21603,6 +21811,7 @@ function renderThemePicker() {
 
 document.addEventListener('DOMContentLoaded', () => {
   setAuthFieldsInteractive(false);
+  initRaceCostCurrencySelects();
   ['mN', 'nrN', 'rdName'].forEach(id => hardenCatalogSearchInput(document.getElementById(id)));
   document.querySelectorAll('.modal-overlay').forEach(overlay => {
     const modal = overlay.querySelector('.modal');
