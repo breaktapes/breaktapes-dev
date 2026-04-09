@@ -13470,6 +13470,7 @@ function computeRacePersonality(sourceRaces = races) {
   const finished = (sourceRaces || []).filter(r => r.date);
   if (!finished.length) return [];
   const trend = computeTrendAnalysis(finished);
+  if (!trend) return [];
   const longRaces = finished.filter(r => (r.distKm || DIST_KM[r.distance] || 0) >= 21);
   const hotRaces = finished.filter(r => {
     const temp = getRaceTemperatureC(r);
