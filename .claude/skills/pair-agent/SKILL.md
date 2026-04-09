@@ -1,0 +1,1 @@
+/Users/akrish/DEV/.claude/worktrees/unruffled-dhawan/.claude/skills/gstack/pair-agent/SKILL.md

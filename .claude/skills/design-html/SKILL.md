@@ -1,0 +1,1 @@
+/Users/akrish/DEV/.claude/worktrees/unruffled-dhawan/.claude/skills/gstack/design-html/SKILL.md
