@@ -5159,6 +5159,35 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   background: var(--surface3); border: 1px solid var(--border); border-radius: 5px;
   padding: 0.75rem 1rem; margin-bottom: 1rem;
 }
+/* Public profile settings section */
+.public-profile-section { margin-bottom: 1.25rem; }
+.settings-section-label {
+  font-family: var(--headline); font-weight: 800; font-size: 11px;
+  letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted);
+  margin-bottom: 0.75rem;
+}
+/* Toggle switch */
+.toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+  position: absolute; cursor: pointer; inset: 0;
+  background: var(--surface3); border: 1px solid var(--border2); border-radius: 999px;
+  transition: background 0.2s;
+}
+.toggle-slider::before {
+  content: ''; position: absolute; height: 18px; width: 18px; left: 2px; bottom: 2px;
+  background: var(--muted); border-radius: 50%; transition: transform 0.2s, background 0.2s;
+}
+.toggle-switch input:checked + .toggle-slider { background: rgba(var(--orange-ch),0.15); border-color: rgba(var(--orange-ch),0.4); }
+.toggle-switch input:checked + .toggle-slider::before { transform: translateX(20px); background: var(--orange); }
+/* Share profile button on athlete page */
+.share-profile-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(var(--orange-ch),0.1); border: 1px solid rgba(var(--orange-ch),0.25);
+  color: var(--orange); font-family: var(--body); font-weight: 600; font-size: 14px;
+  padding: 10px 16px; border-radius: 8px; cursor: pointer; width: 100%;
+  justify-content: center;
+}
 .auth-status-email { color: var(--white); font-weight: 600; }
 .auth-row {
   display:flex; align-items:center; justify-content:space-between; gap:0.75rem;
@@ -6385,6 +6414,13 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
         <div class="ath-stat"><div class="ath-stat-num" id="as-y">—</div><div class="ath-stat-label">Yrs Racing</div></div>
       </div>
     </div>
+    <!-- Share Profile (shown when public profile is set up) -->
+    <div id="shareProfileBanner" style="display:none;padding:0 0 16px">
+      <button class="share-profile-btn" onclick="copyProfileLink()" id="shareProfileBtn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+        Share Profile
+      </button>
+    </div>
     <!-- Bio -->
     <div class="ath-section">
       <div class="ath-section-h">About</div>
@@ -7425,6 +7461,37 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
           <button class="btn-ghost" type="button" id="settingsDeleteBtn" onclick="openDeleteAccountModal()" style="display:none;width:100%;border-color:rgba(255,107,107,0.3);color:#ff8e8e">Delete Account</button>
         </div>
       </div>
+      <!-- Public Profile -->
+      <div class="public-profile-section" id="publicProfileSection" style="display:none">
+        <div class="settings-section-label">Public Profile</div>
+        <div class="fgrid" style="grid-template-columns:1fr">
+          <div class="fg">
+            <label class="fl" for="settingsUsername">Username</label>
+            <div class="fi-wrap">
+              <input class="fi" id="settingsUsername" type="text" placeholder="e.g. ayushk" autocomplete="off" maxlength="20" oninput="onUsernameInput()">
+            </div>
+            <div id="usernameHint" style="font-size:12px;margin-top:4px;color:var(--muted)">3–20 characters, letters, numbers and hyphens only.</div>
+          </div>
+          <div class="fg" style="flex-direction:row;align-items:center;justify-content:space-between;gap:12px">
+            <div>
+              <div class="fl" style="margin-bottom:2px">Make profile public</div>
+              <div style="font-size:12px;color:var(--muted)">Allow anyone to view your race history at your profile URL</div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="settingsIsPublic" onchange="onIsPublicToggle()">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div id="profileLinkPreview" style="display:none">
+            <div class="fl" style="margin-bottom:6px">Your profile URL</div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="fi" id="profileLinkDisplay" style="flex:1;color:var(--muted);font-size:13px;cursor:default;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
+              <button class="btn-ghost" style="flex-shrink:0;padding:8px 12px;font-size:12px" onclick="copyProfileLink()">Copy</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="fgrid" style="grid-template-columns:1fr">
         <div class="fg" id="settingsAiKeyWrap">
           <label class="fl">Anthropic API Key</label>
@@ -9596,7 +9663,9 @@ function buildRemoteStatePayload() {
     races,
     athlete,
     next_race: nextRace,
-    upcoming_races: upcomingRaces
+    upcoming_races: upcomingRaces,
+    username: athlete?.username || null,
+    is_public: athlete?.is_public === true,
   };
 }
 
@@ -10040,6 +10109,15 @@ async function refreshAuthState(session) {
 async function initAuth() {
   const client = initSupabaseClient();
   if (!client) return;
+  // Handle ?join_context= param from public profile CTA
+  const _joinCtx = new URLSearchParams(window.location.search).get('join_context');
+  if (_joinCtx && _joinCtx.startsWith('compare-with-')) {
+    const _ctxName = decodeURIComponent(_joinCtx.replace('compare-with-', '').replace(/-/g, ' '));
+    const headline = document.querySelector('#landing-screen .landing-headline');
+    if (headline) {
+      headline.innerHTML = `${_ctxName} is on BREAKTAPES.<br><em>Track your race life too.</em>`;
+    }
+  }
   let { data } = await client.auth.getSession();
   let session = data.session;
   if (!session) {
@@ -17667,6 +17745,7 @@ function renderAthlete(){
     document.getElementById('athAviImg').style.display='block';
     document.getElementById('athAviTxt').style.display='none';
   }
+  updateShareProfileButton();
   updateMenuFooter();
 }
 function uploadAvi(e){
@@ -18933,6 +19012,18 @@ function openSettings(){
     document.getElementById('owUserId').value = owCfg.uid || '';
   }
   renderThemePicker();
+  // Public profile section: show only when signed in
+  const pubSection = document.getElementById('publicProfileSection');
+  if (pubSection) {
+    pubSection.style.display = authUser ? '' : 'none';
+    if (authUser) {
+      const usernameEl = document.getElementById('settingsUsername');
+      const isPublicEl = document.getElementById('settingsIsPublic');
+      if (usernameEl) usernameEl.value = athlete?.username || '';
+      if (isPublicEl) isPublicEl.checked = athlete?.is_public === true;
+      updateProfileLinkPreview();
+    }
+  }
   updateAuthUI();
   updateAiFeatureVisibility();
   document.getElementById('settingsModal').classList.add('open');
@@ -19062,7 +19153,132 @@ async function submitDeleteAccount() {
 function saveSettings(){
   localStorage.setItem('fl2_apikey', document.getElementById('setApiKey').value.trim());
   updateAiFeatureVisibility();
+  // Save public profile settings if signed in
+  if (authUser) {
+    const usernameEl = document.getElementById('settingsUsername');
+    const isPublicEl = document.getElementById('settingsIsPublic');
+    if (usernameEl && isPublicEl) {
+      const newUsername = usernameEl.value.trim().toLowerCase() || null;
+      const newIsPublic = isPublicEl.checked;
+      // Validate username before saving
+      if (newUsername && !/^[a-z0-9][a-z0-9-]{1,18}[a-z0-9]$/.test(newUsername)) {
+        showBtToast('Username must be 3–20 characters: letters, numbers and hyphens only.');
+        return;
+      }
+      athlete = { ...athlete, username: newUsername, is_public: newIsPublic };
+      sv('fl2_ath', athlete);
+      scheduleRemoteStateSync();
+    }
+  }
   closeM('settingsModal');
+}
+
+/* ============================
+   PUBLIC PROFILE
+   ============================ */
+
+let _usernameCheckTimer = null;
+
+function onUsernameInput() {
+  const el = document.getElementById('settingsUsername');
+  const hint = document.getElementById('usernameHint');
+  if (!el || !hint) return;
+  const val = el.value.trim().toLowerCase();
+  clearTimeout(_usernameCheckTimer);
+  if (!val) {
+    hint.textContent = '3–20 characters, letters, numbers and hyphens only.';
+    hint.style.color = 'var(--muted)';
+    updateProfileLinkPreview();
+    return;
+  }
+  if (!/^[a-z0-9][a-z0-9-]{1,18}[a-z0-9]$/.test(val)) {
+    hint.textContent = 'Invalid format — use letters, numbers and hyphens (3–20 chars).';
+    hint.style.color = 'var(--orange)';
+    updateProfileLinkPreview();
+    return;
+  }
+  hint.textContent = 'Checking availability…';
+  hint.style.color = 'var(--muted)';
+  _usernameCheckTimer = setTimeout(() => checkUsernameAvailability(val), 500);
+}
+
+async function checkUsernameAvailability(username) {
+  const hint = document.getElementById('usernameHint');
+  if (!hint) return;
+  // If it's the same as the current athlete username, it's always available
+  if (username === (athlete?.username || '').toLowerCase()) {
+    hint.textContent = 'Your current username.';
+    hint.style.color = 'var(--muted)';
+    updateProfileLinkPreview();
+    return;
+  }
+  const client = initSupabaseClient();
+  if (!client) return;
+  try {
+    const { data, error } = await client
+      .from('user_state')
+      .select('user_id')
+      .eq('username', username)
+      .maybeSingle();
+    if (error) throw error;
+    if (data) {
+      hint.textContent = '@' + username + ' is taken — try another.';
+      hint.style.color = 'var(--orange)';
+    } else {
+      hint.textContent = '@' + username + ' is available!';
+      hint.style.color = 'var(--green)';
+    }
+  } catch (_) {
+    hint.textContent = 'Could not check availability — try again.';
+    hint.style.color = 'var(--muted)';
+  }
+  updateProfileLinkPreview();
+}
+
+function onIsPublicToggle() {
+  updateProfileLinkPreview();
+}
+
+function updateProfileLinkPreview() {
+  const preview = document.getElementById('profileLinkPreview');
+  const display = document.getElementById('profileLinkDisplay');
+  if (!preview || !display) return;
+  const usernameEl = document.getElementById('settingsUsername');
+  const isPublicEl = document.getElementById('settingsIsPublic');
+  const username = usernameEl?.value.trim().toLowerCase();
+  const isPublic = isPublicEl?.checked;
+  if (username && isPublic && /^[a-z0-9][a-z0-9-]{1,18}[a-z0-9]$/.test(username)) {
+    preview.style.display = '';
+    display.textContent = 'app.breaktapes.com/u/' + username;
+  } else {
+    preview.style.display = 'none';
+  }
+}
+
+function copyProfileLink() {
+  const username = athlete?.username;
+  if (!username) { showBtToast('Set your username in Settings first.'); return; }
+  if (!athlete?.is_public) { showBtToast('Enable public profile in Settings first.'); return; }
+  const url = 'https://app.breaktapes.com/u/' + encodeURIComponent(username);
+  navigator.clipboard.writeText(url).then(() => {
+    showBtToast('Profile link copied!');
+  }).catch(() => {
+    // Fallback for older browsers
+    const el = document.createElement('input');
+    el.value = url;
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand('copy');
+    document.body.removeChild(el);
+    showBtToast('Profile link copied!');
+  });
+}
+
+function updateShareProfileButton() {
+  const banner = document.getElementById('shareProfileBanner');
+  if (!banner) return;
+  const show = !!(authUser && athlete?.username && athlete?.is_public);
+  banner.style.display = show ? '' : 'none';
 }
 
 /* ============================
