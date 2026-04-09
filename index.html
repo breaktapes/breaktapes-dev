@@ -4246,30 +4246,20 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   margin: 0 auto 0.9rem;
   display: flex; align-items: center; justify-content: center;
   position: relative;
-  /* Bright radial spotlight: center is light (medal shows through multiply), edges fade dark */
-  background:
-    radial-gradient(ellipse 65% 72% at 50% 58%,
-      var(--spot-b, rgba(255,225,100,0.88)) 0%,
-      var(--spot-m, rgba(200,150,20,0.42)) 44%,
-      transparent 68%
-    );
+  background: var(--surface2);
   border-radius: 10px;
   overflow: hidden;
 }
 .mw-art svg { width: 100%; height: 100%; max-height: 190px; }
 
-/* Real medal photos — multiply removes white bg; bright backdrop makes colors pop */
+/* Real medal photos — transparent PNGs (processed by rmbg or flood-fill) */
 .mw-photo {
   max-height: 195px; max-width: 100%;
   object-fit: contain;
-  mix-blend-mode: multiply;
-  /* Higher brightness so medal colors survive the multiply against the spotlight */
-  filter: contrast(1.05) brightness(1.5) saturate(1.1);
-  transition: transform 0.35s cubic-bezier(0.4,0,0.2,1), filter 0.35s ease;
+  transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
 }
 .mw-card:hover .mw-photo {
   transform: scale(1.05) translateY(-4px);
-  filter: contrast(1.06) brightness(1.6) saturate(1.15);
 }
 
 /* Change photo button — top-right of art area, visible on hover */
@@ -15113,10 +15103,29 @@ function uploadMedalPhoto(event, raceId) {
       canvas.height = Math.round(img.height * scale);
       canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
 
-      // BFS flood-fill background removal
-      removeBackgroundFloodFill(canvas);
-
-      const dataUrl = canvas.toDataURL('image/png');
+      // Try local rmbg proxy first (ML quality); fall back to canvas flood-fill
+      let dataUrl = null;
+      try {
+        const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+        const resp = await fetch('http://localhost:7437/remove-bg', {
+          method: 'POST', body: blob,
+          headers: { 'Content-Type': 'image/png' },
+          signal: AbortSignal.timeout(30000),
+        });
+        if (resp.ok) {
+          const pngBlob = await resp.blob();
+          dataUrl = await new Promise((res, rej) => {
+            const fr = new FileReader();
+            fr.onload = () => res(fr.result);
+            fr.onerror = rej;
+            fr.readAsDataURL(pngBlob);
+          });
+        }
+      } catch {}
+      if (!dataUrl) {
+        removeBackgroundFloodFill(canvas);
+        dataUrl = canvas.toDataURL('image/png');
+      }
       medalPhotos[raceId] = dataUrl;
       localStorage.setItem('fl2_medal_photos', JSON.stringify(medalPhotos));
       const race = races.find(entry => getRaceKeyValue(entry) === String(raceId));

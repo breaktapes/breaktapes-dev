@@ -36,6 +36,40 @@ fi
 echo "📸  Found $IMAGE_COUNT image(s). Starting upload..."
 echo ""
 
+UPLOAD_DIR="$SCRIPT_DIR/medals-to-upload"
+PROC_DIR=""
+
+RMBG=$(command -v rmbg 2>/dev/null || echo "$HOME/.local/bin/rmbg")
+[ -x "$RMBG" ] || RMBG=""
+
+if [ -n "$RMBG" ]; then
+  echo "🪄  rmbg found — removing backgrounds before upload..."
+  PROC_DIR=$(mktemp -d)
+  for f in "$SCRIPT_DIR/medals-to-upload/"*.png "$SCRIPT_DIR/medals-to-upload/"*.jpg "$SCRIPT_DIR/medals-to-upload/"*.jpeg "$SCRIPT_DIR/medals-to-upload/"*.webp; do
+    [ -f "$f" ] || continue
+    base=$(basename "$f")
+    name="${base%.*}"
+    out="$PROC_DIR/${name}.png"
+    result=$("$RMBG" remove --surface cli --input "$f" --output "$out" --format json 2>/dev/null)
+    ok=$(echo "$result" | grep -o '"ok": *true')
+    if [ -n "$ok" ]; then
+      ms=$(echo "$result" | grep -o '"duration_ms": *[0-9]*' | grep -o '[0-9]*$')
+      echo "  ✓  $base → ${name}.png (${ms}ms)"
+    else
+      echo "  ⚠  $base — rmbg failed, copying original"
+      cp "$f" "$PROC_DIR/${name}.png" 2>/dev/null || cp "$f" "$PROC_DIR/$base"
+    fi
+  done
+  UPLOAD_DIR="$PROC_DIR"
+  echo ""
+else
+  echo "ℹ️   rmbg not found — uploading originals without background removal."
+  echo "    Install ML background removal at: local.backgroundrm.com"
+  echo ""
+fi
+
 SUPABASE_URL="$SUPABASE_URL" \
 SUPABASE_SERVICE_KEY="$SUPABASE_SERVICE_KEY" \
-node "$SCRIPT_DIR/scripts/seed-medals.js" "$SCRIPT_DIR/medals-to-upload"
+node "$SCRIPT_DIR/scripts/seed-medals.js" "$UPLOAD_DIR"
+
+[ -n "$PROC_DIR" ] && rm -rf "$PROC_DIR"
