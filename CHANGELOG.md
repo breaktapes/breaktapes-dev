@@ -3,6 +3,25 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.2.0.0] - 2026-04-09
+
+### Added
+- **Athlete Briefing Card** — state-aware hero card at the top of the dashboard. Four states: Welcome (new user), Pre-Race (upcoming race exists with countdown + streak/last result pills), Just Finished (recent race within 7 days with time + placing + Add Next Race CTA), No Upcoming Race (last race + Add Next Race CTA).
+- **Narrative dashboard layout** — four accordion sections replace the flat widget list: NOW (Race Day), RECENTLY (Your Racing), TRENDING (Build & Consistency), CONTEXT (Patterns & Analysis). Sections collapse/expand with a chevron and persist state in `fl2_dash_zone_collapse`.
+- **Section accordion** — `initDashAccordion()` attaches a single delegated click listener on the dashboard page. Default state: NOW and RECENTLY expanded, TRENDING and CONTEXT collapsed.
+- **13 new tests** — `tests/dash-layout.test.js` covering `getDashZoneCollapse`, `saveDashZoneCollapse`, and `getDashLayout` migration v2 (174 total, all passing).
+
+### Changed
+- **Race Stats widget** moved from NOW to TRENDING zone — it is a career summary, not race-day context.
+- **Widget defaults** — leaner out-of-box experience: 8 widgets enabled by default (stats, recent, activity-preview, training-streak, insights, pbs, goals, bq). Countdown disabled by default.
+- **Zone kicker labels** updated to narrative language: Progress → Recently, Training → Trending, Insights → Context.
+
+### Fixed
+- `renderAthleteBriefing()` null-guard on `last.name` — prevents crash when an AI-parsed race was saved with a missing name field.
+- Migration v2 flag now written inside the try block — prevents silent abandonment on `QuotaExceededError`.
+- `getDashZoneCollapse` array-type guard — prevents JSON arrays from being accepted as valid collapse state.
+- `daysLabel` clock-skew guard — negative daysAway now shows "Today!" instead of "in -1 days".
+
 ## [0.1.0.0] - 2026-03-31
 
 ### Added
