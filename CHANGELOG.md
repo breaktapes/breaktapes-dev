@@ -3,6 +3,22 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.2.0.2] - 2026-04-10
+
+### Fixed
+- **Web scroll unblocked** — removed `overflow: hidden` from `body.landing-active`. The landing screen is `position: fixed; inset: 0` so the body lock was redundant and caused the main page to be non-scrollable on desktop until hovering the footer.
+- **Catalog search with year typed** — searching "Comrades 2026" now returns results. Year filter was incorrectly excluding catalog entries that have no stored `year` field (most entries).
+
+### Changed
+- **Strongest Zones toggle** — tap the pill (shows Age Grade / Pace) to switch metric. Preference persists across sessions. Age-grade shown in green, pace in white.
+- **Flatlay Discover panel compacted** — labels and help text removed; inputs and button reduced in size; filters in a 2-column row. Significantly less vertical space.
+- **History card timing** — time column has consistent `min-width: 64px` and flushes right with equal spacing from card edge.
+- **Majors stats row** — Completed / In Progress / Entry Ready rendered as a single compact inline row with dividers instead of three stacked cards.
+- **Username once-per-year** — changing a username stamps `username_changed_at`. Subsequent change attempts within 365 days show the unlock date and disable the field with a lock hint in Settings.
+
+### Fixed
+- **Test regression** — `bq-widget.test.js` cost tracker assertions updated to match the multi-currency `{amount, currency}` data shape (was comparing against a plain number).
+
 ## [0.2.0.1] - 2026-04-10
 
 ### Fixed
