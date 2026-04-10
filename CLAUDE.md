@@ -119,6 +119,14 @@ CLOUDFLARE_API_TOKEN="" CF_API_TOKEN="" wrangler deploy --env=""
 
 ## Architecture
 
+### Worker entry point (`worker/index.js`)
+Cloudflare Worker that intercepts public profile routes before serving static assets:
+- `GET /u/:username` → `handleProfile()` → SSR public athlete profile HTML
+- `GET /u/:username/race/:id` → `handleRaceCard()` → SSR individual race card HTML
+- All other routes → `env.ASSETS.fetch(request)` (serves `index.html` SPA)
+
+OG image Worker (`og-worker/index.js`) runs separately at `health.breaktapes.com/og/u/:username`. Deployed independently via `cd og-worker && CF_API_TOKEN="" wrangler deploy`.
+
 ### Single-file structure (`index.html`)
 The entire app lives in one HTML file (~10,035 lines). Sections are organized as:
 1. CSS tokens / reset / component styles
@@ -145,6 +153,9 @@ Pages: `dashboard`, `history`, `medals`, `map`, `athlete`, `train`, `training`, 
 | `beta_feedback` | Staging-only: star ratings + messages from beta testers |
 | `wearable_tokens` | OAuth tokens for WHOOP/Garmin — per-user, per-provider, RLS protected |
 | `apple_health_data` | Apple Health imported records grouped by date — per-user, RLS protected |
+| `profile_views` | Public profile view counts keyed by username — anon readable, service-role writable |
+
+**Note:** The table is named `user_state` (not `app_state`) — confirmed from `buildRemoteStatePayload()` in index.html. `user_state` has `username TEXT UNIQUE` and `is_public BOOLEAN` columns added in migration `20260409120000`.
 
 ---
 
@@ -262,6 +273,12 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 | `renderWearablesFeed()` | Parallel fetch WHOOP+Garmin activities, sort by date, render activity cards |
 | `whoopSportName(id)` | Map WHOOP sport_id integer to human-readable sport name |
 | `renderAthleteBriefing()` | State-aware hero card at top of dashboard — 4 states: Welcome / Pre-Race / Just Finished / No Upcoming Race |
+| `checkUsernameAvailability(username)` | Debounced Supabase query to check if username is taken; updates availability indicator in Settings |
+| `onUsernameInput()` | Debounced handler for username field input — validates format, triggers availability check |
+| `onIsPublicToggle()` | Handles is_public toggle switch; disabled until username is saved |
+| `updateProfileLinkPreview()` | Shows/hides profile link preview in Settings based on username + is_public state |
+| `copyProfileLink()` | Copies `app.breaktapes.com/u/{username}` to clipboard + shows toast |
+| `updateShareProfileButton()` | Shows/hides share button on athlete page — visible only when username set + is_public = true |
 | `getDashZoneCollapse()` | Read `fl2_dash_zone_collapse` from localStorage; returns default state (NOW+RECENTLY expanded) if unset or invalid |
 | `saveDashZoneCollapse(state)` | Persist accordion collapse state object to `fl2_dash_zone_collapse` in localStorage |
 | `initDashAccordion()` | Attach single delegated click listener on dashboard page for zone accordion; idempotent (guards with `_accordionInit` flag) |
@@ -590,7 +607,7 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 
 ### Session 11 (2026-04-09) — Athlete Briefing Card + narrative dashboard layout
 
-**Branch:** `claude/busy-poincare` → staging (pending)
+**Branch:** `claude/busy-poincare` → staging (#75) → main (#78)
 
 #### Changes shipped
 - **Athlete Briefing Card** — `renderAthleteBriefing()` replaces the static greeting hero. Four states driven by race data: Welcome (no races yet), Pre-Race (upcoming race with countdown + streak/last-result pills), Just Finished (race within past 7 days — shows time, placing, Add Next Race CTA), No Upcoming Race (shows last race + Add Next Race CTA). Null-guard on `last.name` prevents crash on AI-parsed races with missing name.
@@ -606,6 +623,34 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 - Migration v2 flag write must be inside the `try` block, not after it — `QuotaExceededError` silently abandoned the migration when the flag write was outside
 - `daysAway` can go negative on same-day or clock-skew races — guard with `Math.max(0, daysAway)` or explicit `<= 0` → "Today!" branch to avoid "in -1 days" display
 - `renderAthleteBriefing()` must null-guard `last.name` — AI-parsed races saved before name validation was enforced may have `name: undefined`
+
+---
+
+### Session 12 (2026-04-10) — Public athlete profile /u/:username
+
+**Branch:** `claude/laughing-hofstadter` → staging (#77) → main (#78)
+
+#### Changes shipped
+- **Cloudflare Worker SSR** (`worker/index.js`) — handles `/u/:username` and `/u/:username/race/:id` routes, server-renders public profile HTML, falls through to `env.ASSETS.fetch(request)` for all other routes. `escapeHtml()` on all user data. 404 for both private and missing profiles (no existence leak).
+- **Supabase migration** `20260409120000_public_profiles.sql` — adds `username TEXT UNIQUE` + `is_public BOOLEAN DEFAULT false` to `user_state`. Partial unique index. Anon RLS policy `USING (is_public = true)`. `profile_views` table with RLS. `GRANT SELECT ON user_state TO anon`.
+- **OG image Worker** (`og-worker/`) — separate Cloudflare Worker at `health.breaktapes.com/og/u/:username`. Satori (JSX → SVG) + @resvg/resvg-wasm (SVG → PNG). KV cache 1hr TTL. Fallback to `public/og-placeholder.png`. Bundle: 1,061 KiB / 214 KiB gzipped (within limits).
+- **`wrangler.toml`** — added `main = "worker/index.js"`, `SUPABASE_URL` vars for prod + staging.
+- **Settings modal** — username input with debounced availability check (`checkUsernameAvailability()`), `is_public` toggle switch (disabled until username set), profile link preview + copy button (`copyProfileLink()`).
+- **Athlete page share button** — `#shareProfileBanner` shown when username + is_public both set (`updateShareProfileButton()`).
+- **Join CTA** — fixed bottom bar on all public pages with UTM: `?ref=u-{username}-profile&join_context=compare-with-{encodedName}`.
+- **`initAuth()`** — reads `?join_context` param and updates landing headline for viral pre-fill flow.
+- **`buildRemoteStatePayload()`** — now includes `username` and `is_public` fields synced to Supabase.
+- **Static placeholder** `public/og-placeholder.png` — 1200x630 dark PNG (3151 bytes).
+- **Version bump** — v0.2.0.0 → v0.3.0.0.
+
+#### Key learnings
+- Actual Supabase table is `user_state`, not `app_state` — confirmed by reading `buildRemoteStatePayload()` / `syncRemoteState()` in index.html. CLAUDE.md was wrong.
+- OG Worker must be deployed and have `SUPABASE_ANON_KEY` set separately: `cd og-worker && CF_API_TOKEN="" wrangler secret put SUPABASE_ANON_KEY`
+- `wrangler secret put` requires CWD to be inside the worker directory (has a `wrangler.toml`) — fails silently with "Required Worker name missing" from any other directory
+- Supabase new key format: `sb_publishable_...` shown in Settings → API Keys is the anon key equivalent — safe to use as `SUPABASE_ANON_KEY` in Workers
+- `@resvg/resvg-wasm` bundles fine within Cloudflare's 1MB compressed limit — no need to externalize WASM to R2
+- Worker routing: fall through to `env.ASSETS.fetch(request)` must be the last line of the `fetch()` handler — any unmatched route hits it
+- `escapeHtml()` must cover every string interpolated into SSR HTML — name, location, sport, username, race name, race location, gear items
 
 ---
 
@@ -626,6 +671,10 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 - Garmin integration: requires developer approval at `developer.garmin.com` before OAuth will function — `GARMIN_CLIENT_ID` constant is blank placeholder
 - health-proxy must be redeployed (`wrangler deploy` in `health-proxy/`) after any new routes are added — the worker does not auto-deploy with the main app
 - Apple Health `.zip` export: not supported (raw `export.xml` required). App shows error toast for .zip files.
+- Public profile Worker (`worker/index.js`) deploys with the main app via CI — no separate step needed. OG Worker (`og-worker/`) must be deployed manually: `cd og-worker && CF_API_TOKEN="" wrangler deploy`. Needs `SUPABASE_ANON_KEY` secret set separately.
+- Username availability check (`checkUsernameAvailability()`) queries `user_state` directly with anon key — works because anon can SELECT rows but only sees `username` field pattern, not private data.
+- `is_public` toggle in Settings is disabled until a username is saved — enforced in `onIsPublicToggle()`. Do not remove this guard.
+- `user_state` (not `app_state`) is the actual Supabase table name — CLAUDE.md previously said `app_state` incorrectly. All references now fixed.
 
 ---
 
