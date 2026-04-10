@@ -9763,7 +9763,7 @@ async function syncUserRacesAndAchievements(force = false) {
 
 function buildRemoteStatePayload() {
   return {
-    user_id: authUser.id,
+    user_id: authUser?.id || null,
     races,
     athlete,
     next_race: nextRace,
@@ -10002,7 +10002,15 @@ async function syncRemoteState() {
     if (error) throw error;
     await syncPremiumState();
   } catch (error) {
-    console.warn('Supabase sync failed:', error.message || error);
+    // Username uniqueness violation — surface it to the user
+    if (error?.code === '23505' || error?.message?.includes('duplicate') || error?.message?.includes('unique')) {
+      showBtToast('Username taken — try another in Settings.');
+      athlete = { ...athlete, username: null, is_public: false };
+      sv('fl2_ath', athlete);
+      updateShareProfileButton();
+    } else {
+      console.warn('Supabase sync failed:', error.message || error);
+    }
   } finally {
     remoteSyncInFlight = false;
   }
@@ -18402,8 +18410,8 @@ function saveAth(){
     if (!lastName) { showFieldError('eLast', 'Last name required.'); return; }
     if (!usernameRaw) { showFieldError('eUser', 'Username required.'); return; }
   }
-  if (usernameRaw && !/^[a-z0-9._]{3,20}$/.test(usernameRaw)) {
-    showFieldError('eUser', 'Use 3-20 lowercase letters, numbers, dots, or underscores.');
+  if (usernameRaw && !/^[a-z0-9][a-z0-9-]{1,18}[a-z0-9]$/.test(usernameRaw)) {
+    showFieldError('eUser', 'Use 3-20 characters: letters, numbers and hyphens only.');
     return;
   }
   const dob = document.getElementById('eDob').value || '';
@@ -19258,7 +19266,11 @@ function openSettings(){
       const usernameEl = document.getElementById('settingsUsername');
       const isPublicEl = document.getElementById('settingsIsPublic');
       if (usernameEl) usernameEl.value = athlete?.username || '';
-      if (isPublicEl) isPublicEl.checked = athlete?.is_public === true;
+      if (isPublicEl) {
+        isPublicEl.checked = athlete?.is_public === true;
+        // Disable toggle until a username is saved
+        isPublicEl.disabled = !athlete?.username;
+      }
       updateProfileLinkPreview();
     }
   }
@@ -19398,6 +19410,11 @@ function saveSettings(){
     if (usernameEl && isPublicEl) {
       const newUsername = usernameEl.value.trim().toLowerCase() || null;
       const newIsPublic = isPublicEl.checked;
+      // Block if availability check still pending
+      if (newUsername && _usernameCheckTimer) {
+        showBtToast('Still checking availability — wait a moment.');
+        return;
+      }
       // Validate username before saving
       if (newUsername && !/^[a-z0-9][a-z0-9-]{1,18}[a-z0-9]$/.test(newUsername)) {
         showBtToast('Username must be 3–20 characters: letters, numbers and hyphens only.');
