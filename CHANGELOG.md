@@ -3,6 +3,14 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.2.0.3] - 2026-04-11
+
+### Fixed
+- **Save Race button now works on iOS Safari** — replaced `alert()` validation with `showBtToast()` inline messages. Alerts are suppressed in modal contexts on iOS Safari, causing the button to silently do nothing.
+- **Race detail modal flag cards readable on phone** — moved tag grid and grid column overrides to a `<=640px` breakpoint (was `<=520px`). Cards are now compact chips (44px height vs 84px) that sit cleanly in 2 columns at 390px viewport.
+- **Boston, Chicago, Berlin 2026 now appear in upcoming race search** — catalog entries with a stale stored `event_date` (e.g. the 2025 edition) were excluded from future searches. The search now projects forward to the next occurrence using `month`/`day` when the catalog date is past.
+- **Test suite updated** — `upcoming-race-flow.test.js` updated to match `showBtToast` validation. `bq-widget.test.js` conflict resolved with upstream's more defensive multi-currency check.
+
 ## [0.2.0.2] - 2026-04-10
 
 ### Fixed
