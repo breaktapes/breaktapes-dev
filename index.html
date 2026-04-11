@@ -5633,8 +5633,11 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 /* Training Streak */
 .streak-number{font-family:var(--headline);font-size:3rem;font-weight:900;color:var(--orange);line-height:1}
 .streak-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:.25rem}
-.streak-dots{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;margin-top:.75rem}
-.streak-dot{aspect-ratio:1;border-radius:2px;background:var(--surface3)}
+.streak-grid-wrap{flex:1;min-width:0}
+.streak-day-labels{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:3px}
+.streak-day-label{font-size:9px;font-weight:700;text-align:center;color:var(--muted2);text-transform:uppercase;letter-spacing:.04em}
+.streak-dots{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.streak-dot{aspect-ratio:1;border-radius:3px;background:var(--surface3)}
 .streak-dot.active{background:var(--orange)}
 .streak-dot.today{outline:2px solid var(--orange);outline-offset:1px}
 .streak-header-pill{display:inline-flex;align-items:center;gap:.4rem;background:rgba(var(--orange-ch),0.12);border:1px solid rgba(var(--orange-ch),0.3);border-radius:20px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--orange);margin-bottom:.75rem}
@@ -12891,24 +12894,39 @@ function renderStreakWidget() {
     return;
   }
   const { current, longest, activeDates } = computeStreak(stravaActivities || []);
-  // Build 70-cell dot grid (10 weeks, 7 days each, newest = today)
+  // Build 4-week (28-day) grid, 7 columns = Mon–Sun, newest day = today
   const today = new Date();
+  // Find the Monday of 4 weeks ago so grid columns align to M T W T F S S
+  // We want 28 cells ending today, but shifted so columns are M-aligned
+  const todayDow = today.getDay(); // 0=Sun,1=Mon,...,6=Sat
+  // Days since last Monday (treat Sunday as day 6)
+  const daysSinceMonday = (todayDow + 6) % 7;
+  // Start = Monday of the week containing (today - 27 days)
+  // We'll show 28 cells starting from the Monday 3 full weeks back + current partial week
+  const gridStart = new Date(today);
+  gridStart.setDate(today.getDate() - daysSinceMonday - 21); // 3 prior Mon + current week Mon
+  const DAY_LABELS = ['M','T','W','T','F','S','S'];
   const dots = [];
-  for (let i = 69; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
+  for (let i = 0; i < 28; i++) {
+    const d = new Date(gridStart);
+    d.setDate(gridStart.getDate() + i);
     const key = d.toISOString().slice(0, 10);
-    const isToday = i === 0;
-    const isActive = activeDates.has(key);
-    dots.push(`<div class="streak-dot${isActive ? ' active' : ''}${isToday ? ' today' : ''}" title="${key}"></div>`);
+    const isToday = key === today.toISOString().slice(0, 10);
+    const isFuture = d > today;
+    const isActive = !isFuture && activeDates.has(key);
+    dots.push(`<div class="streak-dot${isActive ? ' active' : ''}${isToday ? ' today' : ''}" title="${key}" style="${isFuture ? 'opacity:.25' : ''}"></div>`);
   }
-  el.innerHTML = `<div style="display:flex;align-items:flex-end;gap:1.5rem;margin-top:.25rem">
-    <div>
+  const dayLabelsHtml = DAY_LABELS.map(l => `<div class="streak-day-label">${l}</div>`).join('');
+  el.innerHTML = `<div style="display:flex;align-items:flex-start;gap:1.25rem;margin-top:.25rem">
+    <div style="padding-top:.25rem">
       <div class="streak-number">${current}</div>
       <div class="streak-label">Day streak</div>
       <div style="font-size:10px;color:var(--muted);margin-top:.2rem">Best: ${longest}</div>
     </div>
-    <div class="streak-dots" style="flex:1">${dots.join('')}</div>
+    <div class="streak-grid-wrap">
+      <div class="streak-day-labels">${dayLabelsHtml}</div>
+      <div class="streak-dots">${dots.join('')}</div>
+    </div>
   </div>`;
 }
 
