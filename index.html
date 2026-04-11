@@ -2092,6 +2092,39 @@ main {
   flex-shrink:0;
   accent-color:var(--orange);
 }
+/* ── RaceDetail Modal: 2-col grids + compact flag chips (≤640px) ── */
+@media (max-width: 640px) {
+  .rd-detail-grid-2,
+  .rd-detail-grid-3 {
+    grid-template-columns:1fr !important;
+  }
+  #raceDetailModal .rd-grid-2,
+  #raceDetailModal .rd-grid-3,
+  #raceDetailModal .rd-grid-4 {
+    grid-template-columns:repeat(2, minmax(0, 1fr)) !important;
+    gap:0.6rem;
+  }
+  #raceDetailModal .rd-mobile-span-2 {
+    grid-column:1 / -1;
+  }
+  #raceDetailModal .rd-flag-grid {
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:0.45rem;
+  }
+  #raceDetailModal .rd-flag-card {
+    min-height:44px;
+    padding:0.55rem 0.7rem;
+    align-items:center;
+  }
+  #raceDetailModal .rd-flag-copy {
+    font-size:12px;
+    line-height:1.25;
+  }
+  #raceDetailModal .rd-section {
+    margin-bottom:1rem;
+  }
+}
+/* ── RaceDetail Modal: full-screen on phones (≤520px) ── */
 @media (max-width: 520px) {
   #raceDetailModal {
     align-items:stretch;
@@ -2141,34 +2174,6 @@ main {
   }
   #raceDetailModal .modal-foot {
     padding-bottom:calc(1rem + env(safe-area-inset-bottom, 0px));
-  }
-  .rd-detail-grid-2,
-  .rd-detail-grid-3 {
-    grid-template-columns:1fr !important;
-  }
-  #raceDetailModal .rd-grid-2,
-  #raceDetailModal .rd-grid-3,
-  #raceDetailModal .rd-grid-4 {
-    grid-template-columns:repeat(2, minmax(0, 1fr)) !important;
-    gap:0.65rem;
-  }
-  #raceDetailModal .rd-mobile-span-2 {
-    grid-column:1 / -1;
-  }
-  #raceDetailModal .rd-flag-grid {
-    grid-template-columns:repeat(2, minmax(0, 1fr));
-    gap:0.65rem;
-  }
-  #raceDetailModal .rd-flag-card {
-    min-height:84px;
-    padding:0.85rem 0.9rem;
-  }
-  #raceDetailModal .rd-flag-copy {
-    font-size:12px;
-    line-height:1.3;
-  }
-  #raceDetailModal .rd-section {
-    margin-bottom:1.1rem;
   }
 }
 
@@ -18315,12 +18320,12 @@ function onWishlistDistChange() {
 function saveNR(){
   const n=document.getElementById('nrN').value.trim();
   const d=document.getElementById('nrDt').value;
-  if(!n||!d){alert('Please fill in race name and date.');return;}
-  if(!isFutureDate(d)){alert('Upcoming races must be in the future. Use Race History for completed events.');return;}
+  if(!n||!d){showBtToast('Add a race name and date to continue.');return;}
+  if(!isFutureDate(d)){showBtToast('Date must be in the future. Log past races in Race History.');return;}
   let dist = document.getElementById('nrDis').value;
   if(dist==='Custom…'){
     dist = document.getElementById('nrCustomDist').value.trim();
-    if(!dist){alert('Please enter a custom distance.');return;}
+    if(!dist){showBtToast('Enter a custom distance to continue.');return;}
   }
   const _nrCi=document.getElementById('nrCi').value.trim(), _nrCo=document.getElementById('nrCo').value.trim();
   const _nrLoc=_nrCi&&_nrCo?`${_nrCi}, ${_nrCo}`:(_nrCi||_nrCo||'');
@@ -21056,20 +21061,35 @@ function searchCatalogRaces(q, mode = 'past') {
 
   const now = new Date();
   const todayStr = now.toISOString().slice(0, 10);
+
+  // For future searches: if catalog date is stale, project to next occurrence via month/day
+  function getEffectiveDate(r) {
+    let d = getRaceDate(r, r.year || now.getFullYear());
+    if (mode === 'future' && (!d || d < todayStr) && r.month && r.day) {
+      d = nextRaceDate(r.month, r.day);
+    }
+    return d;
+  }
+
   const matches = raceDb.map((race, idx) => ({ ...race, _idx: idx }))
     .filter(r => {
-      const raceDate = getRaceDate(r, r.year || now.getFullYear());
+      const raceDate = getEffectiveDate(r);
       if (mode === 'past' && raceDate && raceDate > todayStr) return false;
       if (mode === 'future' && (!raceDate || raceDate < todayStr)) return false;
-      if (queryYear && r.year && Number(r.year) !== queryYear) return false;
+      const effectiveYear = raceDate ? parseInt(raceDate.slice(0, 4), 10) : (r.year || now.getFullYear());
+      if (queryYear && effectiveYear !== queryYear) return false;
       return catalogRaceMatchesQuery(r, queryBase, queryTokens, collapsedQuery);
     })
-    .map(r => ({
-      ...r,
-      _year: r.year || now.getFullYear(),
-      _date: getRaceDate(r, r.year || now.getFullYear()),
-      _endDate: r.eventEndDate || '',
-    }))
+    .map(r => {
+      const _date = getEffectiveDate(r);
+      const _year = _date ? parseInt(_date.slice(0, 4), 10) : (r.year || now.getFullYear());
+      return {
+        ...r,
+        _year,
+        _date,
+        _endDate: r.eventEndDate || '',
+      };
+    })
     .sort((a, b) => {
       const aHasDate = a._date ? 1 : 0;
       const bHasDate = b._date ? 1 : 0;
