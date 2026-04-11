@@ -311,7 +311,6 @@ body {
   cursor: auto;
   overscroll-behavior-y:none;
 }
-body.landing-active,
 body.mobile-race-detail-active {
   overflow: hidden;
 }
@@ -1758,7 +1757,7 @@ main {
   text-transform:uppercase; letter-spacing:0.08em;
   color:rgba(245,245,245,0.35); margin-top:3px;
 }
-.hist-time-col { text-align:right; flex-shrink:0; }
+.hist-time-col { text-align:right; flex-shrink:0; min-width:64px; justify-self:end; }
 .hist-time {
   font-family:var(--headline); font-size:17px; font-weight:900;
   color:var(--white); font-variant-numeric:tabular-nums;
@@ -2093,6 +2092,39 @@ main {
   flex-shrink:0;
   accent-color:var(--orange);
 }
+/* ── RaceDetail Modal: 2-col grids + compact flag chips (≤640px) ── */
+@media (max-width: 640px) {
+  .rd-detail-grid-2,
+  .rd-detail-grid-3 {
+    grid-template-columns:1fr !important;
+  }
+  #raceDetailModal .rd-grid-2,
+  #raceDetailModal .rd-grid-3,
+  #raceDetailModal .rd-grid-4 {
+    grid-template-columns:repeat(2, minmax(0, 1fr)) !important;
+    gap:0.6rem;
+  }
+  #raceDetailModal .rd-mobile-span-2 {
+    grid-column:1 / -1;
+  }
+  #raceDetailModal .rd-flag-grid {
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:0.45rem;
+  }
+  #raceDetailModal .rd-flag-card {
+    min-height:44px;
+    padding:0.55rem 0.7rem;
+    align-items:center;
+  }
+  #raceDetailModal .rd-flag-copy {
+    font-size:12px;
+    line-height:1.25;
+  }
+  #raceDetailModal .rd-section {
+    margin-bottom:1rem;
+  }
+}
+/* ── RaceDetail Modal: full-screen on phones (≤520px) ── */
 @media (max-width: 520px) {
   #raceDetailModal {
     align-items:stretch;
@@ -2142,34 +2174,6 @@ main {
   }
   #raceDetailModal .modal-foot {
     padding-bottom:calc(1rem + env(safe-area-inset-bottom, 0px));
-  }
-  .rd-detail-grid-2,
-  .rd-detail-grid-3 {
-    grid-template-columns:1fr !important;
-  }
-  #raceDetailModal .rd-grid-2,
-  #raceDetailModal .rd-grid-3,
-  #raceDetailModal .rd-grid-4 {
-    grid-template-columns:repeat(2, minmax(0, 1fr)) !important;
-    gap:0.65rem;
-  }
-  #raceDetailModal .rd-mobile-span-2 {
-    grid-column:1 / -1;
-  }
-  #raceDetailModal .rd-flag-grid {
-    grid-template-columns:repeat(2, minmax(0, 1fr));
-    gap:0.65rem;
-  }
-  #raceDetailModal .rd-flag-card {
-    min-height:84px;
-    padding:0.85rem 0.9rem;
-  }
-  #raceDetailModal .rd-flag-copy {
-    font-size:12px;
-    line-height:1.3;
-  }
-  #raceDetailModal .rd-section {
-    margin-bottom:1.1rem;
   }
 }
 
@@ -2783,9 +2787,13 @@ main {
   margin-top:.18rem; font-size:10px; color:var(--muted); letter-spacing:.12em; text-transform:uppercase;
 }
 .ath-champ-progress{
-  margin-top:.9rem; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.55rem;
+  margin-top:.75rem; display:flex; flex-direction:row; gap:0; border-radius:8px; overflow:hidden; border:1px solid rgba(255,255,255,0.06);
 }
-.ath-champ-progress .ath-goal-pill-v{font-size:1.05rem}
+.ath-champ-progress .ath-goal-pill{
+  flex:1; min-height:unset; padding:.4rem .6rem; border-radius:0; border:none; border-right:1px solid rgba(255,255,255,0.06);
+}
+.ath-champ-progress .ath-goal-pill:last-child{ border-right:none; }
+.ath-champ-progress .ath-goal-pill-v{font-size:.95rem; margin-top:.2rem;}
 .ath-timeline-card{padding:1rem 1rem 1.15rem}
 .ath-timeline-list{display:grid;gap:.65rem;margin-top:.85rem}
 .ath-timeline-row{
@@ -3237,23 +3245,28 @@ main {
   border-radius:8px;
   padding:1rem;
 }
-.flatlay-search-card { margin-bottom:1rem; }
+.flatlay-search-card { margin-bottom:0.75rem; padding:0.65rem; }
 .flatlay-search-row {
   display:grid;
   grid-template-columns:1fr auto;
-  gap:0.75rem;
-  align-items:end;
+  gap:0.5rem;
+  align-items:center;
 }
-.flatlay-search-help {
-  margin-top:0.5rem;
-  color:var(--muted);
+.flatlay-search-card .fi, .flatlay-search-card .fs {
+  padding:0.45rem 0.65rem;
   font-size:12px;
 }
+.flatlay-search-card .btn-main {
+  padding:0.45rem 0.75rem;
+  font-size:11px;
+  white-space:nowrap;
+}
+.flatlay-search-help { display:none; }
 .flatlay-filter-row {
   display:grid;
-  grid-template-columns:repeat(3, minmax(0, 1fr));
-  gap:0.75rem;
-  margin-top:0.75rem;
+  grid-template-columns:1fr 1fr;
+  gap:0.5rem;
+  margin-top:0.5rem;
 }
 /* Marketplace discover grid */
 .flatlay-grid {
@@ -3838,8 +3851,7 @@ main {
     padding:0.8rem 0.85rem;
   }
   .flatlay-tabs { grid-template-columns:repeat(2, minmax(0, 1fr)); }
-  .flatlay-search-row { grid-template-columns:1fr; }
-  .flatlay-filter-row { grid-template-columns:1fr; }
+  .flatlay-filter-row { grid-template-columns:1fr 1fr; }
 }
 
 /* =============================================
@@ -5621,8 +5633,11 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 /* Training Streak */
 .streak-number{font-family:var(--headline);font-size:3rem;font-weight:900;color:var(--orange);line-height:1}
 .streak-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:.25rem}
-.streak-dots{display:grid;grid-template-columns:repeat(10,1fr);gap:3px;margin-top:.75rem}
-.streak-dot{aspect-ratio:1;border-radius:2px;background:var(--surface3)}
+.streak-grid-wrap{flex:1;min-width:0}
+.streak-day-labels{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:3px}
+.streak-day-label{font-size:9px;font-weight:700;text-align:center;color:var(--muted2);text-transform:uppercase;letter-spacing:.04em}
+.streak-dots{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.streak-dot{aspect-ratio:1;border-radius:3px;background:var(--surface3)}
 .streak-dot.active{background:var(--orange)}
 .streak-dot.today{outline:2px solid var(--orange);outline-offset:1px}
 .streak-header-pill{display:inline-flex;align-items:center;gap:.4rem;background:rgba(var(--orange-ch),0.12);border:1px solid rgba(var(--orange-ch),0.3);border-radius:20px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--orange);margin-bottom:.75rem}
@@ -6378,27 +6393,16 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
       <div class="flatlay-panel active" id="flatlayPanel-discover">
         <div class="flatlay-search-card">
           <div class="flatlay-search-row">
-            <div class="fg" style="margin:0">
-              <label class="fl" for="flatlaySearchInput">Search Products</label>
-              <input class="fi" id="flatlaySearchInput" type="search" placeholder="Search footwear, bikes, nutrition, hydration..." oninput="onFlatlaySearchInput()">
-            </div>
-            <button class="btn-main" type="button" onclick="openCustomProductModal()">+ Custom Product</button>
+            <input class="fi" id="flatlaySearchInput" type="search" placeholder="Search footwear, bikes, nutrition…" oninput="onFlatlaySearchInput()">
+            <button class="btn-main" type="button" onclick="openCustomProductModal()">+ Custom</button>
           </div>
           <div class="flatlay-filter-row">
-            <div class="fg" style="margin:0">
-              <label class="fl" for="flatlayCategoryFilter">Category</label>
-              <select class="fi" id="flatlayCategoryFilter" onchange="onFlatlayFilterChange()"></select>
-            </div>
-            <div class="fg" style="margin:0;display:none" id="flatlaySubcategoryFilterWrap">
-              <label class="fl" for="flatlaySubcategoryFilter">Sub Category</label>
+            <select class="fi" id="flatlayCategoryFilter" onchange="onFlatlayFilterChange()"></select>
+            <select class="fi" id="flatlayBrandFilter" onchange="onFlatlayFilterChange()"></select>
+            <div style="display:none" id="flatlaySubcategoryFilterWrap">
               <select class="fi" id="flatlaySubcategoryFilter" onchange="onFlatlayFilterChange()"></select>
             </div>
-            <div class="fg" style="margin:0">
-              <label class="fl" for="flatlayBrandFilter">Brand</label>
-              <select class="fi" id="flatlayBrandFilter" onchange="onFlatlayFilterChange()"></select>
-            </div>
           </div>
-          <div class="flatlay-search-help">Search the shared product catalog, save products into your library, and drop them straight into lists or race stacks.</div>
         </div>
         <div class="flatlay-grid" id="flatlaySearchResults"></div>
       </div>
@@ -9763,13 +9767,14 @@ async function syncUserRacesAndAchievements(force = false) {
 
 function buildRemoteStatePayload() {
   return {
-    user_id: authUser.id,
+    user_id: authUser?.id || null,
     races,
     athlete,
     next_race: nextRace,
     upcoming_races: upcomingRaces,
     username: athlete?.username || null,
     is_public: athlete?.is_public === true,
+    username_changed_at: athlete?.username_changed_at || null,
   };
 }
 
@@ -10002,7 +10007,15 @@ async function syncRemoteState() {
     if (error) throw error;
     await syncPremiumState();
   } catch (error) {
-    console.warn('Supabase sync failed:', error.message || error);
+    // Username uniqueness violation — surface it to the user
+    if (error?.code === '23505' || error?.message?.includes('duplicate') || error?.message?.includes('unique')) {
+      showBtToast('Username taken — try another in Settings.');
+      athlete = { ...athlete, username: null, is_public: false };
+      sv('fl2_ath', athlete);
+      updateShareProfileButton();
+    } else {
+      console.warn('Supabase sync failed:', error.message || error);
+    }
   } finally {
     remoteSyncInFlight = false;
   }
@@ -12881,24 +12894,39 @@ function renderStreakWidget() {
     return;
   }
   const { current, longest, activeDates } = computeStreak(stravaActivities || []);
-  // Build 70-cell dot grid (10 weeks, 7 days each, newest = today)
+  // Build 4-week (28-day) grid, 7 columns = Mon–Sun, newest day = today
   const today = new Date();
+  // Find the Monday of 4 weeks ago so grid columns align to M T W T F S S
+  // We want 28 cells ending today, but shifted so columns are M-aligned
+  const todayDow = today.getDay(); // 0=Sun,1=Mon,...,6=Sat
+  // Days since last Monday (treat Sunday as day 6)
+  const daysSinceMonday = (todayDow + 6) % 7;
+  // Start = Monday of the week containing (today - 27 days)
+  // We'll show 28 cells starting from the Monday 3 full weeks back + current partial week
+  const gridStart = new Date(today);
+  gridStart.setDate(today.getDate() - daysSinceMonday - 21); // 3 prior Mon + current week Mon
+  const DAY_LABELS = ['M','T','W','T','F','S','S'];
   const dots = [];
-  for (let i = 69; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
+  for (let i = 0; i < 28; i++) {
+    const d = new Date(gridStart);
+    d.setDate(gridStart.getDate() + i);
     const key = d.toISOString().slice(0, 10);
-    const isToday = i === 0;
-    const isActive = activeDates.has(key);
-    dots.push(`<div class="streak-dot${isActive ? ' active' : ''}${isToday ? ' today' : ''}" title="${key}"></div>`);
+    const isToday = key === today.toISOString().slice(0, 10);
+    const isFuture = d > today;
+    const isActive = !isFuture && activeDates.has(key);
+    dots.push(`<div class="streak-dot${isActive ? ' active' : ''}${isToday ? ' today' : ''}" title="${key}" style="${isFuture ? 'opacity:.25' : ''}"></div>`);
   }
-  el.innerHTML = `<div style="display:flex;align-items:flex-end;gap:1.5rem;margin-top:.25rem">
-    <div>
+  const dayLabelsHtml = DAY_LABELS.map(l => `<div class="streak-day-label">${l}</div>`).join('');
+  el.innerHTML = `<div style="display:flex;align-items:flex-start;gap:1.25rem;margin-top:.25rem">
+    <div style="padding-top:.25rem">
       <div class="streak-number">${current}</div>
       <div class="streak-label">Day streak</div>
       <div style="font-size:10px;color:var(--muted);margin-top:.2rem">Best: ${longest}</div>
     </div>
-    <div class="streak-dots" style="flex:1">${dots.join('')}</div>
+    <div class="streak-grid-wrap">
+      <div class="streak-day-labels">${dayLabelsHtml}</div>
+      <div class="streak-dots">${dots.join('')}</div>
+    </div>
   </div>`;
 }
 
@@ -13622,12 +13650,19 @@ function computeSignatureDistances() {
         distance,
         race,
         score: ageGrade || speedScore,
-        label: ageGrade ? `${ageGrade.toFixed(1)}% age-grade` : paceLabel,
+        ageGradeLabel: ageGrade ? `${ageGrade.toFixed(1)}%` : null,
+        paceLabel,
         metric: ageGrade ? 'age-grade' : 'pace',
       });
     });
   });
   return entries.sort((a, b) => b.score - a.score).slice(0, 3);
+}
+
+function toggleSigDistMetric() {
+  const cur = localStorage.getItem('fl2_sig_metric') || 'age-grade';
+  localStorage.setItem('fl2_sig_metric', cur === 'age-grade' ? 'pace' : 'age-grade');
+  renderAthleteSignatureDistances();
 }
 
 function renderAthleteSignatureDistances() {
@@ -13640,16 +13675,26 @@ function renderAthleteSignatureDistances() {
       <div class="ath-feature-copy">Log a few more timed races to see which distances are becoming your signature by age-grade or speed profile.</div>`;
     return;
   }
+  const mode = localStorage.getItem('fl2_sig_metric') || 'age-grade';
+  const isAG = mode === 'age-grade';
   el.innerHTML = `<div class="ath-feature-kicker">Signature Distances</div>
-    <div class="ath-feature-title">Your strongest zones</div>
-    <div class="ath-feature-copy">Ranked by age-grade when available, with pace-based fallback for unsupported distances.</div>
-    <div class="ath-signature-list">${top.map(item => `<div class="ath-signature-row">
-      <div>
-        <div class="ath-signature-dist">${escapeHtml(item.distance)}</div>
-        <div class="ath-signature-meta">${escapeHtml(item.race.name)} · ${escapeHtml(item.race.time)}</div>
-      </div>
-      <div class="ath-signature-score">${escapeHtml(item.label)}</div>
-    </div>`).join('')}</div>`;
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;margin-bottom:0.75rem">
+      <div class="ath-feature-title" style="margin:0">Your strongest zones</div>
+      <button onclick="toggleSigDistMetric()" style="background:var(--surface3);border:1px solid var(--border2);border-radius:20px;padding:0.2rem 0.65rem;font-family:var(--headline);font-size:10px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:${isAG ? 'var(--green)' : 'var(--white)'};cursor:pointer;white-space:nowrap;flex-shrink:0">${isAG ? 'Age Grade' : 'Pace'}</button>
+    </div>
+    <div class="ath-signature-list">${top.map(item => {
+      const displayVal = isAG
+        ? (item.ageGradeLabel || item.paceLabel)
+        : item.paceLabel;
+      const isGreen = isAG && item.ageGradeLabel;
+      return `<div class="ath-signature-row">
+        <div>
+          <div class="ath-signature-dist">${escapeHtml(item.distance)}</div>
+          <div class="ath-signature-meta">${escapeHtml(item.race.name)} · ${escapeHtml(item.race.time)}</div>
+        </div>
+        <div class="ath-signature-score" style="${isGreen ? 'color:var(--green)' : ''}">${escapeHtml(displayVal)}</div>
+      </div>`;
+    }).join('')}</div>`;
 }
 
 function openFocusRacePicker() {
@@ -18293,12 +18338,12 @@ function onWishlistDistChange() {
 function saveNR(){
   const n=document.getElementById('nrN').value.trim();
   const d=document.getElementById('nrDt').value;
-  if(!n||!d){alert('Please fill in race name and date.');return;}
-  if(!isFutureDate(d)){alert('Upcoming races must be in the future. Use Race History for completed events.');return;}
+  if(!n||!d){showBtToast('Add a race name and date to continue.');return;}
+  if(!isFutureDate(d)){showBtToast('Date must be in the future. Log past races in Race History.');return;}
   let dist = document.getElementById('nrDis').value;
   if(dist==='Custom…'){
     dist = document.getElementById('nrCustomDist').value.trim();
-    if(!dist){alert('Please enter a custom distance.');return;}
+    if(!dist){showBtToast('Enter a custom distance to continue.');return;}
   }
   const _nrCi=document.getElementById('nrCi').value.trim(), _nrCo=document.getElementById('nrCo').value.trim();
   const _nrLoc=_nrCi&&_nrCo?`${_nrCi}, ${_nrCo}`:(_nrCi||_nrCo||'');
@@ -18402,8 +18447,8 @@ function saveAth(){
     if (!lastName) { showFieldError('eLast', 'Last name required.'); return; }
     if (!usernameRaw) { showFieldError('eUser', 'Username required.'); return; }
   }
-  if (usernameRaw && !/^[a-z0-9._]{3,20}$/.test(usernameRaw)) {
-    showFieldError('eUser', 'Use 3-20 lowercase letters, numbers, dots, or underscores.');
+  if (usernameRaw && !/^[a-z0-9][a-z0-9-]{1,18}[a-z0-9]$/.test(usernameRaw)) {
+    showFieldError('eUser', 'Use 3-20 characters: letters, numbers and hyphens only.');
     return;
   }
   const dob = document.getElementById('eDob').value || '';
@@ -19257,8 +19302,35 @@ function openSettings(){
     if (authUser) {
       const usernameEl = document.getElementById('settingsUsername');
       const isPublicEl = document.getElementById('settingsIsPublic');
-      if (usernameEl) usernameEl.value = athlete?.username || '';
-      if (isPublicEl) isPublicEl.checked = athlete?.is_public === true;
+      if (usernameEl) {
+        usernameEl.value = athlete?.username || '';
+        // Lock username field if changed within the last year
+        const changedAt = athlete?.username_changed_at;
+        const usernameHint = document.getElementById('usernameHint');
+        if (changedAt && athlete?.username) {
+          const daysSince = (Date.now() - new Date(changedAt).getTime()) / 86400000;
+          if (daysSince < 365) {
+            const nextChange = new Date(new Date(changedAt).getTime() + 365 * 86400000);
+            usernameEl.readOnly = true;
+            usernameEl.style.opacity = '0.5';
+            if (usernameHint) {
+              usernameHint.textContent = `Locked — can change after ${nextChange.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' })}.`;
+              usernameHint.style.color = 'var(--muted)';
+            }
+          } else {
+            usernameEl.readOnly = false;
+            usernameEl.style.opacity = '';
+          }
+        } else {
+          usernameEl.readOnly = false;
+          usernameEl.style.opacity = '';
+        }
+      }
+      if (isPublicEl) {
+        isPublicEl.checked = athlete?.is_public === true;
+        // Disable toggle until a username is saved
+        isPublicEl.disabled = !athlete?.username;
+      }
       updateProfileLinkPreview();
     }
   }
@@ -19398,12 +19470,28 @@ function saveSettings(){
     if (usernameEl && isPublicEl) {
       const newUsername = usernameEl.value.trim().toLowerCase() || null;
       const newIsPublic = isPublicEl.checked;
+      // Block if availability check still pending
+      if (newUsername && _usernameCheckTimer) {
+        showBtToast('Still checking availability — wait a moment.');
+        return;
+      }
       // Validate username before saving
       if (newUsername && !/^[a-z0-9][a-z0-9-]{1,18}[a-z0-9]$/.test(newUsername)) {
         showBtToast('Username must be 3–20 characters: letters, numbers and hyphens only.');
         return;
       }
-      athlete = { ...athlete, username: newUsername, is_public: newIsPublic };
+      // Enforce once-per-year username change
+      const isChangingUsername = newUsername && athlete.username && newUsername !== athlete.username;
+      if (isChangingUsername && athlete.username_changed_at) {
+        const daysSince = (Date.now() - new Date(athlete.username_changed_at).getTime()) / 86400000;
+        if (daysSince < 365) {
+          const nextChange = new Date(new Date(athlete.username_changed_at).getTime() + 365 * 86400000);
+          showBtToast(`Username can only be changed once per year. Next change available ${nextChange.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' })}.`);
+          return;
+        }
+      }
+      const updatedAt = isChangingUsername ? new Date().toISOString() : (athlete.username_changed_at || null);
+      athlete = { ...athlete, username: newUsername, is_public: newIsPublic, username_changed_at: updatedAt };
       sv('fl2_ath', athlete);
       scheduleRemoteStateSync();
     }
@@ -20991,20 +21079,35 @@ function searchCatalogRaces(q, mode = 'past') {
 
   const now = new Date();
   const todayStr = now.toISOString().slice(0, 10);
+
+  // For future searches: if catalog date is stale, project to next occurrence via month/day
+  function getEffectiveDate(r) {
+    let d = getRaceDate(r, r.year || now.getFullYear());
+    if (mode === 'future' && (!d || d < todayStr) && r.month && r.day) {
+      d = nextRaceDate(r.month, r.day);
+    }
+    return d;
+  }
+
   const matches = raceDb.map((race, idx) => ({ ...race, _idx: idx }))
     .filter(r => {
-      const raceDate = getRaceDate(r, r.year || now.getFullYear());
+      const raceDate = getEffectiveDate(r);
       if (mode === 'past' && raceDate && raceDate > todayStr) return false;
       if (mode === 'future' && (!raceDate || raceDate < todayStr)) return false;
-      if (queryYear && Number(r.year) !== queryYear) return false;
+      const effectiveYear = raceDate ? parseInt(raceDate.slice(0, 4), 10) : (r.year || now.getFullYear());
+      if (queryYear && effectiveYear !== queryYear) return false;
       return catalogRaceMatchesQuery(r, queryBase, queryTokens, collapsedQuery);
     })
-    .map(r => ({
-      ...r,
-      _year: r.year || now.getFullYear(),
-      _date: getRaceDate(r, r.year || now.getFullYear()),
-      _endDate: r.eventEndDate || '',
-    }))
+    .map(r => {
+      const _date = getEffectiveDate(r);
+      const _year = _date ? parseInt(_date.slice(0, 4), 10) : (r.year || now.getFullYear());
+      return {
+        ...r,
+        _year,
+        _date,
+        _endDate: r.eventEndDate || '',
+      };
+    })
     .sort((a, b) => {
       const aHasDate = a._date ? 1 : 0;
       const bHasDate = b._date ? 1 : 0;

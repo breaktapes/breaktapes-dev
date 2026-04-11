@@ -149,7 +149,14 @@ describe('Boston Qualifier summary', () => {
 
     const summary = computeRaceCostTracker();
     expect(summary.raceCount).toBe(2);
-    expect(summary.total).toBe(1000);
-    expect(Math.round(summary.avg)).toBe(500);
+    // total is now an array of {amount, currency} objects (multi-currency support)
+    const usdTotal = Array.isArray(summary.total)
+      ? summary.total.find(t => t.currency === 'USD')?.amount
+      : summary.total;
+    expect(usdTotal).toBe(1000);
+    const usdAvg = Array.isArray(summary.avg)
+      ? summary.avg.find(t => t.currency === 'USD')?.amount
+      : summary.avg;
+    expect(Math.round(usdAvg)).toBe(500);
   });
 });

@@ -53,11 +53,11 @@ describe('upcoming-only race flow', () => {
       <div id="raceForecastStrip"><div id="raceForecastContent"></div></div>
       <div id="raceDNAContent"></div>
     `;
-    global.alert = jest.fn();
+    global.showBtToast = jest.fn();
 
     saveNR();
 
-    expect(global.alert).toHaveBeenCalledWith('Upcoming races must be in the future. Use Race History for completed events.');
+    expect(global.showBtToast).toHaveBeenCalledWith('Date must be in the future. Log past races in Race History.');
     expect(JSON.parse(localStorage.getItem('fl2_upcoming') || '[]')).toEqual([]);
   });
 });
