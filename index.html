@@ -311,7 +311,6 @@ body {
   cursor: auto;
   overscroll-behavior-y:none;
 }
-body.landing-active,
 body.mobile-race-detail-active {
   overflow: hidden;
 }
@@ -1758,7 +1757,7 @@ main {
   text-transform:uppercase; letter-spacing:0.08em;
   color:rgba(245,245,245,0.35); margin-top:3px;
 }
-.hist-time-col { text-align:right; flex-shrink:0; }
+.hist-time-col { text-align:right; flex-shrink:0; min-width:64px; justify-self:end; }
 .hist-time {
   font-family:var(--headline); font-size:17px; font-weight:900;
   color:var(--white); font-variant-numeric:tabular-nums;
@@ -2783,9 +2782,13 @@ main {
   margin-top:.18rem; font-size:10px; color:var(--muted); letter-spacing:.12em; text-transform:uppercase;
 }
 .ath-champ-progress{
-  margin-top:.9rem; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.55rem;
+  margin-top:.75rem; display:flex; flex-direction:row; gap:0; border-radius:8px; overflow:hidden; border:1px solid rgba(255,255,255,0.06);
 }
-.ath-champ-progress .ath-goal-pill-v{font-size:1.05rem}
+.ath-champ-progress .ath-goal-pill{
+  flex:1; min-height:unset; padding:.4rem .6rem; border-radius:0; border:none; border-right:1px solid rgba(255,255,255,0.06);
+}
+.ath-champ-progress .ath-goal-pill:last-child{ border-right:none; }
+.ath-champ-progress .ath-goal-pill-v{font-size:.95rem; margin-top:.2rem;}
 .ath-timeline-card{padding:1rem 1rem 1.15rem}
 .ath-timeline-list{display:grid;gap:.65rem;margin-top:.85rem}
 .ath-timeline-row{
@@ -3237,23 +3240,28 @@ main {
   border-radius:8px;
   padding:1rem;
 }
-.flatlay-search-card { margin-bottom:1rem; }
+.flatlay-search-card { margin-bottom:0.75rem; padding:0.65rem; }
 .flatlay-search-row {
   display:grid;
   grid-template-columns:1fr auto;
-  gap:0.75rem;
-  align-items:end;
+  gap:0.5rem;
+  align-items:center;
 }
-.flatlay-search-help {
-  margin-top:0.5rem;
-  color:var(--muted);
+.flatlay-search-card .fi, .flatlay-search-card .fs {
+  padding:0.45rem 0.65rem;
   font-size:12px;
 }
+.flatlay-search-card .btn-main {
+  padding:0.45rem 0.75rem;
+  font-size:11px;
+  white-space:nowrap;
+}
+.flatlay-search-help { display:none; }
 .flatlay-filter-row {
   display:grid;
-  grid-template-columns:repeat(3, minmax(0, 1fr));
-  gap:0.75rem;
-  margin-top:0.75rem;
+  grid-template-columns:1fr 1fr;
+  gap:0.5rem;
+  margin-top:0.5rem;
 }
 /* Marketplace discover grid */
 .flatlay-grid {
@@ -3838,8 +3846,7 @@ main {
     padding:0.8rem 0.85rem;
   }
   .flatlay-tabs { grid-template-columns:repeat(2, minmax(0, 1fr)); }
-  .flatlay-search-row { grid-template-columns:1fr; }
-  .flatlay-filter-row { grid-template-columns:1fr; }
+  .flatlay-filter-row { grid-template-columns:1fr 1fr; }
 }
 
 /* =============================================
@@ -6378,27 +6385,16 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
       <div class="flatlay-panel active" id="flatlayPanel-discover">
         <div class="flatlay-search-card">
           <div class="flatlay-search-row">
-            <div class="fg" style="margin:0">
-              <label class="fl" for="flatlaySearchInput">Search Products</label>
-              <input class="fi" id="flatlaySearchInput" type="search" placeholder="Search footwear, bikes, nutrition, hydration..." oninput="onFlatlaySearchInput()">
-            </div>
-            <button class="btn-main" type="button" onclick="openCustomProductModal()">+ Custom Product</button>
+            <input class="fi" id="flatlaySearchInput" type="search" placeholder="Search footwear, bikes, nutrition…" oninput="onFlatlaySearchInput()">
+            <button class="btn-main" type="button" onclick="openCustomProductModal()">+ Custom</button>
           </div>
           <div class="flatlay-filter-row">
-            <div class="fg" style="margin:0">
-              <label class="fl" for="flatlayCategoryFilter">Category</label>
-              <select class="fi" id="flatlayCategoryFilter" onchange="onFlatlayFilterChange()"></select>
-            </div>
-            <div class="fg" style="margin:0;display:none" id="flatlaySubcategoryFilterWrap">
-              <label class="fl" for="flatlaySubcategoryFilter">Sub Category</label>
+            <select class="fi" id="flatlayCategoryFilter" onchange="onFlatlayFilterChange()"></select>
+            <select class="fi" id="flatlayBrandFilter" onchange="onFlatlayFilterChange()"></select>
+            <div style="display:none" id="flatlaySubcategoryFilterWrap">
               <select class="fi" id="flatlaySubcategoryFilter" onchange="onFlatlayFilterChange()"></select>
             </div>
-            <div class="fg" style="margin:0">
-              <label class="fl" for="flatlayBrandFilter">Brand</label>
-              <select class="fi" id="flatlayBrandFilter" onchange="onFlatlayFilterChange()"></select>
-            </div>
           </div>
-          <div class="flatlay-search-help">Search the shared product catalog, save products into your library, and drop them straight into lists or race stacks.</div>
         </div>
         <div class="flatlay-grid" id="flatlaySearchResults"></div>
       </div>
@@ -9763,13 +9759,14 @@ async function syncUserRacesAndAchievements(force = false) {
 
 function buildRemoteStatePayload() {
   return {
-    user_id: authUser.id,
+    user_id: authUser?.id || null,
     races,
     athlete,
     next_race: nextRace,
     upcoming_races: upcomingRaces,
     username: athlete?.username || null,
     is_public: athlete?.is_public === true,
+    username_changed_at: athlete?.username_changed_at || null,
   };
 }
 
@@ -10002,7 +9999,15 @@ async function syncRemoteState() {
     if (error) throw error;
     await syncPremiumState();
   } catch (error) {
-    console.warn('Supabase sync failed:', error.message || error);
+    // Username uniqueness violation — surface it to the user
+    if (error?.code === '23505' || error?.message?.includes('duplicate') || error?.message?.includes('unique')) {
+      showBtToast('Username taken — try another in Settings.');
+      athlete = { ...athlete, username: null, is_public: false };
+      sv('fl2_ath', athlete);
+      updateShareProfileButton();
+    } else {
+      console.warn('Supabase sync failed:', error.message || error);
+    }
   } finally {
     remoteSyncInFlight = false;
   }
@@ -13622,12 +13627,19 @@ function computeSignatureDistances() {
         distance,
         race,
         score: ageGrade || speedScore,
-        label: ageGrade ? `${ageGrade.toFixed(1)}% age-grade` : paceLabel,
+        ageGradeLabel: ageGrade ? `${ageGrade.toFixed(1)}%` : null,
+        paceLabel,
         metric: ageGrade ? 'age-grade' : 'pace',
       });
     });
   });
   return entries.sort((a, b) => b.score - a.score).slice(0, 3);
+}
+
+function toggleSigDistMetric() {
+  const cur = localStorage.getItem('fl2_sig_metric') || 'age-grade';
+  localStorage.setItem('fl2_sig_metric', cur === 'age-grade' ? 'pace' : 'age-grade');
+  renderAthleteSignatureDistances();
 }
 
 function renderAthleteSignatureDistances() {
@@ -13640,16 +13652,26 @@ function renderAthleteSignatureDistances() {
       <div class="ath-feature-copy">Log a few more timed races to see which distances are becoming your signature by age-grade or speed profile.</div>`;
     return;
   }
+  const mode = localStorage.getItem('fl2_sig_metric') || 'age-grade';
+  const isAG = mode === 'age-grade';
   el.innerHTML = `<div class="ath-feature-kicker">Signature Distances</div>
-    <div class="ath-feature-title">Your strongest zones</div>
-    <div class="ath-feature-copy">Ranked by age-grade when available, with pace-based fallback for unsupported distances.</div>
-    <div class="ath-signature-list">${top.map(item => `<div class="ath-signature-row">
-      <div>
-        <div class="ath-signature-dist">${escapeHtml(item.distance)}</div>
-        <div class="ath-signature-meta">${escapeHtml(item.race.name)} · ${escapeHtml(item.race.time)}</div>
-      </div>
-      <div class="ath-signature-score">${escapeHtml(item.label)}</div>
-    </div>`).join('')}</div>`;
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;margin-bottom:0.75rem">
+      <div class="ath-feature-title" style="margin:0">Your strongest zones</div>
+      <button onclick="toggleSigDistMetric()" style="background:var(--surface3);border:1px solid var(--border2);border-radius:20px;padding:0.2rem 0.65rem;font-family:var(--headline);font-size:10px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:${isAG ? 'var(--green)' : 'var(--white)'};cursor:pointer;white-space:nowrap;flex-shrink:0">${isAG ? 'Age Grade' : 'Pace'}</button>
+    </div>
+    <div class="ath-signature-list">${top.map(item => {
+      const displayVal = isAG
+        ? (item.ageGradeLabel || item.paceLabel)
+        : item.paceLabel;
+      const isGreen = isAG && item.ageGradeLabel;
+      return `<div class="ath-signature-row">
+        <div>
+          <div class="ath-signature-dist">${escapeHtml(item.distance)}</div>
+          <div class="ath-signature-meta">${escapeHtml(item.race.name)} · ${escapeHtml(item.race.time)}</div>
+        </div>
+        <div class="ath-signature-score" style="${isGreen ? 'color:var(--green)' : ''}">${escapeHtml(displayVal)}</div>
+      </div>`;
+    }).join('')}</div>`;
 }
 
 function openFocusRacePicker() {
@@ -18402,8 +18424,8 @@ function saveAth(){
     if (!lastName) { showFieldError('eLast', 'Last name required.'); return; }
     if (!usernameRaw) { showFieldError('eUser', 'Username required.'); return; }
   }
-  if (usernameRaw && !/^[a-z0-9._]{3,20}$/.test(usernameRaw)) {
-    showFieldError('eUser', 'Use 3-20 lowercase letters, numbers, dots, or underscores.');
+  if (usernameRaw && !/^[a-z0-9][a-z0-9-]{1,18}[a-z0-9]$/.test(usernameRaw)) {
+    showFieldError('eUser', 'Use 3-20 characters: letters, numbers and hyphens only.');
     return;
   }
   const dob = document.getElementById('eDob').value || '';
@@ -19257,8 +19279,35 @@ function openSettings(){
     if (authUser) {
       const usernameEl = document.getElementById('settingsUsername');
       const isPublicEl = document.getElementById('settingsIsPublic');
-      if (usernameEl) usernameEl.value = athlete?.username || '';
-      if (isPublicEl) isPublicEl.checked = athlete?.is_public === true;
+      if (usernameEl) {
+        usernameEl.value = athlete?.username || '';
+        // Lock username field if changed within the last year
+        const changedAt = athlete?.username_changed_at;
+        const usernameHint = document.getElementById('usernameHint');
+        if (changedAt && athlete?.username) {
+          const daysSince = (Date.now() - new Date(changedAt).getTime()) / 86400000;
+          if (daysSince < 365) {
+            const nextChange = new Date(new Date(changedAt).getTime() + 365 * 86400000);
+            usernameEl.readOnly = true;
+            usernameEl.style.opacity = '0.5';
+            if (usernameHint) {
+              usernameHint.textContent = `Locked — can change after ${nextChange.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' })}.`;
+              usernameHint.style.color = 'var(--muted)';
+            }
+          } else {
+            usernameEl.readOnly = false;
+            usernameEl.style.opacity = '';
+          }
+        } else {
+          usernameEl.readOnly = false;
+          usernameEl.style.opacity = '';
+        }
+      }
+      if (isPublicEl) {
+        isPublicEl.checked = athlete?.is_public === true;
+        // Disable toggle until a username is saved
+        isPublicEl.disabled = !athlete?.username;
+      }
       updateProfileLinkPreview();
     }
   }
@@ -19398,12 +19447,28 @@ function saveSettings(){
     if (usernameEl && isPublicEl) {
       const newUsername = usernameEl.value.trim().toLowerCase() || null;
       const newIsPublic = isPublicEl.checked;
+      // Block if availability check still pending
+      if (newUsername && _usernameCheckTimer) {
+        showBtToast('Still checking availability — wait a moment.');
+        return;
+      }
       // Validate username before saving
       if (newUsername && !/^[a-z0-9][a-z0-9-]{1,18}[a-z0-9]$/.test(newUsername)) {
         showBtToast('Username must be 3–20 characters: letters, numbers and hyphens only.');
         return;
       }
-      athlete = { ...athlete, username: newUsername, is_public: newIsPublic };
+      // Enforce once-per-year username change
+      const isChangingUsername = newUsername && athlete.username && newUsername !== athlete.username;
+      if (isChangingUsername && athlete.username_changed_at) {
+        const daysSince = (Date.now() - new Date(athlete.username_changed_at).getTime()) / 86400000;
+        if (daysSince < 365) {
+          const nextChange = new Date(new Date(athlete.username_changed_at).getTime() + 365 * 86400000);
+          showBtToast(`Username can only be changed once per year. Next change available ${nextChange.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' })}.`);
+          return;
+        }
+      }
+      const updatedAt = isChangingUsername ? new Date().toISOString() : (athlete.username_changed_at || null);
+      athlete = { ...athlete, username: newUsername, is_public: newIsPublic, username_changed_at: updatedAt };
       sv('fl2_ath', athlete);
       scheduleRemoteStateSync();
     }
@@ -20996,7 +21061,7 @@ function searchCatalogRaces(q, mode = 'past') {
       const raceDate = getRaceDate(r, r.year || now.getFullYear());
       if (mode === 'past' && raceDate && raceDate > todayStr) return false;
       if (mode === 'future' && (!raceDate || raceDate < todayStr)) return false;
-      if (queryYear && Number(r.year) !== queryYear) return false;
+      if (queryYear && r.year && Number(r.year) !== queryYear) return false;
       return catalogRaceMatchesQuery(r, queryBase, queryTokens, collapsedQuery);
     })
     .map(r => ({
