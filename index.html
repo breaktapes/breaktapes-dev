@@ -1606,7 +1606,7 @@ main {
   font-size:15px; font-weight:800; text-transform:uppercase; letter-spacing:0.04em;
   color:var(--white); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
-.recent-loc { font-size:11px; color:var(--muted); margin-top:1px; }
+.recent-loc { font-size:11px; color:var(--muted); margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .recent-time {
   font-family: var(--headline);
   font-size:16px; font-weight:900; letter-spacing:0.02em;
@@ -3067,7 +3067,7 @@ main {
 .fgrid { display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; }
 .cost-field-row {
   display:grid;
-  grid-template-columns:92px minmax(0,1fr);
+  grid-template-columns:108px minmax(0,1fr);
   gap:0.45rem;
 }
 .cost-currency {
@@ -3437,6 +3437,40 @@ main {
 .mk-btn-icon:hover{color:rgba(17,17,17,0.85);border-color:rgba(17,17,17,0.25)}
 .mk-btn-icon.danger{color:rgba(255,100,100,0.7);border-color:rgba(255,100,100,0.15)}
 .mk-btn-icon.danger:hover{color:#ff6464}
+.mk-btn-sell {
+  min-height:30px;
+  padding:0 0.65rem;
+  background:rgba(0,255,136,0.1);
+  color:var(--green);
+  border:1px solid rgba(0,255,136,0.22);
+  border-radius:5px;
+  font-family:var(--headline);
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:0.06em;
+  text-transform:uppercase;
+  cursor:pointer;
+  white-space:nowrap;
+  flex:none;
+}
+.mk-btn-sell:hover{background:rgba(0,255,136,0.18)}
+.mk-for-sale-badge {
+  position:absolute;
+  top:7px;
+  left:7px;
+  background:var(--green);
+  color:#000;
+  font-family:var(--headline);
+  font-size:9px;
+  font-weight:800;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+  padding:2px 7px;
+  border-radius:4px;
+  pointer-events:none;
+  z-index:2;
+  line-height:18px;
+}
 /* Picker option rows */
 .picker-option {
   display:flex;
@@ -3864,7 +3898,7 @@ main {
   .stats-row  { grid-template-columns:repeat(4,1fr); }
   .ath-stats  { grid-template-columns:repeat(4,1fr); }
   .bio-grid   { grid-template-columns:repeat(2,1fr); }
-  .hist-row   { grid-template-columns:42px 1fr 100px 32px; }
+  .hist-row   { grid-template-columns:42px 1fr auto; }
   .hist-dist, .hist-date { display:none; }
   .ath-hero-content { flex-direction:column; align-items:center; text-align:center; }
   .ath-tags   { justify-content:center; }
@@ -4068,7 +4102,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   .stats-row  { grid-template-columns:repeat(4,1fr); }
   .ath-stats  { grid-template-columns:repeat(4,1fr); }
   .bio-grid   { grid-template-columns:repeat(2,1fr); }
-  .hist-row   { grid-template-columns:42px 1fr 100px 32px; }
+  .hist-row   { grid-template-columns:42px 1fr auto; }
   .ath-hero-content { flex-direction:column; align-items:center; text-align:center; }
   .ath-tags   { justify-content:center; }
   .ath-name-row { justify-content:center; }
@@ -7444,7 +7478,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
             <div class="fg"><label class="fl">Temperature (°C)</label><input class="fi" id="rdAcTemp" type="number" step="0.1" placeholder="32"></div>
           </div>
           <div class="fgrid rd-grid-3">
-            <div class="fg rd-mobile-span-2"><label class="fl">Start Time</label><input class="fi" id="rdAcStartTime" type="time"></div>
+            <div class="fg"><label class="fl">Start Time</label><input class="fi" id="rdAcStartTime" type="time"></div>
             <div class="fg"><label class="fl">Altitude (m)</label><input class="fi" id="rdAcAltitude" type="number" min="0" placeholder="3000"></div>
             <div class="fg"><label class="fl">HR Zone 4/5 %</label><input class="fi" id="rdAcHrLoad" type="number" min="0" max="100" placeholder="70"></div>
           </div>
@@ -7472,15 +7506,17 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
       <!-- Notes -->
       <div class="rd-section">
         <div class="rd-label">Race Conditions</div>
-        <div class="fgrid rd-grid-3">
-          <div class="fg rd-mobile-span-2"><label class="fl">Start Time</label><input class="fi" id="rdStartTime" type="time"></div>
-          <div class="fg"><label class="fl">Surface</label><input class="fi" id="rdSurface" placeholder="Road, trail, track…"></div>
-          <div class="fg"><label class="fl">Terrain</label><input class="fi" id="rdTerrain" placeholder="Flat, rolling, mountain…"></div>
+        <div class="fgrid rd-grid-2">
+          <div class="fg"><label class="fl">Start Time</label><input class="fi" id="rdStartTime" type="time"></div>
+          <div class="fg"><label class="fl">Surface</label><select class="fs" id="rdSurface"><option value="">Select…</option><option>Road</option><option>Trail</option><option>Track</option><option>Treadmill</option><option>Sand</option><option>Gravel</option><option>Mixed</option><option>Other</option></select></div>
         </div>
-        <div class="fgrid rd-grid-3">
-          <div class="fg rd-mobile-span-2"><label class="fl">Course Type</label><input class="fi" id="rdCourseType" placeholder="Loop, point-to-point…"></div>
-          <div class="fg"><label class="fl">Elevation Profile</label><input class="fi" id="rdElevationProfile" placeholder="Flat, rolling, hilly…"></div>
-          <div class="fg"><label class="fl">Travel Context</label><input class="fi" id="rdTravelContext" placeholder="Local, regional, flight…"></div>
+        <div class="fgrid rd-grid-2">
+          <div class="fg"><label class="fl">Terrain</label><select class="fs" id="rdTerrain"><option value="">Select…</option><option>Flat</option><option>Rolling</option><option>Hilly</option><option>Mountain</option><option>Very hilly</option><option>Mixed</option></select></div>
+          <div class="fg"><label class="fl">Course Type</label><select class="fs" id="rdCourseType"><option value="">Select…</option><option>Loop</option><option>Point-to-point</option><option>Out &amp; back</option><option>Multi-loop</option><option>Other</option></select></div>
+        </div>
+        <div class="fgrid rd-grid-2">
+          <div class="fg"><label class="fl">Elevation Profile</label><select class="fs" id="rdElevationProfile"><option value="">Select…</option><option>Flat</option><option>Rolling</option><option>Hilly</option><option>Very hilly</option><option>Mountainous</option></select></div>
+          <div class="fg"><label class="fl">Travel Context</label><select class="fs" id="rdTravelContext"><option value="">Select…</option><option>Local</option><option>Regional</option><option>Domestic flight</option><option>International flight</option><option>Other</option></select></div>
         </div>
         <div class="fgrid rd-grid-4">
           <div class="fg"><label class="fl">Temp High °C</label><input class="fi" id="rdTempHigh" type="number" step="0.1" placeholder="24"></div>
@@ -7925,6 +7961,80 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   </div>
 </div>
 
+<div class="modal-overlay" id="sellListingModal" onclick="bgClose(event,'sellListingModal')">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="sellListingModalTitle">
+    <div class="modal-drag"></div>
+    <div class="modal-head">
+      <div class="modal-h" id="sellListingModalTitle">List for Sale</div>
+      <div class="modal-sub" id="sellListingModalSub">Set a price and let other athletes know this is available.</div>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="sellListingProductId">
+      <div class="fgrid" style="grid-template-columns:1fr">
+        <div class="fgrid rd-grid-2">
+          <div class="fg">
+            <label class="fl" for="sellListingPrice">Price</label>
+            <input class="fi" id="sellListingPrice" type="number" min="0" step="0.01" placeholder="0.00">
+            <div class="fg-err-msg"></div>
+          </div>
+          <div class="fg">
+            <label class="fl" for="sellListingCurrency">Currency</label>
+            <select class="fs" id="sellListingCurrency">
+              <option value="USD">USD — US Dollar</option>
+              <option value="EUR">EUR — Euro</option>
+              <option value="GBP">GBP — British Pound</option>
+              <option value="AUD">AUD — Australian Dollar</option>
+              <option value="CAD">CAD — Canadian Dollar</option>
+              <option value="CHF">CHF — Swiss Franc</option>
+              <option value="JPY">JPY — Japanese Yen</option>
+              <option value="CNY">CNY — Chinese Yuan</option>
+              <option value="HKD">HKD — Hong Kong Dollar</option>
+              <option value="SGD">SGD — Singapore Dollar</option>
+              <option value="NZD">NZD — New Zealand Dollar</option>
+              <option value="ZAR">ZAR — South African Rand</option>
+              <option value="AED">AED — UAE Dirham</option>
+              <option value="SEK">SEK — Swedish Krona</option>
+              <option value="NOK">NOK — Norwegian Krone</option>
+              <option value="DKK">DKK — Danish Krone</option>
+              <option value="MXN">MXN — Mexican Peso</option>
+              <option value="BRL">BRL — Brazilian Real</option>
+              <option value="INR">INR — Indian Rupee</option>
+              <option value="KRW">KRW — South Korean Won</option>
+              <option value="MYR">MYR — Malaysian Ringgit</option>
+              <option value="THB">THB — Thai Baht</option>
+              <option value="CZK">CZK — Czech Koruna</option>
+              <option value="PLN">PLN — Polish Zloty</option>
+            </select>
+          </div>
+        </div>
+        <div class="fg">
+          <label class="fl" for="sellListingCondition">Condition</label>
+          <select class="fs" id="sellListingCondition">
+            <option value="">Select condition…</option>
+            <option value="New">New — Never used, tags on</option>
+            <option value="Like New">Like New — Used once or twice, no visible wear</option>
+            <option value="Good">Good — Light wear, fully functional</option>
+            <option value="Fair">Fair — Visible wear, works as intended</option>
+            <option value="Poor">Poor — Heavy wear, priced to sell</option>
+          </select>
+          <div class="fg-err-msg"></div>
+        </div>
+        <div class="fg">
+          <label class="fl" for="sellListingDescription">Description <span style="color:var(--muted);font-weight:400">(optional)</span></label>
+          <textarea class="fi" id="sellListingDescription" rows="3" placeholder="Size, colour, how many km on them…" style="resize:vertical;min-height:80px"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot" style="flex-wrap:wrap;gap:0.5rem">
+      <button class="btn-ghost" id="sellListingRemoveBtn" onclick="removeSellListing()" style="display:none;color:rgba(255,100,100,0.75)">Remove Listing</button>
+      <div style="display:flex;gap:0.5rem;margin-left:auto">
+        <button class="btn-ghost" onclick="closeM('sellListingModal')">Cancel</button>
+        <button class="btn-main" onclick="saveSellListing()">Save Listing</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="achievementDetailModal" onclick="bgClose(event,'achievementDetailModal')">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="achievementDetailTitle">
     <div class="modal-drag"></div>
@@ -8000,7 +8110,7 @@ let curPage = 'dashboard';
 let curRTab = 'ai';
 let histSearchQuery = '';
 let histPage = 0;
-const HIST_PER_PAGE = 20;
+const HIST_PER_PAGE = 50;
 let _histSearchTimer;
 const _IS_PROD    = window.location.hostname === 'app.breaktapes.com';
 const _IS_STAGING = window.location.hostname === 'dev.breaktapes.com';
@@ -10211,13 +10321,20 @@ async function refreshAuthState(session) {
   }
   updateAuthUI();
   if (authUser) {
-    await loadRemoteState();
-    await loadPremiumState();
-    if (migrateFutureHistoryToUpcoming()) scheduleRemoteStateSync();
-    await loadFlatlayData(true);
-    await loadAchievementData(true);
-    await syncUserRacesAndAchievements(true);
+    // Show local state immediately while remote sync runs
     dismissLanding();
+    render(curPage);
+    // Parallelise independent Supabase fetches
+    await Promise.all([
+      loadRemoteState(),
+      loadPremiumState(),
+    ]);
+    if (migrateFutureHistoryToUpcoming()) scheduleRemoteStateSync();
+    await Promise.all([
+      loadFlatlayData(true),
+      loadAchievementData(true),
+      syncUserRacesAndAchievements(true),
+    ]);
     render(curPage);
     maybeOpenBetaProfileOnboarding();
   }
@@ -10619,13 +10736,20 @@ function renderFlatlayProductCard(product, source) {
   const imageHtml = imageUrl
     ? `<img src="${escapeAttr(imageUrl)}" alt="${escapeHtml(product.name)}" loading="lazy" onerror="this.style.display='none'">`
     : `<div class="mk-placeholder" style="background:${placeholderBg}">${escapeHtml(brandAbbr)}</div>`;
+  const listing = source === 'library' ? getListingByProductId(product.id) : null;
+  const forSaleBadge = listing
+    ? `<div class="mk-for-sale-badge">${listing.currency} ${parseFloat(listing.price).toFixed(2)}</div>`
+    : '';
   const addToListBtn = `<button class="mk-btn-save" onclick="openFlatlayListPicker('${source}','${product.id}')">Add to List</button>`;
   const addToStackBtn = `<button class="mk-btn-icon" style="flex:1" onclick="openFlatlayStackPicker('${source}','${product.id}')">Add to Stack</button>`;
+  const sellBtn = source === 'library'
+    ? `<button class="mk-btn-sell" onclick="openSellListingModal('${product.id}')" title="${listing ? 'Edit listing' : 'List for sale'}">${listing ? '$ SELLING' : '$ SELL'}</button>`
+    : '';
   const extraBtns = source === 'library'
     ? `${custom ? `<button class="mk-btn-icon" style="flex:none;padding:0 0.55rem" onclick="openCustomProductModal('${product.id}')" title="Edit">✎</button>` : ''}<button class="mk-btn-icon danger" style="flex:none;padding:0 0.55rem" onclick="deleteFlatlayLibraryProduct('${product.id}')" title="Remove">×</button>`
     : '';
   return `<div class="mk-card" data-pid="${escapeAttr(product.id)}" data-src="${source}">
-    <div class="mk-img">${imageHtml}</div>
+    <div class="mk-img" style="position:relative">${imageHtml}${forSaleBadge}</div>
     <div class="mk-body">
       <div class="mk-brand">${escapeHtml(product.brand || 'Custom')}</div>
       <div class="mk-name">${escapeHtml(product.name)}</div>
@@ -10633,7 +10757,7 @@ function renderFlatlayProductCard(product, source) {
         <span class="mk-tag category">${escapeHtml(formatFlatlayCategoryOption(product.category))}</span>
         ${primarySubcategory ? `<span class="mk-tag sub">${escapeHtml(primarySubcategory)}</span>` : ''}
       </div>
-      <div class="mk-actions">${addToListBtn}${addToStackBtn}${extraBtns}</div>
+      <div class="mk-actions">${addToListBtn}${addToStackBtn}${sellBtn}${extraBtns}</div>
     </div>
   </div>`;
 }
@@ -11150,8 +11274,64 @@ async function deleteFlatlayLibraryProduct(id) {
   userProducts = userProducts.filter(product => product.id !== id);
   flatlayListItems = flatlayListItems.filter(item => item.user_product_id !== id);
   raceStackItems = raceStackItems.filter(item => item.user_product_id !== id);
+  // remove any sell listing for this product
+  const listings = getSellListings().filter(l => l.userProductId !== id);
+  saveSellListings(listings);
   renderFlatlay();
   showBtToast('Product removed from library.');
+}
+
+// --- Sell Listings (localStorage) ---
+function getSellListings() {
+  try { return JSON.parse(localStorage.getItem('fl2_sell_listings') || '[]'); } catch(e) { return []; }
+}
+function saveSellListings(arr) {
+  localStorage.setItem('fl2_sell_listings', JSON.stringify(arr));
+}
+function getListingByProductId(productId) {
+  return getSellListings().find(l => l.userProductId === productId) || null;
+}
+
+function openSellListingModal(productId) {
+  const listing = getListingByProductId(productId);
+  const product = getLibraryProductById(productId);
+  document.getElementById('sellListingProductId').value = productId;
+  document.getElementById('sellListingModalTitle').textContent = listing ? 'Edit Listing' : 'List for Sale';
+  document.getElementById('sellListingModalSub').textContent = product
+    ? `${escapeHtml(product.brand || 'Custom')} · ${escapeHtml(product.name)}`
+    : 'Set a price and condition for this product.';
+  document.getElementById('sellListingPrice').value = listing ? listing.price : '';
+  document.getElementById('sellListingCurrency').value = listing ? listing.currency : 'USD';
+  document.getElementById('sellListingCondition').value = listing ? listing.condition : '';
+  document.getElementById('sellListingDescription').value = listing ? listing.description : '';
+  document.getElementById('sellListingRemoveBtn').style.display = listing ? '' : 'none';
+  openM('sellListingModal');
+}
+
+function saveSellListing() {
+  const productId = document.getElementById('sellListingProductId').value;
+  const price = parseFloat(document.getElementById('sellListingPrice').value);
+  const currency = document.getElementById('sellListingCurrency').value;
+  const condition = document.getElementById('sellListingCondition').value;
+  const description = document.getElementById('sellListingDescription').value.trim();
+  if (!productId) return;
+  if (isNaN(price) || price <= 0) { showFieldError('sellListingPrice', 'Enter a price greater than 0.'); return; }
+  if (!condition) { showFieldError('sellListingCondition', 'Please select a condition.'); return; }
+  const listings = getSellListings().filter(l => l.userProductId !== productId);
+  listings.push({ id: productId + '_listing', userProductId: productId, price, currency, condition, description, createdAt: new Date().toISOString() });
+  saveSellListings(listings);
+  closeM('sellListingModal');
+  showBtToast('Listing saved.');
+  renderFlatlay();
+}
+
+function removeSellListing() {
+  const productId = document.getElementById('sellListingProductId').value;
+  if (!productId) return;
+  saveSellListings(getSellListings().filter(l => l.userProductId !== productId));
+  closeM('sellListingModal');
+  showBtToast('Listing removed.');
+  renderFlatlay();
 }
 
 async function removeFlatlayListItem(id) {
@@ -13879,11 +14059,27 @@ const COST_CURRENCY_OPTIONS = [
   { code: 'USD', label: 'USD $' },
   { code: 'EUR', label: 'EUR €' },
   { code: 'GBP', label: 'GBP £' },
-  { code: 'ZAR', label: 'ZAR R' },
   { code: 'AUD', label: 'AUD A$' },
   { code: 'CAD', label: 'CAD C$' },
-  { code: 'AED', label: 'AED د.إ' },
+  { code: 'CHF', label: 'CHF Fr' },
   { code: 'JPY', label: 'JPY ¥' },
+  { code: 'CNY', label: 'CNY ¥' },
+  { code: 'HKD', label: 'HKD $' },
+  { code: 'SGD', label: 'SGD $' },
+  { code: 'NZD', label: 'NZD $' },
+  { code: 'ZAR', label: 'ZAR R' },
+  { code: 'AED', label: 'AED د.إ' },
+  { code: 'SEK', label: 'SEK kr' },
+  { code: 'NOK', label: 'NOK kr' },
+  { code: 'DKK', label: 'DKK kr' },
+  { code: 'MXN', label: 'MXN $' },
+  { code: 'BRL', label: 'BRL R$' },
+  { code: 'INR', label: 'INR ₹' },
+  { code: 'KRW', label: 'KRW ₩' },
+  { code: 'MYR', label: 'MYR RM' },
+  { code: 'THB', label: 'THB ฿' },
+  { code: 'CZK', label: 'CZK Kč' },
+  { code: 'PLN', label: 'PLN zł' },
 ];
 const RACE_COST_FIELDS = [
   { key: 'registration', legacyKey: 'registrationCost', amountId: 'rdCostReg', currencyId: 'rdCostRegCurrency' },
@@ -16927,6 +17123,7 @@ function clearHistSearch() {
   histPage = 0;
   renderHistory();
 }
+
 
 function renderHistory(){
   document.getElementById('hs-r').textContent = races.length;

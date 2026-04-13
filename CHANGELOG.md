@@ -3,6 +3,22 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.2.1.0] - 2026-04-13
+
+### Added
+- **Sell your gear from the Flatlay** — every product in My Library now has a "$ SELL" button. Set a price, currency, condition, and description; the card shows a green price badge and flips to "$ SELLING". Listings persist locally in `fl2_sell_listings`.
+
+### Changed
+- **Race Conditions form uses select menus** — Surface, Terrain, Course Type, Elevation Profile, and Travel Context are now dropdowns with preset options instead of free-text inputs.
+- **Conditions grid is 2-column on mobile** — reorganised from two `rd-grid-3` rows to three `rd-grid-2` rows with logical pairings; no orphaned fields at 375px.
+- **Start Time no longer double-wide on mobile** — removed `rd-mobile-span-2` so it sits in its own column alongside Surface.
+- **Currency select widened and expanded** — cost field column is now 108px (was 92px). Currency list expanded from 8 to 24 options including AUD, CAD, CHF, SGD, ZAR, AED, INR, KRW, and more.
+- **History page shows only past races** — upcoming races removed from Race History; they belong on the Athlete page, not mixed with completed results.
+- **Auth load is faster** — `refreshAuthState()` now parallelises Supabase syncs with `Promise.all` instead of five sequential awaits. Local state shown immediately.
+
+### Fixed
+- **History row timing column** — removed unused 32px column from `.hist-row` grid template, fixing label overflow at narrow viewports.
+
 ## [0.2.0.3] - 2026-04-11
 
 ### Fixed
