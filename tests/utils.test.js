@@ -614,6 +614,41 @@ describe('computeSeasonPlan', () => {
     expect(plan.plan[0]).toHaveProperty('taperDays');
     expect(plan.plan[0]).toHaveProperty('recoveryDays');
   });
+
+  test('regression: filters out past races — only future races appear in plan', () => {
+    const today = new Date().toISOString().slice(0, 10);
+    const pastRace = { id: 'p1', name: 'Past Race', distance: 'Half Marathon', date: '2020-01-01', priority: 'A' };
+    const futureRace = { id: 'f1', name: 'Future Race', distance: 'Marathon', date: `${yyyy + 1}-06-01`, priority: 'A' };
+    const plan = computeSeasonPlan([pastRace, futureRace]);
+    expect(plan).not.toBeNull();
+    // Only the future race should appear
+    expect(plan.plan).toHaveLength(1);
+    expect(plan.plan[0].name).toBe('Future Race');
+  });
+
+  test('includes goalTime in plan items when set', () => {
+    const raceWithGoal = [{ ...FIXTURE_UPCOMING[0], goalTime: '3:15:00' }];
+    const plan = computeSeasonPlan(raceWithGoal);
+    expect(plan).not.toBeNull();
+    expect(plan.plan[0]).toHaveProperty('goalTime', '3:15:00');
+  });
+
+  test('goalTime defaults to empty string when not set', () => {
+    const plan = computeSeasonPlan(FIXTURE_UPCOMING);
+    expect(plan).not.toBeNull();
+    expect(plan.plan[0].goalTime).toBe('');
+  });
+
+  test('detects peak week conflict when two A/B races are within 21 days', () => {
+    const closeRaces = [
+      { id: 'r1', name: 'Race One', distance: 'Marathon', date: `${yyyy + 1}-06-01`, priority: 'A' },
+      { id: 'r2', name: 'Race Two', distance: 'Half Marathon', date: `${yyyy + 1}-06-10`, priority: 'B' },
+    ];
+    const plan = computeSeasonPlan(closeRaces);
+    expect(plan).not.toBeNull();
+    const hasConflict = plan.warnings && plan.warnings.some(w => w.toLowerCase().includes('peak week conflict') || w.toLowerCase().includes('conflict'));
+    expect(hasConflict).toBe(true);
+  });
 });
 
 describe('computeRecoveryRisk', () => {
