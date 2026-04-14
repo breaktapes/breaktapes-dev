@@ -8668,6 +8668,7 @@ function buildUpcomingRaceFromSource(source, overrides = {}) {
     trainingContext: overrides.trainingContext || source.trainingContext || {},
     importProvenance: overrides.importProvenance || source.importProvenance || source.sourceSite || '',
     resultConfidence: overrides.resultConfidence ?? source.resultConfidence ?? null,
+    trainingBlockLabel: overrides.trainingBlockLabel || source.trainingBlockLabel || '',
   };
 }
 
@@ -10036,8 +10037,16 @@ function applyRemoteState(row) {
     }
     // Always apply (even null/empty) so a fresh account clears stale localStorage data
     nextRace = (row.next_race && typeof row.next_race === 'object') ? row.next_race : null;
-    localStorage.setItem('fl2_nr', JSON.stringify(nextRace));
     upcomingRaces = Array.isArray(row.upcoming_races) ? row.upcoming_races : [];
+    // If nextRace is missing or stale, auto-promote the nearest future upcoming race
+    if (upcomingRaces.length) {
+      const today = new Date().toISOString().slice(0, 10);
+      if (!nextRace || !nextRace.date || nextRace.date < today) {
+        const promoted = upcomingRaces.find(r => r.date >= today) || null;
+        if (promoted) nextRace = promoted;
+      }
+    }
+    localStorage.setItem('fl2_nr', JSON.stringify(nextRace));
     localStorage.setItem('fl2_upcoming', JSON.stringify(upcomingRaces));
   } finally {
     suppressRemoteSync = false;
@@ -11811,7 +11820,8 @@ function computePrediction(targetRace = nextRace, sourceRaces = races) {
 }
 
 function computeSeasonPlan(upcoming = upcomingRaces) {
-  const future = (upcoming || []).filter(r => r.date).sort((a, b) => a.date.localeCompare(b.date));
+  const today = new Date().toISOString().slice(0, 10);
+  const future = (upcoming || []).filter(r => r.date && r.date >= today).sort((a, b) => a.date.localeCompare(b.date));
   if (!future.length) return null;
   const warnings = [];
   const plan = future.map((race, idx) => {
@@ -11823,6 +11833,9 @@ function computeSeasonPlan(upcoming = upcomingRaces) {
     const recoveryDays = race.priority === 'A' ? 12 : race.priority === 'B' ? 8 : 4;
     if (daysSincePrev != null && daysSincePrev < recoveryDays) warnings.push(`${race.name}: compressed recovery window`);
     if (daysToNext != null && daysToNext < taperDays) warnings.push(`${race.name}: taper overlap into next race`);
+    if (daysSincePrev != null && daysSincePrev < 21 && ['A','B'].includes(race.priority) && ['A','B'].includes(prev?.priority)) {
+      warnings.push(`Peak week conflict: ${escapeHtml(prev.name)} and ${escapeHtml(race.name)} are ${daysSincePrev}d apart — consider downgrading ${escapeHtml(race.name)} to C`);
+    }
     return {
       id: race.id,
       name: race.name,
@@ -11832,6 +11845,8 @@ function computeSeasonPlan(upcoming = upcomingRaces) {
       recoveryDays,
       daysSincePrev,
       daysToNext,
+      goalTime: race.goalTime || '',
+      goalPace: race.goalPace || null,
     };
   });
   return {
@@ -14884,7 +14899,7 @@ function getSeasonPlannerDraftName() {
 
 function saveSeasonPlanDraft(name, items) {
   const record = {
-    id: `plan-${Date.now()}`,
+    id: (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : `plan-${Date.now()}`,
     name: name || getSeasonPlannerDraftName(),
     items,
     createdAt: new Date().toISOString(),
@@ -15260,6 +15275,118 @@ function downloadTextFile(filename, content, mime = 'text/plain') {
   setTimeout(() => URL.revokeObjectURL(url), 1500);
 }
 
+function renderTaperTimeline(planItems) {
+  if (!planItems || planItems.length < 2) return '';
+  // Guard: require valid date + numeric taper/recovery on all items
+  const valid = planItems.filter(it => it.date && !isNaN(+new Date(it.date + 'T00:00:00')) && Number.isFinite(it.taperDays) && Number.isFinite(it.recoveryDays));
+  if (valid.length < 2) return '';
+  const items = valid;
+  const W = 320, PAD = 12, TRACK_Y = 54, TRACK_H = 10, USABLE = W - PAD * 2;
+  const dateMsArr = items.map(it => +new Date(it.date + 'T00:00:00'));
+  const minMs = dateMsArr[0] - items[0].taperDays * 86400000;
+  const maxMs = dateMsArr[dateMsArr.length - 1] + items[items.length - 1].recoveryDays * 86400000;
+  const span = maxMs - minMs || 1;
+  const toX = ms => (PAD + (ms - minMs) / span * USABLE);
+  const priColor = { A: '#E84E1B', B: '#E8A21B', C: 'rgba(232,224,213,0.55)' };
+  const bands = items.flatMap(it => {
+    const rMs = +new Date(it.date + 'T00:00:00');
+    const tx1 = toX(rMs - it.taperDays * 86400000), tx2 = toX(rMs);
+    const rx1 = tx2, rx2 = toX(rMs + it.recoveryDays * 86400000);
+    return [
+      `<rect x="${tx1.toFixed(1)}" y="${TRACK_Y}" width="${Math.max(0, tx2-tx1).toFixed(1)}" height="${TRACK_H}" fill="rgba(232,78,27,0.22)"/>`,
+      `<rect x="${rx1.toFixed(1)}" y="${TRACK_Y}" width="${Math.max(0, rx2-rx1).toFixed(1)}" height="${TRACK_H}" fill="rgba(0,255,136,0.15)"/>`,
+    ];
+  });
+  const markers = items.map((it, i) => {
+    const x = toX(dateMsArr[i]);
+    const above = i % 2 === 0;
+    const nameY = above ? TRACK_Y - 26 : TRACK_Y + TRACK_H + 22;
+    const metaY = above ? TRACK_Y - 15 : TRACK_Y + TRACK_H + 33;
+    const c = priColor[it.priority] || priColor.C;
+    const name = it.name.length > 14 ? it.name.slice(0, 13) + '\u2026' : it.name;
+    return `<line x1="${x.toFixed(1)}" y1="${above ? TRACK_Y-4 : TRACK_Y}" x2="${x.toFixed(1)}" y2="${above ? TRACK_Y : TRACK_Y+TRACK_H+4}" stroke="${c}" stroke-width="1.5" opacity="0.6"/>
+<circle cx="${x.toFixed(1)}" cy="${(TRACK_Y+TRACK_H/2).toFixed(1)}" r="5" fill="${c}" stroke="#0D0D0D" stroke-width="1.5"/>
+<text x="${x.toFixed(1)}" y="${nameY}" text-anchor="middle" font-size="8.5" fill="#E8E0D5" font-family="Barlow Condensed,sans-serif" font-weight="700">${escapeHtml(name)}</text>
+<text x="${x.toFixed(1)}" y="${metaY}" text-anchor="middle" font-size="7.5" fill="rgba(232,224,213,0.5)" font-family="Barlow,sans-serif">${it.priority}</text>`;
+  });
+  const SVG_H = TRACK_Y + TRACK_H + 42;
+  return `<svg width="100%" viewBox="0 0 ${W} ${SVG_H}" xmlns="http://www.w3.org/2000/svg" style="display:block;overflow:visible">
+<rect x="${PAD}" y="${TRACK_Y}" width="${USABLE}" height="${TRACK_H}" rx="2" fill="rgba(245,245,245,0.04)"/>
+${bands.join('\n')}
+${markers.join('\n')}
+<rect x="${PAD}" y="${SVG_H-12}" width="7" height="7" rx="1" fill="rgba(232,78,27,0.4)"/>
+<text x="${PAD+10}" y="${SVG_H-5}" font-size="7.5" fill="rgba(232,224,213,0.45)" font-family="Barlow,sans-serif">Taper</text>
+<rect x="${PAD+46}" y="${SVG_H-12}" width="7" height="7" rx="1" fill="rgba(0,255,136,0.3)"/>
+<text x="${PAD+56}" y="${SVG_H-5}" font-size="7.5" fill="rgba(232,224,213,0.45)" font-family="Barlow,sans-serif">Recovery</text>
+</svg>`;
+}
+
+function deleteSeasonPlan(planId) {
+  seasonPlans = seasonPlans.filter(p => String(p.id) !== String(planId));
+  persistLocalPremiumState();
+  if (remoteSyncReady) schedulePremiumStateSync();
+  renderSavedSeasonPlans();
+  showBtToast('Plan deleted');
+}
+
+function autoSuggestPriorities() {
+  const futureRaces = upcomingRaces.filter(r => isFutureDate(r.date));
+  if (!futureRaces.length) { showBtToast('No upcoming races to suggest priorities for'); return; }
+  const distRank = dist => {
+    const d = (dist || '').toLowerCase();
+    if (/iron.*man|full.*tri|ironman/.test(d)) return 10;
+    if (/ultra|100k|100 km/.test(d)) return 9;
+    if (/70\.3|half.iron/.test(d)) return 8;
+    if (/marathon/.test(d) && !/half/.test(d)) return 7;
+    if (/half.marathon|21k/.test(d)) return 6;
+    if (/olympic|sprint.tri|25k/.test(d)) return 5;
+    if (/15k|20k/.test(d)) return 4;
+    if (/10k|10 km/.test(d)) return 3;
+    if (/5k|5 km/.test(d)) return 2;
+    return 1;
+  };
+  const maxRank = Math.max(...futureRaces.map(r => distRank(r.distance)));
+  upcomingRaces = upcomingRaces.map(race => {
+    if (!isFutureDate(race.date)) return race;
+    const rank = distRank(race.distance);
+    const suggested = (rank === maxRank || rank >= 7) ? 'A' : rank >= 5 ? 'B' : 'C';
+    return { ...race, priority: suggested };
+  });
+  sv('fl2_upcoming', upcomingRaces);
+  document.querySelectorAll('[data-planner-priority]').forEach(el => {
+    const race = upcomingRaces.find(r => String(r.id) === el.getAttribute('data-planner-priority'));
+    if (race) el.value = race.priority;
+  });
+  showBtToast(`Auto-suggested ${futureRaces.length} priorities`);
+}
+
+function renderSeasonYearCompare() {
+  const el = document.getElementById('seasonPlannerYearCompare');
+  if (!el) return;
+  const curYear = new Date().getFullYear();
+  const prevYear = curYear - 1;
+  const thisYearDone = races.filter(r => r.date?.startsWith(String(curYear)));
+  const thisYearPlanned = upcomingRaces.filter(r => r.date?.startsWith(String(curYear)));
+  const lastYearDone = races.filter(r => r.date?.startsWith(String(prevYear)));
+  if (!thisYearDone.length && !thisYearPlanned.length && !lastYearDone.length) { el.innerHTML = ''; return; }
+  const stat = (label, val) => `<div style="text-align:center"><div style="font-family:var(--headline);font-weight:800;font-size:20px;color:var(--white)">${val}</div><div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin-top:1px">${label}</div></div>`;
+  const prevNames = lastYearDone.slice(0, 3).map(r => escapeHtml(r.name)).join(' · ');
+  const curNames = [...thisYearDone, ...thisYearPlanned].slice(0, 3).map(r => escapeHtml(r.name)).join(' · ');
+  el.innerHTML = `<div style="display:grid;grid-template-columns:1fr 1px 1fr;gap:0.75rem;align-items:start;padding:0.85rem 0.1rem">
+  <div>
+    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:0.5rem">${prevYear}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem">${stat('Races', lastYearDone.length)}${stat('Finished', lastYearDone.filter(r=>r.time).length)}</div>
+    ${prevNames ? `<div style="margin-top:0.45rem;font-size:10px;color:var(--muted);line-height:1.4">${prevNames}</div>` : ''}
+  </div>
+  <div style="background:var(--border);height:100%;min-height:56px;width:1px;margin:0 auto"></div>
+  <div>
+    <div style="font-size:10px;color:var(--orange);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:0.5rem">${curYear}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem">${stat('Done', thisYearDone.length)}${stat('Planned', thisYearPlanned.length)}</div>
+    ${curNames ? `<div style="margin-top:0.45rem;font-size:10px;color:var(--muted);line-height:1.4">${curNames}</div>` : ''}
+  </div>
+</div>`;
+}
+
 function renderPlannerRows(containerId, plan) {
   const el = document.getElementById(containerId);
   if (!el) return;
@@ -15267,19 +15394,24 @@ function renderPlannerRows(containerId, plan) {
     el.innerHTML = `<div class="insight-empty"><div class="insight-empty-copy">Add upcoming races to build a season plan.</div></div>`;
     return;
   }
-  el.innerHTML = `<div style="display:grid;gap:0.75rem">${plan.plan.map(item => `
-    <div class="card" style="padding:0.9rem 1rem">
+  const priColor = { A: 'var(--orange)', B: '#E8A21B', C: 'var(--muted)' };
+  const timeline = plan.plan.length >= 2 ? `<div style="background:var(--surface3);border:1px solid var(--border);border-radius:8px;padding:0.6rem 0.5rem 0.4rem;margin-bottom:0.75rem">${renderTaperTimeline(plan.plan)}</div>` : '';
+  el.innerHTML = timeline + `<div style="display:grid;gap:0.6rem">${plan.plan.map(item => `
+    <div class="card" style="padding:0.85rem 1rem">
       <div style="display:flex;justify-content:space-between;gap:1rem;align-items:flex-start">
-        <div>
-          <div class="section-h" style="font-size:15px">${escapeHtml(item.name)}</div>
-          <div style="color:var(--muted);font-size:12px;margin-top:0.2rem">${fmtDate(item.date)} · ${item.priority} race</div>
+        <div style="min-width:0">
+          <div style="display:flex;align-items:center;gap:0.45rem;margin-bottom:0.2rem">
+            <span style="font-family:var(--headline);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.1em;color:${priColor[item.priority]||'var(--muted)'};border:1px solid currentColor;padding:1px 5px;border-radius:2px;flex-shrink:0">${item.priority}</span>
+            <div class="section-h" style="font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(item.name)}</div>
+          </div>
+          <div style="color:var(--muted);font-size:11px">${fmtDate(item.date)}${item.goalTime ? ` &nbsp;·&nbsp; <span style="color:var(--orange)">🎯 ${escapeHtml(item.goalTime)}</span>` : ''}</div>
         </div>
-        <div style="text-align:right;font-size:11px;color:var(--muted)">
+        <div style="text-align:right;font-size:11px;color:var(--muted);white-space:nowrap;flex-shrink:0">
           <div>Taper ${item.taperDays}d</div>
           <div>Recover ${item.recoveryDays}d</div>
         </div>
       </div>
-      <div style="margin-top:0.6rem;font-size:12px;color:var(--muted)">${item.daysSincePrev != null ? `${item.daysSincePrev} days since previous race` : 'Season opener'}${item.daysToNext != null ? ` · ${item.daysToNext} days to next race` : ''}</div>
+      <div style="margin-top:0.45rem;font-size:11px;color:var(--muted)">${item.daysSincePrev != null ? `${item.daysSincePrev}d since prev` : 'Season opener'}${item.daysToNext != null ? ` · ${item.daysToNext}d to next` : ''}</div>
     </div>`).join('')}</div>`;
 }
 
@@ -15292,11 +15424,14 @@ function renderSavedSeasonPlans() {
   }
   el.innerHTML = seasonPlans.slice(0, 6).map(plan => `
     <div class="flatlay-item-row" style="padding:0.7rem 0.9rem">
-      <div>
+      <div style="min-width:0">
         <div style="font-weight:700">${escapeHtml(plan.name)}</div>
         <div style="font-size:11px;color:var(--muted)">${(plan.items || []).length} race slots</div>
       </div>
-      <button class="btn-ghost" type="button" onclick="loadSavedSeasonPlan('${escapeAttr(plan.id)}')">Load</button>
+      <div style="display:flex;gap:0.4rem;flex-shrink:0">
+        <button class="btn-ghost" type="button" onclick="loadSavedSeasonPlan('${escapeAttr(plan.id)}')">Load</button>
+        <button class="btn-ghost" type="button" onclick="deleteSeasonPlan('${escapeAttr(plan.id)}')" style="padding:0.55rem 0.7rem;color:var(--muted)" aria-label="Delete plan">✕</button>
+      </div>
     </div>`).join('');
 }
 
@@ -15304,20 +15439,40 @@ function loadSavedSeasonPlan(planId) {
   const plan = seasonPlans.find(item => String(item.id) === String(planId));
   if (!plan) return;
   const items = Array.isArray(plan.items) ? plan.items : [];
+  let matched = 0;
   upcomingRaces = upcomingRaces.map(race => {
-    const match = items.find(item => String(item.id) === String(race.id));
-    return match ? { ...race, priority: match.priority || race.priority } : race;
+    const match = items.find(item =>
+      String(item.id) === String(race.id) ||
+      (item.name === race.name && item.date === race.date)
+    );
+    if (match) { matched++; return { ...race, priority: match.priority || race.priority }; }
+    return race;
   });
   if (nextRace) {
-    const match = items.find(item => String(item.id) === String(nextRace.id));
+    const match = items.find(item =>
+      String(item.id) === String(nextRace.id) ||
+      (item.name === nextRace.name && item.date === nextRace.date)
+    );
     if (match) nextRace = { ...nextRace, priority: match.priority || nextRace.priority };
   }
   sv('fl2_upcoming', upcomingRaces);
   if (nextRace) sv('fl2_nr', nextRace);
+  showBtToast(`Loaded "${escapeHtml(plan.name)}" — ${matched} race${matched !== 1 ? 's' : ''} updated`);
   openSeasonPlannerModal();
 }
 
 function openSeasonPlannerModal() {
+  // Auto-prune past events from upcoming list
+  const today = new Date().toISOString().slice(0, 10);
+  const before = upcomingRaces.length;
+  upcomingRaces = upcomingRaces.filter(r => !r.date || r.date >= today);
+  if (upcomingRaces.length < before) {
+    sv('fl2_upcoming', upcomingRaces);
+    if (nextRace && nextRace.date && nextRace.date < today) {
+      nextRace = upcomingRaces[0] || null;
+      sv('fl2_nr', nextRace);
+    }
+  }
   const plan = computeSeasonPlan(upcomingRaces);
   const nameEl = document.getElementById('seasonPlannerName');
   if (nameEl) nameEl.value = getSeasonPlannerDraftName();
@@ -15328,19 +15483,33 @@ function openSeasonPlannerModal() {
     : `<div class="nr-insights-copy">No spacing warnings in the current plan.</div>`;
   const list = document.getElementById('seasonPlannerEditableList');
   if (list) {
-    list.innerHTML = upcomingRaces.filter(r => isFutureDate(r.date)).map(r => `
-      <div class="flatlay-item-row" style="padding:0.75rem 0.9rem">
-        <div>
-          <div style="font-weight:700">${escapeHtml(r.name)}</div>
-          <div style="font-size:11px;color:var(--muted)">${fmtDate(r.date)} · ${escapeHtml(r.distance || '')}</div>
-        </div>
-        <select class="fs" data-planner-priority="${escapeAttr(r.id)}" style="max-width:92px">
-          <option value="A" ${r.priority === 'A' ? 'selected' : ''}>A</option>
-          <option value="B" ${r.priority === 'B' ? 'selected' : ''}>B</option>
-          <option value="C" ${r.priority === 'C' ? 'selected' : ''}>C</option>
-        </select>
-      </div>`).join('');
+    const futureRaces = upcomingRaces.filter(r => isFutureDate(r.date));
+    if (!futureRaces.length) {
+      list.innerHTML = `<div class="nr-insights-copy">No upcoming races. Add races to start planning.</div>`;
+    } else {
+      list.innerHTML = futureRaces.map((r, i) => `
+        ${i > 0 ? `<div style="display:flex;align-items:center;gap:0.5rem">
+          <div style="flex:1;height:1px;background:var(--border)"></div>
+          <input class="fi" data-block-label="${escapeAttr(r.id)}"
+            value="${escapeHtml(r.trainingBlockLabel || '')}"
+            placeholder="Training block (e.g. Build, Speed, Taper)…"
+            style="font-size:10px;padding:0.28rem 0.55rem;flex:3;color:var(--muted);border-color:var(--border);background:transparent">
+          <div style="flex:1;height:1px;background:var(--border)"></div>
+        </div>` : ''}
+        <div class="flatlay-item-row" style="padding:0.7rem 0.9rem">
+          <div style="min-width:0">
+            <div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(r.name)}</div>
+            <div style="font-size:11px;color:var(--muted)">${fmtDate(r.date)} · ${escapeHtml(r.distance || '')}${r.goalTime ? ` · 🎯 ${escapeHtml(r.goalTime)}` : ''}</div>
+          </div>
+          <select class="fs" data-planner-priority="${escapeAttr(r.id)}" style="max-width:86px;flex-shrink:0">
+            <option value="A" ${r.priority === 'A' ? 'selected' : ''}>A Race</option>
+            <option value="B" ${r.priority === 'B' ? 'selected' : ''}>B Race</option>
+            <option value="C" ${r.priority === 'C' ? 'selected' : ''}>C Race</option>
+          </select>
+        </div>`).join('');
+    }
   }
+  renderSeasonYearCompare();
   renderSavedSeasonPlans();
   openM('seasonPlannerModal');
 }
@@ -15350,6 +15519,10 @@ function saveSeasonPlannerModal() {
     const raceId = el.getAttribute('data-planner-priority');
     upcomingRaces = upcomingRaces.map(r => String(r.id) === raceId ? { ...r, priority: el.value } : r);
     if (nextRace && String(nextRace.id) === raceId) nextRace = { ...nextRace, priority: el.value };
+  });
+  document.querySelectorAll('[data-block-label]').forEach(el => {
+    const raceId = el.getAttribute('data-block-label');
+    upcomingRaces = upcomingRaces.map(r => String(r.id) === raceId ? { ...r, trainingBlockLabel: el.value.trim() } : r);
   });
   sv('fl2_upcoming', upcomingRaces);
   if (nextRace) sv('fl2_nr', nextRace);
@@ -22230,15 +22403,20 @@ initApp();
       <div class="modal-sub">Set A/B/C priorities, review taper spacing, and save your race stack.</div>
     </div>
     <div class="modal-body">
-      <div class="fg" style="margin-bottom:0.9rem">
-        <label class="fl">Plan Name</label>
-        <input class="fi" id="seasonPlannerName" placeholder="2026 Season">
+      <div style="display:flex;gap:0.6rem;align-items:flex-end;margin-bottom:0.9rem">
+        <div class="fg" style="flex:1;margin-bottom:0">
+          <label class="fl">Plan Name</label>
+          <input class="fi" id="seasonPlannerName" placeholder="2026 Season">
+        </div>
+        <button class="btn-ghost" type="button" onclick="autoSuggestPriorities()" style="flex-shrink:0;white-space:nowrap;padding:0.55rem 0.85rem">Auto-suggest</button>
       </div>
-      <div id="seasonPlannerEditableList" style="display:grid;gap:0.6rem"></div>
+      <div id="seasonPlannerEditableList" style="display:grid;gap:0.4rem"></div>
       <div class="section-row" style="margin-top:1.1rem"><div class="section-h">Saved Plans</div></div>
       <div id="seasonPlannerSavedList" style="display:grid;gap:0.55rem"></div>
       <div class="section-row" style="margin-top:1.1rem"><div class="section-h">Warnings</div></div>
       <div id="seasonPlannerWarnings"></div>
+      <div class="section-row" style="margin-top:1.1rem"><div class="section-h">Season Comparison</div></div>
+      <div id="seasonPlannerYearCompare"></div>
       <div class="section-row" style="margin-top:1.1rem"><div class="section-h">Plan Output</div></div>
       <div id="seasonPlannerResults"></div>
     </div>

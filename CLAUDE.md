@@ -283,6 +283,14 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 | `saveDashZoneCollapse(state)` | Persist accordion collapse state object to `fl2_dash_zone_collapse` in localStorage |
 | `initDashAccordion()` | Attach single delegated click listener on dashboard page for zone accordion; idempotent (guards with `_accordionInit` flag) |
 | `getDashLayout()` | Return array of `{id, enabled}` widget config; migration v2 handles legacy layout formats |
+| `renderTaperTimeline(planItems)` | Generate inline SVG taper/recovery timeline for Season Planner; returns empty string if < 2 valid items or data is missing |
+| `deleteSeasonPlan(planId)` | Remove a saved season plan by ID, persist, sync, re-render saved list, show toast |
+| `autoSuggestPriorities()` | Assign A/B/C priorities to future upcoming races by distance rank (IM=10 → A, Marathon=7 → A/B, 5K=2 → C); updates `data-planner-priority` selects in-place |
+| `renderSeasonYearCompare()` | Render prev year vs current year race count side-by-side in `#seasonPlannerYearCompare`; noop if no races in either year |
+| `computeSeasonPlan(upcoming)` | Build taper/recovery plan for future races; includes `goalTime`, `goalPace`, peak week conflict warnings, future-only filter |
+| `loadSavedSeasonPlan(planId)` | Apply saved plan priorities to `upcomingRaces`; ID-first match, name+date fallback; shows toast with match count |
+| `openSeasonPlannerModal()` | Open Season Planner modal; auto-prunes past events from `upcomingRaces` on open |
+| `saveSeasonPlanDraft(name, items)` | Save season plan to `seasonPlans`; uses `crypto.randomUUID()` for Supabase-compatible UUID IDs |
 
 ---
 
@@ -292,7 +300,7 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 - **Test files:** `tests/utils.test.js` (pure functions), `tests/navigation.test.js` (go() + scroll behaviour)
 - **Loader:** `tests/spa-loader.js` — loads `index.html` into jsdom, exposes globals via `window`
 - **Coverage:** `npm run test:coverage` → `coverage/` directory
-- **174 tests, all green** as of Session 11
+- **218 tests, all green** as of Session 13
 - Functions tested: `timeToSecs`, `secsToHMS`, `buildPBMap`, `parsePlacing`, `computeStreak`, `computeMomentum`, `computePacingIQ`, `computeAgeGrade`, `classifyPacing`, `go()` scroll + page switching + nav state, `whoopSportName`, `parseAppleHealthXML`, all wearable function smoke tests, `getDashZoneCollapse`, `saveDashZoneCollapse`, `getDashLayout`, `renderAthleteBriefing`
 - `tests/wearables.test.js` added in Session 10 — 15 tests for wearable integration functions
 - `tests/dash-layout.test.js` added in Session 11 — 13 tests for `getDashZoneCollapse`, `saveDashZoneCollapse`, `getDashLayout` migration v2
@@ -651,6 +659,32 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 - `@resvg/resvg-wasm` bundles fine within Cloudflare's 1MB compressed limit — no need to externalize WASM to R2
 - Worker routing: fall through to `env.ASSETS.fetch(request)` must be the last line of the `fetch()` handler — any unmatched route hits it
 - `escapeHtml()` must cover every string interpolated into SSR HTML — name, location, sport, username, race name, race location, gear items
+
+---
+
+### Session 13 (2026-04-14) — Season Planner v2 + dashboard upcoming race fix
+
+**Branch:** `claude/sad-black` → staging (#88) → main (pending)
+
+#### Changes shipped
+- **Dashboard upcoming race fix** — `applyRemoteState()` was overwriting `nextRace` with null from remote state without falling back to `upcomingRaces`. Added auto-promote: after sync, if `nextRace` is null or past today, find nearest future race from `upcomingRaces` and promote it.
+- **Season Planner LOAD fix** — `loadSavedSeasonPlan()` now shows toast ("Loaded 'Name' — N races updated") and falls back to name+date matching when IDs differ. Handles plans saved with old `plan-${Date.now()}` IDs.
+- **Plan UUID fix** — `saveSeasonPlanDraft()` now uses `crypto.randomUUID()`. Old `plan-${Date.now()}` format was not a valid UUID; Supabase `season_plans.id` is `uuid` type, causing silent upsert failures that wiped saved plans.
+- **Past race pruning** — `computeSeasonPlan()` filters to `r.date >= today`; `openSeasonPlannerModal()` prunes past events from `upcomingRaces` on open.
+- **`renderTaperTimeline(planItems)`** — SVG inline visualization (320px viewBox) with orange taper zones and green recovery bands. Includes NaN guard: filters items with missing/invalid date or non-finite taper/recovery values before computing geometry.
+- **`deleteSeasonPlan(planId)`** — filter from `seasonPlans`, persist, sync, re-render, toast.
+- **`autoSuggestPriorities()`** — distance-rank lookup (Ironman=10, Marathon=7, Half=6, 5K=2...) assigns A/B/C to all future upcoming races; updates open planner selects in-place.
+- **Peak week conflict detection** — `computeSeasonPlan()` adds warning when two A/B races are < 21 days apart.
+- **`renderSeasonYearCompare()`** — prev vs current year race count side-by-side in `#seasonPlannerYearCompare`.
+- **Training block labels** — `[data-block-label]` free-text inputs between race rows in planner; `saveSeasonPlannerModal()` reads and persists `trainingBlockLabel` on each `upcomingRaces` entry via `buildUpcomingRaceFromSource()`.
+- **Goal time in plan card** — `computeSeasonPlan()` includes `goalTime` in each plan item; `renderPlannerRows()` shows 🎯 orange if set.
+- **4 new regression tests** — `computeSeasonPlan`: past-date filter, goalTime passthrough, peak week conflict, goalTime default. Total: 218 tests.
+
+#### Key learnings
+- `applyRemoteState()` applies remote state indiscriminately — always add a fallback check after sync if a derived value (like `nextRace`) might be null from fresh/empty remote state
+- `season_plans.id` is `uuid primary key` in Supabase — any client-generated ID must be a valid UUID; `plan-${Date.now()}` silently fails upsert
+- `renderTaperTimeline` SVG: `+new Date(dateStr + 'T00:00:00')` returns `NaN` for undefined/invalid dates; `.toFixed(1)` on NaN produces the string `"NaN"` which renders as blank SVG element rather than throwing — always guard before computing geometry
+- String date comparison (`date < today` where both are `YYYY-MM-DD`) is lexicographically correct and safe — no need for Date parsing for simple past/future checks
 
 ---
 
