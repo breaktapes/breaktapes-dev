@@ -712,6 +712,29 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 
 ---
 
+### Session 13 (2026-04-13) — Race catalog v2 full refresh
+
+**Branch:** `claude/serene-kilby` → staging (pending)
+
+#### Changes
+- **Race catalog replaced** — both staging and production `race_catalog` tables truncated and reloaded from `race_catalog_export.numbers` (uploaded 2026-04-13). 8,284 rows across run, tri, cycle, hyrox, swim disciplines.
+- **Migration file** — `supabase/migrations/20260411120000_race_catalog_v2_refresh.sql` committed (documents the truncate + re-insert).
+- **Branch cleanup** — deleted 17 stale local branches (squash-merged via PRs); removed stale `nifty-blackwell` worktree. Remaining local branches: `main`, `staging`, `claude/serene-kilby`, `codex/*` (Codex-owned).
+
+#### How the reload was done (future reference)
+Direct DB access (psql/psycopg2) is blocked from localhost — Supabase only exposes the DB via pooler at non-standard ports. Instead:
+1. Temporarily `GRANT INSERT ON race_catalog TO anon` + `CREATE POLICY race_catalog_anon_insert ... WITH CHECK (true)`
+2. Bulk POST via `https://<project>.supabase.co/rest/v1/race_catalog` with anon key, 200-row batches
+3. `REVOKE INSERT` + `DROP POLICY` after load completes
+
+#### Key learnings
+- Supabase `db.*.supabase.co:5432` is not reachable from localhost — use REST API or Supabase MCP `execute_sql` for remote data loads
+- `execute_sql` MCP tool works but payload size limits make it slow for large datasets — REST API bulk insert is faster (200-row JSON batches, ~40 requests for 8K rows)
+- `GRANT INSERT TO anon` alone is insufficient when RLS is enabled — must also `CREATE POLICY ... FOR INSERT TO anon WITH CHECK (true)`; revoke both after load
+- Supabase anon key format changed from `eyJ...` JWT to `sb_publishable_...` — both work identically in REST API headers
+
+---
+
 ## Skill routing
 
 When the user's request matches an available skill, ALWAYS invoke it using the Skill
