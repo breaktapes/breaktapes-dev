@@ -3,6 +3,23 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.3.0.0] - 2026-04-14
+
+### Fixed
+- **Upcoming races now show on dashboard** — `applyRemoteState()` was overwriting `nextRace` with null on remote sync even when upcoming races were stored. Auto-promote logic now picks the nearest future race from `upcomingRaces` when the synced value is missing or stale.
+- **Season Planner LOAD button** — plans now confirm with a toast ("Loaded 'Plan Name' — N races updated") and fall back to name+date matching when IDs differ, so plans saved before the UUID fix still load correctly.
+- **Season plan IDs** — plans now use `crypto.randomUUID()` preventing silent Supabase upsert failures (`season_plans.id` is `uuid` type; old `plan-${Date.now()}` IDs were invalid).
+- **Past races auto-removed from Season Planner** — opening the planner now prunes past events; `computeSeasonPlan()` also filters to future-only dates.
+
+### Added
+- **Taper timeline visualization** — the Season Planner shows an SVG timeline with proportional orange taper zones and green recovery zones for each race. Requires 2+ planned races.
+- **Delete saved plans** — each saved plan now has a ✕ button to permanently remove it.
+- **Auto-suggest priorities** — new button assigns A/B/C priorities by distance (Ironman/Marathon → A, Half/Olympic → B, 5K/10K → C).
+- **Peak week conflict detection** — warns when two A or B races are within 21 days of each other and suggests downgrading one to C.
+- **Year-over-year comparison** — side-by-side card comparing previous year vs current year race counts in the Season Planner.
+- **Training block labels** — free-text inputs between race rows let you label training phases (e.g., "Base Phase", "Speed Block"); saved per race.
+- **Goal time in plan view** — if a race has a goal time set, it appears in the planner card with an orange 🎯 marker.
+
 ## [0.2.1.0] - 2026-04-13
 
 ### Added
