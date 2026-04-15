@@ -470,6 +470,10 @@ header {
 .menu-item.active { background: var(--orange-dim); color: var(--orange); }
 .menu-item.active .menu-icon { color: var(--orange); }
 .menu-icon { font-size: 16px; width: 22px; text-align:center; flex-shrink:0; }
+.menu-item-label { display:flex; flex-direction:column; gap:1px; }
+.menu-item-sub { font-size: 9px; font-weight: 500; letter-spacing: 0.04em; text-transform: none; color: var(--muted2); line-height: 1.3; }
+.menu-item:hover .menu-item-sub { color: rgba(245,245,245,0.45); }
+.menu-item.active .menu-item-sub { color: rgba(var(--orange-ch),0.55); }
 .menu-badge {
   margin-left:auto; font-size:10px; font-weight:800;
   background: var(--orange); color: var(--black);
@@ -3987,7 +3991,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 [data-theme="light"] .pro-plan-copy,
 [data-theme="light"] .pro-plan-list { color: rgba(26,26,26,0.74); }
 
-[data-theme="light"] .bn-tab { color: rgba(26,26,26,0.55); }
+[data-theme="light"] .bn-tab { color: rgba(26,26,26,0.75); }
 [data-theme="light"] .bn-tab.active { color: var(--orange); }
 
 [data-theme="light"] .menu-item { color: rgba(26,26,26,0.70); }
@@ -4029,6 +4033,22 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 [data-theme="light"] .be-ax { fill: rgba(26,26,26,0.45) !important; }
 
 /* =============================================
+   PAGE TITLE BAR
+   ============================================= */
+#pageTitleBar {
+  display: none;
+  position: sticky; top: 0; z-index: 90;
+  padding: 6px 1rem 5px;
+  font-family: var(--headline); font-size: 10px; font-weight: 800;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--muted); background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  pointer-events: none;
+}
+@media (max-width: 767px) { #pageTitleBar { display: block; } }
+[data-theme="light"] #pageTitleBar { background: #f0f0f0; border-color: rgba(26,26,26,0.08); }
+
+/* =============================================
    BOTTOM NAV
    ============================================= */
 .bottom-nav {
@@ -4050,8 +4070,8 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   align-items: center; justify-content: center;
   gap: 3px; padding: 8px 0 4px; min-height: 48px; min-width: 44px;
   cursor: pointer; background: none; border: none;
-  color: rgba(245,245,245,0.68); transition: color 0.15s, transform 0.15s, opacity 0.15s;
-  font-family: var(--headline); font-size: 8px; font-weight: 800;
+  color: rgba(245,245,245,0.85); transition: color 0.15s, transform 0.15s, opacity 0.15s;
+  font-family: var(--headline); font-size: 10px; font-weight: 800;
   letter-spacing: 0.1em; text-transform: uppercase;
 }
 .bn-tab:active { transform: scale(0.92); }
@@ -4062,7 +4082,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   opacity: 0.96;
 }
 .bn-tab.active svg { stroke: var(--orange); }
-@media (max-width: 360px) { .bn-tab { font-size: 0; } }
+@media (max-width: 360px) { .bn-tab { font-size: 9px; } }
 /* Train tab — green identity */
 #bn-train.active { color: var(--orange); }
 #bn-train.active svg { stroke: var(--orange); }
@@ -5472,6 +5492,17 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 }
 #landing-screen > * { position: relative; z-index: 2; }
 #landing-screen.out { opacity: 0; transform: translateY(-24px); pointer-events: none; }
+#landing-screen.loading .landing-actions,
+#landing-screen.loading .landing-proof { opacity: 0.3; pointer-events: none; }
+#landing-auth-spinner {
+  display: none; width: 20px; height: 20px; margin: 0.5rem auto 0;
+  border: 2px solid rgba(var(--orange-ch),0.2);
+  border-top-color: var(--orange);
+  border-radius: 50%;
+  animation: spinnerSpin 0.7s linear infinite;
+}
+#landing-screen.loading #landing-auth-spinner { display: block; }
+@keyframes spinnerSpin { to { transform: rotate(360deg); } }
 .landing-wordmark {
   font-family: var(--headline);
   font-size: clamp(14px, 4vw, 18px);
@@ -6008,6 +6039,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   <div class="landing-wordmark">BREAK<span class="slash">/</span>TAPES</div>
   <div class="landing-headline">Your Races.<br><em>All of Them.</em></div>
   <p class="landing-sub">Log every finish line. Track PRs, medals, and race history in one place.</p>
+  <div id="landing-auth-spinner"></div>
   <div class="landing-actions">
     <button class="btn-main" onclick="openLandingAuth('signup')">Get Started — It's Free</button>
     <button class="landing-sign-in-link" onclick="openLandingAuth('signin')">Already have an account? Sign in</button>
@@ -6051,36 +6083,36 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   <div class="menu-nav">
     <div class="menu-section-label race">Race</div>
     <button class="menu-item active" id="mi-dashboard" onclick="go('dashboard')">
-      <span class="menu-icon">⚡</span>Dashboard
+      <span class="menu-icon">⚡</span><span class="menu-item-label">Dashboard<span class="menu-item-sub">PRs, medals &amp; upcoming races</span></span>
     </button>
     <button class="menu-item" id="mi-medals" onclick="go('medals')">
-      <span class="menu-icon">🏅</span>Medal Wall
+      <span class="menu-icon">🏅</span><span class="menu-item-label">Medal Wall<span class="menu-item-sub">Photos &amp; achievements</span></span>
       <span class="menu-badge" id="mBadge">0</span>
     </button>
     <button class="menu-item" id="mi-history" onclick="go('history')">
-      <span class="menu-icon">📋</span>Race History
+      <span class="menu-icon">📋</span><span class="menu-item-label">Race History<span class="menu-item-sub">All your finishes</span></span>
     </button>
     <button class="menu-item" id="mi-wishlist" onclick="go('wishlist')">
-      <span class="menu-icon">💫</span>Race Wishlist
+      <span class="menu-icon">💫</span><span class="menu-item-label">Race Wishlist<span class="menu-item-sub">Future &amp; bucket-list races</span></span>
     </button>
     <button class="menu-item" id="mi-map" onclick="go('map')">
-      <span class="menu-icon">🗺️</span>Race Map
+      <span class="menu-icon">🗺️</span><span class="menu-item-label">Race Map<span class="menu-item-sub">Countries &amp; routes</span></span>
     </button>
     <button class="menu-item" id="mi-flatlay" onclick="go('flatlay')">
-      <span class="menu-icon">🧰</span>The Flatlay
+      <span class="menu-icon">🧰</span><span class="menu-item-label">The Flatlay<span class="menu-item-sub">Gear &amp; race kits</span></span>
     </button>
     <div class="menu-divider"></div>
     <div class="menu-section-label train">Train</div>
     <button class="menu-item" id="mi-train" onclick="go('train')">
-      <span class="menu-icon">⚡</span>Pace Calculator
+      <span class="menu-icon">⚡</span><span class="menu-item-label">Pace Calculator<span class="menu-item-sub">Target &amp; split pacing</span></span>
     </button>
     <button class="menu-item" onclick="go('train');switchTrainTab('activities',document.getElementById('ttActivities'))">
-      <span class="menu-icon">🏋️</span>Activity Log
+      <span class="menu-icon">🏋️</span><span class="menu-item-label">Activity Log<span class="menu-item-sub">Workouts &amp; wearables</span></span>
     </button>
     <div class="menu-divider"></div>
     <div class="menu-section-label">You</div>
     <button class="menu-item" id="mi-athlete" onclick="go('athlete')">
-      <span class="menu-icon">👤</span>Athlete Profile
+      <span class="menu-icon">👤</span><span class="menu-item-label">Athlete Profile<span class="menu-item-sub">Stats, bio &amp; public page</span></span>
     </button>
     <button class="menu-item" onclick="openNextRace()">
       <span class="menu-icon">📅</span>Set Next Race
@@ -6140,6 +6172,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 
 <!-- ==== MAIN ==== -->
 <main>
+<div id="pageTitleBar">Dashboard</div>
 <div aria-live="polite" aria-atomic="true" id="a11y-status" class="sr-only"></div>
 
 <!-- DASHBOARD -->
@@ -6255,7 +6288,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
         <div class="dash-zone-head">
           <div>
             <div class="dash-zone-kicker">Trending</div>
-            <div class="dash-zone-title">Build & Consistency</div>
+            <div class="dash-zone-title">Consistency</div>
           </div>
           <button class="dash-zone-chevron" aria-label="Toggle section" tabindex="-1">▾</button>
         </div>
@@ -6296,7 +6329,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
         <div class="dash-zone-head">
           <div>
             <div class="dash-zone-kicker">Context</div>
-            <div class="dash-zone-title">Patterns & Analysis</div>
+            <div class="dash-zone-title">Patterns</div>
           </div>
           <button class="dash-zone-chevron" aria-label="Toggle section" tabindex="-1">▾</button>
         </div>
@@ -6445,7 +6478,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
         <div class="flatlay-section-head">
           <div>
             <div class="flatlay-section-title">My Library</div>
-            <div class="flatlay-section-sub">Your saved marketplace products across footwear, apparel, bike, swim, hydration, nutrition, and race-day essentials.</div>
+            <div class="flatlay-section-sub">Your saved gear.</div>
           </div>
           <button class="btn-main" type="button" onclick="openCustomProductModal()">+ Add Product</button>
         </div>
@@ -6456,7 +6489,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
         <div class="flatlay-section-head">
           <div>
             <div class="flatlay-section-title">Lists</div>
-            <div class="flatlay-section-sub">Build your own product lists from everything in your library.</div>
+            <div class="flatlay-section-sub">Your product lists.</div>
           </div>
           <button class="btn-main" type="button" onclick="openFlatlayListModal()">+ New List</button>
         </div>
@@ -6467,7 +6500,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
         <div class="flatlay-section-head">
           <div>
             <div class="flatlay-section-title">Race Stacks</div>
-            <div class="flatlay-section-sub">Create reusable templates by sport and distance, then layer in your own race-day products.</div>
+            <div class="flatlay-section-sub">Gear sets by race type.</div>
           </div>
           <button class="btn-main" type="button" onclick="openFlatlayStackModal()">+ New Stack</button>
         </div>
@@ -10361,7 +10394,18 @@ async function initAuth() {
       headline.innerHTML = `${_ctxName} is on BREAKTAPES.<br><em>Track your race life too.</em>`;
     }
   }
-  let { data } = await client.auth.getSession();
+  // Show spinner while auth resolves
+  const _ls = document.getElementById('landing-screen');
+  if (_ls) _ls.classList.add('loading');
+  const _timeout = new Promise(resolve => setTimeout(() => resolve({ data: { session: null }, _timedOut: true }), 4000));
+  let _authResult;
+  try {
+    _authResult = await Promise.race([client.auth.getSession(), _timeout]);
+  } catch(e) {
+    _authResult = { data: { session: null } };
+  }
+  if (_ls) _ls.classList.remove('loading');
+  let { data } = _authResult;
   let session = data.session;
   if (!session) {
     const cachedSession = readCachedSupabaseSession();
@@ -10509,6 +10553,11 @@ function go(page) {
   if(a) a.classList.add('active');
   closeMenu();
   window.scrollTo(0, 0);
+  const _pageNames = { dashboard:'Dashboard', medals:'Medal Wall', history:'Race History',
+    map:'Race Map', train:'Train', athlete:'Athlete Profile', wishlist:'Race Wishlist',
+    flatlay:'The Flatlay', pace:'Pace Calculator' };
+  const _ptb = document.getElementById('pageTitleBar');
+  if (_ptb) _ptb.textContent = _pageNames[page] || page;
   render(page);
 }
 function closeMoreSheet() { /* no-op — More now opens the side menu */ }
@@ -20076,7 +20125,7 @@ async function renderOWWidget() {
   const cfg = getOWConfig();
   if (!cfg) {
     el.innerHTML = `<div class="ow-connect-prompt">
-      <div class="ow-connect-text"><strong>Connect Open Wearables</strong> to see today's recovery, HRV, and sleep on your dashboard.</div>
+      <div class="ow-connect-text"><strong>Connect Open Wearables</strong> — today's recovery &amp; HRV.</div>
       <button class="btn-ghost" onclick="openSettings()" style="white-space:nowrap;flex-shrink:0">Connect →</button>
     </div>`;
     return;
@@ -20353,7 +20402,7 @@ async function renderOWFatigueChart() {
   if (pts.length < 3) {
     el.innerHTML = `<div class="ow-fatigue-card">
       <div class="ow-fatigue-title">Fatigue vs Performance</div>
-      <div class="ow-fatigue-empty">Not enough matched data yet. Once you race with OW connected, recovery scores will be correlated with your race times.</div>
+      <div class="ow-fatigue-empty">No matched data yet.</div>
     </div>`;
     return;
   }
@@ -20397,7 +20446,7 @@ async function renderOWTrainingFeed() {
   const cfg = getOWConfig();
   if (!cfg) {
     el.innerHTML = `<div class="ow-connect-prompt">
-      <div class="ow-connect-text"><strong>Connect Open Wearables</strong> for normalized workouts from any device — Garmin, Whoop, Polar, Oura and more.</div>
+      <div class="ow-connect-text"><strong>Connect Open Wearables</strong> — workouts from any device.</div>
       <button class="btn-ghost" onclick="openSettings()" style="white-space:nowrap;flex-shrink:0">Connect →</button>
     </div>`;
     return;
@@ -21006,10 +21055,8 @@ function renderWearables() {
     <div class="integration-help">
       <div class="integration-help-h">How to export from Garmin Connect</div>
       <ol class="integration-help-steps">
-        <li>Open <strong>Garmin Connect</strong> app or website</li>
-        <li>Go to <strong>Activities</strong> &rarr; open any activity</li>
-        <li>Tap the <strong>&hellip; menu</strong> &rarr; <strong>Export to FIT</strong></li>
-        <li>Upload the <strong>.fit file</strong> above — select multiple at once</li>
+        <li>In Garmin Connect: open an activity &rarr; <strong>&hellip; menu</strong> &rarr; <strong>Export to FIT</strong></li>
+        <li>Upload the <strong>.fit file</strong> above</li>
       </ol>
     </div>` : ''}
 
@@ -21017,9 +21064,8 @@ function renderWearables() {
     <div class="integration-help">
       <div class="integration-help-h">How to export Apple Health</div>
       <ol class="integration-help-steps">
-        <li>Open the <strong>Health</strong> app on your iPhone</li>
-        <li>Tap your profile photo &rarr; <strong>Export All Health Data</strong></li>
-        <li>Unzip the file &rarr; upload <strong>export.xml</strong> above</li>
+        <li>iPhone Health app &rarr; profile photo &rarr; <strong>Export All Health Data</strong></li>
+        <li>Unzip &rarr; upload <strong>export.xml</strong> above</li>
       </ol>
     </div>` : ''}
 
@@ -21141,6 +21187,19 @@ async function handleGarminFitImport(fileList) {
   const files = Array.from(fileList).filter(f => f.name.endsWith('.fit') || f.name.endsWith('.FIT'));
   if (!files.length) { showBtToast('Please select .fit files exported from Garmin Connect.', 'error'); return; }
 
+  // Guard: check FIT parser is loaded
+  if (typeof FitParser === 'undefined') {
+    showBtToast('FIT parser not loaded — refresh the page and try again.', 'error');
+    return;
+  }
+
+  // Guard: skip files over 100 MB
+  const oversized = files.filter(f => f.size > 100 * 1024 * 1024);
+  if (oversized.length) {
+    showBtToast(`${oversized.map(f=>f.name).join(', ')} is too large — export individual activities from Garmin Connect.`, 'error');
+    return;
+  }
+
   showBtToast(`Parsing ${files.length} file${files.length > 1 ? 's' : ''}…`);
 
   let allNew = [];
@@ -21156,7 +21215,7 @@ async function handleGarminFitImport(fileList) {
   }
 
   if (!allNew.length && errors) {
-    showBtToast('Could not parse any FIT files. Make sure they are valid Garmin exports.', 'error');
+    showBtToast('Could not read FIT file — try re-exporting from Garmin Connect.', 'error');
     return;
   }
 
