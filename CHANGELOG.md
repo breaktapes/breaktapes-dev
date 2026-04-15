@@ -5,39 +5,27 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.3.1.3] - 2026-04-15
 
-### Fixed
-- Train → Activities tab no longer overflows right on mobile — `.wrap > * { min-width: 0; }` blanket rule ensures all direct grid children shrink within their 1fr column
-- Recent Training widget Strava placeholder text no longer truncates at "Connect Strava to see rec..." — `.ap-name` now uses `flex:1; min-width:0` instead of `max-width:160px`
-
-## [0.3.1.2] - 2026-04-15
-
-### Fixed
-- Recent Training widget Strava placeholder text now renders in full — `.ap-name` uses `flex:1; min-width:0` instead of fixed `max-width:160px`
-
-## [0.3.1.1] - 2026-04-15
-
-### Fixed
-- All 6 pages now fit within 375px viewport with no horizontal scroll on iOS Safari
-- Side menu: switched from `right:-310px` to `transform:translateX(100%)` + `display:none` — `position:fixed` elements off-screen were inflating `body.scrollWidth` on iOS
-- Dashboard PB strip and athlete profile grids: `min-width:0` cascade prevents horizontal flex scroll containers from expanding their parent 1fr grid column
-- Athlete hero layout: `minmax(0,0.75fr)` restored with 140px floor to prevent right column collapsing on narrow viewports
-- Menu rapid-toggle race condition: `_menuCloseTimer` stored and cleared on re-open, preventing a stale `setTimeout` from hiding a freshly opened menu
-
-## [0.3.1.0] - 2026-04-15
-
 ### Changed
-- Bottom nav labels are now larger (10px) and higher contrast — easier to read on all screen sizes, including 360px devices
-- Side menu items now show brief one-line descriptions under each label (e.g. "PRs, medals & upcoming races" under Dashboard)
-- All feature descriptions shortened: Flatlay section subtitles, Open Wearables connect prompts, integration help bullet lists, Fatigue vs Performance empty state
+- Bottom nav labels are now larger (10px) and higher contrast, including 360px devices
+- Side menu items show brief descriptions under each label
+- All feature descriptions shortened across Flatlay, Open Wearables, Fatigue chart, and integration help
 - Dashboard zone titles simplified: "Build & Consistency" → "Consistency", "Patterns & Analysis" → "Patterns"
 
 ### Fixed
-- FIT file upload now shows a clear error toast instead of crashing when the FIT parser library is not loaded, or when a file exceeds 100 MB
-- App loading: `initAuth()` now races against a 4-second timeout — slow or offline Supabase no longer causes a blank screen on startup
-- Loading spinner appears on the landing screen while auth resolves
+- All 6 pages fit within 375px viewport with no horizontal scroll on iOS Safari
+- Side menu: `transform:translateX(100%)` + `display:none` replaces `right:-310px` to stop iOS from inflating `body.scrollWidth`
+- `.wrap > * { min-width: 0 }` blanket rule prevents any grid child from overflowing its 1fr column (fixes Activities tab cutoff)
+- Dashboard PB strip and athlete profile grids: `min-width:0` cascade prevents flex containers from expanding past their grid column
+- Athlete hero: `minmax(140px, 0.75fr)` floor prevents right column collapse on narrow viewports
+- Menu rapid-toggle race condition: `_menuCloseTimer` stored and cleared on re-open
+- Side menu `aria-expanded` and `aria-hidden` now toggle correctly for screen readers
+- Recent Training Strava placeholder text no longer truncates — `.ap-name` uses `flex:1; min-width:0` instead of `max-width:160px`
+- FIT file upload shows a clear error toast instead of crashing when the parser is not loaded or file exceeds 100 MB
+- `initAuth()` races against a 4-second timeout — slow Supabase no longer causes a blank screen
 
 ### Added
-- Page title bar (mobile-only): sticky label at the top of the screen shows the current page name as you navigate
+- Page title bar (mobile-only): sticky label showing the current page name
+- Loading spinner on the landing screen while auth resolves
 
 ## [0.3.0.2] - 2026-04-15
 
