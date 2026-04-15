@@ -128,7 +128,7 @@ Cloudflare Worker that intercepts public profile routes before serving static as
 OG image Worker (`og-worker/index.js`) runs separately at `health.breaktapes.com/og/u/:username`. Deployed independently via `cd og-worker && CF_API_TOKEN="" wrangler deploy`.
 
 ### Single-file structure (`index.html`)
-The entire app lives in one HTML file (~10,035 lines). Sections are organized as:
+The entire app lives in one HTML file (~22,900 lines). Sections are organized as:
 1. CSS tokens / reset / component styles
 2. HTML markup (pages, modals, landing screen)
 3. JavaScript (data, auth, render functions, integrations)
@@ -136,7 +136,7 @@ The entire app lives in one HTML file (~10,035 lines). Sections are organized as
 ### Page system
 Pages use `id="page-*"` with `.page` / `.page.active` CSS classes. Navigation is handled by `go(page)` which sets active class and calls `render(page)`.
 
-Pages: `dashboard`, `history`, `medals`, `map`, `athlete`, `train`, `training`, `pace`
+Pages: `dashboard`, `history`, `medals`, `map`, `athlete`, `train`, `wishlist`, `flatlay`, `pace`
 
 ### State management
 - Local state: `localStorage` via `sv(k,v)` helper
@@ -714,6 +714,10 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 - Username availability check (`checkUsernameAvailability()`) queries `user_state` directly with anon key — works because anon can SELECT rows but only sees `username` field pattern, not private data.
 - `is_public` toggle in Settings is disabled until a username is saved — enforced in `onIsPublicToggle()`. Do not remove this guard.
 - `user_state` (not `app_state`) is the actual Supabase table name — CLAUDE.md previously said `app_state` incorrectly. All references now fixed.
+- Side menu positioning: **do not revert to `right: -310px`** — it inflates `body.scrollWidth` on iOS Safari causing a full-page horizontal scroll. The menu uses `transform: translateX(100%)` + `display: none` (with a 350ms `_menuCloseTimer` delay on close).
+- `#pageTitleBar` is a mobile-only sticky element updated by `go()` — it must stay in sync with the `_pageNames` map in `go()` when new pages are added.
+- `initAuth()` races against a 4-second timeout. If Supabase is cold, the user sees the landing screen (not a blank page). The landing spinner (`#landing-auth-spinner`) shows during this window.
+- FIT file upload: `handleGarminFitImport()` guards against `FitParser` being undefined (CDN not yet loaded) and files > 100 MB. Both checks must stay in place.
 
 ---
 
@@ -755,6 +759,34 @@ Direct DB access (psql/psycopg2) is blocked from localhost — Supabase only exp
 - `execute_sql` MCP tool works but payload size limits make it slow for large datasets — REST API bulk insert is faster (200-row JSON batches, ~40 requests for 8K rows)
 - `GRANT INSERT TO anon` alone is insufficient when RLS is enabled — must also `CREATE POLICY ... FOR INSERT TO anon WITH CHECK (true)`; revoke both after load
 - Supabase anon key format changed from `eyJ...` JWT to `sb_publishable_...` — both work identically in REST API headers
+
+---
+
+### Session 15 (2026-04-15) — Mobile UX polish, overflow fixes, auth timeout, aria (v0.3.1.x)
+
+**Branch:** `claude/gifted-beaver-apname` → staging
+
+#### Changes shipped
+- **Bottom nav readability** — labels bumped from 8px to 10px, opacity from 68% to 85%. At `max-width: 360px`, labels now show at 9px (previously `font-size: 0` — icon-only). Light mode inactive tab opacity raised from 55% to 75%.
+- **Side menu sub-labels** — each `.menu-item` now wraps its label in `.menu-item-label` with a `.menu-item-sub` description (9px, `var(--muted2)`). Adds context at a glance.
+- **Mobile horizontal overflow fix** — `.side-menu` changed from `right: -310px` → `right: 0; transform: translateX(100%)`. Eliminates `body.scrollWidth` inflation on iOS Safari. `display: none` toggled with 350ms `_menuCloseTimer` delay so CSS transition completes before hiding.
+- **`.wrap > * { min-width: 0 }` blanket rule** — prevents any grid child from blowing out its 1fr column. Cascaded `min-width: 0` to `.dash-shell`, `.dash-zone`, `.dash-zone-grid`, `.ath-page-shell`, `.ath-hero-content`, `.ath-section`, `.ath-pb-grid`, `.pb-sport-section`, `.dash-pb-strip`, and more.
+- **Athlete hero column floor** — `minmax(290px, 0.75fr)` → `minmax(140px, 0.75fr)` prevents right column from forcing overflow on narrow viewports.
+- **Strava `.ap-name` fix** — replaced `max-width: 160px` with `flex: 1; min-width: 0`. Strava activity names now expand to available space and truncate correctly.
+- **Menu aria attributes** — `toggleMenu()` / `closeMenu()` now set `aria-expanded` on the hamburger button and `aria-hidden` on the menu panel. Fixed a race condition where rapid open/close left the menu in an intermediate state via `_menuCloseTimer` guard.
+- **`initAuth()` 4-second timeout** — `Promise.race([client.auth.getSession(), timeout])` prevents blank screen on slow Supabase cold-start. Landing screen shows a spinner (`#landing-auth-spinner`) during auth resolution.
+- **FIT file upload guard** — `handleGarminFitImport()` now checks `typeof FitParser !== 'undefined'` before parsing and rejects files > 100 MB with a clear error toast (previously crashed silently).
+- **Page title bar** — `#pageTitleBar` (mobile-only, sticky) shows current page name. Updated by `go()` on every navigation.
+- **Dashboard zone labels** — "Build & Consistency" → "Consistency", "Patterns & Analysis" → "Patterns".
+- **Text density pass** — Flatlay section descriptions, OW connect prompts, fatigue empty state, FIT error toast all shortened.
+- **Version:** v0.3.1.0 → v0.3.1.3
+
+#### Key learnings
+- `right: -310px` on a `position: fixed` element still expands `body.scrollWidth` on iOS Safari — use `transform: translateX(100%)` instead; it is GPU-composited and does not affect layout flow
+- `display: none` must be deferred by the CSS transition duration (350ms) on close — removing it immediately skips the slide-out animation; store the timer ID so re-open can cancel it
+- `min-width: 0` is required on every CSS grid child that contains text or other potentially-wide content — grid items default to `auto` min-width which bypasses the 1fr constraint
+- `Promise.race()` for auth timeout: the `_timedOut: true` field on the fallback object is a clean signal without throwing — catch block is not needed for timeout, only for genuine errors
+- FIT parser crash guard: `typeof FitParser === 'undefined'` check must precede any call to `new FitParser()` — the library loads async via CDN and may not be ready on first render
 
 ---
 

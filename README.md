@@ -26,7 +26,7 @@ Then open `http://localhost:3000` in your browser.
 ## Tests
 
 ```bash
-npm test              # run all tests (67 tests)
+npm test              # run all tests (218 tests)
 npm run test:coverage # with coverage report
 ```
 
