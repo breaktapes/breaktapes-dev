@@ -543,7 +543,7 @@ main {
 /* =============================================
    SHARED LAYOUT
    ============================================= */
-.wrap { max-width: 860px; margin:0 auto; padding: 1.5rem 1.25rem; }
+.wrap { max-width: 860px; margin:0 auto; padding: 1.5rem 1.25rem; display:grid; grid-template-columns:1fr; gap:1rem; }
 
 .page-kicker {
   font-family: var(--headline);
@@ -633,14 +633,14 @@ main {
 .weather-pill .wp-temp { font-size: 0.72rem; color: var(--white); font-weight: 600; }
 .weather-pill .wp-time { font-size: 0.6rem; color: var(--muted2); }
 .dash-shell {
-  display:flex;
-  flex-direction:column;
-  gap:1.5rem;
+  display:grid;
+  grid-template-columns:1fr;
+  gap:1rem;
 }
 .dash-zone {
-  display:flex;
-  flex-direction:column;
-  gap:0.85rem;
+  display:grid;
+  grid-template-columns:1fr;
+  gap:1rem;
 }
 .dash-zone-head {
   display:flex;
@@ -666,9 +666,9 @@ main {
   color:var(--white);
 }
 .dash-zone-grid {
-  display:flex;
-  flex-direction:column;
-  gap:0.85rem;
+  display:grid;
+  grid-template-columns:1fr;
+  gap:1rem;
 }
 .dash-zone-grid > [id^="dash-widget-"] {
   margin:0;
@@ -3650,9 +3650,9 @@ main {
    DASHBOARD POLISH
    ============================================= */
 #page-dashboard .wrap {
-  display:flex;
-  flex-direction:column;
-  gap:1.1rem;
+  display:grid;
+  grid-template-columns:1fr;
+  gap:1rem;
 }
 #page-dashboard .greeting-card {
   margin-bottom:0;
@@ -3691,7 +3691,7 @@ main {
   border:1px solid rgba(245,245,245,0.08);
 }
 #page-dashboard .dash-shell {
-  gap:1.3rem;
+  gap:1rem;
 }
 #page-dashboard .dash-zone {
   padding:1rem 1.05rem 1.1rem;
@@ -3708,7 +3708,7 @@ main {
   border-bottom:1px solid rgba(245,245,245,0.06);
 }
 #page-dashboard .dash-zone-grid {
-  gap:0.95rem;
+  gap:1rem;
 }
 #page-dashboard #dash-widget-recent,
 #page-dashboard #dash-widget-insights,
@@ -3850,13 +3850,13 @@ main {
   margin-top:0;
 }
 @media(max-width:767px){
-  #page-dashboard .wrap { gap:0.95rem; }
+  #page-dashboard .wrap { gap:1rem; }
   #page-dashboard .greeting-card {
     padding:1rem 1rem 1.05rem;
     align-items:flex-start;
   }
   #page-dashboard .dash-shell {
-    gap:1rem;
+    gap:1rem; /* already unified */
   }
   #page-dashboard .dash-zone {
     padding:0.9rem 0.85rem 0.95rem;
@@ -3866,7 +3866,7 @@ main {
     padding-bottom:0.7rem;
   }
   #page-dashboard .dash-zone-grid {
-    gap:0.85rem;
+    gap:1rem;
   }
   #page-dashboard .countdown-wrap {
     padding:1.55rem 1rem 1.3rem;
@@ -3892,7 +3892,7 @@ main {
    RESPONSIVE
    ============================================= */
 @media(max-width:767px){
-  .dash-shell { gap:1.25rem; }
+  .dash-shell { gap:1rem; }
   .dash-zone-head { align-items:flex-start; }
   .dash-zone-title { font-size:17px; }
   .stats-row  { grid-template-columns:repeat(4,1fr); }

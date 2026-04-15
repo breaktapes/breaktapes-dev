@@ -3,6 +3,12 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.3.0.2] - 2026-04-15
+
+### Changed
+- Unified all layout containers to `display: grid; grid-template-columns: 1fr; gap: 1rem` — replaces inconsistent flex-column gaps (0.6–1.5rem) across `.wrap`, `.dash-shell`, `.dash-zone`, and `.dash-zone-grid`
+- Layout uniformity rule documented in `DESIGN.md` — applies to all current and future components
+
 ## [0.3.0.1] - 2026-04-15
 
 ### Fixed
