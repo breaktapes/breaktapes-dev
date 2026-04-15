@@ -3,6 +3,22 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.3.1.0] - 2026-04-15
+
+### Changed
+- Bottom nav labels are now larger (10px) and higher contrast — easier to read on all screen sizes, including 360px devices
+- Side menu items now show brief one-line descriptions under each label (e.g. "PRs, medals & upcoming races" under Dashboard)
+- All feature descriptions shortened: Flatlay section subtitles, Open Wearables connect prompts, integration help bullet lists, Fatigue vs Performance empty state
+- Dashboard zone titles simplified: "Build & Consistency" → "Consistency", "Patterns & Analysis" → "Patterns"
+
+### Fixed
+- FIT file upload now shows a clear error toast instead of crashing when the FIT parser library is not loaded, or when a file exceeds 100 MB
+- App loading: `initAuth()` now races against a 4-second timeout — slow or offline Supabase no longer causes a blank screen on startup
+- Loading spinner appears on the landing screen while auth resolves
+
+### Added
+- Page title bar (mobile-only): sticky label at the top of the screen shows the current page name as you navigate
+
 ## [0.3.0.2] - 2026-04-15
 
 ### Changed
