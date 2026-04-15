@@ -3,6 +3,17 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.3.1.3] - 2026-04-15
+
+### Fixed
+- Train → Activities tab no longer overflows right on mobile — `.wrap > * { min-width: 0; }` blanket rule ensures all direct grid children shrink within their 1fr column
+- Recent Training widget Strava placeholder text no longer truncates at "Connect Strava to see rec..." — `.ap-name` now uses `flex:1; min-width:0` instead of `max-width:160px`
+
+## [0.3.1.2] - 2026-04-15
+
+### Fixed
+- Recent Training widget Strava placeholder text now renders in full — `.ap-name` uses `flex:1; min-width:0` instead of fixed `max-width:160px`
+
 ## [0.3.1.1] - 2026-04-15
 
 ### Fixed
