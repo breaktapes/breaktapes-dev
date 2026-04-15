@@ -266,8 +266,9 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 | `handleGarminCallback()` | Detect `?state=garmin&code=`, POST to `/garmin/token` with PKCE verifier |
 | `refreshGarminToken()` | Rotate Garmin access token using refresh token |
 | `fetchGarminActivities(limit)` | GET Garmin wellness activities (90-day window) |
-| `handleAppleHealthImport(file)` | Handle .xml/.json upload, parse records, save to Supabase |
-| `parseAppleHealthXML(file)` | DOMParser on Apple Health `export.xml`, extract HKRecord elements |
+| `handleAppleHealthImport(file)` | Handle .xml/.json upload; routes to streaming path for files > 500 MB |
+| `parseAppleHealthXML(file)` | Regex-based `<Record>` extractor for Apple Health XML (files < 500 MB) |
+| `importAppleHealthXMLStreaming(file, label)` | 8 MB FileReader chunks for files > 500 MB; sort-independent date flushing; upserts to Supabase incrementally |
 | `saveAppleHealthData(records)` | Group records by date, upsert in 100-row batches to `apple_health_data` |
 | `renderWearables()` | Render 5 integration cards in Wearables tab (WHOOP, Garmin, COROS, Oura, Apple Health) |
 | `renderWearablesFeed()` | Parallel fetch WHOOP+Garmin activities, sort by date, render activity cards |
@@ -358,8 +359,10 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 ### Apple Health
 - No OAuth — file-based import only (no web OAuth exists for HealthKit)
 - User exports `export.xml` from iPhone Health app, uploads via file input in Wearables tab
-- `parseAppleHealthXML()` uses `DOMParser` on `export.xml`, extracts all `<Record>` elements
-- Records grouped by `startDate` prefix (date) and upserted to `apple_health_data` in 100-row batches
+- `parseAppleHealthXML()` uses a regex-based extractor (never DOMParser) on `export.xml`, extracts `<Record>` elements
+- Files < 500 MB: `parseAppleHealthXML()` loads via `file.text()`, groups by date, upserts in 100-row batches
+- Files > 500 MB: `importAppleHealthXMLStreaming()` reads in 8 MB FileReader chunks, flushes dates incrementally
+- Records upserted to `apple_health_data` keyed by `user_id, date`
 - Requires `authUser` — upload button only shown when authenticated
 
 ---
@@ -703,12 +706,32 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 - `recalcSplits()`: must not clear cumulative cells when split input is empty — screenshot imports may only provide the cumulative column with no per-split diff
 - WHOOP integration: `WHOOP_CLIENT_ID` constant in `index.html` is intentionally blank until credentials are obtained — the Connect button will not work until filled
 - Garmin integration: requires developer approval at `developer.garmin.com` before OAuth will function — `GARMIN_CLIENT_ID` constant is blank placeholder
-- health-proxy must be redeployed (`wrangler deploy` in `health-proxy/`) after any new routes are added — the worker does not auto-deploy with the main app
+- health-proxy uses `custom_domain = true` in `wrangler.toml` — auto-provisions DNS for `health.breaktapes.com`. Must be redeployed (`wrangler deploy` in `health-proxy/`) after any new routes are added.
 - Apple Health `.zip` export: not supported (raw `export.xml` required). App shows error toast for .zip files.
+- Apple Health files < 500 MB use `parseAppleHealthXML()` (`file.text()` + regex). Files > 500 MB use `importAppleHealthXMLStreaming()` (8 MB FileReader chunks). The 500 MB threshold is safe for iOS Safari; 2 GB+ exports always use the streaming path.
+- WHOOP users who connected before the `offline` scope was added (v0.3.0.1) have no refresh token stored. When their access token expires (~1 hr), `refreshWhoopToken()` clears the stale token and shows a "reconnect" toast. They must re-authenticate once to get a refresh token.
 - Public profile Worker (`worker/index.js`) deploys with the main app via CI — no separate step needed. OG Worker (`og-worker/`) must be deployed manually: `cd og-worker && CF_API_TOKEN="" wrangler deploy`. Needs `SUPABASE_ANON_KEY` secret set separately.
 - Username availability check (`checkUsernameAvailability()`) queries `user_state` directly with anon key — works because anon can SELECT rows but only sees `username` field pattern, not private data.
 - `is_public` toggle in Settings is disabled until a username is saved — enforced in `onIsPublicToggle()`. Do not remove this guard.
 - `user_state` (not `app_state`) is the actual Supabase table name — CLAUDE.md previously said `app_state` incorrectly. All references now fixed.
+
+---
+
+### Session 14 (2026-04-15) — WHOOP OAuth fix + Apple Health 2GB streaming
+
+**Branch:** `claude/musing-bhabha` → staging (#91)
+
+#### Root causes fixed
+- **WHOOP DNS (NXDOMAIN)** — `health.breaktapes.com` Worker was deployed with a route pattern that requires a manually-created DNS record. That step was never done. Fixed by switching `health-proxy/wrangler.toml` to `custom_domain = true` which auto-provisions the Cloudflare-managed DNS entry on deploy.
+- **WHOOP refresh tokens** — `offline` scope was missing from `WHOOP_SCOPES`. WHOOP only issues refresh tokens when `offline` is requested. Added to scope list.
+- **Apple Health > 500 MB crash** — `file.text()` loads the entire file as a JS string. 2 GB file = 2 GB string = OOM. Added `importAppleHealthXMLStreaming()`: reads in 8 MB FileReader chunks, parses records per chunk, flushes dates to Supabase incrementally using `!batchDates.has(d)` (sort-independent). Peak memory: ~2 chunks (~16 MB).
+
+#### Key learnings
+- `custom_domain = true` in `wrangler.toml` auto-provisions Cloudflare DNS — never use zone route patterns for custom domains; they require manual DNS setup and are easy to forget
+- WHOOP only issues `refresh_token` when `offline` scope is requested at authorize time — adding it after the fact requires all existing users to re-authenticate once
+- `FileReader.readAsText(blob)` splits multi-byte UTF-8 sequences at chunk boundaries silently (replacement char U+FFFD) — only `sourceName` attribute is affected (cosmetic), not health metric values or dates
+- For streaming parsers that flush data by date, `!batchDates.has(d)` is safer than `d < minBatchDate` — the latter silently drops records if the export is not chronologically sorted
+- Force-flush by record count (5000 cap) is essential for single-date bulk exports — the date-based flushing alone doesn't help when all records share one date
 
 ---
 
