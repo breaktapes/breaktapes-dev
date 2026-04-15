@@ -552,6 +552,7 @@ main {
    SHARED LAYOUT
    ============================================= */
 .wrap { max-width: 860px; margin:0 auto; padding: 1.5rem 1.25rem; display:grid; grid-template-columns:1fr; gap:1rem; min-width:0; }
+.wrap > * { min-width: 0; }
 
 .page-kicker {
   font-family: var(--headline);
@@ -5705,7 +5706,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 .ap-card{display:flex;align-items:center;gap:.75rem;padding:.75rem 0;border-bottom:1px solid var(--border)}
 .ap-card:last-child{border-bottom:none}
 .ap-icon{font-size:20px;width:32px;text-align:center;flex-shrink:0}
-.ap-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px}
+.ap-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1}
 .ap-meta{color:var(--muted);font-size:11px;margin-top:2px}
 .ap-stat{font-family:var(--headline);font-size:1rem;font-weight:700;text-align:right;white-space:nowrap;margin-left:auto}
 .ap-stat-sub{color:var(--muted);font-size:10px;text-align:right}
@@ -10590,16 +10591,22 @@ function toggleMenu(){
     el.style.display = 'flex';
     requestAnimationFrame(()=>requestAnimationFrame(()=>{
       el.classList.add('open');
+      el.setAttribute('aria-hidden','false');
       document.getElementById('mOverlay').classList.add('open');
-      document.getElementById('hbtn').classList.add('open');
+      const hb = document.getElementById('hbtn');
+      hb.classList.add('open');
+      hb.setAttribute('aria-expanded','true');
     }));
   }
 }
 function closeMenu(){
   const el = document.getElementById('sMenu');
   el.classList.remove('open');
+  el.setAttribute('aria-hidden','true');
   document.getElementById('mOverlay').classList.remove('open');
-  document.getElementById('hbtn').classList.remove('open');
+  const hb = document.getElementById('hbtn');
+  hb.classList.remove('open');
+  hb.setAttribute('aria-expanded','false');
   _menuCloseTimer = setTimeout(()=>{ if(!el.classList.contains('open')) el.style.display='none'; _menuCloseTimer=null; }, 350);
 }
 
