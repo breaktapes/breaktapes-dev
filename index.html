@@ -551,7 +551,7 @@ main {
 /* =============================================
    SHARED LAYOUT
    ============================================= */
-.wrap { max-width: 860px; margin:0 auto; padding: 1.5rem 1.25rem; display:grid; grid-template-columns:1fr; gap:1rem; min-width:0; overflow-x:hidden; }
+.wrap { max-width: 860px; margin:0 auto; padding: 1.5rem 1.25rem; display:grid; grid-template-columns:1fr; gap:1rem; min-width:0; }
 
 .page-kicker {
   font-family: var(--headline);
@@ -2255,7 +2255,7 @@ main {
 }
 .ath-hero-content {
   position:relative; z-index:1;
-  display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,0.75fr); gap:1rem; align-items:stretch;
+  display:grid; grid-template-columns:minmax(0,1.25fr) minmax(140px,0.75fr); gap:1rem; align-items:stretch;
   padding:1.25rem;
   min-width:0;
 }
@@ -10580,11 +10580,13 @@ function closeMoreSheet() { /* no-op — More now opens the side menu */ }
 /* ============================
    MENU
    ============================ */
+let _menuCloseTimer = null;
 function toggleMenu(){
   const el = document.getElementById('sMenu');
   if(el.classList.contains('open')){
     closeMenu();
   } else {
+    if(_menuCloseTimer){ clearTimeout(_menuCloseTimer); _menuCloseTimer = null; }
     el.style.display = 'flex';
     requestAnimationFrame(()=>requestAnimationFrame(()=>{
       el.classList.add('open');
@@ -10598,7 +10600,7 @@ function closeMenu(){
   el.classList.remove('open');
   document.getElementById('mOverlay').classList.remove('open');
   document.getElementById('hbtn').classList.remove('open');
-  setTimeout(()=>{ if(!el.classList.contains('open')) el.style.display='none'; }, 350);
+  _menuCloseTimer = setTimeout(()=>{ if(!el.classList.contains('open')) el.style.display='none'; _menuCloseTimer=null; }, 350);
 }
 
 /* ============================
