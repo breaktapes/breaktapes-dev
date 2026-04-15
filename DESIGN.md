@@ -17,6 +17,19 @@ This applies to every page wrapper, zone container, widget list, and content gro
 - New page sections, new widget containers, new list layouts — same rule
 - **Exempt:** internal widget layouts (e.g., 4-col stat grid, 2-col insight row, inline pill rows). These are within-widget, not between-widget, and may use their own grid/flex as needed.
 
+### Overflow Prevention Rule
+
+**Every grid container must carry `min-width: 0`.**
+
+CSS grid children default `min-width` to `auto`, which lets them grow past their `1fr` column and cause horizontal overflow. The blanket rule:
+
+```css
+.wrap { min-width: 0; }
+.wrap > * { min-width: 0; }
+```
+
+Apply `min-width: 0` to every new grid/flex container that is itself a grid child. For containers that clip content, also add `overflow: hidden`. This is especially load-bearing on iOS Safari where overflowing grid children expand `body.scrollWidth`.
+
 ---
 
 ## Aesthetic Identity
@@ -232,7 +245,7 @@ color: var(--muted);
 Sub-mobile (existing patterns only — do not add new ones):
 - `max-width: 480px` — compact input/label adjustments
 - `max-width: 420px` — extreme micro-adjustments
-- `max-width: 360px` — icon-only bottom nav (labels hidden)
+- `max-width: 360px` — bottom nav labels shrink to 9px (never hide — always show label)
 
 ---
 
@@ -251,6 +264,15 @@ Persistent 5-tab bottom nav bar:
 
 ### Desktop (≥768px)
 Side menu via hamburger trigger. Bottom nav hidden.
+
+### Page Title Bar (mobile only)
+A sticky `#pageTitleBar` element sits at the top of `<main>` (`display: none` on ≥768px, `display: block` on mobile). Updates on every `go(page)` call with the human-readable page name. Uses Barlow Condensed 800, 10px, uppercase, `var(--muted)` color. `pointer-events: none` — purely informational.
+
+### Side Menu Slide Animation
+Side menu uses `transform: translateX(100%)` + `display: none` (closed) and `transform: translateX(0)` + `display: flex` (open). **Do NOT revert to `right: -310px` positioning** — it causes iOS Safari to inflate `body.scrollWidth`, creating a full-page horizontal scroll. The `display: none` is toggled with a 350ms delay on close (matches CSS transition) via `_menuCloseTimer` to allow the animation to complete before hiding the element.
+
+### Side Menu Items
+Each `.menu-item` wraps its label in `.menu-item-label` with an optional `.menu-item-sub` sub-label (9px, `var(--muted2)`). This provides context at a glance without crowding the nav.
 
 ### Settings (mobile)
 Accessible via Settings button inside the Me/Athlete page — NOT in the hamburger.
@@ -625,7 +647,7 @@ Sentence case. Energetic. Athletic. Personal. Never corporate SaaS.
 
 ## App Architecture
 
-- Single-file SPA: all code in `index.html` (~10,000+ lines)
+- Single-file SPA: all code in `index.html` (~22,900+ lines)
 - No build step, no bundler
 - Vanilla HTML/CSS/JS
 - Supabase for auth + data
