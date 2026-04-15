@@ -417,11 +417,12 @@ header {
 .menu-overlay.open { background:rgba(0,0,0,0.75); pointer-events:all; }
 
 .side-menu {
-  position:fixed; top:0; right:-310px; bottom:0; width:280px; z-index:600;
+  position:fixed; top:0; right:0; bottom:0; width:280px; z-index:600;
   background: var(--surface);
   border-left: 1px solid var(--border2);
-  display:flex; flex-direction:column;
-  transition: right 0.35s cubic-bezier(0.4,0,0.2,1);
+  display:none; flex-direction:column;
+  transform: translateX(100%);
+  transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
   overflow: hidden;
 }
 /* Accent stripe */
@@ -430,7 +431,10 @@ header {
   position:absolute; top:0; left:0; bottom:0; width:2px;
   background: linear-gradient(180deg, var(--orange) 0%, transparent 60%);
 }
-.side-menu.open { right:0; }
+.side-menu.open {
+  display:flex;
+  transform: translateX(0);
+}
 
 .menu-top {
   height: 56px; display:flex; align-items:center;
@@ -547,7 +551,7 @@ main {
 /* =============================================
    SHARED LAYOUT
    ============================================= */
-.wrap { max-width: 860px; margin:0 auto; padding: 1.5rem 1.25rem; display:grid; grid-template-columns:1fr; gap:1rem; }
+.wrap { max-width: 860px; margin:0 auto; padding: 1.5rem 1.25rem; display:grid; grid-template-columns:1fr; gap:1rem; min-width:0; overflow-x:hidden; }
 
 .page-kicker {
   font-family: var(--headline);
@@ -640,11 +644,13 @@ main {
   display:grid;
   grid-template-columns:1fr;
   gap:1rem;
+  min-width:0;
 }
 .dash-zone {
   display:grid;
   grid-template-columns:1fr;
   gap:1rem;
+  min-width:0;
 }
 .dash-zone-head {
   display:flex;
@@ -673,9 +679,11 @@ main {
   display:grid;
   grid-template-columns:1fr;
   gap:1rem;
+  min-width:0;
 }
 .dash-zone-grid > [id^="dash-widget-"] {
   margin:0;
+  min-width:0;
 }
 
 /* ── Athlete Briefing Card ── */
@@ -2216,8 +2224,10 @@ main {
 
 .ath-page-shell{
   display:grid;
+  grid-template-columns:1fr;
   gap:1rem;
   margin-bottom:1.2rem;
+  min-width:0;
 }
 
 /* Hero banner */
@@ -2245,8 +2255,9 @@ main {
 }
 .ath-hero-content {
   position:relative; z-index:1;
-  display:grid; grid-template-columns:minmax(0,1.25fr) minmax(290px,0.75fr); gap:1rem; align-items:stretch;
+  display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,0.75fr); gap:1rem; align-items:stretch;
   padding:1.25rem;
+  min-width:0;
 }
 
 .ath-identity-block{
@@ -2530,6 +2541,8 @@ main {
   border-radius:18px;
   background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.012));
   border:1px solid rgba(255,255,255,0.06);
+  min-width:0;
+  overflow:hidden;
 }
 .ath-section-h {
   font-family:var(--headline);
@@ -2599,6 +2612,7 @@ main {
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   padding-bottom: 2px;
+  min-width: 0;
 }
 .ath-pb-grid::-webkit-scrollbar { display: none; }
 .ath-pb-card {
@@ -5046,6 +5060,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   margin-bottom: 1.5rem;
   padding-top: 4px;
   padding-bottom: 8px;
+  min-width: 0;
 }
 .dash-pb-strip::-webkit-scrollbar { display: none; }
 .dash-pb-card {
@@ -5107,7 +5122,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);
 }
 /* ── PB Sport Sections ── */
-.pb-sport-section { margin-bottom: 1.5rem; }
+.pb-sport-section { margin-bottom: 1.5rem; min-width: 0; overflow: hidden; }
 .pb-sport-section:last-child { margin-bottom: 0; }
 .pb-sport-label {
   display: flex; align-items: center; gap: 0.45rem;
@@ -10566,14 +10581,24 @@ function closeMoreSheet() { /* no-op — More now opens the side menu */ }
    MENU
    ============================ */
 function toggleMenu(){
-  const open = document.getElementById('sMenu').classList.toggle('open');
-  document.getElementById('mOverlay').classList.toggle('open',open);
-  document.getElementById('hbtn').classList.toggle('open',open);
+  const el = document.getElementById('sMenu');
+  if(el.classList.contains('open')){
+    closeMenu();
+  } else {
+    el.style.display = 'flex';
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      el.classList.add('open');
+      document.getElementById('mOverlay').classList.add('open');
+      document.getElementById('hbtn').classList.add('open');
+    }));
+  }
 }
 function closeMenu(){
-  document.getElementById('sMenu').classList.remove('open');
+  const el = document.getElementById('sMenu');
+  el.classList.remove('open');
   document.getElementById('mOverlay').classList.remove('open');
   document.getElementById('hbtn').classList.remove('open');
+  setTimeout(()=>{ if(!el.classList.contains('open')) el.style.display='none'; }, 350);
 }
 
 /* ============================
