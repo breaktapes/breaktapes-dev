@@ -7,6 +7,18 @@
 
 ---
 
+## Layout Uniformity Rule
+
+**All layout containers use `display: grid; grid-template-columns: 1fr; gap: 1rem`. No exceptions.**
+
+This applies to every page wrapper, zone container, widget list, and content grouping in the app — current and future. Do not introduce flex-column with custom gaps, or any gap value other than `1rem`, for between-element spacing.
+
+- `.wrap`, `.dash-shell`, `.dash-zone`, `.dash-zone-grid` — all grid, 1fr, 1rem gap
+- New page sections, new widget containers, new list layouts — same rule
+- **Exempt:** internal widget layouts (e.g., 4-col stat grid, 2-col insight row, inline pill rows). These are within-widget, not between-widget, and may use their own grid/flex as needed.
+
+---
+
 ## Aesthetic Identity
 
 Dark archival athletic. Not generic SaaS dark mode — energetic, personal, nostalgic.
