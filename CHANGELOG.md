@@ -3,6 +3,15 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.3.1.1] - 2026-04-15
+
+### Fixed
+- All 6 pages now fit within 375px viewport with no horizontal scroll on iOS Safari
+- Side menu: switched from `right:-310px` to `transform:translateX(100%)` + `display:none` — `position:fixed` elements off-screen were inflating `body.scrollWidth` on iOS
+- Dashboard PB strip and athlete profile grids: `min-width:0` cascade prevents horizontal flex scroll containers from expanding their parent 1fr grid column
+- Athlete hero layout: `minmax(0,0.75fr)` restored with 140px floor to prevent right column collapsing on narrow viewports
+- Menu rapid-toggle race condition: `_menuCloseTimer` stored and cleared on re-open, preventing a stale `setTimeout` from hiding a freshly opened menu
+
 ## [0.3.1.0] - 2026-04-15
 
 ### Changed
