@@ -20504,7 +20504,13 @@ function startWhoopOAuth() {
 
 async function handleWhoopCallback() {
   const p = new URLSearchParams(window.location.search);
-  if (p.get('state') !== 'whoop' || !p.get('code')) return;
+  if (p.get('state') !== 'whoop') return;
+  if (p.get('error')) {
+    history.replaceState({}, '', window.location.pathname);
+    showBtToast('WHOOP authorization was denied.', 'error');
+    return;
+  }
+  if (!p.get('code')) return;
   const code = p.get('code');
   history.replaceState({}, '', window.location.pathname);
   try {
@@ -20696,6 +20702,11 @@ async function handleAppleHealthImport(file) {
   if (!file) return;
   const label = document.getElementById('appleHealthImportLabel');
   if (label) label.textContent = 'Importing…';
+  // Warn early for very large files — reading into memory may be slow on mobile
+  const fileMB = Math.round(file.size / 1024 / 1024);
+  if (fileMB > 200) {
+    showBtToast(`Large file (${fileMB}MB) — export a shorter date range if this fails`, 'error');
+  }
   try {
     let records = [];
     if (file.name.endsWith('.zip')) {
@@ -20723,16 +20734,32 @@ async function handleAppleHealthImport(file) {
 }
 
 async function parseAppleHealthXML(file) {
+  // Apple Health exports can be 100–500MB+. DOMParser builds a full XML DOM which
+  // triples memory usage and crashes mobile Safari. Regex-based extraction is ~3x
+  // more memory-efficient because it never materialises the tree.
   const text = await file.text();
-  const doc = new DOMParser().parseFromString(text, 'application/xml');
-  return Array.from(doc.querySelectorAll('Record')).map(n => ({
-    type:       n.getAttribute('type'),
-    value:      n.getAttribute('value'),
-    unit:       n.getAttribute('unit'),
-    startDate:  n.getAttribute('startDate'),
-    endDate:    n.getAttribute('endDate'),
-    sourceName: n.getAttribute('sourceName'),
-  }));
+  const records = [];
+  const re = /<Record\b([^>]+)\/>/g;
+  const getAttr = (attrs, key) => {
+    const prefix = key + '="';
+    const i = attrs.indexOf(prefix);
+    if (i === -1) return null;
+    const start = i + prefix.length;
+    const end = attrs.indexOf('"', start);
+    return end === -1 ? null : attrs.slice(start, end);
+  };
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    records.push({
+      type:       getAttr(m[1], 'type'),
+      value:      getAttr(m[1], 'value'),
+      unit:       getAttr(m[1], 'unit'),
+      startDate:  getAttr(m[1], 'startDate'),
+      endDate:    getAttr(m[1], 'endDate'),
+      sourceName: getAttr(m[1], 'sourceName'),
+    });
+  }
+  return records;
 }
 
 async function saveAppleHealthData(records) {
@@ -21086,13 +21113,13 @@ function handleStravaBtn(){
 
 function startStravaOAuth(){
   const redirect = encodeURIComponent(window.location.href.split('?')[0]);
-  window.location.href = `https://www.strava.com/oauth/authorize?client_id=${STRAVA_CLIENT_ID}&redirect_uri=${redirect}&response_type=code&approval_prompt=auto&scope=activity:read_all,read`;
+  window.location.href = `https://www.strava.com/oauth/authorize?client_id=${STRAVA_CLIENT_ID}&redirect_uri=${redirect}&response_type=code&approval_prompt=auto&scope=activity:read_all,read&state=strava`;
 }
 
 async function handleStravaCallback(){
   const params = new URLSearchParams(window.location.search);
   const state = params.get('state');
-  if(state === 'whoop' || state === 'garmin') return;
+  if(state !== 'strava') return;
   const code  = params.get('code');
   const error = params.get('error');
   if(error){ showBtToast('Strava authorization was denied.'); return; }

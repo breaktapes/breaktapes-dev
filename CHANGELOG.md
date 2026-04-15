@@ -3,6 +3,12 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.3.0.1] - 2026-04-15
+
+### Fixed
+- **WHOOP OAuth — "Strava authorization was denied" false error** — the Strava callback handler was intercepting WHOOP error redirects when WHOOP returned `?error=access_denied` without echoing back `?state=whoop`. Fixed by gating the Strava callback on `state=strava` (added to `startStravaOAuth()`) and explicitly handling WHOOP denial with a clear "WHOOP authorization was denied." toast.
+- **Apple Health import crashes mobile Safari** — `parseAppleHealthXML()` used `DOMParser` which builds a full XML DOM from the file, tripling memory usage. For Apple Health exports (100–500MB+) this crashed iOS Safari with "A problem repeatedly occurred." Replaced with a regex-based attribute extractor that never materialises the DOM tree. Also added an early warning toast for files over 200MB suggesting a shorter date-range export.
+
 ## [0.3.0.0] - 2026-04-14
 
 ### Fixed
