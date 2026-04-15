@@ -20488,7 +20488,7 @@ async function loadWearableTokens() {
 
 // ── WHOOP OAuth ───────────────────────────────────────────────────────────────
 const WHOOP_REDIRECT_URI = window.location.origin;
-const WHOOP_SCOPES = 'read:recovery read:sleep read:workout read:profile read:body_measurement';
+const WHOOP_SCOPES = 'read:recovery read:sleep read:workout read:profile read:body_measurement offline';
 
 function startWhoopOAuth() {
   if (!WHOOP_CLIENT_ID) { showBtToast('WHOOP client ID not configured yet.', 'error'); return; }
@@ -20510,7 +20510,10 @@ async function handleWhoopCallback() {
     showBtToast('WHOOP authorization was denied.', 'error');
     return;
   }
-  if (!p.get('code')) return;
+  if (!p.get('code')) {
+    history.replaceState({}, '', window.location.pathname);
+    return;
+  }
   const code = p.get('code');
   history.replaceState({}, '', window.location.pathname);
   try {
@@ -20537,7 +20540,15 @@ async function handleWhoopCallback() {
 }
 
 async function refreshWhoopToken() {
-  if (!whoopData?.refresh_token) return null;
+  if (!whoopData?.refresh_token) {
+    // No refresh token — token was issued before offline scope was added.
+    // Clear the stale connection so the user knows to reconnect.
+    whoopData = null;
+    await removeWearableToken('whoop');
+    showBtToast('WHOOP session expired — please reconnect.', 'error');
+    renderWearables();
+    return null;
+  }
   const res = await fetch(`${HEALTH_WORKER_URL}/whoop/refresh`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -20702,29 +20713,33 @@ async function handleAppleHealthImport(file) {
   if (!file) return;
   const label = document.getElementById('appleHealthImportLabel');
   if (label) label.textContent = 'Importing…';
-  // Warn early for very large files — reading into memory may be slow on mobile
-  const fileMB = Math.round(file.size / 1024 / 1024);
-  if (fileMB > 200) {
-    showBtToast(`Large file (${fileMB}MB) — export a shorter date range if this fails`, 'error');
-  }
   try {
-    let records = [];
     if (file.name.endsWith('.zip')) {
       showBtToast('Unzip the export first, then upload export.xml', 'error'); return;
     } else if (file.name.endsWith('.xml') || file.type.includes('xml')) {
-      records = await parseAppleHealthXML(file);
+      if (file.size > 500 * 1024 * 1024) {
+        // Files over 500 MB: stream in 8 MB chunks — never loads full file into memory
+        await importAppleHealthXMLStreaming(file, label);
+      } else {
+        const records = await parseAppleHealthXML(file);
+        if (!records.length) { showBtToast('No health records found in file.', 'error'); return; }
+        await saveAppleHealthData(records);
+        appleHealthSummary = { recordCount: records.length, lastImport: new Date().toISOString() };
+        showBtToast(`Imported ${records.length.toLocaleString()} health records`, 'success');
+        renderWearables();
+      }
     } else if (file.name.endsWith('.json') || file.type.includes('json')) {
       const text = await file.text();
       const parsed = JSON.parse(text);
-      records = Array.isArray(parsed) ? parsed : (parsed.data || parsed.records || []);
+      const records = Array.isArray(parsed) ? parsed : (parsed.data || parsed.records || []);
+      if (!records.length) { showBtToast('No health records found in file.', 'error'); return; }
+      await saveAppleHealthData(records);
+      appleHealthSummary = { recordCount: records.length, lastImport: new Date().toISOString() };
+      showBtToast(`Imported ${records.length.toLocaleString()} health records`, 'success');
+      renderWearables();
     } else {
       showBtToast('Upload export.xml from your Apple Health export zip.', 'error'); return;
     }
-    if (!records.length) { showBtToast('No health records found in file.', 'error'); return; }
-    await saveAppleHealthData(records);
-    appleHealthSummary = { recordCount: records.length, lastImport: new Date().toISOString() };
-    showBtToast(`Imported ${records.length.toLocaleString()} health records`, 'success');
-    renderWearables();
   } catch(e) {
     console.error('Apple Health import failed', e);
     showBtToast('Import failed: ' + e.message, 'error');
@@ -20739,7 +20754,7 @@ async function parseAppleHealthXML(file) {
   // more memory-efficient because it never materialises the tree.
   const text = await file.text();
   const records = [];
-  const re = /<Record\b([^>]+)\/>/g;
+  const re = /<Record\b([^>]+?)\/>/g;
   const getAttr = (attrs, key) => {
     const prefix = key + '="';
     const i = attrs.indexOf(prefix);
@@ -20760,6 +20775,103 @@ async function parseAppleHealthXML(file) {
     });
   }
   return records;
+}
+
+async function importAppleHealthXMLStreaming(file, label) {
+  // Streaming parser for Apple Health exports over 500 MB.
+  // Reads in 8 MB slices via FileReader, upserts per-date batches to Supabase
+  // incrementally — peak memory is ~2 chunks, not the full file.
+  const client = initSupabaseClient();
+  if (!client || !authUser) { showBtToast('Sign in to import health data.', 'error'); return; }
+  const CHUNK = 8 * 1024 * 1024;
+  const re = /<Record\b([^>]+?)\/>/g;
+  const getAttr = (attrs, key) => {
+    const prefix = key + '="';
+    const i = attrs.indexOf(prefix);
+    if (i === -1) return null;
+    const start = i + prefix.length;
+    const end = attrs.indexOf('"', start);
+    return end === -1 ? null : attrs.slice(start, end);
+  };
+  const readChunk = (blob) => new Promise((resolve, reject) => {
+    const fr = new FileReader();
+    fr.onload = e => resolve(e.target.result);
+    fr.onerror = () => reject(fr.error);
+    fr.readAsText(blob);
+  });
+  const flushDates = async (dates) => {
+    const rows = dates.map(date => ({
+      user_id: authUser.id, date,
+      records: byDate[date], imported_at: new Date().toISOString(),
+    }));
+    for (let i = 0; i < rows.length; i += 100) {
+      const { error } = await client.from('apple_health_data')
+        .upsert(rows.slice(i, i + 100), { onConflict: 'user_id,date' });
+      if (error) throw new Error(error.message);
+    }
+    dates.forEach(d => delete byDate[d]);
+  };
+
+  let tail = '';
+  const byDate = {};
+  let totalRecords = 0;
+  const totalChunks = Math.ceil(file.size / CHUNK);
+
+  for (let offset = 0, chunkIdx = 0; offset < file.size; offset += CHUNK, chunkIdx++) {
+    const chunkText = tail + await readChunk(file.slice(offset, offset + CHUNK));
+
+    // Carry forward any incomplete <Record tag at the chunk boundary
+    const lastRecordStart = chunkText.lastIndexOf('<Record');
+    let parseText, nextTail;
+    if (lastRecordStart !== -1 && chunkText.indexOf('/>', lastRecordStart) === -1) {
+      parseText = chunkText.slice(0, lastRecordStart);
+      nextTail = chunkText.slice(lastRecordStart);
+    } else {
+      parseText = chunkText;
+      nextTail = '';
+    }
+    tail = nextTail;
+
+    re.lastIndex = 0;
+    const batchDates = new Set();
+    let m;
+    while ((m = re.exec(parseText)) !== null) {
+      const d = getAttr(m[1], 'startDate')?.slice(0, 10);
+      if (!d) continue;
+      if (!byDate[d]) byDate[d] = [];
+      byDate[d].push({
+        type: getAttr(m[1], 'type'), value: getAttr(m[1], 'value'),
+        unit: getAttr(m[1], 'unit'), startDate: getAttr(m[1], 'startDate'),
+        endDate: getAttr(m[1], 'endDate'), sourceName: getAttr(m[1], 'sourceName'),
+      });
+      batchDates.add(d);
+      totalRecords++;
+    }
+
+    // Flush dates not seen in this chunk — safe regardless of export sort order.
+    // Also force-flush any date that has accumulated >5000 records to cap memory
+    // usage when all records share a single date (e.g. bulk step-count exports).
+    const FLUSH_CAP = 5000;
+    if (batchDates.size > 0) {
+      const safeDates = Object.keys(byDate).filter(d => !batchDates.has(d));
+      if (safeDates.length > 0) await flushDates(safeDates);
+    }
+    for (const d of Object.keys(byDate)) {
+      if (byDate[d].length >= FLUSH_CAP) await flushDates([d]);
+    }
+
+    const pct = Math.round(((chunkIdx + 1) / totalChunks) * 100);
+    if (label) label.textContent = `Importing… ${pct}%`;
+  }
+
+  // Flush remaining dates
+  const remaining = Object.keys(byDate);
+  if (remaining.length > 0) await flushDates(remaining);
+
+  if (!totalRecords) { showBtToast('No health records found in file.', 'error'); return; }
+  appleHealthSummary = { recordCount: totalRecords, lastImport: new Date().toISOString() };
+  showBtToast(`Imported ${totalRecords.toLocaleString()} health records`, 'success');
+  renderWearables();
 }
 
 async function saveAppleHealthData(records) {

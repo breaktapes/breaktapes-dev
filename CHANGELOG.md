@@ -7,7 +7,10 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 - **WHOOP OAuth — "Strava authorization was denied" false error** — the Strava callback handler was intercepting WHOOP error redirects when WHOOP returned `?error=access_denied` without echoing back `?state=whoop`. Fixed by gating the Strava callback on `state=strava` (added to `startStravaOAuth()`) and explicitly handling WHOOP denial with a clear "WHOOP authorization was denied." toast.
-- **Apple Health import crashes mobile Safari** — `parseAppleHealthXML()` used `DOMParser` which builds a full XML DOM from the file, tripling memory usage. For Apple Health exports (100–500MB+) this crashed iOS Safari with "A problem repeatedly occurred." Replaced with a regex-based attribute extractor that never materialises the DOM tree. Also added an early warning toast for files over 200MB suggesting a shorter date-range export.
+- **WHOOP OAuth — health proxy DNS was unreachable** — `health.breaktapes.com` had no DNS record; the Worker route pattern was deployed but the custom domain DNS entry was never provisioned. Fixed by switching `health-proxy/wrangler.toml` from a zone route pattern to `custom_domain = true`, which auto-provisions the DNS record on deploy. Redeployed — `health.breaktapes.com` is now live.
+- **WHOOP OAuth — refresh tokens not returned** — the `offline` scope was missing from `WHOOP_SCOPES`, so WHOOP never issued a refresh token. Added `offline` to the scope list.
+- **Apple Health import crashes mobile Safari (< 500 MB)** — `parseAppleHealthXML()` used `DOMParser` which builds a full XML DOM from the file, tripling memory usage. Replaced with a regex-based attribute extractor that never materialises the DOM tree.
+- **Apple Health import crashes for files > 500 MB** — even the regex approach called `file.text()` which loads the entire file as a JS string, fatal for 1–2 GB exports. Added `importAppleHealthXMLStreaming()` for files over 500 MB: reads in 8 MB chunks via `FileReader`, processes records per-chunk, and upserts to Supabase incrementally using chronological date flushing. Peak memory is ~2 chunks regardless of file size. Shows live `Importing… N%` progress.
 
 ## [0.3.0.0] - 2026-04-14
 

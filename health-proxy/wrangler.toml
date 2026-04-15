@@ -4,11 +4,9 @@ compatibility_date = "2024-09-23"
 account_id = "b09f233e618dc7f23bcb247c947eb303"
 
 # Production route: health.breaktapes.com
-# After deploy, add custom domain in Cloudflare dashboard:
-#   Workers & Pages → breaktapes-health → Settings → Domains & Routes → Add Custom Domain
-#   Domain: health.breaktapes.com
+# custom_domain = true auto-provisions the DNS record — no manual step required
 routes = [
-  { pattern = "health.breaktapes.com/*", zone_id = "7d1d8be858893e977e57b0455ed2388f" }
+  { pattern = "health.breaktapes.com", custom_domain = true }
 ]
 
 # Secrets (set via wrangler secret put — never commit values here):
