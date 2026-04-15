@@ -10591,16 +10591,22 @@ function toggleMenu(){
     el.style.display = 'flex';
     requestAnimationFrame(()=>requestAnimationFrame(()=>{
       el.classList.add('open');
+      el.setAttribute('aria-hidden','false');
       document.getElementById('mOverlay').classList.add('open');
-      document.getElementById('hbtn').classList.add('open');
+      const hb = document.getElementById('hbtn');
+      hb.classList.add('open');
+      hb.setAttribute('aria-expanded','true');
     }));
   }
 }
 function closeMenu(){
   const el = document.getElementById('sMenu');
   el.classList.remove('open');
+  el.setAttribute('aria-hidden','true');
   document.getElementById('mOverlay').classList.remove('open');
-  document.getElementById('hbtn').classList.remove('open');
+  const hb = document.getElementById('hbtn');
+  hb.classList.remove('open');
+  hb.setAttribute('aria-expanded','false');
   _menuCloseTimer = setTimeout(()=>{ if(!el.classList.contains('open')) el.style.display='none'; _menuCloseTimer=null; }, 350);
 }
 
