@@ -2158,7 +2158,7 @@ function WidgetShell({ label }: { label: string }) {
 
 // ─── All Upcoming Races Modal ─────────────────────────────────────────────────
 
-function AllUpcomingModal({ onClose }: { onClose: () => void }) {
+function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRace: () => void }) {
   const upcoming = useRaceStore(selectUpcomingRaces)
   const today    = todayStr()
   const sorted   = useMemo(
@@ -2174,14 +2174,17 @@ function AllUpcomingModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div style={st.modalOverlay} onClick={onClose}>
-      <div style={{ ...st.customizeSheet, maxHeight: '75vh', paddingBottom: '24px' }} onClick={e => e.stopPropagation()}>
+      <div style={{ ...st.customizeSheet, maxHeight: '80vh', paddingBottom: '0', overflowY: 'hidden' }} onClick={e => e.stopPropagation()}>
         {/* Handle pill */}
-        <div style={{ width: '40px', height: '4px', background: 'var(--border2)', borderRadius: '2px', margin: '0 auto 20px' }} />
+        <div style={{ width: '40px', height: '4px', background: 'var(--border2)', borderRadius: '2px', margin: '0 auto 20px', flexShrink: 0 }} />
 
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexShrink: 0 }}>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '20px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>
             UPCOMING RACES
+            <span style={{ marginLeft: '8px', fontFamily: 'var(--body)', fontWeight: 600, fontSize: '13px', color: 'var(--muted)', letterSpacing: 0, textTransform: 'none' }}>
+              {sorted.length > 0 ? `${sorted.length} race${sorted.length !== 1 ? 's' : ''}` : ''}
+            </span>
           </div>
           <button
             onClick={onClose}
@@ -2190,60 +2193,182 @@ function AllUpcomingModal({ onClose }: { onClose: () => void }) {
           >✕</button>
         </div>
 
-        {/* Race list */}
-        <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        {/* Race list — scrollable */}
+        <div style={{ overflowY: 'auto', WebkitOverflowScrolling: 'touch' as any, overscrollBehavior: 'contain', flex: 1, display: 'flex', flexDirection: 'column', gap: '0', paddingBottom: '12px' }}>
           {sorted.length === 0 ? (
             <div style={{ textAlign: 'center', color: 'var(--muted)', padding: '32px 0', fontSize: '14px' }}>
               No upcoming races yet.
             </div>
-          ) : sorted.map(r => {
-            const d = daysUntil(r.date)
+          ) : sorted.map((r, idx) => {
+            const d       = daysUntil(r.date)
+            const isA     = r.priority === 'A'
+            const prev    = sorted[idx - 1]
+            const gapDays = prev
+              ? Math.round((new Date(r.date + 'T00:00:00').getTime() - new Date(prev.date + 'T00:00:00').getTime()) / 86400000)
+              : null
+
             return (
-              <div key={r.id} style={{
-                background: 'var(--surface3)',
-                border: '1px solid var(--border)',
-                borderRadius: '10px',
-                padding: '12px 14px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: '12px',
-              }}>
-                <div style={{ minWidth: 0, flex: 1 }}>
+              <div key={r.id}>
+                {/* Gap divider between races */}
+                {gapDays !== null && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '6px 0' }}>
+                    <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
+                    <span style={{
+                      fontFamily: 'var(--body)',
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      color: gapDays < 21 ? '#ff9966' : 'var(--muted)',
+                      letterSpacing: '0.04em',
+                      whiteSpace: 'nowrap',
+                    }}>
+                      {gapDays < 21 ? '⚠ ' : ''}{gapDays}d gap
+                    </span>
+                    <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
+                  </div>
+                )}
+
+                {/* Race card — A-race gets bigger highlighted treatment */}
+                {isA ? (
                   <div style={{
-                    fontFamily: 'var(--headline)',
-                    fontWeight: 800,
-                    fontSize: '14px',
-                    letterSpacing: '0.04em',
-                    textTransform: 'uppercase',
-                    color: 'var(--white)',
-                    whiteSpace: 'nowrap',
+                    background: 'linear-gradient(135deg, rgba(255,77,0,0.18) 0%, rgba(255,77,0,0.08) 100%)',
+                    border: '1.5px solid rgba(255,77,0,0.5)',
+                    borderRadius: '12px',
+                    padding: '16px',
+                    position: 'relative',
                     overflow: 'hidden',
-                    textOverflow: 'ellipsis',
                   }}>
-                    {r.priority && <span style={{ color: 'var(--orange)', marginRight: '6px' }}>{r.priority}</span>}
-                    {r.name ?? 'Unnamed race'}
+                    {/* Orange accent bar */}
+                    <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: '4px', background: 'var(--orange)', borderRadius: '12px 0 0 12px' }} />
+                    <div style={{ paddingLeft: '10px' }}>
+                      {/* A-RACE badge + name */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                        <span style={{
+                          background: 'var(--orange)',
+                          color: '#000',
+                          fontFamily: 'var(--headline)',
+                          fontWeight: 900,
+                          fontSize: '10px',
+                          letterSpacing: '0.08em',
+                          padding: '2px 7px',
+                          borderRadius: '4px',
+                          flexShrink: 0,
+                        }}>A RACE</span>
+                        <span style={{
+                          fontFamily: 'var(--headline)',
+                          fontWeight: 900,
+                          fontSize: '17px',
+                          letterSpacing: '0.04em',
+                          textTransform: 'uppercase',
+                          color: 'var(--white)',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          flex: 1,
+                          minWidth: 0,
+                        }}>{r.name ?? 'Unnamed race'}</span>
+                      </div>
+                      {/* Meta */}
+                      <div style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: 1.5 }}>
+                        {[r.city, r.country].filter(Boolean).join(', ')}
+                        {r.distance ? ` · ${distBadge(r.distance) || r.distance + 'K'}` : ''}
+                        {' · '}{fmtDateIntl(r.date)}
+                      </div>
+                      {/* Countdown pill */}
+                      <div style={{ marginTop: '10px' }}>
+                        <span style={{
+                          display: 'inline-block',
+                          background: d === 0 ? 'var(--orange)' : 'rgba(255,77,0,0.2)',
+                          color: d === 0 ? '#000' : 'var(--orange)',
+                          fontFamily: 'var(--headline)',
+                          fontWeight: 900,
+                          fontSize: '14px',
+                          letterSpacing: '0.06em',
+                          padding: '4px 12px',
+                          borderRadius: '6px',
+                        }}>
+                          {d === 0 ? 'TODAY' : `${d} DAYS`}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '3px' }}>
-                    {[r.city, r.country].filter(Boolean).join(', ')}
-                    {r.distance ? ` · ${distBadge(r.distance) || r.distance + 'K'}` : ''}
-                    {' · '}{fmtDateIntl(r.date)}
+                ) : (
+                  /* Standard card for B/C races */
+                  <div style={{
+                    background: 'var(--surface3)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '10px',
+                    padding: '12px 14px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '12px',
+                  }}>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{
+                        fontFamily: 'var(--headline)',
+                        fontWeight: 800,
+                        fontSize: '14px',
+                        letterSpacing: '0.04em',
+                        textTransform: 'uppercase',
+                        color: 'var(--white)',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                      }}>
+                        {r.priority && r.priority !== 'A' && (
+                          <span style={{ color: 'var(--muted)', marginRight: '6px', fontSize: '11px' }}>{r.priority}</span>
+                        )}
+                        {r.name ?? 'Unnamed race'}
+                      </div>
+                      <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '3px' }}>
+                        {[r.city, r.country].filter(Boolean).join(', ')}
+                        {r.distance ? ` · ${distBadge(r.distance) || r.distance + 'K'}` : ''}
+                        {' · '}{fmtDateIntl(r.date)}
+                      </div>
+                    </div>
+                    <div style={{
+                      flexShrink: 0,
+                      fontFamily: 'var(--headline)',
+                      fontWeight: 900,
+                      fontSize: '13px',
+                      color: d === 0 ? 'var(--orange)' : 'var(--muted)',
+                      letterSpacing: '0.04em',
+                      textAlign: 'right',
+                    }}>
+                      {d === 0 ? 'TODAY' : `${d}D`}
+                    </div>
                   </div>
-                </div>
-                <div style={{
-                  flexShrink: 0,
-                  fontFamily: 'var(--headline)',
-                  fontWeight: 900,
-                  fontSize: '13px',
-                  color: d === 0 ? 'var(--orange)' : 'var(--muted)',
-                  letterSpacing: '0.04em',
-                  textAlign: 'right',
-                }}>
-                  {d === 0 ? 'TODAY' : `${d}D`}
-                </div>
+                )}
               </div>
             )
           })}
+        </div>
+
+        {/* Add race button — sticky at bottom */}
+        <div style={{ flexShrink: 0, borderTop: '1px solid var(--border)', padding: '16px', background: 'var(--surface2)' }}>
+          <button
+            onClick={() => { onClose(); onAddRace() }}
+            style={{
+              width: '100%',
+              background: 'var(--orange)',
+              color: '#000',
+              border: 'none',
+              borderRadius: '10px',
+              padding: '14px',
+              fontFamily: 'var(--headline)',
+              fontWeight: 900,
+              fontSize: '14px',
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+            }}
+          >
+            + ADD UPCOMING RACE
+          </button>
         </div>
       </div>
     </div>
@@ -2502,7 +2627,7 @@ export function Dashboard() {
     <div style={st.page}>
       {showCustomize    && <DashCustomizeModal onClose={() => setShowCustomize(false)} />}
       {showAddRace      && <AddRaceModal defaultMode={addRaceMode} onClose={() => setShowAddRace(false)} />}
-      {showAllUpcoming  && <AllUpcomingModal onClose={() => setShowAllUpcoming(false)} />}
+      {showAllUpcoming  && <AllUpcomingModal onClose={() => setShowAllUpcoming(false)} onAddRace={openAddUpcomingRace} />}
 
       <GreetingCard onCustomize={() => setShowCustomize(true)} />
       <PreRaceBriefing onAddRace={openAddRace} />
