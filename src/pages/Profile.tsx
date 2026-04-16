@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/useAuthStore'
 import { selectRaces, selectNextRace, selectAthlete, selectAuthUser } from '@/stores/selectors'
 import { EditProfileModal } from '@/components/EditProfileModal'
 import type { Race } from '@/types'
+import { useUnits, distUnit } from '@/lib/units'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -194,6 +195,7 @@ function computePersonality(races: Race[]): Array<{ trait: string; score: number
 function AthleteHero({ onEdit }: { onEdit: () => void }) {
   const athlete = useAthleteStore(selectAthlete)
   const races   = useRaceStore(selectRaces)
+  const units   = useUnits()
   const nextRace = useRaceStore(selectNextRace)
 
   const initials = useMemo(() => {
@@ -211,12 +213,13 @@ function AthleteHero({ onEdit }: { onEdit: () => void }) {
 
   const level    = athleteLevel(races.length)
   const years    = yearsActive(races)
-  const km       = Math.round(totalKm(races))
+  const rawKm    = totalKm(races)
+  const dist     = Math.round(units === 'imperial' ? rawKm * 0.621371 : rawKm)
   const ctrCount = uniqueCountries(races).length
 
   const stats = [
-    { label: 'Races',    value: races.length.toString() },
-    { label: 'Total KM', value: km.toLocaleString() },
+    { label: 'Races',                   value: races.length.toString() },
+    { label: `Total ${distUnit(units)}`, value: dist.toLocaleString() },
     { label: 'Countries', value: ctrCount.toString() },
     { label: 'Years',    value: years.toString() },
   ]
