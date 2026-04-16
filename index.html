@@ -317,8 +317,6 @@ body.mobile-race-detail-active {
 body.landing-active header,
 body.landing-active main,
 body.landing-active .bottom-nav,
-body.landing-active .side-menu,
-body.landing-active .menu-overlay,
 body.landing-active #feedbackPill {
   visibility: hidden;
   pointer-events: none;
@@ -386,160 +384,6 @@ header {
 .cta-btn:hover { background: var(--orange-glow); filter: brightness(1.15); transform: translateY(-1px); box-shadow: 0 4px 20px var(--orange-glow); }
 .cta-btn:active { transform: translateY(0); }
 
-/* Hamburger */
-.hamburger {
-  width: 36px; height: 36px;
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 4px;
-  cursor: pointer;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 5px; transition: all 0.2s; flex-shrink: 0;
-}
-.hamburger:hover { border-color: rgba(255,255,255,0.22); background: rgba(255,255,255,0.06); }
-.hamburger span {
-  display:block; width:16px; height:1.5px;
-  background: rgba(245,245,245,0.88); border-radius:1px;
-  transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
-}
-.hamburger.open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); background: rgba(245,245,245,0.88); }
-.hamburger.open span:nth-child(2) { opacity:0; transform:scaleX(0); }
-.hamburger.open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); background: rgba(245,245,245,0.88); }
-
-/* =============================================
-   SLIDE MENU
-   ============================================= */
-.menu-overlay {
-  position:fixed; inset:0; z-index:550;
-  background:rgba(0,0,0,0); pointer-events:none;
-  transition: background 0.3s;
-}
-.menu-overlay.open { background:rgba(0,0,0,0.75); pointer-events:all; }
-
-.side-menu {
-  position:fixed; top:0; right:0; bottom:0; width:280px; z-index:600;
-  background: var(--surface);
-  border-left: 1px solid var(--border2);
-  display:none; flex-direction:column;
-  transform: translateX(100%);
-  transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
-  overflow: hidden;
-}
-/* Accent stripe */
-.side-menu::before {
-  content:'';
-  position:absolute; top:0; left:0; bottom:0; width:2px;
-  background: linear-gradient(180deg, var(--orange) 0%, transparent 60%);
-}
-.side-menu.open {
-  display:flex;
-  transform: translateX(0);
-}
-
-.menu-top {
-  height: 56px; display:flex; align-items:center;
-  padding: 0 1.25rem 0 1.5rem;
-  border-bottom: 1px solid var(--border);
-  justify-content: space-between;
-}
-.menu-top-label {
-  font-family: var(--headline);
-  font-size: 11px; font-weight: 800;
-  letter-spacing: 0.18em; text-transform: uppercase;
-  color: var(--muted);
-}
-
-.menu-nav { flex:1; padding: 1rem 0.75rem; overflow-y:auto; }
-.menu-section-label {
-  font-family: var(--headline);
-  font-size: 9px; font-weight: 800;
-  letter-spacing: 0.2em; text-transform: uppercase;
-  color: var(--muted2); padding: 0 0.75rem;
-  margin: 0.75rem 0 0.35rem;
-}
-.menu-section-label:first-child { margin-top: 0; }
-
-.menu-item {
-  display:flex; align-items:center; gap:0.85rem;
-  padding: 0.7rem 0.75rem;
-  border-radius: 4px; cursor:pointer;
-  transition: background 0.15s, color 0.15s;
-  border:none; background:none; width:100%;
-  text-align:left; color: var(--muted);
-  font-family: var(--headline);
-  font-size: 16px; font-weight: 700;
-  letter-spacing: 0.06em; text-transform: uppercase;
-}
-.menu-item:hover { background: var(--surface2); color: var(--white); }
-.menu-item.active { background: var(--orange-dim); color: var(--orange); }
-.menu-item.active .menu-icon { color: var(--orange); }
-.menu-icon { font-size: 16px; width: 22px; text-align:center; flex-shrink:0; }
-.menu-item-label { display:flex; flex-direction:column; gap:1px; }
-.menu-item-sub { font-size: 9px; font-weight: 500; letter-spacing: 0.04em; text-transform: none; color: var(--muted2); line-height: 1.3; }
-.menu-item:hover .menu-item-sub { color: rgba(245,245,245,0.45); }
-.menu-item.active .menu-item-sub { color: rgba(var(--orange-ch),0.55); }
-.menu-badge {
-  margin-left:auto; font-size:10px; font-weight:800;
-  background: var(--orange); color: var(--black);
-  border-radius: 3px; padding: 2px 6px;
-  font-family: var(--headline); letter-spacing: 0.06em;
-}
-
-.menu-divider { height:1px; background: var(--border); margin: 0.5rem 0.75rem; }
-
-.menu-footer {
-  padding: 1rem 1.25rem 1.5rem;
-  border-top: 1px solid var(--border);
-}
-.menu-athlete {
-  display:flex; align-items:center; gap:0.85rem;
-  cursor:pointer; padding: 0.5rem; border-radius:4px;
-  transition: background 0.15s;
-}
-.menu-athlete:hover { background: var(--surface2); }
-.menu-signout-btn {
-  width: 100%;
-  margin-top: 0.6rem;
-  padding: 0.8rem 0.9rem;
-  border-radius: 4px;
-  border: 1px solid rgba(255, 77, 0, 0.35);
-  background: rgba(255, 77, 0, 0.08);
-  color: var(--orange);
-  cursor: pointer;
-  font-family: var(--headline);
-  font-size: 14px;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
-}
-.menu-signout-btn:hover {
-  background: rgba(255, 77, 0, 0.14);
-  border-color: rgba(255, 77, 0, 0.55);
-  color: #ff6a26;
-}
-.menu-avi {
-  width:38px; height:38px; border-radius:50%;
-  background: var(--surface3);
-  border: 1.5px solid var(--orange);
-  display:flex; align-items:center; justify-content:center;
-  font-family: var(--headline); font-size:15px; font-weight:900;
-  color: var(--orange); flex-shrink:0; overflow:hidden;
-}
-.menu-avi img { width:100%; height:100%; object-fit:cover; }
-.menu-ath-name {
-  font-family: var(--headline); font-size:15px; font-weight:800;
-  text-transform:uppercase; letter-spacing:0.04em; color:var(--white);
-}
-.menu-ath-sub { font-size:11px; color:var(--muted); margin-top:1px; }
-
-/* =============================================
-   MAIN / PAGES
-   ============================================= */
-main {
-  margin-top: calc(var(--header-base-height) + env(safe-area-inset-top, 0px));
-  min-height: calc(100vh - var(--header-base-height) - env(safe-area-inset-top, 0px));
-}
 
 .page { display:none; }
 .page.active {
@@ -771,6 +615,24 @@ main {
 }
 .dash-zone.dash-zone-collapsed .dash-zone-chevron { transform: rotate(-90deg); }
 .dash-zone.dash-zone-collapsed .dash-zone-grid { display: none; }
+
+/* ── Pace Calculator Widget ── */
+.pcw-header { margin-bottom:.9rem; }
+.pcw-mode-toggle { display:flex; gap:.4rem; margin-bottom:.9rem; }
+.pcw-mode-btn {
+  flex:1; padding:.42rem .5rem; border-radius:8px; border:1px solid var(--border2);
+  background:none; color:var(--muted); font-family:var(--headline); font-size:10px;
+  font-weight:800; letter-spacing:.09em; text-transform:uppercase; cursor:pointer; transition:all .15s;
+}
+.pcw-mode-btn.active { background:rgba(var(--orange-ch),.1); border-color:rgba(var(--orange-ch),.35); color:var(--orange); }
+.pcw-vdot-section { margin-top:.85rem; padding-top:.85rem; border-top:1px solid var(--border); }
+.pcw-vdot-label { font-size:9px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin-bottom:.55rem; display:flex; justify-content:space-between; align-items:baseline; }
+.pcw-vdot-score-badge { font-family:var(--headline); font-size:13px; font-weight:900; color:var(--orange); }
+.pcw-vdot-grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:.35rem; }
+.pcw-vdot-zone { background:rgba(255,255,255,.03); border:1px solid var(--border); border-radius:8px; padding:.5rem .3rem; text-align:center; }
+.pcw-vdot-zone-name { font-size:8px; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); line-height:1.2; }
+.pcw-vdot-zone-pace { font-family:var(--headline); font-size:.85rem; font-weight:900; color:var(--white); margin-top:.2rem; line-height:1; }
+.pcw-vdot-zone-unit { font-size:8px; color:var(--muted2); }
 
 /* ── Countdown ── */
 .countdown-wrap {
@@ -2773,17 +2635,37 @@ main {
   display:flex;align-items:center;justify-content:space-between;gap:.75rem;
   padding:.72rem .78rem;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);
 }
-.ath-champ-name{font-family:var(--headline);font-size:.95rem;font-weight:900;color:var(--white);text-transform:uppercase}
-.ath-champ-sub{font-size:10px;color:var(--muted);margin-top:.18rem}
-.ath-champ-status{font-family:var(--headline);font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase}
-.ath-champ-status.good{color:var(--green)}
-.ath-champ-status.warn{color:var(--orange)}
-.ath-champ-status.muted{color:var(--muted)}
+.ath-champ-name{font-family:var(--headline);font-size:.95rem;font-weight:900;color:var(--white);text-transform:uppercase;line-height:1.1}
+.ath-champ-sub{font-size:10px;color:var(--muted);margin-top:.25rem;line-height:1.4}
+.ath-champ-detail-line{margin-top:.2rem;font-size:10px;color:var(--muted2);line-height:1.4}
+/* Status pill — sits top-right of card header */
+.ath-champ-status{
+  display:inline-block; font-family:var(--headline); font-size:9px; font-weight:900;
+  letter-spacing:.1em; text-transform:uppercase; white-space:nowrap;
+  padding:.22rem .5rem; border-radius:999px; border:1px solid currentColor;
+  line-height:1.4; flex-shrink:0;
+}
+.ath-champ-status.good{color:var(--green);background:rgba(var(--green-ch),0.1)}
+.ath-champ-status.warn{color:var(--orange);background:rgba(var(--orange-ch),0.1)}
+.ath-champ-status.muted{color:var(--muted);background:rgba(245,245,245,0.05)}
+/* Card header row: name left, status pill right */
+.ath-champ-header{
+  display:flex; align-items:flex-start; justify-content:space-between; gap:.5rem;
+}
+/* Bottom countdown row */
+.ath-champ-bottom{
+  margin-top:auto; padding-top:.7rem; display:flex; align-items:baseline; gap:.3rem;
+}
+.ath-champ-countdown{
+  font-family:var(--headline); font-size:1.1rem; font-weight:900; color:var(--orange); line-height:1;
+}
+.ath-champ-countdown-sub{
+  font-size:9px; color:var(--muted); letter-spacing:.1em; text-transform:uppercase;
+}
 .ath-champ-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem;margin-top:.9rem;align-items:stretch}
 .ath-champ-row.rich{
-  min-height:132px;
-  align-items:flex-start;
-  padding:.9rem .95rem;
+  display:flex; flex-direction:column; min-height:110px;
+  padding:.85rem .9rem;
   border-radius:14px;
 }
 .ath-champ-row.rich.in-progress{
@@ -2796,14 +2678,6 @@ main {
   margin-top:.45rem; display:inline-flex; align-items:center; gap:.4rem;
   padding:.32rem .48rem; border-radius:999px; background:rgba(255,255,255,0.04);
   border:1px solid rgba(255,255,255,0.06); font-family:var(--headline); font-size:11px; font-weight:900; color:var(--white);
-}
-.ath-champ-detail-line{margin-top:.35rem;font-size:11px;color:var(--muted);line-height:1.45}
-.ath-champ-side{text-align:right;min-width:92px}
-.ath-champ-countdown{
-  font-family:var(--headline); font-size:1.5rem; font-weight:900; color:var(--orange); line-height:.9;
-}
-.ath-champ-countdown-sub{
-  margin-top:.18rem; font-size:10px; color:var(--muted); letter-spacing:.12em; text-transform:uppercase;
 }
 .ath-champ-progress{
   margin-top:.75rem; display:flex; flex-direction:row; gap:0; border-radius:8px; overflow:hidden; border:1px solid rgba(255,255,255,0.06);
@@ -3957,7 +3831,6 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 .fl { color: var(--muted); }
 .hist-sub { color: var(--muted); }
 .s-tile-label { color: var(--muted); }
-.menu-section-label { color: var(--muted2); }
 
 /* =============================================
    LIGHT MODE TEXT OVERRIDES
@@ -4009,8 +3882,6 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 [data-theme="light"] .bn-tab { color: rgba(26,26,26,0.75); }
 [data-theme="light"] .bn-tab.active { color: var(--orange); }
 
-[data-theme="light"] .menu-item { color: rgba(26,26,26,0.70); }
-[data-theme="light"] .menu-item:hover { background: var(--surface2); color: #1A1A1A; }
 
 [data-theme="light"] .auth-note,
 [data-theme="light"] .auth-status-card,
@@ -4030,19 +3901,12 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 [data-theme="light"] .mw-date { color: rgba(26,26,26,0.35); }
 
 /* Hamburger bars in light mode */
-[data-theme="light"] .hamburger span,
-[data-theme="light"] .hamburger.open span:nth-child(1),
-[data-theme="light"] .hamburger.open span:nth-child(3) { background: rgba(26,26,26,0.80); }
-
-[data-theme="light"] .hamburger:hover { border-color: rgba(0,0,0,0.20); background: rgba(0,0,0,0.05); }
 
 /* Leaflet map controls in light mode */
 [data-theme="light"] .leaflet-control-zoom a { border: 1px solid rgba(0,0,0,0.15) !important; color: rgba(26,26,26,0.70) !important; background: var(--surface) !important; }
 
 /* SVG icons inherit currentColor — ensure they're dark */
 [data-theme="light"] .bn-tab svg,
-[data-theme="light"] .menu-item svg,
-[data-theme="light"] header svg { color: inherit; }
 
 /* Age grade / sparkline axis text (SVG) */
 [data-theme="light"] .be-ax { fill: rgba(26,26,26,0.45) !important; }
@@ -4078,7 +3942,6 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 @media (max-width: 767px) {
   .bottom-nav { display: flex; align-items: flex-start; justify-content: space-around; }
   main { padding-bottom: calc(var(--bottom-nav-base-height) + env(safe-area-inset-bottom, 0px) + 8px); }
-  .hamburger { display: none; }
 }
 .bn-tab {
   flex: 1; display: flex; flex-direction: column;
@@ -4108,9 +3971,47 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   color: var(--green) !important;
   border-color: rgba(var(--green-ch),0.25) !important;
 }
-/* Sidebar section label colors */
-.menu-section-label.race  { color: var(--orange); }
-.menu-section-label.train { color: var(--green); }
+
+/* ── Home page tabs (Dashboard / Pace) ── */
+.home-tab-bar { display:flex; gap:.3rem; padding:0 var(--page-pad); margin-bottom:1.5rem; }
+.home-tab-pill.active {
+  background: var(--orange-dim) !important;
+  color: var(--orange) !important;
+  border-color: rgba(var(--orange-ch),.35) !important;
+}
+
+/* ── Races page tabs (History / Map / Wishlist) ── */
+.races-tab-bar { display:flex; gap:.3rem; padding:0 var(--page-pad); margin-bottom:1.5rem; }
+.races-tab-pill.active {
+  background: var(--orange-dim) !important;
+  color: var(--orange) !important;
+  border-color: rgba(var(--orange-ch),.35) !important;
+}
+
+/* ── You page tabs (Profile / Medals) ── */
+.you-tab-bar { display:flex; gap:.3rem; padding:0 var(--page-pad); margin-bottom:1.5rem; }
+.you-tab-pill.active {
+  background: var(--orange-dim) !important;
+  color: var(--orange) !important;
+  border-color: rgba(var(--orange-ch),.35) !important;
+}
+
+/* ── Settings page ── */
+#page-settings .page-kicker::before { background: var(--orange); }
+
+/* ── Header gear icon button ── */
+.header-gear-btn {
+  background: none;
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 6px 8px;
+  cursor: pointer;
+  color: var(--white);
+  display: flex; align-items: center;
+  transition: background 0.15s, border-color 0.15s;
+}
+.header-gear-btn:hover { background: var(--surface3); border-color: var(--border2); }
+.header-gear-btn svg { display:block; }
 
 /* =============================================
    ATHLETE PAGE — Settings link on mobile
@@ -4152,16 +4053,26 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 }
 
 /* =============================================
-   RACE MAP PAGE  —  Flighty-style
+   RACES PAGE  —  Full-viewport Flighty style
    ============================================= */
-#page-map {
-  height: calc(100svh - var(--header-base-height) - env(safe-area-inset-top, 0px));
-  height: calc(100vh - var(--header-base-height) - env(safe-area-inset-top, 0px)); /* fallback for older browsers */
-  display: none;
-  position: relative;
+
+/* page-races fills viewport between header and bottom nav */
+#page-races {
+  position: relative !important;
+  overflow: hidden !important;
+  height: calc(100svh - var(--header-base-height) - var(--bottom-nav-base-height) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) !important;
+  /* fallback for browsers that don't support svh */
+  height: calc(100vh  - var(--header-base-height) - var(--bottom-nav-base-height) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) !important;
+  padding: 0 !important;
+}
+
+#racesPanel-map {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  display: block;
   overflow: hidden;
 }
-#page-map.active { display: block; }
 
 /* Full-bleed Leaflet map */
 #raceMap {
@@ -4170,15 +4081,162 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   background: #050608;
 }
 
-/* Arc canvas sits above tiles, below markers */
-/* ── Floating stat pills (bottom-left) ── */
-/* position:fixed escapes page-map's stacking context + iOS 100vh overflow issues */
+/* ── Floating stat pills — above sheet peek ── */
 .map-pill-bar {
-  position: fixed; bottom: calc(var(--bottom-nav-base-height) + env(safe-area-inset-bottom, 0px) + 1rem); left: 1rem; z-index: 600;
-  display: none; gap: 0.45rem; flex-wrap: wrap;
+  position: absolute;
+  bottom: calc(230px + env(safe-area-inset-bottom, 0px) + 8px);
+  left: 1rem; z-index: 600;
+  display: flex; gap: 0.45rem; flex-wrap: wrap;
   pointer-events: none;
 }
-#page-map.active .map-pill-bar { display: flex; }
+
+/* ── Bottom sheet ── */
+.races-sheet {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: calc(100% - 56px);
+  background: var(--surface);
+  border-radius: 18px 18px 0 0;
+  border-top: 1px solid var(--border2);
+  display: flex; flex-direction: column;
+  transform: translateY(calc(100% - 230px));
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 400;
+  touch-action: none;
+}
+.races-sheet.expanded {
+  transform: translateY(0);
+  touch-action: auto;
+  z-index: 650;  /* above map pills (z-600) when fully expanded */
+}
+
+.races-sheet-handle {
+  width: 36px; height: 4px; border-radius: 2px;
+  background: var(--border2);
+  margin: 10px auto 0; flex-shrink: 0; cursor: pointer;
+}
+
+.races-sheet-top {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: .75rem 1rem .4rem; gap: .5rem; flex-shrink: 0;
+}
+
+/* Year filter tabs */
+.races-year-tabs {
+  display: flex; gap: .3rem; overflow-x: auto; scrollbar-width: none; flex: 1;
+}
+.races-year-tabs::-webkit-scrollbar { display: none; }
+.races-year-tab {
+  flex-shrink: 0; padding: .28rem .65rem; border-radius: 999px;
+  border: 1px solid var(--border2); background: none; color: var(--muted);
+  font-family: var(--headline); font-size: 10px; font-weight: 800; letter-spacing: .08em;
+  text-transform: uppercase; cursor: pointer; white-space: nowrap; transition: all .15s;
+}
+.races-year-tab.active {
+  background: rgba(var(--orange-ch), .12);
+  border-color: rgba(var(--orange-ch), .35);
+  color: var(--orange);
+}
+
+/* Compact / Detailed toggle */
+.races-view-toggle { display: flex; gap: .2rem; flex-shrink: 0; }
+.races-view-btn {
+  padding: .28rem .55rem; border-radius: 6px; border: 1px solid var(--border2);
+  background: none; color: var(--muted); font-size: 10px; font-family: var(--headline);
+  font-weight: 800; letter-spacing: .07em; text-transform: uppercase;
+  cursor: pointer; transition: all .15s;
+}
+.races-view-btn.active {
+  background: var(--surface3); color: var(--white); border-color: var(--border2);
+}
+
+/* Stats strip inside sheet */
+.races-sheet-stats {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: .5rem;
+  padding: .4rem 1rem .6rem; flex-shrink: 0;
+}
+
+/* Scrollable race list */
+.races-sheet-list {
+  flex: 1; overflow-y: auto; padding: .25rem 1rem 1rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Sheet footer */
+.races-sheet-footer {
+  padding: .75rem 1rem;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  display: flex; gap: .5rem;
+}
+
+/* ── Compact row ── */
+.race-row-compact {
+  display: grid; grid-template-columns: 1fr auto;
+  padding: .55rem 0; border-bottom: 1px solid var(--border);
+  gap: .25rem; cursor: pointer; align-items: center;
+}
+.race-row-compact:active {
+  background: rgba(255,255,255,.03);
+  margin: 0 -.5rem; padding-left: .5rem; padding-right: .5rem;
+}
+.race-row-compact.is-pb {
+  border-left: 2px solid var(--orange);
+  padding-left: calc(.5rem - 2px);
+  background: linear-gradient(90deg, rgba(var(--orange-ch),.10) 0%, transparent 70%);
+}
+.rrc-name {
+  font-family: var(--headline); font-size: 14px; font-weight: 800; color: var(--white);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.rrc-meta { font-size: 10px; color: var(--muted); }
+.rrc-time {
+  font-family: var(--headline); font-size: 13px; font-weight: 700; color: var(--orange);
+  white-space: nowrap; text-align: right;
+}
+.rrc-dist { font-size: 10px; color: var(--muted); text-align: right; }
+
+/* ── Detailed row ── */
+.race-row-detailed {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 12px; padding: .85rem; margin-bottom: .6rem; cursor: pointer;
+}
+.rrd-header {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  gap: .5rem; margin-bottom: .4rem;
+}
+.rrd-name {
+  font-family: var(--headline); font-size: 15px; font-weight: 900; color: var(--white);
+}
+.rrd-time {
+  font-family: var(--headline); font-size: 14px; font-weight: 800; color: var(--orange);
+  flex-shrink: 0;
+}
+.rrd-meta { font-size: 10px; color: var(--muted); margin-bottom: .5rem; }
+.rrd-tags { display: flex; flex-wrap: wrap; gap: .3rem; }
+.rrd-tag {
+  font-size: 9px; font-family: var(--headline); font-weight: 800; letter-spacing: .08em;
+  text-transform: uppercase; padding: .2rem .45rem; border-radius: 4px;
+  border: 1px solid var(--border2); color: var(--muted); background: var(--surface3);
+}
+.rrd-tag.pb {
+  border-color: rgba(var(--orange-ch), .35); color: var(--orange);
+  background: rgba(var(--orange-ch), .1);
+}
+.rrd-tag.medal {
+  border-color: rgba(255, 215, 112, .35); color: #FFD770;
+  background: rgba(255, 215, 112, .08);
+}
+
+/* Year group header in list */
+.races-year-header {
+  font-family: var(--headline); font-size: 10px; font-weight: 900; letter-spacing: .15em;
+  text-transform: uppercase; color: var(--muted);
+  padding: .7rem 0 .35rem;
+  border-bottom: 1px solid var(--border); margin-bottom: .35rem;
+}
+
+/* Share card canvas */
+#raceShareCanvas { width: 100%; border-radius: 12px; display: block; }
 .map-pill {
   display: flex; flex-direction: column; align-items: center;
   background: rgba(5,6,8,0.75);
@@ -4202,10 +4260,10 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 }
 
 /* ── Zoom controls override ── */
-/* Move the Leaflet bottom-right control pane to fixed so it clears the nav */
-#page-map .leaflet-bottom.leaflet-right {
-  position: fixed !important;
-  bottom: calc(var(--bottom-nav-base-height) + env(safe-area-inset-bottom, 0px) + 0.5rem) !important;
+/* Position above the sheet peek height */
+#page-races .leaflet-bottom.leaflet-right {
+  position: absolute !important;
+  bottom: calc(230px + env(safe-area-inset-bottom, 0px) + 0.5rem) !important;
   right: 1rem !important;
 }
 .leaflet-control-zoom {
@@ -4350,9 +4408,9 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   color: var(--green); font-variant-numeric: tabular-nums; white-space: nowrap;
 }
 
-/* ── Loading overlay ── */
+/* ── Loading overlay — sits behind the sheet (z-index < 400) ── */
 .map-loading {
-  position: absolute; inset: 0; z-index: 999;
+  position: absolute; inset: 0; z-index: 200;
   background: #050608;
   display: flex; flex-direction: column;
   align-items: center; justify-content: center; gap: 1rem;
@@ -6083,74 +6141,16 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 <header role="banner">
   <div class="logo" onclick="go('dashboard')">BREAK<span class="slash">/</span>TAPES</div>
   <div class="header-right">
-    <button class="cta-btn" onclick="openRaceModal()">+ LOG RACE</button>
-    <div class="hamburger" id="hbtn" onclick="toggleMenu()" aria-label="Open navigation menu" aria-expanded="false" aria-controls="sMenu">
-      <span></span><span></span><span></span>
-    </div>
+    <button class="header-gear-btn" onclick="go('settings')" aria-label="Settings">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+    </button>
   </div>
 </header>
 
 <!-- ==== SLIDE MENU ==== -->
-<div class="menu-overlay" id="mOverlay" onclick="closeMenu()"></div>
-<nav class="side-menu" id="sMenu" aria-label="Main navigation" aria-hidden="true">
-  <div class="menu-top">
-    <span class="menu-top-label">Menu</span>
-  </div>
-  <div class="menu-nav">
-    <div class="menu-section-label race">Race</div>
-    <button class="menu-item active" id="mi-dashboard" onclick="go('dashboard')">
-      <span class="menu-icon">⚡</span><span class="menu-item-label">Dashboard<span class="menu-item-sub">PRs, medals &amp; upcoming races</span></span>
-    </button>
-    <button class="menu-item" id="mi-medals" onclick="go('medals')">
-      <span class="menu-icon">🏅</span><span class="menu-item-label">Medal Wall<span class="menu-item-sub">Photos &amp; achievements</span></span>
-      <span class="menu-badge" id="mBadge">0</span>
-    </button>
-    <button class="menu-item" id="mi-history" onclick="go('history')">
-      <span class="menu-icon">📋</span><span class="menu-item-label">Race History<span class="menu-item-sub">All your finishes</span></span>
-    </button>
-    <button class="menu-item" id="mi-wishlist" onclick="go('wishlist')">
-      <span class="menu-icon">💫</span><span class="menu-item-label">Race Wishlist<span class="menu-item-sub">Future &amp; bucket-list races</span></span>
-    </button>
-    <button class="menu-item" id="mi-map" onclick="go('map')">
-      <span class="menu-icon">🗺️</span><span class="menu-item-label">Race Map<span class="menu-item-sub">Countries &amp; routes</span></span>
-    </button>
-    <button class="menu-item" id="mi-flatlay" onclick="go('flatlay')">
-      <span class="menu-icon">🧰</span><span class="menu-item-label">The Flatlay<span class="menu-item-sub">Gear &amp; race kits</span></span>
-    </button>
-    <div class="menu-divider"></div>
-    <div class="menu-section-label train">Train</div>
-    <button class="menu-item" id="mi-train" onclick="go('train')">
-      <span class="menu-icon">⚡</span><span class="menu-item-label">Pace Calculator<span class="menu-item-sub">Target &amp; split pacing</span></span>
-    </button>
-    <button class="menu-item" onclick="go('train');switchTrainTab('activities',document.getElementById('ttActivities'))">
-      <span class="menu-icon">🏋️</span><span class="menu-item-label">Activity Log<span class="menu-item-sub">Workouts &amp; wearables</span></span>
-    </button>
-    <div class="menu-divider"></div>
-    <div class="menu-section-label">You</div>
-    <button class="menu-item" id="mi-athlete" onclick="go('athlete')">
-      <span class="menu-icon">👤</span><span class="menu-item-label">Athlete Profile<span class="menu-item-sub">Stats, bio &amp; public page</span></span>
-    </button>
-    <button class="menu-item" onclick="openNextRace()">
-      <span class="menu-icon">📅</span>Set Next Race
-    </button>
-    <button class="menu-item" onclick="openSettings()">
-      <span class="menu-icon">⚙️</span>Settings
-    </button>
-    <button class="menu-item" id="mi-auth" onclick="openAuthModal()">
-      <span class="menu-icon">🔐</span><span id="authMenuLabel">Sign In</span>
-    </button>
-  </div>
-  <div class="menu-footer">
-    <div class="menu-athlete" onclick="go('athlete')">
-      <div class="menu-avi" id="mAvi">A<img id="mAviImg" style="display:none"/></div>
-      <div>
-        <div class="menu-ath-name" id="mAthName">Athlete</div>
-        <div class="menu-ath-sub" id="mAthSub">0 races</div>
-      </div>
-    </div>
-    <button class="menu-signout-btn" type="button" id="menuSignOutBtn" onclick="signOutUser()" style="display:none">Sign Out</button>
-  </div>
-</nav>
 
 <!-- BETA UPGRADE BANNER (staging only — shown when signed in with @beta.breaktapes.com account) -->
 <div id="betaUpgradeBanner" class="hidden">
@@ -6193,6 +6193,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 
 <!-- DASHBOARD -->
 <div id="page-dashboard" class="page active">
+  <div id="homePanel-dash">
   <div class="wrap">
     <!-- Greeting -->
     <div class="greeting-card" id="greetingCard">
@@ -6329,6 +6330,142 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
             </div>
             <div id="streakWidgetContent"></div>
           </div>
+          <!-- Pace Calculator + VDOT Widget -->
+          <div id="dash-widget-pace-calculator">
+            <div class="pcw-header">
+              <div class="section-row"><div class="section-h">Pace Calculator</div></div>
+            </div>
+            <div class="pace-input-card">
+              <div class="rd-label">Sport &amp; Distance</div>
+              <div style="display:grid;grid-template-columns:auto 1fr;gap:.75rem;margin-bottom:.85rem">
+                <div class="pc-sel" id="pcTypeSelWrap">
+                  <button class="pc-sel-btn" type="button" id="pcTypeBtn" aria-expanded="false" aria-haspopup="listbox" onclick="pcToggleSel('pcType')">
+                    <span id="pcTypeDisplay">🏃 Running</span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                  </button>
+                  <div class="pc-sel-list" id="pcTypeList" style="display:none" role="listbox">
+                    <button class="pc-sel-item pc-sel-active" type="button" onclick="pcPickType('run','🏃 Running')">🏃 Running</button>
+                    <button class="pc-sel-item" type="button" onclick="pcPickType('tri','🏆 Triathlon')">🏆 Triathlon</button>
+                  </div>
+                  <select id="pcType" style="display:none"><option value="run">Running</option><option value="tri">Triathlon</option></select>
+                </div>
+                <div class="pc-sel" id="pcDistSelWrap">
+                  <button class="pc-sel-btn" type="button" id="pcDistBtn" aria-expanded="false" aria-haspopup="listbox" onclick="pcToggleSel('pcDist')">
+                    <span id="pcDistDisplay">5KM</span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                  </button>
+                  <div class="pc-sel-list" id="pcDistList" style="display:none" role="listbox"></div>
+                  <select id="pcDist" style="display:none"></select>
+                </div>
+              </div>
+              <div id="pcStandardInput">
+                <!-- Mode toggle (running only) -->
+                <div class="pcw-mode-toggle" id="pcModeToggle">
+                  <button class="pcw-mode-btn active" id="pcModeTimeBtn" onclick="pcSetMode('time')">Finish Time → Pace</button>
+                  <button class="pcw-mode-btn" id="pcModePaceBtn" onclick="pcSetMode('pace')">Target Pace → Time</button>
+                </div>
+                <!-- Target Finish Time input (default mode) -->
+                <div id="pcFinishTimeInput">
+                  <div class="rd-label">Target Finish Time</div>
+                  <div class="time-picker" style="margin-bottom:.85rem">
+                    <div class="tp-field">
+                      <button class="tp-btn" type="button" onclick="stepTime('pcH',1,0,99)">▲</button>
+                      <input class="tp-in" id="pcH" type="number" min="0" max="99" value="0" inputmode="numeric" onchange="clampTime(this,0,99)">
+                      <button class="tp-btn" type="button" onclick="stepTime('pcH',-1,0,99)">▼</button>
+                      <div class="tp-label">HRS</div>
+                    </div>
+                    <span class="tp-sep">:</span>
+                    <div class="tp-field">
+                      <button class="tp-btn" type="button" onclick="stepTime('pcM',1,0,59)">▲</button>
+                      <input class="tp-in" id="pcM" type="number" min="0" max="59" value="0" inputmode="numeric" onchange="clampTime(this,0,59)">
+                      <button class="tp-btn" type="button" onclick="stepTime('pcM',-1,0,59)">▼</button>
+                      <div class="tp-label">MIN</div>
+                    </div>
+                    <span class="tp-sep">:</span>
+                    <div class="tp-field">
+                      <button class="tp-btn" type="button" onclick="stepTime('pcS',1,0,59)">▲</button>
+                      <input class="tp-in" id="pcS" type="number" min="0" max="59" value="0" inputmode="numeric" onchange="clampTime(this,0,59)">
+                      <button class="tp-btn" type="button" onclick="stepTime('pcS',-1,0,59)">▼</button>
+                      <div class="tp-label">SEC</div>
+                    </div>
+                  </div>
+                </div>
+                <!-- Target Pace input (reverse mode) -->
+                <div id="pcTargetPaceInput" style="display:none">
+                  <div class="rd-label">Target Pace / km</div>
+                  <div class="time-picker" style="margin-bottom:.85rem">
+                    <div class="tp-field">
+                      <button class="tp-btn" type="button" onclick="stepTime('pcPM',1,0,59)">▲</button>
+                      <input class="tp-in" id="pcPM" type="number" min="0" max="59" value="5" inputmode="numeric" onchange="clampTime(this,0,59)">
+                      <button class="tp-btn" type="button" onclick="stepTime('pcPM',-1,0,59)">▼</button>
+                      <div class="tp-label">MIN</div>
+                    </div>
+                    <span class="tp-sep">:</span>
+                    <div class="tp-field">
+                      <button class="tp-btn" type="button" onclick="stepTime('pcPS',1,0,59)">▲</button>
+                      <input class="tp-in" id="pcPS" type="number" min="0" max="59" value="0" inputmode="numeric" onchange="clampTime(this,0,59)">
+                      <button class="tp-btn" type="button" onclick="stepTime('pcPS',-1,0,59)">▼</button>
+                      <div class="tp-label">SEC</div>
+                    </div>
+                  </div>
+                </div>
+                <div id="pcPBRef" style="display:none;font-size:12px;color:var(--muted);margin-bottom:.85rem"></div>
+                <button class="btn-main" style="width:100%" onclick="calcPaceDispatch()">Calculate</button>
+              </div>
+              <div id="pcTriInput" style="display:none">
+                <div class="tri-segs">
+                  <div class="tri-seg-row">
+                    <div class="tri-seg-hd"><span class="tri-seg-icon">🏊</span><div><div class="tri-seg-name">Swim</div><div class="tri-seg-dist" id="pcTriSwimDist">1,500m</div></div></div>
+                    <div class="tri-seg-ctrl"><span class="tri-seg-lbl">Pace / 100m</span>
+                      <div class="tri-pace-inp">
+                        <input class="tri-num" id="pcSwimPaceM" type="number" value="2" min="0" max="9">
+                        <span class="tri-colon">:</span>
+                        <input class="tri-num" id="pcSwimPaceS" type="number" value="0" min="0" max="59">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="tri-seg-row tri-t">
+                    <div class="tri-seg-hd"><span class="tri-seg-icon">⏱</span><div><div class="tri-seg-name">T1</div></div></div>
+                    <div class="tri-seg-ctrl"><span class="tri-seg-lbl">mm : ss</span>
+                      <div class="tri-pace-inp">
+                        <input class="tri-num" id="pcT1M" type="number" value="3" min="0" max="59">
+                        <span class="tri-colon">:</span>
+                        <input class="tri-num" id="pcT1S" type="number" value="0" min="0" max="59">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="tri-seg-row">
+                    <div class="tri-seg-hd"><span class="tri-seg-icon">🚴</span><div><div class="tri-seg-name">Bike</div><div class="tri-seg-dist" id="pcTriBikeDist">40km</div></div></div>
+                    <div class="tri-seg-ctrl"><span class="tri-seg-lbl">Avg Speed km/h</span>
+                      <input class="tri-speed-inp" id="pcBikeSpeed" type="number" value="30" min="1" max="80">
+                    </div>
+                  </div>
+                  <div class="tri-seg-row tri-t">
+                    <div class="tri-seg-hd"><span class="tri-seg-icon">⏱</span><div><div class="tri-seg-name">T2</div></div></div>
+                    <div class="tri-seg-ctrl"><span class="tri-seg-lbl">mm : ss</span>
+                      <div class="tri-pace-inp">
+                        <input class="tri-num" id="pcT2M" type="number" value="2" min="0" max="59">
+                        <span class="tri-colon">:</span>
+                        <input class="tri-num" id="pcT2S" type="number" value="0" min="0" max="59">
+                      </div>
+                    </div>
+                  </div>
+                  <div class="tri-seg-row">
+                    <div class="tri-seg-hd"><span class="tri-seg-icon">🏃</span><div><div class="tri-seg-name">Run</div><div class="tri-seg-dist" id="pcTriRunDist">10km</div></div></div>
+                    <div class="tri-seg-ctrl"><span class="tri-seg-lbl">Pace / km</span>
+                      <div class="tri-pace-inp">
+                        <input class="tri-num" id="pcRunPaceM" type="number" value="5" min="0" max="29">
+                        <span class="tri-colon">:</span>
+                        <input class="tri-num" id="pcRunPaceS" type="number" value="30" min="0" max="59">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <button class="btn-main" style="width:100%;margin-top:1rem" onclick="calcTriPace()">Calculate Time</button>
+              </div>
+            </div>
+            <div id="paceResults" style="display:none"></div>
+          </div>
           <div id="dash-widget-season-planner-widget">
             <div id="seasonPlannerWidgetContent"></div>
           </div>
@@ -6392,72 +6529,107 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
       </section>
     </div>
   </div>
+  </div><!-- /homePanel-dash -->
 </div>
 
 
-<!-- MEDALS -->
-<div id="page-medals" class="page">
-  <div class="wrap">
-    <div class="page-kicker">Your Collection</div>
-    <div class="page-h1">Medal<br><span class="accent">Wall</span></div>
-    <div id="mwAchievements"></div>
-    <div class="medal-wall-ai-grid" id="medalGrid"></div>
-  </div>
-</div>
+<!-- RACES -->
+<div id="page-races" class="page">
 
-<!-- HISTORY -->
-<div id="page-history" class="page">
-  <div class="wrap">
-    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:1.5rem">
-      <div>
-        <div class="page-kicker">All Time</div>
-        <div class="page-h1" style="margin-bottom:0">Race<br><span class="accent">History</span></div>
+  <!-- Full-viewport map layer (always visible) -->
+  <div id="racesPanel-map">
+    <div id="raceMap"></div>
+    <div id="mapModeToggle" style="position:absolute;top:10px;right:12px;z-index:600;display:flex;gap:4px">
+      <button class="map-mode-btn active" id="mapModeStd" onclick="setMapMode('standard')">Standard</button>
+      <button class="map-mode-btn" id="mapModePerf" onclick="setMapMode('performance')">Performance</button>
+    </div>
+    <div id="perfLegend" style="display:none;position:absolute;bottom:calc(230px + env(safe-area-inset-bottom,0px) + 5.5rem);left:12px;z-index:600;background:rgba(10,10,10,0.88);border:1px solid var(--border2);border-radius:6px;padding:8px 10px">
+      <div class="perf-legend-row"><span class="perf-legend-dot" style="background:var(--green)"></span>Top 10%</div>
+      <div class="perf-legend-row"><span class="perf-legend-dot" style="background:var(--orange)"></span>Mid field</div>
+      <div class="perf-legend-row"><span class="perf-legend-dot" style="background:#ef4444"></span>Lower field</div>
+    </div>
+    <div id="mapTip" class="map-hover-tip"></div>
+    <!-- map-pill-bar removed — stats shown in bottom sheet -->
+    <div class="map-loading" id="mapLoading">
+      <div class="map-loading-spinner"></div>
+      <div class="map-loading-label">Plotting your race world</div>
+      <div class="map-progress" id="mapProgress"></div>
+    </div>
+    <div class="map-drawer" id="mapDrawer">
+      <div class="drawer-handle"></div>
+      <div class="drawer-header">
+        <div>
+          <div class="drawer-city" id="drawerCity">City</div>
+          <div class="drawer-country" id="drawerCountry">Country</div>
+        </div>
+        <button class="drawer-close" onclick="closeDrawer()">✕</button>
       </div>
-      <div style="display:flex;gap:0.5rem;align-items:center;flex-shrink:0;margin-top:0.5rem">
-        <button class="btn-ghost" style="padding:.5rem 0.75rem;font-size:12px;white-space:nowrap" onclick="go('map')" aria-label="Race Map">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" style="vertical-align:middle;margin-right:4px"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>Map
-        </button>
-        <button class="btn-main" style="padding:.5rem 1rem;font-size:12px;white-space:nowrap" onclick="openRaceModal()">+ Log Race</button>
+      <div class="drawer-races" id="drawerRaces"></div>
+    </div>
+    <div class="map-error-bar" id="mapError">Some locations could not be geocoded</div>
+  </div><!-- /racesPanel-map -->
+
+  <!-- Bottom sheet overlay -->
+  <div class="races-sheet" id="racesSheet">
+    <div class="races-sheet-handle" id="racesSheetHandle" onclick="toggleRacesSheet()"></div>
+
+    <div class="races-sheet-top">
+      <div class="races-year-tabs" id="racesYearTabs"></div>
+      <div class="races-view-toggle">
+        <button class="races-view-btn active" id="rvCompact" onclick="setRacesView('compact',this)">Compact</button>
+        <button class="races-view-btn" id="rvDetailed" onclick="setRacesView('detailed',this)">Detailed</button>
       </div>
     </div>
-    <div class="stats-row" style="margin-bottom:1.5rem">
+
+    <div class="races-sheet-stats">
       <div class="s-tile"><div class="s-tile-num" id="hs-r">0</div><div class="s-tile-label">Races</div></div>
       <div class="s-tile"><div class="s-tile-num" id="hs-c">0</div><div class="s-tile-label">Countries</div></div>
-      <div class="s-tile"><div class="s-tile-num" id="hs-k">0</div><div class="s-tile-label">Total KM</div></div>
-      <div class="s-tile" onclick="go('medals')" style="cursor:pointer"><div class="s-tile-num" id="hs-m">0</div><div class="s-tile-label">Medals</div></div>
+      <div class="s-tile"><div class="s-tile-num" id="hs-k">0</div><div class="s-tile-label">KM</div></div>
+      <div class="s-tile" onclick="go('you')" style="cursor:pointer"><div class="s-tile-num" id="hs-m">0</div><div class="s-tile-label">Medals</div></div>
     </div>
+
+    <div id="raceSheetList" class="races-sheet-list"></div>
+
+    <div class="races-sheet-footer">
+      <button class="btn-main" style="flex:1;font-size:12px" onclick="openRaceModal()">+ Log Race</button>
+      <button class="btn-ghost" style="flex:1;font-size:12px" onclick="openRaceShareCard()">Share Log →</button>
+    </div>
+  </div><!-- /races-sheet -->
+
+  <!-- Hidden compat elements for renderHistory() called from season planner etc. -->
+  <div style="display:none">
     <div id="prStrip"></div>
     <div id="beChart"></div>
     <div id="matchedRaces"></div>
-    <div class="hist-search-wrap">
-      <input class="fi" id="histSearch" type="search" placeholder="Search races..." oninput="filterHistory()" aria-label="Search race history">
-      <button class="hist-clear-btn" id="histClearBtn" onclick="clearHistSearch()" style="display:none" aria-label="Clear search">×</button>
-    </div>
-    <div class="hist-match-count" id="histMatchCount" style="display:none"></div>
-    <div class="history-list" id="histList"></div>
-    <button class="btn-ghost" id="histLoadMore" onclick="histPage++;renderHistory()" style="display:none;width:100%;margin-top:1rem;">Load more races</button>
+    <div id="histList"></div>
+    <div id="histMatchCount"></div>
+    <button id="histLoadMore"></button>
+    <input id="histSearch">
+    <button id="histClearBtn"></button>
   </div>
-</div>
 
-<div id="page-wishlist" class="page">
-  <div class="wrap">
-    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;margin-bottom:1.5rem">
-      <div>
-        <div class="page-kicker">Future Dreams</div>
-        <div class="page-h1" style="margin-bottom:0">Race<br><span class="accent">Wishlist</span></div>
-      </div>
-      <div style="display:flex;gap:0.5rem;align-items:center;flex-shrink:0;margin-top:0.5rem">
-        <button class="btn-main" style="padding:.5rem 1rem;font-size:12px;white-space:nowrap" onclick="openWishlistModal()">+ Add Wish</button>
-      </div>
+  <!-- Wishlist compat (renderWishlist writes here, shown in modal) -->
+  <div style="display:none">
+    <div class="stats-row">
+      <div class="s-tile"><div class="s-tile-num" id="ws-r">0</div></div>
+      <div class="s-tile"><div class="s-tile-num" id="ws-c">0</div></div>
+      <div class="s-tile"><div class="s-tile-num" id="ws-s">0</div></div>
+      <div class="s-tile"><div class="s-tile-num" id="ws-y">0</div></div>
     </div>
-    <div class="stats-row" style="margin-bottom:1.5rem">
-      <div class="s-tile"><div class="s-tile-num" id="ws-r">0</div><div class="s-tile-label">Wishlist Races</div></div>
-      <div class="s-tile"><div class="s-tile-num" id="ws-c">0</div><div class="s-tile-label">Countries</div></div>
-      <div class="s-tile"><div class="s-tile-num" id="ws-s">0</div><div class="s-tile-label">Sports</div></div>
-      <div class="s-tile"><div class="s-tile-num" id="ws-y">0</div><div class="s-tile-label">Year Targets</div></div>
-    </div>
-    <div id="wishlistList" class="upcoming-row-stack"></div>
+    <div id="wishlistList"></div>
   </div>
+
+  <!-- Race Log share card modal -->
+  <div class="modal-overlay" id="raceShareModal" onclick="if(event.target===this)closeM('raceShareModal')">
+    <div class="modal-box" style="max-width:560px">
+      <div class="modal-header">
+        <div class="modal-title">Race Log</div>
+        <button class="modal-close" onclick="closeM('raceShareModal')">✕</button>
+      </div>
+      <div class="modal-body" id="raceShareBody"></div>
+    </div>
+  </div>
+
 </div>
 
 <!-- FLATLAY -->
@@ -6527,9 +6699,11 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
   </div>
 </div>
 
-<!-- ATHLETE -->
-<div id="page-athlete" class="page">
+
+<!-- YOU -->
+<div id="page-you" class="page">
   <div class="wrap">
+    <div id="youPanel-profile">
     <!-- Onboarding banner (shown for new users until profile is complete) -->
     <div id="onboardBanner" class="onboard-banner" style="display:none">
       <div class="onboard-banner-text">
@@ -6645,54 +6819,85 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
       <div class="ath-section-h">Countries Raced</div>
       <div class="country-chips" id="cChips"></div>
     </div>
-    <div class="athlete-settings-link">
-      <button class="btn-ghost" onclick="openEditAth()" aria-label="Edit profile" style="margin-bottom:0.5rem">✏️ Edit Profile</button>
-      <button class="btn-ghost" onclick="openSettings ? openSettings() : document.getElementById('settingsModal') && document.getElementById('settingsModal').classList.add('open')" aria-label="Open settings">⚙ Settings</button>
+
+    </div>
+    <div id="youPanel-medals">
+    <div class="page-kicker">Your Collection</div>
+    <div class="page-h1">Medal<br><span class="accent">Wall</span></div>
+    <div id="mwAchievements"></div>
+    <div class="medal-wall-ai-grid" id="medalGrid"></div>
     </div>
   </div>
 </div>
 
-<!-- MAP  —  Flighty style -->
-<div id="page-map" class="page">
-  <!-- Full-bleed map -->
-  <div id="raceMap"></div>
-  <div id="mapModeToggle" style="position:fixed;top:calc(var(--header-base-height) + env(safe-area-inset-top,0px) + 8px);right:12px;z-index:600;display:flex;gap:4px">
-    <button class="map-mode-btn active" id="mapModeStd" onclick="setMapMode('standard')">Standard</button>
-    <button class="map-mode-btn" id="mapModePerf" onclick="setMapMode('performance')">Performance</button>
-  </div>
-  <div id="perfLegend" style="display:none;position:fixed;bottom:calc(var(--bottom-nav-base-height) + env(safe-area-inset-bottom,0px) + 5.5rem);left:12px;z-index:600;background:rgba(10,10,10,0.88);border:1px solid var(--border2);border-radius:6px;padding:8px 10px">
-    <div class="perf-legend-row"><span class="perf-legend-dot" style="background:var(--green)"></span>Top 10%</div>
-    <div class="perf-legend-row"><span class="perf-legend-dot" style="background:var(--orange)"></span>Mid field</div>
-    <div class="perf-legend-row"><span class="perf-legend-dot" style="background:#ef4444"></span>Lower field</div>
-  </div>
-  <div id="mapTip" class="map-hover-tip"></div>
-  <!-- Floating stat pills -->
-  <div class="map-pill-bar">
-    <div class="map-pill"><div class="map-pill-num" id="ms-races">0</div><div class="map-pill-label">Races</div></div>
-    <div class="map-pill"><div class="map-pill-num" id="ms-countries">0</div><div class="map-pill-label">Countries</div></div>
-    <div class="map-pill"><div class="map-pill-num" id="ms-cities">0</div><div class="map-pill-label">Cities</div></div>
-    <div class="map-pill"><div class="map-pill-num" id="ms-km">0</div><div class="map-pill-label">KM</div></div>
-  </div>
-  <!-- Loading overlay -->
-  <div class="map-loading" id="mapLoading">
-    <div class="map-loading-spinner"></div>
-    <div class="map-loading-label">Plotting your race world</div>
-    <div class="map-progress" id="mapProgress"></div>
-  </div>
-  <!-- Bottom drawer -->
-  <div class="map-drawer" id="mapDrawer">
-    <div class="drawer-handle"></div>
-    <div class="drawer-header">
-      <div>
-        <div class="drawer-city" id="drawerCity">City</div>
-        <div class="drawer-country" id="drawerCountry">Country</div>
+
+<!-- SETTINGS -->
+<div id="page-settings" class="page">
+  <div class="wrap">
+    <div class="page-kicker">Account</div>
+    <div class="page-h1" style="margin-bottom:1.25rem">Settings</div>
+      <div class="theme-picker-section">
+        <div class="theme-picker-label">Theme</div>
+        <div class="theme-picker-grid" id="themePickerGrid"></div>
       </div>
-      <button class="drawer-close" onclick="closeDrawer()">✕</button>
+      <div class="auth-status-card">
+        <div id="authSettingsStatus">You’re currently using this app without an account.</div>
+        <div style="display:flex;flex-direction:column;gap:0.5rem;margin-top:0.85rem">
+          <button class="btn-main" type="button" id="settingsAuthBtn" onclick="openAuthModal()" style="width:100%">Sign In</button>
+          <button class="btn-ghost" type="button" id="settingsPwBtn" onclick="openPasswordModal()" style="display:none;width:100%">Change Password</button>
+          <button class="btn-ghost" type="button" id="settingsSignOutBtn" onclick="signOutUser()" style="display:none;width:100%">Sign Out</button>
+          <button class="btn-ghost" type="button" id="settingsDeleteBtn" onclick="openDeleteAccountModal()" style="display:none;width:100%;border-color:rgba(255,107,107,0.3);color:#ff8e8e">Delete Account</button>
+        </div>
+      </div>
+      <!-- Public Profile -->
+      <div class="public-profile-section" id="publicProfileSection" style="display:none">
+        <div class="settings-section-label">Public Profile</div>
+        <div class="fgrid" style="grid-template-columns:1fr">
+          <div class="fg">
+            <label class="fl" for="settingsUsername">Username</label>
+            <div class="fi-wrap">
+              <input class="fi" id="settingsUsername" type="text" placeholder="e.g. ayushk" autocomplete="off" maxlength="20" oninput="onUsernameInput()">
+            </div>
+            <div id="usernameHint" style="font-size:12px;margin-top:4px;color:var(--muted)">3–20 characters, letters, numbers and hyphens only.</div>
+          </div>
+          <div class="fg" style="flex-direction:row;align-items:center;justify-content:space-between;gap:12px">
+            <div>
+              <div class="fl" style="margin-bottom:2px">Make profile public</div>
+              <div style="font-size:12px;color:var(--muted)">Allow anyone to view your race history at your profile URL</div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="settingsIsPublic" onchange="onIsPublicToggle()">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div id="profileLinkPreview" style="display:none">
+            <div class="fl" style="margin-bottom:6px">Your profile URL</div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="fi" id="profileLinkDisplay" style="flex:1;color:var(--muted);font-size:13px;cursor:default;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
+              <button class="btn-ghost" style="flex-shrink:0;padding:8px 12px;font-size:12px" onclick="copyProfileLink()">Copy</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="fgrid" style="grid-template-columns:1fr">
+        <div class="fg" id="settingsAiKeyWrap">
+          <label class="fl">Anthropic API Key</label>
+          <div class="fi-wrap">
+            <input class="fi" id="setApiKey" type="password" placeholder="sk-ant-..." autocomplete="new-password" disabled>
+            <button class="fi-reveal" onclick="toggleReveal(this)" aria-label="Show/hide key">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+          <div class="ai-hint" id="settingsAiHint" style="margin-top:6px">Required for AI race import and screenshot parsing. Get your key at console.anthropic.com</div>
+        </div>
+      </div>
     </div>
-    <div class="drawer-races" id="drawerRaces"></div>
+    <button class="btn-main" style="margin-top:1.5rem;width:100%" onclick="saveSettings()">Save</button>
   </div>
-  <!-- Error notice -->
-  <div class="map-error-bar" id="mapError">Some locations could not be geocoded</div>
 </div>
 
 <!-- TRAIN HUB -->
@@ -6701,126 +6906,8 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
     <div class="page-kicker" style="color:var(--green)">Get Faster</div>
     <div class="page-h1" style="margin-bottom:1.25rem">Train<br><span style="color:var(--green)">Tools</span></div>
     <!-- Sub-tab bar -->
-    <div class="training-tabs" id="trainTabBar" style="margin-bottom:1.5rem">
-      <button class="training-tab train-tab-pill active" id="ttPace" onclick="switchTrainTab('pace',this)">Pace</button>
-      <button class="training-tab train-tab-pill" id="ttActivities" onclick="switchTrainTab('activities',this)">Activities</button>
-      <button class="training-tab train-tab-pill" id="ttWearables" onclick="switchTrainTab('wearables',this)">Wearables</button>
-    </div>
-    <!-- Pace sub-tab -->
-    <div id="trainPaceSection">
-      <div class="pace-input-card">
-        <div class="rd-label">Sport &amp; Distance</div>
-        <div class="pace-sport-dist-grid" style="display:grid;grid-template-columns:auto 1fr;gap:.75rem;margin-bottom:1rem">
-          <!-- Custom sport select -->
-          <div class="pc-sel" id="pcTypeSelWrap">
-            <button class="pc-sel-btn" type="button" id="pcTypeBtn" aria-expanded="false" aria-haspopup="listbox" onclick="pcToggleSel('pcType')">
-              <span id="pcTypeDisplay">🏃 Running</span>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-            </button>
-            <div class="pc-sel-list" id="pcTypeList" style="display:none" role="listbox">
-              <button class="pc-sel-item pc-sel-active" type="button" onclick="pcPickType('run','🏃 Running')">🏃 Running</button>
-              <button class="pc-sel-item" type="button" onclick="pcPickType('tri','🏆 Triathlon')">🏆 Triathlon</button>
-            </div>
-            <select id="pcType" style="display:none"><option value="run">Running</option><option value="tri">Triathlon</option></select>
-          </div>
-          <!-- Custom distance select -->
-          <div class="pc-sel" id="pcDistSelWrap">
-            <button class="pc-sel-btn" type="button" id="pcDistBtn" aria-expanded="false" aria-haspopup="listbox" onclick="pcToggleSel('pcDist')">
-              <span id="pcDistDisplay">5KM</span>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
-            </button>
-            <div class="pc-sel-list" id="pcDistList" style="display:none" role="listbox"></div>
-            <select id="pcDist" style="display:none"></select>
-          </div>
-        </div>
-        <div id="pcStandardInput">
-          <div class="rd-label">Target Finish Time</div>
-          <div class="time-picker" style="margin-bottom:1rem">
-            <div class="tp-field">
-              <button class="tp-btn" type="button" onclick="stepTime('pcH',1,0,99)">▲</button>
-              <input class="tp-in" id="pcH" type="number" min="0" max="99" value="0" inputmode="numeric" onchange="clampTime(this,0,99)">
-              <button class="tp-btn" type="button" onclick="stepTime('pcH',-1,0,99)">▼</button>
-              <div class="tp-label">HRS</div>
-            </div>
-            <span class="tp-sep">:</span>
-            <div class="tp-field">
-              <button class="tp-btn" type="button" onclick="stepTime('pcM',1,0,59)">▲</button>
-              <input class="tp-in" id="pcM" type="number" min="0" max="59" value="0" inputmode="numeric" onchange="clampTime(this,0,59)">
-              <button class="tp-btn" type="button" onclick="stepTime('pcM',-1,0,59)">▼</button>
-              <div class="tp-label">MIN</div>
-            </div>
-            <span class="tp-sep">:</span>
-            <div class="tp-field">
-              <button class="tp-btn" type="button" onclick="stepTime('pcS',1,0,59)">▲</button>
-              <input class="tp-in" id="pcS" type="number" min="0" max="59" value="0" inputmode="numeric" onchange="clampTime(this,0,59)">
-              <button class="tp-btn" type="button" onclick="stepTime('pcS',-1,0,59)">▼</button>
-              <div class="tp-label">SEC</div>
-            </div>
-          </div>
-          <div id="pcPBRef" style="display:none;font-size:12px;color:var(--muted);margin-bottom:1rem"></div>
-          <button class="btn-main" style="width:100%" onclick="calcPace()">Calculate Pace</button>
-        </div>
-        <div id="pcTriInput" style="display:none">
-          <div class="tri-segs">
-            <div class="tri-seg-row">
-              <div class="tri-seg-hd"><span class="tri-seg-icon">🏊</span><div><div class="tri-seg-name">Swim</div><div class="tri-seg-dist" id="pcTriSwimDist">1,500m</div></div></div>
-              <div class="tri-seg-ctrl">
-                <span class="tri-seg-lbl">Pace / 100m</span>
-                <div class="tri-pace-inp">
-                  <input class="tri-num" id="pcSwimPaceM" type="number" value="2" min="0" max="9">
-                  <span class="tri-colon">:</span>
-                  <input class="tri-num" id="pcSwimPaceS" type="number" value="0" min="0" max="59">
-                </div>
-              </div>
-            </div>
-            <div class="tri-seg-row tri-t">
-              <div class="tri-seg-hd"><span class="tri-seg-icon">⏱</span><div><div class="tri-seg-name">T1</div></div></div>
-              <div class="tri-seg-ctrl">
-                <span class="tri-seg-lbl">mm : ss</span>
-                <div class="tri-pace-inp">
-                  <input class="tri-num" id="pcT1M" type="number" value="3" min="0" max="59">
-                  <span class="tri-colon">:</span>
-                  <input class="tri-num" id="pcT1S" type="number" value="0" min="0" max="59">
-                </div>
-              </div>
-            </div>
-            <div class="tri-seg-row">
-              <div class="tri-seg-hd"><span class="tri-seg-icon">🚴</span><div><div class="tri-seg-name">Bike</div><div class="tri-seg-dist" id="pcTriBikeDist">40km</div></div></div>
-              <div class="tri-seg-ctrl">
-                <span class="tri-seg-lbl">Avg Speed km/h</span>
-                <input class="tri-speed-inp" id="pcBikeSpeed" type="number" value="30" min="1" max="80">
-              </div>
-            </div>
-            <div class="tri-seg-row tri-t">
-              <div class="tri-seg-hd"><span class="tri-seg-icon">⏱</span><div><div class="tri-seg-name">T2</div></div></div>
-              <div class="tri-seg-ctrl">
-                <span class="tri-seg-lbl">mm : ss</span>
-                <div class="tri-pace-inp">
-                  <input class="tri-num" id="pcT2M" type="number" value="2" min="0" max="59">
-                  <span class="tri-colon">:</span>
-                  <input class="tri-num" id="pcT2S" type="number" value="0" min="0" max="59">
-                </div>
-              </div>
-            </div>
-            <div class="tri-seg-row">
-              <div class="tri-seg-hd"><span class="tri-seg-icon">🏃</span><div><div class="tri-seg-name">Run</div><div class="tri-seg-dist" id="pcTriRunDist">10km</div></div></div>
-              <div class="tri-seg-ctrl">
-                <span class="tri-seg-lbl">Pace / km</span>
-                <div class="tri-pace-inp">
-                  <input class="tri-num" id="pcRunPaceM" type="number" value="5" min="0" max="29">
-                  <span class="tri-colon">:</span>
-                  <input class="tri-num" id="pcRunPaceS" type="number" value="30" min="0" max="59">
-                </div>
-              </div>
-            </div>
-          </div>
-          <button class="btn-main" style="width:100%;margin-top:1rem" onclick="calcTriPace()">Calculate Time</button>
-        </div>
-      </div>
-      <div id="paceResults" style="display:none"></div>
-    </div>
     <!-- Activities sub-tab -->
-    <div id="trainActivitiesSection" style="display:none">
+    <div id="trainActivitiesSection">
       <div class="strava-card" id="stravaCard">
         <div class="strava-logo">🟠</div>
         <div class="strava-card-text">
@@ -6846,7 +6933,7 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
       <div id="trainingFeed"></div>
     </div>
     <!-- Wearables sub-tab -->
-    <div id="trainWearablesSection" style="display:none">
+    <div id="trainWearablesSection">
     </div>
   </div>
 </div>
@@ -10192,7 +10279,7 @@ async function syncRemoteState() {
 function updateAuthUI() {
   const signedIn = !!authUser;
   const email = authUser?.email || '';
-  document.getElementById('authMenuLabel').textContent = signedIn ? 'Account' : 'Sign In';
+  const authMenuLabel = document.getElementById('authMenuLabel'); if(authMenuLabel) authMenuLabel.textContent = signedIn ? 'Account' : 'Sign In';
   document.getElementById('authSettingsStatus').innerHTML = signedIn
     ? `Signed in as <span class="auth-status-email">${email}</span>${_IS_PROD && proAccessGranted ? ' <span style="color:var(--orange);font-size:11px;font-weight:600"> · Pro beta unlocked</span>' : ''}`
     : `You're currently using this app without an account.`;
@@ -10200,9 +10287,8 @@ function updateAuthUI() {
   document.getElementById('settingsPwBtn').style.display = signedIn ? '' : 'none';
   document.getElementById('settingsSignOutBtn').style.display = signedIn ? '' : 'none';
   document.getElementById('settingsDeleteBtn').style.display = signedIn ? '' : 'none';
-  document.getElementById('menuSignOutBtn').style.display = signedIn ? '' : 'none';
-  const miAuth = document.getElementById('mi-auth');
-  if (miAuth) miAuth.style.display = signedIn ? 'none' : '';
+  const menuSignOutBtn = document.getElementById('menuSignOutBtn'); if(menuSignOutBtn) menuSignOutBtn.style.display = signedIn ? '' : 'none';
+  const miAuth = document.getElementById('mi-auth'); if (miAuth) miAuth.style.display = signedIn ? 'none' : '';
   const pill = document.getElementById('feedbackPill');
   if (pill && _IS_STAGING) pill.style.display = signedIn ? '' : 'none';
   // Beta upgrade banner: show when signed in with a beta account on staging
@@ -10551,98 +10637,399 @@ async function signOutUser() {
    NAVIGATION
    ============================ */
 function go(page) {
-  if (page === 'pace') { trainTab = 'pace'; page = 'train'; }
-  else if (page === 'training') { trainTab = 'activities'; page = 'train'; }
+  // Legacy aliases → consolidated pages
+  if      (page === 'pace')     page = 'dashboard';
+  else if (page === 'training') page = 'train';
+  else if (page === 'history')  { racesYearFilter = 'all'; page = 'races'; setTimeout(expandRacesSheet, 50); }
+  else if (page === 'map')      { page = 'races'; setTimeout(collapseRacesSheet, 50); }
+  else if (page === 'wishlist') { page = 'races'; setTimeout(() => { expandRacesSheet(); openWishlistModal(); }, 50); }
+  else if (page === 'athlete' || page === 'medals') page = 'you';
   closeMoreSheet();
   document.querySelectorAll('.bn-tab').forEach(b => b.classList.remove('active'));
-  const _morePages = ['train', 'athlete'];
-  const _bn = _morePages.includes(page) ? document.getElementById('bn-more') : document.getElementById('bn-' + page);
+  const _bn = document.getElementById('bn-' + page);
   if (_bn) _bn.classList.add('active');
-  document.querySelectorAll('.more-sheet-item').forEach(b => b.classList.remove('active'));
-  const _ms = document.getElementById('ms-' + page);
-  if (_ms) _ms.classList.add('active');
   curPage = page;
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById('page-'+page).classList.add('active');
-  document.querySelectorAll('.menu-item[id^="mi-"]').forEach(b=>b.classList.remove('active'));
-  const a = document.getElementById('mi-'+page);
-  if(a) a.classList.add('active');
-  closeMenu();
+  const _pg = document.getElementById('page-'+page);
+  if (_pg) _pg.classList.add('active');
   window.scrollTo(0, 0);
-  const _pageNames = { dashboard:'Dashboard', medals:'Medal Wall', history:'Race History',
-    map:'Race Map', train:'Train', athlete:'Athlete Profile', wishlist:'Race Wishlist',
-    flatlay:'The Flatlay', pace:'Pace Calculator' };
+  const _pageNames = { dashboard:'Home', races:'Races', flatlay:'Gear',
+    train:'Train', you:'You', settings:'Settings' };
   const _ptb = document.getElementById('pageTitleBar');
   if (_ptb) _ptb.textContent = _pageNames[page] || page;
   render(page);
 }
 function closeMoreSheet() { /* no-op — More now opens the side menu */ }
 
+function switchRacesTab(tab) {
+  if (tab === 'map')      collapseRacesSheet();
+  else if (tab === 'history') expandRacesSheet();
+  else if (tab === 'wishlist') { expandRacesSheet(); openWishlistModal(); }
+}
+
 /* ============================
    MENU
    ============================ */
 let _menuCloseTimer = null;
-function toggleMenu(){
-  const el = document.getElementById('sMenu');
-  if(el.classList.contains('open')){
-    closeMenu();
-  } else {
-    if(_menuCloseTimer){ clearTimeout(_menuCloseTimer); _menuCloseTimer = null; }
-    el.style.display = 'flex';
-    requestAnimationFrame(()=>requestAnimationFrame(()=>{
-      el.classList.add('open');
-      el.setAttribute('aria-hidden','false');
-      document.getElementById('mOverlay').classList.add('open');
-      const hb = document.getElementById('hbtn');
-      hb.classList.add('open');
-      hb.setAttribute('aria-expanded','true');
-    }));
-  }
-}
-function closeMenu(){
-  const el = document.getElementById('sMenu');
-  el.classList.remove('open');
-  el.setAttribute('aria-hidden','true');
-  document.getElementById('mOverlay').classList.remove('open');
-  const hb = document.getElementById('hbtn');
-  hb.classList.remove('open');
-  hb.setAttribute('aria-expanded','false');
-  _menuCloseTimer = setTimeout(()=>{ if(!el.classList.contains('open')) el.style.display='none'; _menuCloseTimer=null; }, 350);
-}
+function toggleMenu(){ /* side menu removed */ }
+function closeMenu(){ /* side menu removed */ }
 
 /* ============================
    RENDER DISPATCH
    ============================ */
 function render(p){
   updateMenuFooter();
-  if(p==='dashboard') renderDash();
-  else if(p==='medals') renderMedals();
-  else if(p==='history') renderHistory();
-  else if(p==='wishlist') renderWishlist();
-  else if(p==='flatlay') renderFlatlay();
-  else if(p==='athlete') renderAthlete();
-  else if(p==='map') renderMap();
-  else if(p==='training') renderTraining();
-  else if(p==='pace') renderPace();
-  else if(p==='train') renderTrain();
+  if      (p==='dashboard') renderHome();
+  else if (p==='races')     renderRaces();
+  else if (p==='flatlay')   renderFlatlay();
+  else if (p==='train')     renderTrain();
+  else if (p==='you')       renderYou();
+  else if (p==='settings')  renderSettings();
 }
 
-let trainTab = 'pace';
+let trainTab = 'activities';
 function switchTrainTab(tab, btnEl) {
   trainTab = tab;
-  document.querySelectorAll('.train-tab-pill').forEach(b => b.classList.remove('active'));
-  if (btnEl) btnEl.classList.add('active');
-  document.getElementById('trainPaceSection').style.display       = tab === 'pace'       ? '' : 'none';
-  document.getElementById('trainActivitiesSection').style.display  = tab === 'activities' ? '' : 'none';
-  document.getElementById('trainWearablesSection').style.display   = tab === 'wearables'  ? '' : 'none';
-  if (tab === 'pace')       { pcOnTypeChange(); document.getElementById('paceResults').style.display = 'none'; }
   if (tab === 'activities') renderTraining();
   if (tab === 'wearables')  renderWearables();
 }
 function renderTrain() {
-  const idMap = { pace: 'ttPace', activities: 'ttActivities', wearables: 'ttWearables' };
-  const activeBtn = document.getElementById(idMap[trainTab] || 'ttPace');
-  switchTrainTab(trainTab, activeBtn);
+  renderTraining();
+  renderWearables();
+}
+
+/* ── Home page (Dashboard) ── */
+function renderHome() {
+  renderDash();
+}
+
+/* ── Races page — bottom sheet state ── */
+let racesSheetExpanded = false;
+let racesYearFilter    = 'all';
+let racesViewMode      = 'compact';
+
+function expandRacesSheet() {
+  racesSheetExpanded = true;
+  const s = document.getElementById('racesSheet');
+  if (s) s.classList.add('expanded');
+}
+function collapseRacesSheet() {
+  racesSheetExpanded = false;
+  const s = document.getElementById('racesSheet');
+  if (s) s.classList.remove('expanded');
+}
+function toggleRacesSheet() {
+  racesSheetExpanded ? collapseRacesSheet() : expandRacesSheet();
+}
+
+function initRacesSheetSwipe() {
+  const sheet = document.getElementById('racesSheet');
+  if (!sheet || sheet._swipeInit) return;
+  sheet._swipeInit = true;
+  let startY = 0;
+  sheet.addEventListener('touchstart', e => { startY = e.touches[0].clientY; }, { passive: true });
+  sheet.addEventListener('touchend', e => {
+    const dy = e.changedTouches[0].clientY - startY;
+    if (dy < -50) expandRacesSheet();
+    else if (dy > 50) collapseRacesSheet();
+  }, { passive: true });
+}
+
+function renderRacesYearTabs() {
+  const el = document.getElementById('racesYearTabs');
+  if (!el) return;
+  const years = [...new Set((races||[]).map(r=>(r.date||'').slice(0,4)).filter(Boolean))]
+    .sort((a,b)=>b-a);
+  const tabs = [{label:'All', val:'all'}, ...years.map(y=>({label:y, val:y}))];
+  el.innerHTML = tabs.map(t =>
+    `<button class="races-year-tab${t.val===racesYearFilter?' active':''}"
+      onclick="setRacesYear('${t.val}',this)">${t.label}</button>`
+  ).join('');
+}
+
+function setRacesYear(yr, btn) {
+  racesYearFilter = yr;
+  document.querySelectorAll('.races-year-tab').forEach(b=>b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderRacesSheet();
+}
+
+function setRacesView(mode, btn) {
+  racesViewMode = mode;
+  document.querySelectorAll('.races-view-btn').forEach(b=>b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderRacesSheet();
+}
+
+function _checkIsPBForRow(r, pb, triPB) {
+  if (r.type === 'tri') {
+    return !!(triPB && triPB[r.distance] && triPB[r.distance].overall?.id === r.id);
+  }
+  return !!(pb && pb[r.distance] && pb[r.distance].id === r.id);
+}
+
+function buildCompactRow(r, pb, triPB) {
+  const isPB = _checkIsPBForRow(r, pb, triPB);
+  const d = r.date ? new Date(r.date+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
+  const city = escapeHtml(r.city||'');
+  const meta = city && d ? city+' · '+d : city||d;
+  return `<div class="race-row-compact${isPB?' is-pb':''}" onclick="openRaceView(${r.id})">
+    <div style="min-width:0">
+      <div class="rrc-name">${escapeHtml(r.name||'Unnamed Race')}</div>
+      <div class="rrc-meta">${meta}</div>
+    </div>
+    <div style="text-align:right;flex-shrink:0">
+      <div class="rrc-time">${escapeHtml(r.time||'—')}</div>
+      <div class="rrc-dist">${escapeHtml(r.distance||'')}</div>
+    </div>
+  </div>`;
+}
+
+function buildDetailedRow(r, pb, triPB) {
+  const isPB = _checkIsPBForRow(r, pb, triPB);
+  const d = r.date ? new Date(r.date+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '';
+  const parts = [escapeHtml(r.distance||''), escapeHtml(r.city||''), d].filter(Boolean);
+  const tags = [];
+  if (isPB) tags.push(`<span class="rrd-tag pb">PB</span>`);
+  if (typeof r.medal === 'string' && r.medal) tags.push(`<span class="rrd-tag medal">${escapeHtml(r.medal)}</span>`);
+  if (typeof r.terrain === 'string' && r.terrain) tags.push(`<span class="rrd-tag">${escapeHtml(r.terrain)}</span>`);
+  if (typeof r.achievementContext === 'string' && r.achievementContext) tags.push(`<span class="rrd-tag">${escapeHtml(r.achievementContext)}</span>`);
+  if (r.raceStatus==='major') tags.push(`<span class="rrd-tag">Major</span>`);
+  if (r.priority==='A') tags.push(`<span class="rrd-tag" style="color:var(--orange);border-color:rgba(var(--orange-ch),.3)">A-Race</span>`);
+  return `<div class="race-row-detailed" onclick="openRaceView(${r.id})">
+    <div class="rrd-header">
+      <div class="rrd-name">${escapeHtml(r.name||'Unnamed Race')}</div>
+      <div class="rrd-time">${escapeHtml(r.time||'—')}</div>
+    </div>
+    <div class="rrd-meta">${parts.join(' · ')}</div>
+    ${tags.length ? `<div class="rrd-tags">${tags.join('')}</div>` : ''}
+  </div>`;
+}
+
+function renderRacesSheet() {
+  const pb = buildPBMap();
+  const triPB = (typeof buildTriPBMap === 'function') ? buildTriPBMap() : {};
+  const sorted = [...(races||[])].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  const filtered = racesYearFilter === 'all' ? sorted
+    : sorted.filter(r=>(r.date||'').startsWith(racesYearFilter));
+
+  // Stats
+  const hsR = document.getElementById('hs-r');
+  const hsC = document.getElementById('hs-c');
+  const hsK = document.getElementById('hs-k');
+  const hsM = document.getElementById('hs-m');
+  if (hsR) hsR.textContent = filtered.length;
+  if (hsC) hsC.textContent = new Set(filtered.map(r=>r.country).filter(Boolean)).size;
+  if (hsK) hsK.textContent = Math.round(filtered.reduce((s,r)=>s+(r.distKm||0),0));
+  if (hsM) hsM.textContent = filtered.filter(r=>r.medal).length;
+
+  renderRacesYearTabs();
+  initRacesSheetSwipe();
+
+  const list = document.getElementById('raceSheetList');
+  if (!list) return;
+
+  if (!filtered.length) {
+    list.innerHTML = `<div style="text-align:center;padding:3rem 1rem;">
+      <p style="font-family:var(--headline);font-size:1.4rem;font-weight:700;color:var(--muted);margin-bottom:1rem">No races yet.<br>Every finish line starts here.</p>
+      <button class="cta-btn" onclick="openRaceModal()">+ Log a Race</button></div>`;
+    return;
+  }
+
+  if (racesViewMode === 'compact') {
+    const byYear = {};
+    filtered.forEach(r => {
+      const y = (r.date||'').slice(0,4)||'?';
+      (byYear[y] = byYear[y]||[]).push(r);
+    });
+    const years = Object.keys(byYear).sort((a,b)=>b-a);
+    list.innerHTML = years.map(yr =>
+      (racesYearFilter==='all' ? `<div class="races-year-header">${yr}</div>` : '') +
+      byYear[yr].map(r => buildCompactRow(r, pb, triPB)).join('')
+    ).join('');
+  } else {
+    list.innerHTML = filtered.map(r => buildDetailedRow(r, pb, triPB)).join('');
+  }
+}
+
+/* ── Race Log share card ── */
+function _countryToFlag(country) {
+  const map = {
+    'United States':'US','USA':'US','United Kingdom':'GB','UK':'GB','Germany':'DE',
+    'France':'FR','Australia':'AU','Canada':'CA','Japan':'JP','Italy':'IT',
+    'Spain':'ES','Netherlands':'NL','Switzerland':'CH','Austria':'AT','Sweden':'SE',
+    'Norway':'NO','Denmark':'DK','Finland':'FI','New Zealand':'NZ','Brazil':'BR',
+    'South Africa':'ZA','Ireland':'IE','Belgium':'BE','Portugal':'PT','Czech Republic':'CZ',
+    'Poland':'PL','Hungary':'HU','Greece':'GR','Mexico':'MX','Argentina':'AR',
+    'Chile':'CL','Colombia':'CO','Peru':'PE','China':'CN','South Korea':'KR',
+    'Singapore':'SG','Malaysia':'MY','Thailand':'TH','India':'IN','UAE':'AE',
+    'Bahrain':'BH','Qatar':'QA','Kenya':'KE','Ethiopia':'ET','Morocco':'MA',
+  };
+  const code = map[country];
+  if (!code) return null;
+  return code.split('').map(c=>String.fromCodePoint(127397+c.charCodeAt(0))).join('');
+}
+
+function openRaceShareCard() {
+  const body = document.getElementById('raceShareBody');
+  if (!body) return;
+  const filtered = racesYearFilter === 'all' ? (races||[])
+    : (races||[]).filter(r=>(r.date||'').startsWith(racesYearFilter));
+  const countries = [...new Set(filtered.map(r=>r.country).filter(Boolean))];
+  const km = Math.round(filtered.reduce((s,r)=>s+(r.distKm||0),0));
+  const yearLabel = racesYearFilter === 'all' ? 'All Time' : racesYearFilter;
+  const name = ((athlete?.firstName||'') + (athlete?.lastName ? ' '+athlete.lastName : '')).trim();
+
+  body.innerHTML = `<canvas id="raceShareCanvas" width="1200" height="630"></canvas>
+    <div style="display:flex;gap:.75rem;margin-top:1rem">
+      <button class="btn-main" style="flex:1" onclick="downloadShareCard()">Download PNG</button>
+      <button class="btn-ghost" style="flex:1" onclick="copyShareCard()">Copy Image</button>
+    </div>`;
+
+  openM('raceShareModal');
+  requestAnimationFrame(() => _drawShareCard(filtered, yearLabel, name, countries, km));
+}
+
+function _drawShareCard(raceList, yearLabel, name, countries, km) {
+  const canvas = document.getElementById('raceShareCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = 1200, H = 630;
+
+  // Background gradient
+  ctx.fillStyle = '#0D0D0D';
+  ctx.fillRect(0, 0, W, H);
+
+  // Subtle grid lines
+  ctx.strokeStyle = 'rgba(245,245,245,0.04)';
+  ctx.lineWidth = 1;
+  for (let x = 0; x < W; x += 60) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,H); ctx.stroke(); }
+  for (let y = 0; y < H; y += 60) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(W,y); ctx.stroke(); }
+
+  // Orange left bar
+  ctx.fillStyle = 'rgba(var(--orange-ch, 232,78,27), 1)';
+  const grad = ctx.createLinearGradient(0,0,0,H);
+  grad.addColorStop(0, '#E84E1B');
+  grad.addColorStop(1, '#C03A10');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 5, H);
+
+  // BREAK/TAPES wordmark
+  ctx.fillStyle = '#E84E1B';
+  ctx.font = '900 28px "Barlow Condensed", sans-serif';
+  ctx.letterSpacing = '0.12em';
+  ctx.fillText('BREAK/TAPES', 40, 58);
+
+  // Subtitle
+  ctx.fillStyle = 'rgba(245,245,245,0.4)';
+  ctx.font = '600 13px Barlow, sans-serif';
+  ctx.letterSpacing = '0';
+  ctx.fillText('RACE LOG · ' + yearLabel.toUpperCase(), 40, 82);
+
+  // Big stats
+  const stats = [
+    { val: raceList.length, label: 'RACES' },
+    { val: countries.length, label: 'COUNTRIES' },
+    { val: km.toLocaleString(), label: 'KM' },
+  ];
+  stats.forEach((s, i) => {
+    const x = 40 + i * 220;
+    ctx.fillStyle = '#F5F5F5';
+    ctx.font = '900 72px "Barlow Condensed", sans-serif';
+    ctx.letterSpacing = '-0.01em';
+    ctx.fillText(String(s.val), x, 185);
+    ctx.fillStyle = 'rgba(245,245,245,0.4)';
+    ctx.font = '700 11px Barlow, sans-serif';
+    ctx.letterSpacing = '0.15em';
+    ctx.fillText(s.label, x, 207);
+  });
+
+  // Divider
+  ctx.strokeStyle = 'rgba(245,245,245,0.08)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(40, 230); ctx.lineTo(W-40, 230); ctx.stroke();
+
+  // Recent race names (up to 8)
+  const recent = [...raceList].sort((a,b)=>new Date(b.date)-new Date(a.date)).slice(0, 8);
+  ctx.fillStyle = 'rgba(245,245,245,0.55)';
+  ctx.font = '500 13px Barlow, sans-serif';
+  ctx.letterSpacing = '0';
+  recent.forEach((r, i) => {
+    const col = i < 4 ? 0 : 1;
+    const row = i % 4;
+    const x = 40 + col * 560;
+    const y = 260 + row * 28;
+    const txt = (r.name||'').replace(/\s+\d{4}$/,'').substring(0,38);
+    const yr = (r.date||'').slice(0,4);
+    ctx.fillStyle = 'rgba(245,245,245,0.25)';
+    ctx.fillText(yr, x, y);
+    ctx.fillStyle = 'rgba(245,245,245,0.65)';
+    ctx.fillText(txt, x+42, y);
+  });
+
+  // Country flags strip
+  const flags = countries.slice(0,20).map(c=>_countryToFlag(c)).filter(Boolean);
+  if (flags.length) {
+    ctx.font = '26px serif';
+    ctx.letterSpacing = '4px';
+    ctx.fillText(flags.join(''), 40, H - 65);
+  }
+
+  // Athlete name
+  if (name) {
+    ctx.fillStyle = 'rgba(245,245,245,0.7)';
+    ctx.font = '600 15px Barlow, sans-serif';
+    ctx.letterSpacing = '0';
+    ctx.fillText(name, 40, H - 32);
+  }
+
+  // URL
+  ctx.fillStyle = 'rgba(245,245,245,0.25)';
+  ctx.font = '500 12px Barlow, sans-serif';
+  ctx.fillText('app.breaktapes.com', W - 200, H - 32);
+}
+
+function downloadShareCard() {
+  const canvas = document.getElementById('raceShareCanvas');
+  if (!canvas) return;
+  const a = document.createElement('a');
+  a.download = 'breaktapes-race-log.png';
+  a.href = canvas.toDataURL('image/png');
+  a.click();
+}
+
+async function copyShareCard() {
+  const canvas = document.getElementById('raceShareCanvas');
+  if (!canvas) return;
+  try {
+    canvas.toBlob(async blob => {
+      try {
+        await navigator.clipboard.write([new ClipboardItem({'image/png': blob})]);
+        showBtToast('Image copied to clipboard');
+      } catch(e) {
+        showBtToast('Copy not supported — use Download instead');
+      }
+    });
+  } catch(e) {
+    showBtToast('Copy not supported — use Download instead');
+  }
+}
+
+/* ── Races page render ── */
+function renderRaces() {
+  renderRacesSheet();
+  setTimeout(() => renderMap(), 50);
+}
+
+/* ── You page (Profile + Medals as sections) ── */
+function renderYou() {
+  renderAthlete();
+  renderMedals();
+}
+
+/* ── Settings page ── */
+function renderSettings() {
+  _populateSettingsFields();
 }
 
 function switchFlatlayTab(tab) {
@@ -12237,9 +12624,120 @@ function pcPickDist(val, label) {
   document.getElementById('pcDistBtn').setAttribute('aria-expanded','false');
   pcOnDistChange();
 }
+/* ── Pace Calculator mode toggle ── */
+let _pcMode = 'time'; // 'time' | 'pace'
+function pcSetMode(mode) {
+  _pcMode = mode;
+  const tBtn = document.getElementById('pcModeTimeBtn');
+  const pBtn = document.getElementById('pcModePaceBtn');
+  if (tBtn) tBtn.classList.toggle('active', mode === 'time');
+  if (pBtn) pBtn.classList.toggle('active', mode === 'pace');
+  const fi = document.getElementById('pcFinishTimeInput');
+  const pi = document.getElementById('pcTargetPaceInput');
+  if (fi) fi.style.display = mode === 'time' ? '' : 'none';
+  if (pi) pi.style.display = mode === 'pace' ? '' : 'none';
+  const res = document.getElementById('paceResults');
+  if (res) res.style.display = 'none';
+}
+function calcPaceDispatch() {
+  if (_pcMode === 'pace') calcPaceFromTarget();
+  else calcPace();
+}
+/* Reverse mode: user enters pace/km → output finish time */
+function calcPaceFromTarget() {
+  const dist = document.getElementById('pcDist').value;
+  const pm = parseInt(document.getElementById('pcPM').value) || 0;
+  const ps = parseInt(document.getElementById('pcPS').value) || 0;
+  const paceSecPerKm = pm * 60 + ps;
+  if (!paceSecPerKm) { showBtToast('Enter a target pace.'); return; }
+  const distKm = DIST_KM[dist];
+  if (!distKm) { showBtToast('Select a standard distance.'); return; }
+  const totalSecs = paceSecPerKm * distKm;
+  const fmtP = s => { const pm=Math.floor(s/60),ps=Math.round(s%60); return `${pm}:${String(ps).padStart(2,'0')}`; };
+  const fmtT = s => { s=Math.round(s); const fh=Math.floor(s/3600),fm=Math.floor((s%3600)/60),fs=s%60; return fh>0?`${fh}:${String(fm).padStart(2,'0')}:${String(fs).padStart(2,'0')}`:`${fm}:${String(fs).padStart(2,'0')}`; };
+  const pb = buildPBMap()[dist];
+  let pbHtml = '';
+  if (pb && pb.secs) {
+    const diff = totalSecs - pb.secs;
+    pbHtml = `<div class="pace-pb-row"><span>vs Your PB (${pb.time})</span><span class="${diff<=0?'pace-faster':'pace-slower'}">${diff>=0?'+':''}${fmtT(Math.abs(diff))}</span></div>`;
+  }
+  // Splits
+  const splitPts = [];
+  let km = 5;
+  while (km < distKm - 1) { splitPts.push({label:`${km}KM`,km}); km += 5; }
+  if (distKm>20) { const half=distKm/2; if (!splitPts.some(p=>Math.abs(p.km-half)<0.5)) splitPts.push({label:'Half',km:half}); }
+  splitPts.push({label:'Finish',km:distKm});
+  splitPts.sort((a,b)=>a.km-b.km);
+  const splitsHtml = splitPts.map(p=>`<tr><td>${p.label}</td><td>${fmtP(paceSecPerKm)}/km</td><td>${fmtT(paceSecPerKm*p.km)}</td></tr>`).join('');
+  const vdotHtml = buildVDOTHtml(distKm, totalSecs, fmtP);
+  document.getElementById('paceResults').innerHTML = `
+    <div class="pace-main-result">
+      <div class="pace-big">${fmtT(totalSecs)}</div>
+      <div class="pace-mi">${fmtP(paceSecPerKm * 1.60934)} /mi</div>
+      ${pbHtml}
+    </div>
+    <div class="pace-section-label">Splits</div>
+    <table class="split-table" style="margin-bottom:1rem">
+      <thead><tr><th>Point</th><th>Pace</th><th>Time</th></tr></thead>
+      <tbody>${splitsHtml}</tbody>
+    </table>
+    ${vdotHtml}`;
+  document.getElementById('paceResults').style.display = '';
+}
+
+/* ── VDOT (Jack Daniels) ── */
+function computeVDOT(distKm, timeSecs) {
+  const distM  = distKm * 1000;
+  const timeMin = timeSecs / 60;
+  if (timeMin <= 0 || distM <= 0) return null;
+  const v = distM / timeMin; // m/min
+  const pct = 0.8 + 0.1894393 * Math.exp(-0.012778 * timeMin) + 0.2989558 * Math.exp(-0.1932605 * timeMin);
+  const vo2  = -4.60 + 0.182258 * v + 0.000104 * v * v;
+  const vdot = vo2 / pct;
+  return vdot > 0 ? Math.round(vdot * 10) / 10 : null;
+}
+function vdotToPaceSecPerKm(vdot, pctVO2max) {
+  const targetVO2 = vdot * pctVO2max;
+  const a = 0.000104, b = 0.182258, c = -4.60 - targetVO2;
+  const discriminant = b * b - 4 * a * c;
+  if (discriminant < 0) return null;
+  const v = (-b + Math.sqrt(discriminant)) / (2 * a); // m/min
+  return v > 0 ? 60000 / v : null; // sec/km
+}
+function buildVDOTHtml(distKm, timeSecs, fmtP) {
+  const vdot = computeVDOT(distKm, timeSecs);
+  if (!vdot || vdot < 20 || vdot > 90) return '';
+  const zones = [
+    { name: 'Easy',   pct: 0.67 },
+    { name: 'Mara',   pct: 0.79 },
+    { name: 'Tempo',  pct: 0.875 },
+    { name: 'Interval', pct: 0.975 },
+    { name: 'Reps',   pct: 1.10 },
+  ];
+  const zonesHtml = zones.map(z => {
+    const s = vdotToPaceSecPerKm(vdot, z.pct);
+    if (!s || s < 60 || s > 1800) return '';
+    return `<div class="pcw-vdot-zone">
+      <div class="pcw-vdot-zone-name">${z.name}</div>
+      <div class="pcw-vdot-zone-pace">${fmtP(s)}</div>
+      <div class="pcw-vdot-zone-unit">/km</div>
+    </div>`;
+  }).join('');
+  return `<div class="pcw-vdot-section">
+    <div class="pcw-vdot-label">VDOT Training Paces <span class="pcw-vdot-score-badge">${vdot}</span></div>
+    <div class="pcw-vdot-grid">${zonesHtml}</div>
+  </div>`;
+}
+
 function renderPace() {
+  renderPaceCalculatorWidget();
+}
+function renderPaceCalculatorWidget() {
+  const el = document.getElementById('dash-widget-pace-calculator');
+  if (!el) return;
   pcOnTypeChange();
-  document.getElementById('paceResults').style.display = 'none';
+  const res = document.getElementById('paceResults');
+  if (res) res.style.display = 'none';
 }
 function pcOnTypeChange() {
   const type = document.getElementById('pcType').value;
@@ -12259,7 +12757,10 @@ function pcOnTypeChange() {
   document.getElementById('pcStandardInput').style.display = isTri ? 'none' : '';
   document.getElementById('pcTriInput').style.display      = isTri ? '' : 'none';
   document.getElementById('paceResults').style.display     = 'none';
-  if (isTri) pcUpdateTriSegs(); else pcOnDistChange();
+  // Mode toggle only meaningful for running
+  const modeToggle = document.getElementById('pcModeToggle');
+  if (modeToggle) modeToggle.style.display = isTri ? 'none' : '';
+  if (isTri) { _pcMode = 'time'; pcUpdateTriSegs(); } else pcOnDistChange();
 }
 function pcOnDistChange() {
   const type = document.getElementById('pcType').value;
@@ -12343,9 +12844,9 @@ function calcPace() {
   const m = parseInt(document.getElementById('pcM').value)||0;
   const s = parseInt(document.getElementById('pcS').value)||0;
   const totalSecs = h*3600 + m*60 + s;
-  if (!totalSecs) { alert('Enter a target finish time.'); return; }
+  if (!totalSecs) { showBtToast('Enter a target finish time.'); return; }
   const distKm = DIST_KM[dist];
-  if (!distKm) { alert('Select a standard distance.'); return; }
+  if (!distKm) { showBtToast('Select a standard distance.'); return; }
   const paceSecPerKm = totalSecs / distKm;
   const fmtP = s => { const pm=Math.floor(s/60),ps=Math.round(s%60); return `${pm}:${String(ps).padStart(2,'0')}`; };
   const fmtT = s => { const fh=Math.floor(s/3600),fm=Math.floor((s%3600)/60),fs=Math.round(s%60); return fh>0?`${fh}:${String(fm).padStart(2,'0')}:${String(fs).padStart(2,'0')}`:`${fm}:${String(fs).padStart(2,'0')}`; };
@@ -12377,6 +12878,7 @@ function calcPace() {
         </div>`;
     }
   }
+  const vdotHtml = type === 'run' ? buildVDOTHtml(distKm, totalSecs, fmtP) : '';
   document.getElementById('paceResults').innerHTML = `
     <div class="pace-main-result">
       <div class="pace-big">${fmtP(paceSecPerKm)}<span class="pace-unit">/km</span></div>
@@ -12388,20 +12890,22 @@ function calcPace() {
       <thead><tr><th>Point</th><th>Pace</th><th>Time</th></tr></thead>
       <tbody>${splitsHtml}</tbody>
     </table>
-    ${equivHtml}`;
+    ${equivHtml}
+    ${vdotHtml}`;
   document.getElementById('paceResults').style.display = '';
 }
 function updateMenuFooter(){
   const ini = (athlete.name||'A').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-  document.getElementById('mAthName').textContent = athlete.name||'Athlete';
-  document.getElementById('mAthSub').textContent  = races.length+' races';
-  document.getElementById('mBadge').textContent   = races.length;
-  document.getElementById('mAvi').childNodes[0].textContent = ini[0]||'A';
+  const mAthName = document.getElementById('mAthName'); if(mAthName) mAthName.textContent = athlete.name||'Athlete';
+  const mAthSub  = document.getElementById('mAthSub');  if(mAthSub)  mAthSub.textContent  = races.length+' races';
+  const mBadge   = document.getElementById('mBadge');   if(mBadge)   mBadge.textContent   = races.length;
+  const mAvi     = document.getElementById('mAvi');
+  if(mAvi) mAvi.childNodes[0].textContent = ini[0]||'A';
   const savedAvi = localStorage.getItem('fl2_avi');
   if(savedAvi){
-    document.getElementById('mAviImg').src=savedAvi;
-    document.getElementById('mAviImg').style.display='block';
-    document.getElementById('mAvi').childNodes[0].textContent='';
+    const mAviImg = document.getElementById('mAviImg');
+    if(mAviImg){ mAviImg.src=savedAvi; mAviImg.style.display='block'; }
+    if(mAvi) mAvi.childNodes[0].textContent='';
   }
 }
 
@@ -12595,6 +13099,7 @@ const DASH_WIDGETS = [
   { id: 'insights',  label: 'Year So Far & H2H',      icon: '📈', zone: 'training' },
   { id: 'pbs',       label: 'Personal Bests',         icon: '⚡', zone: 'training' },
   { id: 'goals',     label: 'Goals',                  icon: '🎯', zone: 'training' },
+  { id: 'pace-calculator', label: 'Pace Calculator', icon: '⏱️', zone: 'training', enabled: true },
   { id: 'season-planner-widget', label: 'Season Planner', icon: '🗓️', zone: 'training', pro: true, enabled: false },
   { id: 'recovery-intelligence-widget', label: 'Recovery Intelligence', icon: '🫀', zone: 'training', pro: true, enabled: false },
   { id: 'training-correlation-widget', label: 'Training Correlation', icon: '📶', zone: 'training', pro: true, enabled: false },
@@ -14130,16 +14635,14 @@ function renderAthleteChampionshipTracker() {
     <div class="ath-champ-grid">${rows.map(row => {
       const rowClass = row.status === 'In Progress' ? 'rich in-progress' : row.status === 'Completed' ? 'rich completed' : 'rich';
       return `<div class="ath-champ-row ${rowClass}">
-        <div>
+        <div class="ath-champ-header">
           <div class="ath-champ-name">${escapeHtml(row.name)}</div>
-          <div class="ath-champ-sub">${escapeHtml(row.race?.name || row.detail)}</div>
-          ${row.result ? `<div class="ath-champ-result">${escapeHtml(row.result)}</div>` : ''}
-          ${row.race ? `<div class="ath-champ-detail-line">${escapeHtml(row.detail)}${row.race.distance ? ` · ${escapeHtml(row.race.distance)}` : ''}</div>` : ''}
-        </div>
-        <div class="ath-champ-side">
           <div class="ath-champ-status ${row.tone}">${escapeHtml(row.status)}</div>
-          ${row.countdown != null ? `<div class="ath-champ-countdown">${row.countdown}</div><div class="ath-champ-countdown-sub">days to go</div>` : ''}
         </div>
+        <div class="ath-champ-sub">${escapeHtml(row.race?.name || row.detail)}</div>
+        ${row.result ? `<div class="ath-champ-result">${escapeHtml(row.result)}</div>` : ''}
+        ${row.race ? `<div class="ath-champ-detail-line">${escapeHtml(row.detail)}${row.race.distance ? ` · ${escapeHtml(row.race.distance)}` : ''}</div>` : ''}
+        ${row.countdown != null ? `<div class="ath-champ-bottom"><span class="ath-champ-countdown">${row.countdown}</span><span class="ath-champ-countdown-sub">days to go</span></div>` : ''}
       </div>`;
     }).join('')}</div>`;
 }
@@ -16084,6 +16587,7 @@ function renderDash(){
     renderSeasonPlannerWidget();
     renderRecoveryIntelligenceWidget();
     renderTrainingCorrelationWidget();
+    renderPaceCalculatorWidget();
     renderPacingIQ();
     renderMomentumWidget();
     renderAgeGradeWidget();
@@ -16133,6 +16637,7 @@ function renderDash(){
   renderSeasonPlannerWidget();
   renderRecoveryIntelligenceWidget();
   renderTrainingCorrelationWidget();
+  renderPaceCalculatorWidget();
   renderPacingIQ();
   renderMomentumWidget();
   renderAgeGradeWidget();
@@ -18265,8 +18770,8 @@ function saveRaceDetail() {
     sv('fl2_races', races);
     _rdIsNew = false;
     closeM('raceDetailModal');
-    if (curPage === 'history') renderHistory();
-    else if (curPage === 'medals') renderMedals();
+    if (curPage === 'races') renderRacesSheet();
+    else if (curPage === 'you' && youTab === 'medals') renderMedals();
     else if (curPage === 'dashboard') renderDash();
     else render(curPage);
     return;
@@ -18343,8 +18848,8 @@ function saveRaceDetail() {
   }
   sv('fl2_races', races);
   closeM('raceDetailModal');
-  if (curPage === 'history') renderHistory();
-  else if (curPage === 'medals') renderMedals();
+  if (curPage === 'races') renderRacesSheet();
+  else if (curPage === 'you' && youTab === 'medals') renderMedals();
   else if (curPage === 'dashboard') renderDash();
 }
 
@@ -18876,7 +19381,7 @@ function saveWishlistRace() {
 function removeWishlistRace(id) {
   wishlistRaces = wishlistRaces.filter(r => String(r.id) !== String(id));
   sv('fl2_wishlist', wishlistRaces);
-  if (curPage === 'wishlist') renderWishlist();
+  if (curPage === 'races') renderWishlist();
 }
 function planWishlistRace(id) {
   const race = wishlistRaces.find(r => String(r.id) === String(id));
@@ -19386,26 +19891,23 @@ let countryLayers   = {};
 let countryPolyCache = JSON.parse(localStorage.getItem('fl2_countrypolycache') || '{}');
 
 async function renderMap() {
-  // Stats pills
-  document.getElementById('ms-races').textContent    = races.length;
-  document.getElementById('ms-countries').textContent = new Set(races.map(r => r.country)).size;
-  document.getElementById('ms-cities').textContent   = new Set(races.map(r => r.city + ',' + r.country)).size;
-  document.getElementById('ms-km').textContent       = Math.round(races.reduce((s,r) => s+(r.distKm||0), 0));
-
   const loadEl = document.getElementById('mapLoading');
   const progEl = document.getElementById('mapProgress');
   const errEl  = document.getElementById('mapError');
   loadEl.classList.remove('hidden');
   errEl.classList.remove('show');
   closeDrawer();
+  // Fallback: always dismiss loading overlay after 5s so the sheet stays usable
+  const _loadTimeout = setTimeout(() => loadEl.classList.add('hidden'), 5000);
 
   // ── Init Leaflet once ──────────────────────────────
   if (!leafletMap) {
     leafletMap = L.map('raceMap', {
-      center: [30, 15], zoom: 2,
+      center: [20, 10], zoom: 1.5,
       zoomControl: false,
       attributionControl: true,
       minZoom: 1, maxZoom: 18,
+      worldCopyJump: true,
     });
     // Ultra-dark "no-labels" CARTO tiles
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
@@ -19427,6 +19929,7 @@ async function renderMap() {
   }
 
   if (!races.length) {
+    clearTimeout(_loadTimeout);
     loadEl.classList.add('hidden');
     const mapEl = document.getElementById('raceMap');
     if (mapEl) {
@@ -19442,9 +19945,13 @@ async function renderMap() {
     return;
   }
 
-  // ── Geocode ────────────────────────────────────────
+  // Remove stale empty-state if it exists (user logged their first race)
+  document.getElementById('raceMap')?.querySelector('.map-empty-state')?.remove();
+
+  // ── Geocode — skip races with no city ─────────────
   const uniqueLocs = [...new Map(
-    races.map(r => [r.city+'||'+r.country, {city:r.city, country:r.country}])
+    races.filter(r => r.city && r.country)
+         .map(r => [r.city+'||'+r.country, {city:r.city, country:r.country}])
   ).values()];
   let done = 0, failed = 0;
 
@@ -19499,16 +20006,65 @@ async function renderMap() {
     marker._cityKey = key;
   }
 
-  // ── Fit bounds ─────────────────────────────────────
-  if (bounds.length === 1) leafletMap.setView(bounds[0], 7);
-  else if (bounds.length > 1) leafletMap.fitBounds(bounds, { padding: [80, 80] });
+  // ── Draw arc connections between race cities ──────
+  const cityCoords = Object.entries(cityRaceMap)
+    .map(([key]) => geoCache[key] ? { key, coord: geoCache[key] } : null)
+    .filter(Boolean)
+    .sort((a, b) => {
+      const ra = cityRaceMap[a.key], rb = cityRaceMap[b.key];
+      const da = ra[0]?.date || '';
+      const db = rb[0]?.date || '';
+      return da < db ? -1 : 1;
+    });
+
+  if (cityCoords.length >= 2) {
+    for (let i = 0; i < cityCoords.length - 1; i++) {
+      const from = cityCoords[i].coord;
+      const to   = cityCoords[i + 1].coord;
+      const pts  = _greatCirclePoints([from.lat, from.lng], [to.lat, to.lng], 12);
+      const arc  = L.polyline(pts, {
+        color: 'rgba(255,77,0,0.35)', weight: 1.5, opacity: 1,
+        dashArray: '4 6', lineJoin: 'round', lineCap: 'round',
+      }).addTo(leafletMap);
+      routeLayers.push(arc);
+    }
+  }
+
+  // ── Keep world view — don't auto-zoom to fit races ─────────────
+  // Flighty-style: show full world context, let users zoom in manually
+  if (!leafletMap._hasInitialFit) {
+    leafletMap._hasInitialFit = true;
+    if (bounds.length === 1) {
+      // Single city: gentle zoom to region
+      leafletMap.setView(bounds[0], 4);
+    } else {
+      // Multiple races: world view so all are visible
+      leafletMap.setView([20, 10], 1.5);
+    }
+  }
 
   leafletMap.invalidateSize();
 
+  clearTimeout(_loadTimeout);
   loadEl.classList.add('hidden');
   if (failed > 0) errEl.classList.add('show');
 
   fetchAndAddCountries(); // non-blocking — loads country polygons for hover
+}
+
+/* Great-circle arc points for Leaflet polyline */
+function _greatCirclePoints(from, to, n) {
+  const pts = [];
+  const dLng = to[1] - from[1];
+  for (let i = 0; i <= n; i++) {
+    const t = i / n;
+    const lat = from[0] + (to[0] - from[0]) * t;
+    const lng = from[1] + dLng * t;
+    // Lift arc at midpoint proportional to distance
+    const arcH = Math.sin(Math.PI * t) * Math.min(20, Math.abs(dLng) * 0.25 + 5);
+    pts.push([lat + arcH * 0.35, lng]);
+  }
+  return pts;
 }
 
 /* ── Hover tooltip ───────────────────────────────── */
@@ -19738,14 +20294,16 @@ function fmtDate(d){
    SETTINGS
    ============================ */
 function openSettings(){
-  closeMenu();
+  go('settings');
+}
+function _populateSettingsFields(){
   const apiKeyEl = document.getElementById('setApiKey');
-  // Re-enable password field only when modal opens (prevents autofill scan)
-  apiKeyEl.disabled = false;
-  apiKeyEl.value = getApiKey();
+  // Re-enable password field only when settings opens (prevents autofill scan)
+  if (apiKeyEl) { apiKeyEl.disabled = false; apiKeyEl.value = getApiKey(); }
   const owCfg = getOWConfig();
   if (owCfg) {
-    document.getElementById('owUserId').value = owCfg.uid || '';
+    const owUserIdEl = document.getElementById('owUserId');
+    if (owUserIdEl) owUserIdEl.value = owCfg.uid || '';
   }
   renderThemePicker();
   // Public profile section: show only when signed in
@@ -19789,7 +20347,6 @@ function openSettings(){
   }
   updateAuthUI();
   updateAiFeatureVisibility();
-  document.getElementById('settingsModal').classList.add('open');
 }
 
 function openPasswordModal() {
@@ -19949,7 +20506,9 @@ function saveSettings(){
       scheduleRemoteStateSync();
     }
   }
-  closeM('settingsModal');
+  const sm = document.getElementById('settingsModal');
+  if (sm && sm.classList.contains('open')) closeM('settingsModal');
+  showBtToast('Settings saved.');
 }
 
 /* ============================
@@ -22580,25 +23139,25 @@ initApp();
   </div>
 </div>
 <nav class="bottom-nav" aria-label="Main navigation">
-  <button class="bn-tab active" id="bn-dashboard" onclick="go('dashboard')" aria-label="Dashboard">
+  <button class="bn-tab active" id="bn-dashboard" onclick="go('dashboard')" aria-label="Home">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
     Home
   </button>
-  <button class="bn-tab" id="bn-history" onclick="go('history')" aria-label="Race History">
+  <button class="bn-tab" id="bn-races" onclick="go('races')" aria-label="Races">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-    History
+    Races
   </button>
-  <button class="bn-tab" id="bn-flatlay" onclick="go('flatlay')" aria-label="The Flatlay">
+  <button class="bn-tab" id="bn-flatlay" onclick="go('flatlay')" aria-label="Gear">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16"/><path d="M6 7v11"/><path d="M18 7v11"/><path d="M4 18h16"/><path d="M9 11h6"/><path d="M9 14h6"/></svg>
-    Flatlay
+    Gear
   </button>
-  <button class="bn-tab" id="bn-medals" onclick="go('medals')" aria-label="Medal Wall">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
-    Medals
+  <button class="bn-tab" id="bn-train" onclick="go('train')" aria-label="Train">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    Train
   </button>
-  <button class="bn-tab" id="bn-more" onclick="toggleMenu()" aria-label="More">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="5" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.2" fill="currentColor" stroke="none"/></svg>
-    More
+  <button class="bn-tab" id="bn-you" onclick="go('you')" aria-label="You">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+    You
   </button>
 </nav>
 

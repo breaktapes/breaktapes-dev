@@ -1,6 +1,6 @@
 /**
  * SPA Loader — reads index.html, extracts the inline <script> block
- * (lines 4103-9919), and evaluates it in the current jsdom context.
+ * and evaluates it in the current jsdom context.
  *
  * IMPORTANT: Call loadSPA() in a beforeAll block ONCE per test file.
  * Re-calling it will throw because `let races` can't be redeclared.
@@ -21,7 +21,6 @@ function extractScript() {
   if (_scriptCache) return _scriptCache;
   const html = fs.readFileSync(HTML_PATH, 'utf-8');
   // Match the ONE big inline script (no src attribute), grab its content.
-  // There are exactly two script tags: two CDN scripts + one inline app script.
   const re = /<script(?!\s+src)[^>]*>([\s\S]*?)<\/script>/gi;
   let best = '';
   let m;
@@ -61,20 +60,52 @@ function loadSPA({
                         localStorage.setItem('fl2_strava_acts',JSON.stringify(stravaActivities));
 
   // Build a minimal DOM so the SPA doesn't throw on missing elements.
-  // Includes elements referenced by updateAuthUI, initAuth, and render guards.
+  // 6-page structure: dashboard, races, flatlay, train, you, settings
   document.body.innerHTML = `
     <div id="landing-screen"   style="display:none"></div>
-    <div id="page-dashboard"   class="page active"></div>
-    <div id="page-history"     class="page"></div>
-    <div id="page-medals"      class="page"></div>
+    <div id="page-dashboard"   class="page active">
+      <div id="homePanel-dash"></div>
+      <div id="homePanel-pace" style="display:none"></div>
+    </div>
+    <div id="page-races"       class="page">
+      <div id="racesPanel-map"></div>
+      <div class="races-sheet" id="racesSheet">
+        <div id="racesYearTabs"></div>
+        <div id="hs-r"></div><div id="hs-c"></div><div id="hs-k"></div><div id="hs-m"></div>
+        <div id="raceSheetList"></div>
+      </div>
+      <!-- compat -->
+      <div id="prStrip" style="display:none"></div>
+      <div id="beChart" style="display:none"></div>
+      <div id="matchedRaces" style="display:none"></div>
+      <div id="histList" style="display:none"></div>
+      <div id="histMatchCount" style="display:none"></div>
+      <button id="histLoadMore" style="display:none"></button>
+      <input id="histSearch" style="display:none">
+      <button id="histClearBtn" style="display:none"></button>
+      <div id="ws-r" style="display:none"></div>
+      <div id="ws-c" style="display:none"></div>
+      <div id="ws-s" style="display:none"></div>
+      <div id="ws-y" style="display:none"></div>
+      <div id="wishlistList" style="display:none"></div>
+    </div>
     <div id="page-flatlay"     class="page"></div>
-    <div id="page-map"         class="page"></div>
-    <div id="page-athlete"     class="page"></div>
     <div id="page-train"       class="page"></div>
-    <div id="page-pace"        class="page"></div>
-    <div id="sMenu"></div>
-    <div id="mOverlay"></div>
-    <button id="hbtn"></button>
+    <div id="page-you"         class="page">
+      <div id="youPanel-profile"></div>
+      <div id="youPanel-medals" style="display:none"></div>
+    </div>
+    <div id="page-settings"    class="page"></div>
+
+    <!-- bottom nav -->
+    <button id="bn-dashboard" class="bn-tab active"></button>
+    <button id="bn-races"     class="bn-tab"></button>
+    <button id="bn-flatlay"   class="bn-tab"></button>
+    <button id="bn-train"     class="bn-tab"></button>
+    <button id="bn-you"       class="bn-tab"></button>
+
+    <!-- page title bar (mobile) -->
+    <div id="pageTitleBar"></div>
 
     <!-- auth UI elements referenced by updateAuthUI() -->
     <span  id="authMenuLabel"></span>
@@ -124,7 +155,7 @@ function loadSPA({
     <div id="mwAchievements"></div>
     <div id="medalGrid"></div>
 
-    <!-- athlete page -->
+    <!-- athlete / you page -->
     <div id="athName"></div>
     <div id="athSub"></div>
     <div id="athPBs"></div>
@@ -135,14 +166,12 @@ function loadSPA({
     <div id="trainingFeed"></div>
     <div id="stravaStreakHeader"></div>
 
-    <!-- map page -->
+    <!-- map panel -->
     <div id="map" style="height:400px"></div>
     <div id="mapStats"></div>
   `;
 
   // Eval the SPA script in global (window) scope.
-  // Function declarations become window properties; `let` vars stay in eval scope
-  // but are accessible via closure from the function declarations.
   // eslint-disable-next-line no-eval
   (0, eval)(extractScript());
 
@@ -157,13 +186,12 @@ function loadSPA({
   global.applyEnvRestrictions   = () => {};
   global.dismissLanding         = () => {};
 
-  // go() calls render() at the end, which calls updateMenuFooter() and then
-  // page-specific render functions that assume a fully built DOM.  Override
-  // render() to a no-op so navigation tests can assert DOM changes made by
-  // go() (page activation, scroll, bn-tab) without triggering render crashes.
+  // go() calls render() at the end, which calls page-specific render functions
+  // that assume a fully built DOM. Override render() to a no-op so navigation
+  // tests can assert DOM changes (page activation, scroll, bn-tab) cleanly.
   global.render = () => {};
 
-  // closeMenu() accesses sMenu/mOverlay — override to no-op as well.
+  // closeMenu() may be referenced by legacy code — keep as no-op.
   global.closeMenu = () => {};
 }
 
