@@ -61,6 +61,8 @@ export const useRaceStore = create<RaceState>()(
       updateRace: (id, patch) => set(s => ({
         races: s.races.map(r => r.id === id ? { ...r, ...patch } : r),
         upcomingRaces: s.upcomingRaces.map(r => r.id === id ? { ...r, ...patch } : r),
+        // Keep nextRace in sync — otherwise goal time / priority edits don't surface in dashboard widgets
+        nextRace: s.nextRace?.id === id ? { ...s.nextRace, ...patch } : s.nextRace,
       })),
 
       deleteRace: (id) => set(s => ({

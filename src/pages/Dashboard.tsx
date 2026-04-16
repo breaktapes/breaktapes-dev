@@ -6,6 +6,8 @@ import { useDashStore } from '@/stores/useDashStore'
 import { useWearableStore } from '@/stores/useWearableStore'
 import { selectRaces, selectNextRace, selectAthlete, selectDashZoneCollapse, selectUpcomingRaces, selectFocusRace, selectFocusRaceId } from '@/stores/selectors'
 import { AddRaceModal } from '@/components/AddRaceModal'
+import { TimePickerWheel } from '@/components/TimePickerWheel'
+import type { HMS } from '@/components/TimePickerWheel'
 import type { Race } from '@/types'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -514,8 +516,13 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
   const focusRaceId   = useRaceStore(selectFocusRaceId)
 
   const [priority, setPriority] = useState<string>(race.priority ?? 'A')
-  const [goal, setGoal]         = useState(race.goalTime ?? '')
   const [confirmDelete, setConfirmDelete] = useState(false)
+
+  // Parse existing goalTime string (H:MM:SS) into HMS for the wheel
+  const [goalHMS, setGoalHMS] = useState<HMS>(() => {
+    const parts = (race.goalTime ?? '').split(':').map(Number)
+    return { h: parts[0] || 0, m: parts[1] || 0, s: parts[2] || 0 }
+  })
 
   const isFocused = focusRaceId === race.id
 
@@ -525,7 +532,11 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
   }, [])
 
   function handleSave() {
-    updateRace(race.id, { priority: priority as Race['priority'], goalTime: goal.trim() || undefined })
+    const hasGoal = goalHMS.h > 0 || goalHMS.m > 0 || goalHMS.s > 0
+    const goalTime = hasGoal
+      ? `${goalHMS.h}:${String(goalHMS.m).padStart(2,'0')}:${String(goalHMS.s).padStart(2,'0')}`
+      : undefined
+    updateRace(race.id, { priority: priority as Race['priority'], goalTime })
     onClose()
   }
 
@@ -599,27 +610,14 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
             </div>
           </div>
 
-          {/* Goal time */}
+          {/* Goal time — scroll wheel, 0–99h */}
           <div>
             <div style={{ fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '10px' }}>
               GOAL TIME <span style={{ opacity: 0.5, fontWeight: 400, textTransform: 'lowercase', letterSpacing: 0 }}>(optional)</span>
             </div>
-            <input
-              type="text"
-              value={goal}
-              onChange={e => setGoal(e.target.value)}
-              placeholder="e.g. 3:30:00"
-              style={{
-                width: '100%', boxSizing: 'border-box',
-                background: 'var(--surface3)', border: '1px solid var(--border2)',
-                borderRadius: '8px', color: 'var(--white)',
-                fontFamily: 'var(--headline)', fontWeight: 700,
-                fontSize: '18px', padding: '12px 14px',
-                letterSpacing: '0.06em',
-              }}
-            />
+            <TimePickerWheel value={goalHMS} onChange={setGoalHMS} maxHours={99} />
             <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '6px' }}>
-              Format: H:MM:SS · Used by Gap To Goal widget
+              Scroll to set · Used by Gap To Goal widget
             </div>
           </div>
 
@@ -1677,7 +1675,7 @@ function RaceReadinessWidget() {
 
 function GapToGoalWidget() {
   const races   = useRaceStore(selectRaces)
-  const nextRace = useRaceStore(selectNextRace)
+  const nextRace = useRaceStore(selectFocusRace)   // follows user's pinned focus race
   const today   = todayStr()
 
   const result = useMemo(() => {

@@ -141,9 +141,11 @@ function Wheel({
 export function TimePickerWheel({
   value,
   onChange,
+  maxHours = 23,   // 23 for time-of-day, 99 for race finish times
 }: {
   value: HMS
   onChange: (v: HMS) => void
+  maxHours?: number
 }) {
   const WHEEL_H = ITEM_H * VISIBLE
 
@@ -164,7 +166,7 @@ export function TimePickerWheel({
         position:     'absolute',
         left:         0,
         right:        0,
-        top:          ITEM_H,   // offset by 1 item (padding-top)
+        top:          ITEM_H,
         height:       ITEM_H,
         background:   'rgba(255,77,0,0.08)',
         borderTop:    '1px solid rgba(255,77,0,0.18)',
@@ -174,8 +176,8 @@ export function TimePickerWheel({
       }} />
 
       <Wheel
-        values={range(24)}
-        selected={value.h}
+        values={range(maxHours + 1)}
+        selected={Math.min(value.h, maxHours)}
         onChange={h => onChange({ ...value, h })}
         label="HRS"
         format={v => String(v)}
