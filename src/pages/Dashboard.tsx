@@ -4,8 +4,10 @@ import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { useDashStore } from '@/stores/useDashStore'
 import { useWearableStore } from '@/stores/useWearableStore'
-import { selectRaces, selectNextRace, selectAthlete, selectDashZoneCollapse, selectUpcomingRaces } from '@/stores/selectors'
+import { selectRaces, selectNextRace, selectAthlete, selectDashZoneCollapse, selectUpcomingRaces, selectFocusRace, selectFocusRaceId } from '@/stores/selectors'
 import { AddRaceModal } from '@/components/AddRaceModal'
+import { TimePickerWheel } from '@/components/TimePickerWheel'
+import type { HMS } from '@/components/TimePickerWheel'
 import type { Race } from '@/types'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -315,24 +317,24 @@ function GreetingCard({ onCustomize }: { onCustomize: () => void }) {
       async pos => {
         try {
           const { latitude, longitude } = pos.coords
-          const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code&hourly=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=1&forecast_hours=6`)
+          const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code&hourly=temperature_2m,weather_code&timezone=auto&forecast_days=1&forecast_hours=10`)
           const d   = await res.json()
           const wc: number = d?.current?.weather_code ?? 0
           const icon = wcIcon(wc)
           const desc = wcDesc(wc)
           const temp  = Math.round(d?.current?.temperature_2m ?? 0)
-          const low   = Math.round(d?.daily?.temperature_2m_min?.[0] ?? temp)
-          const high  = Math.round(d?.daily?.temperature_2m_max?.[0] ?? temp)
-          // Next 4 hours
+          const low   = temp
+          const high  = temp
+          // Next 5 hours (starting from current hour)
           const times: string[] = d?.hourly?.time ?? []
           const temps: number[] = d?.hourly?.temperature_2m ?? []
           const codes: number[] = d?.hourly?.weather_code ?? []
           const nowH = new Date().getHours()
           const hourly = times
             .map((t, i) => ({ t, temp: temps[i], icon: wcIcon(codes[i]) }))
-            .filter(x => { const h = new Date(x.t).getHours(); return h >= nowH && h < nowH + 4 })
-            .slice(0, 4)
-            .map(x => ({ time: new Date(x.t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), temp: Math.round(x.temp), icon: x.icon }))
+            .filter(x => { const h = new Date(x.t).getHours(); return h >= nowH })
+            .slice(0, 5)
+            .map(x => ({ time: new Date(x.t).toLocaleTimeString([], { hour: 'numeric', hour12: true }), temp: Math.round(x.temp), icon: x.icon }))
 
           const data: GeoWeather = { temp, icon, desc, low, high, hourly }
           setWeather(data); setGeoState('ok')
@@ -376,25 +378,26 @@ function GreetingCard({ onCustomize }: { onCustomize: () => void }) {
           <span style={st.greetingName}>{firstName}</span>
         </div>
 
-        {/* Weather sub-row */}
+        {/* Weather — 5-hour strip only */}
         {geoState === 'ok' && weather ? (
-          <div style={{ marginTop: '8px' }}>
-            {/* Current conditions */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-              <span style={{ fontSize: '24px', lineHeight: 1 }}>{weather.icon}</span>
-              <div>
-                <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '18px', color: 'var(--white)', letterSpacing: '0.02em' }}>{weather.temp}°C</span>
-                <span style={{ fontSize: '12px', color: 'var(--muted)', marginLeft: '6px' }}>{weather.desc} · {weather.low}° / {weather.high}°</span>
-              </div>
-            </div>
-            {/* 4-hour strip */}
+          <div style={{ marginTop: '10px' }}>
             {weather.hourly.length > 0 && (
-              <div style={{ display: 'flex', gap: '8px' }}>
+              <div style={{ display: 'flex', gap: '6px' }}>
                 {weather.hourly.map((h, i) => (
-                  <div key={i} style={{ flex: 1, background: 'var(--surface3)', borderRadius: '8px', padding: '6px 4px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px', minWidth: 0 }}>
-                    <span style={{ fontSize: '14px', lineHeight: 1 }}>{h.icon}</span>
-                    <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '12px', color: 'var(--white)' }}>{h.temp}°</span>
-                    <span style={{ fontSize: '9px', color: 'var(--muted)', letterSpacing: '0.02em' }}>{h.time}</span>
+                  <div key={i} style={{
+                    flex: 1,
+                    background: 'var(--surface3)',
+                    borderRadius: '10px',
+                    padding: '10px 4px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '5px',
+                    minWidth: 0,
+                  }}>
+                    <span style={{ fontSize: '18px', lineHeight: 1 }}>{h.icon}</span>
+                    <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '14px', color: 'var(--white)', letterSpacing: '0.02em' }}>{h.temp}°</span>
+                    <span style={{ fontSize: '9px', color: 'var(--muted)', letterSpacing: '0.02em', textAlign: 'center' }}>{h.time}</span>
                   </div>
                 ))}
               </div>
@@ -426,7 +429,7 @@ function GreetingCard({ onCustomize }: { onCustomize: () => void }) {
 
 function PreRaceBriefing({ onAddRace }: { onAddRace: () => void }) {
   const races    = useRaceStore(selectRaces)
-  const nextRace = useRaceStore(selectNextRace)
+  const nextRace = useRaceStore(selectFocusRace)   // uses focus race if set, else nearest
   const today    = todayStr()
   const pbMap    = useMemo(() => buildPBMap(races), [races])
 
@@ -482,7 +485,7 @@ function PreRaceBriefing({ onAddRace }: { onAddRace: () => void }) {
       <div style={st.briefingInner}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
           <IconPin />
-          <span style={st.briefingTag}>PRE-RACE</span>
+          <span style={st.briefingTag}>NEXT RACE</span>
         </div>
         <div style={st.briefingTitle}>
           {(nextRace.name ?? '').toUpperCase()} {dayLabel}
@@ -506,13 +509,22 @@ function PreRaceBriefing({ onAddRace }: { onAddRace: () => void }) {
 
 // ─── Edit Upcoming Race Sheet ────────────────────────────────────────────────
 
-function EditUpcomingRaceSheet({ race, onClose }: { race: Race; onClose: () => void }) {
-  const updateRace = useRaceStore(s => s.updateRace)
-  const deleteRace = useRaceStore(s => s.deleteRace)
+function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; onClose: () => void; zIndex?: number }) {
+  const updateRace    = useRaceStore(s => s.updateRace)
+  const deleteRace    = useRaceStore(s => s.deleteRace)
+  const setFocusRaceId = useRaceStore(s => s.setFocusRaceId)
+  const focusRaceId   = useRaceStore(selectFocusRaceId)
 
   const [priority, setPriority] = useState<string>(race.priority ?? 'A')
-  const [goal, setGoal]         = useState(race.goalTime ?? '')
   const [confirmDelete, setConfirmDelete] = useState(false)
+
+  // Parse existing goalTime string (H:MM:SS) into HMS for the wheel
+  const [goalHMS, setGoalHMS] = useState<HMS>(() => {
+    const parts = (race.goalTime ?? '').split(':').map(Number)
+    return { h: parts[0] || 0, m: parts[1] || 0, s: parts[2] || 0 }
+  })
+
+  const isFocused = focusRaceId === race.id
 
   useEffect(() => {
     document.body.style.overflow = 'hidden'
@@ -520,7 +532,11 @@ function EditUpcomingRaceSheet({ race, onClose }: { race: Race; onClose: () => v
   }, [])
 
   function handleSave() {
-    updateRace(race.id, { priority: priority as Race['priority'], goalTime: goal.trim() || undefined })
+    const hasGoal = goalHMS.h > 0 || goalHMS.m > 0 || goalHMS.s > 0
+    const goalTime = hasGoal
+      ? `${goalHMS.h}:${String(goalHMS.m).padStart(2,'0')}:${String(goalHMS.s).padStart(2,'0')}`
+      : undefined
+    updateRace(race.id, { priority: priority as Race['priority'], goalTime })
     onClose()
   }
 
@@ -536,7 +552,7 @@ function EditUpcomingRaceSheet({ race, onClose }: { race: Race; onClose: () => v
   ]
 
   return (
-    <div style={st.modalOverlay} onClick={onClose}>
+    <div style={{ ...st.modalOverlay, zIndex }} onClick={onClose}>
       <div style={{ ...st.customizeSheet, maxHeight: '85vh', paddingBottom: '0', overflowY: 'hidden' }} onClick={e => e.stopPropagation()}>
         {/* Handle */}
         <div style={{ width: '40px', height: '4px', background: 'var(--border2)', borderRadius: '2px', margin: '0 auto 20px', flexShrink: 0 }} />
@@ -594,29 +610,41 @@ function EditUpcomingRaceSheet({ race, onClose }: { race: Race; onClose: () => v
             </div>
           </div>
 
-          {/* Goal time */}
+          {/* Goal time — scroll wheel, 0–99h */}
           <div>
             <div style={{ fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '10px' }}>
               GOAL TIME <span style={{ opacity: 0.5, fontWeight: 400, textTransform: 'lowercase', letterSpacing: 0 }}>(optional)</span>
             </div>
-            <input
-              type="text"
-              value={goal}
-              onChange={e => setGoal(e.target.value)}
-              placeholder="e.g. 3:30:00"
-              style={{
-                width: '100%', boxSizing: 'border-box',
-                background: 'var(--surface3)', border: '1px solid var(--border2)',
-                borderRadius: '8px', color: 'var(--white)',
-                fontFamily: 'var(--headline)', fontWeight: 700,
-                fontSize: '18px', padding: '12px 14px',
-                letterSpacing: '0.06em',
-              }}
-            />
+            <TimePickerWheel value={goalHMS} onChange={setGoalHMS} maxHours={99} />
             <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '6px' }}>
-              Format: H:MM:SS · Used by Gap To Goal widget
+              Scroll to set · Used by Gap To Goal widget
             </div>
           </div>
+
+          {/* Focus race toggle */}
+          <button
+            onClick={() => { setFocusRaceId(isFocused ? null : race.id); onClose() }}
+            style={{
+              width: '100%',
+              background: isFocused ? 'rgba(255,77,0,0.12)' : 'var(--surface3)',
+              border: isFocused ? '1.5px solid rgba(255,77,0,0.5)' : '1.5px solid var(--border2)',
+              borderRadius: '10px',
+              color: isFocused ? 'var(--orange)' : 'var(--white)',
+              fontFamily: 'var(--headline)',
+              fontWeight: 700,
+              fontSize: '13px',
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              padding: '12px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+            }}
+          >
+            {isFocused ? '📌 Focused Race (tap to unpin)' : '📌 Set as Focus Race'}
+          </button>
 
           {/* Delete */}
           {!confirmDelete ? (
@@ -1647,7 +1675,7 @@ function RaceReadinessWidget() {
 
 function GapToGoalWidget() {
   const races   = useRaceStore(selectRaces)
-  const nextRace = useRaceStore(selectNextRace)
+  const nextRace = useRaceStore(selectFocusRace)   // follows user's pinned focus race
   const today   = todayStr()
 
   const result = useMemo(() => {
@@ -2590,8 +2618,10 @@ function WidgetShell({ label }: { label: string }) {
 // ─── All Upcoming Races Modal ─────────────────────────────────────────────────
 
 function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRace: () => void }) {
-  const upcoming = useRaceStore(selectUpcomingRaces)
-  const today    = todayStr()
+  const upcoming       = useRaceStore(selectUpcomingRaces)
+  const focusRaceId    = useRaceStore(selectFocusRaceId)
+  const setFocusRaceId = useRaceStore(s => s.setFocusRaceId)
+  const today          = todayStr()
   const [editingId, setEditingId] = useState<string | null>(null)
 
   const sorted = useMemo(
@@ -2611,6 +2641,7 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
         <EditUpcomingRaceSheet
           race={editing}
           onClose={() => setEditingId(null)}
+          zIndex={1000}
         />
       )}
       <div style={st.modalOverlay} onClick={onClose}>
@@ -2666,9 +2697,17 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                             <span style={{ background: 'var(--orange)', color: '#000', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '10px', letterSpacing: '0.08em', padding: '2px 7px', borderRadius: '4px', flexShrink: 0 }}>A RACE</span>
                             <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>{r.name ?? 'Unnamed race'}</span>
                           </div>
-                          <button onClick={() => setEditingId(r.id)} style={{ background: 'rgba(255,77,0,0.15)', border: '1px solid rgba(255,77,0,0.4)', borderRadius: '6px', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px', letterSpacing: '0.06em', padding: '5px 10px', cursor: 'pointer', flexShrink: 0 }}>EDIT</button>
+                          <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                            <button onClick={() => setFocusRaceId(focusRaceId === r.id ? null : r.id)}
+                              title={focusRaceId === r.id ? 'Unpin focus race' : 'Set as focus race'}
+                              style={{ background: focusRaceId === r.id ? 'rgba(255,77,0,0.3)' : 'rgba(255,77,0,0.1)', border: '1px solid rgba(255,77,0,0.4)', borderRadius: '6px', color: 'var(--orange)', fontSize: '14px', padding: '5px 8px', cursor: 'pointer', flexShrink: 0 }}>
+                              📌
+                            </button>
+                            <button onClick={() => setEditingId(r.id)} style={{ background: 'rgba(255,77,0,0.15)', border: '1px solid rgba(255,77,0,0.4)', borderRadius: '6px', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px', letterSpacing: '0.06em', padding: '5px 10px', cursor: 'pointer', flexShrink: 0 }}>EDIT</button>
+                          </div>
                         </div>
                         <div style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: 1.5 }}>
+                          {focusRaceId === r.id && <span style={{ color: 'var(--orange)', marginRight: '6px', fontSize: '10px', fontWeight: 700 }}>📌 FOCUS</span>}
                           {[r.city, r.country].filter(Boolean).join(', ')}
                           {r.distance ? ` · ${distBadge(r.distance) || r.distance + 'K'}` : ''}
                           {' · '}{fmtDateIntl(r.date)}
@@ -2700,7 +2739,14 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                         <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', color: d === 0 ? 'var(--orange)' : 'var(--muted)', letterSpacing: '0.04em' }}>
                           {d === 0 ? 'TODAY' : `${d}D`}
                         </div>
-                        <button onClick={() => setEditingId(r.id)} style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: '5px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '10px', letterSpacing: '0.06em', padding: '3px 8px', cursor: 'pointer' }}>EDIT</button>
+                        <div style={{ display: 'flex', gap: '4px' }}>
+                          <button onClick={() => setFocusRaceId(focusRaceId === r.id ? null : r.id)}
+                            title={focusRaceId === r.id ? 'Unpin' : 'Set as focus'}
+                            style={{ background: focusRaceId === r.id ? 'rgba(255,77,0,0.2)' : 'var(--surface2)', border: `1px solid ${focusRaceId === r.id ? 'rgba(255,77,0,0.4)' : 'var(--border2)'}`, borderRadius: '5px', fontSize: '11px', padding: '3px 6px', cursor: 'pointer' }}>
+                            📌
+                          </button>
+                          <button onClick={() => setEditingId(r.id)} style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: '5px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '10px', letterSpacing: '0.06em', padding: '3px 8px', cursor: 'pointer' }}>EDIT</button>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -2960,7 +3006,7 @@ export function Dashboard() {
   const [showAddRace,       setShowAddRace]       = useState(false)
   const [addRaceMode,       setAddRaceMode]       = useState<'past' | 'upcoming'>('past')
   const [showAllUpcoming,   setShowAllUpcoming]   = useState(false)
-  const nextRace      = useRaceStore(selectNextRace)
+  const nextRace      = useRaceStore(selectFocusRace)  // focus race or nearest upcoming
   const storeWidgets  = useDashStore(s => s.widgets)
   const getDashLayout = useDashStore(s => s.getDashLayout)
   const widgets       = useMemo(() => getDashLayout(), [storeWidgets, getDashLayout])

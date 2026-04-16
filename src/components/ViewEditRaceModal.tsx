@@ -102,6 +102,36 @@ function fmtDate(dateStr: string): string {
   return d.toLocaleDateString('en', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
 }
 
+// Flat map: label or value → numeric km string (e.g. "Half Marathon" → "21.1", "42.2" → "42.2")
+const _DIST_KM_MAP: Record<string, string> = (() => {
+  const m: Record<string, string> = {}
+  for (const entries of Object.values(DISTANCES_BY_SPORT)) {
+    for (const e of entries) {
+      if (!CUSTOM_DIST_VALUES.includes(e.value)) {
+        m[e.label.toLowerCase()] = e.value
+        m[e.value.toLowerCase()] = e.value
+      }
+    }
+  }
+  return m
+})()
+
+/** Resolve a distance string to its km display value.
+ *  "Half Marathon" → "21.1",  "21.1" → "21.1",  "Solo Open" → "Solo Open" (HYROX) */
+function resolveDistKm(dist: string): { km: string; isNumeric: boolean } {
+  if (!dist) return { km: dist, isNumeric: false }
+  const mapped = _DIST_KM_MAP[dist.toLowerCase()]
+  if (mapped) {
+    const n = parseFloat(mapped)
+    return { km: mapped, isNumeric: !isNaN(n) }
+  }
+  // Already a numeric string?
+  const n = parseFloat(dist)
+  if (!isNaN(n)) return { km: dist, isNumeric: true }
+  // Non-numeric label (HYROX category, etc.)
+  return { km: dist, isNumeric: false }
+}
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 interface Props {
@@ -131,12 +161,15 @@ function ViewPanel({ race, onEdit, onDelete, onShare }: { race: Race; onEdit: ()
             <div style={st.statLabel}>FINISH TIME</div>
           </div>
         )}
-        {race.distance && (
-          <div style={st.statBox}>
-            <div style={st.statVal}>{race.distance}</div>
-            <div style={st.statLabel}>KM</div>
-          </div>
-        )}
+        {race.distance && (() => {
+          const { km, isNumeric } = resolveDistKm(race.distance)
+          return (
+            <div style={st.statBox}>
+              <div style={st.statVal}>{km}</div>
+              <div style={st.statLabel}>{isNumeric ? 'KM' : 'DISTANCE'}</div>
+            </div>
+          )
+        })()}
         {race.placing && (
           <div style={st.statBox}>
             <div style={st.statVal}>{race.placing}</div>

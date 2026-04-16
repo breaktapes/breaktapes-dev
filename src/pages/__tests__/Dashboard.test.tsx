@@ -91,14 +91,14 @@ describe('Dashboard — AthleteBriefing (just finished)', () => {
 })
 
 describe('Dashboard — AthleteBriefing (upcoming race)', () => {
-  it('shows PRE-RACE section when nextRace is set', () => {
+  it('shows NEXT RACE section when nextRace is set', () => {
     useRaceStore.setState({
       races: [RACE],
       nextRace: { ...RACE, id: 'upcoming', name: 'Tokyo Marathon', date: FUTURE },
       upcomingRaces: [{ ...RACE, id: 'upcoming', name: 'Tokyo Marathon', date: FUTURE }],
     })
     renderDashboard()
-    expect(screen.getByText(/PRE-RACE/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/NEXT RACE/i).length).toBeGreaterThanOrEqual(1)
     const els = screen.getAllByText(/Tokyo Marathon/i)
     expect(els.length).toBeGreaterThanOrEqual(1)
   })
