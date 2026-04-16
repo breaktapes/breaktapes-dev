@@ -23,6 +23,7 @@ export interface Race {
   notes?: string
   isArace?: boolean
   priority?: 'A' | 'B' | 'C'
+  outcome?: string          // "Finished" | "DNF" | "DSQ" | "DNS"
   goalTime?: string
   bibNumber?: string
   lat?: number
