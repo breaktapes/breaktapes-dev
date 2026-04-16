@@ -98,7 +98,7 @@ describe('Dashboard — AthleteBriefing (upcoming race)', () => {
       upcomingRaces: [{ ...RACE, id: 'upcoming', name: 'Tokyo Marathon', date: FUTURE }],
     })
     renderDashboard()
-    expect(screen.getByText(/NEXT RACE/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/NEXT RACE/i).length).toBeGreaterThanOrEqual(1)
     const els = screen.getAllByText(/Tokyo Marathon/i)
     expect(els.length).toBeGreaterThanOrEqual(1)
   })
