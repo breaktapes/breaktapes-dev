@@ -863,6 +863,29 @@ Direct DB access (psql/psycopg2) is blocked from localhost — Supabase only exp
 
 ---
 
+### Session 19 (2026-04-16) — Upcoming Races Modal + Set Next Race Modal (v0.6.1.0)
+
+**Branch:** `claude/condescending-haibt` → staging (PR #115)
+
+#### Changes shipped (commits `79fd098`, `91ee8cc`, `2b61ac4`)
+
+- **UpcomingRacesModal** — full-screen bottom sheet listing all future upcoming races sorted by date. Features: A/B/C priority badges (orange/amber/muted), ACTIVE pill on current `nextRace`, days-between-races separators, "+ ADD RACE" button. Opened by tapping "ALL UPCOMING RACES →" on the CountdownCard.
+- **SetNextRaceModal** — slide-up edit sheet for any upcoming race. Fields: priority (A/B/C select), goal time HRS/MIN/SEC spinners with ▲/▼ buttons, auto-calculated pace target (min/km). UPCOMING INSIGHTS panel: location, course summary, weather forecast (Nominatim geocode → Open-Meteo API), Race DNA outlook comparing expected temperature to past race weather history. CANCEL / REMOVE / SAVE RACE action bar.
+- **`setNextRace` action** in `useRaceStore` — allows explicitly setting any race as the dashboard focus race, decoupled from automatic "nearest upcoming" logic.
+- **RH-5 fix** — `AddRaceModal` `handleSave` wrapped in `try/catch`; save button clears error state on retry.
+- **RH-24 fix** — `Profile.tsx` `PersonalBests` section groups by sport via `buildPBBySport()` with `SPORT_ORDER` priority sort.
+- **7 Linear issues resolved**: RH-5, RH-20, RH-21, RH-22, RH-23, RH-24, RH-25.
+- **Branch cleanup** — deleted 4 stale remote branches (`claude/compassionate-nash`, `claude/fix-autofill-supabase`, `claude/flamboyant-bhaskara`, `claude/modest-hodgkin`) and 1 stale local branch.
+
+#### Key learnings
+- `WebkitOverflowScrolling` in React inline styles requires `'touch' as React.CSSProperties['WebkitOverflowScrolling']` — `'touch' as unknown as undefined` compiles but emits a TS warning.
+- Open-Meteo forecast API (`/v1/forecast`) only supports up to 16 days in the future; for races further out, use the archive endpoint or show a "forecast not available yet" state gracefully.
+- Cancel token pattern (`cancelledRef`) is essential for weather fetch in modals — the fetch may resolve after the user closes the modal; without cleanup the state update will fire on an unmounted component.
+- Zustand `useRaceStore.setState({ nextRace: null })` can be called directly from component handlers without importing an action — useful for one-off state clears outside the store's own action methods.
+- `buildPBBySport()` in Profile.tsx must handle missing `r.sport` gracefully (`?? 'Running'` fallback) — AI-parsed races before sport validation was enforced may have `sport: undefined`.
+
+---
+
 ## Skill routing
 
 When the user's request matches an available skill, ALWAYS invoke it using the Skill
