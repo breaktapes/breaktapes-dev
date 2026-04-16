@@ -717,8 +717,8 @@ function TrainingCorrelWidget() {
 
 // ─── Boston Qualifier Widget ──────────────────────────────────────────────────
 
-// Typical recent cutoff buffer: ~5 min under the BQ standard to safely get in
-const BQ_BUFFER_SECS = 300
+// Typical recent cutoff buffer: ~7 min under the BQ standard to safely get in
+const BQ_BUFFER_SECS = 420
 
 function BostonQualWidget() {
   const athlete    = useAthleteStore(selectAthlete)
@@ -788,7 +788,7 @@ function BostonQualWidget() {
                 {secsToHMS(bqTarget - BQ_BUFFER_SECS)}
               </div>
               <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted2)', textTransform: 'uppercase', marginTop: '3px' }}>
-                SAFE BUFFER (−5 MIN)
+                SAFE BUFFER (−7 MIN)
               </div>
             </div>
           </div>
@@ -1402,20 +1402,22 @@ function isEnabled(widgets: ReturnType<typeof useDashStore.getState>['widgets'],
 }
 
 export function Dashboard() {
-  const [showCustomize, setShowCustomize] = useState(false)
-  const [showAddRace,   setShowAddRace]   = useState(false)
+  const [showCustomize,  setShowCustomize]  = useState(false)
+  const [showAddRace,    setShowAddRace]    = useState(false)
+  const [addRaceMode,    setAddRaceMode]    = useState<'past' | 'upcoming'>('past')
   const nextRace      = useRaceStore(selectNextRace)
   const storeWidgets  = useDashStore(s => s.widgets)
   const getDashLayout = useDashStore(s => s.getDashLayout)
   const widgets       = useMemo(() => getDashLayout(), [storeWidgets, getDashLayout])
 
-  const openAddRace = () => setShowAddRace(true)
+  const openAddRace          = () => { setAddRaceMode('past');     setShowAddRace(true) }
+  const openAddUpcomingRace  = () => { setAddRaceMode('upcoming'); setShowAddRace(true) }
   const en = (id: string) => isEnabled(widgets, id)
 
   return (
     <div style={st.page}>
       {showCustomize && <DashCustomizeModal onClose={() => setShowCustomize(false)} />}
-      {showAddRace   && <AddRaceModal       onClose={() => setShowAddRace(false)} />}
+      {showAddRace   && <AddRaceModal defaultMode={addRaceMode} onClose={() => setShowAddRace(false)} />}
 
       <GreetingCard onCustomize={() => setShowCustomize(true)} />
       <PreRaceBriefing onAddRace={openAddRace} />
@@ -1426,7 +1428,7 @@ export function Dashboard() {
           ? <>{en('countdown') && <CountdownCard race={nextRace} />}
               {en('race-forecast') && <WeatherCard race={nextRace} />}
               <CourseInfoCard race={nextRace} /></>
-          : <NoUpcomingRaceCTA onAddRace={openAddRace} />
+          : <NoUpcomingRaceCTA onAddRace={openAddUpcomingRace} />
         }
       </DashZone>
 
@@ -1439,7 +1441,7 @@ export function Dashboard() {
 
       {/* CONSISTENCY — BUILD */}
       <DashZone id="trending" tag="CONSISTENCY" label="BUILD">
-        {en('season-planner')  && <SeasonPlannerWidget onAddRace={openAddRace} />}
+        {en('season-planner')  && <SeasonPlannerWidget onAddRace={openAddUpcomingRace} />}
         {en('recovery-intel')  && <RecoveryIntelWidget />}
         {en('training-correl') && <TrainingCorrelWidget />}
       </DashZone>

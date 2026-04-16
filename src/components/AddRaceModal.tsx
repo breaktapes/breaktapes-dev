@@ -4,6 +4,8 @@ import { useRaceStore } from '@/stores/useRaceStore'
 import { useRaceCatalog, type CatalogRace } from '@/hooks/useRaceCatalog'
 import type { Race, Split } from '@/types'
 
+type Mode = 'past' | 'upcoming'
+
 // ─── Sport / Distance / Option config ───────────────────────────────────────
 
 const SPORTS = [
@@ -212,17 +214,26 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 // ─── Main modal ───────────────────────────────────────────────────────────────
 
-interface Props { onClose: () => void }
+interface Props {
+  onClose: () => void
+  defaultMode?: Mode
+}
 
-export function AddRaceModal({ onClose }: Props) {
-  const addRace   = useRaceStore(s => s.addRace)
-  const pastRaces = useRaceStore(s => s.races)
+export function AddRaceModal({ onClose, defaultMode = 'past' }: Props) {
+  const [mode, setMode] = useState<Mode>(defaultMode)
+  const addRace         = useRaceStore(s => s.addRace)
+  const addUpcomingRace = useRaceStore(s => s.addUpcomingRace)
+  const pastRaces       = useRaceStore(s => s.races)
+  const upcomingRaces   = useRaceStore(s => s.upcomingRaces)
   const { data: catalog = [] } = useRaceCatalog()
+
+  // When parent changes defaultMode (e.g. re-opens), sync
+  useEffect(() => { setMode(defaultMode) }, [defaultMode])
 
   // Autocomplete
   const [query, setQuery]           = useState('')
   const [showSuggest, setShowSuggest] = useState(false)
-  const [suggestions, setSuggestions] = useState<{ label: string; source: 'past' | 'catalog'; data?: CatalogRace }[]>([])
+  const [suggestions, setSuggestions] = useState<{ label: string; source: 'past' | 'catalog'; data?: CatalogRace; myRace?: Race }[]>([])
 
   // Core fields
   const [name, setName]             = useState('')
@@ -296,48 +307,57 @@ export function AddRaceModal({ onClose }: Props) {
           (r.aliases ?? []).some(a => a.toLowerCase().includes(q))
         )
         .slice(0, 6)
-        .map(r => ({ label: `${r.name}${r.city ? ` · ${r.city}` : ''}`, source: 'catalog' as const, data: r }))
-      const pastHits = pastRaces
+        .map(r => ({ label: r.name, source: 'catalog' as const, data: r }))
+      const allMyRaces = [...pastRaces, ...upcomingRaces]
+      const myHits = allMyRaces
         .filter(r => r.name.toLowerCase().includes(q))
         .slice(0, 3)
-        .map(r => ({ label: r.name, source: 'past' as const }))
-      const all = [...pastHits, ...catalogHits].slice(0, 8)
+        .map(r => ({ label: r.name, source: 'past' as const, myRace: r }))
+      const all = [...myHits, ...catalogHits].slice(0, 8)
       setSuggestions(all)
       setShowSuggest(all.length > 0)
     }, 250)
     return () => clearTimeout(debounceRef.current)
-  }, [query, catalog, pastRaces])
+  }, [query, catalog, pastRaces, upcomingRaces])
 
   function selectSuggestion(s: typeof suggestions[0]) {
-    const raceName = s.data?.name ?? s.label.split(' · ')[0]
-    setQuery(raceName)
-    setName(raceName)
+    const TYPE_MAP: Record<string, string> = {
+      run: 'Running', running: 'Running',
+      tri: 'Triathlon', triathlon: 'Triathlon',
+      cycle: 'Cycling', cycling: 'Cycling', bike: 'Cycling',
+      swim: 'Swimming', swimming: 'Swimming',
+      hyrox: 'HYROX',
+    }
+
+    if (s.myRace) {
+      // Autofill from user's own past/upcoming race
+      const r = s.myRace
+      setQuery(r.name); setName(r.name)
+      if (r.country) { setCountry(r.country); setCitySelect(''); setCityText('') }
+      if (r.city)    { setCitySelect(r.city); setCityText(r.city) }
+      if (r.sport)   setSport(r.sport)
+      if (r.distance) {
+        const presets = DISTANCES_BY_SPORT[r.sport ?? 'Running'] ?? []
+        const match = presets.find(p => p.value === r.distance)
+        if (match) { setDistance(r.distance) } else { setDistance('__custom__'); setCustomDist(r.distance) }
+      }
+      setShowSuggest(false)
+      return
+    }
+
+    const raceName = s.data?.name ?? s.label
+    setQuery(raceName); setName(raceName)
     if (s.data) {
       if (s.data.country) { setCountry(s.data.country); setCitySelect(''); setCityText('') }
       if (s.data.city)    { setCitySelect(s.data.city); setCityText(s.data.city) }
-      // DB 'type' is short-form ("run", "tri", "cycle") — map to app sport labels
-      const TYPE_MAP: Record<string, string> = {
-        run: 'Running', running: 'Running',
-        tri: 'Triathlon', triathlon: 'Triathlon',
-        cycle: 'Cycling', cycling: 'Cycling', bike: 'Cycling',
-        swim: 'Swimming', swimming: 'Swimming',
-        hyrox: 'HYROX',
-      }
       const mappedSport = s.data.type ? (TYPE_MAP[s.data.type.toLowerCase()] ?? s.data.type) : null
       if (mappedSport) setSport(mappedSport)
       if (s.data.dist_km) {
-        // Match to a preset value, or fall back to custom
         const distStr = String(s.data.dist_km)
         const presets = DISTANCES_BY_SPORT[mappedSport ?? 'Running'] ?? []
         const match = presets.find(p => p.value === distStr)
-        if (match) {
-          setDistance(distStr)
-        } else {
-          setDistance('__custom__')
-          setCustomDist(distStr)
-        }
+        if (match) { setDistance(distStr) } else { setDistance('__custom__'); setCustomDist(distStr) }
       }
-      // Auto-fill date from catalog month/day (current year)
       if (s.data.month && s.data.day) {
         const yr = new Date().getFullYear()
         setDate(`${yr}-${pad2(s.data.month)}-${pad2(s.data.day)}`)
@@ -406,7 +426,11 @@ export function AddRaceModal({ onClose }: Props) {
       splits: buildSplits(),
     }
 
-    addRace(race)
+    if (mode === 'upcoming') {
+      addUpcomingRace(race)
+    } else {
+      addRace(race)
+    }
     setSaving(false)
     onClose()
   }
@@ -432,19 +456,32 @@ export function AddRaceModal({ onClose }: Props) {
         {/* Header */}
         <div style={st.header}>
           <div>
-            <span style={st.title}>LOG A RACE</span>
-            <p style={st.subtitle}>Cross the line. Claim the medal.</p>
+            <span style={st.title}>{mode === 'past' ? 'LOG A RACE' : 'ADD UPCOMING RACE'}</span>
+            <p style={st.subtitle}>{mode === 'past' ? 'Cross the line. Claim the medal.' : 'Plan ahead. Chase the goal.'}</p>
           </div>
           <button style={st.closeBtn} onClick={onClose} aria-label="Close">✕</button>
         </div>
 
-        {/* Manual badge */}
-        <div style={{ padding: '8px 16px 0', flexShrink: 0 }}>
-          <div style={st.manualBadge}>✏️ MANUAL</div>
+        {/* Mode tabs */}
+        <div style={{ padding: '12px 16px 0', flexShrink: 0, display: 'flex', gap: '8px' }}>
+          <button
+            style={{ ...st.tabBtn, ...(mode === 'past' ? st.tabBtnActive : {}) }}
+            onClick={() => setMode('past')}
+            type="button"
+          >
+            🏁 LOG A RACE
+          </button>
+          <button
+            style={{ ...st.tabBtn, ...(mode === 'upcoming' ? st.tabBtnActiveGreen : {}) }}
+            onClick={() => setMode('upcoming')}
+            type="button"
+          >
+            📅 ADD UPCOMING
+          </button>
         </div>
 
         {/* Scrollable body */}
-        <div style={st.body}>
+        <div style={{ ...st.body, paddingTop: '12px' }}>
 
           {/* ── Race Name autocomplete ── */}
           <div ref={nameWrapRef}>
@@ -470,34 +507,61 @@ export function AddRaceModal({ onClose }: Props) {
               width: dropRect.width,
               zIndex: 1200,
             }}>
-              {suggestions.map((s, i) => (
-                <button
-                  key={i}
-                  style={{
-                    ...st.dropdownItem,
-                    borderBottom: i < suggestions.length - 1 ? '1px solid var(--border)' : 'none',
-                  }}
-                  onMouseDown={e => { e.preventDefault(); selectSuggestion(s) }}
-                >
-                  <span style={{
-                    color: s.source === 'past' ? 'var(--orange)' : 'var(--green)',
-                    marginRight: '8px',
-                    fontSize: '11px',
-                    fontWeight: 700,
-                    flexShrink: 0,
-                  }}>
-                    {s.source === 'past' ? '★' : '⚡'}
-                  </span>
-                  <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {s.label}
-                  </span>
-                  {s.data?.type && (
-                    <span style={{ marginLeft: '8px', fontSize: '10px', color: 'var(--muted)', flexShrink: 0 }}>
-                      {s.data.type}
-                    </span>
-                  )}
-                </button>
-              ))}
+              {suggestions.map((s, i) => {
+                // Build meta line: city · country · distance · date
+                const metaParts: string[] = []
+                if (s.myRace) {
+                  if (s.myRace.city)     metaParts.push(s.myRace.city)
+                  if (s.myRace.country)  metaParts.push(s.myRace.country)
+                  if (s.myRace.distance) metaParts.push(`${s.myRace.distance} km`)
+                  if (s.myRace.date)     metaParts.push(s.myRace.date)
+                } else if (s.data) {
+                  if (s.data.city)     metaParts.push(s.data.city)
+                  if (s.data.country)  metaParts.push(s.data.country)
+                  if (s.data.dist_km)  metaParts.push(`${s.data.dist_km} km`)
+                  if (s.data.month && s.data.day) {
+                    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+                    metaParts.push(`${months[s.data.month - 1]} ${s.data.day}`)
+                  }
+                }
+                return (
+                  <button
+                    key={i}
+                    style={{
+                      ...st.dropdownItem,
+                      borderBottom: i < suggestions.length - 1 ? '1px solid var(--border)' : 'none',
+                      flexDirection: 'column',
+                      alignItems: 'flex-start',
+                      gap: '2px',
+                    }}
+                    onMouseDown={e => { e.preventDefault(); selectSuggestion(s) }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '8px' }}>
+                      <span style={{
+                        color: s.source === 'past' ? 'var(--orange)' : 'var(--green)',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        flexShrink: 0,
+                      }}>
+                        {s.source === 'past' ? '★' : '⚡'}
+                      </span>
+                      <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600 }}>
+                        {s.label}
+                      </span>
+                      {s.data?.type && (
+                        <span style={{ fontSize: '10px', color: 'var(--muted)', flexShrink: 0, textTransform: 'uppercase', fontFamily: 'var(--headline)', letterSpacing: '0.06em' }}>
+                          {s.data.type}
+                        </span>
+                      )}
+                    </div>
+                    {metaParts.length > 0 && (
+                      <div style={{ fontSize: '11px', color: 'var(--muted)', paddingLeft: '19px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%' }}>
+                        {metaParts.join(' · ')}
+                      </div>
+                    )}
+                  </button>
+                )
+              })}
             </div>,
             document.body,
           )}
@@ -526,22 +590,24 @@ export function AddRaceModal({ onClose }: Props) {
             )}
           </Field>
 
-          {/* ── Race Outcome ── */}
-          <Field label="Race Outcome">
-            <select style={st.input} value={outcome} onChange={e => setOutcome(e.target.value)}>
-              {RACE_OUTCOMES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-            </select>
-          </Field>
+          {/* ── Race Outcome (past only) ── */}
+          {mode === 'past' && (
+            <Field label="Race Outcome">
+              <select style={st.input} value={outcome} onChange={e => setOutcome(e.target.value)}>
+                {RACE_OUTCOMES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </select>
+            </Field>
+          )}
 
-          {/* ── Finish Time (drum) — hidden for DNF/DSQ/DNS ── */}
-          {outcome === 'Finished' && (
+          {/* ── Finish Time (past only, drum) — hidden for DNF/DSQ/DNS ── */}
+          {mode === 'past' && outcome === 'Finished' && (
             <Field label="Finish Time">
               <TimePicker value={time} onChange={setTime} />
             </Field>
           )}
 
-          {/* ── Triathlon splits ── */}
-          {sport === 'Triathlon' && outcome === 'Finished' && (
+          {/* ── Triathlon splits (past only) ── */}
+          {mode === 'past' && sport === 'Triathlon' && outcome === 'Finished' && (
             <Field label="Splits">
               <TriathlonSplits
                 splits={triSplits}
@@ -608,30 +674,34 @@ export function AddRaceModal({ onClose }: Props) {
             />
           </Field>
 
-          {/* ── Placing ── */}
-          <Field label="Placing (Optional)">
-            <input
-              style={st.input}
-              placeholder="e.g. 342/5000"
-              value={placing}
-              onChange={e => setPlacing(e.target.value)}
-            />
-          </Field>
-
-          {/* ── Medal ── */}
-          <Field label="Medal">
-            <select style={st.input} value={medal} onChange={e => setMedal(e.target.value)}>
-              {MEDALS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
-            </select>
-            {medal === '__custom__' && (
+          {/* ── Placing (past only) ── */}
+          {mode === 'past' && (
+            <Field label="Placing (Optional)">
               <input
-                style={{ ...st.input, marginTop: '6px' }}
-                placeholder="e.g. Sub-3 Finisher, Age Group Winner..."
-                value={customMedal}
-                onChange={e => setCustomMedal(e.target.value)}
+                style={st.input}
+                placeholder="e.g. 342/5000"
+                value={placing}
+                onChange={e => setPlacing(e.target.value)}
               />
-            )}
-          </Field>
+            </Field>
+          )}
+
+          {/* ── Medal (past only) ── */}
+          {mode === 'past' && (
+            <Field label="Medal">
+              <select style={st.input} value={medal} onChange={e => setMedal(e.target.value)}>
+                {MEDALS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+              </select>
+              {medal === '__custom__' && (
+                <input
+                  style={{ ...st.input, marginTop: '6px' }}
+                  placeholder="e.g. Sub-3 Finisher, Age Group Winner..."
+                  value={customMedal}
+                  onChange={e => setCustomMedal(e.target.value)}
+                />
+              )}
+            </Field>
+          )}
 
           {error && (
             <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: '#ff6b6b', fontFamily: 'var(--body)' }}>
@@ -642,8 +712,8 @@ export function AddRaceModal({ onClose }: Props) {
           {/* ── Actions ── */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '0.75rem' }}>
             <button style={st.cancelBtn} onClick={onClose} type="button">CANCEL</button>
-            <button style={st.saveBtn} onClick={handleSave} disabled={saving} type="button">
-              {saving ? 'SAVING…' : 'ADD RACE'}
+            <button style={{ ...st.saveBtn, background: mode === 'upcoming' ? 'var(--green)' : 'var(--orange)', color: '#000' }} onClick={handleSave} disabled={saving} type="button">
+              {saving ? 'SAVING…' : mode === 'past' ? 'LOG RACE' : 'ADD TO CALENDAR'}
             </button>
           </div>
         </div>
@@ -866,5 +936,32 @@ const st = {
     textTransform: 'uppercase',
     cursor: 'pointer',
     width: '100%',
+  } as React.CSSProperties,
+
+  tabBtn: {
+    flex: 1,
+    background: 'var(--surface3)',
+    border: '1px solid var(--border2)',
+    borderRadius: '8px',
+    color: 'var(--muted)',
+    fontFamily: 'var(--headline)',
+    fontWeight: 900,
+    fontSize: '12px',
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    padding: '10px 8px',
+    cursor: 'pointer',
+  } as React.CSSProperties,
+
+  tabBtnActive: {
+    background: 'rgba(var(--orange-ch),0.12)',
+    border: '1px solid rgba(var(--orange-ch),0.4)',
+    color: 'var(--orange)',
+  } as React.CSSProperties,
+
+  tabBtnActiveGreen: {
+    background: 'rgba(0,255,136,0.1)',
+    border: '1px solid rgba(0,255,136,0.35)',
+    color: 'var(--green)',
   } as React.CSSProperties,
 }

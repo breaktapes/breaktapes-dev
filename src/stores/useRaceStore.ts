@@ -8,6 +8,8 @@ export interface RaceState {
   wishlistRaces: Race[]
   nextRace: Race | null
   addRace: (race: Race) => void
+  addUpcomingRace: (race: Race) => void
+  autoMoveExpiredUpcoming: () => void
   updateRace: (id: string, patch: Partial<Race>) => void
   deleteRace: (id: string) => void
   setRaces: (races: Race[]) => void
@@ -32,6 +34,23 @@ export const useRaceStore = create<RaceState>()(
       nextRace: null,
 
       addRace: (race) => set(s => ({ races: [...s.races, race] })),
+
+      addUpcomingRace: (race) => {
+        set(s => ({ upcomingRaces: [...s.upcomingRaces, race] }))
+        get().promoteNextRace()
+      },
+
+      autoMoveExpiredUpcoming: () => {
+        const today = new Date().toISOString().split('T')[0]
+        const { upcomingRaces, races } = get()
+        const expired = upcomingRaces.filter(r => r.date < today)
+        if (expired.length === 0) return
+        set({
+          races: [...races, ...expired],
+          upcomingRaces: upcomingRaces.filter(r => r.date >= today),
+        })
+        get().promoteNextRace()
+      },
 
       updateRace: (id, patch) => set(s => ({
         races: s.races.map(r => r.id === id ? { ...r, ...patch } : r),
@@ -63,16 +82,21 @@ export const useRaceStore = create<RaceState>()(
       name: 'fl2_races',  // must match existing localStorage key
       // Migrate old SPA format: raw array stored directly, not wrapped in {state:{...}}
       onRehydrateStorage: () => (state) => {
-        if (!state || state.races.length > 0) return
-        try {
-          const raw = localStorage.getItem('fl2_races')
-          if (!raw) return
-          const parsed = JSON.parse(raw)
-          // Old SPA stored: [{id:"...",name:"...",...}, ...] (plain array, no "state" wrapper)
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            state.setRaces(parsed)
-          }
-        } catch {}
+        if (!state) return
+        // Migrate old SPA format: raw array stored directly
+        if (state.races.length === 0) {
+          try {
+            const raw = localStorage.getItem('fl2_races')
+            if (raw) {
+              const parsed = JSON.parse(raw)
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                state.setRaces(parsed)
+              }
+            }
+          } catch {}
+        }
+        // Auto-move any expired upcoming races to past on app load
+        state.autoMoveExpiredUpcoming()
       },
     }
   ),
