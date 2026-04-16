@@ -373,7 +373,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past' }: Props) {
         if (match) { setDistance(distStr) } else { setDistance('__custom__'); setCustomDist(distStr) }
       }
       if (s.data.month && s.data.day) {
-        const yr = new Date().getFullYear()
+        const yr = s.data.year ?? new Date().getFullYear()
         setDate(`${yr}-${pad2(s.data.month)}-${pad2(s.data.day)}`)
       }
     }
@@ -677,7 +677,8 @@ export function AddRaceModal({ onClose, defaultMode = 'past' }: Props) {
                   if (s.data.dist_km)  metaParts.push(`${s.data.dist_km} km`)
                   if (s.data.month && s.data.day) {
                     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-                    metaParts.push(`${months[s.data.month - 1]} ${s.data.day}`)
+                    const yearSuffix = s.data.year ? ` ${s.data.year}` : ''
+                    metaParts.push(`${months[s.data.month - 1]} ${s.data.day}${yearSuffix}`)
                   }
                 }
                 return (

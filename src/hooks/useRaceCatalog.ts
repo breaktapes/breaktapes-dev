@@ -7,6 +7,7 @@ export interface CatalogRace {
   aliases: string[]
   city: string
   country: string
+  year?: number
   month?: number
   day?: number
   dist_km?: number      // actual DB column name
@@ -17,7 +18,7 @@ export interface CatalogRace {
   course_summary?: string
 }
 
-const COLS = 'id, name, aliases, city, country, month, day, dist_km, type, discipline, surface, elevation_profile, course_summary'
+const COLS = 'id, name, aliases, city, country, year, month, day, dist_km, type, discipline, surface, elevation_profile, course_summary'
 const PAGE = 5000
 
 /**
