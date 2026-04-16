@@ -18,9 +18,9 @@ describe('BottomNav', () => {
     renderNav()
     expect(screen.getByText('Home')).toBeInTheDocument()
     expect(screen.getByText('Races')).toBeInTheDocument()
+    expect(screen.getByText('Gear')).toBeInTheDocument()
     expect(screen.getByText('Train')).toBeInTheDocument()
     expect(screen.getByText('You')).toBeInTheDocument()
-    expect(screen.getByText('More')).toBeInTheDocument()
   })
 
   it('has role="navigation" with accessible label', () => {
@@ -58,10 +58,10 @@ describe('BottomNav', () => {
     expect(youLink).toHaveAttribute('aria-current', 'page')
   })
 
-  it('marks More tab active on /settings', () => {
-    renderNav('/settings')
-    const moreLink = screen.getByText('More').closest('a')!
-    expect(moreLink).toHaveAttribute('aria-current', 'page')
+  it('marks Gear tab active on /gear', () => {
+    renderNav('/gear')
+    const gearLink = screen.getByText('Gear').closest('a')!
+    expect(gearLink).toHaveAttribute('aria-current', 'page')
   })
 
   it('only one tab is active at a time', () => {
@@ -74,8 +74,8 @@ describe('BottomNav', () => {
     renderNav()
     expect(screen.getByText('Home').closest('a')).toHaveAttribute('href', '/')
     expect(screen.getByText('Races').closest('a')).toHaveAttribute('href', '/races')
+    expect(screen.getByText('Gear').closest('a')).toHaveAttribute('href', '/gear')
     expect(screen.getByText('Train').closest('a')).toHaveAttribute('href', '/train')
     expect(screen.getByText('You').closest('a')).toHaveAttribute('href', '/you')
-    expect(screen.getByText('More').closest('a')).toHaveAttribute('href', '/settings')
   })
 })

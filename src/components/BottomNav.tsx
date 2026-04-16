@@ -1,13 +1,54 @@
 import { NavLink, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 
+// ─── SVG Icons ────────────────────────────────────────────────────────────────
+
+const IconHome = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+    <polygon points="13,1.5 3,15 10.5,15 9.5,22.5 21,9 13.5,9"/>
+  </svg>
+)
+
+const IconRaces = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+    <line x1="3" y1="6"  x2="21" y2="6"/>
+    <line x1="3" y1="12" x2="21" y2="12"/>
+    <line x1="3" y1="18" x2="16" y2="18"/>
+  </svg>
+)
+
+const IconGear = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="7" width="20" height="14" rx="2"/>
+    <path d="M2 11h20"/>
+    <path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+  </svg>
+)
+
+const IconTrain = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="2,12 6,12 8.5,5 11.5,19 14,12 16,12 17.5,7.5 19,12 22,12"/>
+  </svg>
+)
+
+const IconYou = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+    <circle cx="12" cy="7" r="4"/>
+    <path d="M4 21c0-4.418 3.582-8 8-8s8 3.582 8 8"/>
+  </svg>
+)
+
+// ─── Nav config ───────────────────────────────────────────────────────────────
+
 const NAV_TABS = [
-  { to: '/',          label: 'Home',  icon: '⬜' },
-  { to: '/races',     label: 'Races', icon: '🏁' },
-  { to: '/train',     label: 'Train', icon: '📈' },
-  { to: '/you',       label: 'You',   icon: '👤' },
-  { to: '/settings',  label: 'More',  icon: '···' },
+  { to: '/',      label: 'Home',  Icon: IconHome  },
+  { to: '/races', label: 'Races', Icon: IconRaces },
+  { to: '/gear',  label: 'Gear',  Icon: IconGear  },
+  { to: '/train', label: 'Train', Icon: IconTrain },
+  { to: '/you',   label: 'You',   Icon: IconYou   },
 ] as const
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export function BottomNav() {
   const location = useLocation()
@@ -25,38 +66,37 @@ export function BottomNav() {
         background: 'var(--surface)',
       }}
     >
-      {NAV_TABS.map(tab => {
-        const isActive = tab.to === '/'
+      {NAV_TABS.map(({ to, label, Icon }) => {
+        const isActive = to === '/'
           ? location.pathname === '/'
-          : location.pathname.startsWith(tab.to)
+          : location.pathname.startsWith(to)
 
         return (
           <NavLink
-            key={tab.to}
-            to={tab.to}
+            key={to}
+            to={to}
             aria-current={isActive ? 'page' : undefined}
             style={{
               flex: 1,
               position: 'relative',
-              display: 'flex', flexDirection: 'column',
-              alignItems: 'center', justifyContent: 'center',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
               gap: '3px',
               textDecoration: 'none',
               color: isActive ? 'var(--orange)' : 'var(--muted)',
-              fontSize: '18px',
-              minHeight: '44px',  // a11y: 44px touch target
+              minHeight: '44px',
             }}
           >
-            <span style={{ fontSize: tab.label === 'More' ? '14px' : '18px' }}>
-              {tab.icon}
-            </span>
+            <Icon />
             <span style={{
               fontFamily: 'var(--body)',
               fontSize: '10px',
               fontWeight: isActive ? 600 : 400,
               letterSpacing: '0.02em',
             }}>
-              {tab.label}
+              {label}
             </span>
             {isActive && (
               <motion.span
