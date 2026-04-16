@@ -33,6 +33,9 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+          VITE_SUPABASE_URL: https://kmdpufauamadwavqsinj.supabase.co
+          VITE_SUPABASE_ANON_KEY: sb_publishable_aXlZ54g7bW8dckyl3N-kCA_Jzy_Nt0B
 
       # ── 2. Push Supabase migrations → production ─────────────────────────
       - name: Setup Supabase CLI
