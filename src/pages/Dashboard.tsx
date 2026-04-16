@@ -4,7 +4,6 @@ import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { useDashStore } from '@/stores/useDashStore'
 import { selectRaces, selectNextRace, selectAthlete, selectDashZoneCollapse } from '@/stores/selectors'
-import { Skeleton } from '@/components/Skeleton'
 import { AddRaceModal } from '@/components/AddRaceModal'
 import type { Race } from '@/types'
 
@@ -69,6 +68,64 @@ function medalCount(races: Race[]) {
   return races.filter(r => r.medal && r.medal !== 'finisher').length
 }
 
+function computeAge(dob: string | undefined): number | null {
+  if (!dob) return null
+  const birth = new Date(dob + 'T00:00:00')
+  const now = new Date()
+  let age = now.getFullYear() - birth.getFullYear()
+  const m = now.getMonth() - birth.getMonth()
+  if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) age--
+  return age
+}
+
+function parseHMS(str: string): number | null {
+  const p = str.trim().split(':').map(Number)
+  if (p.some(isNaN)) return null
+  if (p.length === 3) return p[0] * 3600 + p[1] * 60 + p[2]
+  if (p.length === 2) return p[0] * 60 + p[1]
+  return null
+}
+
+function secsToHMS(s: number): string {
+  const h = Math.floor(s / 3600)
+  const m = Math.floor((s % 3600) / 60)
+  const sec = Math.round(s % 60)
+  return `${h}:${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`
+}
+
+function computeMomentum(races: Race[]): { score: number; badge: string } {
+  const past = races.filter(r => r.date <= todayStr() && r.time && r.distance)
+    .sort((a, b) => b.date.localeCompare(a.date))
+  if (past.length < 2) return { score: 1.0, badge: 'NEUTRAL' }
+  const pbMap = buildPBMap(past)
+  const last = past[0]
+  const pb = pbMap[last.distance]
+  if (!pb?.time || !last.time) return { score: 1.0, badge: 'NEUTRAL' }
+  const lastSecs = parseHMS(last.time)
+  const pbSecs = parseHMS(pb.time)
+  if (!lastSecs || !pbSecs || pbSecs === 0) return { score: 1.0, badge: 'NEUTRAL' }
+  const ratio = Math.min(1.0, pbSecs / lastSecs)
+  const badge = ratio >= 1.0 ? 'HOT' : ratio >= 0.97 ? 'RISING' : ratio >= 0.93 ? 'NEUTRAL' : 'COOLING'
+  return { score: parseFloat(ratio.toFixed(2)), badge }
+}
+
+// Boston Qualifying standards (2027, seconds)
+const BQ_TIMES: Record<string, number> = {
+  M18: 10800, M35: 11100, M40: 11400, M45: 12000, M50: 12300,
+  M55: 12900, M60: 13800, M65: 14700, M70: 15600, M75: 16500, M80: 17400,
+  F18: 12600, F35: 12900, F40: 13200, F45: 13800, F50: 14100,
+  F55: 14700, F60: 15600, F65: 16500, F70: 17400, F75: 18300, F80: 19200,
+}
+
+function getBQTarget(dob: string | undefined, gender: string | undefined): number | null {
+  const age = computeAge(dob)
+  if (age === null || !gender) return null
+  const g = gender === 'M' ? 'M' : 'F'
+  const brackets = [80, 75, 70, 65, 60, 55, 50, 45, 40, 35, 18]
+  const bracket = brackets.find(b => age >= b) ?? 18
+  return BQ_TIMES[`${g}${bracket}`] ?? null
+}
+
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
 const IconGrid = () => (
@@ -91,6 +148,39 @@ const IconEdit = () => (
     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
   </svg>
 )
+
+// ─── Toggle Switch ────────────────────────────────────────────────────────────
+
+function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <div
+      onClick={() => onChange(!checked)}
+      role="switch"
+      aria-checked={checked}
+      style={{
+        width: '46px', height: '27px',
+        background: checked ? 'var(--orange)' : 'var(--surface3)',
+        borderRadius: '14px',
+        border: `1px solid ${checked ? 'rgba(var(--orange-ch), 0.5)' : 'var(--border2)'}`,
+        position: 'relative',
+        cursor: 'pointer',
+        transition: 'background 0.2s ease, border-color 0.2s ease',
+        flexShrink: 0,
+      }}
+    >
+      <div style={{
+        position: 'absolute',
+        top: '3px',
+        left: checked ? '22px' : '3px',
+        width: '19px', height: '19px',
+        background: '#fff',
+        borderRadius: '50%',
+        transition: 'left 0.2s ease',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.5)',
+      }} />
+    </div>
+  )
+}
 
 // ─── Greeting Card ────────────────────────────────────────────────────────────
 
@@ -117,10 +207,10 @@ function GreetingCard({ onCustomize }: { onCustomize: () => void }) {
 // ─── Pre-Race Briefing ────────────────────────────────────────────────────────
 
 function PreRaceBriefing({ onAddRace }: { onAddRace: () => void }) {
-  const races   = useRaceStore(selectRaces)
+  const races    = useRaceStore(selectRaces)
   const nextRace = useRaceStore(selectNextRace)
-  const today   = todayStr()
-  const pbMap   = useMemo(() => buildPBMap(races), [races])
+  const today    = todayStr()
+  const pbMap    = useMemo(() => buildPBMap(races), [races])
 
   const lastRace = useMemo(
     () => races.filter(r => r.date <= today).sort((a, b) => b.date.localeCompare(a.date))[0],
@@ -134,7 +224,6 @@ function PreRaceBriefing({ onAddRace }: { onAddRace: () => void }) {
   }, [lastRace, pbMap])
 
   if (!nextRace) {
-    // JUST RACED state: last race was within 7 days
     if (lastRace && daysAgo(lastRace.date) <= 7) {
       const d = daysAgo(lastRace.date)
       const dLabel = d === 0 ? 'Today' : d === 1 ? 'Yesterday' : `${d} days ago`
@@ -153,7 +242,6 @@ function PreRaceBriefing({ onAddRace }: { onAddRace: () => void }) {
         </div>
       )
     }
-    // No races at all (or last race was >7 days ago)
     return (
       <div style={st.briefingCard}>
         <div style={st.briefingInner}>
@@ -196,7 +284,7 @@ function PreRaceBriefing({ onAddRace }: { onAddRace: () => void }) {
   )
 }
 
-// ─── Live Countdown Card ──────────────────────────────────────────────────────
+// ─── Countdown Card ───────────────────────────────────────────────────────────
 
 function CountdownCard({ race }: { race: Race }) {
   const navigate = useNavigate()
@@ -207,13 +295,12 @@ function CountdownCard({ race }: { race: Race }) {
     return () => clearInterval(id)
   }, [])
 
-  const diff  = Math.max(0, new Date(race.date + 'T00:00:00').getTime() - now)
-  const days  = Math.floor(diff / 86400000)
-  const hrs   = Math.floor((diff % 86400000) / 3600000)
-  const mins  = Math.floor((diff % 3600000) / 60000)
-  const secs  = Math.floor((diff % 60000) / 1000)
-  const p2    = (n: number) => n.toString().padStart(2, '0')
-
+  const diff = Math.max(0, new Date(race.date + 'T00:00:00').getTime() - now)
+  const days = Math.floor(diff / 86400000)
+  const hrs  = Math.floor((diff % 86400000) / 3600000)
+  const mins = Math.floor((diff % 3600000) / 60000)
+  const secs = Math.floor((diff % 60000) / 1000)
+  const p2   = (n: number) => n.toString().padStart(2, '0')
   const priority = race.priority ?? 'A'
 
   return (
@@ -245,9 +332,7 @@ function CountdownCard({ race }: { race: Race }) {
             &nbsp;·&nbsp;{distBadge(race.distance) || race.distance + 'K'}
           </span>
         )}
-        <span style={{ color: 'var(--muted)' }}>
-          &nbsp;·&nbsp;{fmtDateIntl(race.date)}
-        </span>
+        <span style={{ color: 'var(--muted)' }}>&nbsp;·&nbsp;{fmtDateIntl(race.date)}</span>
       </div>
 
       {/* Countdown digits */}
@@ -274,11 +359,7 @@ function CountdownCard({ race }: { race: Race }) {
       </div>
 
       <div style={st.countdownDivider} />
-
-      {/* All upcoming link */}
-      <button style={st.allRacesBtn} onClick={() => navigate('/races')}>
-        ALL UPCOMING RACES →
-      </button>
+      <button style={st.allRacesBtn} onClick={() => navigate('/races')}>ALL UPCOMING RACES →</button>
     </div>
   )
 }
@@ -289,9 +370,7 @@ function CourseInfoCard({ race }: { race: Race }) {
   const tags = useMemo(() => {
     const t: string[] = []
     if (race.surface) t.push(race.surface.toUpperCase())
-    if (typeof race.elevation === 'number') {
-      t.push(race.elevation > 300 ? 'HILLY' : 'FLAT')
-    }
+    if (typeof race.elevation === 'number') t.push(race.elevation > 300 ? 'HILLY' : 'FLAT')
     return t
   }, [race])
 
@@ -327,9 +406,7 @@ function WeatherCard({ race }: { race: Race }) {
             −° − −°C
           </div>
           <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px', lineHeight: 1.4 }}>
-            {days > 14
-              ? 'Forecast becomes available 14 days before race day.'
-              : 'Loading forecast…'}
+            {days > 14 ? 'Forecast available 14 days before race day.' : 'Loading forecast…'}
           </div>
         </div>
         <div style={st.daysPill}>{days} DAYS</div>
@@ -355,9 +432,7 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
         <div style={st.sectionHeader}>RECENT RACES</div>
         <div style={st.emptyState}>
           <div style={{ fontSize: '28px' }}>🏁</div>
-          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', maxWidth: '240px', lineHeight: 1.5, textAlign: 'center' }}>
-            No races yet.
-          </div>
+          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', maxWidth: '240px', lineHeight: 1.5, textAlign: 'center' }}>No races yet.</div>
           <button style={st.ctaOutline} onClick={onAddRace}>+ Add Race</button>
         </div>
       </div>
@@ -411,7 +486,7 @@ function StatsStrip() {
     <div style={st.statsStrip}>
       {stats.map(s => (
         <div key={s.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px', minWidth: 0 }}>
-          <div style={{ fontFamily: 'var(--headline)', fontSize: '22px', fontWeight: 900, lineHeight: 1, color: 'var(--white)', letterSpacing: '0.02em' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontSize: '22px', fontWeight: 900, lineHeight: 1, color: 'var(--green)', letterSpacing: '0.02em' }}>
             {s.value}
           </div>
           <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)' }}>
@@ -423,12 +498,466 @@ function StatsStrip() {
   )
 }
 
+// ─── Season Planner Widget ────────────────────────────────────────────────────
+
+function SeasonPlannerWidget({ onAddRace }: { onAddRace: () => void }) {
+  const races = useRaceStore(selectRaces)
+  const navigate = useNavigate()
+  const today = todayStr()
+
+  const upcoming90 = useMemo(() => {
+    const cutoff = new Date(); cutoff.setDate(cutoff.getDate() + 90)
+    const cutoffStr = cutoff.toISOString().split('T')[0]
+    return races.filter(r => r.date > today && r.date <= cutoffStr)
+      .sort((a, b) => a.date.localeCompare(b.date))
+  }, [races, today])
+
+  const taperFor = (dist: string) => {
+    const n = parseFloat(dist) || 0
+    if (n >= 42) return { taper: 14, recover: 12 }
+    if (n >= 21) return { taper: 10, recover: 7 }
+    if (n >= 10) return { taper: 7, recover: 5 }
+    return { taper: 5, recover: 3 }
+  }
+
+  const badge = upcoming90.length >= 3 ? 'HIGH' : upcoming90.length >= 1 ? 'MEDIUM' : 'LOW'
+  const badgeColors = { HIGH: 'var(--orange)', MEDIUM: '#FFD770', LOW: 'var(--muted)' }
+  const bc = badgeColors[badge]
+
+  return (
+    <div style={st.glowCard}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+        <div>
+          <div style={st.widgetLabel}>SEASON PLANNER</div>
+          <div style={st.widgetTitle}>NEXT 90 DAYS</div>
+        </div>
+        <span style={{ ...st.badgePill, background: `${bc}22`, color: bc, border: `1px solid ${bc}55`, flexShrink: 0 }}>{badge}</span>
+      </div>
+
+      {upcoming90.length === 0 ? (
+        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', lineHeight: 1.6 }}>
+          No races in the next 90 days.
+          <br />
+          <button style={st.ghostLink} onClick={onAddRace}>+ Add a race</button>
+        </div>
+      ) : (
+        <>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
+            {upcoming90.slice(0, 3).map(r => {
+              const { taper, recover } = taperFor(r.distance)
+              const p = r.priority ?? 'C'
+              return (
+                <div key={r.id} style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5 }}>
+                  <span style={{ color: p === 'A' ? 'var(--white)' : p === 'B' ? 'rgba(245,245,245,0.6)' : 'var(--muted)' }}>{p}</span>
+                  {` · ${r.name} · taper ${taper}d / recover ${recover}d`}
+                </div>
+              )
+            })}
+          </div>
+          <div style={st.widgetDivider} />
+          <button style={st.ghostOutlineBtn} onClick={() => navigate('/races')}>OPEN PLANNER</button>
+        </>
+      )}
+    </div>
+  )
+}
+
+// ─── Recovery Intelligence Widget ────────────────────────────────────────────
+
+function RecoveryIntelWidget() {
+  const races = useRaceStore(selectRaces)
+  const today = todayStr()
+
+  const lastRace = useMemo(
+    () => races.filter(r => r.date <= today).sort((a, b) => b.date.localeCompare(a.date))[0],
+    [races, today],
+  )
+
+  if (!lastRace) {
+    return (
+      <div style={st.glowCard}>
+        <div style={st.widgetLabel}>RECOVERY INTELLIGENCE</div>
+        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '6px' }}>Log your first race to track recovery.</div>
+      </div>
+    )
+  }
+
+  const dist = parseFloat(lastRace.distance) || 0
+  const recoveryDays = dist >= 42 ? 14 : dist >= 21 ? 7 : dist >= 10 ? 3 : 2
+  const daysSince = daysAgo(lastRace.date)
+  const daysLeft = Math.max(0, recoveryDays - daysSince)
+  const loadScore = Math.min(100, Math.round(dist * 2))
+  const badge = recoveryDays >= 14 ? 'HIGH' : recoveryDays >= 7 ? 'MEDIUM' : 'LOW'
+  const bc = badge === 'HIGH' ? 'var(--orange)' : badge === 'MEDIUM' ? '#FFD770' : 'var(--green)'
+
+  return (
+    <div style={st.glowCard}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+        <div>
+          <div style={st.widgetLabel}>RECOVERY INTELLIGENCE</div>
+          <div style={st.widgetTitle}>{(lastRace.name ?? '').toUpperCase()}</div>
+        </div>
+        <span style={{ ...st.badgePill, background: `${bc}22`, color: bc, border: `1px solid ${bc}55`, flexShrink: 0 }}>{badge}</span>
+      </div>
+
+      <div>
+        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '68px', lineHeight: 1, color: 'var(--white)', letterSpacing: '-0.02em' }}>
+          {daysLeft}d
+        </div>
+        <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '10px', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
+          ESTIMATED RECOVERY
+        </div>
+      </div>
+
+      <div style={st.widgetDivider} />
+
+      <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.55 }}>
+        Recent race load score: {loadScore}. Use this to avoid stacking hard events too closely.
+      </div>
+    </div>
+  )
+}
+
+// ─── Training Correlation Widget (locked) ─────────────────────────────────────
+
+function TrainingCorrelWidget() {
+  return (
+    <div style={{ ...st.glowCard, border: '1px dashed var(--border2)' }}>
+      <div style={st.widgetLabel}>TRAINING CORRELATION</div>
+      <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.6, marginTop: '6px' }}>
+        Connect Strava and build a few matched race windows to see how load tracks with outcomes.
+      </div>
+    </div>
+  )
+}
+
+// ─── Boston Qualifier Widget ──────────────────────────────────────────────────
+
+function BostonQualWidget() {
+  const athlete = useAthleteStore(selectAthlete)
+  const races   = useRaceStore(selectRaces)
+
+  const marathonPB = useMemo(() => {
+    const ms = races.filter(r => {
+      const d = parseFloat(r.distance); return d >= 42 && d <= 42.3 && r.time
+    })
+    return ms.sort((a, b) => (a.time ?? '').localeCompare(b.time ?? ''))[0] ?? null
+  }, [races])
+
+  const bqTarget = useMemo(() => getBQTarget(athlete?.dob, athlete?.gender), [athlete])
+  const hasProfile = !!(athlete?.dob && athlete?.gender)
+
+  return (
+    <div style={st.glowCard}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+        <div>
+          <div style={st.widgetLabel}>B.A.A.</div>
+          <div style={st.widgetTitle}>BOSTON QUALIFIER</div>
+        </div>
+        <span style={{ ...st.badgePill, background: 'rgba(var(--orange-ch), 0.12)', color: 'var(--orange)', border: '1px solid rgba(var(--orange-ch), 0.3)', flexShrink: 0 }}>2027</span>
+      </div>
+
+      {!hasProfile ? (
+        <div style={st.lockedBox}>
+          <div style={st.lockedTitle}>PROFILE NEEDED</div>
+          <div style={st.lockedText}>Add age group and gender in your athlete profile to unlock your official Boston qualifying target.</div>
+        </div>
+      ) : bqTarget && marathonPB ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '28px', color: 'var(--white)', lineHeight: 1 }}>
+            {secsToHMS(bqTarget)}
+          </div>
+          <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase' }}>BQ TARGET</div>
+          {(() => {
+            const pbSecs = parseHMS(marathonPB.time!)
+            if (!pbSecs) return null
+            const gap = pbSecs - bqTarget
+            const color = gap <= 0 ? 'var(--green)' : 'var(--orange)'
+            const label = gap <= 0 ? `${secsToHMS(Math.abs(gap))} under BQ ✓` : `${secsToHMS(gap)} over BQ`
+            return <div style={{ fontSize: 'var(--text-sm)', color, fontWeight: 600, marginTop: '4px' }}>{label}</div>
+          })()}
+        </div>
+      ) : (
+        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '6px' }}>Log a marathon to see your BQ gap.</div>
+      )}
+    </div>
+  )
+}
+
+// ─── Pacing IQ Widget ─────────────────────────────────────────────────────────
+
+function PacingIQWidget() {
+  const races = useRaceStore(selectRaces)
+
+  const analysis = useMemo(() => {
+    const withSplits = races.filter(r => r.splits && r.splits.length >= 2)
+    if (!withSplits.length) return null
+    let faded = 0, negative = 0, even = 0
+    for (const r of withSplits) {
+      const splits = (r.splits ?? []).filter(s => s.split)
+      if (splits.length < 2) continue
+      const first = parseHMS(splits[0].split!) ?? 0
+      const last  = parseHMS(splits[splits.length - 1].split!) ?? 0
+      if (last > first * 1.02) faded++
+      else if (last < first * 0.98) negative++
+      else even++
+    }
+    const total = faded + negative + even
+    if (total === 0) return null
+    const dominant = faded > negative && faded > even ? 'FADER' :
+      negative > even ? 'NEGATIVE SPLITTER' : 'EVEN PACER'
+    return { faded, negative, even, total, dominant }
+  }, [races])
+
+  return (
+    <div style={st.glowCard}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+        <div>
+          <div style={st.widgetLabel}>PACING IQ</div>
+          <div style={st.widgetTitle}>RACE RHYTHM</div>
+        </div>
+        <span style={st.iconBox}>🧠</span>
+      </div>
+
+      {!analysis ? (
+        <div style={st.lockedBox}>
+          <div style={st.lockedTitle}>UNLOCK YOUR PACING PATTERN</div>
+          <div style={st.lockedText}>Add splits when logging races to reveal whether you pace aggressively, evenly, or fade late.</div>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', color: 'var(--green)', letterSpacing: '0.04em' }}>
+            {analysis.dominant}
+          </div>
+          <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5 }}>
+            Based on {analysis.total} races with split data.
+            Fade rate: {Math.round((analysis.faded / analysis.total) * 100)}%.
+            Negative splits: {Math.round((analysis.negative / analysis.total) * 100)}%.
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Career Momentum Widget ───────────────────────────────────────────────────
+
+function CareerMomentumWidget() {
+  const races = useRaceStore(selectRaces)
+  const { score, badge } = useMemo(() => computeMomentum(races), [races])
+
+  const bc = badge === 'HOT' ? 'var(--orange)' : badge === 'RISING' ? '#FFD770' :
+    badge === 'NEUTRAL' ? 'var(--muted)' : 'rgba(var(--orange-ch), 0.4)'
+
+  return (
+    <div style={st.glowCard}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+        <div>
+          <div style={st.widgetLabel}>CAREER MOMENTUM</div>
+          <div style={st.widgetTitle}>FORM TREND</div>
+        </div>
+        <span style={{ ...st.badgePill, background: `${bc}22`, color: bc, border: `1px solid ${bc}55`, flexShrink: 0 }}>{badge}</span>
+      </div>
+
+      <div>
+        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: 'var(--green)', letterSpacing: '-0.02em' }}>
+          {score.toFixed(2)}
+        </div>
+        <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '10px', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
+          MOMENTUM
+        </div>
+        <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '2px' }}>→ vs last block</div>
+        <div style={{ height: '3px', background: 'var(--surface3)', borderRadius: '2px', marginTop: '10px', overflow: 'hidden' }}>
+          <div style={{ height: '100%', width: `${Math.round(score * 100)}%`, background: 'var(--green)', borderRadius: '2px' }} />
+        </div>
+      </div>
+
+      <div style={st.widgetDivider} />
+      <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.55 }}>
+        Weighted against your recent personal-best equivalents, this shows whether your results are trending stronger or softer over time.
+      </div>
+    </div>
+  )
+}
+
+// ─── Age Grade Widget ─────────────────────────────────────────────────────────
+
+function AgeGradeWidget() {
+  const athlete = useAthleteStore(selectAthlete)
+  const hasProfile = !!(athlete?.dob && athlete?.gender)
+
+  return (
+    <div style={st.glowCard}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+        <div>
+          <div style={st.widgetLabel}>AGE-GRADE SCORE</div>
+          <div style={st.widgetTitle}>PERFORMANCE CONTEXT</div>
+        </div>
+        <span style={{ ...st.badgePill, background: 'rgba(var(--orange-ch), 0.12)', color: 'var(--orange)', border: '1px solid rgba(var(--orange-ch), 0.3)', flexShrink: 0 }}>WA</span>
+      </div>
+
+      {!hasProfile ? (
+        <div style={st.lockedBox}>
+          <div style={st.lockedTitle}>PROFILE NEEDED</div>
+          <div style={st.lockedText}>Add your date of birth and gender in athlete profile to unlock age-grade scoring.</div>
+        </div>
+      ) : (
+        <div style={{ fontSize: '13px', color: 'var(--muted)' }}>Age-grade analysis requires race times. Keep logging!</div>
+      )}
+    </div>
+  )
+}
+
+// ─── Race DNA Widget ──────────────────────────────────────────────────────────
+
+function RaceDNAWidget() {
+  const races  = useRaceStore(selectRaces)
+  const today  = todayStr()
+  const past   = useMemo(() => races.filter(r => r.date <= today), [races, today])
+
+  const { fadeRate, travelCount } = useMemo(() => {
+    const withSplits = past.filter(r => (r.splits ?? []).length >= 2)
+    let faded = 0
+    for (const r of withSplits) {
+      const splits = (r.splits ?? []).filter(s => s.split)
+      if (splits.length < 2) continue
+      const first = parseHMS(splits[0].split!) ?? 0
+      const last  = parseHMS(splits[splits.length - 1].split!) ?? 0
+      if (last > first * 1.02) faded++
+    }
+    const fr = withSplits.length > 0 ? Math.round((faded / withSplits.length) * 100) : 0
+    const tc = past.filter(r => r.country && r.country !== (past[0]?.country ?? '')).length
+    return { fadeRate: fr, travelCount: tc }
+  }, [past])
+
+  return (
+    <div style={st.glowCard}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+        <div>
+          <div style={st.widgetLabel}>RACE DNA</div>
+          <div style={st.widgetTitle}>TEMPERATURE FIT</div>
+        </div>
+        <span style={{ ...st.badgePill, background: 'rgba(var(--orange-ch), 0.12)', color: 'var(--orange)', border: '1px solid rgba(var(--orange-ch), 0.3)', flexShrink: 0 }}>{past.length} RACES</span>
+      </div>
+
+      {past.length === 0 ? (
+        <div style={st.lockedBox}>
+          <div style={st.lockedTitle}>NO DATA YET</div>
+          <div style={st.lockedText}>Log your first race to start building your race DNA profile.</div>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.6 }}>
+            Negative split rate: {100 - fadeRate}%<br />
+            Fade rate: {fadeRate}%<br />
+            {travelCount > 0 && <>{travelCount} travel races<br /></>}
+            No hot-weather baseline
+          </div>
+          <div style={st.widgetDivider} />
+          <div style={{ fontSize: '13px', color: 'var(--muted)' }}>
+            {past.length < 5 ? `Log ${5 - past.length} more races to unlock temperature fit analysis.` : 'No comeback tags yet.'}
+          </div>
+          <button style={st.ghostOutlineBtn}>EXPLAIN WITH AI</button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Pattern Scan Widget ──────────────────────────────────────────────────────
+
+function PatternScanWidget() {
+  const races = useRaceStore(selectRaces)
+  const today = todayStr()
+  const past  = useMemo(() => races.filter(r => r.date <= today), [races, today])
+
+  const negSplitRate = useMemo(() => {
+    const w = past.filter(r => (r.splits ?? []).length >= 2)
+    if (!w.length) return 0
+    const neg = w.filter(r => {
+      const s = (r.splits ?? []).filter(x => x.split)
+      if (s.length < 2) return false
+      const first = parseHMS(s[0].split!) ?? 0
+      const last  = parseHMS(s[s.length - 1].split!) ?? 0
+      return last < first * 0.98
+    })
+    return Math.round((neg.length / w.length) * 100)
+  }, [past])
+
+  return (
+    <div style={st.glowCard}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+        <div>
+          <div style={st.widgetLabel}>DEEP TRENDS</div>
+          <div style={st.widgetTitle}>PATTERN SCAN</div>
+        </div>
+        <span style={{ ...st.badgePill, background: 'rgba(var(--orange-ch), 0.12)', color: 'var(--orange)', border: '1px solid rgba(var(--orange-ch), 0.3)', flexShrink: 0 }}>{past.length}</span>
+      </div>
+
+      <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.7 }}>
+        Negative split rate: {negSplitRate}%<br />
+        Fade rate: {100 - negSplitRate}%<br />
+        {past.length} total races logged<br />
+        No hot-weather baseline
+      </div>
+
+      <div style={st.widgetDivider} />
+
+      <div style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: '10px' }}>
+        {past.length < 3 ? 'Log more races to see deep pattern analysis.' : 'No comeback tags yet.'}
+      </div>
+      <button style={st.ghostOutlineBtn}>EXPLAIN WITH AI</button>
+    </div>
+  )
+}
+
+// ─── Why Result Widget ────────────────────────────────────────────────────────
+
+function WhyResultWidget() {
+  const races = useRaceStore(selectRaces)
+  const today = todayStr()
+
+  const lastRace = useMemo(
+    () => races.filter(r => r.date <= today && r.time).sort((a, b) => b.date.localeCompare(a.date))[0],
+    [races, today],
+  )
+
+  if (!lastRace) {
+    return (
+      <div style={st.glowCard}>
+        <div style={st.widgetLabel}>WHY RESULT</div>
+        <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '6px' }}>Log a timed race to unlock result analysis.</div>
+      </div>
+    )
+  }
+
+  return (
+    <div style={st.glowCard}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+        <div>
+          <div style={st.widgetLabel}>WHY RESULT</div>
+          <div style={st.widgetTitle}>{(lastRace.name ?? '').toUpperCase()}</div>
+        </div>
+        <span style={{ ...st.badgePill, background: 'rgba(var(--orange-ch), 0.12)', color: 'var(--orange)', border: '1px solid rgba(var(--orange-ch), 0.3)', flexShrink: 0 }}>EXPLAIN</span>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        <div style={{ fontSize: '13px', color: 'var(--muted)' }}>Best: execution and context aligned well</div>
+        <div style={{ fontSize: '13px', color: 'var(--muted)' }}>Tough day: course and pacing demands stacked up</div>
+      </div>
+
+      <div style={st.widgetDivider} />
+      <button style={st.ghostOutlineBtn}>COACH BRIEF</button>
+    </div>
+  )
+}
+
 // ─── Zone accordion ───────────────────────────────────────────────────────────
 
 interface ZoneProps {
   id:       'now' | 'recently' | 'trending' | 'context'
-  tag:      string   // small orange label e.g. "NOW"
-  label:    string   // large white label e.g. "RACE DAY"
+  tag:      string
+  label:    string
   children: React.ReactNode
 }
 
@@ -448,14 +977,9 @@ function DashZone({ id, tag, label, children }: ZoneProps) {
           <span style={st.zoneTag}>{tag}</span>
           <span style={st.zoneLabel}>{label}</span>
         </div>
-        <span style={{
-          ...st.zoneChevron,
-          transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)',
-        }}>▾</span>
+        <span style={{ ...st.zoneChevron, transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)' }}>▾</span>
       </button>
-      {!isCollapsed && (
-        <div style={st.zoneContent}>{children}</div>
-      )}
+      {!isCollapsed && <div style={st.zoneContent}>{children}</div>}
     </div>
   )
 }
@@ -466,7 +990,7 @@ function WidgetShell({ label }: { label: string }) {
   return (
     <div style={st.widgetShell}>
       <div style={st.widgetShellLabel}>{label}</div>
-      <Skeleton height={44} borderRadius={8} />
+      <div style={{ height: '44px', background: 'var(--surface)', borderRadius: '8px', opacity: 0.4 }} />
     </div>
   )
 }
@@ -483,14 +1007,6 @@ const PACE_DISTS = [
 function secsToMMSS(s: number) {
   const m = Math.floor(s / 60)
   return `${m}:${Math.round(s % 60).toString().padStart(2, '0')}`
-}
-
-function parseHMS(str: string): number | null {
-  const p = str.trim().split(':').map(Number)
-  if (p.some(isNaN)) return null
-  if (p.length === 3) return p[0] * 3600 + p[1] * 60 + p[2]
-  if (p.length === 2) return p[0] * 60 + p[1]
-  return null
 }
 
 function PaceCalculator() {
@@ -538,30 +1054,118 @@ function PaceCalculator() {
   )
 }
 
-// ─── Customize modal ──────────────────────────────────────────────────────────
+// ─── Customize Modal ──────────────────────────────────────────────────────────
+
+const ZONE_META: Record<string, { tag: string; label: string }> = {
+  now:      { tag: 'NOW',          label: 'RACE CONTEXT'   },
+  recently: { tag: 'RECENTLY',     label: 'YOUR RACING'    },
+  trending: { tag: 'CONSISTENCY',  label: 'BUILD'          },
+  context:  { tag: 'PATTERNS',     label: 'ANALYSIS'       },
+}
+
+const ZONE_ORDER = ['now', 'recently', 'trending', 'context'] as const
 
 function DashCustomizeModal({ onClose }: { onClose: () => void }) {
-  const widgets        = useDashStore(s => s.widgets)
+  const storeWidgets     = useDashStore(s => s.widgets)
+  const getDashLayout    = useDashStore(s => s.getDashLayout)
   const setWidgetEnabled = useDashStore(s => s.setWidgetEnabled)
+  const reorderWidget    = useDashStore(s => s.reorderWidget)
+  const widgets          = useMemo(() => getDashLayout(), [storeWidgets, getDashLayout])
+
+  const byZone = useMemo(() =>
+    ZONE_ORDER.reduce((acc, z) => {
+      acc[z] = widgets.filter(w => w.zone === z)
+      return acc
+    }, {} as Record<string, typeof widgets>),
+    [widgets],
+  )
 
   return (
     <div style={st.modalOverlay} onClick={onClose}>
-      <div style={st.modalSheet} onClick={e => e.stopPropagation()}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-          <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '15px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--white)' }}>
-            CUSTOMISE DASHBOARD
-          </span>
-          <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'var(--muted)', fontSize: '16px', cursor: 'pointer', padding: '4px 8px' }}>✕</button>
+      <div style={st.customizeSheet} onClick={e => e.stopPropagation()}>
+        {/* Handle pill */}
+        <div style={{ width: '40px', height: '4px', background: 'var(--border2)', borderRadius: '2px', margin: '0 auto 20px' }} />
+
+        {/* Header */}
+        <div style={{ marginBottom: '6px' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)', lineHeight: 1.1 }}>
+            CUSTOMIZE DASHBOARD
+          </div>
+          <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '6px', lineHeight: 1.5 }}>
+            Turn widgets on or off, reorder them within a section.
+          </div>
         </div>
-        {widgets.map(w => (
-          <label key={w.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 0', borderBottom: '1px solid var(--border)', cursor: 'pointer', minWidth: 0 }}>
-            <span style={{ fontSize: '16px', flexShrink: 0, width: '20px', textAlign: 'center' }}>{w.icon}</span>
-            <span style={{ flex: 1, fontSize: 'var(--text-sm)', color: 'var(--white)', fontFamily: 'var(--body)', fontWeight: 500, minWidth: 0 }}>{w.label}</span>
-            <span style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)', flexShrink: 0 }}>{w.zone}</span>
-            <input type="checkbox" checked={w.enabled} onChange={e => setWidgetEnabled(w.id, e.target.checked)}
-              style={{ accentColor: 'var(--orange)', width: '16px', height: '16px', flexShrink: 0 }} />
-          </label>
-        ))}
+
+        <div style={{ fontSize: '12px', color: 'var(--muted2)', lineHeight: 1.5, padding: '10px 12px', background: 'var(--surface3)', borderRadius: '8px', marginBottom: '4px' }}>
+          Use ▲ and ▼ on a widget to reorder it within its section.
+        </div>
+
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
+          {ZONE_ORDER.map(zoneId => {
+            const meta = ZONE_META[zoneId]
+            const zWidgets = byZone[zoneId] ?? []
+            return (
+              <div key={zoneId} style={{ marginTop: '16px' }}>
+                {/* Section header */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0 8px', borderTop: '1px solid var(--border)' }}>
+                  <div>
+                    <div style={{ fontFamily: 'var(--headline)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.14em', color: 'var(--orange)', textTransform: 'uppercase' }}>
+                      SECTION
+                    </div>
+                    <div style={{ fontFamily: 'var(--headline)', fontSize: '15px', fontWeight: 900, letterSpacing: '0.06em', color: 'var(--white)', textTransform: 'uppercase' }}>
+                      {meta.tag} — {meta.label}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                    <div style={st.arrowBtn}>▲</div>
+                    <div style={st.arrowBtn}>▼</div>
+                  </div>
+                </div>
+
+                {/* Widget rows */}
+                {zWidgets.map((w, idx) => (
+                  <div key={w.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 0', borderBottom: '1px solid var(--border)', minWidth: 0 }}>
+                    {/* Icon box */}
+                    <div style={{ width: '38px', height: '38px', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0 }}>
+                      {w.icon}
+                    </div>
+                    {/* Label + PRO badge */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
+                        <span style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', fontFamily: 'var(--body)', fontWeight: 500 }}>{w.label}</span>
+                        {w.pro && (
+                          <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.08em', color: 'var(--orange)', border: '1px solid rgba(var(--orange-ch), 0.5)', borderRadius: '100px', padding: '2px 6px', flexShrink: 0 }}>
+                            PRO
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    {/* Reorder buttons */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', flexShrink: 0 }}>
+                      <button
+                        style={{ ...st.arrowBtn, opacity: idx === 0 ? 0.25 : 1, cursor: idx === 0 ? 'default' : 'pointer' }}
+                        onClick={() => idx > 0 && reorderWidget(w.id, 'up')}
+                        disabled={idx === 0}
+                      >▲</button>
+                      <button
+                        style={{ ...st.arrowBtn, opacity: idx === zWidgets.length - 1 ? 0.25 : 1, cursor: idx === zWidgets.length - 1 ? 'default' : 'pointer' }}
+                        onClick={() => idx < zWidgets.length - 1 && reorderWidget(w.id, 'down')}
+                        disabled={idx === zWidgets.length - 1}
+                      >▼</button>
+                    </div>
+                    {/* Toggle */}
+                    <ToggleSwitch checked={w.enabled} onChange={v => setWidgetEnabled(w.id, v)} />
+                  </div>
+                ))}
+              </div>
+            )
+          })}
+        </div>
+
+        {/* DONE button — sticky at bottom */}
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '12px 20px 28px', background: 'var(--surface2)', borderTop: '1px solid var(--border)' }}>
+          <button style={st.doneBtn} onClick={onClose}>DONE</button>
+        </div>
       </div>
     </div>
   )
@@ -569,12 +1173,20 @@ function DashCustomizeModal({ onClose }: { onClose: () => void }) {
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 
+function isEnabled(widgets: ReturnType<typeof useDashStore.getState>['widgets'], id: string) {
+  return widgets.find(w => w.id === id)?.enabled !== false
+}
+
 export function Dashboard() {
   const [showCustomize, setShowCustomize] = useState(false)
   const [showAddRace,   setShowAddRace]   = useState(false)
-  const nextRace = useRaceStore(selectNextRace)
+  const nextRace      = useRaceStore(selectNextRace)
+  const storeWidgets  = useDashStore(s => s.widgets)
+  const getDashLayout = useDashStore(s => s.getDashLayout)
+  const widgets       = useMemo(() => getDashLayout(), [storeWidgets, getDashLayout])
 
   const openAddRace = () => setShowAddRace(true)
+  const en = (id: string) => isEnabled(widgets, id)
 
   return (
     <div style={st.page}>
@@ -584,31 +1196,39 @@ export function Dashboard() {
       <GreetingCard onCustomize={() => setShowCustomize(true)} />
       <PreRaceBriefing onAddRace={openAddRace} />
 
+      {/* NOW — RACE DAY */}
       <DashZone id="now" tag="NOW" label="RACE DAY">
         {nextRace
-          ? <CountdownCard race={nextRace} />
+          ? <>{en('countdown') && <CountdownCard race={nextRace} />}
+              {en('race-forecast') && <WeatherCard race={nextRace} />}
+              <CourseInfoCard race={nextRace} /></>
           : <WidgetShell label="No upcoming race — add one to start the countdown" />
         }
-        {nextRace && <CourseInfoCard race={nextRace} />}
-        {nextRace && <WeatherCard race={nextRace} />}
       </DashZone>
 
+      {/* RECENTLY — YOUR SEASON */}
       <DashZone id="recently" tag="RECENTLY" label="YOUR SEASON">
         <StatsStrip />
-        <RecentRaces onAddRace={openAddRace} />
-        <WidgetShell label="Personal Bests" />
+        {en('recent-races') && <RecentRaces onAddRace={openAddRace} />}
+        {en('personal-bests') && <WidgetShell label="Personal Bests" />}
       </DashZone>
 
+      {/* CONSISTENCY — BUILD */}
       <DashZone id="trending" tag="CONSISTENCY" label="BUILD">
-        <WidgetShell label="Training Streak" />
-        <WidgetShell label="Pacing IQ" />
-        <WidgetShell label="Career Momentum" />
+        {en('season-planner')  && <SeasonPlannerWidget onAddRace={openAddRace} />}
+        {en('recovery-intel')  && <RecoveryIntelWidget />}
+        {en('training-correl') && <TrainingCorrelWidget />}
       </DashZone>
 
+      {/* PATTERNS — ANALYSIS */}
       <DashZone id="context" tag="PATTERNS" label="ANALYSIS">
-        <WidgetShell label="Race DNA" />
-        <WidgetShell label="Age Grade" />
-        <WidgetShell label="On This Day" />
+        {en('boston-qual')     && <BostonQualWidget />}
+        {en('pacing-iq')       && <PacingIQWidget />}
+        {en('career-momentum') && <CareerMomentumWidget />}
+        {en('age-grade')       && <AgeGradeWidget />}
+        {en('race-dna')        && <RaceDNAWidget />}
+        {en('pattern-scan')    && <PatternScanWidget />}
+        {en('why-result')      && <WhyResultWidget />}
       </DashZone>
 
       <PaceCalculator />
@@ -643,10 +1263,7 @@ const st = {
     minWidth: 0,
   } as React.CSSProperties,
 
-  greetingContent: {
-    flex: 1,
-    minWidth: 0,
-  } as React.CSSProperties,
+  greetingContent: { flex: 1, minWidth: 0 } as React.CSSProperties,
 
   greetingLine: {
     display: 'flex',
@@ -681,11 +1298,11 @@ const st = {
   } as React.CSSProperties,
 
   gridBtn: {
-    width: '40px',
-    height: '40px',
+    width: '44px',
+    height: '44px',
     background: 'var(--surface3)',
     border: '1px solid var(--border2)',
-    borderRadius: '10px',
+    borderRadius: '50%',
     color: 'var(--muted)',
     display: 'flex',
     alignItems: 'center',
@@ -749,10 +1366,11 @@ const st = {
     width: 'fit-content',
   } as React.CSSProperties,
 
-  // ── Countdown
+  // ── Countdown card
   countdownCard: {
-    background: 'var(--surface)',
+    background: 'radial-gradient(ellipse at 20% 80%, rgba(var(--orange-ch), 0.15) 0%, transparent 65%), var(--surface)',
     border: '1px solid var(--border)',
+    borderTop: '1px solid rgba(var(--orange-ch), 0.35)',
     borderRadius: '12px',
     padding: '16px',
     display: 'flex',
@@ -820,7 +1438,7 @@ const st = {
   countdownRaceName: {
     fontFamily: 'var(--headline)',
     fontWeight: 900,
-    fontSize: '26px',
+    fontSize: '28px',
     letterSpacing: '0.03em',
     textTransform: 'uppercase' as const,
     color: 'var(--white)',
@@ -855,7 +1473,7 @@ const st = {
   countdownNum: {
     fontFamily: 'var(--headline)',
     fontWeight: 900,
-    fontSize: '52px',
+    fontSize: '56px',
     color: 'var(--white)',
     lineHeight: 1,
     letterSpacing: '-0.02em',
@@ -875,7 +1493,7 @@ const st = {
     fontFamily: 'var(--headline)',
     fontWeight: 900,
     fontSize: '36px',
-    color: 'var(--muted)',
+    color: 'rgba(var(--orange-ch), 0.5)',
     lineHeight: 1,
     paddingTop: '8px',
     flexShrink: 0,
@@ -961,7 +1579,7 @@ const st = {
     whiteSpace: 'nowrap' as const,
   } as React.CSSProperties,
 
-  // ── Recent races
+  // ── Section card
   sectionCard: {
     background: 'var(--surface2)',
     border: '1px solid var(--border)',
@@ -1105,7 +1723,7 @@ const st = {
     minWidth: 0,
   } as React.CSSProperties,
 
-  // ── Widget shell
+  // ── Widget shell (placeholder)
   widgetShell: {
     background: 'var(--surface3)',
     border: '1px solid var(--border)',
@@ -1124,6 +1742,125 @@ const st = {
     letterSpacing: '0.1em',
     textTransform: 'uppercase' as const,
     color: 'var(--muted)',
+  } as React.CSSProperties,
+
+  // ── Glow card (analytics widgets)
+  glowCard: {
+    background: 'var(--surface2)',
+    border: '1px solid var(--border)',
+    borderTop: '1px solid rgba(var(--orange-ch), 0.3)',
+    borderRadius: '14px',
+    padding: '18px',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '14px',
+    minWidth: 0,
+  } as React.CSSProperties,
+
+  widgetLabel: {
+    fontFamily: 'var(--headline)',
+    fontSize: '10px',
+    fontWeight: 700,
+    letterSpacing: '0.16em',
+    textTransform: 'uppercase' as const,
+    color: 'var(--orange)',
+    marginBottom: '2px',
+  } as React.CSSProperties,
+
+  widgetTitle: {
+    fontFamily: 'var(--headline)',
+    fontWeight: 900,
+    fontSize: '20px',
+    letterSpacing: '0.04em',
+    textTransform: 'uppercase' as const,
+    color: 'var(--white)',
+    lineHeight: 1.1,
+  } as React.CSSProperties,
+
+  badgePill: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    borderRadius: '100px',
+    padding: '4px 12px',
+    fontFamily: 'var(--headline)',
+    fontWeight: 800,
+    fontSize: '11px',
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase' as const,
+    whiteSpace: 'nowrap' as const,
+  } as React.CSSProperties,
+
+  iconBox: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '38px',
+    height: '38px',
+    background: 'rgba(var(--orange-ch), 0.1)',
+    border: '1px solid rgba(var(--orange-ch), 0.2)',
+    borderRadius: '10px',
+    fontSize: '20px',
+    flexShrink: 0,
+  } as React.CSSProperties,
+
+  lockedBox: {
+    background: 'var(--surface3)',
+    border: '1px dashed var(--border2)',
+    borderRadius: '10px',
+    padding: '14px',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '6px',
+  } as React.CSSProperties,
+
+  lockedTitle: {
+    fontFamily: 'var(--headline)',
+    fontSize: '11px',
+    fontWeight: 800,
+    letterSpacing: '0.12em',
+    textTransform: 'uppercase' as const,
+    color: 'var(--white)',
+  } as React.CSSProperties,
+
+  lockedText: {
+    fontSize: '13px',
+    color: 'var(--muted)',
+    lineHeight: 1.55,
+  } as React.CSSProperties,
+
+  widgetDivider: {
+    height: '1px',
+    background: 'var(--border)',
+    margin: '0',
+  } as React.CSSProperties,
+
+  ghostOutlineBtn: {
+    background: 'transparent',
+    border: '1px solid var(--border2)',
+    borderRadius: '8px',
+    color: 'var(--white)',
+    fontFamily: 'var(--headline)',
+    fontWeight: 700,
+    fontSize: '12px',
+    letterSpacing: '0.1em',
+    textTransform: 'uppercase' as const,
+    padding: '9px 16px',
+    cursor: 'pointer',
+    alignSelf: 'flex-start' as const,
+  } as React.CSSProperties,
+
+  ghostLink: {
+    background: 'transparent',
+    border: 'none',
+    color: 'var(--orange)',
+    fontFamily: 'var(--headline)',
+    fontWeight: 700,
+    fontSize: '12px',
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase' as const,
+    cursor: 'pointer',
+    padding: 0,
+    display: 'inline',
   } as React.CSSProperties,
 
   // ── Pace calc
@@ -1187,7 +1924,7 @@ const st = {
     letterSpacing: '0.06em',
     textTransform: 'uppercase' as const,
     cursor: 'pointer',
-    alignSelf: 'flex-start',
+    alignSelf: 'flex-start' as const,
   } as React.CSSProperties,
 
   ctaOutline: {
@@ -1203,29 +1940,61 @@ const st = {
     letterSpacing: '0.06em',
     textTransform: 'uppercase' as const,
     cursor: 'pointer',
-    alignSelf: 'flex-start',
+    alignSelf: 'flex-start' as const,
   } as React.CSSProperties,
 
-  // ── Modal
+  // ── Customize modal
   modalOverlay: {
     position: 'fixed' as const,
     inset: 0,
-    background: 'rgba(0,0,0,0.7)',
+    background: 'rgba(0,0,0,0.75)',
     zIndex: 900,
     display: 'flex',
     alignItems: 'flex-end',
   } as React.CSSProperties,
 
-  modalSheet: {
+  customizeSheet: {
     width: '100%',
-    maxHeight: '80vh',
-    overflowY: 'auto' as const,
+    maxHeight: '92vh',
     background: 'var(--surface2)',
     borderTop: '1px solid var(--border2)',
-    borderRadius: '16px 16px 0 0',
-    padding: '20px 16px 32px',
+    borderRadius: '20px 20px 0 0',
+    padding: '16px 20px 0',
     display: 'flex',
     flexDirection: 'column' as const,
     gap: '0',
+    position: 'relative' as const,
+    overflowY: 'auto' as const,
+  } as React.CSSProperties,
+
+  arrowBtn: {
+    background: 'var(--surface3)',
+    border: '1px solid var(--border2)',
+    borderRadius: '5px',
+    color: 'var(--muted)',
+    fontFamily: 'var(--headline)',
+    fontWeight: 700,
+    fontSize: '10px',
+    padding: '3px 6px',
+    cursor: 'pointer',
+    lineHeight: 1,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  } as React.CSSProperties,
+
+  doneBtn: {
+    width: '100%',
+    background: 'var(--orange)',
+    color: '#000',
+    border: 'none',
+    borderRadius: '12px',
+    padding: '16px',
+    fontFamily: 'var(--headline)',
+    fontWeight: 900,
+    fontSize: '15px',
+    letterSpacing: '0.1em',
+    textTransform: 'uppercase' as const,
+    cursor: 'pointer',
   } as React.CSSProperties,
 } as const

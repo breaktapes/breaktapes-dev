@@ -9,16 +9,19 @@ import type { Race } from '@/types'
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function daysUntil(dateStr: string): number {
-  const now = new Date()
-  now.setHours(0, 0, 0, 0)
-  const target = new Date(dateStr + 'T00:00:00')
-  return Math.max(0, Math.round((target.getTime() - now.getTime()) / 86400000))
+  const now = new Date(); now.setHours(0, 0, 0, 0)
+  return Math.max(0, Math.round((new Date(dateStr + 'T00:00:00').getTime() - now.getTime()) / 86400000))
 }
 
 function fmtDate(dateStr: string): string {
   return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', {
     month: 'short', day: 'numeric', year: 'numeric',
   })
+}
+
+function fmtMonthYear(year: number, month: number): string {
+  const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC']
+  return `${months[month]} ${year}`
 }
 
 function computeAge(dob: string | undefined): number | null {
@@ -52,8 +55,8 @@ function totalKm(races: Race[]): number {
   }, 0)
 }
 
-function uniqueCountries(races: Race[]): number {
-  return new Set(races.map(r => r.country).filter(Boolean)).size
+function uniqueCountries(races: Race[]): string[] {
+  return [...new Set(races.map(r => r.country).filter(Boolean))]
 }
 
 function athleteLevel(raceCount: number): string {
@@ -75,7 +78,6 @@ function distLabel(d: string | undefined): string {
   return `${n} km`
 }
 
-// Canonical distance ordering for PB grouping
 const DIST_ORDER: string[] = ['5', '10', '21.1', '42.2', '1.5', '3', '15', '20', '25', '30', '50', '100']
 
 function buildPBByDist(races: Race[]): Array<{ key: string; label: string; race: Race }> {
@@ -83,46 +85,115 @@ function buildPBByDist(races: Race[]): Array<{ key: string; label: string; race:
   for (const r of races) {
     if (!r.time || !r.distance) continue
     const key = r.distance
-    if (!map[key] || r.time < map[key].time!) {
-      map[key] = r
-    }
+    if (!map[key] || r.time < map[key].time!) map[key] = r
   }
   const entries = Object.entries(map)
-  // Sort: known distances first in order, then remaining alphabetically
   entries.sort(([a], [b]) => {
-    const ai = DIST_ORDER.indexOf(a)
-    const bi = DIST_ORDER.indexOf(b)
+    const ai = DIST_ORDER.indexOf(a); const bi = DIST_ORDER.indexOf(b)
     if (ai !== -1 && bi !== -1) return ai - bi
-    if (ai !== -1) return -1
-    if (bi !== -1) return 1
+    if (ai !== -1) return -1; if (bi !== -1) return 1
     return parseFloat(a) - parseFloat(b)
   })
   return entries.map(([key, race]) => ({ key, label: distLabel(key), race }))
 }
 
-function medalColor(medal: string): { bg: string; color: string; border: string } {
-  switch (medal) {
-    case 'gold': return { bg: 'rgba(255,215,0,0.12)', color: '#FFD770', border: 'rgba(255,215,0,0.25)' }
-    case 'silver': return { bg: 'rgba(200,212,220,0.1)', color: '#C8D4DC', border: 'rgba(200,212,220,0.2)' }
-    case 'bronze': return { bg: 'rgba(205,140,90,0.12)', color: '#CD8C5A', border: 'rgba(205,140,90,0.2)' }
-    default: return { bg: 'rgba(var(--orange-ch), 0.1)', color: 'var(--orange)', border: 'rgba(var(--orange-ch), 0.2)' }
-  }
+function parseHMS(str: string): number | null {
+  const p = str.trim().split(':').map(Number)
+  if (p.some(isNaN)) return null
+  if (p.length === 3) return p[0] * 3600 + p[1] * 60 + p[2]
+  if (p.length === 2) return p[0] * 60 + p[1]
+  return null
 }
 
-function medalEmoji(medal: string): string {
-  switch (medal) {
-    case 'gold': return '🥇'
-    case 'silver': return '🥈'
-    case 'bronze': return '🥉'
-    default: return '🏅'
+// ─── Achievement Definitions ──────────────────────────────────────────────────
+
+interface Achievement {
+  id: string
+  icon: string
+  name: string
+  group: 'special' | 'milestone' | 'event'
+  check: (races: Race[], athlete: ReturnType<typeof selectAthlete>) => boolean
+}
+
+const ACHIEVEMENTS: Achievement[] = [
+  { id: 'first-finish',      icon: '🏁', name: 'FIRST FINISH',          group: 'milestone', check: r => r.length >= 1 },
+  { id: 'half-starter',      icon: '🌓', name: 'HALF STARTER',          group: 'milestone', check: r => r.some(x => parseFloat(x.distance) >= 21) },
+  { id: 'full-marathon',     icon: '🔥', name: 'MARATHON FINISHER',     group: 'milestone', check: r => r.some(x => parseFloat(x.distance) >= 42) },
+  { id: 'photo-finish',      icon: '📷', name: 'PHOTO FINISH',          group: 'special',   check: r => r.some(x => x.medalPhoto) },
+  { id: 'pb-streak',         icon: '⚡', name: 'PB STREAK',             group: 'special',   check: r => r.filter(x => x.time).length >= 3 },
+  { id: '5-races',           icon: '5️⃣', name: 'FIVE FINISHER',        group: 'milestone', check: r => r.length >= 5 },
+  { id: '10-races',          icon: '🔟', name: 'TEN DONE',              group: 'milestone', check: r => r.length >= 10 },
+  { id: 'globe-trotter',     icon: '🌍', name: 'GLOBE TROTTER',         group: 'special',   check: r => new Set(r.map(x => x.country).filter(Boolean)).size >= 3 },
+  { id: 'comrades',          icon: '🔥', name: 'COMRADES MARATHON FINISHER', group: 'event', check: r => r.some(x => (x.name ?? '').toLowerCase().includes('comrades')) },
+  // Locked achievements
+  { id: 'climb-crusher',     icon: '🏔', name: 'CLIMB CRUSHER',        group: 'special',   check: r => r.some(x => (x.elevation ?? 0) > 1000) },
+  { id: 'heat-warrior',      icon: '🔥', name: 'HEAT WARRIOR',         group: 'special',   check: r => r.some(x => (x.weather?.temp ?? 0) > 30) },
+  { id: 'night-runner',      icon: '🌙', name: 'NIGHT RUNNER',         group: 'special',   check: () => false },
+  { id: 'neg-split',         icon: '⚡', name: 'NEGATIVE SPLIT MASTER', group: 'special',  check: () => false },
+  { id: 'no-quit',           icon: '❤️', name: 'NO QUIT',              group: 'special',   check: r => r.some(x => x.outcome === 'Finished' && (x.elevation ?? 0) > 500) },
+  { id: 'pain-cave',         icon: '💗', name: 'PAIN CAVE',            group: 'special',   check: () => false },
+  { id: 'comeback-run',      icon: '🔄', name: 'COMEBACK RUN',         group: 'special',   check: () => false },
+  { id: 'solo-warrior',      icon: '🪖', name: 'SOLO WARRIOR',         group: 'special',   check: () => false },
+  { id: 'desert-runner',     icon: '🏜', name: 'DESERT RUNNER',        group: 'special',   check: () => false },
+]
+
+// World Marathon Majors
+const MAJORS = [
+  { id: 'tokyo',    name: 'TOKYO' },
+  { id: 'boston',   name: 'BOSTON' },
+  { id: 'london',   name: 'LONDON' },
+  { id: 'berlin',   name: 'BERLIN' },
+  { id: 'chicago',  name: 'CHICAGO' },
+  { id: 'nyc',      name: 'NEW YORK CITY' },
+  { id: 'sydney',   name: 'SYDNEY' },
+]
+
+function matchesMajor(race: Race, major: { id: string; name: string }): boolean {
+  const nameLower = (race.name ?? '').toLowerCase()
+  const cityLower = (race.city ?? '').toLowerCase()
+  return nameLower.includes(major.id) || cityLower.includes(major.id) ||
+    nameLower.includes(major.name.toLowerCase())
+}
+
+// Race Personality traits
+function computePersonality(races: Race[]): Array<{ trait: string; score: number; desc: string }> {
+  const past = races.filter(r => r.date <= new Date().toISOString().split('T')[0])
+  const total = past.length
+
+  // STARTER: low fade rate
+  const withSplits = past.filter(r => (r.splits ?? []).length >= 2)
+  let fadeCount = 0
+  for (const r of withSplits) {
+    const s = (r.splits ?? []).filter(x => x.split)
+    if (s.length < 2) continue
+    const first = parseHMS(s[0].split!) ?? 0
+    const last  = parseHMS(s[s.length - 1].split!) ?? 0
+    if (last > first * 1.02) fadeCount++
   }
+  const fadeRate = withSplits.length > 0 ? fadeCount / withSplits.length : 0
+  const starterScore = Math.round((1 - fadeRate) * 100)
+
+  // DIESEL: proportion of long races
+  const longRaces = past.filter(r => parseFloat(r.distance) >= 21).length
+  const dieselScore = total > 0 ? Math.min(100, Math.round((longRaces / total) * 100 + (total >= 3 ? 35 : 0))) : 0
+
+  // BIG-DAY PERFORMER: PBs + race count milestones
+  const majorMatches = past.filter(r => MAJORS.some(m => matchesMajor(r, m))).length
+  const pbCount = buildPBByDist(past).length
+  const bigDayScore = Math.min(100, majorMatches * 20 + pbCount * 10)
+
+  return [
+    { trait: 'STARTER',           score: starterScore, desc: `${fadeRate === 0 ? '0' : Math.round(fadeRate * 100)}% fade rate suggests how often early effort stays under control.` },
+    { trait: 'DIESEL',            score: dieselScore,  desc: `${longRaces} longer races and a consistency score of ${starterScore} point to durable endurance.` },
+    { trait: 'BIG-DAY PERFORMER', score: bigDayScore,  desc: `${majorMatches} majors logged and ${pbCount} personal-best categories banked.` },
+  ]
 }
 
 // ─── Athlete Hero Card ────────────────────────────────────────────────────────
 
-function AthleteHero() {
+function AthleteHero({ onEdit }: { onEdit: () => void }) {
   const athlete = useAthleteStore(selectAthlete)
-  const races = useRaceStore(selectRaces)
+  const races   = useRaceStore(selectRaces)
   const nextRace = useRaceStore(selectNextRace)
 
   const initials = useMemo(() => {
@@ -136,24 +207,26 @@ function AthleteHero() {
     : 'Athlete'
 
   const sportCity = [athlete?.mainSport, [athlete?.city, athlete?.country].filter(Boolean).join(', ')]
-    .filter(Boolean)
-    .join(' · ')
+    .filter(Boolean).join(' · ')
 
-  const level = athleteLevel(races.length)
-  const years = yearsActive(races)
-  const km = Math.round(totalKm(races))
-  const countries = uniqueCountries(races)
+  const level    = athleteLevel(races.length)
+  const years    = yearsActive(races)
+  const km       = Math.round(totalKm(races))
+  const ctrCount = uniqueCountries(races).length
 
   const stats = [
-    { label: 'Races', value: races.length.toString() },
+    { label: 'Races',    value: races.length.toString() },
     { label: 'Total KM', value: km.toLocaleString() },
-    { label: 'Countries', value: countries.toString() },
-    { label: 'Years', value: years.toString() },
+    { label: 'Countries', value: ctrCount.toString() },
+    { label: 'Years',    value: years.toString() },
   ]
+
+  const ag = ageGroup(athlete?.dob, athlete?.gender)
+  const age = computeAge(athlete?.dob)
 
   return (
     <div style={st.heroCard}>
-      {/* Avatar */}
+      {/* Avatar row */}
       <div style={st.avatarRow}>
         <div style={st.avatar}>
           <span style={st.avatarInitials}>{initials}</span>
@@ -161,8 +234,12 @@ function AthleteHero() {
         <div style={st.avatarInfo}>
           <div style={st.athleteName}>{fullName}</div>
           {sportCity && <div style={st.athleteSub}>{sportCity}</div>}
-          <div style={st.levelBadge}>{level}</div>
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '4px' }}>
+            <span style={st.levelBadge}>{level}</span>
+            {age !== null && <span style={st.levelBadge}>{age}yr{ag ? ` · ${ag}` : ''}</span>}
+          </div>
         </div>
+        <button style={st.editBtnSmall} onClick={onEdit}>Edit</button>
       </div>
 
       {/* Stats row */}
@@ -175,19 +252,15 @@ function AthleteHero() {
         ))}
       </div>
 
-      {/* Focus race card */}
+      {/* Focus race */}
       {nextRace && (() => {
         const days = daysUntil(nextRace.date)
         return (
           <div style={st.focusCard}>
             <div style={st.focusLabel}>FOCUS RACE</div>
             <div style={st.focusName}>{nextRace.name}</div>
-            <div style={st.focusMeta}>
-              {distLabel(nextRace.distance)} · {fmtDate(nextRace.date)}
-            </div>
-            <div style={st.focusDays}>
-              {days === 0 ? 'TODAY' : `${days} days away`}
-            </div>
+            <div style={st.focusMeta}>{distLabel(nextRace.distance)} · {fmtDate(nextRace.date)}</div>
+            <div style={st.focusDays}>{days === 0 ? 'TODAY' : `${days} days away`}</div>
           </div>
         )
       })()}
@@ -195,16 +268,159 @@ function AthleteHero() {
   )
 }
 
-// ─── Personal Bests Section ───────────────────────────────────────────────────
+// ─── Achievements Section ─────────────────────────────────────────────────────
+
+function AchievementsSection() {
+  const races   = useRaceStore(selectRaces)
+  const athlete = useAthleteStore(selectAthlete)
+
+  const unlocked = useMemo(
+    () => ACHIEVEMENTS.filter(a => a.check(races, athlete)),
+    [races, athlete],
+  )
+
+  const unlockedIds = new Set(unlocked.map(a => a.id))
+  const totalCount  = ACHIEVEMENTS.length
+
+  // Recent unlocked pills (last 3)
+  const recentPills = unlocked.slice(-3).reverse()
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      {/* Hero achievement card */}
+      <div style={st.achievementHero}>
+        <div style={{ fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.14em', color: 'rgba(var(--green-ch), 0.6)', textTransform: 'uppercase', marginBottom: '8px' }}>
+          SUPABASE-BACKED ACHIEVEMENTS
+        </div>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', marginBottom: '10px' }}>
+          <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '56px', color: 'var(--white)', lineHeight: 1, letterSpacing: '-0.02em' }}>
+            {unlocked.length}
+          </span>
+          <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '20px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            OF {totalCount} UNLOCKED
+          </span>
+        </div>
+        <div style={{ fontSize: '14px', color: 'rgba(245,245,245,0.55)', lineHeight: 1.55, marginBottom: '16px', maxWidth: '340px' }}>
+          Track special race moments, milestone ladders, and major-event progress from one synced wall.
+        </div>
+        {recentPills.length > 0 && (
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            {recentPills.map(a => (
+              <div key={a.id} style={st.achievementPill}>
+                <span style={{ fontSize: '16px' }}>{a.icon}</span>
+                <span>{a.name}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Achievement icons grid */}
+      <div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 0 10px', borderBottom: '1px solid var(--border)' }}>
+          <span style={{ fontSize: '14px' }}>🏆</span>
+          <span style={{ fontFamily: 'var(--headline)', fontSize: '11px', fontWeight: 700, letterSpacing: '0.14em', color: 'var(--muted)', textTransform: 'uppercase' }}>
+            ACHIEVEMENT ICONS
+          </span>
+        </div>
+
+        {/* Special achievements */}
+        <div style={{ ...st.achievementGroup, marginTop: '12px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)' }}>
+              SPECIAL ACHIEVEMENTS
+            </span>
+            <span style={{ fontSize: '12px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700 }}>
+              {unlocked.filter(a => a.group === 'special').length}/{ACHIEVEMENTS.filter(a => a.group === 'special').length}
+            </span>
+          </div>
+          <div style={st.achievementGrid}>
+            {ACHIEVEMENTS.filter(a => a.group === 'special').map(a => {
+              const isUnlocked = unlockedIds.has(a.id)
+              return (
+                <div key={a.id} style={{ ...st.achievementTile, opacity: isUnlocked ? 1 : 0.7 }}>
+                  <div style={{ ...st.achievementIconBox, background: isUnlocked ? 'rgba(var(--green-ch), 0.12)' : 'var(--surface)' }}>
+                    <span style={{ fontSize: '24px' }}>{a.icon}</span>
+                  </div>
+                  <div style={st.achievementName}>{a.name}</div>
+                  <div style={{ ...st.achievementStatus, background: isUnlocked ? 'rgba(var(--green-ch), 0.1)' : 'var(--surface)', color: isUnlocked ? 'var(--green)' : 'var(--muted)' }}>
+                    {isUnlocked ? 'UNLOCKED' : 'LOCKED'}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Milestone achievements */}
+        <div style={{ ...st.achievementGroup, marginTop: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+            <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)' }}>
+              MILESTONES
+            </span>
+            <span style={{ fontSize: '12px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700 }}>
+              {unlocked.filter(a => a.group === 'milestone').length}/{ACHIEVEMENTS.filter(a => a.group === 'milestone').length}
+            </span>
+          </div>
+          <div style={st.achievementGrid}>
+            {ACHIEVEMENTS.filter(a => a.group === 'milestone' || a.group === 'event').map(a => {
+              const isUnlocked = unlockedIds.has(a.id)
+              return (
+                <div key={a.id} style={{ ...st.achievementTile, opacity: isUnlocked ? 1 : 0.7 }}>
+                  <div style={{ ...st.achievementIconBox, background: isUnlocked ? 'rgba(var(--orange-ch), 0.1)' : 'var(--surface)' }}>
+                    <span style={{ fontSize: '24px' }}>{a.icon}</span>
+                  </div>
+                  <div style={st.achievementName}>{a.name}</div>
+                  <div style={{ ...st.achievementStatus, background: isUnlocked ? 'rgba(var(--orange-ch), 0.08)' : 'var(--surface)', color: isUnlocked ? 'var(--orange)' : 'var(--muted)' }}>
+                    {isUnlocked ? 'UNLOCKED' : 'LOCKED'}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Countries Raced ──────────────────────────────────────────────────────────
+
+function CountriesRaced() {
+  const races    = useRaceStore(selectRaces)
+  const countries = useMemo(() => uniqueCountries(races), [races])
+
+  return (
+    <div style={st.section}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
+        <div style={st.sectionTitle}>COUNTRIES RACED</div>
+        <div style={{ height: '1px', flex: 1, background: 'var(--border)', marginLeft: '16px' }} />
+      </div>
+      {countries.length === 0 ? (
+        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', padding: '8px 0' }}>
+          Log a race to see your countries.
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '12px' }}>
+          {countries.map(c => (
+            <div key={c} style={st.countryPill}>{(c ?? '').toUpperCase()}</div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Personal Bests ───────────────────────────────────────────────────────────
 
 function PersonalBests() {
   const races = useRaceStore(selectRaces)
   const pbs = useMemo(() => buildPBByDist(races), [races])
 
-  if (races.length === 0 || pbs.length === 0) {
+  if (pbs.length === 0) {
     return (
       <div style={st.section}>
-        <div style={st.sectionHeader}>PERSONAL BESTS</div>
+        <div style={st.sectionTitle}>PERSONAL BESTS</div>
         <div style={st.emptyState}>
           <div style={st.emptyIcon}>⏱</div>
           <div style={st.emptyText}>No PBs yet. Log a timed race to start tracking.</div>
@@ -215,8 +431,8 @@ function PersonalBests() {
 
   return (
     <div style={st.section}>
-      <div style={st.sectionHeader}>PERSONAL BESTS</div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', minWidth: 0 }}>
+      <div style={st.sectionTitle}>PERSONAL BESTS</div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', minWidth: 0, marginTop: '4px' }}>
         {pbs.slice(0, 8).map(({ key, label, race }) => (
           <div key={key} style={st.pbCard}>
             <div style={st.pbDist}>{label}</div>
@@ -229,55 +445,293 @@ function PersonalBests() {
   )
 }
 
-// ─── Recent Medals Section ────────────────────────────────────────────────────
+// ─── Age-Grade Trajectory ─────────────────────────────────────────────────────
 
-function RecentMedals() {
-  const races = useRaceStore(selectRaces)
+function AgeGradeTrajectory() {
+  const athlete = useAthleteStore(selectAthlete)
+  const hasProfile = !!(athlete?.dob && athlete?.gender)
 
-  const medals = useMemo(() =>
-    races
-      .filter(r => r.medal)
-      .sort((a, b) => b.date.localeCompare(a.date))
-      .slice(0, 4),
-    [races]
-  )
-
-  if (medals.length === 0) {
-    return (
-      <div style={st.section}>
-        <div style={st.sectionHeader}>MEDALS</div>
-        <div style={st.emptyState}>
-          <div style={st.emptyIcon}>🏅</div>
-          <div style={st.emptyText}>No medals logged yet. Add a race with a medal to see it here.</div>
-        </div>
+  return (
+    <div style={{ ...st.section, padding: '20px' }}>
+      <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '20px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', lineHeight: 1.1, marginBottom: '12px' }}>
+        AGE-GRADE TRAJECTORY
       </div>
-    )
-  }
+      {!hasProfile ? (
+        <div style={{ fontSize: '14px', color: 'var(--muted)', lineHeight: 1.6 }}>
+          Add your date of birth and gender in profile to unlock age-grade scoring.
+        </div>
+      ) : (
+        <div style={{ fontSize: '14px', color: 'var(--muted)', lineHeight: 1.6 }}>
+          Log 5K, 10K, Half Marathon, or Marathon races to see your trajectory.
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Race Activity Heatmap ────────────────────────────────────────────────────
+
+function RaceActivityHeatmap() {
+  const races = useRaceStore(selectRaces)
+  const [selectedCell, setSelectedCell] = useState<{ year: number; month: number } | null>(null)
+
+  const currentYear = new Date().getFullYear()
+  const years = [currentYear, currentYear - 1]
+  const months = [0,1,2,3,4,5,6,7,8,9,10,11]
+  const MONTH_LABELS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC']
+
+  // Build race map keyed by YYYY-MM
+  const raceMap = useMemo(() => {
+    const m: Record<string, Race[]> = {}
+    for (const r of races) {
+      if (!r.date) continue
+      const key = r.date.slice(0, 7) // "YYYY-MM"
+      if (!m[key]) m[key] = []
+      m[key].push(r)
+    }
+    return m
+  }, [races])
+
+  const selectedKey = selectedCell ? `${selectedCell.year}-${String(selectedCell.month + 1).padStart(2, '0')}` : null
+  const selectedRaces = selectedKey ? (raceMap[selectedKey] ?? []) : []
 
   return (
     <div style={st.section}>
-      <div style={st.sectionHeader}>MEDALS</div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', minWidth: 0 }}>
-        {medals.map(r => {
-          const mc = medalColor(r.medal!)
-          return (
-            <div
-              key={r.id}
-              style={{
-                ...st.medalCard,
-                background: mc.bg,
-                border: `1px solid ${mc.border}`,
-              }}
-            >
-              <div style={{ fontSize: '28px', lineHeight: 1, marginBottom: '6px' }}>
-                {medalEmoji(r.medal!)}
-              </div>
-              <div style={{ ...st.medalType, color: mc.color }}>{r.medal!.toUpperCase()}</div>
-              <div style={st.medalRaceName} title={r.name}>{r.name}</div>
-              <div style={st.medalDate}>{r.date ? fmtDate(r.date) : ''}</div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
+        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '18px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)' }}>
+          RACE ACTIVITY
+        </div>
+        <div style={{ height: '1px', flex: 1, background: 'var(--border)', marginLeft: '16px' }} />
+      </div>
+
+      <div style={{ background: 'var(--surface3)', borderRadius: '12px', padding: '14px', marginTop: '10px', overflowX: 'auto' }}>
+        {/* Month headers */}
+        <div style={{ display: 'grid', gridTemplateColumns: '42px repeat(12, 1fr)', gap: '4px', marginBottom: '6px', minWidth: '480px' }}>
+          <div />
+          {MONTH_LABELS.map(m => (
+            <div key={m} style={{ fontFamily: 'var(--headline)', fontSize: '9px', fontWeight: 700, letterSpacing: '0.08em', color: 'var(--muted)', textAlign: 'center', textTransform: 'uppercase' }}>
+              {m}
             </div>
-          )
-        })}
+          ))}
+        </div>
+
+        {/* Year rows */}
+        {years.map(year => (
+          <div key={year} style={{ display: 'grid', gridTemplateColumns: '42px repeat(12, 1fr)', gap: '4px', marginBottom: '4px', minWidth: '480px' }}>
+            <div style={{ fontFamily: 'var(--headline)', fontSize: '10px', fontWeight: 700, color: 'var(--muted)', display: 'flex', alignItems: 'center' }}>
+              {year}
+            </div>
+            {months.map(month => {
+              const key = `${year}-${String(month + 1).padStart(2, '0')}`
+              const count = raceMap[key]?.length ?? 0
+              const isSelected = selectedCell?.year === year && selectedCell?.month === month
+              const isFuture = new Date(year, month) > new Date()
+              return (
+                <div
+                  key={month}
+                  onClick={() => !isFuture && count > 0 && setSelectedCell(isSelected ? null : { year, month })}
+                  style={{
+                    height: '32px',
+                    borderRadius: '6px',
+                    background: isSelected
+                      ? 'var(--green)'
+                      : count > 0
+                        ? 'rgba(var(--green-ch), 0.5)'
+                        : isFuture ? 'rgba(245,245,245,0.03)' : 'var(--surface2)',
+                    border: isSelected ? '1px solid var(--green)' : '1px solid transparent',
+                    cursor: count > 0 && !isFuture ? 'pointer' : 'default',
+                    transition: 'background 0.15s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  {count > 1 && (
+                    <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 800, color: isSelected ? '#000' : 'rgba(var(--green-ch), 0.9)' }}>
+                      {count}
+                    </span>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        ))}
+
+        {/* Selected month details */}
+        {selectedCell && selectedRaces.length > 0 && (
+          <div style={{ marginTop: '12px', background: 'var(--surface2)', borderRadius: '10px', padding: '14px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '18px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)' }}>
+                {fmtMonthYear(selectedCell.year, selectedCell.month)}
+              </div>
+              <div style={{ fontFamily: 'var(--headline)', fontSize: '11px', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted)', textTransform: 'uppercase' }}>
+                {selectedRaces.length} RACE{selectedRaces.length !== 1 ? 'S' : ''}
+              </div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {selectedRaces.sort((a, b) => a.date.localeCompare(b.date)).map(r => (
+                <div key={r.id} style={{ background: 'var(--surface3)', borderRadius: '8px', padding: '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                    <div>
+                      <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', lineHeight: 1.2 }}>
+                        {r.name}
+                      </div>
+                      <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '3px' }}>
+                        {[distLabel(r.distance), r.city, r.country].filter(Boolean).join(' · ')}
+                      </div>
+                    </div>
+                    <div style={{ fontSize: '12px', color: 'var(--muted)', flexShrink: 0 }}>
+                      {fmtDate(r.date)}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─── Majors & Qualifiers ──────────────────────────────────────────────────────
+
+function MajorsQualifiers() {
+  const races = useRaceStore(selectRaces)
+  const today = new Date().toISOString().split('T')[0]
+
+  const majorStatus = useMemo(() => {
+    return MAJORS.map(major => {
+      const allMatches = races.filter(r => matchesMajor(r, major))
+      const completed = allMatches.filter(r => r.date <= today)
+      const upcoming  = allMatches.filter(r => r.date > today)
+      const status = completed.length > 0 ? 'completed' : upcoming.length > 0 ? 'in-progress' : 'not-tracked'
+      return { ...major, status, completed, upcoming }
+    })
+  }, [races, today])
+
+  const completedCount  = majorStatus.filter(m => m.status === 'completed').length
+  const inProgressCount = majorStatus.filter(m => m.status === 'in-progress').length
+
+  return (
+    <div style={st.section}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
+        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '18px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)' }}>
+          MAJORS & QUALIFIERS
+        </div>
+        <div style={{ height: '1px', flex: 1, background: 'var(--border)', marginLeft: '16px' }} />
+      </div>
+
+      {/* BQ / Championship tracker card */}
+      <div style={{ ...st.subsection, marginTop: '12px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '12px' }}>
+          <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.14em', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '4px' }}>
+            BQ / CHAMPIONSHIP TRACKER
+          </div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '18px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', lineHeight: 1.1 }}>
+            WORLD MARATHON MAJORS BOARD
+          </div>
+          <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '10px', lineHeight: 1.6, maxWidth: '360px', margin: '10px auto 0' }}>
+            Every major lives here. Completed races surface your result and details, while upcoming majors stay highlighted in progress with a live countdown. Qualification is tracked where useful, but it is not treated as the only way in. Ballot, charity, tour, and qualifier paths all count.
+          </div>
+        </div>
+
+        {/* Summary stats */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1px', background: 'var(--border)', borderRadius: '10px', overflow: 'hidden', marginBottom: '14px' }}>
+          {[
+            { label: 'COMPLETED',   value: `${completedCount}/${MAJORS.length}` },
+            { label: 'IN PROGRESS', value: inProgressCount.toString() },
+            { label: 'ENTRY READY', value: '0' },
+          ].map(s => (
+            <div key={s.label} style={{ background: 'var(--surface3)', padding: '12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <div style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase' }}>
+                {s.label}
+              </div>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '20px', color: 'var(--white)', lineHeight: 1 }}>
+                {s.value}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Individual majors */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {majorStatus.map(m => (
+            <div key={m.id} style={{
+              background: 'var(--surface)',
+              border: `1px solid ${m.status === 'completed' ? 'rgba(var(--green-ch), 0.3)' : m.status === 'in-progress' ? 'rgba(var(--orange-ch), 0.3)' : 'var(--border)'}`,
+              borderRadius: '10px',
+              padding: '14px 16px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              minHeight: '52px',
+              gap: '12px',
+            }}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', letterSpacing: '0.06em', textTransform: 'uppercase', color: m.status === 'completed' ? 'var(--white)' : m.status === 'in-progress' ? 'var(--orange)' : 'var(--muted)' }}>
+                {m.name}
+              </div>
+              <div style={{
+                fontFamily: 'var(--headline)',
+                fontWeight: 700,
+                fontSize: '11px',
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                padding: '5px 12px',
+                borderRadius: '100px',
+                border: `1px solid ${m.status === 'completed' ? 'rgba(var(--green-ch), 0.3)' : m.status === 'in-progress' ? 'rgba(var(--orange-ch), 0.3)' : 'var(--border2)'}`,
+                color: m.status === 'completed' ? 'var(--green)' : m.status === 'in-progress' ? 'var(--orange)' : 'var(--muted)',
+                background: 'transparent',
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
+              }}>
+                {m.status === 'completed' ? 'COMPLETED' : m.status === 'in-progress' ? 'IN PROGRESS' : 'NOT TRACKED'}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Race Personality ─────────────────────────────────────────────────────────
+
+function RacePersonality() {
+  const races = useRaceStore(selectRaces)
+  const traits = useMemo(() => computePersonality(races), [races])
+
+  return (
+    <div style={st.section}>
+      {/* Outer card with orange top glow */}
+      <div style={{ background: 'var(--surface3)', border: '1px solid var(--border)', borderTop: '1px solid rgba(var(--orange-ch), 0.4)', borderRadius: '14px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '4px' }}>
+          <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.16em', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '6px' }}>
+            RACE PERSONALITY
+          </div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '20px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', lineHeight: 1.1 }}>
+            WHAT KIND OF RACER ARE YOU?
+          </div>
+          <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '8px', lineHeight: 1.5 }}>
+            A fun but useful read on the traits that keep showing up in your results.
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {traits.map(t => (
+            <div key={t.trait} style={{ background: 'var(--surface2)', borderRadius: '10px', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)' }}>
+                  {t.trait}
+                </div>
+                <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '20px', color: 'var(--orange)', letterSpacing: '0.02em' }}>
+                  {t.score}
+                </div>
+              </div>
+              <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5 }}>{t.desc}</div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )
@@ -287,25 +741,23 @@ function RecentMedals() {
 
 function BioDetails({ onEdit }: { onEdit: () => void }) {
   const athlete = useAthleteStore(selectAthlete)
-
-  const ag = ageGroup(athlete?.dob, athlete?.gender)
+  const ag  = ageGroup(athlete?.dob, athlete?.gender)
   const age = computeAge(athlete?.dob)
 
   const fields: Array<{ label: string; value: string | null | undefined }> = [
-    { label: 'City', value: athlete?.city },
-    { label: 'Country', value: athlete?.country },
-    { label: 'Age', value: age !== null ? `${age}${ag ? ` · ${ag}` : ''}` : null },
+    { label: 'City',       value: athlete?.city },
+    { label: 'Country',    value: athlete?.country },
+    { label: 'Age',        value: age !== null ? `${age}${ag ? ` · ${ag}` : ''}` : null },
     { label: 'Main Sport', value: athlete?.mainSport },
-    { label: 'Club', value: athlete?.club },
+    { label: 'Club',       value: athlete?.club },
   ]
-
   const visibleFields = fields.filter(f => f.value)
 
   return (
     <div style={st.section}>
-      <div style={st.sectionHeaderRow}>
-        <div style={st.sectionHeader}>DETAILS</div>
-        <button style={st.editBtn} onClick={onEdit}>Edit</button>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={st.sectionTitle}>DETAILS</div>
+        <button style={st.editBtnSmall} onClick={onEdit}>Edit</button>
       </div>
 
       {visibleFields.length === 0 ? (
@@ -314,16 +766,14 @@ function BioDetails({ onEdit }: { onEdit: () => void }) {
           <button style={st.ctaOutline} onClick={onEdit}>Set Up Profile</button>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '4px' }}>
           {visibleFields.map(f => (
             <div key={f.label} style={st.detailRow}>
               <div style={st.detailLabel}>{f.label}</div>
               <div style={st.detailValue}>{f.value}</div>
             </div>
           ))}
-          {athlete?.bio && (
-            <div style={st.bio}>{athlete.bio}</div>
-          )}
+          {athlete?.bio && <div style={st.bio}>{athlete.bio}</div>}
         </div>
       )}
     </div>
@@ -333,11 +783,9 @@ function BioDetails({ onEdit }: { onEdit: () => void }) {
 // ─── Profile Page ─────────────────────────────────────────────────────────────
 
 export function Profile() {
-  const athlete = useAthleteStore(selectAthlete)
   const authUser = useAuthStore(selectAuthUser)
   const [showEdit, setShowEdit] = useState(false)
 
-  // Not authenticated
   if (!authUser) {
     return (
       <div style={st.page}>
@@ -352,15 +800,20 @@ export function Profile() {
   return (
     <div style={st.page}>
       {showEdit && <EditProfileModal onClose={() => setShowEdit(false)} />}
-      <AthleteHero />
+      <AthleteHero onEdit={() => setShowEdit(true)} />
+      <AchievementsSection />
+      <CountriesRaced />
       <PersonalBests />
-      <RecentMedals />
+      <AgeGradeTrajectory />
+      <RaceActivityHeatmap />
+      <MajorsQualifiers />
+      <RacePersonality />
       <BioDetails onEdit={() => setShowEdit(true)} />
     </div>
   )
 }
 
-// ─── Style object ─────────────────────────────────────────────────────────────
+// ─── Styles ───────────────────────────────────────────────────────────────────
 
 const st = {
   page: {
@@ -455,10 +908,8 @@ const st = {
     fontFamily: 'var(--headline)',
     fontWeight: 800,
     letterSpacing: '0.1em',
-    alignSelf: 'flex-start',
   } as React.CSSProperties,
 
-  // ── Hero stats row
   heroStats: {
     display: 'grid',
     gridTemplateColumns: 'repeat(4, 1fr)',
@@ -496,7 +947,6 @@ const st = {
     textAlign: 'center',
   } as React.CSSProperties,
 
-  // ── Focus race card
   focusCard: {
     background: 'rgba(var(--orange-ch), 0.08)',
     border: '1px solid rgba(var(--orange-ch), 0.2)',
@@ -529,10 +979,7 @@ const st = {
     whiteSpace: 'nowrap',
   } as React.CSSProperties,
 
-  focusMeta: {
-    fontSize: 'var(--text-xs)',
-    color: 'var(--muted)',
-  } as React.CSSProperties,
+  focusMeta: { fontSize: 'var(--text-xs)', color: 'var(--muted)' } as React.CSSProperties,
 
   focusDays: {
     fontFamily: 'var(--headline)',
@@ -544,49 +991,134 @@ const st = {
     marginTop: '4px',
   } as React.CSSProperties,
 
-  // ── Section
+  // ── Achievements hero
+  achievementHero: {
+    background: 'linear-gradient(135deg, rgba(0,40,20,0.9) 0%, rgba(0,25,12,0.95) 60%, rgba(5,15,8,1) 100%)',
+    border: '1px solid rgba(var(--green-ch), 0.2)',
+    borderRadius: '16px',
+    padding: '22px',
+    minWidth: 0,
+  } as React.CSSProperties,
+
+  achievementPill: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '8px',
+    background: 'rgba(245,245,245,0.06)',
+    border: '1px solid rgba(245,245,245,0.12)',
+    borderRadius: '100px',
+    padding: '7px 14px',
+    fontSize: '11px',
+    fontFamily: 'var(--headline)',
+    fontWeight: 700,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    color: 'var(--white)',
+    whiteSpace: 'nowrap',
+  } as React.CSSProperties,
+
+  achievementGroup: {
+    background: 'var(--surface2)',
+    border: '1px solid var(--border)',
+    borderRadius: '12px',
+    padding: '16px',
+  } as React.CSSProperties,
+
+  achievementGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, 1fr)',
+    gap: '8px',
+  } as React.CSSProperties,
+
+  achievementTile: {
+    background: 'var(--surface3)',
+    border: '1px solid var(--border)',
+    borderRadius: '10px',
+    padding: '14px 10px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '8px',
+    minWidth: 0,
+  } as React.CSSProperties,
+
+  achievementIconBox: {
+    width: '48px',
+    height: '48px',
+    borderRadius: '12px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    border: '1px solid rgba(245,245,245,0.06)',
+  } as React.CSSProperties,
+
+  achievementName: {
+    fontFamily: 'var(--headline)',
+    fontSize: '9px',
+    fontWeight: 800,
+    letterSpacing: '0.06em',
+    textTransform: 'uppercase',
+    color: 'var(--white)',
+    textAlign: 'center',
+    lineHeight: 1.3,
+  } as React.CSSProperties,
+
+  achievementStatus: {
+    fontFamily: 'var(--headline)',
+    fontSize: '9px',
+    fontWeight: 700,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    padding: '4px 8px',
+    borderRadius: '100px',
+    border: '1px solid rgba(245,245,245,0.08)',
+  } as React.CSSProperties,
+
+  // ── Countries
+  countryPill: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    background: 'var(--surface3)',
+    border: '1px solid var(--border2)',
+    borderRadius: '100px',
+    padding: '7px 16px',
+    fontFamily: 'var(--headline)',
+    fontSize: '11px',
+    fontWeight: 700,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    color: 'var(--white)',
+    whiteSpace: 'nowrap',
+  } as React.CSSProperties,
+
+  // ── Section containers
   section: {
+    minWidth: 0,
+  } as React.CSSProperties,
+
+  subsection: {
     background: 'var(--surface2)',
     border: '1px solid var(--border)',
     borderRadius: '12px',
     padding: '16px',
     display: 'flex',
     flexDirection: 'column',
-    gap: '14px',
+    gap: '12px',
     minWidth: 0,
   } as React.CSSProperties,
 
-  sectionHeader: {
+  sectionTitle: {
     fontFamily: 'var(--headline)',
-    fontSize: '12px',
-    fontWeight: 800,
-    letterSpacing: '0.12em',
+    fontWeight: 900,
+    fontSize: '18px',
+    letterSpacing: '0.04em',
     textTransform: 'uppercase',
-    color: 'var(--muted)',
-  } as React.CSSProperties,
-
-  sectionHeaderRow: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  } as React.CSSProperties,
-
-  editBtn: {
-    background: 'transparent',
-    border: '1px solid var(--border2)',
-    borderRadius: '6px',
-    color: 'var(--muted)',
-    padding: '4px 12px',
-    fontSize: 'var(--text-xs)',
-    fontFamily: 'var(--body)',
-    fontWeight: 600,
-    cursor: 'pointer',
-    letterSpacing: '0.02em',
+    color: 'var(--white)',
   } as React.CSSProperties,
 
   // ── PB cards
   pbCard: {
-    background: 'var(--surface3)',
+    background: 'var(--surface2)',
     border: '1px solid var(--border)',
     borderRadius: '10px',
     padding: '14px',
@@ -620,39 +1152,6 @@ const st = {
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
-  } as React.CSSProperties,
-
-  // ── Medal cards
-  medalCard: {
-    borderRadius: '10px',
-    padding: '16px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '2px',
-    minWidth: 0,
-  } as React.CSSProperties,
-
-  medalType: {
-    fontFamily: 'var(--headline)',
-    fontSize: '11px',
-    fontWeight: 800,
-    letterSpacing: '0.1em',
-    textTransform: 'uppercase',
-  } as React.CSSProperties,
-
-  medalRaceName: {
-    fontSize: 'var(--text-sm)',
-    fontWeight: 600,
-    color: 'var(--white)',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-    marginTop: '4px',
-  } as React.CSSProperties,
-
-  medalDate: {
-    fontSize: 'var(--text-xs)',
-    color: 'var(--muted)',
   } as React.CSSProperties,
 
   // ── Details
@@ -693,7 +1192,19 @@ const st = {
     padding: '10px 0 0',
   } as React.CSSProperties,
 
-  // ── CTA
+  editBtnSmall: {
+    background: 'transparent',
+    border: '1px solid var(--border2)',
+    borderRadius: '6px',
+    color: 'var(--muted)',
+    padding: '5px 14px',
+    fontSize: 'var(--text-xs)',
+    fontFamily: 'var(--body)',
+    fontWeight: 600,
+    cursor: 'pointer',
+    flexShrink: 0,
+  } as React.CSSProperties,
+
   ctaOutline: {
     marginTop: '4px',
     background: 'transparent',
@@ -709,7 +1220,6 @@ const st = {
     cursor: 'pointer',
   } as React.CSSProperties,
 
-  // ── Empty state
   emptyState: {
     display: 'flex',
     flexDirection: 'column',
@@ -719,10 +1229,7 @@ const st = {
     textAlign: 'center',
   } as React.CSSProperties,
 
-  emptyIcon: {
-    fontSize: '32px',
-    lineHeight: 1,
-  } as React.CSSProperties,
+  emptyIcon: { fontSize: '32px', lineHeight: 1 } as React.CSSProperties,
 
   emptyText: {
     fontSize: 'var(--text-sm)',

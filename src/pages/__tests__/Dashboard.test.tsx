@@ -119,7 +119,7 @@ describe('Dashboard — StatsStrip', () => {
   it('shows correct race count', () => {
     useRaceStore.setState({ races: [RACE, { ...RACE, id: 'r2' }], nextRace: null, upcomingRaces: [] })
     renderDashboard()
-    expect(screen.getByText('2')).toBeInTheDocument()
+    expect(screen.getAllByText('2').length).toBeGreaterThanOrEqual(1)
   })
 })
 
