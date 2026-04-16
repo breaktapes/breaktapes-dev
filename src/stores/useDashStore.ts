@@ -72,12 +72,19 @@ export const useDashStore = create<DashState>()(
       getDashLayout: () => {
         const { widgets } = get()
         if (!Array.isArray(widgets) || widgets.length === 0 || typeof widgets[0] !== 'object') {
+          // Nothing stored yet — persist defaults so future operations work
+          set({ widgets: DEFAULT_WIDGETS })
           return DEFAULT_WIDGETS
         }
-        // Merge any new default widgets not in stored list
+        // Merge any new default widgets not yet in the stored list.
+        // IMPORTANT: write the merged list back to the store so operations like
+        // setWidgetEnabled / reorderWidget find the new widgets in s.widgets.
         const storedIds = new Set(widgets.map((w: DashWidget) => w.id))
         const newDefaults = DEFAULT_WIDGETS.filter(w => !storedIds.has(w.id))
-        return [...widgets, ...newDefaults]
+        if (newDefaults.length === 0) return widgets
+        const merged = [...widgets, ...newDefaults]
+        set({ widgets: merged })
+        return merged
       },
 
       getDashZoneCollapse: () => {
@@ -89,9 +96,16 @@ export const useDashStore = create<DashState>()(
       },
 
       setWidgetEnabled: (id, enabled) =>
-        set(s => ({
-          widgets: s.widgets.map(w => w.id === id ? { ...w, enabled } : w),
-        })),
+        set(s => {
+          const exists = s.widgets.some(w => w.id === id)
+          if (exists) {
+            return { widgets: s.widgets.map(w => w.id === id ? { ...w, enabled } : w) }
+          }
+          // Widget not in stored list yet (new default) — add it with the toggled state
+          const def = DEFAULT_WIDGETS.find(w => w.id === id)
+          if (!def) return {}
+          return { widgets: [...s.widgets, { ...def, enabled }] }
+        }),
 
       reorderWidget: (id, direction) =>
         set(s => {
