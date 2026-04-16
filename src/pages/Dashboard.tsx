@@ -507,7 +507,7 @@ function PreRaceBriefing({ onAddRace }: { onAddRace: () => void }) {
 
 // ─── Edit Upcoming Race Sheet ────────────────────────────────────────────────
 
-function EditUpcomingRaceSheet({ race, onClose }: { race: Race; onClose: () => void }) {
+function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; onClose: () => void; zIndex?: number }) {
   const updateRace    = useRaceStore(s => s.updateRace)
   const deleteRace    = useRaceStore(s => s.deleteRace)
   const setFocusRaceId = useRaceStore(s => s.setFocusRaceId)
@@ -541,7 +541,7 @@ function EditUpcomingRaceSheet({ race, onClose }: { race: Race; onClose: () => v
   ]
 
   return (
-    <div style={st.modalOverlay} onClick={onClose}>
+    <div style={{ ...st.modalOverlay, zIndex }} onClick={onClose}>
       <div style={{ ...st.customizeSheet, maxHeight: '85vh', paddingBottom: '0', overflowY: 'hidden' }} onClick={e => e.stopPropagation()}>
         {/* Handle */}
         <div style={{ width: '40px', height: '4px', background: 'var(--border2)', borderRadius: '2px', margin: '0 auto 20px', flexShrink: 0 }} />
@@ -2643,6 +2643,7 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
         <EditUpcomingRaceSheet
           race={editing}
           onClose={() => setEditingId(null)}
+          zIndex={1000}
         />
       )}
       <div style={st.modalOverlay} onClick={onClose}>
