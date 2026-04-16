@@ -21,12 +21,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # ── 1. Sync index.html → public/ ─────────────────────────────────────
-      - name: Sync index.html → public/
-        run: |
-          mkdir -p public
-          cp index.html public/index.html
-          echo "✅ public/index.html synced"
+      # ── 1. Node.js + build ────────────────────────────────────────────────
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          VITE_SUPABASE_URL: https://kmdpufauamadwavqsinj.supabase.co
+          VITE_SUPABASE_ANON_KEY: sb_publishable_aXlZ54g7bW8dckyl3N-kCA_Jzy_Nt0B
 
       # ── 2. Push Supabase migrations → production ─────────────────────────
       - name: Setup Supabase CLI
