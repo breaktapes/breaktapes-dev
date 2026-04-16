@@ -4,6 +4,7 @@ import { useAthleteStore } from '@/stores/useAthleteStore'
 import { useDashStore } from '@/stores/useDashStore'
 import { selectRaces, selectNextRace, selectAthlete, selectDashZoneCollapse } from '@/stores/selectors'
 import { Skeleton } from '@/components/Skeleton'
+import { AddRaceModal } from '@/components/AddRaceModal'
 import type { Race } from '@/types'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -78,7 +79,7 @@ function buildPBMap(races: Race[]): Record<string, Race> {
 
 // ─── AthleteBriefing Card ────────────────────────────────────────────────────
 
-function AthleteBriefing() {
+function AthleteBriefing({ onAddRace }: { onAddRace: () => void }) {
   const races = useRaceStore(selectRaces)
   const nextRace = useRaceStore(selectNextRace)
   const athlete = useAthleteStore(selectAthlete)
@@ -96,7 +97,7 @@ function AthleteBriefing() {
           <p style={st.briefingSubtext}>
             Every champion's journey begins with race one. Log it here.
           </p>
-          <button style={st.ctaPrimary} onClick={() => console.log('open add race modal')}>
+          <button style={st.ctaPrimary} onClick={() => onAddRace()}>
             + Log First Race
           </button>
         </div>
@@ -132,7 +133,7 @@ function AthleteBriefing() {
               </span>
             )}
           </div>
-          <button style={st.ctaOutline} onClick={() => console.log('open add race modal')}>
+          <button style={st.ctaOutline} onClick={() => onAddRace()}>
             + Add Next Race
           </button>
         </div>
@@ -191,7 +192,7 @@ function AthleteBriefing() {
         <div style={st.pills}>
           {lastRace?.time && <span style={st.pill}>{lastRace.time}</span>}
         </div>
-        <button style={st.ctaOutline} onClick={() => console.log('open add race modal')}>
+        <button style={st.ctaOutline} onClick={() => onAddRace()}>
           + Add Next Race
         </button>
       </div>
@@ -226,7 +227,7 @@ function StatsStrip() {
 
 // ─── Recent Races Section ─────────────────────────────────────────────────────
 
-function RecentRaces() {
+function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
   const races = useRaceStore(selectRaces)
   const today = todayStr()
 
@@ -247,7 +248,7 @@ function RecentRaces() {
         <div style={st.emptyState}>
           <div style={st.emptyIcon}>🏁</div>
           <div style={st.emptyText}>No races yet. Log your first to get started.</div>
-          <button style={st.ctaOutline} onClick={() => console.log('open add race modal')}>
+          <button style={st.ctaOutline} onClick={() => onAddRace()}>
             + Add Race
           </button>
         </div>
@@ -456,6 +457,9 @@ function WidgetShell({ label }: { label: string }) {
 
 export function Dashboard() {
   const [showCustomize, setShowCustomize] = useState(false)
+  const [showAddRace, setShowAddRace] = useState(false)
+
+  const openAddRace = () => setShowAddRace(true)
 
   return (
     <div style={st.page}>
@@ -473,17 +477,18 @@ export function Dashboard() {
       </div>
 
       {showCustomize && <DashCustomizeModal onClose={() => setShowCustomize(false)} />}
+      {showAddRace && <AddRaceModal onClose={() => setShowAddRace(false)} />}
 
-      <AthleteBriefing />
+      <AthleteBriefing onAddRace={openAddRace} />
       <StatsStrip />
 
       <DashZone id="now" label="NOW">
-        <RecentRaces />
+        <RecentRaces onAddRace={openAddRace} />
         <WidgetShell label="Race Day Forecast" />
       </DashZone>
 
       <DashZone id="recently" label="RECENTLY">
-        <RecentRaces />
+        <RecentRaces onAddRace={openAddRace} />
         <WidgetShell label="Personal Bests" />
       </DashZone>
 
