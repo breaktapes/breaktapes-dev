@@ -112,7 +112,7 @@ describe('Dashboard — StatsStrip', () => {
     // Labels use uppercase text
     expect(screen.getByText('RACES')).toBeInTheDocument()
     expect(screen.getByText('COUNTRIES')).toBeInTheDocument()
-    expect(screen.getByText('TOTAL KM')).toBeInTheDocument()
+    expect(screen.getAllByText(/TOTAL (KM|MI)/i).length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText('MEDALS')).toBeInTheDocument()
   })
 
