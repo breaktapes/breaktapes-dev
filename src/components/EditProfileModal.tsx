@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/useAuthStore'
+import { DateInput } from '@/components/DateInput'
 import type { Athlete } from '@/types'
 
 interface Props {
@@ -114,20 +115,18 @@ export function EditProfileModal({ onClose }: Props) {
             </Field>
           </div>
 
-          {/* DOB + Gender */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', minWidth: 0 }}>
-            <Field label="Date of Birth *">
-              <input type="date" style={st.input} value={dob} onChange={e => setDob(e.target.value)} />
-            </Field>
-            <Field label="Gender *">
-              <select style={st.input} value={gender} onChange={e => setGender(e.target.value)}>
-                <option value="">—</option>
-                <option value="M">Male</option>
-                <option value="F">Female</option>
-                <option value="X">Non-binary</option>
-              </select>
-            </Field>
-          </div>
+          {/* DOB + Gender — each on its own row so the date input never overflows */}
+          <Field label="Date of Birth *">
+            <DateInput value={dob} onChange={setDob} max={new Date().toISOString().split('T')[0]} />
+          </Field>
+          <Field label="Gender *">
+            <select style={st.input} value={gender} onChange={e => setGender(e.target.value)}>
+              <option value="">—</option>
+              <option value="M">Male</option>
+              <option value="F">Female</option>
+              <option value="X">Non-binary</option>
+            </select>
+          </Field>
 
           {/* Main sport */}
           <Field label="Main Sport *">
