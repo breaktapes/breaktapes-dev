@@ -668,7 +668,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past' }: Props) {
           <Field label="Date *">
             <input
               type="date"
-              style={st.input}
+              style={{ ...st.input, WebkitAppearance: 'none', appearance: 'none', maxWidth: '100%' } as React.CSSProperties}
               value={date}
               onChange={e => setDate(e.target.value)}
             />
