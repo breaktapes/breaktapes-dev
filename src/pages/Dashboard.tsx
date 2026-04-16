@@ -165,21 +165,49 @@ function computeMomentum(races: Race[]): { score: number; badge: string } {
   return { score: parseFloat(ratio.toFixed(2)), badge }
 }
 
-// Boston Qualifying standards (2027, seconds)
-const BQ_TIMES: Record<string, number> = {
-  M18: 10800, M35: 11100, M40: 11400, M45: 12000, M50: 12300,
-  M55: 12900, M60: 13800, M65: 14700, M70: 15600, M75: 16500, M80: 17400,
-  F18: 12600, F35: 12900, F40: 13200, F45: 13800, F50: 14100,
-  F55: 14700, F60: 15600, F65: 16500, F70: 17400, F75: 18300, F80: 19200,
+// Official BAA qualifying standards (seconds) by Boston year.
+// 2023 and earlier: original standards.
+// 2024+: tightened by 5 minutes across all age groups (announced 2023).
+const BQ_BY_YEAR: Record<string, Record<string, number>> = {
+  '2023': {
+    M18: 10800, M35: 11100, M40: 11400, M45: 12000, M50: 12300,
+    M55: 12900, M60: 13800, M65: 14700, M70: 15600, M75: 16500, M80: 17400,
+    F18: 12600, F35: 12900, F40: 13200, F45: 13800, F50: 14100,
+    F55: 14700, F60: 15600, F65: 16500, F70: 17400, F75: 18300, F80: 19200,
+  },
+  '2024': {
+    // 5 minutes faster than 2023 across all age groups
+    M18: 10500, M35: 10800, M40: 11100, M45: 11700, M50: 12000,
+    M55: 12600, M60: 13500, M65: 14400, M70: 15300, M75: 16200, M80: 17100,
+    F18: 12300, F35: 12600, F40: 12900, F45: 13500, F50: 13800,
+    F55: 14400, F60: 15300, F65: 16200, F70: 17100, F75: 18000, F80: 18900,
+  },
+}
+// 2025+ assumed same as 2024 until BAA announces new standards
+function getBQStandards(bostonYear: number) {
+  if (bostonYear <= 2023) return BQ_BY_YEAR['2023']
+  return BQ_BY_YEAR['2024']
 }
 
-function getBQTarget(dob: string | undefined, gender: string | undefined): number | null {
+function nextBostonYear(): number {
+  const now = new Date()
+  const y = now.getFullYear()
+  // Boston is ~April 21; if past that date, next race is next year
+  return (now.getMonth() > 3 || (now.getMonth() === 3 && now.getDate() > 21)) ? y + 1 : y
+}
+
+function bqQualWindow(bostonYear: number) {
+  // BAA qualifying window: Sept 16 of two years prior → Sept 15 of prior year
+  return { start: `${bostonYear - 2}-09-16`, end: `${bostonYear - 1}-09-15` }
+}
+
+function getBQTarget(dob: string | undefined, gender: string | undefined, bostonYear: number): number | null {
   const age = computeAge(dob)
   if (age === null || !gender) return null
   const g = gender === 'M' ? 'M' : 'F'
   const brackets = [80, 75, 70, 65, 60, 55, 50, 45, 40, 35, 18]
   const bracket = brackets.find(b => age >= b) ?? 18
-  return BQ_TIMES[`${g}${bracket}`] ?? null
+  return getBQStandards(bostonYear)[`${g}${bracket}`] ?? null
 }
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -689,52 +717,140 @@ function TrainingCorrelWidget() {
 
 // ─── Boston Qualifier Widget ──────────────────────────────────────────────────
 
+// Typical recent cutoff buffer: ~5 min under the BQ standard to safely get in
+const BQ_BUFFER_SECS = 300
+
 function BostonQualWidget() {
-  const athlete = useAthleteStore(selectAthlete)
-  const races   = useRaceStore(selectRaces)
-
-  const marathonPB = useMemo(() => {
-    const ms = races.filter(r => {
-      const d = distanceToKm(r.distance); return d >= 42 && d <= 42.3 && r.time
-    })
-    return ms.sort((a, b) => (a.time ?? '').localeCompare(b.time ?? ''))[0] ?? null
-  }, [races])
-
-  const bqTarget = useMemo(() => getBQTarget(athlete?.dob, athlete?.gender), [athlete])
+  const athlete    = useAthleteStore(selectAthlete)
+  const races      = useRaceStore(selectRaces)
   const hasProfile = !!(athlete?.dob && athlete?.gender)
+
+  const bostonYear                  = useMemo(() => nextBostonYear(), [])
+  const { start: qualStart, end: qualEnd } = useMemo(() => bqQualWindow(bostonYear), [bostonYear])
+  const bqTarget                    = useMemo(() => getBQTarget(athlete?.dob, athlete?.gender, bostonYear), [athlete, bostonYear])
+
+  // Marathons inside the qualifying window, newest first
+  const qualRaces = useMemo(() =>
+    races
+      .filter(r => {
+        const d = distanceToKm(r.distance)
+        return d >= 42 && d <= 42.3 && !!r.time && r.date >= qualStart && r.date <= qualEnd
+      })
+      .sort((a, b) => b.date.localeCompare(a.date)),
+    [races, qualStart, qualEnd],
+  )
+
+  // Fastest time among qualifying-window races
+  const bestQual = useMemo(() =>
+    [...qualRaces].sort((a, b) => (a.time ?? '').localeCompare(b.time ?? ''))[0] ?? null,
+    [qualRaces],
+  )
+
+  const fmtWindow = (d: string) => {
+    const [y, m, day] = d.split('-')
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+    return `${months[+m - 1]} ${+day}, ${y}`
+  }
 
   return (
     <div style={st.glowCard}>
+      {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>B.A.A.</div>
           <div style={st.widgetTitle}>BOSTON QUALIFIER</div>
         </div>
-        <span style={{ ...st.badgePill, background: 'rgba(var(--orange-ch), 0.12)', color: 'var(--orange)', border: '1px solid rgba(var(--orange-ch), 0.3)', flexShrink: 0 }}>2027</span>
+        <span style={{ ...st.badgePill, background: 'rgba(var(--orange-ch),0.12)', color: 'var(--orange)', border: '1px solid rgba(var(--orange-ch),0.3)', flexShrink: 0 }}>
+          {bostonYear}
+        </span>
       </div>
 
       {!hasProfile ? (
         <div style={st.lockedBox}>
           <div style={st.lockedTitle}>PROFILE NEEDED</div>
-          <div style={st.lockedText}>Add age group and gender in your athlete profile to unlock your official Boston qualifying target.</div>
+          <div style={st.lockedText}>Add date of birth and gender in your athlete profile to unlock your official BQ target.</div>
         </div>
-      ) : bqTarget && marathonPB ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '28px', color: 'var(--white)', lineHeight: 1 }}>
-            {secsToHMS(bqTarget)}
+      ) : !bqTarget ? null : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+
+          {/* BQ standard + safe-buffer target side by side */}
+          <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-end' }}>
+            <div>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '28px', color: 'var(--white)', lineHeight: 1 }}>
+                {secsToHMS(bqTarget)}
+              </div>
+              <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase', marginTop: '3px' }}>
+                BQ STANDARD
+              </div>
+            </div>
+            <div style={{ paddingBottom: '1px' }}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '18px', color: 'var(--muted)', lineHeight: 1 }}>
+                {secsToHMS(bqTarget - BQ_BUFFER_SECS)}
+              </div>
+              <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted2)', textTransform: 'uppercase', marginTop: '3px' }}>
+                SAFE BUFFER (−5 MIN)
+              </div>
+            </div>
           </div>
-          <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase' }}>BQ TARGET</div>
-          {(() => {
-            const pbSecs = parseHMS(marathonPB.time!)
+
+          {/* Qualifying window */}
+          <div style={{ fontSize: '11px', color: 'var(--muted2)', letterSpacing: '0.02em' }}>
+            Qualifying window: {fmtWindow(qualStart)} – {fmtWindow(qualEnd)}
+          </div>
+
+          {/* Gap summary from best qualifying race */}
+          {bestQual && (() => {
+            const pbSecs = parseHMS(bestQual.time!)
             if (!pbSecs) return null
-            const gap = pbSecs - bqTarget
-            const color = gap <= 0 ? 'var(--green)' : 'var(--orange)'
-            const label = gap <= 0 ? `${secsToHMS(Math.abs(gap))} under BQ ✓` : `${secsToHMS(gap)} over BQ`
-            return <div style={{ fontSize: 'var(--text-sm)', color, fontWeight: 600, marginTop: '4px' }}>{label}</div>
+            const gapStd    = pbSecs - bqTarget
+            const gapBuffer = pbSecs - (bqTarget - BQ_BUFFER_SECS)
+            const safelyIn  = gapBuffer <= 0
+            const qualified = gapStd <= 0
+            const color = safelyIn ? 'var(--green)' : qualified ? '#FFD770' : 'var(--orange)'
+            const label = safelyIn
+              ? `${secsToHMS(Math.abs(gapBuffer))} inside safe buffer ✓`
+              : qualified
+              ? `BQ met — ${secsToHMS(Math.abs(gapBuffer))} short of safe buffer`
+              : `${secsToHMS(gapStd)} to BQ · ${secsToHMS(gapBuffer)} to safe buffer`
+            return <div style={{ fontSize: 'var(--text-sm)', color, fontWeight: 600 }}>{label}</div>
           })()}
+
+          {/* Last 3 races in qualifying window */}
+          {qualRaces.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+              <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase' }}>
+                QUALIFYING RACES ({qualRaces.length})
+              </div>
+              {qualRaces.slice(0, 3).map(r => {
+                const secs = parseHMS(r.time!)
+                if (!secs) return null
+                const gap       = secs - bqTarget
+                const qualified = gap <= 0
+                const rowColor  = qualified ? 'var(--green)' : 'var(--muted)'
+                return (
+                  <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 10px', background: 'var(--surface)', borderRadius: '7px', gap: '10px' }}>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {r.name || distBadge(r.distance)}
+                      </div>
+                      <div style={{ fontSize: '10px', color: 'var(--muted2)', marginTop: '1px' }}>{r.date}</div>
+                    </div>
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                      <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--white)', fontFamily: 'var(--headline)', lineHeight: 1 }}>{r.time}</div>
+                      <div style={{ fontSize: '10px', color: rowColor, fontWeight: 700, marginTop: '2px' }}>
+                        {qualified ? `${secsToHMS(Math.abs(gap))} under ✓` : `${secsToHMS(gap)} over`}
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ) : (
+            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
+              No marathons yet in the {bostonYear} qualifying window.
+            </div>
+          )}
         </div>
-      ) : (
-        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '6px' }}>Log a marathon to see your BQ gap.</div>
       )}
     </div>
   )
