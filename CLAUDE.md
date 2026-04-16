@@ -863,6 +863,33 @@ Direct DB access (psql/psycopg2) is blocked from localhost — Supabase only exp
 
 ---
 
+### Session 19 (2026-04-16/17) — Goal time sync, units preference, catalog search, weather forecast
+
+**Branch:** `claude/units-and-fixes` → staging (#121), `claude/catalog-search-fix` → staging (#122, #123, #124)
+
+#### Changes shipped
+
+- **Goal time sync fix** — `updateRace` in `useRaceStore` now also patches `nextRace` when the updated race IS the current `nextRace`. Previously edits to goal time were invisible to `GapToGoalWidget` until a hard reload.
+- **`GapToGoalWidget` uses `selectFocusRace`** — was using `selectNextRace`; now follows user's pinned focus race instead of always the nearest upcoming race.
+- **Distance display in ViewEditRaceModal** — "Half Marathon" label → "21.1 KM" via new `resolveDistKm()` helper + `_DIST_KM_MAP`. Auto-computed PACE stat box (from time + distance) added.
+- **Pro features unlocked on staging** — `useAuthStore` sets `proAccessGranted: IS_STAGING` so all beta testers see all pro widgets and themes on `dev.breaktapes.com`.
+- **Imperial/Metric units preference** — new `src/lib/units.ts` with `useUnits()` hook (reads `athlete.units ?? 'metric'`), `fmtDistKm()`, `distUnit()`, `fmtPaceSecPerKm()`, `paceUnit()`, `fmtSpeedKmh()`, `computePaceSecPerKm()`. New "Preferences" section in Settings.tsx with 2-button toggle. StatsStrip in Dashboard/Races/Profile all convert and relabel dynamically. `Athlete.units?: 'metric' | 'imperial'` added to `src/types/index.ts`.
+- **TimePickerWheel `maxHours` prop** — supports 0–99h for ultra finish times.
+- **Tokenized multi-word catalog search** — `AddRaceModal` autocomplete now splits query on whitespace and requires ALL tokens to match across the combined haystack (name + city + country + resolved country name + aliases). "Ironman Oman" now finds "IRONMAN Oman" (country stored as "Oman"). New `src/lib/countries.ts` ISO-2 → country name map for ~80 racing countries.
+- **Catalog load race condition fix** — new `useEffect([catalog])` in `AddRaceModal` fires `runSearch()` immediately when catalog arrives if user already has a query typed. Previously suggestions never appeared if user typed before the 1-3s catalog fetch completed. "Searching race catalog…" inline loading hint added.
+- **5-hour weather forecast always shows** — was `forecast_days=1`, filtered by `hour >= currentHour` — left only 1 slot at 11PM. Now fetches `forecast_days=2`, filters by actual timestamp. Always shows next 5 hours across midnight.
+- **Dashboard test timezone fix** — `YESTERDAY`/`FUTURE` constants switched from `.toISOString()` (UTC) to local-time date arithmetic. Was failing nightly in UTC+4 after midnight.
+- **Branch cleanup** — closed PRs #115 and #117 (upcoming race modal improvements, conflicts too large to resolve against units/widgets changes). All stale branches deleted. Only `main` and `staging` remain.
+
+#### Key learnings
+- `updateRace` in Zustand stores must patch ALL derived copies of a race — `races`, `upcomingRaces`, AND `nextRace` — otherwise widgets reading `nextRace` see stale data after an edit.
+- `useRaceCatalog` is fetched inside `AddRaceModal` on mount — the 8,284-row fetch takes 1-3s. Always add a `useEffect([catalog])` re-trigger so search fires when data arrives, not just when query changes.
+- Race catalog stores `country` as full names ("Oman", "United States", "France") — NOT ISO codes. The `countries.ts` mapping handles both directions for search haystacks.
+- `new Date().toISOString()` is UTC — never use it for "today/yesterday" date strings in tests or components that compare against local-time YYYY-MM-DD. Use `localDateStr()` helpers that use `d.getFullYear()`, `d.getMonth()`, `d.getDate()`.
+- Open-Meteo `forecast_days=1` + `hour >= currentHour` filter fails at night — always fetch `forecast_days=2` and filter by `timestamp >= now - 1hr`, then `.slice(0, 5)`.
+
+---
+
 ## Skill routing
 
 When the user's request matches an available skill, ALWAYS invoke it using the Skill
