@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { useRaceCatalog, type CatalogRace } from '@/hooks/useRaceCatalog'
 import { parseRaceText, importRaceScreenshot, getClaudeApiKey } from '@/lib/claude'
+import { DateInput } from '@/components/DateInput'
+import { TimePickerWheel, type HMS } from '@/components/TimePickerWheel'
 import type { Race, Split } from '@/types'
 
 type Mode = 'past' | 'upcoming'
@@ -107,41 +109,7 @@ function secsToHMS(secs: number) {
   return `${h}:${pad2(m)}:${pad2(s)}`
 }
 
-interface HMS { h: number; m: number; s: number }
-
-// ─── Drum time picker ─────────────────────────────────────────────────────────
-
-function TimePicker({ value, onChange }: { value: HMS; onChange: (v: HMS) => void }) {
-  const { h, m, s } = value
-
-  const cell = (val: number, label: string, onUp: () => void, onDown: () => void) => (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', flex: 1 }}>
-      <button style={drumBtn} type="button" onClick={onUp} aria-label={`Increase ${label}`}>▲</button>
-      <span style={drumNum}>{label === 'HRS' ? val : pad2(val)}</span>
-      <button style={drumBtn} type="button" onClick={onDown} aria-label={`Decrease ${label}`}>▼</button>
-      <span style={drumLabel}>{label}</span>
-    </div>
-  )
-
-  return (
-    <div style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-      {cell(h, 'HRS',
-        () => onChange({ ...value, h: h + 1 }),
-        () => onChange({ ...value, h: Math.max(0, h - 1) })
-      )}
-      <span style={colonStyle}>:</span>
-      {cell(m, 'MIN',
-        () => onChange({ ...value, m: (m + 1) % 60 }),
-        () => onChange({ ...value, m: Math.max(0, m - 1) })
-      )}
-      <span style={colonStyle}>:</span>
-      {cell(s, 'SEC',
-        () => onChange({ ...value, s: (s + 1) % 60 }),
-        () => onChange({ ...value, s: Math.max(0, s - 1) })
-      )}
-    </div>
-  )
-}
+// HMS imported from TimePickerWheel
 
 // ─── Compact split input for triathlon ────────────────────────────────────────
 
@@ -309,25 +277,38 @@ export function AddRaceModal({ onClose, defaultMode = 'past' }: Props) {
     }
   }, [showSuggest, suggestions])
 
-  // Autocomplete debounce
+  // Autocomplete debounce — matches on name, aliases, AND city
   useEffect(() => {
     clearTimeout(debounceRef.current)
     if (query.length < 2) { setSuggestions([]); setShowSuggest(false); return }
     debounceRef.current = setTimeout(() => {
       const q = query.toLowerCase()
+      const isCityQuery = catalog.some(r => r.city?.toLowerCase() === q || r.city?.toLowerCase().startsWith(q))
+
       const catalogHits = catalog
         .filter(r =>
           r.name.toLowerCase().includes(q) ||
-          (r.aliases ?? []).some(a => a.toLowerCase().includes(q))
+          (r.aliases ?? []).some(a => a.toLowerCase().includes(q)) ||
+          r.city?.toLowerCase().includes(q)
         )
-        .slice(0, 6)
+        // Sort: name/alias matches first, then city-only matches
+        .sort((a, b) => {
+          const aNameMatch = a.name.toLowerCase().includes(q) || (a.aliases ?? []).some(x => x.toLowerCase().includes(q))
+          const bNameMatch = b.name.toLowerCase().includes(q) || (b.aliases ?? []).some(x => x.toLowerCase().includes(q))
+          if (aNameMatch && !bNameMatch) return -1
+          if (!aNameMatch && bNameMatch) return 1
+          return 0
+        })
+        .slice(0, isCityQuery ? 8 : 6)
         .map(r => ({ label: r.name, source: 'catalog' as const, data: r }))
+
       const allMyRaces = [...pastRaces, ...upcomingRaces]
       const myHits = allMyRaces
-        .filter(r => r.name.toLowerCase().includes(q))
+        .filter(r => r.name.toLowerCase().includes(q) || r.city?.toLowerCase().includes(q))
         .slice(0, 3)
         .map(r => ({ label: r.name, source: 'past' as const, myRace: r }))
-      const all = [...myHits, ...catalogHits].slice(0, 8)
+
+      const all = [...myHits, ...catalogHits].slice(0, 10)
       setSuggestions(all)
       setShowSuggest(all.length > 0)
     }, 250)
@@ -373,7 +354,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past' }: Props) {
         if (match) { setDistance(distStr) } else { setDistance('__custom__'); setCustomDist(distStr) }
       }
       if (s.data.month && s.data.day) {
-        const yr = new Date().getFullYear()
+        const yr = s.data.year ?? new Date().getFullYear()
         setDate(`${yr}-${pad2(s.data.month)}-${pad2(s.data.day)}`)
       }
     }
@@ -677,7 +658,8 @@ export function AddRaceModal({ onClose, defaultMode = 'past' }: Props) {
                   if (s.data.dist_km)  metaParts.push(`${s.data.dist_km} km`)
                   if (s.data.month && s.data.day) {
                     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-                    metaParts.push(`${months[s.data.month - 1]} ${s.data.day}`)
+                    const yearSuffix = s.data.year ? ` ${s.data.year}` : ''
+                    metaParts.push(`${months[s.data.month - 1]} ${s.data.day}${yearSuffix}`)
                   }
                 }
                 return (
@@ -758,7 +740,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past' }: Props) {
           {/* ── Finish Time (past only, drum) — hidden for DNF/DSQ/DNS ── */}
           {mode === 'past' && outcome === 'Finished' && (
             <Field label="Finish Time">
-              <TimePicker value={time} onChange={setTime} />
+              <TimePickerWheel value={time} onChange={setTime} />
             </Field>
           )}
 
@@ -823,12 +805,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past' }: Props) {
 
           {/* ── Date ── */}
           <Field label="Date *">
-            <input
-              type="date"
-              style={{ ...st.input, WebkitAppearance: 'none', appearance: 'none', maxWidth: '100%' } as React.CSSProperties}
-              value={date}
-              onChange={e => setDate(e.target.value)}
-            />
+            <DateInput value={date} onChange={setDate} />
           </Field>
 
           {/* ── Placing (past only) ── */}
@@ -877,48 +854,6 @@ export function AddRaceModal({ onClose, defaultMode = 'past' }: Props) {
       </div>
     </div>
   )
-}
-
-// ─── Shared style constants ───────────────────────────────────────────────────
-
-const colonStyle: React.CSSProperties = {
-  color: 'var(--muted)',
-  fontSize: '20px',
-  fontWeight: 700,
-  alignSelf: 'center',
-  paddingBottom: '20px',
-}
-
-const drumBtn: React.CSSProperties = {
-  background: 'transparent',
-  border: 'none',
-  color: 'var(--muted)',
-  fontSize: '12px',
-  cursor: 'pointer',
-  padding: '4px 8px',
-  lineHeight: 1,
-  minHeight: '28px',
-  minWidth: '28px',
-}
-
-const drumNum: React.CSSProperties = {
-  fontFamily: 'var(--headline)',
-  fontWeight: 900,
-  fontSize: '28px',
-  color: 'var(--white)',
-  letterSpacing: '0.02em',
-  lineHeight: 1,
-  minWidth: '36px',
-  textAlign: 'center',
-}
-
-const drumLabel: React.CSSProperties = {
-  fontSize: '10px',
-  fontFamily: 'var(--headline)',
-  fontWeight: 700,
-  letterSpacing: '0.1em',
-  textTransform: 'uppercase',
-  color: 'var(--muted)',
 }
 
 const st = {

@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { useDashStore } from '@/stores/useDashStore'
-import { selectRaces, selectNextRace, selectAthlete, selectDashZoneCollapse } from '@/stores/selectors'
+import { useWearableStore } from '@/stores/useWearableStore'
+import { selectRaces, selectNextRace, selectAthlete, selectDashZoneCollapse, selectUpcomingRaces } from '@/stores/selectors'
 import { AddRaceModal } from '@/components/AddRaceModal'
 import type { Race } from '@/types'
 
@@ -147,6 +148,16 @@ function secsToHMS(s: number): string {
   const m = Math.floor((s % 3600) / 60)
   const sec = Math.round(s % 60)
   return `${h}:${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`
+}
+
+function parsePlacing(str: string | undefined): { pos: number; total: number; percentile: number } | null {
+  if (!str) return null
+  const m = str.match(/(\d+)\s*[/\\]\s*(\d+)/)
+  if (!m) return null
+  const pos = parseInt(m[1], 10)
+  const total = parseInt(m[2], 10)
+  if (!pos || !total || total === 0) return null
+  return { pos, total, percentile: Math.round((1 - (pos - 1) / total) * 100) }
 }
 
 function computeMomentum(races: Race[]): { score: number; badge: string } {
@@ -370,7 +381,7 @@ function PreRaceBriefing({ onAddRace }: { onAddRace: () => void }) {
 
 // ─── Countdown Card ───────────────────────────────────────────────────────────
 
-function CountdownCard({ race }: { race: Race }) {
+function CountdownCard({ race, onShowAll }: { race: Race; onShowAll: () => void }) {
   const navigate = useNavigate()
   const [now, setNow] = useState(() => Date.now())
 
@@ -443,7 +454,7 @@ function CountdownCard({ race }: { race: Race }) {
       </div>
 
       <div style={st.countdownDivider} />
-      <button style={st.allRacesBtn} onClick={() => navigate('/races')}>ALL UPCOMING RACES →</button>
+      <button style={st.allRacesBtn} onClick={onShowAll}>ALL UPCOMING RACES →</button>
     </div>
   )
 }
@@ -1124,6 +1135,984 @@ function WhyResultWidget() {
   )
 }
 
+// ─── Pro Gate ────────────────────────────────────────────────────────────────
+
+function ProGate({ label, teaser }: { label: string; teaser: string }) {
+  return (
+    <div style={{ ...st.glowCard, border: '1px dashed var(--border2)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+        <div>
+          <div style={st.widgetLabel}>{label}</div>
+          <div style={st.widgetTitle}>PRO FEATURE</div>
+        </div>
+        <span style={{ fontSize: '18px', flexShrink: 0 }}>🔒</span>
+      </div>
+      <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.6, marginTop: '2px' }}>{teaser}</div>
+      <div style={st.widgetDivider} />
+      <button style={st.ghostOutlineBtn}>UPGRADE TO PRO</button>
+    </div>
+  )
+}
+
+// ─── Race Readiness Widget ────────────────────────────────────────────────────
+
+function RaceReadinessWidget() {
+  const races        = useRaceStore(selectRaces)
+  const whoopRecovery = useWearableStore(s => s.whoopRecovery)
+  const today        = todayStr()
+
+  const { signal, score, detail } = useMemo(() => {
+    // WHOOP-based recovery
+    if (whoopRecovery.length > 0) {
+      const latest = whoopRecovery.sort((a, b) => b.created_at.localeCompare(a.created_at))[0]
+      const s = latest?.score?.recovery_score ?? 50
+      const signal = s >= 67 ? 'READY' : s >= 34 ? 'BUILDING' : 'UNDERCOOKED'
+      return { signal, score: s, detail: `WHOOP recovery score: ${s}%` }
+    }
+    // Derive from days since last race
+    const past = races.filter(r => r.date <= today).sort((a, b) => b.date.localeCompare(a.date))
+    const last = past[0]
+    if (!last) return { signal: 'BUILDING', score: 50, detail: 'Log your first race to track readiness.' }
+    const dist = distanceToKm(last.distance)
+    const recoveryDays = dist >= 42 ? 14 : dist >= 21 ? 7 : dist >= 10 ? 3 : 2
+    const daysSince = daysAgo(last.date)
+    const ratio = Math.min(1, daysSince / recoveryDays)
+    const s = Math.round(ratio * 100)
+    const signal = s >= 85 ? 'READY' : s >= 50 ? 'BUILDING' : 'UNDERCOOKED'
+    return { signal, score: s, detail: `${daysSince}d since ${distBadge(last.distance)} · recovery window: ${recoveryDays}d` }
+  }, [races, whoopRecovery, today])
+
+  const sigColor = signal === 'READY' ? 'var(--green)' : signal === 'BUILDING' ? '#FFD770' : 'var(--orange)'
+
+  return (
+    <div style={st.glowCard}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+        <div>
+          <div style={st.widgetLabel}>READINESS</div>
+          <div style={st.widgetTitle}>RACE READINESS</div>
+        </div>
+        <span style={{ ...st.badgePill, background: `${sigColor}22`, color: sigColor, border: `1px solid ${sigColor}55`, flexShrink: 0 }}>{signal}</span>
+      </div>
+
+      <div>
+        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: sigColor, letterSpacing: '-0.02em' }}>
+          {score}%
+        </div>
+        <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '10px', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
+          READINESS SCORE
+        </div>
+        <div style={{ height: '3px', background: 'var(--surface3)', borderRadius: '2px', marginTop: '10px', overflow: 'hidden' }}>
+          <div style={{ height: '100%', width: `${score}%`, background: sigColor, borderRadius: '2px', transition: 'width 0.5s ease' }} />
+        </div>
+      </div>
+
+      <div style={st.widgetDivider} />
+      <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.55 }}>{detail}</div>
+    </div>
+  )
+}
+
+// ─── Gap To Goal Widget ───────────────────────────────────────────────────────
+
+function GapToGoalWidget() {
+  const races   = useRaceStore(selectRaces)
+  const nextRace = useRaceStore(selectNextRace)
+  const today   = todayStr()
+
+  const result = useMemo(() => {
+    if (!nextRace?.goalTime) return null
+    const goalSecs = parseHMS(nextRace.goalTime)
+    if (!goalSecs) return null
+    const key = normalizeDistKey(nextRace.distance)
+    const pbMap = buildPBMap(races.filter(r => r.date <= today))
+    const pb = pbMap[key]
+    if (!pb?.time) return { goal: secsToHMS(goalSecs), pb: null, gap: null, raceName: nextRace.name }
+    const pbSecs = parseHMS(pb.time)
+    if (!pbSecs) return { goal: secsToHMS(goalSecs), pb: pb.time, gap: null, raceName: nextRace.name }
+    const gap = goalSecs - pbSecs
+    return { goal: secsToHMS(goalSecs), pb: pb.time, gap, raceName: nextRace.name }
+  }, [races, nextRace, today])
+
+  if (!nextRace) {
+    return (
+      <div style={st.glowCard}>
+        <div style={st.widgetLabel}>GAP TO GOAL</div>
+        <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '6px' }}>Add an upcoming race to track your gap to goal.</div>
+      </div>
+    )
+  }
+
+  if (!result?.goal) {
+    return (
+      <div style={st.glowCard}>
+        <div style={st.widgetLabel}>GAP TO GOAL</div>
+        <div style={st.widgetTitle}>{(nextRace.name ?? '').toUpperCase()}</div>
+        <div style={st.lockedBox}>
+          <div style={st.lockedTitle}>NO GOAL SET</div>
+          <div style={st.lockedText}>Set a goal time on your next race to track your gap.</div>
+        </div>
+      </div>
+    )
+  }
+
+  const gapColor = result.gap == null ? 'var(--muted)' : result.gap <= 0 ? 'var(--green)' : 'var(--orange)'
+  const gapLabel = result.gap == null
+    ? 'No PB logged for this distance yet'
+    : result.gap <= 0
+      ? `${secsToHMS(Math.abs(result.gap))} AHEAD OF GOAL`
+      : `${secsToHMS(result.gap)} BEHIND GOAL`
+
+  return (
+    <div style={st.glowCard}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+        <div>
+          <div style={st.widgetLabel}>GAP TO GOAL</div>
+          <div style={st.widgetTitle}>{distBadge(nextRace.distance) || 'NEXT RACE'}</div>
+        </div>
+        <span style={{ ...st.badgePill, background: 'rgba(var(--orange-ch),0.12)', color: 'var(--orange)', border: '1px solid rgba(var(--orange-ch),0.3)', flexShrink: 0 }}>
+          🎯
+        </span>
+      </div>
+
+      <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-end' }}>
+        <div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '28px', color: 'var(--white)', lineHeight: 1 }}>{result.goal}</div>
+          <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase', marginTop: '3px' }}>GOAL TIME</div>
+        </div>
+        {result.pb && (
+          <div style={{ paddingBottom: '1px' }}>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '18px', color: 'var(--muted)', lineHeight: 1 }}>{result.pb}</div>
+            <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted2)', textTransform: 'uppercase', marginTop: '3px' }}>CURRENT PB</div>
+          </div>
+        )}
+      </div>
+
+      <div style={{ fontSize: 'var(--text-sm)', color: gapColor, fontWeight: 600 }}>{gapLabel}</div>
+    </div>
+  )
+}
+
+// ─── Surface Profile Widget ───────────────────────────────────────────────────
+
+function SurfaceProfileWidget() {
+  const races = useRaceStore(selectRaces)
+  const today = todayStr()
+
+  const surfaces = useMemo(() => {
+    const past = races.filter(r => r.date <= today && r.placing)
+    if (past.length < 3) return null
+    const grouped: Record<string, number[]> = {}
+    for (const r of past) {
+      const s = (r.surface ?? 'road').toLowerCase()
+      const p = parsePlacing(r.placing)
+      if (!p) continue
+      if (!grouped[s]) grouped[s] = []
+      grouped[s].push(p.percentile)
+    }
+    return Object.entries(grouped)
+      .map(([surface, pcts]) => ({
+        surface,
+        avg: Math.round(pcts.reduce((a, b) => a + b, 0) / pcts.length),
+        count: pcts.length,
+      }))
+      .sort((a, b) => b.avg - a.avg)
+  }, [races, today])
+
+  return (
+    <div style={st.glowCard}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+        <div>
+          <div style={st.widgetLabel}>SURFACE PROFILE</div>
+          <div style={st.widgetTitle}>WHERE YOU THRIVE</div>
+        </div>
+        <span style={{ ...st.badgePill, background: 'rgba(var(--orange-ch),0.12)', color: 'var(--orange)', border: '1px solid rgba(var(--orange-ch),0.3)', flexShrink: 0 }}>
+          {surfaces ? surfaces.length : '—'}
+        </span>
+      </div>
+
+      {!surfaces ? (
+        <div style={st.lockedBox}>
+          <div style={st.lockedTitle}>NOT ENOUGH DATA</div>
+          <div style={st.lockedText}>Log 3+ races with placing data to see your surface breakdown.</div>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {surfaces.slice(0, 4).map((s, i) => {
+            const barColor = i === 0 ? 'var(--green)' : 'var(--orange)'
+            return (
+              <div key={s.surface}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                  <span style={{ fontSize: '12px', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: i === 0 ? 'var(--white)' : 'var(--muted)' }}>
+                    {s.surface}
+                    {i === 0 && <span style={{ marginLeft: '6px', fontSize: '10px', color: 'var(--green)' }}>BEST</span>}
+                  </span>
+                  <span style={{ fontSize: '12px', color: i === 0 ? 'var(--green)' : 'var(--muted)', fontWeight: 700 }}>
+                    Top {100 - s.avg + 1}% avg
+                  </span>
+                </div>
+                <div style={{ height: '3px', background: 'var(--surface3)', borderRadius: '2px', overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${s.avg}%`, background: barColor, borderRadius: '2px' }} />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Pressure Performer Widget ────────────────────────────────────────────────
+
+function PressurePerformerWidget() {
+  const races = useRaceStore(selectRaces)
+  const today = todayStr()
+
+  const result = useMemo(() => {
+    const past = races.filter(r => r.date <= today && r.placing)
+    if (past.length < 3) return null
+
+    const aRaces = past.filter(r => r.priority === 'A' || r.isArace)
+    const otherRaces = past.filter(r => r.priority !== 'A' && !r.isArace)
+
+    const avgPct = (list: Race[]) => {
+      const ps = list.map(r => parsePlacing(r.placing)?.percentile ?? null).filter((p): p is number => p !== null)
+      if (!ps.length) return null
+      return Math.round(ps.reduce((a, b) => a + b, 0) / ps.length)
+    }
+
+    const aPct = avgPct(aRaces)
+    const otherPct = avgPct(otherRaces)
+
+    if (aPct === null && otherPct === null) return null
+
+    let label = 'CONSISTENT'
+    if (aPct !== null && otherPct !== null) {
+      if (aPct > otherPct + 5) label = 'CLUTCH'
+      else if (otherPct > aPct + 5) label = 'RELAXED RACER'
+      else label = 'CONSISTENT'
+    }
+
+    return { aPct, otherPct, label, aCount: aRaces.length, otherCount: otherRaces.length }
+  }, [races, today])
+
+  const labelColor = result?.label === 'CLUTCH' ? 'var(--green)' : result?.label === 'RELAXED RACER' ? '#FFD770' : 'var(--orange)'
+
+  return (
+    <div style={st.glowCard}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+        <div>
+          <div style={st.widgetLabel}>PRESSURE PERFORMER</div>
+          <div style={st.widgetTitle}>A-RACE IQ</div>
+        </div>
+        {result && <span style={{ ...st.badgePill, background: `${labelColor}22`, color: labelColor, border: `1px solid ${labelColor}55`, flexShrink: 0 }}>{result.label}</span>}
+      </div>
+
+      {!result ? (
+        <div style={st.lockedBox}>
+          <div style={st.lockedTitle}>NOT ENOUGH DATA</div>
+          <div style={st.lockedText}>Log 3+ races with placing data and mark A-races to see your pressure profile.</div>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-end' }}>
+          {result.aPct !== null && (
+            <div>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '32px', color: 'var(--white)', lineHeight: 1 }}>
+                Top {100 - result.aPct + 1}%
+              </div>
+              <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted)', textTransform: 'uppercase', marginTop: '3px' }}>A-RACES ({result.aCount})</div>
+            </div>
+          )}
+          {result.otherPct !== null && (
+            <div style={{ paddingBottom: '2px' }}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '20px', color: 'var(--muted)', lineHeight: 1 }}>
+                Top {100 - result.otherPct + 1}%
+              </div>
+              <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted2)', textTransform: 'uppercase', marginTop: '3px' }}>B/C RACES ({result.otherCount})</div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Travel Load Widget ───────────────────────────────────────────────────────
+
+function TravelLoadWidget() {
+  const races   = useRaceStore(selectRaces)
+  const athlete = useAthleteStore(selectAthlete)
+  const today   = todayStr()
+
+  const result = useMemo(() => {
+    const past = races.filter(r => r.date <= today && r.placing)
+    if (past.length < 3) return null
+
+    const homeCountry = (athlete?.country ?? '').toLowerCase().trim()
+    const local = past.filter(r => homeCountry && r.country?.toLowerCase().trim() === homeCountry)
+    const away  = past.filter(r => !homeCountry || r.country?.toLowerCase().trim() !== homeCountry)
+
+    const avgPct = (list: Race[]) => {
+      const ps = list.map(r => parsePlacing(r.placing)?.percentile ?? null).filter((p): p is number => p !== null)
+      if (!ps.length) return null
+      return Math.round(ps.reduce((a, b) => a + b, 0) / ps.length)
+    }
+
+    return {
+      localPct: avgPct(local),
+      awayPct: avgPct(away),
+      localCount: local.length,
+      awayCount: away.length,
+    }
+  }, [races, athlete, today])
+
+  return (
+    <div style={st.glowCard}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+        <div>
+          <div style={st.widgetLabel}>TRAVEL LOAD</div>
+          <div style={st.widgetTitle}>HOME vs AWAY</div>
+        </div>
+        <span style={{ fontSize: '18px', flexShrink: 0 }}>✈️</span>
+      </div>
+
+      {!result ? (
+        <div style={st.lockedBox}>
+          <div style={st.lockedTitle}>NOT ENOUGH DATA</div>
+          <div style={st.lockedText}>Log 3+ races and set your home country in athlete profile.</div>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+          {result.localPct !== null && (
+            <div>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '32px', color: 'var(--green)', lineHeight: 1 }}>
+                Top {100 - result.localPct + 1}%
+              </div>
+              <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted)', textTransform: 'uppercase', marginTop: '3px' }}>
+                HOME ({result.localCount})
+              </div>
+            </div>
+          )}
+          {result.awayPct !== null && (
+            <div style={{ paddingBottom: '2px' }}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '20px', color: 'var(--muted)', lineHeight: 1 }}>
+                Top {100 - result.awayPct + 1}%
+              </div>
+              <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted2)', textTransform: 'uppercase', marginTop: '3px' }}>
+                AWAY ({result.awayCount})
+              </div>
+            </div>
+          )}
+          {result.localPct !== null && result.awayPct !== null && (
+            <>
+              <div style={st.widgetDivider} />
+              <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.55 }}>
+                {result.localPct > result.awayPct + 5
+                  ? 'You perform better at home-country races.'
+                  : result.awayPct > result.localPct + 5
+                  ? 'You actually thrive away from home.'
+                  : 'Consistent performer wherever you race.'}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Race Density Widget ──────────────────────────────────────────────────────
+
+function RaceDensityWidget() {
+  const races = useRaceStore(selectRaces)
+  const today = todayStr()
+
+  const result = useMemo(() => {
+    const past = races.filter(r => r.date <= today).sort((a, b) => a.date.localeCompare(b.date))
+    if (past.length < 2) return null
+
+    const gaps: number[] = []
+    for (let i = 1; i < past.length; i++) {
+      const gap = Math.round(
+        (new Date(past[i].date + 'T00:00:00').getTime() - new Date(past[i - 1].date + 'T00:00:00').getTime()) / 86400000
+      )
+      gaps.push(gap)
+    }
+
+    const avg = Math.round(gaps.reduce((a, b) => a + b, 0) / gaps.length)
+    const min = Math.min(...gaps)
+    const tightCount = gaps.filter(g => g < 14).length
+
+    return { avg, min, tightCount, total: past.length }
+  }, [races, today])
+
+  return (
+    <div style={st.glowCard}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+        <div>
+          <div style={st.widgetLabel}>RACE DENSITY</div>
+          <div style={st.widgetTitle}>RACE SPACING</div>
+        </div>
+        {result && (
+          <span style={{ ...st.badgePill, background: result.tightCount > 0 ? 'rgba(var(--orange-ch),0.12)' : 'rgba(0,255,136,0.1)', color: result.tightCount > 0 ? 'var(--orange)' : 'var(--green)', border: `1px solid ${result.tightCount > 0 ? 'rgba(var(--orange-ch),0.3)' : 'rgba(0,255,136,0.3)'}`, flexShrink: 0 }}>
+            {result.tightCount > 0 ? 'TIGHT' : 'SPACED'}
+          </span>
+        )}
+      </div>
+
+      {!result ? (
+        <div style={st.lockedBox}>
+          <div style={st.lockedTitle}>NOT ENOUGH DATA</div>
+          <div style={st.lockedText}>Log 2+ races to see your race spacing analysis.</div>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+            <div>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '32px', color: 'var(--white)', lineHeight: 1 }}>{result.avg}d</div>
+              <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted)', textTransform: 'uppercase', marginTop: '3px' }}>AVG GAP</div>
+            </div>
+            <div style={{ paddingBottom: '2px' }}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '20px', color: result.min < 14 ? 'var(--orange)' : 'var(--muted)', lineHeight: 1 }}>{result.min}d</div>
+              <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted2)', textTransform: 'uppercase', marginTop: '3px' }}>SHORTEST</div>
+            </div>
+          </div>
+          {result.tightCount > 0 && (
+            <div style={{ fontSize: '13px', color: 'var(--orange)', lineHeight: 1.5 }}>
+              ⚠ {result.tightCount} race{result.tightCount > 1 ? 's' : ''} stacked within 14 days of another.
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Best Conditions Widget ───────────────────────────────────────────────────
+
+function BestConditionsWidget() {
+  const races = useRaceStore(selectRaces)
+  const today = todayStr()
+
+  const result = useMemo(() => {
+    const past = races.filter(r => r.date <= today && r.placing && r.weather?.temp != null)
+    if (past.length < 3) return null
+
+    // Bucket by temp range and find best avg percentile
+    const buckets: { label: string; min: number; max: number; pcts: number[] }[] = [
+      { label: '< 5°C', min: -999, max: 5, pcts: [] },
+      { label: '5–10°C', min: 5, max: 10, pcts: [] },
+      { label: '10–15°C', min: 10, max: 15, pcts: [] },
+      { label: '15–20°C', min: 15, max: 20, pcts: [] },
+      { label: '20–25°C', min: 20, max: 25, pcts: [] },
+      { label: '> 25°C', min: 25, max: 999, pcts: [] },
+    ]
+
+    for (const r of past) {
+      const t = r.weather!.temp!
+      const p = parsePlacing(r.placing)
+      if (!p) continue
+      const bucket = buckets.find(b => t >= b.min && t < b.max)
+      if (bucket) bucket.pcts.push(p.percentile)
+    }
+
+    const ranked = buckets
+      .filter(b => b.pcts.length > 0)
+      .map(b => ({ label: b.label, avg: Math.round(b.pcts.reduce((a, c) => a + c, 0) / b.pcts.length), count: b.pcts.length }))
+      .sort((a, b) => b.avg - a.avg)
+
+    if (!ranked.length) return null
+
+    // Best surface
+    const surfMap: Record<string, number[]> = {}
+    for (const r of past) {
+      const s = r.surface ?? 'road'
+      const p = parsePlacing(r.placing)
+      if (!p) continue
+      if (!surfMap[s]) surfMap[s] = []
+      surfMap[s].push(p.percentile)
+    }
+    const bestSurf = Object.entries(surfMap)
+      .map(([s, ps]) => ({ s, avg: Math.round(ps.reduce((a, b) => a + b, 0) / ps.length) }))
+      .sort((a, b) => b.avg - a.avg)[0]
+
+    return { tempBuckets: ranked.slice(0, 3), bestSurf, totalWithWeather: past.length }
+  }, [races, today])
+
+  return (
+    <div style={st.glowCard}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+        <div>
+          <div style={st.widgetLabel}>BEST CONDITIONS</div>
+          <div style={st.widgetTitle}>YOUR OPTIMAL RACE</div>
+        </div>
+        <span style={{ fontSize: '18px', flexShrink: 0 }}>☀️</span>
+      </div>
+
+      {!result ? (
+        <div style={st.lockedBox}>
+          <div style={st.lockedTitle}>NOT ENOUGH DATA</div>
+          <div style={st.lockedText}>Log 3+ races with weather and placing data to find your sweet spot.</div>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {result.bestSurf && (
+            <div style={{ fontSize: '13px', color: 'var(--white)', fontWeight: 600 }}>
+              Best surface: <span style={{ color: 'var(--green)' }}>{result.bestSurf.s.toUpperCase()}</span>
+            </div>
+          )}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            {result.tempBuckets.map((b, i) => (
+              <div key={b.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '12px', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: i === 0 ? 'var(--white)' : 'var(--muted)' }}>
+                  {b.label} {i === 0 && '★'}
+                </span>
+                <span style={{ fontSize: '12px', color: i === 0 ? 'var(--green)' : 'var(--muted)', fontWeight: 700 }}>
+                  Top {100 - b.avg + 1}% ({b.count})
+                </span>
+              </div>
+            ))}
+          </div>
+          <div style={st.widgetDivider} />
+          <div style={{ fontSize: '12px', color: 'var(--muted)' }}>Based on {result.totalWithWeather} races with weather data</div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Course Fit Score Widget ──────────────────────────────────────────────────
+
+function CourseFitWidget() {
+  const races    = useRaceStore(selectRaces)
+  const nextRace = useRaceStore(selectNextRace)
+  const today    = todayStr()
+
+  const result = useMemo(() => {
+    if (!nextRace) return null
+    const past = races.filter(r => r.date <= today && r.placing)
+    if (past.length < 3) return null
+
+    // Surface fit: how well does athlete do on this surface?
+    const nextSurface = (nextRace.surface ?? 'road').toLowerCase()
+    const surfaceRaces = past.filter(r => (r.surface ?? 'road').toLowerCase() === nextSurface)
+    const allPcts = past.map(r => parsePlacing(r.placing)?.percentile ?? null).filter((p): p is number => p !== null)
+    const surfPcts = surfaceRaces.map(r => parsePlacing(r.placing)?.percentile ?? null).filter((p): p is number => p !== null)
+
+    const overallAvg = allPcts.length ? allPcts.reduce((a, b) => a + b, 0) / allPcts.length : 50
+    const surfAvg = surfPcts.length ? surfPcts.reduce((a, b) => a + b, 0) / surfPcts.length : overallAvg
+
+    // Elevation fit: flat specialist vs hilly
+    let elevFit = 50
+    if (typeof nextRace.elevation === 'number') {
+      const isHilly = nextRace.elevation > 300
+      const hillyRaces = past.filter(r => typeof r.elevation === 'number' && r.elevation > 300)
+      const flatRaces  = past.filter(r => typeof r.elevation === 'number' && r.elevation <= 300)
+      const hillyPcts  = hillyRaces.map(r => parsePlacing(r.placing)?.percentile ?? null).filter((p): p is number => p !== null)
+      const flatPcts   = flatRaces.map(r => parsePlacing(r.placing)?.percentile ?? null).filter((p): p is number => p !== null)
+      if (isHilly && hillyPcts.length) elevFit = hillyPcts.reduce((a, b) => a + b, 0) / hillyPcts.length
+      else if (!isHilly && flatPcts.length) elevFit = flatPcts.reduce((a, b) => a + b, 0) / flatPcts.length
+    }
+
+    const score = Math.round((surfAvg * 0.6 + elevFit * 0.4))
+    const label = score >= 70 ? 'GREAT FIT' : score >= 50 ? 'SOLID FIT' : 'TOUGH COURSE'
+    const color = score >= 70 ? 'var(--green)' : score >= 50 ? '#FFD770' : 'var(--orange)'
+
+    return { score, label, color, nextSurface, surfaceRaceCount: surfaceRaces.length }
+  }, [races, nextRace, today])
+
+  if (!nextRace) {
+    return (
+      <div style={st.glowCard}>
+        <div style={st.widgetLabel}>COURSE FIT</div>
+        <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '6px' }}>Add an upcoming race to calculate your course fit score.</div>
+      </div>
+    )
+  }
+
+  return (
+    <div style={st.glowCard}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+        <div>
+          <div style={st.widgetLabel}>COURSE FIT</div>
+          <div style={st.widgetTitle}>{(nextRace.name ?? 'NEXT RACE').toUpperCase()}</div>
+        </div>
+        {result && <span style={{ ...st.badgePill, background: `${result.color}22`, color: result.color, border: `1px solid ${result.color}55`, flexShrink: 0 }}>{result.label}</span>}
+      </div>
+
+      {!result ? (
+        <div style={{ fontSize: '13px', color: 'var(--muted)' }}>Log 3+ races with placing data to unlock course fit score.</div>
+      ) : (
+        <>
+          <div>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: result.color, letterSpacing: '-0.02em' }}>
+              {result.score}
+            </div>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '10px', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
+              / 100 COURSE FIT
+            </div>
+            <div style={{ height: '3px', background: 'var(--surface3)', borderRadius: '2px', marginTop: '10px', overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${result.score}%`, background: result.color, borderRadius: '2px' }} />
+            </div>
+          </div>
+          <div style={st.widgetDivider} />
+          <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.55 }}>
+            Surface: {result.nextSurface.toUpperCase()}
+            {result.surfaceRaceCount > 0 ? ` · ${result.surfaceRaceCount} prior ${result.nextSurface} races` : ' · no prior races on this surface'}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+// ─── PB Probability Widget ────────────────────────────────────────────────────
+
+function PBProbabilityWidget() {
+  const races    = useRaceStore(selectRaces)
+  const nextRace = useRaceStore(selectNextRace)
+  const today    = todayStr()
+
+  const result = useMemo(() => {
+    if (!nextRace) return null
+    const past = races.filter(r => r.date <= today && r.time)
+    if (past.length < 2) return null
+
+    const key = normalizeDistKey(nextRace.distance)
+    const pbMap = buildPBMap(past)
+    const pb = pbMap[key]
+
+    // Form trend (30%)
+    const { score: momentumScore } = computeMomentum(past)
+    const formScore = Math.round(momentumScore * 100)
+
+    // Surface fit (25%) — how often they race well on this surface
+    const nextSurface = (nextRace.surface ?? 'road').toLowerCase()
+    const surfRaces = past.filter(r => (r.surface ?? 'road').toLowerCase() === nextSurface && r.placing)
+    const allRacesWithPlacing = past.filter(r => r.placing)
+    const surfPct = surfRaces.length
+      ? surfRaces.map(r => parsePlacing(r.placing)?.percentile ?? 50).reduce((a, b) => a + b, 0) / surfRaces.length
+      : allRacesWithPlacing.length
+        ? allRacesWithPlacing.map(r => parsePlacing(r.placing)?.percentile ?? 50).reduce((a, b) => a + b, 0) / allRacesWithPlacing.length
+        : 50
+    const surfScore = Math.round(surfPct)
+
+    // Rest gap (15%) — was there enough recovery?
+    const lastRace = past.sort((a, b) => b.date.localeCompare(a.date))[0]
+    const lastDist = lastRace ? distanceToKm(lastRace.distance) : 0
+    const minRecovery = lastDist >= 42 ? 14 : lastDist >= 21 ? 7 : 3
+    const daysSinceLast = lastRace ? daysAgo(lastRace.date) : 999
+    const restScore = daysSinceLast >= minRecovery ? 100 : Math.round((daysSinceLast / minRecovery) * 100)
+
+    // Has PB for this distance (20%)
+    const hasPBForDist = !!pb
+    const pbScore = hasPBForDist ? 60 : 40
+
+    const weighted = Math.round(formScore * 0.30 + surfScore * 0.25 + restScore * 0.15 + pbScore * 0.20 + 10)
+    const clamped = Math.max(5, Math.min(95, weighted))
+
+    const label = clamped >= 65 ? 'HIGH' : clamped >= 40 ? 'MODERATE' : 'LOW'
+    const color = clamped >= 65 ? 'var(--green)' : clamped >= 40 ? '#FFD770' : 'var(--orange)'
+
+    return { probability: clamped, label, color, hasPBForDist }
+  }, [races, nextRace, today])
+
+  if (!nextRace) {
+    return (
+      <div style={st.glowCard}>
+        <div style={st.widgetLabel}>PB PROBABILITY</div>
+        <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '6px' }}>Add an upcoming race to estimate your PB chance.</div>
+      </div>
+    )
+  }
+
+  return (
+    <div style={st.glowCard}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+        <div>
+          <div style={st.widgetLabel}>PB PROBABILITY</div>
+          <div style={st.widgetTitle}>{(nextRace.name ?? 'NEXT RACE').toUpperCase()}</div>
+        </div>
+        {result && <span style={{ ...st.badgePill, background: `${result.color}22`, color: result.color, border: `1px solid ${result.color}55`, flexShrink: 0 }}>{result.label}</span>}
+      </div>
+
+      {!result ? (
+        <div style={{ fontSize: '13px', color: 'var(--muted)' }}>Log 2+ races to calculate PB probability.</div>
+      ) : (
+        <>
+          <div>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: result.color, letterSpacing: '-0.02em' }}>
+              {result.probability}%
+            </div>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '10px', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
+              PB CHANCE
+            </div>
+            <div style={{ height: '3px', background: 'var(--surface3)', borderRadius: '2px', marginTop: '10px', overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${result.probability}%`, background: result.color, borderRadius: '2px' }} />
+            </div>
+          </div>
+          <div style={st.widgetDivider} />
+          <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.55 }}>
+            {!result.hasPBForDist
+              ? 'No PB logged for this distance — every finish is a new PB.'
+              : 'Based on form trend, surface fit, and recent recovery.'}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+// ─── Streak Risk Widget ───────────────────────────────────────────────────────
+
+function StreakRiskWidget() {
+  const garminActivities = useWearableStore(s => s.garminActivities)
+  const whoopActivities  = useWearableStore(s => s.whoopActivities)
+  const races = useRaceStore(selectRaces)
+  const today = todayStr()
+
+  const result = useMemo(() => {
+    // Build a set of active days from wearables or recent races
+    const activeDays = new Set<string>()
+    garminActivities.forEach(a => { if (a.startTimeGmt) activeDays.add(a.startTimeGmt.split('T')[0].split(' ')[0]) })
+    whoopActivities.forEach(a => { if (a.start) activeDays.add(a.start.split('T')[0]) })
+
+    // Fallback to recent races if no wearable data
+    if (activeDays.size === 0) {
+      races.filter(r => r.date <= today).forEach(r => activeDays.add(r.date))
+    }
+
+    if (activeDays.size === 0) return null
+
+    // Compute current streak (consecutive days back from today)
+    let streak = 0
+    let d = new Date(); d.setHours(0, 0, 0, 0)
+    while (true) {
+      const ds = d.toISOString().split('T')[0]
+      if (!activeDays.has(ds)) break
+      streak++
+      d.setDate(d.getDate() - 1)
+    }
+
+    const isRisk = streak >= 14
+    const label = isRisk ? 'RISK' : streak >= 7 ? 'BUILDING' : 'HEALTHY'
+    const color = isRisk ? 'var(--orange)' : streak >= 7 ? '#FFD770' : 'var(--green)'
+    const note = isRisk
+      ? `${streak}-day streak — consider a rest day to avoid overtraining.`
+      : streak >= 7
+      ? `${streak}-day streak — monitor for fatigue signs.`
+      : streak > 0
+      ? `${streak}-day active streak. Keep it consistent.`
+      : 'No recent activity streak detected.'
+
+    return { streak, label, color, note }
+  }, [garminActivities, whoopActivities, races, today])
+
+  return (
+    <div style={st.glowCard}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+        <div>
+          <div style={st.widgetLabel}>STREAK RISK</div>
+          <div style={st.widgetTitle}>TRAINING LOAD</div>
+        </div>
+        {result && <span style={{ ...st.badgePill, background: `${result.color}22`, color: result.color, border: `1px solid ${result.color}55`, flexShrink: 0 }}>{result.label}</span>}
+      </div>
+
+      {!result ? (
+        <div style={st.lockedBox}>
+          <div style={st.lockedTitle}>NO ACTIVITY DATA</div>
+          <div style={st.lockedText}>Connect Garmin or WHOOP to track your training streak risk.</div>
+        </div>
+      ) : (
+        <>
+          <div>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: result.color, letterSpacing: '-0.02em' }}>
+              {result.streak}d
+            </div>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '10px', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
+              CURRENT STREAK
+            </div>
+          </div>
+          <div style={st.widgetDivider} />
+          <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.55 }}>{result.note}</div>
+        </>
+      )}
+    </div>
+  )
+}
+
+// ─── Advanced Race DNA Widget (Pro) ──────────────────────────────────────────
+
+function AdvancedRaceDNAWidget() {
+  const races = useRaceStore(selectRaces)
+  const today = todayStr()
+  const past  = useMemo(() => races.filter(r => r.date <= today && r.placing), [races, today])
+
+  const teaser = useMemo(() => {
+    const withWeather = past.filter(r => r.weather?.humidity != null || r.weather?.wind != null).length
+    const withElev = past.filter(r => typeof r.elevation === 'number').length
+    return `${withWeather} races with humidity/wind data · ${withElev} with elevation`
+  }, [past])
+
+  return (
+    <ProGate
+      label="ADVANCED RACE DNA"
+      teaser={`Upgrade your Race DNA with humidity bands, wind sensitivity, elevation gain preference, and start-time performance. ${teaser}.`}
+    />
+  )
+}
+
+// ─── Weather Fit Score Widget (Pro) ──────────────────────────────────────────
+
+function WeatherFitWidget() {
+  const nextRace = useRaceStore(selectNextRace)
+  const teaser = nextRace
+    ? `Next race: ${nextRace.name ?? 'upcoming'}. Compare your historical weather performance against the forecast.`
+    : 'Add an upcoming race to see your weather fit score.'
+  return <ProGate label="WEATHER FIT SCORE" teaser={teaser} />
+}
+
+// ─── Race Gap Analysis Widget (Pro) ──────────────────────────────────────────
+
+function RaceGapAnalysisWidget() {
+  const races = useRaceStore(selectRaces)
+  const today = todayStr()
+  const past = useMemo(() => races.filter(r => r.date <= today).sort((a, b) => a.date.localeCompare(b.date)), [races, today])
+  const tightStacks = useMemo(() => {
+    let count = 0
+    for (let i = 1; i < past.length; i++) {
+      const gap = Math.round((new Date(past[i].date + 'T00:00:00').getTime() - new Date(past[i - 1].date + 'T00:00:00').getTime()) / 86400000)
+      const d = distanceToKm(past[i - 1].distance)
+      if (d >= 10 && gap < 14) count++
+    }
+    return count
+  }, [past])
+  return (
+    <ProGate
+      label="RACE GAP / RECOVERY"
+      teaser={`Detailed recovery analysis across ${past.length} races${tightStacks > 0 ? `, including ${tightStacks} tight-stack warning${tightStacks > 1 ? 's' : ''}` : ''}. Get guidance on over-racing risk and optimal spacing.`}
+    />
+  )
+}
+
+// ─── Why You PR'd Widget (Pro) ────────────────────────────────────────────────
+
+function WhyPRdWidget() {
+  const races = useRaceStore(selectRaces)
+  const today = todayStr()
+  const pbMap = useMemo(() => buildPBMap(races.filter(r => r.date <= today)), [races, today])
+  const pbCount = Object.keys(pbMap).length
+  return (
+    <ProGate
+      label="WHY YOU PR'D"
+      teaser={`You have ${pbCount} personal best${pbCount !== 1 ? 's' : ''} across distances. Unlock a narrative breakdown of what surface, weather, rest, and race type aligned on your best days.`}
+    />
+  )
+}
+
+// ─── Why You Faded Widget (Pro) ───────────────────────────────────────────────
+
+function WhyFadedWidget() {
+  const races = useRaceStore(selectRaces)
+  const today = todayStr()
+  const fadedCount = useMemo(() => {
+    return races.filter(r => r.date <= today && (r.splits ?? []).length >= 2).filter(r => {
+      const splits = (r.splits ?? []).filter(s => s.split)
+      if (splits.length < 2) return false
+      const first = parseHMS(splits[0].split!) ?? 0
+      const last  = parseHMS(splits[splits.length - 1].split!) ?? 0
+      return last > first * 1.05
+    }).length
+  }, [races, today])
+  return (
+    <ProGate
+      label="WHY YOU FADED"
+      teaser={`${fadedCount > 0 ? `${fadedCount} race${fadedCount > 1 ? 's' : ''} where you faded in the second half.` : 'Races where your pace dropped significantly in the second half.'} Unlock split analysis, weather correlation, and spacing factors.`}
+    />
+  )
+}
+
+// ─── Race Comparer Widget (Pro) ───────────────────────────────────────────────
+
+function RaceComparerWidget() {
+  const races = useRaceStore(selectRaces)
+  const today = todayStr()
+  const past  = useMemo(() => races.filter(r => r.date <= today && r.time).sort((a, b) => b.date.localeCompare(a.date)), [races, today])
+  return (
+    <ProGate
+      label="RACE COMPARER"
+      teaser={`Compare any two of your ${past.length} timed races side by side — time, pace, weather, surface, elevation, and placing — to spot what made the difference.`}
+    />
+  )
+}
+
+// ─── Race Stack Planner Widget (Pro) ─────────────────────────────────────────
+
+function RaceStackWidget() {
+  const nextRace = useRaceStore(selectNextRace)
+  const teaser = nextRace
+    ? `Your next race is ${nextRace.name ?? 'upcoming'} (${distBadge(nextRace.distance) || nextRace.distance + 'K'}). Generate a personalised race-day checklist based on course type, climate, and travel.`
+    : 'Add an upcoming race to generate a personalised race-day checklist.'
+  return <ProGate label="RACE STACK PLANNER" teaser={teaser} />
+}
+
+// ─── Adaptive Goals Widget (Pro) ─────────────────────────────────────────────
+
+function AdaptiveGoalsWidget() {
+  const races = useRaceStore(selectRaces)
+  const today = todayStr()
+  const withGoals = useMemo(() => races.filter(r => r.date <= today && r.goalTime && r.time).length, [races, today])
+  return (
+    <ProGate
+      label="ADAPTIVE GOALS"
+      teaser={`${withGoals > 0 ? `${withGoals} race${withGoals > 1 ? 's' : ''} with goal times logged.` : 'Set goal times on your upcoming races.'} Adaptive Goals automatically recalibrates your targets based on actual performance trends.`}
+    />
+  )
+}
+
+// ─── Break Tape Moments Widget (Pro) ─────────────────────────────────────────
+
+function BreakTapeWidget() {
+  const races = useRaceStore(selectRaces)
+  const today = todayStr()
+  const past  = useMemo(() => races.filter(r => r.date <= today).sort((a, b) => a.date.localeCompare(b.date)), [races, today])
+
+  const milestones = useMemo(() => {
+    const m: string[] = []
+    if (past.length > 0) m.push(`First race: ${past[0].name ?? past[0].date}`)
+    const distanceSeen = new Set<string>()
+    for (const r of past) {
+      const key = normalizeDistKey(r.distance)
+      if (key && !distanceSeen.has(key)) {
+        distanceSeen.add(key)
+        if (['5K','10K','Half Marathon','Marathon'].includes(key)) m.push(`First ${key}: ${r.name ?? r.date}`)
+      }
+    }
+    return m.slice(0, 3)
+  }, [past])
+
+  return (
+    <ProGate
+      label="BREAK TAPE MOMENTS"
+      teaser={`${milestones.length > 0 ? milestones.join(' · ') : `${past.length} races logged.`} Unlock your iconic moments: first of each distance, biggest time drop, comeback race, best age-grade effort.`}
+    />
+  )
+}
+
+// ─── What To Race Next Widget (Pro) ──────────────────────────────────────────
+
+function WhatToRaceNextWidget() {
+  const races = useRaceStore(selectRaces)
+  const today = todayStr()
+  const wishlist = useMemo(() => races.filter(r => r.date > today), [races, today])
+  return (
+    <ProGate
+      label="WHAT TO RACE NEXT"
+      teaser={`${wishlist.length > 0 ? `${wishlist.length} upcoming race${wishlist.length > 1 ? 's' : ''} in your list.` : 'Add races to your upcoming list.'} Get ranked recommendations based on your surface strengths, optimal conditions, and current form.`}
+    />
+  )
+}
+
 // ─── Zone accordion ───────────────────────────────────────────────────────────
 
 interface ZoneProps {
@@ -1163,6 +2152,100 @@ function WidgetShell({ label }: { label: string }) {
     <div style={st.widgetShell}>
       <div style={st.widgetShellLabel}>{label}</div>
       <div style={{ height: '44px', background: 'var(--surface)', borderRadius: '8px', opacity: 0.4 }} />
+    </div>
+  )
+}
+
+// ─── All Upcoming Races Modal ─────────────────────────────────────────────────
+
+function AllUpcomingModal({ onClose }: { onClose: () => void }) {
+  const upcoming = useRaceStore(selectUpcomingRaces)
+  const today    = todayStr()
+  const sorted   = useMemo(
+    () => [...upcoming].filter(r => r.date >= today).sort((a, b) => a.date.localeCompare(b.date)),
+    [upcoming, today],
+  )
+
+  // Body scroll lock
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = '' }
+  }, [])
+
+  return (
+    <div style={st.modalOverlay} onClick={onClose}>
+      <div style={{ ...st.customizeSheet, maxHeight: '75vh', paddingBottom: '24px' }} onClick={e => e.stopPropagation()}>
+        {/* Handle pill */}
+        <div style={{ width: '40px', height: '4px', background: 'var(--border2)', borderRadius: '2px', margin: '0 auto 20px' }} />
+
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '20px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>
+            UPCOMING RACES
+          </div>
+          <button
+            onClick={onClose}
+            style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '20px', cursor: 'pointer', padding: '4px', lineHeight: 1 }}
+            aria-label="Close"
+          >✕</button>
+        </div>
+
+        {/* Race list */}
+        <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {sorted.length === 0 ? (
+            <div style={{ textAlign: 'center', color: 'var(--muted)', padding: '32px 0', fontSize: '14px' }}>
+              No upcoming races yet.
+            </div>
+          ) : sorted.map(r => {
+            const d = daysUntil(r.date)
+            return (
+              <div key={r.id} style={{
+                background: 'var(--surface3)',
+                border: '1px solid var(--border)',
+                borderRadius: '10px',
+                padding: '12px 14px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '12px',
+              }}>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{
+                    fontFamily: 'var(--headline)',
+                    fontWeight: 800,
+                    fontSize: '14px',
+                    letterSpacing: '0.04em',
+                    textTransform: 'uppercase',
+                    color: 'var(--white)',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}>
+                    {r.priority && <span style={{ color: 'var(--orange)', marginRight: '6px' }}>{r.priority}</span>}
+                    {r.name ?? 'Unnamed race'}
+                  </div>
+                  <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '3px' }}>
+                    {[r.city, r.country].filter(Boolean).join(', ')}
+                    {r.distance ? ` · ${distBadge(r.distance) || r.distance + 'K'}` : ''}
+                    {' · '}{fmtDateIntl(r.date)}
+                  </div>
+                </div>
+                <div style={{
+                  flexShrink: 0,
+                  fontFamily: 'var(--headline)',
+                  fontWeight: 900,
+                  fontSize: '13px',
+                  color: d === 0 ? 'var(--orange)' : 'var(--muted)',
+                  letterSpacing: '0.04em',
+                  textAlign: 'right',
+                }}>
+                  {d === 0 ? 'TODAY' : `${d}D`}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
     </div>
   )
 }
@@ -1402,9 +2485,10 @@ function isEnabled(widgets: ReturnType<typeof useDashStore.getState>['widgets'],
 }
 
 export function Dashboard() {
-  const [showCustomize,  setShowCustomize]  = useState(false)
-  const [showAddRace,    setShowAddRace]    = useState(false)
-  const [addRaceMode,    setAddRaceMode]    = useState<'past' | 'upcoming'>('past')
+  const [showCustomize,     setShowCustomize]     = useState(false)
+  const [showAddRace,       setShowAddRace]       = useState(false)
+  const [addRaceMode,       setAddRaceMode]       = useState<'past' | 'upcoming'>('past')
+  const [showAllUpcoming,   setShowAllUpcoming]   = useState(false)
   const nextRace      = useRaceStore(selectNextRace)
   const storeWidgets  = useDashStore(s => s.widgets)
   const getDashLayout = useDashStore(s => s.getDashLayout)
@@ -1416,8 +2500,9 @@ export function Dashboard() {
 
   return (
     <div style={st.page}>
-      {showCustomize && <DashCustomizeModal onClose={() => setShowCustomize(false)} />}
-      {showAddRace   && <AddRaceModal defaultMode={addRaceMode} onClose={() => setShowAddRace(false)} />}
+      {showCustomize    && <DashCustomizeModal onClose={() => setShowCustomize(false)} />}
+      {showAddRace      && <AddRaceModal defaultMode={addRaceMode} onClose={() => setShowAddRace(false)} />}
+      {showAllUpcoming  && <AllUpcomingModal onClose={() => setShowAllUpcoming(false)} />}
 
       <GreetingCard onCustomize={() => setShowCustomize(true)} />
       <PreRaceBriefing onAddRace={openAddRace} />
@@ -1425,36 +2510,56 @@ export function Dashboard() {
       {/* NOW — RACE DAY */}
       <DashZone id="now" tag="NOW" label="RACE DAY">
         {nextRace
-          ? <>{en('countdown') && <CountdownCard race={nextRace} />}
-              {en('race-forecast') && <WeatherCard race={nextRace} />}
+          ? <>{en('countdown')       && <CountdownCard race={nextRace} onShowAll={() => setShowAllUpcoming(true)} />}
+              {en('race-forecast')   && <WeatherCard race={nextRace} />}
               <CourseInfoCard race={nextRace} /></>
           : <NoUpcomingRaceCTA onAddRace={openAddUpcomingRace} />
         }
+        {en('race-readiness') && <RaceReadinessWidget />}
+        {en('gap-to-goal')    && <GapToGoalWidget />}
+        {en('course-fit')     && <CourseFitWidget />}
+        {en('pb-probability') && <PBProbabilityWidget />}
+        {en('weather-fit')    && <WeatherFitWidget />}
+        {en('race-stack')     && <RaceStackWidget />}
       </DashZone>
 
       {/* RECENTLY — YOUR SEASON */}
       <DashZone id="recently" tag="RECENTLY" label="YOUR SEASON">
         <StatsStrip />
-        {en('recent-races') && <RecentRaces onAddRace={openAddRace} />}
+        {en('recent-races')   && <RecentRaces onAddRace={openAddRace} />}
         {en('personal-bests') && <WidgetShell label="Personal Bests" />}
+        {en('why-prd')        && <WhyPRdWidget />}
+        {en('why-faded')      && <WhyFadedWidget />}
+        {en('break-tape')     && <BreakTapeWidget />}
       </DashZone>
 
       {/* CONSISTENCY — BUILD */}
       <DashZone id="trending" tag="CONSISTENCY" label="BUILD">
-        {en('season-planner')  && <SeasonPlannerWidget onAddRace={openAddUpcomingRace} />}
-        {en('recovery-intel')  && <RecoveryIntelWidget />}
-        {en('training-correl') && <TrainingCorrelWidget />}
+        {en('season-planner')    && <SeasonPlannerWidget onAddRace={openAddUpcomingRace} />}
+        {en('recovery-intel')    && <RecoveryIntelWidget />}
+        {en('race-density')      && <RaceDensityWidget />}
+        {en('streak-risk')       && <StreakRiskWidget />}
+        {en('training-correl')   && <TrainingCorrelWidget />}
+        {en('race-gap-analysis') && <RaceGapAnalysisWidget />}
+        {en('adaptive-goals')    && <AdaptiveGoalsWidget />}
       </DashZone>
 
       {/* PATTERNS — ANALYSIS */}
       <DashZone id="context" tag="PATTERNS" label="ANALYSIS">
-        {en('boston-qual')     && <BostonQualWidget />}
-        {en('pacing-iq')       && <PacingIQWidget />}
-        {en('career-momentum') && <CareerMomentumWidget />}
-        {en('age-grade')       && <AgeGradeWidget />}
-        {en('race-dna')        && <RaceDNAWidget />}
-        {en('pattern-scan')    && <PatternScanWidget />}
-        {en('why-result')      && <WhyResultWidget />}
+        {en('boston-qual')       && <BostonQualWidget />}
+        {en('pacing-iq')         && <PacingIQWidget />}
+        {en('career-momentum')   && <CareerMomentumWidget />}
+        {en('age-grade')         && <AgeGradeWidget />}
+        {en('race-dna')          && <RaceDNAWidget />}
+        {en('surface-profile')   && <SurfaceProfileWidget />}
+        {en('pressure-performer') && <PressurePerformerWidget />}
+        {en('travel-load')       && <TravelLoadWidget />}
+        {en('best-conditions')   && <BestConditionsWidget />}
+        {en('pattern-scan')      && <PatternScanWidget />}
+        {en('why-result')        && <WhyResultWidget />}
+        {en('advanced-race-dna') && <AdvancedRaceDNAWidget />}
+        {en('race-comparer')     && <RaceComparerWidget />}
+        {en('what-to-race-next') && <WhatToRaceNextWidget />}
       </DashZone>
 
       <PaceCalculator />

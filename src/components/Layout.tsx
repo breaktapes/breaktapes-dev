@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { BottomNav } from './BottomNav'
 import { useSyncState } from '@/hooks/useSyncState'
 
@@ -15,6 +15,10 @@ const IconSettings = () => (
 )
 
 export function Layout({ children }: { children: React.ReactNode }) {
+  const navigate = useNavigate()
+  const location = useLocation()
+  const onSettings = location.pathname === '/settings'
+
   return (
     <div style={{
       position: 'fixed', inset: 0,
@@ -43,25 +47,25 @@ export function Layout({ children }: { children: React.ReactNode }) {
           BREAK<span style={{ color: 'var(--orange)' }}>/</span>TAPES
         </span>
 
-        <NavLink
-          to="/settings"
-          aria-label="Settings"
-          style={({ isActive }) => ({
+        <button
+          aria-label={onSettings ? 'Close settings' : 'Open settings'}
+          onClick={() => onSettings ? navigate(-1) : navigate('/settings')}
+          style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             width: '36px',
             height: '36px',
             background: 'var(--surface2)',
-            border: `1px solid ${isActive ? 'var(--orange)' : 'var(--border2)'}`,
+            border: `1px solid ${onSettings ? 'var(--orange)' : 'var(--border2)'}`,
             borderRadius: '8px',
-            color: isActive ? 'var(--orange)' : 'var(--muted)',
-            textDecoration: 'none',
+            color: onSettings ? 'var(--orange)' : 'var(--muted)',
+            cursor: 'pointer',
             flexShrink: 0,
-          })}
+          }}
         >
           <IconSettings />
-        </NavLink>
+        </button>
       </header>
 
       <main style={{

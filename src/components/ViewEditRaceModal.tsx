@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { RaceShareCard } from '@/components/RaceShareCard'
+import { DateInput } from '@/components/DateInput'
+import { TimePickerWheel, type HMS } from '@/components/TimePickerWheel'
 import type { Race } from '@/types'
 
 // ─── Config (mirrors AddRaceModal) ──────────────────────────────────────────
@@ -272,7 +274,10 @@ function EditPanel({ race, onSave, onCancel }: { race: Race; onSave: (patch: Par
     return match ? '' : (race.distance ?? '')
   })
   const [outcome, setOutcome]   = useState(race.outcome ?? 'Finished')
-  const [time, setTime]         = useState(race.time ?? '')
+  const [time, setTime]         = useState<HMS>(() => {
+    const parts = (race.time ?? '').split(':').map(Number)
+    return { h: parts[0] ?? 0, m: parts[1] ?? 0, s: parts[2] ?? 0 }
+  })
   const [placing, setPlacing]   = useState(race.placing ?? '')
   const [medal, setMedal]       = useState(() => {
     if (!race.medal) return ''
@@ -305,7 +310,9 @@ function EditPanel({ race, onSave, onCancel }: { race: Race; onSave: (patch: Par
       country: country.trim() || undefined,
       distance: effectiveDist || undefined,
       outcome: outcome || undefined,
-      time: (showTime && time.trim()) ? time.trim() : undefined,
+      time: (showTime && (time.h || time.m || time.s))
+        ? `${time.h}:${String(time.m).padStart(2,'0')}:${String(time.s).padStart(2,'0')}`
+        : undefined,
       placing: placing.trim() || undefined,
       medal: effectiveMedal || undefined,
       priority: priority || undefined,
@@ -349,20 +356,19 @@ function EditPanel({ race, onSave, onCancel }: { race: Race; onSave: (patch: Par
         )}
       </Field>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-        <Field label="Date">
-          <input type="date" style={st.input} value={date} onChange={e => setDate(e.target.value)} />
-        </Field>
-        <Field label="Outcome">
-          <select style={st.input} value={outcome} onChange={e => setOutcome(e.target.value)}>
-            {RACE_OUTCOMES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
-        </Field>
-      </div>
+      <Field label="Date">
+        <DateInput value={date} onChange={setDate} />
+      </Field>
+
+      <Field label="Outcome">
+        <select style={st.input} value={outcome} onChange={e => setOutcome(e.target.value)}>
+          {RACE_OUTCOMES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+        </select>
+      </Field>
 
       {showTime && (
-        <Field label="Finish Time (H:MM:SS)">
-          <input style={st.input} value={time} onChange={e => setTime(e.target.value)} placeholder="3:45:00" />
+        <Field label="Finish Time">
+          <TimePickerWheel value={time} onChange={setTime} />
         </Field>
       )}
 

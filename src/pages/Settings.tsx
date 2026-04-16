@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
@@ -98,6 +98,19 @@ export function Settings() {
   const [usernameSaved, setUsernameSaved] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
+  // Username lock: locked for 1 year after first set
+  const isUsernameLocked = useMemo(() => {
+    if (!athlete?.username || !athlete?.usernameSetAt) return false
+    const setAt = new Date(athlete.usernameSetAt).getTime()
+    return Date.now() - setAt < 365 * 24 * 60 * 60 * 1000
+  }, [athlete?.username, athlete?.usernameSetAt])
+
+  const usernameUnlockDate = useMemo(() => {
+    if (!athlete?.usernameSetAt) return null
+    const d = new Date(new Date(athlete.usernameSetAt).getTime() + 365 * 24 * 60 * 60 * 1000)
+    return d.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
+  }, [athlete?.usernameSetAt])
+
   // Keep local state in sync if athlete loads after mount
   useEffect(() => {
     setUsername(athlete?.username ?? '')
@@ -133,10 +146,17 @@ export function Settings() {
 
   async function saveUsername() {
     if (!authUser || usernameSaving) return
+    if (isUsernameLocked) return  // blocked for 1 year
     if (username && !validateUsername(username)) return
     setUsernameSaving(true)
     try {
-      const patch = { username: username || undefined, isPublic }
+      const isNewUsername = username && username !== athlete?.username
+      const now = new Date().toISOString()
+      const patch = {
+        username: username || undefined,
+        isPublic,
+        ...(isNewUsername ? { usernameSetAt: now } : {}),
+      }
       updateAthlete(patch)
       const { data: existing } = await supabase
         .from('user_state')
@@ -148,7 +168,7 @@ export function Settings() {
         user_id: authUser.id,
         username: username || null,
         is_public: isPublic,
-        state_json: { ...current, athlete: { ...(current.athlete ?? {}), username, isPublic } },
+        state_json: { ...current, athlete: { ...(current.athlete ?? {}), ...patch } },
       }, { onConflict: 'user_id' })
       setUsernameSaved(true)
       setUsernameStatus('idle')
@@ -265,43 +285,73 @@ export function Settings() {
             <label style={{ display: 'block', fontSize: 'var(--text-xs)', color: 'var(--muted)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '6px', fontFamily: 'var(--headline)', fontWeight: 700 }}>
               Username
             </label>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <div style={{ flex: 1, position: 'relative' }}>
-                <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)', fontSize: '14px', pointerEvents: 'none' }}>@</span>
-                <input
-                  style={{ ...inputStyle, paddingLeft: '24px' }}
-                  value={username}
-                  onChange={e => onUsernameChange(e.target.value)}
-                  placeholder="yourname"
-                  maxLength={20}
-                  autoCapitalize="none"
-                  autoCorrect="off"
-                />
+            {isUsernameLocked ? (
+              /* Locked state — username set, within 1-year window */
+              <div>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  background: 'var(--surface3)',
+                  border: '1px solid var(--border2)',
+                  borderRadius: '8px',
+                  padding: '0.6rem 0.75rem',
+                }}>
+                  <span style={{ color: 'var(--muted)', fontSize: '14px' }}>@</span>
+                  <span style={{ flex: 1, color: 'var(--white)', fontSize: 'var(--text-sm)', fontWeight: 600 }}>{username}</span>
+                  <span style={{ fontSize: '14px' }}>🔒</span>
+                </div>
+                <p style={{ margin: '5px 0 0', fontSize: '11px', color: 'var(--muted)', lineHeight: 1.5 }}>
+                  Username is locked until <span style={{ color: 'var(--white)' }}>{usernameUnlockDate}</span>.
+                </p>
               </div>
-              <button
-                style={{
-                  ...btnMain,
-                  padding: '0 16px',
-                  opacity: (usernameStatus === 'taken' || usernameStatus === 'invalid' || usernameSaving) ? 0.5 : 1,
-                  flexShrink: 0,
-                }}
-                onClick={saveUsername}
-                disabled={usernameStatus === 'taken' || usernameStatus === 'invalid' || usernameSaving}
-              >
-                {usernameSaving ? '…' : usernameSaved ? '✓' : 'Save'}
-              </button>
-            </div>
-            {usernameStatus === 'checking' && (
-              <p style={{ margin: '4px 0 0', fontSize: '11px', color: 'var(--muted)' }}>Checking availability…</p>
-            )}
-            {usernameStatus === 'available' && (
-              <p style={{ margin: '4px 0 0', fontSize: '11px', color: 'var(--green)' }}>✓ Available</p>
-            )}
-            {usernameStatus === 'taken' && (
-              <p style={{ margin: '4px 0 0', fontSize: '11px', color: '#ff6b6b' }}>Already taken</p>
-            )}
-            {usernameStatus === 'invalid' && (
-              <p style={{ margin: '4px 0 0', fontSize: '11px', color: '#ff6b6b' }}>3–20 chars, lowercase letters, numbers, underscores only</p>
+            ) : (
+              /* Editable state */
+              <div>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <div style={{ flex: 1, position: 'relative' }}>
+                    <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)', fontSize: '14px', pointerEvents: 'none' }}>@</span>
+                    <input
+                      style={{ ...inputStyle, paddingLeft: '24px' }}
+                      value={username}
+                      onChange={e => onUsernameChange(e.target.value)}
+                      placeholder="yourname"
+                      maxLength={20}
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                    />
+                  </div>
+                  <button
+                    style={{
+                      ...btnMain,
+                      padding: '0 16px',
+                      opacity: (usernameStatus === 'taken' || usernameStatus === 'invalid' || usernameSaving) ? 0.5 : 1,
+                      flexShrink: 0,
+                    }}
+                    onClick={saveUsername}
+                    disabled={usernameStatus === 'taken' || usernameStatus === 'invalid' || usernameSaving}
+                  >
+                    {usernameSaving ? '…' : usernameSaved ? '✓' : 'Save'}
+                  </button>
+                </div>
+                {usernameStatus === 'checking' && (
+                  <p style={{ margin: '4px 0 0', fontSize: '11px', color: 'var(--muted)' }}>Checking availability…</p>
+                )}
+                {usernameStatus === 'available' && (
+                  <p style={{ margin: '4px 0 0', fontSize: '11px', color: 'var(--green)' }}>✓ Available</p>
+                )}
+                {usernameStatus === 'taken' && (
+                  <p style={{ margin: '4px 0 0', fontSize: '11px', color: '#ff6b6b' }}>Already taken</p>
+                )}
+                {usernameStatus === 'invalid' && (
+                  <p style={{ margin: '4px 0 0', fontSize: '11px', color: '#ff6b6b' }}>3–20 chars, lowercase letters, numbers, underscores only</p>
+                )}
+                {athlete?.username && !isUsernameLocked && (
+                  <p style={{ margin: '4px 0 0', fontSize: '11px', color: 'var(--muted)' }}>
+                    Once saved, your username will be locked for 1 year.
+                  </p>
+                )}
+              </div>
             )}
           </div>
 

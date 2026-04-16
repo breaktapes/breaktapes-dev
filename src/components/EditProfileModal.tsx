@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/useAuthStore'
+import { DateInput } from '@/components/DateInput'
 import type { Athlete } from '@/types'
 
 interface Props {
@@ -32,20 +33,29 @@ export function EditProfileModal({ onClose }: Props) {
   const [error,     setError]     = useState('')
 
   async function handleSave() {
-    if (!firstName.trim()) { setError('First name is required'); return }
+    // All fields required except Club
+    if (!firstName.trim())  { setError('First name is required'); return }
+    if (!lastName.trim())   { setError('Last name is required'); return }
+    if (!city.trim())       { setError('City is required'); return }
+    if (!country.trim())    { setError('Country is required'); return }
+    if (!dob)               { setError('Date of birth is required'); return }
+    if (!gender)            { setError('Gender is required'); return }
+    if (!mainSport)         { setError('Main sport is required'); return }
+    if (!bio.trim())        { setError('Bio is required'); return }
     setSaving(true)
     setError('')
 
     const patch: Partial<Athlete> = {
       firstName: firstName.trim(),
-      lastName:  lastName.trim()  || undefined,
-      city:      city.trim()      || undefined,
-      country:   country.trim()   || undefined,
-      dob:       dob              || undefined,
-      gender:    gender           || undefined,
-      mainSport: mainSport        || undefined,
-      club:      club.trim()      || undefined,
-      bio:       bio.trim()       || undefined,
+      lastName:  lastName.trim(),
+      city:      city.trim(),
+      country:   country.trim(),
+      dob,
+      gender,
+      mainSport,
+      // Club is optional — pass value so user can intentionally clear it; undefined = not touched
+      ...(club.trim() !== (athlete?.club ?? '') ? { club: club.trim() || undefined } : {}),
+      bio:       bio.trim(),
     }
     updateAthlete(patch)
 
@@ -90,38 +100,36 @@ export function EditProfileModal({ onClose }: Props) {
             <Field label="First Name *">
               <input style={st.input} value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="Jane" autoFocus />
             </Field>
-            <Field label="Last Name">
+            <Field label="Last Name *">
               <input style={st.input} value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Smith" />
             </Field>
           </div>
 
           {/* Location */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', minWidth: 0 }}>
-            <Field label="City">
+            <Field label="City *">
               <input style={st.input} value={city} onChange={e => setCity(e.target.value)} placeholder="London" />
             </Field>
-            <Field label="Country">
+            <Field label="Country *">
               <input style={st.input} value={country} onChange={e => setCountry(e.target.value)} placeholder="UK" />
             </Field>
           </div>
 
-          {/* DOB + Gender */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', minWidth: 0 }}>
-            <Field label="Date of Birth">
-              <input type="date" style={st.input} value={dob} onChange={e => setDob(e.target.value)} />
-            </Field>
-            <Field label="Gender">
-              <select style={st.input} value={gender} onChange={e => setGender(e.target.value)}>
-                <option value="">—</option>
-                <option value="M">Male</option>
-                <option value="F">Female</option>
-                <option value="X">Non-binary</option>
-              </select>
-            </Field>
-          </div>
+          {/* DOB + Gender — each on its own row so the date input never overflows */}
+          <Field label="Date of Birth *">
+            <DateInput value={dob} onChange={setDob} max={new Date().toISOString().split('T')[0]} />
+          </Field>
+          <Field label="Gender *">
+            <select style={st.input} value={gender} onChange={e => setGender(e.target.value)}>
+              <option value="">—</option>
+              <option value="M">Male</option>
+              <option value="F">Female</option>
+              <option value="X">Non-binary</option>
+            </select>
+          </Field>
 
           {/* Main sport */}
-          <Field label="Main Sport">
+          <Field label="Main Sport *">
             <select style={st.input} value={mainSport} onChange={e => setMainSport(e.target.value)}>
               {['Running', 'Triathlon', 'Cycling', 'Swimming', 'Trail Running', 'Ultra', 'Duathlon', 'Other'].map(s => (
                 <option key={s} value={s}>{s}</option>
@@ -129,13 +137,13 @@ export function EditProfileModal({ onClose }: Props) {
             </select>
           </Field>
 
-          {/* Club */}
+          {/* Club — optional */}
           <Field label="Club / Team">
-            <input style={st.input} value={club} onChange={e => setClub(e.target.value)} placeholder="e.g. Berlin Running Club" />
+            <input style={st.input} value={club} onChange={e => setClub(e.target.value)} placeholder="e.g. Berlin Running Club (optional)" />
           </Field>
 
           {/* Bio */}
-          <Field label="Bio">
+          <Field label="Bio *">
             <textarea
               style={{ ...st.input, minHeight: '72px', resize: 'vertical' }}
               value={bio}

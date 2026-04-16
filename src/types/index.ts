@@ -56,6 +56,7 @@ export interface Athlete {
   mainSport?: string
   weeklyKm?: number
   username?: string
+  usernameSetAt?: string  // ISO timestamp — username locked for 1 year after this
   isPublic?: boolean
 }
 
