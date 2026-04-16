@@ -5,13 +5,42 @@
  * The map uses CartoDB Dark Matter (no API key required).
  * Pin markers only — no arc routes between races.
  */
-import { useRef, useState, useMemo, useEffect } from 'react'
+import { useRef, useState, useMemo, useEffect, Component } from 'react'
+import type { ReactNode, ErrorInfo } from 'react'
 import Map, { Marker } from 'react-map-gl/maplibre'
 import type { MapRef } from 'react-map-gl/maplibre'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { ViewEditRaceModal } from '@/components/ViewEditRaceModal'
+import { AddRaceModal } from '@/components/AddRaceModal'
 import type { Race } from '@/types'
+
+// Error boundary for MapLibre — catches WebGL init failures, style errors, CSP blocks
+class MapErrorBoundary extends Component<
+  { children: ReactNode },
+  { error: Error | null }
+> {
+  state = { error: null }
+  static getDerivedStateFromError(error: Error) { return { error } }
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error('[MapLibre]', error, info.componentStack)
+  }
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{
+          position: 'absolute', inset: 0, display: 'flex',
+          alignItems: 'center', justifyContent: 'center',
+          background: 'var(--surface)', color: 'var(--muted)',
+          fontFamily: 'var(--body)', fontSize: '14px', textAlign: 'center', padding: '2rem',
+        }}>
+          Map unavailable on this device
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
 
 const CARTO_DARK = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json'
 
@@ -110,7 +139,7 @@ function CompactRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onClic
     <div className={`race-row-compact${isPB ? ' is-pb' : ''}`} onClick={onClick} style={{ cursor: 'pointer' }}>
       <div style={{ minWidth: 0 }}>
         <div className="rrc-name">{race.name}</div>
-        <div className="rrc-meta">{race.city}, {race.country} · {mon} {day}</div>
+        <div className="rrc-meta">{[race.city, race.country].filter(Boolean).join(', ')} · {mon} {day}</div>
       </div>
       <div style={{ textAlign: 'right', flexShrink: 0 }}>
         <div className="rrc-time">{race.time ?? '—'}</div>
@@ -141,7 +170,7 @@ function DetailedRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onCli
             {race.name}
           </div>
           <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>
-            {race.city}, {race.country} · {race.distance} · {fmtDate(race.date)}
+            {[race.city, race.country].filter(Boolean).join(', ')} · {race.distance} · {fmtDate(race.date)}
           </div>
         </div>
         <div style={{ flexShrink: 0, textAlign: 'right' }}>
@@ -233,7 +262,7 @@ function WishlistRow({ race, onPlan, onRemove }: {
 
 type ViewMode = 'compact' | 'detailed' | 'wishlist'
 
-function RacesSheet({ races }: { races: Race[] }) {
+function RacesSheet({ races, onAddRace }: { races: Race[]; onAddRace: () => void }) {
   const [expanded, setExpanded] = useState(false)
   const [yearFilter, setYearFilter] = useState('all')
   const [viewMode, setViewMode] = useState<ViewMode>('compact')
@@ -430,6 +459,7 @@ function RacesSheet({ races }: { races: Race[] }) {
             fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px',
             letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer',
           }}
+          onClick={onAddRace}
         >
           + Log Race
         </button>
@@ -452,6 +482,7 @@ export function Races() {
   const races = useRaceStore(s => s.races)
   const [viewState, setViewState] = useState(INITIAL_VIEW)
   const mapRef = useRef<MapRef>(null)
+  const [addRaceOpen, setAddRaceOpen] = useState(false)
 
   // Fly-to bounds when races load
   useEffect(() => {
@@ -470,7 +501,8 @@ export function Races() {
 
   return (
     <div id="page-races">
-      {/* Map fills viewport */}
+      {/* Map fills viewport — wrapped in error boundary for WebGL/CSP failures */}
+      <MapErrorBoundary>
       <Map
         ref={mapRef}
         {...viewState}
@@ -502,9 +534,12 @@ export function Races() {
           </Marker>
         ))}
       </Map>
+      </MapErrorBoundary>
 
       {/* Bottom sheet */}
-      <RacesSheet races={races} />
+      <RacesSheet races={races} onAddRace={() => setAddRaceOpen(true)} />
+
+      {addRaceOpen && <AddRaceModal onClose={() => setAddRaceOpen(false)} />}
     </div>
   )
 }

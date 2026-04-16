@@ -78,23 +78,6 @@ interface ActivityItem {
   strain?: number
 }
 
-interface WhoopActivity {
-  id: string | number
-  sport_id: number
-  start: string
-  end?: string
-  strain?: number
-}
-
-interface GarminActivity {
-  activityId: number
-  activityName?: string
-  startTimeGmt: string
-  activityType?: { typeKey: string }
-  distance?: number
-  duration?: number
-  averageHR?: number
-}
 
 function whoopSportName(id: number): string {
   const names: Record<number, string> = {
@@ -140,11 +123,12 @@ export function Train() {
         if (provider === 'garmin') await handleGarminCallback(code!, state!)
         if (provider === 'strava') await handleStravaCallback(code!, state!)
         if (!provider || !['whoop', 'garmin', 'strava'].includes(provider)) return
-        setOauthStatus(`${state} connected!`)
+        setOauthStatus(`${provider} connected!`)
         setActiveTab('activities')
       } catch (err) {
+        const provider = state?.split(':')[0] ?? state
         console.error('OAuth callback failed:', err)
-        setOauthStatus(`Failed to connect ${state}. Please try again.`)
+        setOauthStatus(`Failed to connect ${provider}. Please try again.`)
       }
     }
     finish()
@@ -163,7 +147,7 @@ export function Train() {
         ])
         if (cancelled) return
         const merged: ActivityItem[] = [
-          ...(whoopActs as WhoopActivity[]).map(a => ({
+          ...whoopActs.map(a => ({
             id: String(a.id),
             source: 'WHOOP' as const,
             name: whoopSportName(a.sport_id),
@@ -171,7 +155,7 @@ export function Train() {
             durationMin: a.end ? Math.round((new Date(a.end).getTime() - new Date(a.start).getTime()) / 60000) : undefined,
             strain: a.strain,
           })),
-          ...(garminActs as GarminActivity[]).map(a => ({
+          ...garminActs.map(a => ({
             id: String(a.activityId),
             source: 'Garmin' as const,
             name: a.activityName || a.activityType?.typeKey || 'Activity',

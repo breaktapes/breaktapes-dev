@@ -2,6 +2,10 @@ import { useWearableStore } from '@/stores/useWearableStore'
 import { saveWearableToken } from '@/lib/wearableUtils'
 import { WHOOP_CLIENT_ID } from '@/env'
 import type { WearableToken } from '@/types'
+import type { WhoopActivity, WhoopRecovery } from '@/types/wearables'
+
+// Module-level timer — cancels previous before scheduling new to prevent accumulation
+let _refreshTimer: ReturnType<typeof setTimeout> | null = null
 
 export { WHOOP_CLIENT_ID }
 export const WHOOP_SCOPES = 'read:workout read:recovery read:body_measurement offline'
@@ -78,13 +82,14 @@ export async function refreshWhoopToken(): Promise<void> {
 
 function scheduleWhoopRefresh(token: WearableToken) {
   if (!token.expires_at) return
+  if (_refreshTimer !== null) clearTimeout(_refreshTimer)
   const msUntilRefresh = token.expires_at * 1000 - Date.now() - 60_000
   if (msUntilRefresh > 0) {
-    setTimeout(refreshWhoopToken, msUntilRefresh)
+    _refreshTimer = setTimeout(refreshWhoopToken, msUntilRefresh)
   }
 }
 
-export async function fetchWhoopActivities(limit = 20): Promise<unknown[]> {
+export async function fetchWhoopActivities(limit = 20): Promise<WhoopActivity[]> {
   const token = useWearableStore.getState().whoopToken
   if (!token) return []
   const res = await fetch(`https://api.prod.whoop.com/developer/v1/activity/workout?limit=${limit}`, {
@@ -92,10 +97,10 @@ export async function fetchWhoopActivities(limit = 20): Promise<unknown[]> {
   })
   if (!res.ok) return []
   const data = await res.json()
-  return data.records ?? []
+  return (data.records as WhoopActivity[]) ?? []
 }
 
-export async function fetchWhoopRecovery(limit = 20): Promise<unknown[]> {
+export async function fetchWhoopRecovery(limit = 20): Promise<WhoopRecovery[]> {
   const token = useWearableStore.getState().whoopToken
   if (!token) return []
   const res = await fetch(`https://api.prod.whoop.com/developer/v1/recovery?limit=${limit}`, {
@@ -103,5 +108,5 @@ export async function fetchWhoopRecovery(limit = 20): Promise<unknown[]> {
   })
   if (!res.ok) return []
   const data = await res.json()
-  return data.records ?? []
+  return (data.records as WhoopRecovery[]) ?? []
 }

@@ -2,6 +2,7 @@ import { useWearableStore } from '@/stores/useWearableStore'
 import { saveWearableToken } from '@/lib/wearableUtils'
 import { GARMIN_CLIENT_ID } from '@/env'
 import type { WearableToken } from '@/types'
+import type { GarminActivity } from '@/types/wearables'
 
 export { GARMIN_CLIENT_ID }
 
@@ -72,7 +73,7 @@ export async function handleGarminCallback(code: string, returnedState: string):
   useWearableStore.getState().setToken('garmin', token)
 }
 
-export async function fetchGarminActivities(limit = 20): Promise<unknown[]> {
+export async function fetchGarminActivities(limit = 20): Promise<GarminActivity[]> {
   const token = useWearableStore.getState().garminToken
   if (!token) return []
   const end = Math.floor(Date.now() / 1000)
@@ -82,5 +83,5 @@ export async function fetchGarminActivities(limit = 20): Promise<unknown[]> {
     { headers: { Authorization: `Bearer ${token.access_token}` } },
   )
   if (!res.ok) return []
-  return await res.json()
+  return (await res.json()) as GarminActivity[]
 }
