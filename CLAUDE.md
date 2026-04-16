@@ -215,9 +215,16 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 | `render(p)` | Dispatch page render |
 | `renderDash()` | Build dashboard view |
 | `renderMedals()` | Build medal wall |
-| `renderHistory()` | Build race history list (with search + pagination) |
+| `renderRaces()` | Render Races page: calls renderRacesSheet() + renderMap() |
+| `renderRacesSheet()` | Build bottom sheet race list (year filter, compact/detailed rows, stats) |
+| `renderRacesYearTabs()` | Render year filter tabs from race data |
+| `expandRacesSheet()` / `collapseRacesSheet()` | Toggle bottom sheet peek ↔ expanded state |
+| `buildCompactRow(r, pb, triPB)` | One-line race row (name/city/date \| time/dist) with PB gradient |
+| `buildDetailedRow(r, pb, triPB)` | Card race row with PB/medal/terrain/A-Race tags |
+| `openRaceShareCard()` | Open share modal; draws canvas 1200×630 race passport card |
+| `renderHistory()` | Build race history list — still used by season planner; no longer called from renderRaces() |
 | `renderAthlete()` | Build athlete profile |
-| `renderMap()` | Init Leaflet map + routes |
+| `renderMap()` | Init Leaflet map + arc routes (zoom 1.5, world view); always full-viewport on races page |
 | `renderTrain()` | Build Train hub (Pace / Activities / Wearables sub-tabs) |
 | `renderGreeting()` | Weather + time greeting |
 | `initAuth()` | Bootstrap Supabase auth |
@@ -787,6 +794,31 @@ Direct DB access (psql/psycopg2) is blocked from localhost — Supabase only exp
 - `min-width: 0` is required on every CSS grid child that contains text or other potentially-wide content — grid items default to `auto` min-width which bypasses the 1fr constraint
 - `Promise.race()` for auth timeout: the `_timedOut: true` field on the fallback object is a clean signal without throwing — catch block is not needed for timeout, only for genuine errors
 - FIT parser crash guard: `typeof FitParser === 'undefined'` check must precede any call to `new FitParser()` — the library loads async via CDN and may not be ready on first render
+
+---
+
+### Session 16 (2026-04-16) — Races page rebuild, Flighty Passport style (v0.4.0.0)
+
+**Branch:** `claude/strange-euler` → main (PR #104)
+
+#### Changes shipped
+- **Full-viewport map** — `#page-races` is now `position:relative; overflow:hidden` with `#racesPanel-map` filling via `position:absolute; inset:0`. Height calc subtracts both header and bottom nav heights.
+- **Bottom sheet** — `.races-sheet` at `position:absolute; bottom:0` with `transform:translateY(calc(100% - 230px))` peeking state → `translateY(0)` expanded. `z-index:400` (expanded: 650 to cover map pills).
+- **Year tabs** — `racesYearFilter` state, `renderRacesYearTabs()`, `setRacesYear()`. Generated from race data.
+- **Compact/Detailed toggle** — `racesViewMode` state; `buildCompactRow()` + `buildDetailedRow()`. PB rows get `.is-pb` class with orange left-border gradient.
+- **Arc connections** — `_greatCirclePoints(from, to, n=12)` uses `sin(π·t)` midpoint lift for curved great-circle arcs. Replaces straight Leaflet polylines.
+- **Share Race Log** — `openRaceShareCard()` + `drawShareCard()` + `_countryToFlag()`. Canvas 2D 1200×630 export; `copyShareCard()` wraps async clipboard write in inner try/catch.
+- **Map loading overlay** — moved to `z-index:200` (below sheet at 400) so sheet is immediately visible. `_loadTimeout` setTimeout clears when map finishes or on early return.
+- **Fixes from pre-landing review**: `ms-races/ms-countries/ms-cities/ms-km` null crash removed; `r.time` XSS escaped; empty-city geocoding filtered; `map-empty-state` orphan cleaned up.
+- **Tests** — `tests/spa-loader.js` stubs updated with `.races-sheet`, `#raceSheetList`, stat tiles. 241/241 pass.
+- **Version:** v0.3.1.3 → v0.4.0.0
+
+#### Key learnings
+- Map loading overlay must be `z-index` lower than the bottom sheet — if the overlay covers the full page (inset:0), the sheet will be invisible until map tiles load. Put overlay at z-index < sheet z-index.
+- `#page-races` height must subtract BOTH `--header-base-height` AND `--bottom-nav-base-height` — subtracting only the header lets the map overflow into the bottom nav area.
+- After removing floating stat elements (map pills), always grep for all JS references — `renderMap()` had 4 `getElementById` calls to the removed elements that would have crashed on every invocation.
+- Canvas `fillStyle` does not resolve CSS custom properties (`var(--orange)`) — use hardcoded hex values in canvas draw functions.
+- `canvas.toBlob()` is not a Promise — async errors inside the callback are not caught by an outer `try/catch`; wrap the async work inside the callback in its own `try/catch`.
 
 ---
 
