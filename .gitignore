@@ -22,3 +22,5 @@ coverage/
 # Ruflo runtime
 .claude-flow/
 .swarm/
+dist/
+vitest.workspace.ts
