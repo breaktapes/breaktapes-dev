@@ -297,7 +297,9 @@ function GreetingCard({ onCustomize }: { onCustomize: () => void }) {
       const cached = localStorage.getItem('fl2_geo_weather')
       if (cached) {
         const { data, ts } = JSON.parse(cached)
-        if (Date.now() - ts < 30 * 60 * 1000) { setWeather(data); setGeoState('ok'); return }
+        // Cache valid for 30 min AND must have 5 future hourly slots (old cache had only 1 day)
+        const futureHours = (data?.hourly ?? []).filter((h: { time: string }) => new Date(h.time).getTime() > Date.now()).length
+        if (Date.now() - ts < 30 * 60 * 1000 && futureHours >= 5) { setWeather(data); setGeoState('ok'); return }
       }
       // Check if permission was previously granted
       if (navigator.permissions) {
@@ -318,7 +320,8 @@ function GreetingCard({ onCustomize }: { onCustomize: () => void }) {
       async pos => {
         try {
           const { latitude, longitude } = pos.coords
-          const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code&hourly=temperature_2m,weather_code&timezone=auto&forecast_days=1&forecast_hours=10`)
+          // Fetch 2 days so we always have 5 future hours even late at night
+          const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code&hourly=temperature_2m,weather_code&timezone=auto&forecast_days=2`)
           const d   = await res.json()
           const wc: number = d?.current?.weather_code ?? 0
           const icon = wcIcon(wc)
@@ -326,14 +329,14 @@ function GreetingCard({ onCustomize }: { onCustomize: () => void }) {
           const temp  = Math.round(d?.current?.temperature_2m ?? 0)
           const low   = temp
           const high  = temp
-          // Next 5 hours (starting from current hour)
+          // Next 5 hours starting from current hour — compare by timestamp, not hour number
           const times: string[] = d?.hourly?.time ?? []
           const temps: number[] = d?.hourly?.temperature_2m ?? []
           const codes: number[] = d?.hourly?.weather_code ?? []
-          const nowH = new Date().getHours()
+          const nowMs = Date.now()
           const hourly = times
-            .map((t, i) => ({ t, temp: temps[i], icon: wcIcon(codes[i]) }))
-            .filter(x => { const h = new Date(x.t).getHours(); return h >= nowH })
+            .map((t, i) => ({ t, ms: new Date(t).getTime(), temp: temps[i], icon: wcIcon(codes[i]) }))
+            .filter(x => x.ms >= nowMs - 60 * 60 * 1000)  // include current hour (up to 1hr old)
             .slice(0, 5)
             .map(x => ({ time: new Date(x.t).toLocaleTimeString([], { hour: 'numeric', hour12: true }), temp: Math.round(x.temp), icon: x.icon }))
 
