@@ -496,7 +496,10 @@ export function ViewEditRaceModal({ race, onClose }: Props) {
 const st = {
   overlay: {
     position: 'fixed',
-    inset: 0,
+    top: 'calc(var(--header-base-height) + var(--safe-top))',
+    left: 0,
+    right: 0,
+    bottom: 'calc(var(--bottom-nav-base-height) + var(--safe-bottom))',
     background: 'rgba(0,0,0,0.75)',
     zIndex: 900,
     display: 'flex',

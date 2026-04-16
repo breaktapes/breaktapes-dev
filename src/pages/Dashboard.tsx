@@ -31,10 +31,65 @@ function fmtShortDate(dateStr: string): string {
   return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
+// Canonical label → km mapping (covers both numeric strings and named distances)
+const DIST_LABEL_KM: Record<string, number> = {
+  'marathon': 42.195,
+  'full marathon': 42.195,
+  'half marathon': 21.0975,
+  'half': 21.0975,
+  'ironman': 226,
+  'full ironman': 226,
+  'half ironman': 113,
+  '70.3': 113,
+  'olympic': 51.5,
+  'olympic triathlon': 51.5,
+  'sprint': 25.75,
+  'sprint triathlon': 25.75,
+  '5k': 5,
+  '10k': 10,
+  '15k': 15,
+  '20k': 20,
+  '25k': 25,
+  '30k': 30,
+  '50k': 50,
+  '60k': 60,
+  '80k': 80,
+  '90k': 90,
+  '100k': 100,
+  '160k': 160,
+  '50mi': 80.47,
+  '100mi': 160.93,
+  'ultra': 50,
+  'ultramarathon': 50,
+  'mile': 1.609,
+  '1 mile': 1.609,
+  '5 mile': 8.047,
+  '10 mile': 16.09,
+}
+
+function distanceToKm(d: string | undefined): number {
+  if (!d) return 0
+  const n = parseFloat(d)
+  if (!isNaN(n)) return n
+  return DIST_LABEL_KM[d.toLowerCase().trim()] ?? 0
+}
+
+// Normalize different representations of the same distance to one canonical key
+function normalizeDistKey(d: string | undefined): string {
+  if (!d) return ''
+  const km = distanceToKm(d)
+  if (km <= 0) return d.toLowerCase().trim()
+  if (km >= 42 && km <= 42.3) return 'Marathon'
+  if (km >= 21 && km <= 21.2) return 'Half Marathon'
+  if (km >= 10 && km <= 10.1) return '10K'
+  if (km >= 5 && km <= 5.1) return '5K'
+  return `${km}`
+}
+
 function distBadge(d: string | undefined): string {
   if (!d) return ''
-  const n = parseFloat(d)
-  if (isNaN(n)) return d
+  const n = distanceToKm(d)
+  if (n === 0) return d
   if (n >= 42 && n <= 42.3) return 'Marathon'
   if (n >= 21 && n <= 21.2) return 'Half Marathon'
   if (n >= 10 && n <= 10.1) return '10K'
@@ -46,7 +101,8 @@ function buildPBMap(races: Race[]): Record<string, Race> {
   const pb: Record<string, Race> = {}
   for (const r of races) {
     if (!r.time || !r.distance) continue
-    if (!pb[r.distance] || r.time < pb[r.distance].time!) pb[r.distance] = r
+    const key = normalizeDistKey(r.distance)
+    if (!pb[key] || r.time < pb[key].time!) pb[key] = r
   }
   return pb
 }
@@ -62,7 +118,7 @@ function uniqueCountries(races: Race[]) {
   return new Set(races.map(r => r.country).filter(Boolean)).size
 }
 function totalKm(races: Race[]) {
-  return races.reduce((s, r) => { const d = parseFloat(r.distance); return s + (isNaN(d) ? 0 : d) }, 0)
+  return races.reduce((s, r) => s + distanceToKm(r.distance), 0)
 }
 function medalCount(races: Race[]) {
   return races.filter(r => r.medal && r.medal !== 'finisher').length
@@ -99,7 +155,7 @@ function computeMomentum(races: Race[]): { score: number; badge: string } {
   if (past.length < 2) return { score: 1.0, badge: 'NEUTRAL' }
   const pbMap = buildPBMap(past)
   const last = past[0]
-  const pb = pbMap[last.distance]
+  const pb = pbMap[normalizeDistKey(last.distance)]
   if (!pb?.time || !last.time) return { score: 1.0, badge: 'NEUTRAL' }
   const lastSecs = parseHMS(last.time)
   const pbSecs = parseHMS(pb.time)
@@ -443,7 +499,7 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
     <div style={st.sectionCard}>
       <div style={st.sectionHeader}>RECENT RACES</div>
       {recent.map((r, i) => {
-        const isPB = !!r.time && pbMap[r.distance]?.id === r.id
+        const isPB = !!r.time && pbMap[normalizeDistKey(r.distance)]?.id === r.id
         return (
           <div key={r.id} style={{
             ...st.raceRow,
@@ -513,7 +569,7 @@ function SeasonPlannerWidget({ onAddRace }: { onAddRace: () => void }) {
   }, [races, today])
 
   const taperFor = (dist: string) => {
-    const n = parseFloat(dist) || 0
+    const n = distanceToKm(dist)
     if (n >= 42) return { taper: 14, recover: 12 }
     if (n >= 21) return { taper: 10, recover: 7 }
     if (n >= 10) return { taper: 7, recover: 5 }
@@ -582,7 +638,7 @@ function RecoveryIntelWidget() {
     )
   }
 
-  const dist = parseFloat(lastRace.distance) || 0
+  const dist = distanceToKm(lastRace.distance)
   const recoveryDays = dist >= 42 ? 14 : dist >= 21 ? 7 : dist >= 10 ? 3 : 2
   const daysSince = daysAgo(lastRace.date)
   const daysLeft = Math.max(0, recoveryDays - daysSince)
@@ -639,7 +695,7 @@ function BostonQualWidget() {
 
   const marathonPB = useMemo(() => {
     const ms = races.filter(r => {
-      const d = parseFloat(r.distance); return d >= 42 && d <= 42.3 && r.time
+      const d = distanceToKm(r.distance); return d >= 42 && d <= 42.3 && r.time
     })
     return ms.sort((a, b) => (a.time ?? '').localeCompare(b.time ?? ''))[0] ?? null
   }, [races])
@@ -1946,7 +2002,10 @@ const st = {
   // ── Customize modal
   modalOverlay: {
     position: 'fixed' as const,
-    inset: 0,
+    top: 'calc(var(--header-base-height) + var(--safe-top))',
+    left: 0,
+    right: 0,
+    bottom: 'calc(var(--bottom-nav-base-height) + var(--safe-bottom))',
     background: 'rgba(0,0,0,0.75)',
     zIndex: 900,
     display: 'flex',
@@ -1955,7 +2014,7 @@ const st = {
 
   customizeSheet: {
     width: '100%',
-    maxHeight: '92vh',
+    maxHeight: '100%',
     background: 'var(--surface2)',
     borderTop: '1px solid var(--border2)',
     borderRadius: '20px 20px 0 0',
