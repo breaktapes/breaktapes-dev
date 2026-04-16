@@ -28,8 +28,14 @@ function renderDashboard() {
   )
 }
 
-const YESTERDAY = new Date(Date.now() - 86400000).toISOString().split('T')[0]
-const FUTURE = new Date(Date.now() + 30 * 86400000).toISOString().split('T')[0]
+// Use local-time date strings to match how the component computes today/yesterday
+function localDateStr(offsetDays: number) {
+  const d = new Date()
+  d.setDate(d.getDate() + offsetDays)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+const YESTERDAY = localDateStr(-1)
+const FUTURE    = localDateStr(30)
 
 const RACE: Race = {
   id: 'r1',
