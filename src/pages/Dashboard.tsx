@@ -315,24 +315,24 @@ function GreetingCard({ onCustomize }: { onCustomize: () => void }) {
       async pos => {
         try {
           const { latitude, longitude } = pos.coords
-          const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code&hourly=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=1&forecast_hours=6`)
+          const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code&hourly=temperature_2m,weather_code&timezone=auto&forecast_days=1&forecast_hours=10`)
           const d   = await res.json()
           const wc: number = d?.current?.weather_code ?? 0
           const icon = wcIcon(wc)
           const desc = wcDesc(wc)
           const temp  = Math.round(d?.current?.temperature_2m ?? 0)
-          const low   = Math.round(d?.daily?.temperature_2m_min?.[0] ?? temp)
-          const high  = Math.round(d?.daily?.temperature_2m_max?.[0] ?? temp)
-          // Next 4 hours
+          const low   = temp
+          const high  = temp
+          // Next 5 hours (starting from current hour)
           const times: string[] = d?.hourly?.time ?? []
           const temps: number[] = d?.hourly?.temperature_2m ?? []
           const codes: number[] = d?.hourly?.weather_code ?? []
           const nowH = new Date().getHours()
           const hourly = times
             .map((t, i) => ({ t, temp: temps[i], icon: wcIcon(codes[i]) }))
-            .filter(x => { const h = new Date(x.t).getHours(); return h >= nowH && h < nowH + 4 })
-            .slice(0, 4)
-            .map(x => ({ time: new Date(x.t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), temp: Math.round(x.temp), icon: x.icon }))
+            .filter(x => { const h = new Date(x.t).getHours(); return h >= nowH })
+            .slice(0, 5)
+            .map(x => ({ time: new Date(x.t).toLocaleTimeString([], { hour: 'numeric', hour12: true }), temp: Math.round(x.temp), icon: x.icon }))
 
           const data: GeoWeather = { temp, icon, desc, low, high, hourly }
           setWeather(data); setGeoState('ok')
@@ -376,25 +376,26 @@ function GreetingCard({ onCustomize }: { onCustomize: () => void }) {
           <span style={st.greetingName}>{firstName}</span>
         </div>
 
-        {/* Weather sub-row */}
+        {/* Weather — 5-hour strip only */}
         {geoState === 'ok' && weather ? (
-          <div style={{ marginTop: '8px' }}>
-            {/* Current conditions */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-              <span style={{ fontSize: '24px', lineHeight: 1 }}>{weather.icon}</span>
-              <div>
-                <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '18px', color: 'var(--white)', letterSpacing: '0.02em' }}>{weather.temp}°C</span>
-                <span style={{ fontSize: '12px', color: 'var(--muted)', marginLeft: '6px' }}>{weather.desc} · {weather.low}° / {weather.high}°</span>
-              </div>
-            </div>
-            {/* 4-hour strip */}
+          <div style={{ marginTop: '10px' }}>
             {weather.hourly.length > 0 && (
-              <div style={{ display: 'flex', gap: '8px' }}>
+              <div style={{ display: 'flex', gap: '6px' }}>
                 {weather.hourly.map((h, i) => (
-                  <div key={i} style={{ flex: 1, background: 'var(--surface3)', borderRadius: '8px', padding: '6px 4px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px', minWidth: 0 }}>
-                    <span style={{ fontSize: '14px', lineHeight: 1 }}>{h.icon}</span>
-                    <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '12px', color: 'var(--white)' }}>{h.temp}°</span>
-                    <span style={{ fontSize: '9px', color: 'var(--muted)', letterSpacing: '0.02em' }}>{h.time}</span>
+                  <div key={i} style={{
+                    flex: 1,
+                    background: 'var(--surface3)',
+                    borderRadius: '10px',
+                    padding: '10px 4px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '5px',
+                    minWidth: 0,
+                  }}>
+                    <span style={{ fontSize: '18px', lineHeight: 1 }}>{h.icon}</span>
+                    <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '14px', color: 'var(--white)', letterSpacing: '0.02em' }}>{h.temp}°</span>
+                    <span style={{ fontSize: '9px', color: 'var(--muted)', letterSpacing: '0.02em', textAlign: 'center' }}>{h.time}</span>
                   </div>
                 ))}
               </div>
