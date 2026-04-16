@@ -840,6 +840,29 @@ Direct DB access (psql/psycopg2) is blocked from localhost — Supabase only exp
 
 ---
 
+### Session 18 (2026-04-16) — Race past/upcoming architecture + modal polish
+
+**Branch:** `staging` (direct commits — not merged to main yet)
+
+#### Changes shipped (commits `6fb1ed7`, `a04e5db`, `feb159f`)
+
+- **Race past/upcoming architecture** — `useRaceStore` gets `addUpcomingRace(race)` and `autoMoveExpiredUpcoming()`. On every app rehydration, upcoming races whose date is in the past are automatically moved to `races`. Dashboard RACE DAY empty state and season planner CTAs open the upcoming tab; all other "log race" CTAs open the past tab.
+- **Two-tab AddRaceModal** — "🏁 LOG A RACE" (full form: outcome, time, placing, medal → saves via `addRace`) and "📅 ADD UPCOMING" (simplified, no result fields → saves via `addUpcomingRace`). Tabs are orange/green themed. Save button label switches between "LOG RACE" and "ADD TO CALENDAR".
+- **Rich autocomplete dropdown** — two-line entries: race name + sport type badge on line 1; city · country · distance · date on line 2. Searches both past races AND upcoming races alongside the catalog.
+- **BQ safe buffer** — 5 min → **7 min** (420 sec); label updated to "SAFE BUFFER (−7 MIN)".
+- **Modal scroll lock** — All 3 modals (`AddRaceModal`, `ViewEditRaceModal`, `EditProfileModal`) now call `document.body.style.overflow = 'hidden'` via `useEffect` on mount (restored on unmount). `overscrollBehavior: 'contain'` added to each modal's scroll container. Fixes background scrolling on iOS.
+- **Country + City side by side** — `1fr 1fr` grid in AddRaceModal. Shortened placeholder text ("Country...", "City...") to fit.
+- **Date input iOS overflow fix** — `WebkitAppearance: none` + `appearance: none` + `maxWidth: 100%` on `input[type=date]` strips native iOS date picker intrinsic width that was overflowing the container.
+- **Stale branch cleanup** — Deleted 13 stale local branches (all squash-merged or pre-React migration). Removed 3 stale worktrees. Repo now has only `main` and `staging` local branches.
+
+#### Key learnings
+- `input[type=date]` on iOS Safari has an intrinsic minimum width tied to the native date display — `width: 100%` alone does NOT constrain it. Must add `WebkitAppearance: none` + `appearance: none` to opt out of native styling, plus `maxWidth: 100%` as a safety net.
+- Body scroll lock in React modals: `document.body.style.overflow = 'hidden'` in a `useEffect` with cleanup is the most reliable cross-browser approach. `overscrollBehavior: contain` on the scroll container is a required complement — it prevents rubber-banding at scroll edges from propagating to the body on iOS.
+- React passive event listeners: `e.preventDefault()` on `onTouchMove` does NOT work in React (all touch listeners are passive by default since React 17). The body lock approach is the correct iOS scroll isolation pattern.
+- `autoMoveExpiredUpcoming()` uses lexicographic date comparison (`date < today` where both are `YYYY-MM-DD`) — correct and zero-cost. No Date parsing needed.
+
+---
+
 ## Skill routing
 
 When the user's request matches an available skill, ALWAYS invoke it using the Skill
