@@ -3,6 +3,22 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.4.1.0] - 2026-04-16
+
+### Added
+- **Dashboard greeting card**: time-based greeting (GOOD MORNING/AFTERNOON/EVENING) with athlete name in orange.
+- **Pre-race briefing card**: three states — JUST RACED (last race within 7 days), PRE-RACE countdown (upcoming race with live D:H:M:S ticker), and Add First Race CTA.
+- **Live countdown**: full-screen D:H:M:S countdown to next race with priority badge and EDIT shortcut.
+
+### Changed
+- Bottom nav: Gear tab (→ /gear) replaces old More tab; SVG icons for all five tabs.
+- Race catalog hook: queries correct DB column names (`dist_km`, `type`, `aliases`) — autocomplete now searches race aliases in addition to name.
+- BREAK/TAPES wordmark in header gets orange slash; settings gear icon links to /settings.
+
+### Fixed
+- AddRaceModal dropdown: portal-based positioning so autocomplete is never clipped by overflow:hidden containers.
+- Race selection autofill: `dist_km` mapped to nearest preset distance; `type` sets sport correctly.
+
 ## [0.4.0.0] - 2026-04-16
 
 ### Added
