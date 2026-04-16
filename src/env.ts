@@ -6,3 +6,4 @@ export const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as strin
 export const IS_STAGING = import.meta.env.VITE_IS_STAGING === 'true'
 export const WHOOP_CLIENT_ID = import.meta.env.VITE_WHOOP_CLIENT_ID as string ?? ''
 export const GARMIN_CLIENT_ID = import.meta.env.VITE_GARMIN_CLIENT_ID as string ?? ''
+export const STRAVA_CLIENT_ID = import.meta.env.VITE_STRAVA_CLIENT_ID as string ?? ''

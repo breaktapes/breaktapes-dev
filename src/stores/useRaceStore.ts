@@ -15,6 +15,9 @@ export interface RaceState {
   setRaces: (races: Race[]) => void
   setUpcomingRaces: (races: Race[]) => void
   promoteNextRace: () => void
+  addToWishlist: (race: Race) => void
+  removeFromWishlist: (id: string) => void
+  moveToUpcoming: (id: string) => void
 }
 
 function findNextRace(upcoming: Race[]): Race | null {
@@ -76,6 +79,24 @@ export const useRaceStore = create<RaceState>()(
         if (!nextRace || nextRace.date < today) {
           set({ nextRace: findNextRace(upcomingRaces) })
         }
+      },
+
+      addToWishlist: (race) => set(s => ({
+        wishlistRaces: s.wishlistRaces.some(r => r.id === race.id)
+          ? s.wishlistRaces
+          : [...s.wishlistRaces, race],
+      })),
+
+      removeFromWishlist: (id) => set(s => ({
+        wishlistRaces: s.wishlistRaces.filter(r => r.id !== id),
+      })),
+
+      moveToUpcoming: (id) => {
+        const { wishlistRaces } = get()
+        const race = wishlistRaces.find(r => r.id === id)
+        if (!race) return
+        set(s => ({ wishlistRaces: s.wishlistRaces.filter(r => r.id !== id) }))
+        get().addUpcomingRace(race)
       },
     }),
     {

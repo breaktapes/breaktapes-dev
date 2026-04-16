@@ -2,7 +2,13 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
+import { useWearableStore } from '@/stores/useWearableStore'
 import { supabase } from '@/lib/supabase'
+import { startWhoopOAuth } from '@/lib/whoop'
+import { startGarminOAuth } from '@/lib/garmin'
+import { startStravaOAuth } from '@/lib/strava'
+import { importAppleHealthXML, importAppleHealthXMLStreaming } from '@/lib/appleHealth'
+import { removeWearableToken } from '@/lib/wearableUtils'
 import { THEMES } from '@/types'
 import type { ThemeId } from '@/types'
 
@@ -69,6 +75,16 @@ export function Settings() {
   const proAccessGranted = useAuthStore(s => s.proAccessGranted)
   const athlete = useAthleteStore(s => s.athlete)
   const updateAthlete = useAthleteStore(s => s.updateAthlete)
+
+  const whoopToken  = useWearableStore(s => s.whoopToken)
+  const garminToken = useWearableStore(s => s.garminToken)
+  const stravaToken = useWearableStore(s => s.stravaToken)
+  const appleHealth = useWearableStore(s => s.appleHealthSummary)
+  const clearToken  = useWearableStore(s => s.clearToken)
+
+  const [appleImporting, setAppleImporting] = useState(false)
+  const [appleProgress, setAppleProgress] = useState(0)
+  const appleInputRef = useRef<HTMLInputElement>(null)
 
   const [activeTheme, setActiveTheme] = useState<ThemeId>(
     () => (localStorage.getItem('bt_theme') as ThemeId) || 'carbon'
@@ -162,6 +178,35 @@ export function Settings() {
     document.documentElement.dataset.theme = themeId
     localStorage.setItem('bt_theme', themeId)
     setActiveTheme(themeId)
+  }
+
+  async function handleAppleHealthFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.name.endsWith('.xml')) {
+      alert('Please select an export.xml file from Apple Health.')
+      return
+    }
+    if (file.size > 100 * 1024 * 1024 * 1024) {
+      alert('File too large.')
+      return
+    }
+    setAppleImporting(true)
+    setAppleProgress(0)
+    try {
+      if (file.size > 500 * 1024 * 1024) {
+        await importAppleHealthXMLStreaming(file, setAppleProgress)
+      } else {
+        await importAppleHealthXML(file)
+        setAppleProgress(100)
+      }
+    } catch (err) {
+      console.error('Apple Health import failed:', err)
+      alert('Import failed. Please try again.')
+    } finally {
+      setAppleImporting(false)
+      e.target.value = ''
+    }
   }
 
   async function handleSignOut() {
@@ -392,65 +437,121 @@ export function Settings() {
       <section>
         <p style={sectionLabel}>Wearables</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          {[
-            { id: 'whoop',  name: 'WHOOP',        desc: 'Recovery, strain & sleep coaching',        status: 'connect' as const },
-            { id: 'garmin', name: 'Garmin',        desc: 'GPS activities & performance metrics',     status: 'connect' as const },
-            { id: 'coros',  name: 'COROS',         desc: 'Training load & endurance data',           status: 'soon'    as const },
-            { id: 'oura',   name: 'Oura',          desc: 'Readiness, sleep & HRV',                  status: 'soon'    as const },
-            { id: 'apple',  name: 'Apple Health',  desc: 'Import export.xml from the Health app',   status: 'connect' as const },
-          ].map(w => (
-            <div
-              key={w.id}
-              style={{
-                ...card,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: '1rem',
-              }}
-            >
+
+          {/* WHOOP */}
+          <div style={{ ...card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ margin: 0, fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>WHOOP</p>
+              <p style={{ margin: '3px 0 0', fontSize: 'var(--text-xs)', color: whoopToken ? 'var(--green)' : 'var(--muted)' }}>
+                {whoopToken ? '● Connected' : 'Recovery, strain & sleep coaching'}
+              </p>
+            </div>
+            {whoopToken ? (
+              <button
+                style={{ ...btnGhost, padding: '0.5rem 1rem', whiteSpace: 'nowrap', flexShrink: 0, fontSize: '12px' }}
+                onClick={async () => { await removeWearableToken('whoop'); clearToken('whoop') }}
+              >Disconnect</button>
+            ) : (
+              <button
+                style={{ ...btnMain, padding: '0.5rem 1rem', whiteSpace: 'nowrap', flexShrink: 0 }}
+                onClick={startWhoopOAuth}
+              >Connect</button>
+            )}
+          </div>
+
+          {/* Garmin */}
+          <div style={{ ...card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ margin: 0, fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>Garmin</p>
+              <p style={{ margin: '3px 0 0', fontSize: 'var(--text-xs)', color: garminToken ? 'var(--green)' : 'var(--muted)' }}>
+                {garminToken ? '● Connected' : 'GPS activities & performance metrics'}
+              </p>
+            </div>
+            {garminToken ? (
+              <button
+                style={{ ...btnGhost, padding: '0.5rem 1rem', whiteSpace: 'nowrap', flexShrink: 0, fontSize: '12px' }}
+                onClick={async () => { await removeWearableToken('garmin'); clearToken('garmin') }}
+              >Disconnect</button>
+            ) : (
+              <button
+                style={{ ...btnMain, padding: '0.5rem 1rem', whiteSpace: 'nowrap', flexShrink: 0 }}
+                onClick={startGarminOAuth}
+              >Connect</button>
+            )}
+          </div>
+
+          {/* Strava */}
+          <div style={{ ...card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ margin: 0, fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>Strava</p>
+              <p style={{ margin: '3px 0 0', fontSize: 'var(--text-xs)', color: stravaToken ? 'var(--green)' : 'var(--muted)' }}>
+                {stravaToken ? '● Connected' : 'Activities & segment data'}
+              </p>
+            </div>
+            {stravaToken ? (
+              <button
+                style={{ ...btnGhost, padding: '0.5rem 1rem', whiteSpace: 'nowrap', flexShrink: 0, fontSize: '12px' }}
+                onClick={async () => { await removeWearableToken('strava'); clearToken('strava') }}
+              >Disconnect</button>
+            ) : (
+              <button
+                style={{ ...btnMain, padding: '0.5rem 1rem', whiteSpace: 'nowrap', flexShrink: 0 }}
+                onClick={startStravaOAuth}
+              >Connect</button>
+            )}
+          </div>
+
+          {/* COROS */}
+          <div style={{ ...card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ margin: 0, fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>COROS</p>
+              <p style={{ margin: '3px 0 0', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Training load & endurance data</p>
+            </div>
+            <span style={{ padding: '3px 10px', borderRadius: '4px', background: 'var(--surface3)', border: '1px solid var(--border)', fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)', whiteSpace: 'nowrap' }}>Soon</span>
+          </div>
+
+          {/* Oura */}
+          <div style={{ ...card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <p style={{ margin: 0, fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>Oura</p>
+              <p style={{ margin: '3px 0 0', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Readiness, sleep & HRV</p>
+            </div>
+            <span style={{ padding: '3px 10px', borderRadius: '4px', background: 'var(--surface3)', border: '1px solid var(--border)', fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)', whiteSpace: 'nowrap' }}>Soon</span>
+          </div>
+
+          {/* Apple Health */}
+          <div style={{ ...card, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{
-                  margin: 0,
-                  fontFamily: 'var(--headline)',
-                  fontWeight: 900,
-                  fontSize: '14px',
-                  letterSpacing: '0.06em',
-                  textTransform: 'uppercase',
-                  color: 'var(--white)',
-                }}>
-                  {w.name}
-                </p>
-                <p style={{ margin: '3px 0 0', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
-                  {w.desc}
+                <p style={{ margin: 0, fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>Apple Health</p>
+                <p style={{ margin: '3px 0 0', fontSize: 'var(--text-xs)', color: appleHealth ? 'var(--green)' : 'var(--muted)' }}>
+                  {appleHealth
+                    ? `● ${appleHealth.totalWorkouts} days imported · ${appleHealth.lastSyncDate}`
+                    : 'Import export.xml from the Health app'}
                 </p>
               </div>
-              {w.status === 'soon' ? (
-                <span style={{
-                  padding: '3px 10px',
-                  borderRadius: '4px',
-                  background: 'var(--surface3)',
-                  border: '1px solid var(--border)',
-                  fontSize: 'var(--text-xs)',
-                  fontFamily: 'var(--headline)',
-                  fontWeight: 700,
-                  letterSpacing: '0.08em',
-                  textTransform: 'uppercase',
-                  color: 'var(--muted)',
-                  whiteSpace: 'nowrap',
-                }}>
-                  Soon
-                </span>
-              ) : (
-                <button
-                  style={{ ...btnMain, padding: '0.5rem 1rem', whiteSpace: 'nowrap', flexShrink: 0 }}
-                  onClick={() => console.log(`Connect ${w.name}`)}
-                >
-                  Connect
-                </button>
-              )}
+              <button
+                style={{ ...btnMain, padding: '0.5rem 1rem', whiteSpace: 'nowrap', flexShrink: 0 }}
+                onClick={() => appleInputRef.current?.click()}
+                disabled={appleImporting}
+              >
+                {appleImporting ? `${appleProgress}%` : 'Import'}
+              </button>
+              <input
+                ref={appleInputRef}
+                type="file"
+                accept=".xml"
+                style={{ display: 'none' }}
+                onChange={handleAppleHealthFile}
+              />
             </div>
-          ))}
+            {appleImporting && (
+              <div style={{ height: '4px', background: 'var(--surface3)', borderRadius: '2px', overflow: 'hidden' }}>
+                <div style={{ height: '100%', width: `${appleProgress}%`, background: 'var(--orange)', transition: 'width 0.3s' }} />
+              </div>
+            )}
+          </div>
+
         </div>
       </section>
 

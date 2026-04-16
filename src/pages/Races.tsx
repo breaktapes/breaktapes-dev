@@ -1,17 +1,46 @@
 /**
- * Races page — full-viewport MapLibre map with deck.gl ArcLayer overlay
+ * Races page — full-viewport MapLibre map with race location pin markers
  * and a drag-able bottom sheet listing race history.
  *
- * deck.gl is lazy-loaded so it stays out of the main JS bundle.
  * The map uses CartoDB Dark Matter (no API key required).
+ * Pin markers only — no arc routes between races.
  */
-import { lazy, Suspense, useRef, useState, useMemo, useEffect } from 'react'
-import Map from 'react-map-gl/maplibre'
+import { useRef, useState, useMemo, useEffect, Component } from 'react'
+import type { ReactNode, ErrorInfo } from 'react'
+import Map, { Marker } from 'react-map-gl/maplibre'
 import type { MapRef } from 'react-map-gl/maplibre'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { ViewEditRaceModal } from '@/components/ViewEditRaceModal'
+import { AddRaceModal } from '@/components/AddRaceModal'
 import type { Race } from '@/types'
+
+// Error boundary for MapLibre — catches WebGL init failures, style errors, CSP blocks
+class MapErrorBoundary extends Component<
+  { children: ReactNode },
+  { error: Error | null }
+> {
+  state = { error: null }
+  static getDerivedStateFromError(error: Error) { return { error } }
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error('[MapLibre]', error, info.componentStack)
+  }
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{
+          position: 'absolute', inset: 0, display: 'flex',
+          alignItems: 'center', justifyContent: 'center',
+          background: 'var(--surface)', color: 'var(--muted)',
+          fontFamily: 'var(--body)', fontSize: '14px', textAlign: 'center', padding: '2rem',
+        }}>
+          Map unavailable on this device
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
 
 const CARTO_DARK = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json'
 
@@ -22,9 +51,6 @@ const INITIAL_VIEW = {
   pitch: 0,
   bearing: 0,
 }
-
-// Lazy-load deck.gl ArcLayer to keep initial bundle small
-const RaceArcLayer = lazy(() => import('@/components/RaceArcLayer'))
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -113,7 +139,7 @@ function CompactRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onClic
     <div className={`race-row-compact${isPB ? ' is-pb' : ''}`} onClick={onClick} style={{ cursor: 'pointer' }}>
       <div style={{ minWidth: 0 }}>
         <div className="rrc-name">{race.name}</div>
-        <div className="rrc-meta">{race.city}, {race.country} · {mon} {day}</div>
+        <div className="rrc-meta">{[race.city, race.country].filter(Boolean).join(', ')} · {mon} {day}</div>
       </div>
       <div style={{ textAlign: 'right', flexShrink: 0 }}>
         <div className="rrc-time">{race.time ?? '—'}</div>
@@ -144,7 +170,7 @@ function DetailedRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onCli
             {race.name}
           </div>
           <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>
-            {race.city}, {race.country} · {race.distance} · {fmtDate(race.date)}
+            {[race.city, race.country].filter(Boolean).join(', ')} · {race.distance} · {fmtDate(race.date)}
           </div>
         </div>
         <div style={{ flexShrink: 0, textAlign: 'right' }}>
@@ -185,22 +211,93 @@ function DetailedRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onCli
   )
 }
 
+// ── Wishlist row ──────────────────────────────────────────────────────────────
+
+function WishlistRow({ race, onPlan, onRemove }: {
+  race: Race
+  onPlan: () => void
+  onRemove: () => void
+}) {
+  return (
+    <div style={{
+      padding: '12px 14px',
+      borderBottom: '1px solid var(--border)',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '10px',
+    }}>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '14px', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {race.name}
+        </div>
+        <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>
+          {[race.distance ? `${race.distance} km` : null, race.city, race.country].filter(Boolean).join(' · ')}
+        </div>
+        {race.date && (
+          <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '2px' }}>
+            {new Date(race.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+          </div>
+        )}
+      </div>
+      <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+        <button
+          onClick={onPlan}
+          style={{ background: 'rgba(var(--green-ch),0.12)', border: '1px solid rgba(var(--green-ch),0.3)', color: 'var(--green)', borderRadius: '6px', padding: '5px 10px', fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '11px', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer' }}
+        >
+          PLAN
+        </button>
+        <button
+          onClick={onRemove}
+          style={{ background: 'transparent', border: '1px solid var(--border2)', color: 'var(--muted)', borderRadius: '6px', padding: '5px 8px', fontSize: '13px', cursor: 'pointer' }}
+          aria-label="Remove from wishlist"
+        >
+          ✕
+        </button>
+      </div>
+    </div>
+  )
+}
+
 // ── Races sheet ───────────────────────────────────────────────────────────────
 
-type ViewMode = 'compact' | 'detailed'
+type ViewMode = 'compact' | 'detailed' | 'wishlist'
 
-function RacesSheet({ races }: { races: Race[] }) {
+function RacesSheet({ races, onAddRace }: { races: Race[]; onAddRace: () => void }) {
   const [expanded, setExpanded] = useState(false)
   const [yearFilter, setYearFilter] = useState('all')
   const [viewMode, setViewMode] = useState<ViewMode>('compact')
   const [selectedRace, setSelectedRace] = useState<Race | null>(null)
+  const [search, setSearch] = useState('')
+  const [visibleCount, setVisibleCount] = useState(20)
   const startY = useRef(0)
+  const searchDebounce = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+
+  const wishlistRaces    = useRaceStore(s => s.wishlistRaces)
+  const removeFromWishlist = useRaceStore(s => s.removeFromWishlist)
+  const moveToUpcoming   = useRaceStore(s => s.moveToUpcoming)
 
   const pbMap = useMemo(() => buildPBMap(races), [races])
 
-  const filtered = yearFilter === 'all'
-    ? races
-    : races.filter(r => r.date.startsWith(yearFilter))
+  // Debounce search input 150ms
+  function onSearchChange(val: string) {
+    setSearch(val)
+    clearTimeout(searchDebounce.current)
+    searchDebounce.current = setTimeout(() => setDebouncedSearch(val), 150)
+  }
+
+  const filtered = useMemo(() => {
+    let result = yearFilter === 'all' ? races : races.filter(r => r.date.startsWith(yearFilter))
+    if (debouncedSearch.trim()) {
+      const q = debouncedSearch.toLowerCase()
+      result = result.filter(r =>
+        r.name?.toLowerCase().includes(q) ||
+        r.city?.toLowerCase().includes(q) ||
+        r.country?.toLowerCase().includes(q)
+      )
+    }
+    return result
+  }, [races, yearFilter, debouncedSearch])
 
   const sorted = [...filtered].sort((a, b) => b.date.localeCompare(a.date))
 
@@ -213,6 +310,8 @@ function RacesSheet({ races }: { races: Race[] }) {
     else if (dy > 50) setExpanded(false)
   }
 
+  const showWishlist = viewMode === 'wishlist'
+
   return (
     <div
       className={`races-sheet${expanded ? ' expanded' : ''}`}
@@ -222,27 +321,97 @@ function RacesSheet({ races }: { races: Race[] }) {
       {/* Handle */}
       <div className="races-sheet-handle" onClick={() => setExpanded(e => !e)} />
 
-      {/* Top bar: year tabs + view toggle */}
+      {/* Search bar (hidden in wishlist mode) */}
+      {!showWishlist && (
+        <div style={{ padding: '0 12px 6px', position: 'relative' }}>
+          <input
+            type="search"
+            placeholder="Search races, cities, countries…"
+            value={search}
+            onChange={e => onSearchChange(e.target.value)}
+            style={{
+              width: '100%', boxSizing: 'border-box',
+              background: 'var(--surface3)',
+              border: '1px solid var(--border2)',
+              borderRadius: '6px',
+              color: 'var(--white)',
+              fontSize: '13px',
+              padding: '7px 30px 7px 10px',
+              fontFamily: 'var(--body)',
+              outline: 'none',
+            }}
+          />
+          {search && (
+            <button
+              onClick={() => { setSearch(''); setDebouncedSearch('') }}
+              style={{
+                position: 'absolute', right: '20px', top: '50%', transform: 'translateY(-50%)',
+                background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer',
+                fontSize: '14px', padding: 0, lineHeight: 1,
+              }}
+              aria-label="Clear search"
+            >✕</button>
+          )}
+        </div>
+      )}
+
+      {/* Top bar: mode tabs + year filter (hidden in wishlist mode) + view toggle */}
       <div className="races-sheet-top">
-        <YearTabs races={races} active={yearFilter} onChange={setYearFilter} />
+        {!showWishlist && (
+          <YearTabs races={races} active={yearFilter} onChange={y => { setYearFilter(y); setVisibleCount(20) }} />
+        )}
+        {showWishlist && (
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--orange)', padding: '0 4px', display: 'flex', alignItems: 'center' }}>
+            ♡ WISHLIST · {wishlistRaces.length}
+          </div>
+        )}
         <div className="races-view-toggle">
           <button
             className={`races-view-btn${viewMode === 'compact' ? ' active' : ''}`}
             onClick={() => setViewMode('compact')}
+            title="Compact"
           >≡</button>
           <button
             className={`races-view-btn${viewMode === 'detailed' ? ' active' : ''}`}
             onClick={() => setViewMode('detailed')}
+            title="Detailed"
           >▤</button>
+          <button
+            className={`races-view-btn${viewMode === 'wishlist' ? ' active' : ''}`}
+            onClick={() => setViewMode(v => v === 'wishlist' ? 'compact' : 'wishlist')}
+            title="Wishlist"
+            style={viewMode === 'wishlist' ? { color: 'var(--orange)' } : undefined}
+          >♡</button>
         </div>
       </div>
 
-      {/* Stats strip */}
-      <StatsStrip races={races} />
+      {/* Stats strip — only for race history */}
+      {!showWishlist && <StatsStrip races={races} />}
 
-      {/* Race list */}
+      {/* Content */}
       <div className="races-sheet-list">
-        {sorted.length === 0 ? (
+        {showWishlist ? (
+          wishlistRaces.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '2.5rem 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+              <div style={{ fontSize: '28px' }}>♡</div>
+              <div style={{ color: 'var(--muted)', fontSize: '13px', fontFamily: 'var(--headline)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                Races you&rsquo;re dreaming of
+              </div>
+              <div style={{ color: 'var(--muted2)', fontSize: '12px', fontFamily: 'var(--body)' }}>
+                Add races while logging to save them here.
+              </div>
+            </div>
+          ) : (
+            wishlistRaces.map(r => (
+              <WishlistRow
+                key={r.id}
+                race={r}
+                onPlan={() => moveToUpcoming(r.id)}
+                onRemove={() => removeFromWishlist(r.id)}
+              />
+            ))
+          )
+        ) : sorted.length === 0 ? (
           <div style={{
             textAlign: 'center', padding: '2rem 1rem',
             color: 'var(--muted)', fontSize: '13px',
@@ -251,13 +420,33 @@ function RacesSheet({ races }: { races: Race[] }) {
             {races.length === 0 ? 'No races yet — log your first one' : 'No races in this year'}
           </div>
         ) : viewMode === 'compact' ? (
-          sorted.map(r => (
-            <CompactRow key={r.id} race={r} isPB={pbMap[r.distance]?.id === r.id} onClick={() => setSelectedRace(r)} />
-          ))
+          <>
+            {sorted.slice(0, visibleCount).map(r => (
+              <CompactRow key={r.id} race={r} isPB={pbMap[r.distance]?.id === r.id} onClick={() => setSelectedRace(r)} />
+            ))}
+            {sorted.length > visibleCount && (
+              <button
+                onClick={() => setVisibleCount(c => c + 20)}
+                style={{ width: '100%', padding: '10px', background: 'none', border: 'none', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '12px', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer' }}
+              >
+                Show more ({sorted.length - visibleCount} remaining)
+              </button>
+            )}
+          </>
         ) : (
-          sorted.map(r => (
-            <DetailedRow key={r.id} race={r} isPB={pbMap[r.distance]?.id === r.id} onClick={() => setSelectedRace(r)} />
-          ))
+          <>
+            {sorted.slice(0, visibleCount).map(r => (
+              <DetailedRow key={r.id} race={r} isPB={pbMap[r.distance]?.id === r.id} onClick={() => setSelectedRace(r)} />
+            ))}
+            {sorted.length > visibleCount && (
+              <button
+                onClick={() => setVisibleCount(c => c + 20)}
+                style={{ width: '100%', padding: '10px', background: 'none', border: 'none', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '12px', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer' }}
+              >
+                Show more ({sorted.length - visibleCount} remaining)
+              </button>
+            )}
+          </>
         )}
       </div>
 
@@ -270,6 +459,7 @@ function RacesSheet({ races }: { races: Race[] }) {
             fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px',
             letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer',
           }}
+          onClick={onAddRace}
         >
           + Log Race
         </button>
@@ -292,6 +482,7 @@ export function Races() {
   const races = useRaceStore(s => s.races)
   const [viewState, setViewState] = useState(INITIAL_VIEW)
   const mapRef = useRef<MapRef>(null)
+  const [addRaceOpen, setAddRaceOpen] = useState(false)
 
   // Fly-to bounds when races load
   useEffect(() => {
@@ -306,11 +497,12 @@ export function Races() {
     mapRef.current.fitBounds(bounds, { padding: 80, maxZoom: 8, duration: 800 })
   }, [races.length]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const hasGeo = races.some(r => r.lat != null && r.lng != null)
+  const geoRaces = races.filter(r => r.lat != null && r.lng != null)
 
   return (
     <div id="page-races">
-      {/* Map fills viewport */}
+      {/* Map fills viewport — wrapped in error boundary for WebGL/CSP failures */}
+      <MapErrorBoundary>
       <Map
         ref={mapRef}
         {...viewState}
@@ -319,16 +511,35 @@ export function Races() {
         style={{ position: 'absolute', inset: 0 }}
         aria-label={`Race map showing ${races.length} races`}
       >
-        {/* Arc layer — lazy loaded, deck.gl stays out of main bundle */}
-        {hasGeo && (
-          <Suspense fallback={null}>
-            <RaceArcLayer races={races} viewState={viewState} />
-          </Suspense>
-        )}
+        {/* Race location pin markers */}
+        {geoRaces.map(r => (
+          <Marker
+            key={r.id}
+            longitude={r.lng!}
+            latitude={r.lat!}
+            anchor="center"
+          >
+            <div
+              title={`${r.name} · ${r.city}`}
+              style={{
+                width: '10px',
+                height: '10px',
+                borderRadius: '50%',
+                background: '#E84E1B',
+                border: '2px solid rgba(245,245,245,0.5)',
+                boxShadow: '0 0 6px rgba(232,78,27,0.6)',
+                cursor: 'pointer',
+              }}
+            />
+          </Marker>
+        ))}
       </Map>
+      </MapErrorBoundary>
 
       {/* Bottom sheet */}
-      <RacesSheet races={races} />
+      <RacesSheet races={races} onAddRace={() => setAddRaceOpen(true)} />
+
+      {addRaceOpen && <AddRaceModal onClose={() => setAddRaceOpen(false)} />}
     </div>
   )
 }
