@@ -9,6 +9,7 @@ import { AddRaceModal } from '@/components/AddRaceModal'
 import { TimePickerWheel } from '@/components/TimePickerWheel'
 import type { HMS } from '@/components/TimePickerWheel'
 import type { Race } from '@/types'
+import { useUnits, fmtDistKm, distUnit, fmtPaceSecPerKm, paceUnit } from '@/lib/units'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -1029,12 +1030,19 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
 
 function StatsStrip() {
   const races = useRaceStore(selectRaces)
-  const stats = useMemo(() => [
-    { label: 'RACES',     value: races.length.toString() },
-    { label: 'COUNTRIES', value: uniqueCountries(races).toString() },
-    { label: 'TOTAL KM',  value: Math.round(totalKm(races)).toLocaleString() },
-    { label: 'MEDALS',    value: medalCount(races).toString() },
-  ], [races])
+  const units = useUnits()
+  const stats = useMemo(() => {
+    const km = totalKm(races)
+    const dist = units === 'imperial'
+      ? Math.round(km * 0.621371).toLocaleString()
+      : Math.round(km).toLocaleString()
+    return [
+      { label: 'RACES',                 value: races.length.toString() },
+      { label: 'COUNTRIES',             value: uniqueCountries(races).toString() },
+      { label: `TOTAL ${distUnit(units)}`, value: dist },
+      { label: 'MEDALS',               value: medalCount(races).toString() },
+    ]
+  }, [races, units])
 
   return (
     <div style={st.statsStrip}>

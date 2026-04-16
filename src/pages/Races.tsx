@@ -14,6 +14,7 @@ import { useRaceStore } from '@/stores/useRaceStore'
 import { ViewEditRaceModal } from '@/components/ViewEditRaceModal'
 import { AddRaceModal } from '@/components/AddRaceModal'
 import type { Race } from '@/types'
+import { useUnits, distUnit } from '@/lib/units'
 
 // Error boundary for MapLibre — catches WebGL init failures, style errors, CSP blocks
 class MapErrorBoundary extends Component<
@@ -105,14 +106,16 @@ function YearTabs({
 // ── Stats strip ───────────────────────────────────────────────────────────────
 
 function StatsStrip({ races }: { races: Race[] }) {
-  const totalKm = Math.round(races.reduce((s, r) => s + (parseFloat(r.distance) || 0), 0))
+  const units = useUnits()
+  const km = races.reduce((s, r) => s + (parseFloat(r.distance) || 0), 0)
+  const totalDist = Math.round(units === 'imperial' ? km * 0.621371 : km)
   const countries = new Set(races.map(r => r.country).filter(Boolean)).size
   const medals = races.filter(r => r.medal).length
 
   const stats = [
     { val: races.length, label: 'RACES' },
     { val: countries,    label: 'COUNTRIES' },
-    { val: totalKm,      label: 'KM' },
+    { val: totalDist,    label: distUnit(units) },
     { val: medals,       label: 'MEDALS' },
   ]
 
