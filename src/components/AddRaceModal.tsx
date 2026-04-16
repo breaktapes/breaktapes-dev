@@ -230,6 +230,12 @@ export function AddRaceModal({ onClose, defaultMode = 'past' }: Props) {
   // When parent changes defaultMode (e.g. re-opens), sync
   useEffect(() => { setMode(defaultMode) }, [defaultMode])
 
+  // Lock body scroll while modal is open
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = '' }
+  }, [])
+
   // Autocomplete
   const [query, setQuery]           = useState('')
   const [showSuggest, setShowSuggest] = useState(false)
@@ -623,46 +629,47 @@ export function AddRaceModal({ onClose, defaultMode = 'past' }: Props) {
             </select>
           </Field>
 
-          {/* ── Country (dropdown from catalog) ── */}
-          <Field label="Country">
-            <select style={st.input} value={country} onChange={e => handleCountryChange(e.target.value)}>
-              <option value="">Select a country...</option>
-              {allCountries.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </Field>
+          {/* ── Country + City side by side ── */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+            <Field label="Country">
+              <select style={st.input} value={country} onChange={e => handleCountryChange(e.target.value)}>
+                <option value="">Country...</option>
+                {allCountries.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </Field>
 
-          {/* ── City (dropdown filtered by country, then text if Other) ── */}
-          <Field label="City">
-            {hasCatalogCities ? (
-              <>
-                <select
+            <Field label="City">
+              {hasCatalogCities ? (
+                <>
+                  <select
+                    style={st.input}
+                    value={citySelect}
+                    onChange={e => setCitySelect(e.target.value)}
+                  >
+                    <option value="">City...</option>
+                    {citiesForCountry.map(c => <option key={c} value={c}>{c}</option>)}
+                    <option value="__other__">Other...</option>
+                  </select>
+                  {cityIsOther && (
+                    <input
+                      style={{ ...st.input, marginTop: '6px' }}
+                      placeholder="Enter city"
+                      value={cityText}
+                      onChange={e => setCityText(e.target.value)}
+                      autoFocus
+                    />
+                  )}
+                </>
+              ) : (
+                <input
                   style={st.input}
-                  value={citySelect}
-                  onChange={e => setCitySelect(e.target.value)}
-                >
-                  <option value="">Select a city...</option>
-                  {citiesForCountry.map(c => <option key={c} value={c}>{c}</option>)}
-                  <option value="__other__">Other (type below)...</option>
-                </select>
-                {cityIsOther && (
-                  <input
-                    style={{ ...st.input, marginTop: '6px' }}
-                    placeholder="Enter city name"
-                    value={cityText}
-                    onChange={e => setCityText(e.target.value)}
-                    autoFocus
-                  />
-                )}
-              </>
-            ) : (
-              <input
-                style={st.input}
-                placeholder="e.g. Berlin"
-                value={cityText}
-                onChange={e => setCityText(e.target.value)}
-              />
-            )}
-          </Field>
+                  placeholder="e.g. Berlin"
+                  value={cityText}
+                  onChange={e => setCityText(e.target.value)}
+                />
+              )}
+            </Field>
+          </div>
 
           {/* ── Date ── */}
           <Field label="Date *">
@@ -855,6 +862,7 @@ const st = {
     paddingBottom: '32px',
     overflowY: 'auto',
     WebkitOverflowScrolling: 'touch',
+    overscrollBehavior: 'contain',
     flex: 1,
   } as React.CSSProperties,
 

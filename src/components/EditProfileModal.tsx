@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/useAuthStore'
@@ -12,6 +12,12 @@ export function EditProfileModal({ onClose }: Props) {
   const athlete = useAthleteStore(s => s.athlete)
   const updateAthlete = useAthleteStore(s => s.updateAthlete)
   const authUser = useAuthStore(s => s.authUser)
+
+  // Lock body scroll while modal is open
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = '' }
+  }, [])
 
   const [firstName, setFirstName] = useState(athlete?.firstName ?? '')
   const [lastName,  setLastName]  = useState(athlete?.lastName ?? '')
@@ -183,6 +189,7 @@ const st = {
     flexDirection: 'column',
     overflowY: 'auto',
     WebkitOverflowScrolling: 'touch' as any,
+    overscrollBehavior: 'contain',
   } as React.CSSProperties,
 
   handle: {

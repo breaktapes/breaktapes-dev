@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRaceStore } from '@/stores/useRaceStore'
 import type { Race } from '@/types'
 
@@ -449,6 +449,12 @@ export function ViewEditRaceModal({ race, onClose }: Props) {
   const deleteRace = useRaceStore(s => s.deleteRace)
   const [mode, setMode] = useState<'view' | 'edit'>('view')
 
+  // Lock body scroll while modal is open
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = '' }
+  }, [])
+
   function handleSave(patch: Partial<Race>) {
     updateRace(race.id, patch)
     setMode('view')
@@ -557,6 +563,7 @@ const st = {
     overflowY: 'auto',
     flex: 1,
     WebkitOverflowScrolling: 'touch' as any,
+    overscrollBehavior: 'contain',
   } as React.CSSProperties,
 
   body: {
