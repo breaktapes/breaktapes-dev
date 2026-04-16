@@ -279,9 +279,94 @@ function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (v: b
 
 // ─── Greeting Card ────────────────────────────────────────────────────────────
 
+type GeoWeather = { temp: number; icon: string; desc: string; low: number; high: number; hourly: { time: string; temp: number; icon: string }[] }
+
 function GreetingCard({ onCustomize }: { onCustomize: () => void }) {
-  const athlete = useAthleteStore(selectAthlete)
+  const athlete   = useAthleteStore(selectAthlete)
   const firstName = (athlete?.firstName ?? 'Athlete').toUpperCase()
+
+  const [geoState, setGeoState] = useState<'idle' | 'asking' | 'loading' | 'ok' | 'denied' | 'error'>('idle')
+  const [weather, setWeather]   = useState<GeoWeather | null>(null)
+
+  // On mount: check if we already have cached coords
+  useEffect(() => {
+    try {
+      const cached = localStorage.getItem('fl2_geo_weather')
+      if (cached) {
+        const { data, ts } = JSON.parse(cached)
+        if (Date.now() - ts < 30 * 60 * 1000) { setWeather(data); setGeoState('ok'); return }
+      }
+      // Check if permission was previously granted
+      if (navigator.permissions) {
+        navigator.permissions.query({ name: 'geolocation' }).then(p => {
+          if (p.state === 'granted') requestWeather()
+          else if (p.state === 'denied') setGeoState('denied')
+          else setGeoState('asking')
+        }).catch(() => setGeoState('asking'))
+      } else {
+        setGeoState('asking')
+      }
+    } catch { setGeoState('asking') }
+  }, [])
+
+  function requestWeather() {
+    setGeoState('loading')
+    navigator.geolocation.getCurrentPosition(
+      async pos => {
+        try {
+          const { latitude, longitude } = pos.coords
+          const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code&hourly=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=1&forecast_hours=6`)
+          const d   = await res.json()
+          const wc: number = d?.current?.weather_code ?? 0
+          const icon = wcIcon(wc)
+          const desc = wcDesc(wc)
+          const temp  = Math.round(d?.current?.temperature_2m ?? 0)
+          const low   = Math.round(d?.daily?.temperature_2m_min?.[0] ?? temp)
+          const high  = Math.round(d?.daily?.temperature_2m_max?.[0] ?? temp)
+          // Next 4 hours
+          const times: string[] = d?.hourly?.time ?? []
+          const temps: number[] = d?.hourly?.temperature_2m ?? []
+          const codes: number[] = d?.hourly?.weather_code ?? []
+          const nowH = new Date().getHours()
+          const hourly = times
+            .map((t, i) => ({ t, temp: temps[i], icon: wcIcon(codes[i]) }))
+            .filter(x => { const h = new Date(x.t).getHours(); return h >= nowH && h < nowH + 4 })
+            .slice(0, 4)
+            .map(x => ({ time: new Date(x.t).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), temp: Math.round(x.temp), icon: x.icon }))
+
+          const data: GeoWeather = { temp, icon, desc, low, high, hourly }
+          setWeather(data); setGeoState('ok')
+          localStorage.setItem('fl2_geo_weather', JSON.stringify({ data, ts: Date.now() }))
+        } catch { setGeoState('error') }
+      },
+      err => { setGeoState(err.code === 1 ? 'denied' : 'error') },
+      { timeout: 8000 }
+    )
+  }
+
+  // WMO weather code helpers
+  function wcIcon(code: number): string {
+    if (code === 0) return '☀️'
+    if (code <= 2)  return '⛅'
+    if (code <= 3)  return '☁️'
+    if (code <= 49) return '🌫'
+    if (code <= 67) return '🌧'
+    if (code <= 77) return '🌨'
+    if (code <= 82) return '🌦'
+    if (code <= 99) return '⛈'
+    return '🌤'
+  }
+  function wcDesc(code: number): string {
+    if (code === 0) return 'Clear'
+    if (code <= 2)  return 'Partly cloudy'
+    if (code <= 3)  return 'Overcast'
+    if (code <= 49) return 'Foggy'
+    if (code <= 67) return 'Rainy'
+    if (code <= 77) return 'Snowy'
+    if (code <= 82) return 'Showers'
+    if (code <= 99) return 'Thunderstorm'
+    return 'Mixed'
+  }
 
   return (
     <div style={st.greetingCard}>
@@ -290,7 +375,45 @@ function GreetingCard({ onCustomize }: { onCustomize: () => void }) {
           <span style={st.greetingText}>{getGreeting()},&nbsp;</span>
           <span style={st.greetingName}>{firstName}</span>
         </div>
-        <div style={st.greetingSubtext}>Enable location to show local weather</div>
+
+        {/* Weather sub-row */}
+        {geoState === 'ok' && weather ? (
+          <div style={{ marginTop: '8px' }}>
+            {/* Current conditions */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+              <span style={{ fontSize: '24px', lineHeight: 1 }}>{weather.icon}</span>
+              <div>
+                <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '18px', color: 'var(--white)', letterSpacing: '0.02em' }}>{weather.temp}°C</span>
+                <span style={{ fontSize: '12px', color: 'var(--muted)', marginLeft: '6px' }}>{weather.desc} · {weather.low}° / {weather.high}°</span>
+              </div>
+            </div>
+            {/* 4-hour strip */}
+            {weather.hourly.length > 0 && (
+              <div style={{ display: 'flex', gap: '8px' }}>
+                {weather.hourly.map((h, i) => (
+                  <div key={i} style={{ flex: 1, background: 'var(--surface3)', borderRadius: '8px', padding: '6px 4px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px', minWidth: 0 }}>
+                    <span style={{ fontSize: '14px', lineHeight: 1 }}>{h.icon}</span>
+                    <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '12px', color: 'var(--white)' }}>{h.temp}°</span>
+                    <span style={{ fontSize: '9px', color: 'var(--muted)', letterSpacing: '0.02em' }}>{h.time}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : geoState === 'asking' ? (
+          <button
+            onClick={requestWeather}
+            style={{ marginTop: '8px', background: 'rgba(255,77,0,0.12)', border: '1px solid rgba(255,77,0,0.35)', borderRadius: '8px', padding: '8px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '12px', letterSpacing: '0.06em', textTransform: 'uppercase' }}
+          >
+            📍 Tap to show local weather
+          </button>
+        ) : geoState === 'loading' ? (
+          <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--muted)' }}>Getting your weather…</div>
+        ) : geoState === 'denied' ? (
+          <div style={{ marginTop: '6px', fontSize: '11px', color: 'var(--muted)' }}>Location blocked · Enable in browser settings</div>
+        ) : (
+          <div style={{ marginTop: '6px', fontSize: '11px', color: 'var(--muted)' }}>Weather unavailable</div>
+        )}
       </div>
       <button style={st.gridBtn} onClick={onCustomize} aria-label="Customise dashboard">
         <IconGrid />
@@ -381,9 +504,176 @@ function PreRaceBriefing({ onAddRace }: { onAddRace: () => void }) {
 
 // ─── Countdown Card ───────────────────────────────────────────────────────────
 
+// ─── Edit Upcoming Race Sheet ────────────────────────────────────────────────
+
+function EditUpcomingRaceSheet({ race, onClose }: { race: Race; onClose: () => void }) {
+  const updateRace = useRaceStore(s => s.updateRace)
+  const deleteRace = useRaceStore(s => s.deleteRace)
+
+  const [priority, setPriority] = useState<string>(race.priority ?? 'A')
+  const [goal, setGoal]         = useState(race.goalTime ?? '')
+  const [confirmDelete, setConfirmDelete] = useState(false)
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = '' }
+  }, [])
+
+  function handleSave() {
+    updateRace(race.id, { priority: priority as Race['priority'], goalTime: goal.trim() || undefined })
+    onClose()
+  }
+
+  function handleDelete() {
+    deleteRace(race.id)
+    onClose()
+  }
+
+  const PRIORITIES = [
+    { key: 'A', label: 'A RACE', desc: 'Season goal' },
+    { key: 'B', label: 'B RACE', desc: 'Strong effort' },
+    { key: 'C', label: 'C RACE', desc: 'Training run' },
+  ]
+
+  return (
+    <div style={st.modalOverlay} onClick={onClose}>
+      <div style={{ ...st.customizeSheet, maxHeight: '85vh', paddingBottom: '0', overflowY: 'hidden' }} onClick={e => e.stopPropagation()}>
+        {/* Handle */}
+        <div style={{ width: '40px', height: '4px', background: 'var(--border2)', borderRadius: '2px', margin: '0 auto 20px', flexShrink: 0 }} />
+
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px', flexShrink: 0 }}>
+          <div>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '18px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>
+              {race.name ?? 'Upcoming Race'}
+            </div>
+            <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '2px' }}>
+              {fmtDateIntl(race.date)}{race.city ? ` · ${race.city}` : ''}
+            </div>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '20px', cursor: 'pointer', padding: '4px', lineHeight: 1 }} aria-label="Close">✕</button>
+        </div>
+
+        {/* Scrollable body */}
+        <div style={{ overflowY: 'auto', WebkitOverflowScrolling: 'touch' as any, flex: 1, display: 'flex', flexDirection: 'column', gap: '20px', padding: '20px 0 12px' }}>
+
+          {/* Priority */}
+          <div>
+            <div style={{ fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '10px' }}>
+              RACE PRIORITY
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {PRIORITIES.map(p => (
+                <button
+                  key={p.key}
+                  onClick={() => setPriority(p.key)}
+                  style={{
+                    flex: 1,
+                    padding: '12px 8px',
+                    borderRadius: '10px',
+                    border: priority === p.key ? '2px solid var(--orange)' : '1.5px solid var(--border2)',
+                    background: priority === p.key ? 'rgba(255,77,0,0.12)' : 'var(--surface3)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  <span style={{
+                    fontFamily: 'var(--headline)',
+                    fontWeight: 900,
+                    fontSize: '18px',
+                    color: priority === p.key ? 'var(--orange)' : 'var(--white)',
+                    letterSpacing: '0.04em',
+                  }}>{p.key}</span>
+                  <span style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', color: priority === p.key ? 'var(--orange)' : 'var(--muted)', textTransform: 'uppercase' }}>{p.label}</span>
+                  <span style={{ fontSize: '10px', color: 'var(--muted)', lineHeight: 1.3 }}>{p.desc}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Goal time */}
+          <div>
+            <div style={{ fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '10px' }}>
+              GOAL TIME <span style={{ opacity: 0.5, fontWeight: 400, textTransform: 'lowercase', letterSpacing: 0 }}>(optional)</span>
+            </div>
+            <input
+              type="text"
+              value={goal}
+              onChange={e => setGoal(e.target.value)}
+              placeholder="e.g. 3:30:00"
+              style={{
+                width: '100%', boxSizing: 'border-box',
+                background: 'var(--surface3)', border: '1px solid var(--border2)',
+                borderRadius: '8px', color: 'var(--white)',
+                fontFamily: 'var(--headline)', fontWeight: 700,
+                fontSize: '18px', padding: '12px 14px',
+                letterSpacing: '0.06em',
+              }}
+            />
+            <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '6px' }}>
+              Format: H:MM:SS · Used by Gap To Goal widget
+            </div>
+          </div>
+
+          {/* Delete */}
+          {!confirmDelete ? (
+            <button
+              onClick={() => setConfirmDelete(true)}
+              style={{
+                background: 'transparent',
+                border: '1.5px solid rgba(255,80,80,0.35)',
+                borderRadius: '10px',
+                color: '#ff6b6b',
+                fontFamily: 'var(--headline)',
+                fontWeight: 700,
+                fontSize: '13px',
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                padding: '12px',
+                cursor: 'pointer',
+                width: '100%',
+              }}
+            >
+              🗑 Remove Race
+            </button>
+          ) : (
+            <div style={{ background: 'rgba(255,80,80,0.08)', border: '1.5px solid rgba(255,80,80,0.35)', borderRadius: '10px', padding: '14px' }}>
+              <div style={{ fontSize: '13px', color: '#ff6b6b', marginBottom: '12px', fontWeight: 600 }}>
+                Remove {race.name ?? 'this race'} from your calendar?
+              </div>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button onClick={() => setConfirmDelete(false)} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid var(--border2)', background: 'var(--surface3)', color: 'var(--white)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '13px', cursor: 'pointer', letterSpacing: '0.06em' }}>
+                  CANCEL
+                </button>
+                <button onClick={handleDelete} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: '#ff4444', color: '#fff', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', cursor: 'pointer', letterSpacing: '0.06em' }}>
+                  YES, REMOVE
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Save button sticky footer */}
+        <div style={{ flexShrink: 0, borderTop: '1px solid var(--border)', padding: '16px', background: 'var(--surface2)' }}>
+          <button onClick={handleSave} style={{
+            width: '100%', background: 'var(--orange)', color: '#000', border: 'none', borderRadius: '10px',
+            padding: '14px', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px',
+            letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer',
+          }}>
+            SAVE CHANGES
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function CountdownCard({ race, onShowAll }: { race: Race; onShowAll: () => void }) {
-  const navigate = useNavigate()
-  const [now, setNow] = useState(() => Date.now())
+  const [now, setNow]         = useState(() => Date.now())
+  const [showEdit, setShowEdit] = useState(false)
 
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000)
@@ -399,63 +689,66 @@ function CountdownCard({ race, onShowAll }: { race: Race; onShowAll: () => void 
   const priority = race.priority ?? 'A'
 
   return (
-    <div style={st.countdownCard}>
-      {/* Header row */}
-      <div style={st.countdownHeader}>
-        <div style={st.countdownHeaderLeft}>
-          <span style={st.countdownDash}>—</span>
-          <span style={st.aBadge}>{priority}</span>
-          <span style={st.aRaceLabel}>{priority} RACE</span>
+    <>
+      {showEdit && <EditUpcomingRaceSheet race={race} onClose={() => setShowEdit(false)} />}
+      <div style={st.countdownCard}>
+        {/* Header row */}
+        <div style={st.countdownHeader}>
+          <div style={st.countdownHeaderLeft}>
+            <span style={st.countdownDash}>—</span>
+            <span style={st.aBadge}>{priority}</span>
+            <span style={st.aRaceLabel}>{priority} RACE</span>
+          </div>
+          <button style={st.editBtn} onClick={() => setShowEdit(true)}>
+            <IconEdit />
+            <span>EDIT</span>
+          </button>
         </div>
-        <button style={st.editBtn} onClick={() => navigate('/races')}>
-          <IconEdit />
-          <span>EDIT</span>
-        </button>
-      </div>
 
-      {/* Race name */}
-      <div style={st.countdownRaceName}>{(race.name ?? '').toUpperCase()}</div>
+        {/* Race name */}
+        <div style={st.countdownRaceName}>{(race.name ?? '').toUpperCase()}</div>
 
-      {/* Location */}
-      <div style={st.countdownLocation}>
-        <IconPin size={11} />
-        <span style={{ color: 'var(--orange)' }}>
-          {[race.city, race.country].filter(Boolean).join(', ')}
-        </span>
-        {race.distance && (
-          <span style={{ color: 'var(--muted)' }}>
-            &nbsp;·&nbsp;{distBadge(race.distance) || race.distance + 'K'}
+        {/* Location */}
+        <div style={st.countdownLocation}>
+          <IconPin size={11} />
+          <span style={{ color: 'var(--orange)' }}>
+            {[race.city, race.country].filter(Boolean).join(', ')}
           </span>
-        )}
-        <span style={{ color: 'var(--muted)' }}>&nbsp;·&nbsp;{fmtDateIntl(race.date)}</span>
-      </div>
+          {race.distance && (
+            <span style={{ color: 'var(--muted)' }}>
+              &nbsp;·&nbsp;{distBadge(race.distance) || race.distance + 'K'}
+            </span>
+          )}
+          <span style={{ color: 'var(--muted)' }}>&nbsp;·&nbsp;{fmtDateIntl(race.date)}</span>
+        </div>
 
-      {/* Countdown digits */}
-      <div style={st.countdownRow}>
-        <div style={st.countdownUnit}>
-          <div style={st.countdownNum}>{days}</div>
-          <div style={st.countdownUnitLabel}>DAYS</div>
+        {/* Countdown digits */}
+        <div style={st.countdownRow}>
+          <div style={st.countdownUnit}>
+            <div style={st.countdownNum}>{days}</div>
+            <div style={st.countdownUnitLabel}>DAYS</div>
+          </div>
+          <div style={st.countdownSep}>:</div>
+          <div style={st.countdownUnit}>
+            <div style={st.countdownNum}>{p2(hrs)}</div>
+            <div style={st.countdownUnitLabel}>HRS</div>
+          </div>
+          <div style={st.countdownSep}>:</div>
+          <div style={st.countdownUnit}>
+            <div style={st.countdownNum}>{p2(mins)}</div>
+            <div style={st.countdownUnitLabel}>MINS</div>
+          </div>
+          <div style={st.countdownSep}>:</div>
+          <div style={st.countdownUnit}>
+            <div style={st.countdownNum}>{p2(secs)}</div>
+            <div style={st.countdownUnitLabel}>SECS</div>
+          </div>
         </div>
-        <div style={st.countdownSep}>:</div>
-        <div style={st.countdownUnit}>
-          <div style={st.countdownNum}>{p2(hrs)}</div>
-          <div style={st.countdownUnitLabel}>HRS</div>
-        </div>
-        <div style={st.countdownSep}>:</div>
-        <div style={st.countdownUnit}>
-          <div style={st.countdownNum}>{p2(mins)}</div>
-          <div style={st.countdownUnitLabel}>MINS</div>
-        </div>
-        <div style={st.countdownSep}>:</div>
-        <div style={st.countdownUnit}>
-          <div style={st.countdownNum}>{p2(secs)}</div>
-          <div style={st.countdownUnitLabel}>SECS</div>
-        </div>
-      </div>
 
-      <div style={st.countdownDivider} />
-      <button style={st.allRacesBtn} onClick={onShowAll}>ALL UPCOMING RACES →</button>
-    </div>
+        <div style={st.countdownDivider} />
+        <button style={st.allRacesBtn} onClick={onShowAll}>ALL UPCOMING RACES →</button>
+      </div>
+    </>
   )
 }
 
@@ -485,9 +778,120 @@ function CourseInfoCard({ race }: { race: Race }) {
 
 // ─── Weather Card ─────────────────────────────────────────────────────────────
 
+// Climate norms lookup cache (keyed by "city,country,month")
+const _climateCache: Record<string, { min: number; max: number; precip: number; icon: string } | null> = {}
+
+async function fetchClimatNorms(city: string, country: string, month: number): Promise<{ min: number; max: number; precip: number; icon: string } | null> {
+  const cacheKey = `${city},${country},${month}`
+  if (cacheKey in _climateCache) return _climateCache[cacheKey]
+
+  try {
+    // Step 1 — geocode city via Open-Meteo geocoding API
+    const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`)
+    const geoData = await geoRes.json()
+    const loc = geoData?.results?.[0]
+    if (!loc) { _climateCache[cacheKey] = null; return null }
+    const { latitude, longitude } = loc
+
+    // Step 2 — fetch historical data for same month in last 5 years via archive API
+    const year = new Date().getFullYear()
+    const pad  = (n: number) => n.toString().padStart(2, '0')
+    // Query a 3-day window centred on the 15th of that month across 5 years
+    const requests = [1,2,3,4,5].map(y => {
+      const yr = year - y
+      const start = `${yr}-${pad(month)}-13`
+      const end   = `${yr}-${pad(month)}-17`
+      return fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${latitude}&longitude=${longitude}&start_date=${start}&end_date=${end}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=auto`)
+        .then(r => r.json())
+    })
+    const results = await Promise.all(requests)
+
+    let totalMax = 0, totalMin = 0, totalPrecip = 0, count = 0
+    for (const r of results) {
+      const maxArr: number[] = r?.daily?.temperature_2m_max ?? []
+      const minArr: number[] = r?.daily?.temperature_2m_min ?? []
+      const preArr: number[] = r?.daily?.precipitation_sum ?? []
+      for (let i = 0; i < maxArr.length; i++) {
+        if (maxArr[i] != null && minArr[i] != null) {
+          totalMax += maxArr[i]; totalMin += minArr[i]
+          totalPrecip += (preArr[i] ?? 0)
+          count++
+        }
+      }
+    }
+    if (count === 0) { _climateCache[cacheKey] = null; return null }
+
+    const avgMax    = Math.round(totalMax / count)
+    const avgMin    = Math.round(totalMin / count)
+    const avgPrecip = totalPrecip / count
+
+    // Pick icon by temp + precip
+    let icon = '☀️'
+    if (avgPrecip > 4)          icon = '🌧'
+    else if (avgPrecip > 1.5)   icon = '🌦'
+    else if (avgMax < 5)        icon = '🥶'
+    else if (avgMax < 15)       icon = '⛅'
+    else if (avgMax > 32)       icon = '🌡'
+
+    const result = { min: avgMin, max: avgMax, precip: Math.round(avgPrecip * 10) / 10, icon }
+    _climateCache[cacheKey] = result
+    return result
+  } catch {
+    _climateCache[cacheKey] = null
+    return null
+  }
+}
+
 function WeatherCard({ race }: { race: Race }) {
-  const days = daysUntil(race.date)
+  const days     = daysUntil(race.date)
   const location = [race.city, race.country].filter(Boolean).join(', ').toUpperCase()
+  const isLive   = days <= 14
+
+  // Climate estimate state (used when >14 days)
+  const [climate, setClimate] = useState<{ min: number; max: number; precip: number; icon: string } | null | 'loading'>('loading')
+
+  // Live forecast state (used when ≤14 days)
+  const [forecast, setForecast] = useState<{ min: number; max: number; icon: string } | null>(null)
+
+  useEffect(() => {
+    if (isLive) {
+      // Actual 14-day forecast via Open-Meteo (same logic as before but targeted at race date)
+      if (!race.city && !race.country) return
+      const city = race.city ?? race.country ?? ''
+      fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`)
+        .then(r => r.json())
+        .then(async geo => {
+          const loc = geo?.results?.[0]
+          if (!loc) return
+          const { latitude, longitude } = loc
+          const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=16`)
+          const data = await res.json()
+          // Find the day that matches race date
+          const dates: string[] = data?.daily?.time ?? []
+          const idx = dates.findIndex((d: string) => d === race.date)
+          if (idx === -1) return
+          const max  = Math.round(data.daily.temperature_2m_max[idx])
+          const min  = Math.round(data.daily.temperature_2m_min[idx])
+          const prec: number = data.daily.precipitation_probability_max?.[idx] ?? 0
+          let icon = '☀️'
+          if (prec > 60)       icon = '🌧'
+          else if (prec > 30)  icon = '🌦'
+          else if (max < 5)    icon = '🥶'
+          else if (max < 15)   icon = '⛅'
+          else if (max > 32)   icon = '🌡'
+          setForecast({ min, max, icon })
+        })
+        .catch(() => {})
+    } else {
+      // Climate estimate
+      if (!race.city && !race.country) { setClimate(null); return }
+      const city    = race.city ?? ''
+      const country = race.country ?? ''
+      const month   = new Date(race.date + 'T00:00:00').getMonth() + 1
+      setClimate('loading')
+      fetchClimatNorms(city, country, month).then(setClimate)
+    }
+  }, [race.date, race.city, race.country, isLive])
 
   return (
     <div style={st.weatherCard}>
@@ -495,14 +899,41 @@ function WeatherCard({ race }: { race: Race }) {
         {location}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <span style={{ fontSize: '32px', lineHeight: 1, flexShrink: 0 }}>🌤</span>
+        <span style={{ fontSize: '32px', lineHeight: 1, flexShrink: 0 }}>
+          {isLive
+            ? (forecast?.icon ?? '🌤')
+            : (climate && climate !== 'loading' ? climate.icon : '🌤')}
+        </span>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '15px', color: 'var(--white)', letterSpacing: '0.02em' }}>
-            −° − −°C
-          </div>
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px', lineHeight: 1.4 }}>
-            {days > 14 ? 'Forecast available 14 days before race day.' : 'Loading forecast…'}
-          </div>
+          {isLive ? (
+            forecast ? (
+              <>
+                <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '18px', color: 'var(--white)', letterSpacing: '0.02em' }}>
+                  {forecast.min}° – {forecast.max}°C
+                </div>
+                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--orange)', marginTop: '2px', lineHeight: 1.4, fontWeight: 600 }}>
+                  RACE DAY FORECAST
+                </div>
+              </>
+            ) : (
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', lineHeight: 1.4 }}>Loading forecast…</div>
+            )
+          ) : (
+            climate && climate !== 'loading' ? (
+              <>
+                <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '18px', color: 'var(--white)', letterSpacing: '0.02em' }}>
+                  {climate.min}° – {climate.max}°C
+                </div>
+                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px', lineHeight: 1.4 }}>
+                  Typical for {new Date(race.date + 'T00:00:00').toLocaleString('default', { month: 'long' })} · ~{climate.precip}mm/day · Forecast from {days - 14}d out
+                </div>
+              </>
+            ) : (
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', lineHeight: 1.4 }}>
+                {climate === 'loading' ? 'Loading climate data…' : 'Climate data unavailable'}
+              </div>
+            )
+          )}
         </div>
         <div style={st.daysPill}>{days} DAYS</div>
       </div>
@@ -2158,95 +2589,135 @@ function WidgetShell({ label }: { label: string }) {
 
 // ─── All Upcoming Races Modal ─────────────────────────────────────────────────
 
-function AllUpcomingModal({ onClose }: { onClose: () => void }) {
+function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRace: () => void }) {
   const upcoming = useRaceStore(selectUpcomingRaces)
   const today    = todayStr()
-  const sorted   = useMemo(
+  const [editingId, setEditingId] = useState<string | null>(null)
+
+  const sorted = useMemo(
     () => [...upcoming].filter(r => r.date >= today).sort((a, b) => a.date.localeCompare(b.date)),
     [upcoming, today],
   )
+  const editing = editingId ? sorted.find(r => r.id === editingId) ?? null : null
 
-  // Body scroll lock
   useEffect(() => {
     document.body.style.overflow = 'hidden'
     return () => { document.body.style.overflow = '' }
   }, [])
 
   return (
-    <div style={st.modalOverlay} onClick={onClose}>
-      <div style={{ ...st.customizeSheet, maxHeight: '75vh', paddingBottom: '24px' }} onClick={e => e.stopPropagation()}>
-        {/* Handle pill */}
-        <div style={{ width: '40px', height: '4px', background: 'var(--border2)', borderRadius: '2px', margin: '0 auto 20px' }} />
+    <>
+      {editing && (
+        <EditUpcomingRaceSheet
+          race={editing}
+          onClose={() => setEditingId(null)}
+        />
+      )}
+      <div style={st.modalOverlay} onClick={onClose}>
+        <div style={{ ...st.customizeSheet, maxHeight: '80vh', paddingBottom: '0', overflowY: 'hidden' }} onClick={e => e.stopPropagation()}>
+          {/* Handle pill */}
+          <div style={{ width: '40px', height: '4px', background: 'var(--border2)', borderRadius: '2px', margin: '0 auto 20px', flexShrink: 0 }} />
 
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '20px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>
-            UPCOMING RACES
-          </div>
-          <button
-            onClick={onClose}
-            style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '20px', cursor: 'pointer', padding: '4px', lineHeight: 1 }}
-            aria-label="Close"
-          >✕</button>
-        </div>
-
-        {/* Race list */}
-        <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {sorted.length === 0 ? (
-            <div style={{ textAlign: 'center', color: 'var(--muted)', padding: '32px 0', fontSize: '14px' }}>
-              No upcoming races yet.
+          {/* Header */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexShrink: 0 }}>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '20px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>
+              UPCOMING RACES
+              <span style={{ marginLeft: '8px', fontFamily: 'var(--body)', fontWeight: 600, fontSize: '13px', color: 'var(--muted)', letterSpacing: 0, textTransform: 'none' }}>
+                {sorted.length > 0 ? `${sorted.length} race${sorted.length !== 1 ? 's' : ''}` : ''}
+              </span>
             </div>
-          ) : sorted.map(r => {
-            const d = daysUntil(r.date)
-            return (
-              <div key={r.id} style={{
-                background: 'var(--surface3)',
-                border: '1px solid var(--border)',
-                borderRadius: '10px',
-                padding: '12px 14px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: '12px',
-              }}>
-                <div style={{ minWidth: 0, flex: 1 }}>
-                  <div style={{
-                    fontFamily: 'var(--headline)',
-                    fontWeight: 800,
-                    fontSize: '14px',
-                    letterSpacing: '0.04em',
-                    textTransform: 'uppercase',
-                    color: 'var(--white)',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                  }}>
-                    {r.priority && <span style={{ color: 'var(--orange)', marginRight: '6px' }}>{r.priority}</span>}
-                    {r.name ?? 'Unnamed race'}
-                  </div>
-                  <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '3px' }}>
-                    {[r.city, r.country].filter(Boolean).join(', ')}
-                    {r.distance ? ` · ${distBadge(r.distance) || r.distance + 'K'}` : ''}
-                    {' · '}{fmtDateIntl(r.date)}
-                  </div>
-                </div>
-                <div style={{
-                  flexShrink: 0,
-                  fontFamily: 'var(--headline)',
-                  fontWeight: 900,
-                  fontSize: '13px',
-                  color: d === 0 ? 'var(--orange)' : 'var(--muted)',
-                  letterSpacing: '0.04em',
-                  textAlign: 'right',
-                }}>
-                  {d === 0 ? 'TODAY' : `${d}D`}
-                </div>
+            <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '20px', cursor: 'pointer', padding: '4px', lineHeight: 1 }} aria-label="Close">✕</button>
+          </div>
+
+          {/* Race list — scrollable */}
+          <div style={{ overflowY: 'auto', WebkitOverflowScrolling: 'touch' as any, overscrollBehavior: 'contain', flex: 1, display: 'flex', flexDirection: 'column', gap: '0', paddingBottom: '12px' }}>
+            {sorted.length === 0 ? (
+              <div style={{ textAlign: 'center', color: 'var(--muted)', padding: '32px 0', fontSize: '14px' }}>
+                No upcoming races yet.
               </div>
-            )
-          })}
+            ) : sorted.map((r, idx) => {
+              const d       = daysUntil(r.date)
+              const isA     = r.priority === 'A'
+              const prev    = sorted[idx - 1]
+              const gapDays = prev
+                ? Math.round((new Date(r.date + 'T00:00:00').getTime() - new Date(prev.date + 'T00:00:00').getTime()) / 86400000)
+                : null
+
+              return (
+                <div key={r.id}>
+                  {/* Gap divider */}
+                  {gapDays !== null && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '6px 0' }}>
+                      <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
+                      <span style={{ fontFamily: 'var(--body)', fontSize: '11px', fontWeight: 600, color: gapDays < 21 ? '#ff9966' : 'var(--muted)', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>
+                        {gapDays < 21 ? '⚠ ' : ''}{gapDays}d gap
+                      </span>
+                      <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
+                    </div>
+                  )}
+
+                  {/* A-race — large highlighted card */}
+                  {isA ? (
+                    <div style={{ background: 'linear-gradient(135deg, rgba(255,77,0,0.18) 0%, rgba(255,77,0,0.08) 100%)', border: '1.5px solid rgba(255,77,0,0.5)', borderRadius: '12px', padding: '16px', position: 'relative', overflow: 'hidden' }}>
+                      <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: '4px', background: 'var(--orange)', borderRadius: '12px 0 0 12px' }} />
+                      <div style={{ paddingLeft: '10px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '6px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
+                            <span style={{ background: 'var(--orange)', color: '#000', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '10px', letterSpacing: '0.08em', padding: '2px 7px', borderRadius: '4px', flexShrink: 0 }}>A RACE</span>
+                            <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>{r.name ?? 'Unnamed race'}</span>
+                          </div>
+                          <button onClick={() => setEditingId(r.id)} style={{ background: 'rgba(255,77,0,0.15)', border: '1px solid rgba(255,77,0,0.4)', borderRadius: '6px', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px', letterSpacing: '0.06em', padding: '5px 10px', cursor: 'pointer', flexShrink: 0 }}>EDIT</button>
+                        </div>
+                        <div style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: 1.5 }}>
+                          {[r.city, r.country].filter(Boolean).join(', ')}
+                          {r.distance ? ` · ${distBadge(r.distance) || r.distance + 'K'}` : ''}
+                          {' · '}{fmtDateIntl(r.date)}
+                          {r.goalTime ? <span style={{ color: 'var(--orange)', marginLeft: '6px' }}>🎯 {r.goalTime}</span> : ''}
+                        </div>
+                        <div style={{ marginTop: '10px' }}>
+                          <span style={{ display: 'inline-block', background: d === 0 ? 'var(--orange)' : 'rgba(255,77,0,0.2)', color: d === 0 ? '#000' : 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', letterSpacing: '0.06em', padding: '4px 12px', borderRadius: '6px' }}>
+                            {d === 0 ? 'TODAY' : `${d} DAYS`}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    /* Standard B/C card */
+                    <div style={{ background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: '10px', padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '14px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {r.priority && r.priority !== 'A' && <span style={{ color: 'var(--muted)', marginRight: '6px', fontSize: '11px' }}>{r.priority}</span>}
+                          {r.name ?? 'Unnamed race'}
+                        </div>
+                        <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '3px' }}>
+                          {[r.city, r.country].filter(Boolean).join(', ')}
+                          {r.distance ? ` · ${distBadge(r.distance) || r.distance + 'K'}` : ''}
+                          {' · '}{fmtDateIntl(r.date)}
+                          {r.goalTime ? <span style={{ color: 'var(--muted)', marginLeft: '4px' }}>· 🎯 {r.goalTime}</span> : ''}
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px', flexShrink: 0 }}>
+                        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', color: d === 0 ? 'var(--orange)' : 'var(--muted)', letterSpacing: '0.04em' }}>
+                          {d === 0 ? 'TODAY' : `${d}D`}
+                        </div>
+                        <button onClick={() => setEditingId(r.id)} style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: '5px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '10px', letterSpacing: '0.06em', padding: '3px 8px', cursor: 'pointer' }}>EDIT</button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Add race — sticky footer */}
+          <div style={{ flexShrink: 0, borderTop: '1px solid var(--border)', padding: '16px', background: 'var(--surface2)' }}>
+            <button onClick={() => { onClose(); onAddRace() }} style={{ width: '100%', background: 'var(--orange)', color: '#000', border: 'none', borderRadius: '10px', padding: '14px', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer' }}>
+              + ADD UPCOMING RACE
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }
 
@@ -2502,7 +2973,7 @@ export function Dashboard() {
     <div style={st.page}>
       {showCustomize    && <DashCustomizeModal onClose={() => setShowCustomize(false)} />}
       {showAddRace      && <AddRaceModal defaultMode={addRaceMode} onClose={() => setShowAddRace(false)} />}
-      {showAllUpcoming  && <AllUpcomingModal onClose={() => setShowAllUpcoming(false)} />}
+      {showAllUpcoming  && <AllUpcomingModal onClose={() => setShowAllUpcoming(false)} onAddRace={openAddUpcomingRace} />}
 
       <GreetingCard onCustomize={() => setShowCustomize(true)} />
       <PreRaceBriefing onAddRace={openAddRace} />
