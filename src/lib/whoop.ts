@@ -1,5 +1,5 @@
-import { supabase } from '@/lib/supabase'
 import { useWearableStore } from '@/stores/useWearableStore'
+import { saveWearableToken } from '@/lib/wearableUtils'
 import { WHOOP_CLIENT_ID } from '@/env'
 import type { WearableToken } from '@/types'
 
@@ -9,18 +9,26 @@ export const WHOOP_SCOPES = 'read:workout read:recovery read:body_measurement of
 const HEALTH_PROXY = 'https://health.breaktapes.com'
 
 export function startWhoopOAuth() {
+  const nonce = crypto.randomUUID()
+  const state = `whoop:${nonce}`
+  sessionStorage.setItem('oauth_state', state)
   const redirectUri = `${window.location.origin}/train`
   const params = new URLSearchParams({
     client_id: WHOOP_CLIENT_ID,
     redirect_uri: redirectUri,
     response_type: 'code',
     scope: WHOOP_SCOPES,
-    state: 'whoop',
+    state,
   })
   window.location.href = `https://api.prod.whoop.com/oauth/oauth2/auth?${params}`
 }
 
-export async function handleWhoopCallback(code: string): Promise<void> {
+export async function handleWhoopCallback(code: string, returnedState: string): Promise<void> {
+  const expectedState = sessionStorage.getItem('oauth_state')
+  sessionStorage.removeItem('oauth_state')
+  if (!expectedState || expectedState !== returnedState) {
+    throw new Error('OAuth state mismatch — possible CSRF attack')
+  }
   const redirectUri = `${window.location.origin}/train`
   const res = await fetch(`${HEALTH_PROXY}/whoop/token`, {
     method: 'POST',
@@ -96,16 +104,4 @@ export async function fetchWhoopRecovery(limit = 20): Promise<unknown[]> {
   if (!res.ok) return []
   const data = await res.json()
   return data.records ?? []
-}
-
-async function saveWearableToken(token: WearableToken) {
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return
-  await supabase.from('wearable_tokens').upsert({
-    user_id: user.id,
-    provider: token.provider,
-    access_token: token.access_token,
-    refresh_token: token.refresh_token ?? null,
-    expires_at: token.expires_at ?? null,
-  }, { onConflict: 'user_id,provider' })
 }

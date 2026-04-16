@@ -135,9 +135,11 @@ export function Train() {
 
     async function finish() {
       try {
-        if (state === 'whoop')  await handleWhoopCallback(code!)
-        if (state === 'garmin') await handleGarminCallback(code!)
-        if (state === 'strava') await handleStravaCallback(code!)
+        const provider = state?.split(':')[0]
+        if (provider === 'whoop')  await handleWhoopCallback(code!, state!)
+        if (provider === 'garmin') await handleGarminCallback(code!, state!)
+        if (provider === 'strava') await handleStravaCallback(code!, state!)
+        if (!provider || !['whoop', 'garmin', 'strava'].includes(provider)) return
         setOauthStatus(`${state} connected!`)
         setActiveTab('activities')
       } catch (err) {

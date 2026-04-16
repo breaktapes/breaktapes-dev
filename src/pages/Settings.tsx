@@ -8,6 +8,7 @@ import { startWhoopOAuth } from '@/lib/whoop'
 import { startGarminOAuth } from '@/lib/garmin'
 import { startStravaOAuth } from '@/lib/strava'
 import { importAppleHealthXML, importAppleHealthXMLStreaming } from '@/lib/appleHealth'
+import { removeWearableToken } from '@/lib/wearableUtils'
 import { THEMES } from '@/types'
 import type { ThemeId } from '@/types'
 
@@ -448,7 +449,7 @@ export function Settings() {
             {whoopToken ? (
               <button
                 style={{ ...btnGhost, padding: '0.5rem 1rem', whiteSpace: 'nowrap', flexShrink: 0, fontSize: '12px' }}
-                onClick={() => clearToken('whoop')}
+                onClick={async () => { await removeWearableToken('whoop'); clearToken('whoop') }}
               >Disconnect</button>
             ) : (
               <button
@@ -469,7 +470,7 @@ export function Settings() {
             {garminToken ? (
               <button
                 style={{ ...btnGhost, padding: '0.5rem 1rem', whiteSpace: 'nowrap', flexShrink: 0, fontSize: '12px' }}
-                onClick={() => clearToken('garmin')}
+                onClick={async () => { await removeWearableToken('garmin'); clearToken('garmin') }}
               >Disconnect</button>
             ) : (
               <button
@@ -490,7 +491,7 @@ export function Settings() {
             {stravaToken ? (
               <button
                 style={{ ...btnGhost, padding: '0.5rem 1rem', whiteSpace: 'nowrap', flexShrink: 0, fontSize: '12px' }}
-                onClick={() => clearToken('strava')}
+                onClick={async () => { await removeWearableToken('strava'); clearToken('strava') }}
               >Disconnect</button>
             ) : (
               <button

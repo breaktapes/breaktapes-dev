@@ -1,5 +1,5 @@
-import { supabase } from '@/lib/supabase'
 import { useWearableStore } from '@/stores/useWearableStore'
+import { saveWearableToken } from '@/lib/wearableUtils'
 import { GARMIN_CLIENT_ID } from '@/env'
 import type { WearableToken } from '@/types'
 
@@ -26,7 +26,10 @@ async function generatePKCE(): Promise<{ verifier: string; challenge: string }> 
 
 export async function startGarminOAuth(): Promise<void> {
   const { verifier, challenge } = await generatePKCE()
+  const nonce = crypto.randomUUID()
+  const state = `garmin:${nonce}`
   sessionStorage.setItem('garmin_pkce_verifier', verifier)
+  sessionStorage.setItem('oauth_state', state)
   const redirectUri = `${window.location.origin}/train`
   const params = new URLSearchParams({
     client_id: GARMIN_CLIENT_ID,
@@ -35,12 +38,17 @@ export async function startGarminOAuth(): Promise<void> {
     scope: 'activity:read',
     code_challenge: challenge,
     code_challenge_method: 'S256',
-    state: 'garmin',
+    state,
   })
   window.location.href = `https://connect.garmin.com/oauthConfirm?${params}`
 }
 
-export async function handleGarminCallback(code: string): Promise<void> {
+export async function handleGarminCallback(code: string, returnedState: string): Promise<void> {
+  const expectedState = sessionStorage.getItem('oauth_state')
+  sessionStorage.removeItem('oauth_state')
+  if (!expectedState || expectedState !== returnedState) {
+    throw new Error('OAuth state mismatch — possible CSRF attack')
+  }
   const verifier = sessionStorage.getItem('garmin_pkce_verifier')
   sessionStorage.removeItem('garmin_pkce_verifier')
   if (!verifier) throw new Error('PKCE verifier missing')
@@ -75,16 +83,4 @@ export async function fetchGarminActivities(limit = 20): Promise<unknown[]> {
   )
   if (!res.ok) return []
   return await res.json()
-}
-
-async function saveWearableToken(token: WearableToken) {
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return
-  await supabase.from('wearable_tokens').upsert({
-    user_id: user.id,
-    provider: token.provider,
-    access_token: token.access_token,
-    refresh_token: token.refresh_token ?? null,
-    expires_at: token.expires_at ?? null,
-  }, { onConflict: 'user_id,provider' })
 }
