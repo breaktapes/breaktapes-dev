@@ -53,6 +53,21 @@ export const useRaceStore = create<RaceState>()(
         }
       },
     }),
-    { name: 'fl2_races' },  // must match existing localStorage key
+    {
+      name: 'fl2_races',  // must match existing localStorage key
+      // Migrate old SPA format: raw array stored directly, not wrapped in {state:{...}}
+      onRehydrateStorage: () => (state) => {
+        if (!state || state.races.length > 0) return
+        try {
+          const raw = localStorage.getItem('fl2_races')
+          if (!raw) return
+          const parsed = JSON.parse(raw)
+          // Old SPA stored: [{id:"...",name:"...",...}, ...] (plain array, no "state" wrapper)
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            state.setRaces(parsed)
+          }
+        } catch {}
+      },
+    }
   ),
 )

@@ -1,4 +1,11 @@
 import { BottomNav } from './BottomNav'
+import { useSyncState } from '@/hooks/useSyncState'
+
+/** Fires after auth resolves — loads remote state from Supabase into stores. */
+function DataSync() {
+  useSyncState()
+  return null
+}
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -7,6 +14,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
       display: 'flex', flexDirection: 'column',
       background: 'var(--black)',
     }}>
+      <DataSync />
+
       <header style={{
         height: 'var(--header-base-height)',
         flexShrink: 0,

@@ -3,7 +3,6 @@ import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { selectRaces, selectNextRace, selectAthlete, selectAuthUser } from '@/stores/selectors'
-import { Skeleton } from '@/components/Skeleton'
 import type { Race } from '@/types'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -342,19 +341,6 @@ function BioDetails() {
 export function Profile() {
   const athlete = useAthleteStore(selectAthlete)
   const authUser = useAuthStore(selectAuthUser)
-
-  // Loading state — auth resolved but athlete not yet loaded
-  if (authUser && athlete === null) {
-    return (
-      <div style={st.page}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <Skeleton height={200} borderRadius={16} />
-          <Skeleton height={140} borderRadius={12} />
-          <Skeleton height={120} borderRadius={12} />
-        </div>
-      </div>
-    )
-  }
 
   // Not authenticated
   if (!authUser) {
