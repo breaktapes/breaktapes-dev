@@ -5,6 +5,7 @@ import { useRaceCatalog, type CatalogRace } from '@/hooks/useRaceCatalog'
 import { parseRaceText, importRaceScreenshot, getClaudeApiKey } from '@/lib/claude'
 import { DateInput } from '@/components/DateInput'
 import { TimePickerWheel, type HMS } from '@/components/TimePickerWheel'
+import { countryNameHaystack } from '@/lib/countries'
 import type { Race, Split } from '@/types'
 
 type Mode = 'past' | 'upcoming'
@@ -277,34 +278,44 @@ export function AddRaceModal({ onClose, defaultMode = 'past' }: Props) {
     }
   }, [showSuggest, suggestions])
 
-  // Autocomplete debounce — matches on name, aliases, AND city
+  // Autocomplete debounce — multi-word tokenized match across name, aliases, city, country
   useEffect(() => {
     clearTimeout(debounceRef.current)
     if (query.length < 2) { setSuggestions([]); setShowSuggest(false); return }
     debounceRef.current = setTimeout(() => {
-      const q = query.toLowerCase()
-      const isCityQuery = catalog.some(r => r.city?.toLowerCase() === q || r.city?.toLowerCase().startsWith(q))
+      // Split into tokens — ALL tokens must appear somewhere in the combined haystack
+      const tokens = query.toLowerCase().split(/\s+/).filter(Boolean)
+      const matchesCatalog = (r: CatalogRace) => {
+        // Include both the raw country code AND the resolved country name so that
+        // typing "oman" matches entries with country="OM", "France" matches "FR", etc.
+        const countryName = countryNameHaystack(r.country ?? '')
+        const haystack = [r.name, r.city ?? '', r.country ?? '', countryName, ...(r.aliases ?? [])].join(' ').toLowerCase()
+        return tokens.every(t => haystack.includes(t))
+      }
+      // For sort: prefer entries where name/alias directly contains the full query string
+      const fullQ = tokens.join(' ')
+      const nameMatchScore = (r: CatalogRace) => {
+        if (r.name.toLowerCase().includes(fullQ)) return 2
+        if ((r.aliases ?? []).some(a => a.toLowerCase().includes(fullQ))) return 2
+        if (r.name.toLowerCase().includes(tokens[0])) return 1
+        return 0
+      }
+
+      const isCityQuery = tokens.length === 1 &&
+        catalog.some(r => r.city?.toLowerCase() === fullQ || r.city?.toLowerCase().startsWith(fullQ))
 
       const catalogHits = catalog
-        .filter(r =>
-          r.name.toLowerCase().includes(q) ||
-          (r.aliases ?? []).some(a => a.toLowerCase().includes(q)) ||
-          r.city?.toLowerCase().includes(q)
-        )
-        // Sort: name/alias matches first, then city-only matches
-        .sort((a, b) => {
-          const aNameMatch = a.name.toLowerCase().includes(q) || (a.aliases ?? []).some(x => x.toLowerCase().includes(q))
-          const bNameMatch = b.name.toLowerCase().includes(q) || (b.aliases ?? []).some(x => x.toLowerCase().includes(q))
-          if (aNameMatch && !bNameMatch) return -1
-          if (!aNameMatch && bNameMatch) return 1
-          return 0
-        })
+        .filter(matchesCatalog)
+        .sort((a, b) => nameMatchScore(b) - nameMatchScore(a))
         .slice(0, isCityQuery ? 8 : 6)
         .map(r => ({ label: r.name, source: 'catalog' as const, data: r }))
 
       const allMyRaces = [...pastRaces, ...upcomingRaces]
       const myHits = allMyRaces
-        .filter(r => r.name.toLowerCase().includes(q) || r.city?.toLowerCase().includes(q))
+        .filter(r => {
+          const h = [r.name, r.city ?? '', r.country ?? ''].join(' ').toLowerCase()
+          return tokens.every(t => h.includes(t))
+        })
         .slice(0, 3)
         .map(r => ({ label: r.name, source: 'past' as const, myRace: r }))
 
