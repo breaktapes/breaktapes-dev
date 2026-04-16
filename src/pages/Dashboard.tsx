@@ -1,9 +1,10 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { useDashStore } from '@/stores/useDashStore'
 import { selectRaces, selectNextRace, selectAthlete, selectDashZoneCollapse } from '@/stores/selectors'
 import { Skeleton } from '@/components/Skeleton'
+import { AddRaceModal } from '@/components/AddRaceModal'
 import type { Race } from '@/types'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -78,7 +79,7 @@ function buildPBMap(races: Race[]): Record<string, Race> {
 
 // ─── AthleteBriefing Card ────────────────────────────────────────────────────
 
-function AthleteBriefing() {
+function AthleteBriefing({ onAddRace }: { onAddRace: () => void }) {
   const races = useRaceStore(selectRaces)
   const nextRace = useRaceStore(selectNextRace)
   const athlete = useAthleteStore(selectAthlete)
@@ -96,7 +97,7 @@ function AthleteBriefing() {
           <p style={st.briefingSubtext}>
             Every champion's journey begins with race one. Log it here.
           </p>
-          <button style={st.ctaPrimary} onClick={() => console.log('open add race modal')}>
+          <button style={st.ctaPrimary} onClick={() => onAddRace()}>
             + Log First Race
           </button>
         </div>
@@ -132,7 +133,7 @@ function AthleteBriefing() {
               </span>
             )}
           </div>
-          <button style={st.ctaOutline} onClick={() => console.log('open add race modal')}>
+          <button style={st.ctaOutline} onClick={() => onAddRace()}>
             + Add Next Race
           </button>
         </div>
@@ -191,7 +192,7 @@ function AthleteBriefing() {
         <div style={st.pills}>
           {lastRace?.time && <span style={st.pill}>{lastRace.time}</span>}
         </div>
-        <button style={st.ctaOutline} onClick={() => console.log('open add race modal')}>
+        <button style={st.ctaOutline} onClick={() => onAddRace()}>
           + Add Next Race
         </button>
       </div>
@@ -226,7 +227,7 @@ function StatsStrip() {
 
 // ─── Recent Races Section ─────────────────────────────────────────────────────
 
-function RecentRaces() {
+function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
   const races = useRaceStore(selectRaces)
   const today = todayStr()
 
@@ -247,7 +248,7 @@ function RecentRaces() {
         <div style={st.emptyState}>
           <div style={st.emptyIcon}>🏁</div>
           <div style={st.emptyText}>No races yet. Log your first to get started.</div>
-          <button style={st.ctaOutline} onClick={() => console.log('open add race modal')}>
+          <button style={st.ctaOutline} onClick={() => onAddRace()}>
             + Add Race
           </button>
         </div>
@@ -327,6 +328,120 @@ function DashZone({ id, label, children }: ZoneProps) {
   )
 }
 
+// ─── Pace Calculator ─────────────────────────────────────────────────────────
+
+const PACE_DISTANCES = [
+  { label: '5K',           km: 5 },
+  { label: '10K',          km: 10 },
+  { label: 'Half Marathon', km: 21.0975 },
+  { label: 'Marathon',     km: 42.195 },
+]
+
+function secsToMMSS(secs: number): string {
+  const m = Math.floor(secs / 60)
+  const s = Math.round(secs % 60)
+  return `${m}:${s.toString().padStart(2, '0')}`
+}
+
+function parseHMS(str: string): number | null {
+  const parts = str.trim().split(':').map(Number)
+  if (parts.some(isNaN)) return null
+  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2]
+  if (parts.length === 2) return parts[0] * 60 + parts[1]
+  return null
+}
+
+function PaceCalculator() {
+  const [distIdx, setDistIdx] = useState(2)
+  const [goalTime, setGoalTime] = useState('')
+  const [result, setResult] = useState<{ km: string; mi: string } | null>(null)
+
+  function calc() {
+    const secs = parseHMS(goalTime)
+    if (!secs) return
+    const d = PACE_DISTANCES[distIdx]
+    setResult({ km: secsToMMSS(secs / d.km), mi: secsToMMSS(secs / (d.km / 1.60934)) })
+  }
+
+  return (
+    <div style={st.sectionCard}>
+      <div style={st.sectionHeader}>PACE CALCULATOR</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', minWidth: 0 }}>
+          <div>
+            <label style={st.inputLabel}>Distance</label>
+            <select
+              value={distIdx}
+              onChange={e => { setDistIdx(Number(e.target.value)); setResult(null) }}
+              style={st.select}
+            >
+              {PACE_DISTANCES.map((d, i) => (
+                <option key={d.label} value={i}>{d.label}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label style={st.inputLabel}>Goal Time</label>
+            <input
+              type="text"
+              placeholder="1:45:00"
+              value={goalTime}
+              onChange={e => { setGoalTime(e.target.value); setResult(null) }}
+              style={st.input}
+            />
+          </div>
+        </div>
+        <button style={st.ctaPrimary} onClick={calc}>Calculate</button>
+        {result && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', minWidth: 0 }}>
+            <div style={st.paceResult}>
+              <div style={st.paceValue}>{result.km}</div>
+              <div style={st.paceUnit}>min/km</div>
+            </div>
+            <div style={st.paceResult}>
+              <div style={{ ...st.paceValue, color: 'var(--white)' }}>{result.mi}</div>
+              <div style={st.paceUnit}>min/mi</div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─── Customize Modal ──────────────────────────────────────────────────────────
+
+function DashCustomizeModal({ onClose }: { onClose: () => void }) {
+  const widgets = useDashStore(s => s.widgets)
+  const setWidgetEnabled = useDashStore(s => s.setWidgetEnabled)
+
+  return (
+    <div style={st.modalOverlay} onClick={onClose}>
+      <div style={st.modalSheet} onClick={e => e.stopPropagation()}>
+        <div style={st.modalHeader}>
+          <span style={st.modalTitle}>CUSTOMISE DASHBOARD</span>
+          <button style={st.modalClose} onClick={onClose} aria-label="Close">✕</button>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          {widgets.map(w => (
+            <label key={w.id} style={st.widgetRow}>
+              <span style={st.widgetRowIcon}>{w.icon}</span>
+              <span style={st.widgetRowLabel}>{w.label}</span>
+              <span style={st.widgetRowZone}>{w.zone}</span>
+              <input
+                type="checkbox"
+                checked={w.enabled}
+                onChange={e => setWidgetEnabled(w.id, e.target.checked)}
+                style={{ accentColor: 'var(--orange)', width: '16px', height: '16px', flexShrink: 0 }}
+              />
+            </label>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Widget placeholder (for zones not yet wired) ────────────────────────────
 
 function WidgetShell({ label }: { label: string }) {
@@ -341,18 +456,39 @@ function WidgetShell({ label }: { label: string }) {
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 
 export function Dashboard() {
+  const [showCustomize, setShowCustomize] = useState(false)
+  const [showAddRace, setShowAddRace] = useState(false)
+
+  const openAddRace = () => setShowAddRace(true)
+
   return (
     <div style={st.page}>
-      <AthleteBriefing />
+      {/* Header row with customize icon */}
+      <div style={st.dashHeader}>
+        <span style={st.dashTitle}>DASHBOARD</span>
+        <button
+          style={st.customizeBtn}
+          onClick={() => setShowCustomize(true)}
+          aria-label="Customise dashboard"
+          title="Customise dashboard"
+        >
+          ⚙
+        </button>
+      </div>
+
+      {showCustomize && <DashCustomizeModal onClose={() => setShowCustomize(false)} />}
+      {showAddRace && <AddRaceModal onClose={() => setShowAddRace(false)} />}
+
+      <AthleteBriefing onAddRace={openAddRace} />
       <StatsStrip />
 
       <DashZone id="now" label="NOW">
-        <RecentRaces />
+        <RecentRaces onAddRace={openAddRace} />
         <WidgetShell label="Race Day Forecast" />
       </DashZone>
 
       <DashZone id="recently" label="RECENTLY">
-        <RecentRaces />
+        <RecentRaces onAddRace={openAddRace} />
         <WidgetShell label="Personal Bests" />
       </DashZone>
 
@@ -367,6 +503,8 @@ export function Dashboard() {
         <WidgetShell label="Age Grade" />
         <WidgetShell label="On This Day" />
       </DashZone>
+
+      <PaceCalculator />
     </div>
   )
 }
@@ -722,5 +860,185 @@ const st = {
     letterSpacing: '0.1em',
     textTransform: 'uppercase',
     color: 'var(--muted)',
+  } as React.CSSProperties,
+
+  // ── Dashboard header
+  dashHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    minWidth: 0,
+  } as React.CSSProperties,
+
+  dashTitle: {
+    fontFamily: 'var(--headline)',
+    fontSize: '22px',
+    fontWeight: 900,
+    letterSpacing: '0.1em',
+    textTransform: 'uppercase',
+    color: 'var(--white)',
+  } as React.CSSProperties,
+
+  customizeBtn: {
+    background: 'transparent',
+    border: '1px solid var(--border2)',
+    borderRadius: '8px',
+    color: 'var(--muted)',
+    fontSize: '18px',
+    width: '36px',
+    height: '36px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    flexShrink: 0,
+    lineHeight: 1,
+  } as React.CSSProperties,
+
+  // ── Pace calculator inputs
+  inputLabel: {
+    display: 'block',
+    fontSize: '11px',
+    fontFamily: 'var(--headline)',
+    fontWeight: 700,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    color: 'var(--muted)',
+    marginBottom: '4px',
+  } as React.CSSProperties,
+
+  select: {
+    width: '100%',
+    background: 'var(--surface3)',
+    border: '1px solid var(--border2)',
+    borderRadius: '6px',
+    color: 'var(--white)',
+    fontSize: 'var(--text-sm)',
+    padding: '0.55rem 0.75rem',
+    fontFamily: 'var(--body)',
+    boxSizing: 'border-box',
+  } as React.CSSProperties,
+
+  input: {
+    width: '100%',
+    background: 'var(--surface3)',
+    border: '1px solid var(--border2)',
+    borderRadius: '6px',
+    color: 'var(--white)',
+    fontSize: 'var(--text-sm)',
+    padding: '0.55rem 0.75rem',
+    fontFamily: 'var(--body)',
+    boxSizing: 'border-box',
+  } as React.CSSProperties,
+
+  paceResult: {
+    background: 'var(--surface3)',
+    border: '1px solid var(--border2)',
+    borderRadius: '8px',
+    padding: '12px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '2px',
+    minWidth: 0,
+  } as React.CSSProperties,
+
+  paceValue: {
+    fontFamily: 'var(--headline)',
+    fontWeight: 900,
+    fontSize: '24px',
+    color: 'var(--orange)',
+    letterSpacing: '0.02em',
+    lineHeight: 1.1,
+  } as React.CSSProperties,
+
+  paceUnit: {
+    fontSize: '11px',
+    color: 'var(--muted)',
+    fontFamily: 'var(--body)',
+  } as React.CSSProperties,
+
+  // ── Customize modal
+  modalOverlay: {
+    position: 'fixed',
+    inset: 0,
+    background: 'rgba(0,0,0,0.7)',
+    zIndex: 900,
+    display: 'flex',
+    alignItems: 'flex-end',
+  } as React.CSSProperties,
+
+  modalSheet: {
+    width: '100%',
+    maxHeight: '80vh',
+    overflowY: 'auto',
+    background: 'var(--surface2)',
+    borderTop: '1px solid var(--border2)',
+    borderRadius: '16px 16px 0 0',
+    padding: '20px 16px 32px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
+  } as React.CSSProperties,
+
+  modalHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: '4px',
+  } as React.CSSProperties,
+
+  modalTitle: {
+    fontFamily: 'var(--headline)',
+    fontWeight: 900,
+    fontSize: '15px',
+    letterSpacing: '0.1em',
+    textTransform: 'uppercase',
+    color: 'var(--white)',
+  } as React.CSSProperties,
+
+  modalClose: {
+    background: 'transparent',
+    border: 'none',
+    color: 'var(--muted)',
+    fontSize: '16px',
+    cursor: 'pointer',
+    padding: '4px 8px',
+    lineHeight: 1,
+  } as React.CSSProperties,
+
+  widgetRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    padding: '10px 0',
+    borderBottom: '1px solid var(--border)',
+    cursor: 'pointer',
+    minWidth: 0,
+  } as React.CSSProperties,
+
+  widgetRowIcon: {
+    fontSize: '16px',
+    flexShrink: 0,
+    width: '20px',
+    textAlign: 'center',
+  } as React.CSSProperties,
+
+  widgetRowLabel: {
+    flex: 1,
+    fontSize: 'var(--text-sm)',
+    color: 'var(--white)',
+    fontFamily: 'var(--body)',
+    fontWeight: 500,
+    minWidth: 0,
+  } as React.CSSProperties,
+
+  widgetRowZone: {
+    fontSize: '10px',
+    fontFamily: 'var(--headline)',
+    fontWeight: 700,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+    color: 'var(--muted)',
+    flexShrink: 0,
   } as React.CSSProperties,
 } as const

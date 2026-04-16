@@ -1,9 +1,9 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { selectRaces, selectNextRace, selectAthlete, selectAuthUser } from '@/stores/selectors'
-import { Skeleton } from '@/components/Skeleton'
+import { EditProfileModal } from '@/components/EditProfileModal'
 import type { Race } from '@/types'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -285,7 +285,7 @@ function RecentMedals() {
 
 // ─── Bio / Details Section ────────────────────────────────────────────────────
 
-function BioDetails() {
+function BioDetails({ onEdit }: { onEdit: () => void }) {
   const athlete = useAthleteStore(selectAthlete)
 
   const ag = ageGroup(athlete?.dob, athlete?.gender)
@@ -305,20 +305,13 @@ function BioDetails() {
     <div style={st.section}>
       <div style={st.sectionHeaderRow}>
         <div style={st.sectionHeader}>DETAILS</div>
-        <button
-          style={st.editBtn}
-          onClick={() => console.log('open edit modal')}
-        >
-          Edit
-        </button>
+        <button style={st.editBtn} onClick={onEdit}>Edit</button>
       </div>
 
       {visibleFields.length === 0 ? (
         <div style={st.emptyState}>
           <div style={st.emptyText}>Add your details to complete your profile.</div>
-          <button style={st.ctaOutline} onClick={() => console.log('open edit modal')}>
-            Set Up Profile
-          </button>
+          <button style={st.ctaOutline} onClick={onEdit}>Set Up Profile</button>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -342,19 +335,7 @@ function BioDetails() {
 export function Profile() {
   const athlete = useAthleteStore(selectAthlete)
   const authUser = useAuthStore(selectAuthUser)
-
-  // Loading state — auth resolved but athlete not yet loaded
-  if (authUser && athlete === null) {
-    return (
-      <div style={st.page}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <Skeleton height={200} borderRadius={16} />
-          <Skeleton height={140} borderRadius={12} />
-          <Skeleton height={120} borderRadius={12} />
-        </div>
-      </div>
-    )
-  }
+  const [showEdit, setShowEdit] = useState(false)
 
   // Not authenticated
   if (!authUser) {
@@ -370,10 +351,11 @@ export function Profile() {
 
   return (
     <div style={st.page}>
+      {showEdit && <EditProfileModal onClose={() => setShowEdit(false)} />}
       <AthleteHero />
       <PersonalBests />
       <RecentMedals />
-      <BioDetails />
+      <BioDetails onEdit={() => setShowEdit(true)} />
     </div>
   )
 }

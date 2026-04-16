@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useRaceStore } from '@/stores/useRaceStore'
 
 const btnMain: React.CSSProperties = {
@@ -53,48 +54,15 @@ function parseHMS(str: string): number | null {
   return null
 }
 
-type Tab = 'pace' | 'activities' | 'wearables'
+type Tab = 'pace' | 'activities'
 
 const TAB_LABELS: { id: Tab; label: string }[] = [
   { id: 'pace',       label: 'Pace' },
   { id: 'activities', label: 'Activities' },
-  { id: 'wearables',  label: 'Wearables' },
-]
-
-const WEARABLES = [
-  {
-    id: 'whoop',
-    name: 'WHOOP',
-    desc: 'Recovery, strain & sleep coaching',
-    status: 'connect' as const,
-  },
-  {
-    id: 'garmin',
-    name: 'Garmin',
-    desc: 'GPS activities & performance metrics',
-    status: 'connect' as const,
-  },
-  {
-    id: 'coros',
-    name: 'COROS',
-    desc: 'Training load & endurance data',
-    status: 'soon' as const,
-  },
-  {
-    id: 'oura',
-    name: 'Oura',
-    desc: 'Readiness, sleep & HRV',
-    status: 'soon' as const,
-  },
-  {
-    id: 'apple',
-    name: 'Apple Health',
-    desc: 'Import export.xml from the Health app',
-    status: 'connect' as const,
-  },
 ]
 
 export function Train() {
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<Tab>('pace')
   const [distanceIdx, setDistanceIdx] = useState(2) // HM default
   const [goalTime, setGoalTime] = useState('')
@@ -300,7 +268,7 @@ export function Train() {
             textAlign: 'center',
           }}>
             <div style={{ display: 'flex', gap: '1rem', opacity: 0.5 }}>
-              {['W', 'G', ''].map((l, i) => (
+              {['W', 'G', '♡'].map((l, i) => (
                 <div
                   key={i}
                   style={{
@@ -318,7 +286,7 @@ export function Train() {
                     color: 'var(--muted)',
                   }}
                 >
-                  {l || '♡'}
+                  {l}
                 </div>
               ))}
             </div>
@@ -328,77 +296,10 @@ export function Train() {
             <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--muted)', maxWidth: '260px', lineHeight: 1.5 }}>
               Link WHOOP, Garmin, or Apple Health to see your activity feed here.
             </p>
-            <button
-              style={btnMain}
-              onClick={() => setActiveTab('wearables')}
-            >
-              Go to Wearables
+            <button style={btnMain} onClick={() => navigate('/settings')}>
+              Go to Settings → Wearables
             </button>
           </div>
-        </div>
-      )}
-
-      {/* ── Wearables tab ── */}
-      {activeTab === 'wearables' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          {WEARABLES.map(w => (
-            <div
-              key={w.id}
-              style={{
-                ...card,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: '1rem',
-              }}
-            >
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{
-                  margin: 0,
-                  fontFamily: 'var(--headline)',
-                  fontWeight: 900,
-                  fontSize: '15px',
-                  letterSpacing: '0.06em',
-                  textTransform: 'uppercase',
-                  color: 'var(--white)',
-                }}>
-                  {w.name}
-                </p>
-                <p style={{ margin: '3px 0 0', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
-                  {w.desc}
-                </p>
-              </div>
-              {w.status === 'soon' ? (
-                <span style={{
-                  padding: '3px 10px',
-                  borderRadius: '4px',
-                  background: 'var(--surface3)',
-                  border: '1px solid var(--border)',
-                  fontSize: 'var(--text-xs)',
-                  fontFamily: 'var(--headline)',
-                  fontWeight: 700,
-                  letterSpacing: '0.08em',
-                  textTransform: 'uppercase',
-                  color: 'var(--muted)',
-                  whiteSpace: 'nowrap',
-                }}>
-                  Coming Soon
-                </span>
-              ) : (
-                <button
-                  style={{
-                    ...btnMain,
-                    padding: '0.5rem 1rem',
-                    whiteSpace: 'nowrap',
-                    flexShrink: 0,
-                  }}
-                  onClick={() => console.log(`Connect ${w.name}`)}
-                >
-                  Connect
-                </button>
-              )}
-            </div>
-          ))}
         </div>
       )}
     </div>

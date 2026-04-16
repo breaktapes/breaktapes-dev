@@ -36,6 +36,23 @@ export const useAthleteStore = create<AthleteState>()(
       deleteSeasonPlan: (id) =>
         set(s => ({ seasonPlans: s.seasonPlans.filter(p => p.id !== id) })),
     }),
-    { name: 'fl2_ath' },  // must match existing localStorage key
+    {
+      name: 'fl2_ath',  // must match existing localStorage key
+      // Migrate old SPA format: raw athlete object stored at root, not wrapped in {state:{...}}
+      onRehydrateStorage: () => (state) => {
+        if (!state || state.athlete !== null) return
+        try {
+          const raw = localStorage.getItem('fl2_ath')
+          if (!raw) return
+          const parsed = JSON.parse(raw)
+          // Old SPA stored: {"firstName":"...","lastName":"...",...} (no "state" wrapper)
+          if (parsed && typeof parsed === 'object' && !Array.isArray(parsed) && !('state' in parsed)) {
+            if (parsed.firstName !== undefined || parsed.lastName !== undefined || parsed.mainSport !== undefined) {
+              state.setAthlete(parsed)
+            }
+          }
+        } catch {}
+      },
+    }
   ),
 )
