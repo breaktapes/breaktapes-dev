@@ -1051,6 +1051,58 @@ function WidgetShell({ label }: { label: string }) {
   )
 }
 
+// ─── No Upcoming Race CTA ─────────────────────────────────────────────────────
+
+function NoUpcomingRaceCTA({ onAddRace }: { onAddRace: () => void }) {
+  return (
+    <div style={{
+      background: 'linear-gradient(135deg, var(--surface2) 0%, var(--surface3) 100%)',
+      border: '1px dashed rgba(255,77,0,0.35)',
+      borderRadius: '12px',
+      padding: '20px',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: '14px',
+      textAlign: 'center',
+    }}>
+      <div style={{ fontSize: '32px', lineHeight: 1 }}>📅</div>
+      <div>
+        <div style={{
+          fontFamily: 'var(--headline)',
+          fontWeight: 900,
+          fontSize: '16px',
+          letterSpacing: '0.06em',
+          textTransform: 'uppercase',
+          color: 'var(--white)',
+          marginBottom: '4px',
+        }}>No upcoming race</div>
+        <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5 }}>
+          Add your next race to start the countdown and unlock race-day forecasts.
+        </div>
+      </div>
+      <button
+        onClick={onAddRace}
+        style={{
+          background: 'var(--orange)',
+          color: '#000',
+          border: 'none',
+          borderRadius: '8px',
+          padding: '10px 22px',
+          fontFamily: 'var(--headline)',
+          fontWeight: 800,
+          fontSize: '13px',
+          letterSpacing: '0.08em',
+          textTransform: 'uppercase',
+          cursor: 'pointer',
+        }}
+      >
+        + Add Upcoming Race
+      </button>
+    </div>
+  )
+}
+
 // ─── Pace Calculator ─────────────────────────────────────────────────────────
 
 const PACE_DISTS = [
@@ -1258,7 +1310,7 @@ export function Dashboard() {
           ? <>{en('countdown') && <CountdownCard race={nextRace} />}
               {en('race-forecast') && <WeatherCard race={nextRace} />}
               <CourseInfoCard race={nextRace} /></>
-          : <WidgetShell label="No upcoming race — add one to start the countdown" />
+          : <NoUpcomingRaceCTA onAddRace={openAddRace} />
         }
       </DashZone>
 
