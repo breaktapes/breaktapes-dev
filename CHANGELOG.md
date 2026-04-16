@@ -3,6 +3,14 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.6.1.0] - 2026-04-16
+
+### Added
+- **Upcoming Races modal**: tapping "ALL UPCOMING RACES →" on the dashboard opens a full-screen modal listing all upcoming races sorted by date, with days-between separators, A/B/C priority badges, and ACTIVE pill on the current focus race.
+- **Set Next Race modal**: tapping any race in the Upcoming modal opens an edit sheet with priority selector, goal time spinners (HRS/MIN/SEC), auto-calculated pace target, and an UPCOMING INSIGHTS panel showing location, course summary, weather forecast (Open-Meteo API), and Race DNA outlook.
+- **Set any race as focus**: selecting a race in the Upcoming modal sets it as the active `nextRace` in the dashboard countdown card, replacing the previous first-upcoming-only behaviour.
+- **`setNextRace` action** in `useRaceStore`: explicitly set any race as the focused/active next race.
+
 ## [0.6.0.0] - 2026-04-16
 
 ### Added
