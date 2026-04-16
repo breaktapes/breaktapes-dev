@@ -5,6 +5,7 @@ import { RaceShareCard } from '@/components/RaceShareCard'
 import { DateInput } from '@/components/DateInput'
 import { TimePickerWheel, type HMS } from '@/components/TimePickerWheel'
 import type { Race } from '@/types'
+import { useUnits, fmtDistKm, distUnit, fmtPaceSecPerKm, computePaceSecPerKm } from '@/lib/units'
 
 // ─── Config (mirrors AddRaceModal) ──────────────────────────────────────────
 
@@ -144,6 +145,7 @@ interface Props {
 function ViewPanel({ race, onEdit, onDelete, onShare }: { race: Race; onEdit: () => void; onDelete: () => void; onShare: () => void }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const medalColor = race.medal ? (MEDAL_COLORS[race.medal] ?? 'var(--orange)') : null
+  const units = useUnits()
 
   return (
     <div style={st.body}>
@@ -163,10 +165,27 @@ function ViewPanel({ race, onEdit, onDelete, onShare }: { race: Race; onEdit: ()
         )}
         {race.distance && (() => {
           const { km, isNumeric } = resolveDistKm(race.distance)
+          const distDisplay = isNumeric ? fmtDistKm(km, units) : km
+          const distLabel = isNumeric ? distUnit(units) : 'DISTANCE'
           return (
             <div style={st.statBox}>
-              <div style={st.statVal}>{km}</div>
-              <div style={st.statLabel}>{isNumeric ? 'KM' : 'DISTANCE'}</div>
+              <div style={st.statVal}>{distDisplay}</div>
+              <div style={st.statLabel}>{distLabel}</div>
+            </div>
+          )
+        })()}
+        {/* Pace stat — computed from time + distance */}
+        {race.time && race.distance && (() => {
+          const { isNumeric } = resolveDistKm(race.distance)
+          if (!isNumeric) return null
+          const secPerKm = computePaceSecPerKm(race.distance, race.time)
+          if (!secPerKm) return null
+          const paceStr = fmtPaceSecPerKm(secPerKm, units)
+          const [paceVal, paceUnitLabel] = paceStr.split(' ')
+          return (
+            <div style={st.statBox}>
+              <div style={st.statVal}>{paceVal}</div>
+              <div style={st.statLabel}>PACE {paceUnitLabel}</div>
             </div>
           )
         })()}

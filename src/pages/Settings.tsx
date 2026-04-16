@@ -407,6 +407,48 @@ export function Settings() {
         </div>
       </section>
 
+      {/* ── Preferences section ── */}
+      <section>
+        <p style={sectionLabel}>Preferences</p>
+        <div style={{ ...card, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          {/* Units toggle */}
+          <div>
+            <p style={{ margin: '0 0 10px', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '13px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>
+              Units
+            </p>
+            <p style={{ margin: '0 0 10px', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
+              Distances, paces, and speeds across the app
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              {(['metric', 'imperial'] as const).map(u => {
+                const active = (athlete?.units ?? 'metric') === u
+                return (
+                  <button
+                    key={u}
+                    onClick={() => updateAthlete({ units: u })}
+                    style={{
+                      padding: '10px',
+                      borderRadius: '8px',
+                      border: active ? '2px solid var(--orange)' : '1px solid var(--border2)',
+                      background: active ? 'rgba(var(--orange-ch),0.1)' : 'var(--surface3)',
+                      cursor: 'pointer',
+                      textAlign: 'center' as const,
+                    }}
+                  >
+                    <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', letterSpacing: '0.08em', textTransform: 'uppercase', color: active ? 'var(--orange)' : 'var(--white)' }}>
+                      {u === 'metric' ? '🌍 Metric' : '🇺🇸 Imperial'}
+                    </div>
+                    <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '3px' }}>
+                      {u === 'metric' ? 'km · min/km' : 'mi · min/mi'}
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── Theme section ── */}
       <section>
         <p style={sectionLabel}>Theme</p>

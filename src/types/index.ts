@@ -58,6 +58,7 @@ export interface Athlete {
   username?: string
   usernameSetAt?: string  // ISO timestamp — username locked for 1 year after this
   isPublic?: boolean
+  units?: 'metric' | 'imperial'  // distance + pace display preference (default: metric)
 }
 
 export interface WearableToken {
