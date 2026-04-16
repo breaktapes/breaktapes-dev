@@ -140,12 +140,14 @@ function LandingScreen() {
         </div>
       </div>
 
-      <AuthModal
-        open={modalOpen}
-        mode={authMode}
-        onModeChange={setAuthMode}
-        onClose={() => setModalOpen(false)}
-      />
+      {modalOpen && (
+        <AuthModal
+          open={true}
+          mode={authMode}
+          onModeChange={setAuthMode}
+          onClose={() => setModalOpen(false)}
+        />
+      )}
     </>
   )
 }
