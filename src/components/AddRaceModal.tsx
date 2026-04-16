@@ -195,7 +195,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past' }: Props) {
   const addUpcomingRace = useRaceStore(s => s.addUpcomingRace)
   const pastRaces       = useRaceStore(s => s.races)
   const upcomingRaces   = useRaceStore(s => s.upcomingRaces)
-  const { data: catalog = [] } = useRaceCatalog()
+  const { data: catalog = [], isLoading: catalogLoading } = useRaceCatalog()
 
   // When parent changes defaultMode (e.g. re-opens), sync
   useEffect(() => { setMode(defaultMode) }, [defaultMode])
@@ -278,53 +278,72 @@ export function AddRaceModal({ onClose, defaultMode = 'past' }: Props) {
     }
   }, [showSuggest, suggestions])
 
+  // Run search immediately (no debounce) whenever catalog arrives after user already typed
+  useEffect(() => {
+    if (catalog.length > 0 && query.length >= 2) {
+      clearTimeout(debounceRef.current)
+      runSearch(query, catalog)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [catalog])
+
+  function runSearch(q: string, cat: CatalogRace[]) {
+    const tokens = q.toLowerCase().split(/\s+/).filter(Boolean)
+    const matchesCatalog = (r: CatalogRace) => {
+      // Include both the raw country code AND the resolved country name so that
+      // typing "oman" matches entries with country="OM", "France" matches "FR", etc.
+      const countryName = countryNameHaystack(r.country ?? '')
+      const haystack = [r.name, r.city ?? '', r.country ?? '', countryName, ...(r.aliases ?? [])].join(' ').toLowerCase()
+      return tokens.every(t => haystack.includes(t))
+    }
+    // For sort: prefer entries where name/alias directly contains the full query string
+    const fullQ = tokens.join(' ')
+    const nameMatchScore = (r: CatalogRace) => {
+      if (r.name.toLowerCase().includes(fullQ)) return 2
+      if ((r.aliases ?? []).some(a => a.toLowerCase().includes(fullQ))) return 2
+      if (r.name.toLowerCase().includes(tokens[0])) return 1
+      return 0
+    }
+
+    const isCityQuery = tokens.length === 1 &&
+      cat.some(r => r.city?.toLowerCase() === fullQ || r.city?.toLowerCase().startsWith(fullQ))
+
+    const catalogHits = cat
+      .filter(matchesCatalog)
+      .sort((a, b) => nameMatchScore(b) - nameMatchScore(a))
+      .slice(0, isCityQuery ? 8 : 6)
+      .map(r => ({ label: r.name, source: 'catalog' as const, data: r }))
+
+    const allMyRaces = [...pastRaces, ...upcomingRaces]
+    const myHits = allMyRaces
+      .filter(r => {
+        const h = [r.name, r.city ?? '', r.country ?? ''].join(' ').toLowerCase()
+        return tokens.every(t => h.includes(t))
+      })
+      .slice(0, 3)
+      .map(r => ({ label: r.name, source: 'past' as const, myRace: r }))
+
+    const all = [...myHits, ...catalogHits].slice(0, 10)
+    setSuggestions(all)
+    setShowSuggest(all.length > 0)
+  }
+
   // Autocomplete debounce — multi-word tokenized match across name, aliases, city, country
   useEffect(() => {
     clearTimeout(debounceRef.current)
     if (query.length < 2) { setSuggestions([]); setShowSuggest(false); return }
+    // While catalog is still loading show a hint so user knows search is coming
+    if (catalogLoading) {
+      setSuggestions([])
+      setShowSuggest(false)
+      return
+    }
     debounceRef.current = setTimeout(() => {
-      // Split into tokens — ALL tokens must appear somewhere in the combined haystack
-      const tokens = query.toLowerCase().split(/\s+/).filter(Boolean)
-      const matchesCatalog = (r: CatalogRace) => {
-        // Include both the raw country code AND the resolved country name so that
-        // typing "oman" matches entries with country="OM", "France" matches "FR", etc.
-        const countryName = countryNameHaystack(r.country ?? '')
-        const haystack = [r.name, r.city ?? '', r.country ?? '', countryName, ...(r.aliases ?? [])].join(' ').toLowerCase()
-        return tokens.every(t => haystack.includes(t))
-      }
-      // For sort: prefer entries where name/alias directly contains the full query string
-      const fullQ = tokens.join(' ')
-      const nameMatchScore = (r: CatalogRace) => {
-        if (r.name.toLowerCase().includes(fullQ)) return 2
-        if ((r.aliases ?? []).some(a => a.toLowerCase().includes(fullQ))) return 2
-        if (r.name.toLowerCase().includes(tokens[0])) return 1
-        return 0
-      }
-
-      const isCityQuery = tokens.length === 1 &&
-        catalog.some(r => r.city?.toLowerCase() === fullQ || r.city?.toLowerCase().startsWith(fullQ))
-
-      const catalogHits = catalog
-        .filter(matchesCatalog)
-        .sort((a, b) => nameMatchScore(b) - nameMatchScore(a))
-        .slice(0, isCityQuery ? 8 : 6)
-        .map(r => ({ label: r.name, source: 'catalog' as const, data: r }))
-
-      const allMyRaces = [...pastRaces, ...upcomingRaces]
-      const myHits = allMyRaces
-        .filter(r => {
-          const h = [r.name, r.city ?? '', r.country ?? ''].join(' ').toLowerCase()
-          return tokens.every(t => h.includes(t))
-        })
-        .slice(0, 3)
-        .map(r => ({ label: r.name, source: 'past' as const, myRace: r }))
-
-      const all = [...myHits, ...catalogHits].slice(0, 10)
-      setSuggestions(all)
-      setShowSuggest(all.length > 0)
-    }, 250)
+      runSearch(query, catalog)
+    }, 200)
     return () => clearTimeout(debounceRef.current)
-  }, [query, catalog, pastRaces, upcomingRaces])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, catalog, pastRaces, upcomingRaces, catalogLoading])
 
   function selectSuggestion(s: typeof suggestions[0]) {
     const TYPE_MAP: Record<string, string> = {
@@ -643,6 +662,12 @@ export function AddRaceModal({ onClose, defaultMode = 'past' }: Props) {
                 autoFocus
               />
             </Field>
+            {/* Loading hint — shown inline while catalog is still fetching */}
+            {catalogLoading && query.length >= 2 && (
+              <div style={{ fontSize: '11px', color: 'var(--muted)', padding: '4px 2px', letterSpacing: '0.05em' }}>
+                Searching race catalog…
+              </div>
+            )}
           </div>
 
           {/* Dropdown rendered via portal so it escapes overflow:hidden on the sheet */}
