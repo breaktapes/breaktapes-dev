@@ -13,7 +13,10 @@
 const fs   = require('fs');
 const path = require('path');
 
-const HTML_PATH = path.resolve(__dirname, '../index.html');
+// During React migration, the original SPA is archived at tests/index.html.spa.
+// The root index.html is now the Vite entry point (React app).
+// tests/index.html.spa = exact copy of index.html at the time tests were written.
+const HTML_PATH = path.resolve(__dirname, 'index.html.spa');
 
 let _scriptCache = null;
 
@@ -193,6 +196,16 @@ function loadSPA({
 
   // closeMenu() may be referenced by legacy code — keep as no-op.
   global.closeMenu = () => {};
+
+  // Pre-define module-level variables as global properties so Vitest's ESM strict
+  // mode allows test code to assign to them (e.g. `upcomingRaces = FIXTURE_UPCOMING`).
+  // In Jest/CJS these were implicitly created on globalThis; Vitest/ESM requires
+  // the variable to already exist on globalThis before assigning.
+  if (!('upcomingRaces' in global))          global.upcomingRaces = [];
+  if (!('nextRace' in global))               global.nextRace = null;
+  if (!('stravaActivities' in global))       global.stravaActivities = [];
+  if (!('flatlayCategoryFilter' in global))  global.flatlayCategoryFilter = null;
+  if (!('flatlaySubcategoryFilter' in global)) global.flatlaySubcategoryFilter = null;
 }
 
 module.exports = { loadSPA };
