@@ -4,13 +4,17 @@ import { supabase } from '@/lib/supabase'
 export interface CatalogRace {
   id: number
   name: string
+  aliases: string[]
   city: string
   country: string
   month?: number
   day?: number
-  distance?: string
-  sport?: string
-  priority?: 'A' | 'B' | 'C'
+  dist_km?: number      // actual DB column name
+  type?: string         // actual DB column name (Running, Cycling, etc.)
+  discipline?: string
+  surface?: string
+  elevation_profile?: string
+  course_summary?: string
 }
 
 /**
@@ -24,7 +28,7 @@ export function useRaceCatalog() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('race_catalog')
-        .select('id, name, city, country, month, day, distance, sport, priority')
+        .select('id, name, aliases, city, country, month, day, dist_km, type, discipline, surface, elevation_profile, course_summary')
         .order('name')
 
       if (error) throw error

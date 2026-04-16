@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { useRaceCatalog, type CatalogRace } from '@/hooks/useRaceCatalog'
 import type { Race, Split } from '@/types'
@@ -245,7 +246,9 @@ export function AddRaceModal({ onClose }: Props) {
   const [error, setError]           = useState('')
   const [saving, setSaving]         = useState(false)
 
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const debounceRef  = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const nameWrapRef  = useRef<HTMLDivElement>(null)
+  const [dropRect, setDropRect] = useState<{ top: number; left: number; width: number } | null>(null)
 
   // Derived: unique countries & cities from catalog
   const allCountries = useMemo(
@@ -271,6 +274,16 @@ export function AddRaceModal({ onClose }: Props) {
     setCustomDist('')
   }, [sport])
 
+  // Update dropdown portal position whenever suggestions open
+  useEffect(() => {
+    if (showSuggest && suggestions.length > 0 && nameWrapRef.current) {
+      const r = nameWrapRef.current.getBoundingClientRect()
+      setDropRect({ top: r.bottom + 4, left: r.left, width: r.width })
+    } else {
+      setDropRect(null)
+    }
+  }, [showSuggest, suggestions])
+
   // Autocomplete debounce
   useEffect(() => {
     clearTimeout(debounceRef.current)
@@ -278,7 +291,10 @@ export function AddRaceModal({ onClose }: Props) {
     debounceRef.current = setTimeout(() => {
       const q = query.toLowerCase()
       const catalogHits = catalog
-        .filter(r => r.name.toLowerCase().includes(q))
+        .filter(r =>
+          r.name.toLowerCase().includes(q) ||
+          (r.aliases ?? []).some(a => a.toLowerCase().includes(q))
+        )
         .slice(0, 6)
         .map(r => ({ label: `${r.name}${r.city ? ` · ${r.city}` : ''}`, source: 'catalog' as const, data: r }))
       const pastHits = pastRaces
@@ -299,8 +315,19 @@ export function AddRaceModal({ onClose }: Props) {
     if (s.data) {
       if (s.data.country) { setCountry(s.data.country); setCitySelect(''); setCityText('') }
       if (s.data.city)    { setCitySelect(s.data.city); setCityText(s.data.city) }
-      if (s.data.sport)   setSport(s.data.sport)
-      if (s.data.distance) setDistance(s.data.distance)
+      if (s.data.type)    setSport(s.data.type)
+      if (s.data.dist_km) {
+        // Match to a preset value, or fall back to custom
+        const distStr = String(s.data.dist_km)
+        const presets = DISTANCES_BY_SPORT[s.data.type ?? 'Running'] ?? []
+        const match = presets.find(p => p.value === distStr)
+        if (match) {
+          setDistance(distStr)
+        } else {
+          setDistance('__custom__')
+          setCustomDist(distStr)
+        }
+      }
       // Auto-fill date from catalog month/day (current year)
       if (s.data.month && s.data.day) {
         const yr = new Date().getFullYear()
@@ -411,34 +438,60 @@ export function AddRaceModal({ onClose }: Props) {
         <div style={st.body}>
 
           {/* ── Race Name autocomplete ── */}
-          <div style={{ position: 'relative' }}>
+          <div ref={nameWrapRef}>
             <Field label="Race Name *">
               <input
                 style={st.input}
                 placeholder="Search a race or type your own..."
                 value={query}
                 onChange={e => { setQuery(e.target.value); setName(e.target.value); setShowSuggest(true) }}
-                onBlur={() => setTimeout(() => setShowSuggest(false), 150)}
+                onBlur={() => setTimeout(() => setShowSuggest(false), 180)}
                 autoFocus
               />
             </Field>
-            {showSuggest && suggestions.length > 0 && (
-              <div style={st.dropdown}>
-                {suggestions.map((s, i) => (
-                  <button
-                    key={i}
-                    style={st.dropdownItem}
-                    onMouseDown={() => selectSuggestion(s)}
-                  >
-                    <span style={{ color: s.source === 'past' ? 'var(--orange)' : 'var(--green)', marginRight: '8px', fontSize: '11px', fontWeight: 700 }}>
-                      {s.source === 'past' ? '★' : '⚡'}
-                    </span>
-                    {s.label}
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
+
+          {/* Dropdown rendered via portal so it escapes overflow:hidden on the sheet */}
+          {showSuggest && suggestions.length > 0 && dropRect && createPortal(
+            <div style={{
+              ...st.dropdown,
+              position: 'fixed',
+              top: dropRect.top,
+              left: dropRect.left,
+              width: dropRect.width,
+              zIndex: 1200,
+            }}>
+              {suggestions.map((s, i) => (
+                <button
+                  key={i}
+                  style={{
+                    ...st.dropdownItem,
+                    borderBottom: i < suggestions.length - 1 ? '1px solid var(--border)' : 'none',
+                  }}
+                  onMouseDown={e => { e.preventDefault(); selectSuggestion(s) }}
+                >
+                  <span style={{
+                    color: s.source === 'past' ? 'var(--orange)' : 'var(--green)',
+                    marginRight: '8px',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    flexShrink: 0,
+                  }}>
+                    {s.source === 'past' ? '★' : '⚡'}
+                  </span>
+                  <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {s.label}
+                  </span>
+                  {s.data?.type && (
+                    <span style={{ marginLeft: '8px', fontSize: '10px', color: 'var(--muted)', flexShrink: 0 }}>
+                      {s.data.type}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>,
+            document.body,
+          )}
 
           {/* ── Race Type ── */}
           <Field label="Race Type">
