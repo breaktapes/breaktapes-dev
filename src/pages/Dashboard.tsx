@@ -4,7 +4,7 @@ import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { useDashStore } from '@/stores/useDashStore'
 import { useWearableStore } from '@/stores/useWearableStore'
-import { selectRaces, selectNextRace, selectAthlete, selectDashZoneCollapse, selectUpcomingRaces } from '@/stores/selectors'
+import { selectRaces, selectNextRace, selectAthlete, selectDashZoneCollapse, selectUpcomingRaces, selectFocusRace, selectFocusRaceId } from '@/stores/selectors'
 import { AddRaceModal } from '@/components/AddRaceModal'
 import type { Race } from '@/types'
 
@@ -426,7 +426,7 @@ function GreetingCard({ onCustomize }: { onCustomize: () => void }) {
 
 function PreRaceBriefing({ onAddRace }: { onAddRace: () => void }) {
   const races    = useRaceStore(selectRaces)
-  const nextRace = useRaceStore(selectNextRace)
+  const nextRace = useRaceStore(selectFocusRace)   // uses focus race if set, else nearest
   const today    = todayStr()
   const pbMap    = useMemo(() => buildPBMap(races), [races])
 
@@ -482,7 +482,7 @@ function PreRaceBriefing({ onAddRace }: { onAddRace: () => void }) {
       <div style={st.briefingInner}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
           <IconPin />
-          <span style={st.briefingTag}>PRE-RACE</span>
+          <span style={st.briefingTag}>NEXT RACE</span>
         </div>
         <div style={st.briefingTitle}>
           {(nextRace.name ?? '').toUpperCase()} {dayLabel}
@@ -507,12 +507,16 @@ function PreRaceBriefing({ onAddRace }: { onAddRace: () => void }) {
 // ─── Edit Upcoming Race Sheet ────────────────────────────────────────────────
 
 function EditUpcomingRaceSheet({ race, onClose }: { race: Race; onClose: () => void }) {
-  const updateRace = useRaceStore(s => s.updateRace)
-  const deleteRace = useRaceStore(s => s.deleteRace)
+  const updateRace    = useRaceStore(s => s.updateRace)
+  const deleteRace    = useRaceStore(s => s.deleteRace)
+  const setFocusRaceId = useRaceStore(s => s.setFocusRaceId)
+  const focusRaceId   = useRaceStore(selectFocusRaceId)
 
   const [priority, setPriority] = useState<string>(race.priority ?? 'A')
   const [goal, setGoal]         = useState(race.goalTime ?? '')
   const [confirmDelete, setConfirmDelete] = useState(false)
+
+  const isFocused = focusRaceId === race.id
 
   useEffect(() => {
     document.body.style.overflow = 'hidden'
@@ -617,6 +621,31 @@ function EditUpcomingRaceSheet({ race, onClose }: { race: Race; onClose: () => v
               Format: H:MM:SS · Used by Gap To Goal widget
             </div>
           </div>
+
+          {/* Focus race toggle */}
+          <button
+            onClick={() => { setFocusRaceId(isFocused ? null : race.id); onClose() }}
+            style={{
+              width: '100%',
+              background: isFocused ? 'rgba(255,77,0,0.12)' : 'var(--surface3)',
+              border: isFocused ? '1.5px solid rgba(255,77,0,0.5)' : '1.5px solid var(--border2)',
+              borderRadius: '10px',
+              color: isFocused ? 'var(--orange)' : 'var(--white)',
+              fontFamily: 'var(--headline)',
+              fontWeight: 700,
+              fontSize: '13px',
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              padding: '12px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+            }}
+          >
+            {isFocused ? '📌 Focused Race (tap to unpin)' : '📌 Set as Focus Race'}
+          </button>
 
           {/* Delete */}
           {!confirmDelete ? (
@@ -2590,8 +2619,10 @@ function WidgetShell({ label }: { label: string }) {
 // ─── All Upcoming Races Modal ─────────────────────────────────────────────────
 
 function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRace: () => void }) {
-  const upcoming = useRaceStore(selectUpcomingRaces)
-  const today    = todayStr()
+  const upcoming       = useRaceStore(selectUpcomingRaces)
+  const focusRaceId    = useRaceStore(selectFocusRaceId)
+  const setFocusRaceId = useRaceStore(s => s.setFocusRaceId)
+  const today          = todayStr()
   const [editingId, setEditingId] = useState<string | null>(null)
 
   const sorted = useMemo(
@@ -2666,9 +2697,17 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                             <span style={{ background: 'var(--orange)', color: '#000', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '10px', letterSpacing: '0.08em', padding: '2px 7px', borderRadius: '4px', flexShrink: 0 }}>A RACE</span>
                             <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>{r.name ?? 'Unnamed race'}</span>
                           </div>
-                          <button onClick={() => setEditingId(r.id)} style={{ background: 'rgba(255,77,0,0.15)', border: '1px solid rgba(255,77,0,0.4)', borderRadius: '6px', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px', letterSpacing: '0.06em', padding: '5px 10px', cursor: 'pointer', flexShrink: 0 }}>EDIT</button>
+                          <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                            <button onClick={() => setFocusRaceId(focusRaceId === r.id ? null : r.id)}
+                              title={focusRaceId === r.id ? 'Unpin focus race' : 'Set as focus race'}
+                              style={{ background: focusRaceId === r.id ? 'rgba(255,77,0,0.3)' : 'rgba(255,77,0,0.1)', border: '1px solid rgba(255,77,0,0.4)', borderRadius: '6px', color: 'var(--orange)', fontSize: '14px', padding: '5px 8px', cursor: 'pointer', flexShrink: 0 }}>
+                              📌
+                            </button>
+                            <button onClick={() => setEditingId(r.id)} style={{ background: 'rgba(255,77,0,0.15)', border: '1px solid rgba(255,77,0,0.4)', borderRadius: '6px', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px', letterSpacing: '0.06em', padding: '5px 10px', cursor: 'pointer', flexShrink: 0 }}>EDIT</button>
+                          </div>
                         </div>
                         <div style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: 1.5 }}>
+                          {focusRaceId === r.id && <span style={{ color: 'var(--orange)', marginRight: '6px', fontSize: '10px', fontWeight: 700 }}>📌 FOCUS</span>}
                           {[r.city, r.country].filter(Boolean).join(', ')}
                           {r.distance ? ` · ${distBadge(r.distance) || r.distance + 'K'}` : ''}
                           {' · '}{fmtDateIntl(r.date)}
@@ -2700,7 +2739,14 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                         <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', color: d === 0 ? 'var(--orange)' : 'var(--muted)', letterSpacing: '0.04em' }}>
                           {d === 0 ? 'TODAY' : `${d}D`}
                         </div>
-                        <button onClick={() => setEditingId(r.id)} style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: '5px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '10px', letterSpacing: '0.06em', padding: '3px 8px', cursor: 'pointer' }}>EDIT</button>
+                        <div style={{ display: 'flex', gap: '4px' }}>
+                          <button onClick={() => setFocusRaceId(focusRaceId === r.id ? null : r.id)}
+                            title={focusRaceId === r.id ? 'Unpin' : 'Set as focus'}
+                            style={{ background: focusRaceId === r.id ? 'rgba(255,77,0,0.2)' : 'var(--surface2)', border: `1px solid ${focusRaceId === r.id ? 'rgba(255,77,0,0.4)' : 'var(--border2)'}`, borderRadius: '5px', fontSize: '11px', padding: '3px 6px', cursor: 'pointer' }}>
+                            📌
+                          </button>
+                          <button onClick={() => setEditingId(r.id)} style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: '5px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '10px', letterSpacing: '0.06em', padding: '3px 8px', cursor: 'pointer' }}>EDIT</button>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -2960,7 +3006,7 @@ export function Dashboard() {
   const [showAddRace,       setShowAddRace]       = useState(false)
   const [addRaceMode,       setAddRaceMode]       = useState<'past' | 'upcoming'>('past')
   const [showAllUpcoming,   setShowAllUpcoming]   = useState(false)
-  const nextRace      = useRaceStore(selectNextRace)
+  const nextRace      = useRaceStore(selectFocusRace)  // focus race or nearest upcoming
   const storeWidgets  = useDashStore(s => s.widgets)
   const getDashLayout = useDashStore(s => s.getDashLayout)
   const widgets       = useMemo(() => getDashLayout(), [storeWidgets, getDashLayout])

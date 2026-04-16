@@ -7,6 +7,7 @@ export interface RaceState {
   upcomingRaces: Race[]
   wishlistRaces: Race[]
   nextRace: Race | null
+  focusRaceId: string | null
   addRace: (race: Race) => void
   addUpcomingRace: (race: Race) => void
   autoMoveExpiredUpcoming: () => void
@@ -15,6 +16,7 @@ export interface RaceState {
   setRaces: (races: Race[]) => void
   setUpcomingRaces: (races: Race[]) => void
   promoteNextRace: () => void
+  setFocusRaceId: (id: string | null) => void
   addToWishlist: (race: Race) => void
   removeFromWishlist: (id: string) => void
   moveToUpcoming: (id: string) => void
@@ -35,6 +37,7 @@ export const useRaceStore = create<RaceState>()(
       upcomingRaces: [],
       wishlistRaces: [],
       nextRace: null,
+      focusRaceId: null,
 
       addRace: (race) => set(s => ({ races: [...s.races, race] })),
 
@@ -63,7 +66,11 @@ export const useRaceStore = create<RaceState>()(
       deleteRace: (id) => set(s => ({
         races: s.races.filter(r => r.id !== id),
         upcomingRaces: s.upcomingRaces.filter(r => r.id !== id),
+        // Clear focus if the focused race is deleted
+        focusRaceId: s.focusRaceId === id ? null : s.focusRaceId,
       })),
+
+      setFocusRaceId: (id) => set({ focusRaceId: id }),
 
       setRaces: (races) => set({ races }),
 
