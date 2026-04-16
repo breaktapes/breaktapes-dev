@@ -3,6 +3,31 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.4.0.0] - 2026-04-16
+
+### Added
+- **Races page rebuilt — Flighty Passport style**: the globe is now the primary full-viewport layer with a bottom sheet sliding up from the bottom. Tap the handle to peek race history; swipe up or tap again to expand fully.
+- **Year-wise filtering**: tap All · 2026 · 2025 · ... tabs in the sheet header to filter the race list and stats in one tap.
+- **Compact and Detailed view modes**: Compact shows name + city/date | time + distance in a clean single row; Detailed shows full cards with PB, medal, terrain, and A-Race tags.
+- **PB gradient rows**: personal-best races get an orange left-border gradient highlight in compact view.
+- **Arc map connections**: race cities are connected by curved great-circle arcs instead of straight lines.
+- **Share Race Log**: canvas-based 1200×630 race passport card (stats + country flags + athlete name) with Download and Copy Image.
+- **Pace Calculator widget**: expandable dashboard widget for target-pace and finish-time calculations with VDOT training zones.
+- **Athlete focus card redesign**: race name on its own line, status pill top-right, countdown bottom-left — cleaner hierarchy on narrow screens.
+
+### Changed
+- Map stat pills (Races, Countries, Cities, KM) removed from the floating overlay — stats now live exclusively in the bottom sheet.
+- Map loading spinner now sits behind the sheet (lower z-index) so the race list is immediately usable while tiles load; 5-second fallback auto-dismisses the spinner on slow or offline connections.
+- Races page height calculation now correctly subtracts both header and bottom nav, keeping all chrome visible.
+
+### Fixed
+- `renderMap()` no longer crashes when the map pill elements are absent from the DOM.
+- `r.time` is now escaped with `escapeHtml()` in compact and detailed race rows (XSS fix).
+- `_loadTimeout` is cleared on the zero-races early-return path.
+- Stale `map-empty-state` overlay is removed when the user logs their first race.
+- Geocoding loop skips races with no city/country instead of sending empty queries to Nominatim.
+- `copyShareCard()` async clipboard error is caught inside the `toBlob` callback.
+
 ## [0.3.1.3] - 2026-04-15
 
 ### Changed
