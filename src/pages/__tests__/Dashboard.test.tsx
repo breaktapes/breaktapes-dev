@@ -50,15 +50,16 @@ beforeEach(() => {
 // ─── AthleteBriefing states ──────────────────────────────────────────────────
 
 describe('Dashboard — AthleteBriefing (no races)', () => {
-  it('shows welcome state when races list is empty', () => {
+  it('shows ADD YOUR FIRST RACE tag when races list is empty', () => {
     renderDashboard()
-    expect(screen.getByText('Welcome, Athlete!')).toBeInTheDocument()
+    expect(screen.getByText('ADD YOUR FIRST RACE')).toBeInTheDocument()
   })
 
-  it('uses first name if athlete has one', () => {
+  it('shows athlete name in greeting when athlete has a first name', () => {
     useAthleteStore.setState({ athlete: { firstName: 'Sam' } as any, seasonPlans: [] })
     renderDashboard()
-    expect(screen.getByText('Welcome, Sam!')).toBeInTheDocument()
+    // Greeting card shows the first name in uppercase
+    expect(screen.getByText('SAM')).toBeInTheDocument()
   })
 
   it('shows "Log First Race" CTA when no races', () => {
@@ -90,15 +91,16 @@ describe('Dashboard — AthleteBriefing (just finished)', () => {
 })
 
 describe('Dashboard — AthleteBriefing (upcoming race)', () => {
-  it('shows NEXT RACE section when nextRace is set', () => {
+  it('shows PRE-RACE section when nextRace is set', () => {
     useRaceStore.setState({
       races: [RACE],
       nextRace: { ...RACE, id: 'upcoming', name: 'Tokyo Marathon', date: FUTURE },
       upcomingRaces: [{ ...RACE, id: 'upcoming', name: 'Tokyo Marathon', date: FUTURE }],
     })
     renderDashboard()
-    expect(screen.getByText(/NEXT RACE/i)).toBeInTheDocument()
-    expect(screen.getByText('Tokyo Marathon')).toBeInTheDocument()
+    expect(screen.getByText(/PRE-RACE/i)).toBeInTheDocument()
+    const els = screen.getAllByText(/Tokyo Marathon/i)
+    expect(els.length).toBeGreaterThanOrEqual(1)
   })
 })
 

@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { useDashStore } from '@/stores/useDashStore'
@@ -9,236 +10,343 @@ import type { Race } from '@/types'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function todayStr(): string {
-  return new Date().toISOString().split('T')[0]
-}
+function todayStr() { return new Date().toISOString().split('T')[0] }
 
 function daysUntil(dateStr: string): number {
-  const now = new Date()
-  now.setHours(0, 0, 0, 0)
-  const target = new Date(dateStr + 'T00:00:00')
-  return Math.max(0, Math.round((target.getTime() - now.getTime()) / 86400000))
+  const now = new Date(); now.setHours(0, 0, 0, 0)
+  return Math.max(0, Math.round((new Date(dateStr + 'T00:00:00').getTime() - now.getTime()) / 86400000))
 }
 
 function daysAgo(dateStr: string): number {
-  const now = new Date()
-  now.setHours(0, 0, 0, 0)
-  const target = new Date(dateStr + 'T00:00:00')
-  return Math.round((now.getTime() - target.getTime()) / 86400000)
+  const now = new Date(); now.setHours(0, 0, 0, 0)
+  return Math.round((now.getTime() - new Date(dateStr + 'T00:00:00').getTime()) / 86400000)
 }
 
-function fmtDate(dateStr: string): string {
-  return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', {
-    month: 'short', day: 'numeric', year: 'numeric',
-  })
+function fmtDateIntl(dateStr: string): string {
+  const d = new Date(dateStr + 'T00:00:00')
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+  return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`
 }
 
 function fmtShortDate(dateStr: string): string {
-  return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', {
-    month: 'short', day: 'numeric',
-  })
+  return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
-function distLabel(d: string | undefined): string {
+function distBadge(d: string | undefined): string {
   if (!d) return ''
   const n = parseFloat(d)
   if (isNaN(n)) return d
   if (n >= 42 && n <= 42.3) return 'Marathon'
   if (n >= 21 && n <= 21.2) return 'Half Marathon'
-  if (n === 10) return '10K'
-  if (n === 5) return '5K'
-  return `${n} km`
-}
-
-function uniqueCountries(races: Race[]): number {
-  return new Set(races.map(r => r.country).filter(Boolean)).size
-}
-
-function totalKm(races: Race[]): number {
-  return races.reduce((sum, r) => {
-    const d = parseFloat(r.distance)
-    return sum + (isNaN(d) ? 0 : d)
-  }, 0)
-}
-
-function medalCount(races: Race[]): number {
-  return races.filter(r => r.medal && r.medal !== 'finisher').length
+  if (n >= 10 && n <= 10.1) return '10K'
+  if (n >= 5 && n <= 5.1) return '5K'
+  return `${n}K`
 }
 
 function buildPBMap(races: Race[]): Record<string, Race> {
   const pb: Record<string, Race> = {}
   for (const r of races) {
     if (!r.time || !r.distance) continue
-    const key = r.distance
-    if (!pb[key] || r.time < pb[key].time!) {
-      pb[key] = r
-    }
+    if (!pb[r.distance] || r.time < pb[r.distance].time!) pb[r.distance] = r
   }
   return pb
 }
 
-// ─── AthleteBriefing Card ────────────────────────────────────────────────────
+function getGreeting(): string {
+  const h = new Date().getHours()
+  if (h < 12) return 'GOOD MORNING'
+  if (h < 17) return 'GOOD AFTERNOON'
+  return 'GOOD EVENING'
+}
 
-function AthleteBriefing({ onAddRace }: { onAddRace: () => void }) {
-  const races = useRaceStore(selectRaces)
-  const nextRace = useRaceStore(selectNextRace)
+function uniqueCountries(races: Race[]) {
+  return new Set(races.map(r => r.country).filter(Boolean)).size
+}
+function totalKm(races: Race[]) {
+  return races.reduce((s, r) => { const d = parseFloat(r.distance); return s + (isNaN(d) ? 0 : d) }, 0)
+}
+function medalCount(races: Race[]) {
+  return races.filter(r => r.medal && r.medal !== 'finisher').length
+}
+
+// ─── Icons ────────────────────────────────────────────────────────────────────
+
+const IconGrid = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+    {[4,8,12].flatMap(x => [4,8,12].map(y =>
+      <circle key={`${x}${y}`} cx={x} cy={y} r={1.4}/>
+    ))}
+  </svg>
+)
+
+const IconPin = ({ color = 'var(--orange)', size = 12 }: { color?: string; size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill={color} style={{ flexShrink: 0 }}>
+    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+  </svg>
+)
+
+const IconEdit = () => (
+  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+  </svg>
+)
+
+// ─── Greeting Card ────────────────────────────────────────────────────────────
+
+function GreetingCard({ onCustomize }: { onCustomize: () => void }) {
   const athlete = useAthleteStore(selectAthlete)
-  const today = todayStr()
+  const firstName = (athlete?.firstName ?? 'Athlete').toUpperCase()
 
-  // State 1: No races
-  if (races.length === 0) {
+  return (
+    <div style={st.greetingCard}>
+      <div style={st.greetingContent}>
+        <div style={st.greetingLine}>
+          <span style={st.greetingText}>{getGreeting()},&nbsp;</span>
+          <span style={st.greetingName}>{firstName}</span>
+        </div>
+        <div style={st.greetingSubtext}>Enable location to show local weather</div>
+      </div>
+      <button style={st.gridBtn} onClick={onCustomize} aria-label="Customise dashboard">
+        <IconGrid />
+      </button>
+    </div>
+  )
+}
+
+// ─── Pre-Race Briefing ────────────────────────────────────────────────────────
+
+function PreRaceBriefing({ onAddRace }: { onAddRace: () => void }) {
+  const races   = useRaceStore(selectRaces)
+  const nextRace = useRaceStore(selectNextRace)
+  const today   = todayStr()
+  const pbMap   = useMemo(() => buildPBMap(races), [races])
+
+  const lastRace = useMemo(
+    () => races.filter(r => r.date <= today).sort((a, b) => b.date.localeCompare(a.date))[0],
+    [races, today],
+  )
+
+  const lastPill = useMemo(() => {
+    if (!lastRace?.time) return null
+    const isPB = pbMap[lastRace.distance]?.id === lastRace.id
+    return { text: `Last: ${lastRace.time} ${distBadge(lastRace.distance)}`, isPB }
+  }, [lastRace, pbMap])
+
+  if (!nextRace) {
+    // JUST RACED state: last race was within 7 days
+    if (lastRace && daysAgo(lastRace.date) <= 7) {
+      const d = daysAgo(lastRace.date)
+      const dLabel = d === 0 ? 'Today' : d === 1 ? 'Yesterday' : `${d} days ago`
+      return (
+        <div style={st.briefingCard}>
+          <div style={st.briefingInner}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+              <IconPin />
+              <span style={st.briefingTag}>JUST RACED</span>
+            </div>
+            <div style={st.briefingTitle}>{(lastRace.name ?? '').toUpperCase()}</div>
+            <div style={st.briefingMeta}>{dLabel} · {distBadge(lastRace.distance) || (lastRace.distance + 'K')}</div>
+            {lastRace.time && <div style={st.lastRacePill}>Finish: {lastRace.time}</div>}
+            <button style={{ ...st.ctaPrimary, marginTop: '12px' }} onClick={onAddRace}>+ Add Next Race</button>
+          </div>
+        </div>
+      )
+    }
+    // No races at all (or last race was >7 days ago)
     return (
       <div style={st.briefingCard}>
         <div style={st.briefingInner}>
-          <div style={st.briefingTag}>YOUR STORY STARTS HERE</div>
-          <div style={st.briefingTitle}>
-            {athlete?.firstName ? `Welcome, ${athlete.firstName}!` : 'Welcome, Athlete!'}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <IconPin />
+            <span style={st.briefingTag}>{races.length === 0 ? 'ADD YOUR FIRST RACE' : 'WHAT\'S NEXT?'}</span>
           </div>
-          <p style={st.briefingSubtext}>
-            Every champion's journey begins with race one. Log it here.
-          </p>
-          <button style={st.ctaPrimary} onClick={() => onAddRace()}>
-            + Log First Race
-          </button>
+          <div style={st.briefingTitle}>{races.length === 0 ? 'Your race story awaits' : 'No upcoming race'}</div>
+          <button style={st.ctaPrimary} onClick={onAddRace}>+ Log First Race</button>
         </div>
-        <div style={st.briefingGlow} />
       </div>
     )
   }
 
-  // State 2: Just finished (race within past 7 days)
-  const recentlyFinished = races
-    .filter(r => r.date <= today)
-    .sort((a, b) => b.date.localeCompare(a.date))
-    .find(r => daysAgo(r.date) <= 7)
-
-  if (recentlyFinished) {
-    const ago = daysAgo(recentlyFinished.date)
-    return (
-      <div style={{ ...st.briefingCard, borderColor: 'rgba(var(--orange-ch), 0.4)' }}>
-        <div style={st.briefingInner}>
-          <div style={{ ...st.briefingTag, color: 'var(--orange)' }}>JUST RACED</div>
-          <div style={st.briefingTitle}>{recentlyFinished.name}</div>
-          <div style={st.briefingMeta}>
-            {[recentlyFinished.city, recentlyFinished.country].filter(Boolean).join(', ')}
-            {' · '}
-            {ago === 0 ? 'Today' : ago === 1 ? 'Yesterday' : `${ago} days ago`}
-          </div>
-          <div style={st.pills}>
-            {recentlyFinished.time && <span style={st.pill}>{recentlyFinished.time}</span>}
-            {recentlyFinished.placing && <span style={st.pill}>{recentlyFinished.placing}</span>}
-            {recentlyFinished.medal && (
-              <span style={{ ...st.pill, background: 'rgba(255,215,0,0.15)', color: '#FFD770', border: '1px solid rgba(255,215,0,0.25)' }}>
-                {recentlyFinished.medal.toUpperCase()}
-              </span>
-            )}
-          </div>
-          <button style={st.ctaOutline} onClick={() => onAddRace()}>
-            + Add Next Race
-          </button>
-        </div>
-        <div style={{ ...st.briefingGlow, background: 'var(--orange)', opacity: 0.08 }} />
-      </div>
-    )
-  }
-
-  // State 3: Upcoming race
-  if (nextRace) {
-    const days = daysUntil(nextRace.date)
-    const lastRace = races
-      .filter(r => r.date <= today)
-      .sort((a, b) => b.date.localeCompare(a.date))[0]
-
-    return (
-      <div style={st.briefingCard}>
-        <div style={st.briefingInner}>
-          <div style={st.briefingTag}>NEXT RACE</div>
-          <div style={st.briefingTitle}>{nextRace.name}</div>
-          <div style={st.briefingMeta}>
-            {[nextRace.city, nextRace.country].filter(Boolean).join(', ')} · {fmtDate(nextRace.date)}
-          </div>
-          <div style={st.pills}>
-            <span style={{ ...st.pill, background: 'rgba(var(--orange-ch), 0.18)', color: 'var(--orange)', border: '1px solid rgba(var(--orange-ch), 0.3)', fontSize: '15px', fontWeight: 800 }}>
-              {days === 0 ? 'TODAY!' : `${days} days away`}
-            </span>
-            {distLabel(nextRace.distance) && <span style={st.pill}>{distLabel(nextRace.distance)}</span>}
-            {lastRace && (
-              <span style={{ ...st.pill, background: 'rgba(0,255,136,0.1)', color: 'var(--green)', border: '1px solid rgba(0,255,136,0.2)' }}>
-                Last: {(lastRace.name ?? '').split(' ')[0] || 'Race'}
-              </span>
-            )}
-          </div>
-        </div>
-        <div style={st.briefingGlow} />
-      </div>
-    )
-  }
-
-  // State 4: No upcoming, has history
-  const lastRace = races
-    .filter(r => r.date <= today)
-    .sort((a, b) => b.date.localeCompare(a.date))[0]
+  const days = daysUntil(nextRace.date)
+  const dayLabel = days === 0 ? 'TODAY!' : days === 1 ? 'IN 1 DAY' : `IN ${days} DAYS`
 
   return (
     <div style={st.briefingCard}>
       <div style={st.briefingInner}>
-        <div style={st.briefingTag}>LAST RACE</div>
-        <div style={st.briefingTitle}>{lastRace?.name ?? 'No recent race'}</div>
-        {lastRace && (
-          <div style={st.briefingMeta}>
-            {[lastRace.city, lastRace.country].filter(Boolean).join(', ')} · {fmtDate(lastRace.date)}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+          <IconPin />
+          <span style={st.briefingTag}>PRE-RACE</span>
+        </div>
+        <div style={st.briefingTitle}>
+          {(nextRace.name ?? '').toUpperCase()} {dayLabel}
+        </div>
+        <div style={st.briefingMeta}>
+          {fmtDateIntl(nextRace.date)}
+          {nextRace.distance ? ` · ${distBadge(nextRace.distance) || nextRace.distance + 'K'}` : ''}
+        </div>
+        {lastPill && (
+          <div style={st.lastRacePill}>
+            {lastPill.text}
+            {lastPill.isPB && <span style={{ marginLeft: '5px' }}>↑ PB</span>}
           </div>
         )}
-        <div style={st.pills}>
-          {lastRace?.time && <span style={st.pill}>{lastRace.time}</span>}
-        </div>
-        <button style={st.ctaOutline} onClick={() => onAddRace()}>
-          + Add Next Race
-        </button>
       </div>
-      <div style={st.briefingGlow} />
     </div>
   )
 }
 
-// ─── Stats Strip ─────────────────────────────────────────────────────────────
+// ─── Live Countdown Card ──────────────────────────────────────────────────────
 
-function StatsStrip() {
-  const races = useRaceStore(selectRaces)
+function CountdownCard({ race }: { race: Race }) {
+  const navigate = useNavigate()
+  const [now, setNow] = useState(() => Date.now())
 
-  const stats = useMemo(() => [
-    { label: 'RACES', value: races.length.toString() },
-    { label: 'COUNTRIES', value: uniqueCountries(races).toString() },
-    { label: 'TOTAL KM', value: Math.round(totalKm(races)).toLocaleString() },
-    { label: 'MEDALS', value: medalCount(races).toString() },
-  ], [races])
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(id)
+  }, [])
+
+  const diff  = Math.max(0, new Date(race.date + 'T00:00:00').getTime() - now)
+  const days  = Math.floor(diff / 86400000)
+  const hrs   = Math.floor((diff % 86400000) / 3600000)
+  const mins  = Math.floor((diff % 3600000) / 60000)
+  const secs  = Math.floor((diff % 60000) / 1000)
+  const p2    = (n: number) => n.toString().padStart(2, '0')
+
+  const priority = race.priority ?? 'A'
 
   return (
-    <div style={st.statsStrip}>
-      {stats.map(s => (
-        <div key={s.label} style={st.statCell}>
-          <div style={st.statValue}>{s.value}</div>
-          <div style={st.statLabel}>{s.label}</div>
+    <div style={st.countdownCard}>
+      {/* Header row */}
+      <div style={st.countdownHeader}>
+        <div style={st.countdownHeaderLeft}>
+          <span style={st.countdownDash}>—</span>
+          <span style={st.aBadge}>{priority}</span>
+          <span style={st.aRaceLabel}>{priority} RACE</span>
         </div>
-      ))}
+        <button style={st.editBtn} onClick={() => navigate('/races')}>
+          <IconEdit />
+          <span>EDIT</span>
+        </button>
+      </div>
+
+      {/* Race name */}
+      <div style={st.countdownRaceName}>{(race.name ?? '').toUpperCase()}</div>
+
+      {/* Location */}
+      <div style={st.countdownLocation}>
+        <IconPin size={11} />
+        <span style={{ color: 'var(--orange)' }}>
+          {[race.city, race.country].filter(Boolean).join(', ')}
+        </span>
+        {race.distance && (
+          <span style={{ color: 'var(--muted)' }}>
+            &nbsp;·&nbsp;{distBadge(race.distance) || race.distance + 'K'}
+          </span>
+        )}
+        <span style={{ color: 'var(--muted)' }}>
+          &nbsp;·&nbsp;{fmtDateIntl(race.date)}
+        </span>
+      </div>
+
+      {/* Countdown digits */}
+      <div style={st.countdownRow}>
+        <div style={st.countdownUnit}>
+          <div style={st.countdownNum}>{days}</div>
+          <div style={st.countdownUnitLabel}>DAYS</div>
+        </div>
+        <div style={st.countdownSep}>:</div>
+        <div style={st.countdownUnit}>
+          <div style={st.countdownNum}>{p2(hrs)}</div>
+          <div style={st.countdownUnitLabel}>HRS</div>
+        </div>
+        <div style={st.countdownSep}>:</div>
+        <div style={st.countdownUnit}>
+          <div style={st.countdownNum}>{p2(mins)}</div>
+          <div style={st.countdownUnitLabel}>MINS</div>
+        </div>
+        <div style={st.countdownSep}>:</div>
+        <div style={st.countdownUnit}>
+          <div style={st.countdownNum}>{p2(secs)}</div>
+          <div style={st.countdownUnitLabel}>SECS</div>
+        </div>
+      </div>
+
+      <div style={st.countdownDivider} />
+
+      {/* All upcoming link */}
+      <button style={st.allRacesBtn} onClick={() => navigate('/races')}>
+        ALL UPCOMING RACES →
+      </button>
     </div>
   )
 }
 
-// ─── Recent Races Section ─────────────────────────────────────────────────────
+// ─── Course Info Card ─────────────────────────────────────────────────────────
+
+function CourseInfoCard({ race }: { race: Race }) {
+  const tags = useMemo(() => {
+    const t: string[] = []
+    if (race.surface) t.push(race.surface.toUpperCase())
+    if (typeof race.elevation === 'number') {
+      t.push(race.elevation > 300 ? 'HILLY' : 'FLAT')
+    }
+    return t
+  }, [race])
+
+  if (!race.notes && tags.length === 0) return null
+
+  return (
+    <div style={st.infoCard}>
+      {tags.length > 0 && (
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          {tags.map(tag => <span key={tag} style={st.terrainTag}>{tag}</span>)}
+        </div>
+      )}
+      {race.notes && <p style={st.infoText}>{race.notes}</p>}
+    </div>
+  )
+}
+
+// ─── Weather Card ─────────────────────────────────────────────────────────────
+
+function WeatherCard({ race }: { race: Race }) {
+  const days = daysUntil(race.date)
+  const location = [race.city, race.country].filter(Boolean).join(', ').toUpperCase()
+
+  return (
+    <div style={st.weatherCard}>
+      <div style={{ fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '8px' }}>
+        {location}
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <span style={{ fontSize: '32px', lineHeight: 1, flexShrink: 0 }}>🌤</span>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '15px', color: 'var(--white)', letterSpacing: '0.02em' }}>
+            −° − −°C
+          </div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px', lineHeight: 1.4 }}>
+            {days > 14
+              ? 'Forecast becomes available 14 days before race day.'
+              : 'Loading forecast…'}
+          </div>
+        </div>
+        <div style={st.daysPill}>{days} DAYS</div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Recent Races ─────────────────────────────────────────────────────────────
 
 function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
   const races = useRaceStore(selectRaces)
   const today = todayStr()
-
   const pbMap = useMemo(() => buildPBMap(races), [races])
-
-  const recent = useMemo(() =>
-    races
-      .filter(r => r.date <= today)
-      .sort((a, b) => b.date.localeCompare(a.date))
-      .slice(0, 3),
-    [races, today]
+  const recent = useMemo(
+    () => races.filter(r => r.date <= today).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3),
+    [races, today],
   )
 
   if (races.length === 0) {
@@ -246,11 +354,11 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
       <div style={st.sectionCard}>
         <div style={st.sectionHeader}>RECENT RACES</div>
         <div style={st.emptyState}>
-          <div style={st.emptyIcon}>🏁</div>
-          <div style={st.emptyText}>No races yet. Log your first to get started.</div>
-          <button style={st.ctaOutline} onClick={() => onAddRace()}>
-            + Add Race
-          </button>
+          <div style={{ fontSize: '28px' }}>🏁</div>
+          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', maxWidth: '240px', lineHeight: 1.5, textAlign: 'center' }}>
+            No races yet.
+          </div>
+          <button style={st.ctaOutline} onClick={onAddRace}>+ Add Race</button>
         </div>
       </div>
     )
@@ -259,50 +367,75 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
   return (
     <div style={st.sectionCard}>
       <div style={st.sectionHeader}>RECENT RACES</div>
-      <div style={{ display: 'flex', flexDirection: 'column' }}>
-        {recent.map((r, i) => {
-          const isPB = !!r.time && pbMap[r.distance]?.id === r.id
-          return (
-            <div
-              key={r.id}
-              style={{
-                ...st.raceRow,
-                borderBottom: i < recent.length - 1 ? '1px solid var(--border)' : 'none',
-                ...(isPB ? st.raceRowPB : {}),
-              }}
-            >
-              <div style={st.raceDate}>{r.date ? fmtShortDate(r.date) : '—'}</div>
-              <div style={st.raceCenter}>
-                <div style={st.raceName}>{r.name}</div>
-                <div style={st.raceMeta}>
-                  {[r.city, r.country].filter(Boolean).join(', ')}
-                  {distLabel(r.distance) ? ` · ${distLabel(r.distance)}` : ''}
-                </div>
+      {recent.map((r, i) => {
+        const isPB = !!r.time && pbMap[r.distance]?.id === r.id
+        return (
+          <div key={r.id} style={{
+            ...st.raceRow,
+            borderBottom: i < recent.length - 1 ? '1px solid var(--border)' : 'none',
+            ...(isPB ? st.raceRowPB : {}),
+          }}>
+            <div style={st.raceDate}>{r.date ? fmtShortDate(r.date) : '—'}</div>
+            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+              <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--white)' }}>
+                {r.name}
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '3px' }}>
-                {r.time && <div style={st.raceTime}>{r.time}</div>}
-                {isPB && <div style={st.pbTag}>PB</div>}
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {[r.city, r.country].filter(Boolean).join(', ')}
+                {distBadge(r.distance) ? ` · ${distBadge(r.distance)}` : ''}
               </div>
             </div>
-          )
-        })}
-      </div>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '3px', flexShrink: 0 }}>
+              {r.time && <div style={st.raceTime}>{r.time}</div>}
+              {isPB && <div style={st.pbTag}>PB</div>}
+            </div>
+          </div>
+        )
+      })}
     </div>
   )
 }
 
-// ─── Dashboard Zone Accordion ─────────────────────────────────────────────────
+// ─── Stats Strip ─────────────────────────────────────────────────────────────
+
+function StatsStrip() {
+  const races = useRaceStore(selectRaces)
+  const stats = useMemo(() => [
+    { label: 'RACES',     value: races.length.toString() },
+    { label: 'COUNTRIES', value: uniqueCountries(races).toString() },
+    { label: 'TOTAL KM',  value: Math.round(totalKm(races)).toLocaleString() },
+    { label: 'MEDALS',    value: medalCount(races).toString() },
+  ], [races])
+
+  return (
+    <div style={st.statsStrip}>
+      {stats.map(s => (
+        <div key={s.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px', minWidth: 0 }}>
+          <div style={{ fontFamily: 'var(--headline)', fontSize: '22px', fontWeight: 900, lineHeight: 1, color: 'var(--white)', letterSpacing: '0.02em' }}>
+            {s.value}
+          </div>
+          <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)' }}>
+            {s.label}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ─── Zone accordion ───────────────────────────────────────────────────────────
 
 interface ZoneProps {
-  id: 'now' | 'recently' | 'trending' | 'context'
-  label: string
+  id:       'now' | 'recently' | 'trending' | 'context'
+  tag:      string   // small orange label e.g. "NOW"
+  label:    string   // large white label e.g. "RACE DAY"
   children: React.ReactNode
 }
 
-function DashZone({ id, label, children }: ZoneProps) {
-  const zoneCollapse = useDashStore(selectDashZoneCollapse)
+function DashZone({ id, tag, label, children }: ZoneProps) {
+  const zoneCollapse    = useDashStore(selectDashZoneCollapse)
   const setZoneCollapse = useDashStore(s => s.setZoneCollapse)
-  const isCollapsed = zoneCollapse[id] ?? false
+  const isCollapsed     = zoneCollapse[id] ?? false
 
   return (
     <div style={st.zone}>
@@ -311,138 +444,23 @@ function DashZone({ id, label, children }: ZoneProps) {
         onClick={() => setZoneCollapse(id, !isCollapsed)}
         aria-expanded={!isCollapsed}
       >
-        <span style={st.zoneLabel}>{label}</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          <span style={st.zoneTag}>{tag}</span>
+          <span style={st.zoneLabel}>{label}</span>
+        </div>
         <span style={{
           ...st.zoneChevron,
           transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)',
-        }}>
-          ▼
-        </span>
+        }}>▾</span>
       </button>
       {!isCollapsed && (
-        <div style={st.zoneContent}>
-          {children}
-        </div>
+        <div style={st.zoneContent}>{children}</div>
       )}
     </div>
   )
 }
 
-// ─── Pace Calculator ─────────────────────────────────────────────────────────
-
-const PACE_DISTANCES = [
-  { label: '5K',           km: 5 },
-  { label: '10K',          km: 10 },
-  { label: 'Half Marathon', km: 21.0975 },
-  { label: 'Marathon',     km: 42.195 },
-]
-
-function secsToMMSS(secs: number): string {
-  const m = Math.floor(secs / 60)
-  const s = Math.round(secs % 60)
-  return `${m}:${s.toString().padStart(2, '0')}`
-}
-
-function parseHMS(str: string): number | null {
-  const parts = str.trim().split(':').map(Number)
-  if (parts.some(isNaN)) return null
-  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2]
-  if (parts.length === 2) return parts[0] * 60 + parts[1]
-  return null
-}
-
-function PaceCalculator() {
-  const [distIdx, setDistIdx] = useState(2)
-  const [goalTime, setGoalTime] = useState('')
-  const [result, setResult] = useState<{ km: string; mi: string } | null>(null)
-
-  function calc() {
-    const secs = parseHMS(goalTime)
-    if (!secs) return
-    const d = PACE_DISTANCES[distIdx]
-    setResult({ km: secsToMMSS(secs / d.km), mi: secsToMMSS(secs / (d.km / 1.60934)) })
-  }
-
-  return (
-    <div style={st.sectionCard}>
-      <div style={st.sectionHeader}>PACE CALCULATOR</div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', minWidth: 0 }}>
-          <div>
-            <label style={st.inputLabel}>Distance</label>
-            <select
-              value={distIdx}
-              onChange={e => { setDistIdx(Number(e.target.value)); setResult(null) }}
-              style={st.select}
-            >
-              {PACE_DISTANCES.map((d, i) => (
-                <option key={d.label} value={i}>{d.label}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label style={st.inputLabel}>Goal Time</label>
-            <input
-              type="text"
-              placeholder="1:45:00"
-              value={goalTime}
-              onChange={e => { setGoalTime(e.target.value); setResult(null) }}
-              style={st.input}
-            />
-          </div>
-        </div>
-        <button style={st.ctaPrimary} onClick={calc}>Calculate</button>
-        {result && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', minWidth: 0 }}>
-            <div style={st.paceResult}>
-              <div style={st.paceValue}>{result.km}</div>
-              <div style={st.paceUnit}>min/km</div>
-            </div>
-            <div style={st.paceResult}>
-              <div style={{ ...st.paceValue, color: 'var(--white)' }}>{result.mi}</div>
-              <div style={st.paceUnit}>min/mi</div>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
-// ─── Customize Modal ──────────────────────────────────────────────────────────
-
-function DashCustomizeModal({ onClose }: { onClose: () => void }) {
-  const widgets = useDashStore(s => s.widgets)
-  const setWidgetEnabled = useDashStore(s => s.setWidgetEnabled)
-
-  return (
-    <div style={st.modalOverlay} onClick={onClose}>
-      <div style={st.modalSheet} onClick={e => e.stopPropagation()}>
-        <div style={st.modalHeader}>
-          <span style={st.modalTitle}>CUSTOMISE DASHBOARD</span>
-          <button style={st.modalClose} onClick={onClose} aria-label="Close">✕</button>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-          {widgets.map(w => (
-            <label key={w.id} style={st.widgetRow}>
-              <span style={st.widgetRowIcon}>{w.icon}</span>
-              <span style={st.widgetRowLabel}>{w.label}</span>
-              <span style={st.widgetRowZone}>{w.zone}</span>
-              <input
-                type="checkbox"
-                checked={w.enabled}
-                onChange={e => setWidgetEnabled(w.id, e.target.checked)}
-                style={{ accentColor: 'var(--orange)', width: '16px', height: '16px', flexShrink: 0 }}
-              />
-            </label>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-// ─── Widget placeholder (for zones not yet wired) ────────────────────────────
+// ─── Widget placeholder ───────────────────────────────────────────────────────
 
 function WidgetShell({ label }: { label: string }) {
   return (
@@ -453,52 +471,141 @@ function WidgetShell({ label }: { label: string }) {
   )
 }
 
+// ─── Pace Calculator ─────────────────────────────────────────────────────────
+
+const PACE_DISTS = [
+  { label: '5K',            km: 5 },
+  { label: '10K',           km: 10 },
+  { label: 'Half Marathon', km: 21.0975 },
+  { label: 'Marathon',      km: 42.195 },
+]
+
+function secsToMMSS(s: number) {
+  const m = Math.floor(s / 60)
+  return `${m}:${Math.round(s % 60).toString().padStart(2, '0')}`
+}
+
+function parseHMS(str: string): number | null {
+  const p = str.trim().split(':').map(Number)
+  if (p.some(isNaN)) return null
+  if (p.length === 3) return p[0] * 3600 + p[1] * 60 + p[2]
+  if (p.length === 2) return p[0] * 60 + p[1]
+  return null
+}
+
+function PaceCalculator() {
+  const [distIdx, setDistIdx] = useState(2)
+  const [goalTime, setGoalTime] = useState('')
+  const [result, setResult] = useState<{ km: string; mi: string } | null>(null)
+
+  return (
+    <div style={st.sectionCard}>
+      <div style={st.sectionHeader}>PACE CALCULATOR</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', minWidth: 0 }}>
+          <div>
+            <label style={st.inputLabel}>Distance</label>
+            <select value={distIdx} onChange={e => { setDistIdx(+e.target.value); setResult(null) }} style={st.select}>
+              {PACE_DISTS.map((d, i) => <option key={d.label} value={i}>{d.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={st.inputLabel}>Goal Time</label>
+            <input type="text" placeholder="1:45:00" value={goalTime}
+              onChange={e => { setGoalTime(e.target.value); setResult(null) }} style={st.input} />
+          </div>
+        </div>
+        <button style={st.ctaPrimary} onClick={() => {
+          const secs = parseHMS(goalTime)
+          if (!secs) return
+          const d = PACE_DISTS[distIdx]
+          setResult({ km: secsToMMSS(secs / d.km), mi: secsToMMSS(secs / (d.km / 1.60934)) })
+        }}>Calculate</button>
+        {result && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', minWidth: 0 }}>
+            <div style={st.paceResult}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '24px', color: 'var(--orange)', letterSpacing: '0.02em', lineHeight: 1.1 }}>{result.km}</div>
+              <div style={{ fontSize: '11px', color: 'var(--muted)' }}>min/km</div>
+            </div>
+            <div style={st.paceResult}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '24px', color: 'var(--white)', letterSpacing: '0.02em', lineHeight: 1.1 }}>{result.mi}</div>
+              <div style={{ fontSize: '11px', color: 'var(--muted)' }}>min/mi</div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─── Customize modal ──────────────────────────────────────────────────────────
+
+function DashCustomizeModal({ onClose }: { onClose: () => void }) {
+  const widgets        = useDashStore(s => s.widgets)
+  const setWidgetEnabled = useDashStore(s => s.setWidgetEnabled)
+
+  return (
+    <div style={st.modalOverlay} onClick={onClose}>
+      <div style={st.modalSheet} onClick={e => e.stopPropagation()}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+          <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '15px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--white)' }}>
+            CUSTOMISE DASHBOARD
+          </span>
+          <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'var(--muted)', fontSize: '16px', cursor: 'pointer', padding: '4px 8px' }}>✕</button>
+        </div>
+        {widgets.map(w => (
+          <label key={w.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 0', borderBottom: '1px solid var(--border)', cursor: 'pointer', minWidth: 0 }}>
+            <span style={{ fontSize: '16px', flexShrink: 0, width: '20px', textAlign: 'center' }}>{w.icon}</span>
+            <span style={{ flex: 1, fontSize: 'var(--text-sm)', color: 'var(--white)', fontFamily: 'var(--body)', fontWeight: 500, minWidth: 0 }}>{w.label}</span>
+            <span style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)', flexShrink: 0 }}>{w.zone}</span>
+            <input type="checkbox" checked={w.enabled} onChange={e => setWidgetEnabled(w.id, e.target.checked)}
+              style={{ accentColor: 'var(--orange)', width: '16px', height: '16px', flexShrink: 0 }} />
+          </label>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 
 export function Dashboard() {
   const [showCustomize, setShowCustomize] = useState(false)
-  const [showAddRace, setShowAddRace] = useState(false)
+  const [showAddRace,   setShowAddRace]   = useState(false)
+  const nextRace = useRaceStore(selectNextRace)
 
   const openAddRace = () => setShowAddRace(true)
 
   return (
     <div style={st.page}>
-      {/* Header row with customize icon */}
-      <div style={st.dashHeader}>
-        <span style={st.dashTitle}>DASHBOARD</span>
-        <button
-          style={st.customizeBtn}
-          onClick={() => setShowCustomize(true)}
-          aria-label="Customise dashboard"
-          title="Customise dashboard"
-        >
-          ⚙
-        </button>
-      </div>
-
       {showCustomize && <DashCustomizeModal onClose={() => setShowCustomize(false)} />}
-      {showAddRace && <AddRaceModal onClose={() => setShowAddRace(false)} />}
+      {showAddRace   && <AddRaceModal       onClose={() => setShowAddRace(false)} />}
 
-      <AthleteBriefing onAddRace={openAddRace} />
-      <StatsStrip />
+      <GreetingCard onCustomize={() => setShowCustomize(true)} />
+      <PreRaceBriefing onAddRace={openAddRace} />
 
-      <DashZone id="now" label="NOW">
-        <RecentRaces onAddRace={openAddRace} />
-        <WidgetShell label="Race Day Forecast" />
+      <DashZone id="now" tag="NOW" label="RACE DAY">
+        {nextRace
+          ? <CountdownCard race={nextRace} />
+          : <WidgetShell label="No upcoming race — add one to start the countdown" />
+        }
+        {nextRace && <CourseInfoCard race={nextRace} />}
+        {nextRace && <WeatherCard race={nextRace} />}
       </DashZone>
 
-      <DashZone id="recently" label="RECENTLY">
+      <DashZone id="recently" tag="RECENTLY" label="YOUR SEASON">
+        <StatsStrip />
         <RecentRaces onAddRace={openAddRace} />
         <WidgetShell label="Personal Bests" />
       </DashZone>
 
-      <DashZone id="trending" label="CONSISTENCY">
+      <DashZone id="trending" tag="CONSISTENCY" label="BUILD">
         <WidgetShell label="Training Streak" />
         <WidgetShell label="Pacing IQ" />
         <WidgetShell label="Career Momentum" />
       </DashZone>
 
-      <DashZone id="context" label="PATTERNS">
+      <DashZone id="context" tag="PATTERNS" label="ANALYSIS">
         <WidgetShell label="Race DNA" />
         <WidgetShell label="Age Grade" />
         <WidgetShell label="On This Day" />
@@ -509,7 +616,7 @@ export function Dashboard() {
   )
 }
 
-// ─── Style object ─────────────────────────────────────────────────────────────
+// ─── Styles ───────────────────────────────────────────────────────────────────
 
 const st = {
   page: {
@@ -523,35 +630,83 @@ const st = {
     minWidth: 0,
   } as React.CSSProperties,
 
-  // ── Briefing
+  // ── Greeting
+  greetingCard: {
+    background: 'var(--surface2)',
+    border: '1px solid var(--border)',
+    borderRadius: '16px',
+    padding: '20px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '12px',
+    minWidth: 0,
+  } as React.CSSProperties,
+
+  greetingContent: {
+    flex: 1,
+    minWidth: 0,
+  } as React.CSSProperties,
+
+  greetingLine: {
+    display: 'flex',
+    flexWrap: 'wrap' as const,
+    alignItems: 'baseline',
+    lineHeight: 1.1,
+  } as React.CSSProperties,
+
+  greetingText: {
+    fontFamily: 'var(--headline)',
+    fontWeight: 900,
+    fontSize: '22px',
+    letterSpacing: '0.04em',
+    textTransform: 'uppercase' as const,
+    color: 'var(--white)',
+  } as React.CSSProperties,
+
+  greetingName: {
+    fontFamily: 'var(--headline)',
+    fontWeight: 900,
+    fontSize: '22px',
+    letterSpacing: '0.04em',
+    textTransform: 'uppercase' as const,
+    color: 'var(--orange)',
+  } as React.CSSProperties,
+
+  greetingSubtext: {
+    fontSize: 'var(--text-sm)',
+    color: 'var(--muted)',
+    marginTop: '6px',
+    lineHeight: 1.4,
+  } as React.CSSProperties,
+
+  gridBtn: {
+    width: '40px',
+    height: '40px',
+    background: 'var(--surface3)',
+    border: '1px solid var(--border2)',
+    borderRadius: '10px',
+    color: 'var(--muted)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    flexShrink: 0,
+  } as React.CSSProperties,
+
+  // ── Pre-race briefing
   briefingCard: {
     background: 'var(--surface2)',
-    border: '1px solid var(--border2)',
+    border: '1px solid var(--border)',
     borderRadius: '16px',
-    padding: '24px',
-    position: 'relative',
-    overflow: 'hidden',
+    padding: '20px',
     minWidth: 0,
   } as React.CSSProperties,
 
   briefingInner: {
-    position: 'relative',
-    zIndex: 1,
     display: 'flex',
-    flexDirection: 'column',
+    flexDirection: 'column' as const,
     gap: '8px',
-  } as React.CSSProperties,
-
-  briefingGlow: {
-    position: 'absolute',
-    top: '-20px',
-    right: '-20px',
-    width: '140px',
-    height: '140px',
-    background: 'var(--surface3)',
-    borderRadius: '50%',
-    opacity: 0.6,
-    pointerEvents: 'none',
   } as React.CSSProperties,
 
   briefingTag: {
@@ -559,8 +714,8 @@ const st = {
     fontSize: '11px',
     fontWeight: 700,
     letterSpacing: '0.14em',
-    color: 'var(--muted)',
-    textTransform: 'uppercase',
+    color: 'var(--orange)',
+    textTransform: 'uppercase' as const,
   } as React.CSSProperties,
 
   briefingTitle: {
@@ -568,124 +723,252 @@ const st = {
     fontSize: '26px',
     fontWeight: 900,
     letterSpacing: '0.04em',
-    textTransform: 'uppercase',
+    textTransform: 'uppercase' as const,
     lineHeight: 1.1,
     color: 'var(--white)',
-  } as React.CSSProperties,
-
-  briefingSubtext: {
-    fontSize: 'var(--text-sm)',
-    color: 'var(--muted)',
-    margin: 0,
-    lineHeight: 1.5,
   } as React.CSSProperties,
 
   briefingMeta: {
     fontSize: 'var(--text-sm)',
     color: 'var(--muted)',
-    lineHeight: 1.4,
   } as React.CSSProperties,
 
-  pills: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '8px',
-    marginTop: '4px',
-  } as React.CSSProperties,
-
-  pill: {
+  lastRacePill: {
     display: 'inline-flex',
     alignItems: 'center',
-    background: 'var(--surface3)',
-    border: '1px solid var(--border2)',
+    background: 'rgba(var(--green-ch), 0.12)',
+    border: '1px solid rgba(var(--green-ch), 0.25)',
+    color: 'var(--green)',
     borderRadius: '100px',
-    padding: '4px 10px',
+    padding: '5px 12px',
     fontSize: 'var(--text-xs)',
     fontFamily: 'var(--headline)',
     fontWeight: 700,
     letterSpacing: '0.06em',
-    textTransform: 'uppercase',
-    color: 'var(--white)',
+    textTransform: 'uppercase' as const,
+    width: 'fit-content',
   } as React.CSSProperties,
 
-  ctaPrimary: {
-    marginTop: '8px',
-    background: 'var(--orange)',
-    color: '#000',
-    border: 'none',
-    borderRadius: '8px',
-    padding: '10px 18px',
-    fontFamily: 'var(--headline)',
-    fontWeight: 800,
-    fontSize: '13px',
-    letterSpacing: '0.06em',
-    textTransform: 'uppercase',
-    cursor: 'pointer',
-    alignSelf: 'flex-start',
-  } as React.CSSProperties,
-
-  ctaOutline: {
-    marginTop: '8px',
-    background: 'transparent',
-    color: 'var(--orange)',
-    border: '1px solid rgba(var(--orange-ch), 0.5)',
-    borderRadius: '8px',
-    padding: '10px 18px',
-    fontFamily: 'var(--headline)',
-    fontWeight: 800,
-    fontSize: '13px',
-    letterSpacing: '0.06em',
-    textTransform: 'uppercase',
-    cursor: 'pointer',
-    alignSelf: 'flex-start',
-  } as React.CSSProperties,
-
-  // ── Stats strip
-  statsStrip: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(4, 1fr)',
-    gap: '1rem',
-    background: 'var(--surface2)',
+  // ── Countdown
+  countdownCard: {
+    background: 'var(--surface)',
     border: '1px solid var(--border)',
     borderRadius: '12px',
-    padding: '16px 12px',
-    minWidth: 0,
-  } as React.CSSProperties,
-
-  statCell: {
+    padding: '16px',
     display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '3px',
+    flexDirection: 'column' as const,
+    gap: '10px',
     minWidth: 0,
   } as React.CSSProperties,
 
-  statValue: {
-    fontFamily: 'var(--headline)',
-    fontSize: '22px',
-    fontWeight: 900,
-    lineHeight: 1,
-    color: 'var(--white)',
-    letterSpacing: '0.02em',
+  countdownHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   } as React.CSSProperties,
 
-  statLabel: {
-    fontSize: '10px',
+  countdownHeaderLeft: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '7px',
+  } as React.CSSProperties,
+
+  countdownDash: {
+    color: 'var(--muted)',
+    fontWeight: 700,
+    fontSize: '14px',
+  } as React.CSSProperties,
+
+  aBadge: {
+    background: 'var(--orange)',
+    color: '#000',
+    borderRadius: '4px',
+    padding: '2px 8px',
+    fontFamily: 'var(--headline)',
+    fontWeight: 900,
+    fontSize: '13px',
+    letterSpacing: '0.04em',
+    lineHeight: 1.4,
+  } as React.CSSProperties,
+
+  aRaceLabel: {
     fontFamily: 'var(--headline)',
     fontWeight: 700,
-    letterSpacing: '0.08em',
-    textTransform: 'uppercase',
+    fontSize: '12px',
+    letterSpacing: '0.1em',
+    textTransform: 'uppercase' as const,
     color: 'var(--muted)',
   } as React.CSSProperties,
 
-  // ── Section card
+  editBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '5px',
+    background: 'transparent',
+    border: '1px solid var(--border2)',
+    borderRadius: '6px',
+    color: 'var(--muted)',
+    fontFamily: 'var(--headline)',
+    fontWeight: 700,
+    fontSize: '11px',
+    letterSpacing: '0.1em',
+    textTransform: 'uppercase' as const,
+    padding: '5px 10px',
+    cursor: 'pointer',
+  } as React.CSSProperties,
+
+  countdownRaceName: {
+    fontFamily: 'var(--headline)',
+    fontWeight: 900,
+    fontSize: '26px',
+    letterSpacing: '0.03em',
+    textTransform: 'uppercase' as const,
+    color: 'var(--white)',
+    lineHeight: 1.1,
+  } as React.CSSProperties,
+
+  countdownLocation: {
+    display: 'flex',
+    alignItems: 'center',
+    flexWrap: 'wrap' as const,
+    gap: '2px',
+    fontSize: 'var(--text-xs)',
+    fontFamily: 'var(--body)',
+  } as React.CSSProperties,
+
+  countdownRow: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '2px',
+    marginTop: '4px',
+    minWidth: 0,
+  } as React.CSSProperties,
+
+  countdownUnit: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'center',
+    minWidth: 0,
+  } as React.CSSProperties,
+
+  countdownNum: {
+    fontFamily: 'var(--headline)',
+    fontWeight: 900,
+    fontSize: '52px',
+    color: 'var(--white)',
+    lineHeight: 1,
+    letterSpacing: '-0.02em',
+  } as React.CSSProperties,
+
+  countdownUnitLabel: {
+    fontFamily: 'var(--headline)',
+    fontWeight: 700,
+    fontSize: '9px',
+    letterSpacing: '0.1em',
+    textTransform: 'uppercase' as const,
+    color: 'var(--muted)',
+    marginTop: '4px',
+  } as React.CSSProperties,
+
+  countdownSep: {
+    fontFamily: 'var(--headline)',
+    fontWeight: 900,
+    fontSize: '36px',
+    color: 'var(--muted)',
+    lineHeight: 1,
+    paddingTop: '8px',
+    flexShrink: 0,
+  } as React.CSSProperties,
+
+  countdownDivider: {
+    height: '1px',
+    background: 'var(--border)',
+    margin: '2px 0',
+  } as React.CSSProperties,
+
+  allRacesBtn: {
+    background: 'transparent',
+    border: 'none',
+    color: 'var(--muted)',
+    fontFamily: 'var(--headline)',
+    fontWeight: 700,
+    fontSize: '11px',
+    letterSpacing: '0.1em',
+    textTransform: 'uppercase' as const,
+    cursor: 'pointer',
+    textAlign: 'left' as const,
+    padding: 0,
+    display: 'block',
+  } as React.CSSProperties,
+
+  // ── Course info
+  infoCard: {
+    background: 'var(--surface2)',
+    border: '1px solid var(--border)',
+    borderRadius: '12px',
+    padding: '14px',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '10px',
+    minWidth: 0,
+  } as React.CSSProperties,
+
+  terrainTag: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    background: 'transparent',
+    border: '1px solid var(--border2)',
+    borderRadius: '100px',
+    padding: '4px 12px',
+    fontSize: '11px',
+    fontFamily: 'var(--headline)',
+    fontWeight: 700,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase' as const,
+    color: 'var(--white)',
+  } as React.CSSProperties,
+
+  infoText: {
+    margin: 0,
+    fontSize: 'var(--text-sm)',
+    color: 'var(--muted)',
+    lineHeight: 1.55,
+  } as React.CSSProperties,
+
+  // ── Weather
+  weatherCard: {
+    background: 'var(--surface2)',
+    border: '1px solid var(--border)',
+    borderRadius: '12px',
+    padding: '14px',
+    minWidth: 0,
+  } as React.CSSProperties,
+
+  daysPill: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    background: 'var(--orange)',
+    color: '#000',
+    borderRadius: '100px',
+    padding: '6px 14px',
+    fontFamily: 'var(--headline)',
+    fontWeight: 900,
+    fontSize: '12px',
+    letterSpacing: '0.06em',
+    textTransform: 'uppercase' as const,
+    flexShrink: 0,
+    whiteSpace: 'nowrap' as const,
+  } as React.CSSProperties,
+
+  // ── Recent races
   sectionCard: {
     background: 'var(--surface2)',
     border: '1px solid var(--border)',
     borderRadius: '12px',
     padding: '16px',
     display: 'flex',
-    flexDirection: 'column',
+    flexDirection: 'column' as const,
     gap: '12px',
     minWidth: 0,
   } as React.CSSProperties,
@@ -695,11 +978,10 @@ const st = {
     fontSize: '12px',
     fontWeight: 800,
     letterSpacing: '0.12em',
-    textTransform: 'uppercase',
+    textTransform: 'uppercase' as const,
     color: 'var(--muted)',
   } as React.CSSProperties,
 
-  // ── Race row
   raceRow: {
     display: 'flex',
     alignItems: 'center',
@@ -720,35 +1002,10 @@ const st = {
     fontWeight: 700,
     letterSpacing: '0.06em',
     color: 'var(--muted)',
-    whiteSpace: 'nowrap',
-    textTransform: 'uppercase',
+    whiteSpace: 'nowrap' as const,
+    textTransform: 'uppercase' as const,
     width: '52px',
     flexShrink: 0,
-  } as React.CSSProperties,
-
-  raceCenter: {
-    flex: 1,
-    minWidth: 0,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '2px',
-  } as React.CSSProperties,
-
-  raceName: {
-    fontSize: 'var(--text-sm)',
-    fontWeight: 600,
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    color: 'var(--white)',
-  } as React.CSSProperties,
-
-  raceMeta: {
-    fontSize: 'var(--text-xs)',
-    color: 'var(--muted)',
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
   } as React.CSSProperties,
 
   raceTime: {
@@ -757,11 +1014,11 @@ const st = {
     fontWeight: 700,
     letterSpacing: '0.04em',
     color: 'var(--white)',
-    whiteSpace: 'nowrap',
+    whiteSpace: 'nowrap' as const,
   } as React.CSSProperties,
 
   pbTag: {
-    background: 'rgba(0, 255, 136, 0.15)',
+    background: 'rgba(var(--green-ch), 0.15)',
     color: 'var(--green)',
     fontSize: '10px',
     fontFamily: 'var(--headline)',
@@ -769,34 +1026,32 @@ const st = {
     letterSpacing: '0.06em',
     padding: '2px 6px',
     borderRadius: '4px',
-    textTransform: 'uppercase',
+    textTransform: 'uppercase' as const,
   } as React.CSSProperties,
 
-  // ── Empty state
   emptyState: {
     display: 'flex',
-    flexDirection: 'column',
+    flexDirection: 'column' as const,
     alignItems: 'center',
     gap: '12px',
-    padding: '28px 16px',
-    textAlign: 'center',
+    padding: '20px 0',
   } as React.CSSProperties,
 
-  emptyIcon: {
-    fontSize: '32px',
-    lineHeight: 1,
+  // ── Stats strip
+  statsStrip: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(4, 1fr)',
+    gap: '1rem',
+    background: 'var(--surface3)',
+    border: '1px solid var(--border)',
+    borderRadius: '10px',
+    padding: '14px 12px',
+    minWidth: 0,
   } as React.CSSProperties,
 
-  emptyText: {
-    fontSize: 'var(--text-sm)',
-    color: 'var(--muted)',
-    maxWidth: '260px',
-    lineHeight: 1.5,
-  } as React.CSSProperties,
-
-  // ── Zone accordion
+  // ── Zone
   zone: {
-    background: 'var(--surface)',
+    background: 'var(--surface2)',
     border: '1px solid var(--border)',
     borderRadius: '12px',
     overflow: 'hidden',
@@ -812,21 +1067,30 @@ const st = {
     background: 'transparent',
     border: 'none',
     cursor: 'pointer',
-    color: 'var(--white)',
+    textAlign: 'left' as const,
+  } as React.CSSProperties,
+
+  zoneTag: {
     fontFamily: 'var(--headline)',
-    fontSize: '13px',
-    fontWeight: 800,
-    letterSpacing: '0.12em',
-    textTransform: 'uppercase',
-    textAlign: 'left',
+    fontSize: '11px',
+    fontWeight: 700,
+    letterSpacing: '0.14em',
+    textTransform: 'uppercase' as const,
+    color: 'var(--orange)',
   } as React.CSSProperties,
 
   zoneLabel: {
-    letterSpacing: '0.12em',
+    fontFamily: 'var(--headline)',
+    fontSize: '17px',
+    fontWeight: 900,
+    letterSpacing: '0.06em',
+    textTransform: 'uppercase' as const,
+    color: 'var(--white)',
+    lineHeight: 1.1,
   } as React.CSSProperties,
 
   zoneChevron: {
-    fontSize: '9px',
+    fontSize: '14px',
     color: 'var(--muted)',
     transition: 'transform 0.2s ease',
     display: 'inline-block',
@@ -836,19 +1100,19 @@ const st = {
   zoneContent: {
     padding: '0 12px 12px',
     display: 'flex',
-    flexDirection: 'column',
+    flexDirection: 'column' as const,
     gap: '1rem',
     minWidth: 0,
   } as React.CSSProperties,
 
-  // ── Widget shell (placeholder)
+  // ── Widget shell
   widgetShell: {
-    background: 'var(--surface2)',
+    background: 'var(--surface3)',
     border: '1px solid var(--border)',
     borderRadius: '10px',
     padding: '14px',
     display: 'flex',
-    flexDirection: 'column',
+    flexDirection: 'column' as const,
     gap: '10px',
     minWidth: 0,
   } as React.CSSProperties,
@@ -858,51 +1122,18 @@ const st = {
     fontSize: '11px',
     fontWeight: 700,
     letterSpacing: '0.1em',
-    textTransform: 'uppercase',
+    textTransform: 'uppercase' as const,
     color: 'var(--muted)',
   } as React.CSSProperties,
 
-  // ── Dashboard header
-  dashHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    minWidth: 0,
-  } as React.CSSProperties,
-
-  dashTitle: {
-    fontFamily: 'var(--headline)',
-    fontSize: '22px',
-    fontWeight: 900,
-    letterSpacing: '0.1em',
-    textTransform: 'uppercase',
-    color: 'var(--white)',
-  } as React.CSSProperties,
-
-  customizeBtn: {
-    background: 'transparent',
-    border: '1px solid var(--border2)',
-    borderRadius: '8px',
-    color: 'var(--muted)',
-    fontSize: '18px',
-    width: '36px',
-    height: '36px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    cursor: 'pointer',
-    flexShrink: 0,
-    lineHeight: 1,
-  } as React.CSSProperties,
-
-  // ── Pace calculator inputs
+  // ── Pace calc
   inputLabel: {
     display: 'block',
     fontSize: '11px',
     fontFamily: 'var(--headline)',
     fontWeight: 700,
     letterSpacing: '0.08em',
-    textTransform: 'uppercase',
+    textTransform: 'uppercase' as const,
     color: 'var(--muted)',
     marginBottom: '4px',
   } as React.CSSProperties,
@@ -916,7 +1147,7 @@ const st = {
     fontSize: 'var(--text-sm)',
     padding: '0.55rem 0.75rem',
     fontFamily: 'var(--body)',
-    boxSizing: 'border-box',
+    boxSizing: 'border-box' as const,
   } as React.CSSProperties,
 
   input: {
@@ -928,7 +1159,7 @@ const st = {
     fontSize: 'var(--text-sm)',
     padding: '0.55rem 0.75rem',
     fontFamily: 'var(--body)',
-    boxSizing: 'border-box',
+    boxSizing: 'border-box' as const,
   } as React.CSSProperties,
 
   paceResult: {
@@ -937,29 +1168,47 @@ const st = {
     borderRadius: '8px',
     padding: '12px',
     display: 'flex',
-    flexDirection: 'column',
+    flexDirection: 'column' as const,
     gap: '2px',
     minWidth: 0,
   } as React.CSSProperties,
 
-  paceValue: {
+  // ── CTAs
+  ctaPrimary: {
+    marginTop: '4px',
+    background: 'var(--orange)',
+    color: '#000',
+    border: 'none',
+    borderRadius: '8px',
+    padding: '10px 18px',
     fontFamily: 'var(--headline)',
-    fontWeight: 900,
-    fontSize: '24px',
+    fontWeight: 800,
+    fontSize: '13px',
+    letterSpacing: '0.06em',
+    textTransform: 'uppercase' as const,
+    cursor: 'pointer',
+    alignSelf: 'flex-start',
+  } as React.CSSProperties,
+
+  ctaOutline: {
+    marginTop: '4px',
+    background: 'transparent',
     color: 'var(--orange)',
-    letterSpacing: '0.02em',
-    lineHeight: 1.1,
+    border: '1px solid rgba(var(--orange-ch), 0.5)',
+    borderRadius: '8px',
+    padding: '10px 18px',
+    fontFamily: 'var(--headline)',
+    fontWeight: 800,
+    fontSize: '13px',
+    letterSpacing: '0.06em',
+    textTransform: 'uppercase' as const,
+    cursor: 'pointer',
+    alignSelf: 'flex-start',
   } as React.CSSProperties,
 
-  paceUnit: {
-    fontSize: '11px',
-    color: 'var(--muted)',
-    fontFamily: 'var(--body)',
-  } as React.CSSProperties,
-
-  // ── Customize modal
+  // ── Modal
   modalOverlay: {
-    position: 'fixed',
+    position: 'fixed' as const,
     inset: 0,
     background: 'rgba(0,0,0,0.7)',
     zIndex: 900,
@@ -970,75 +1219,13 @@ const st = {
   modalSheet: {
     width: '100%',
     maxHeight: '80vh',
-    overflowY: 'auto',
+    overflowY: 'auto' as const,
     background: 'var(--surface2)',
     borderTop: '1px solid var(--border2)',
     borderRadius: '16px 16px 0 0',
     padding: '20px 16px 32px',
     display: 'flex',
-    flexDirection: 'column',
-    gap: '12px',
-  } as React.CSSProperties,
-
-  modalHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: '4px',
-  } as React.CSSProperties,
-
-  modalTitle: {
-    fontFamily: 'var(--headline)',
-    fontWeight: 900,
-    fontSize: '15px',
-    letterSpacing: '0.1em',
-    textTransform: 'uppercase',
-    color: 'var(--white)',
-  } as React.CSSProperties,
-
-  modalClose: {
-    background: 'transparent',
-    border: 'none',
-    color: 'var(--muted)',
-    fontSize: '16px',
-    cursor: 'pointer',
-    padding: '4px 8px',
-    lineHeight: 1,
-  } as React.CSSProperties,
-
-  widgetRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    padding: '10px 0',
-    borderBottom: '1px solid var(--border)',
-    cursor: 'pointer',
-    minWidth: 0,
-  } as React.CSSProperties,
-
-  widgetRowIcon: {
-    fontSize: '16px',
-    flexShrink: 0,
-    width: '20px',
-    textAlign: 'center',
-  } as React.CSSProperties,
-
-  widgetRowLabel: {
-    flex: 1,
-    fontSize: 'var(--text-sm)',
-    color: 'var(--white)',
-    fontFamily: 'var(--body)',
-    fontWeight: 500,
-    minWidth: 0,
-  } as React.CSSProperties,
-
-  widgetRowZone: {
-    fontSize: '10px',
-    fontFamily: 'var(--headline)',
-    fontWeight: 700,
-    letterSpacing: '0.08em',
-    textTransform: 'uppercase',
-    color: 'var(--muted)',
-    flexShrink: 0,
+    flexDirection: 'column' as const,
+    gap: '0',
   } as React.CSSProperties,
 } as const
