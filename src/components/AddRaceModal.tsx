@@ -315,11 +315,20 @@ export function AddRaceModal({ onClose }: Props) {
     if (s.data) {
       if (s.data.country) { setCountry(s.data.country); setCitySelect(''); setCityText('') }
       if (s.data.city)    { setCitySelect(s.data.city); setCityText(s.data.city) }
-      if (s.data.type)    setSport(s.data.type)
+      // DB 'type' is short-form ("run", "tri", "cycle") — map to app sport labels
+      const TYPE_MAP: Record<string, string> = {
+        run: 'Running', running: 'Running',
+        tri: 'Triathlon', triathlon: 'Triathlon',
+        cycle: 'Cycling', cycling: 'Cycling', bike: 'Cycling',
+        swim: 'Swimming', swimming: 'Swimming',
+        hyrox: 'HYROX',
+      }
+      const mappedSport = s.data.type ? (TYPE_MAP[s.data.type.toLowerCase()] ?? s.data.type) : null
+      if (mappedSport) setSport(mappedSport)
       if (s.data.dist_km) {
         // Match to a preset value, or fall back to custom
         const distStr = String(s.data.dist_km)
-        const presets = DISTANCES_BY_SPORT[s.data.type ?? 'Running'] ?? []
+        const presets = DISTANCES_BY_SPORT[mappedSport ?? 'Running'] ?? []
         const match = presets.find(p => p.value === distStr)
         if (match) {
           setDistance(distStr)
