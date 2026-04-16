@@ -4,7 +4,7 @@ import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { useDashStore } from '@/stores/useDashStore'
 import { useWearableStore } from '@/stores/useWearableStore'
-import { selectRaces, selectNextRace, selectAthlete, selectDashZoneCollapse } from '@/stores/selectors'
+import { selectRaces, selectNextRace, selectAthlete, selectDashZoneCollapse, selectUpcomingRaces } from '@/stores/selectors'
 import { AddRaceModal } from '@/components/AddRaceModal'
 import type { Race } from '@/types'
 
@@ -381,7 +381,7 @@ function PreRaceBriefing({ onAddRace }: { onAddRace: () => void }) {
 
 // ─── Countdown Card ───────────────────────────────────────────────────────────
 
-function CountdownCard({ race }: { race: Race }) {
+function CountdownCard({ race, onShowAll }: { race: Race; onShowAll: () => void }) {
   const navigate = useNavigate()
   const [now, setNow] = useState(() => Date.now())
 
@@ -454,7 +454,7 @@ function CountdownCard({ race }: { race: Race }) {
       </div>
 
       <div style={st.countdownDivider} />
-      <button style={st.allRacesBtn} onClick={() => navigate('/races')}>ALL UPCOMING RACES →</button>
+      <button style={st.allRacesBtn} onClick={onShowAll}>ALL UPCOMING RACES →</button>
     </div>
   )
 }
@@ -2156,6 +2156,100 @@ function WidgetShell({ label }: { label: string }) {
   )
 }
 
+// ─── All Upcoming Races Modal ─────────────────────────────────────────────────
+
+function AllUpcomingModal({ onClose }: { onClose: () => void }) {
+  const upcoming = useRaceStore(selectUpcomingRaces)
+  const today    = todayStr()
+  const sorted   = useMemo(
+    () => [...upcoming].filter(r => r.date >= today).sort((a, b) => a.date.localeCompare(b.date)),
+    [upcoming, today],
+  )
+
+  // Body scroll lock
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = '' }
+  }, [])
+
+  return (
+    <div style={st.modalOverlay} onClick={onClose}>
+      <div style={{ ...st.customizeSheet, maxHeight: '75vh', paddingBottom: '24px' }} onClick={e => e.stopPropagation()}>
+        {/* Handle pill */}
+        <div style={{ width: '40px', height: '4px', background: 'var(--border2)', borderRadius: '2px', margin: '0 auto 20px' }} />
+
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '20px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>
+            UPCOMING RACES
+          </div>
+          <button
+            onClick={onClose}
+            style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '20px', cursor: 'pointer', padding: '4px', lineHeight: 1 }}
+            aria-label="Close"
+          >✕</button>
+        </div>
+
+        {/* Race list */}
+        <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {sorted.length === 0 ? (
+            <div style={{ textAlign: 'center', color: 'var(--muted)', padding: '32px 0', fontSize: '14px' }}>
+              No upcoming races yet.
+            </div>
+          ) : sorted.map(r => {
+            const d = daysUntil(r.date)
+            return (
+              <div key={r.id} style={{
+                background: 'var(--surface3)',
+                border: '1px solid var(--border)',
+                borderRadius: '10px',
+                padding: '12px 14px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '12px',
+              }}>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{
+                    fontFamily: 'var(--headline)',
+                    fontWeight: 800,
+                    fontSize: '14px',
+                    letterSpacing: '0.04em',
+                    textTransform: 'uppercase',
+                    color: 'var(--white)',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}>
+                    {r.priority && <span style={{ color: 'var(--orange)', marginRight: '6px' }}>{r.priority}</span>}
+                    {r.name ?? 'Unnamed race'}
+                  </div>
+                  <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '3px' }}>
+                    {[r.city, r.country].filter(Boolean).join(', ')}
+                    {r.distance ? ` · ${distBadge(r.distance) || r.distance + 'K'}` : ''}
+                    {' · '}{fmtDateIntl(r.date)}
+                  </div>
+                </div>
+                <div style={{
+                  flexShrink: 0,
+                  fontFamily: 'var(--headline)',
+                  fontWeight: 900,
+                  fontSize: '13px',
+                  color: d === 0 ? 'var(--orange)' : 'var(--muted)',
+                  letterSpacing: '0.04em',
+                  textAlign: 'right',
+                }}>
+                  {d === 0 ? 'TODAY' : `${d}D`}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── No Upcoming Race CTA ─────────────────────────────────────────────────────
 
 function NoUpcomingRaceCTA({ onAddRace }: { onAddRace: () => void }) {
@@ -2391,9 +2485,10 @@ function isEnabled(widgets: ReturnType<typeof useDashStore.getState>['widgets'],
 }
 
 export function Dashboard() {
-  const [showCustomize,  setShowCustomize]  = useState(false)
-  const [showAddRace,    setShowAddRace]    = useState(false)
-  const [addRaceMode,    setAddRaceMode]    = useState<'past' | 'upcoming'>('past')
+  const [showCustomize,     setShowCustomize]     = useState(false)
+  const [showAddRace,       setShowAddRace]       = useState(false)
+  const [addRaceMode,       setAddRaceMode]       = useState<'past' | 'upcoming'>('past')
+  const [showAllUpcoming,   setShowAllUpcoming]   = useState(false)
   const nextRace      = useRaceStore(selectNextRace)
   const storeWidgets  = useDashStore(s => s.widgets)
   const getDashLayout = useDashStore(s => s.getDashLayout)
@@ -2405,8 +2500,9 @@ export function Dashboard() {
 
   return (
     <div style={st.page}>
-      {showCustomize && <DashCustomizeModal onClose={() => setShowCustomize(false)} />}
-      {showAddRace   && <AddRaceModal defaultMode={addRaceMode} onClose={() => setShowAddRace(false)} />}
+      {showCustomize    && <DashCustomizeModal onClose={() => setShowCustomize(false)} />}
+      {showAddRace      && <AddRaceModal defaultMode={addRaceMode} onClose={() => setShowAddRace(false)} />}
+      {showAllUpcoming  && <AllUpcomingModal onClose={() => setShowAllUpcoming(false)} />}
 
       <GreetingCard onCustomize={() => setShowCustomize(true)} />
       <PreRaceBriefing onAddRace={openAddRace} />
@@ -2414,7 +2510,7 @@ export function Dashboard() {
       {/* NOW — RACE DAY */}
       <DashZone id="now" tag="NOW" label="RACE DAY">
         {nextRace
-          ? <>{en('countdown')       && <CountdownCard race={nextRace} />}
+          ? <>{en('countdown')       && <CountdownCard race={nextRace} onShowAll={() => setShowAllUpcoming(true)} />}
               {en('race-forecast')   && <WeatherCard race={nextRace} />}
               <CourseInfoCard race={nextRace} /></>
           : <NoUpcomingRaceCTA onAddRace={openAddUpcomingRace} />
