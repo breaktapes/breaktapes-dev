@@ -282,7 +282,8 @@ function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (v: b
 
 // ─── Greeting Card ────────────────────────────────────────────────────────────
 
-type GeoWeather = { temp: number; icon: string; desc: string; low: number; high: number; hourly: { time: string; temp: number; icon: string }[] }
+type HourlyPill = { time: string; temp: number | null; icon: string; isSun?: 'rise' | 'set' }
+type GeoWeather = { temp: number; icon: string; desc: string; low: number; high: number; hourly: HourlyPill[] }
 
 function GreetingCard({ onCustomize }: { onCustomize: () => void }) {
   const athlete   = useAthleteStore(selectAthlete)
@@ -321,24 +322,54 @@ function GreetingCard({ onCustomize }: { onCustomize: () => void }) {
         try {
           const { latitude, longitude } = pos.coords
           // Fetch 2 days so we always have 5 future hours even late at night
-          const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code&hourly=temperature_2m,weather_code&timezone=auto&forecast_days=2`)
+          const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,weather_code,is_day&hourly=temperature_2m,weather_code,is_day&daily=sunrise,sunset&timezone=auto&forecast_days=2`)
           const d   = await res.json()
           const wc: number = d?.current?.weather_code ?? 0
-          const icon = wcIcon(wc)
+          const currentIsDay: boolean = (d?.current?.is_day ?? 1) === 1
+          const icon = wcIcon(wc, currentIsDay)
           const desc = wcDesc(wc)
           const temp  = Math.round(d?.current?.temperature_2m ?? 0)
           const low   = temp
           const high  = temp
           // Next 5 hours starting from current hour — compare by timestamp, not hour number
-          const times: string[] = d?.hourly?.time ?? []
-          const temps: number[] = d?.hourly?.temperature_2m ?? []
-          const codes: number[] = d?.hourly?.weather_code ?? []
+          const times: string[]   = d?.hourly?.time ?? []
+          const temps: number[]   = d?.hourly?.temperature_2m ?? []
+          const codes: number[]   = d?.hourly?.weather_code ?? []
+          const isDays: number[]  = d?.hourly?.is_day ?? []
           const nowMs = Date.now()
-          const hourly = times
-            .map((t, i) => ({ t, ms: new Date(t).getTime(), temp: temps[i], icon: wcIcon(codes[i]) }))
-            .filter(x => x.ms >= nowMs - 60 * 60 * 1000)  // include current hour (up to 1hr old)
+
+          // Sunrise/sunset times for today and tomorrow (daily arrays)
+          const sunriseTimes: string[] = d?.daily?.sunrise ?? []
+          const sunsetTimes: string[]  = d?.daily?.sunset  ?? []
+          const sunEvents: { ms: number; kind: 'rise' | 'set' }[] = [
+            ...sunriseTimes.map(t => ({ ms: new Date(t).getTime(), kind: 'rise' as const })),
+            ...sunsetTimes.map(t  => ({ ms: new Date(t).getTime(), kind: 'set'  as const })),
+          ].filter(e => e.ms >= nowMs - 60 * 60 * 1000)  // only future-ish events
+
+          // Build 5 base hourly slots
+          const baseSlots = times
+            .map((t, i) => ({ t, ms: new Date(t).getTime(), temp: temps[i], isDay: isDays[i] === 1, code: codes[i] }))
+            .filter(x => x.ms >= nowMs - 60 * 60 * 1000)
             .slice(0, 5)
-            .map(x => ({ time: new Date(x.t).toLocaleTimeString([], { hour: 'numeric', hour12: true }), temp: Math.round(x.temp), icon: x.icon }))
+
+          // Merge sun events into slots: if a sun event falls within a slot's hour, inject it
+          const hourly: HourlyPill[] = baseSlots.map(slot => {
+            const slotEnd = slot.ms + 3600 * 1000
+            const sun = sunEvents.find(e => e.ms >= slot.ms && e.ms < slotEnd)
+            if (sun) {
+              return {
+                time: new Date(sun.ms).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true }),
+                temp: null,
+                icon: sun.kind === 'rise' ? '🌅' : '🌇',
+                isSun: sun.kind,
+              }
+            }
+            return {
+              time: new Date(slot.t).toLocaleTimeString([], { hour: 'numeric', hour12: true }),
+              temp: Math.round(slot.temp),
+              icon: wcIcon(slot.code, slot.isDay),
+            }
+          })
 
           const data: GeoWeather = { temp, icon, desc, low, high, hourly }
           setWeather(data); setGeoState('ok')
@@ -350,17 +381,17 @@ function GreetingCard({ onCustomize }: { onCustomize: () => void }) {
     )
   }
 
-  // WMO weather code helpers
-  function wcIcon(code: number): string {
-    if (code === 0) return '☀️'
-    if (code <= 2)  return '⛅'
+  // WMO weather code helpers — isDay=true for day icons, false for night icons
+  function wcIcon(code: number, isDay = true): string {
+    if (code === 0) return isDay ? '☀️' : '🌙'
+    if (code <= 2)  return isDay ? '⛅' : '🌙'
     if (code <= 3)  return '☁️'
     if (code <= 49) return '🌫'
-    if (code <= 67) return '🌧'
+    if (code <= 67) return isDay ? '🌧' : '🌧'
     if (code <= 77) return '🌨'
-    if (code <= 82) return '🌦'
+    if (code <= 82) return isDay ? '🌦' : '🌧'
     if (code <= 99) return '⛈'
-    return '🌤'
+    return isDay ? '🌤' : '🌙'
   }
   function wcDesc(code: number): string {
     if (code === 0) return 'Clear'
@@ -390,7 +421,8 @@ function GreetingCard({ onCustomize }: { onCustomize: () => void }) {
                 {weather.hourly.map((h, i) => (
                   <div key={i} style={{
                     flex: 1,
-                    background: 'var(--surface3)',
+                    background: h.isSun ? 'rgba(var(--orange-ch), 0.10)' : 'var(--surface3)',
+                    border: h.isSun ? '1px solid rgba(var(--orange-ch), 0.30)' : '1px solid transparent',
                     borderRadius: '10px',
                     padding: '10px 4px',
                     display: 'flex',
@@ -400,8 +432,11 @@ function GreetingCard({ onCustomize }: { onCustomize: () => void }) {
                     minWidth: 0,
                   }}>
                     <span style={{ fontSize: '18px', lineHeight: 1 }}>{h.icon}</span>
-                    <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '14px', color: 'var(--white)', letterSpacing: '0.02em' }}>{h.temp}°</span>
-                    <span style={{ fontSize: '9px', color: 'var(--muted)', letterSpacing: '0.02em', textAlign: 'center' }}>{h.time}</span>
+                    {h.temp !== null
+                      ? <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '14px', color: 'var(--white)', letterSpacing: '0.02em' }}>{h.temp}°</span>
+                      : <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '9px', color: 'var(--orange)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{h.isSun === 'rise' ? 'RISE' : 'SET'}</span>
+                    }
+                    <span style={{ fontSize: '9px', color: 'var(--muted)', letterSpacing: '0.02em', textAlign: 'center', whiteSpace: 'nowrap' }}>{h.time}</span>
                   </div>
                 ))}
               </div>
