@@ -299,6 +299,17 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 | `loadSavedSeasonPlan(planId)` | Apply saved plan priorities to `upcomingRaces`; ID-first match, name+date fallback; shows toast with match count |
 | `openSeasonPlannerModal()` | Open Season Planner modal; auto-prunes past events from `upcomingRaces` on open |
 | `saveSeasonPlanDraft(name, items)` | Save season plan to `seasonPlans`; uses `crypto.randomUUID()` for Supabase-compatible UUID IDs |
+| `useUnits()` | React hook returning `'metric' \| 'imperial'` from `athlete.units`; defaults to metric |
+| `fmtDistKm(km, units)` | Format a km string for display — converts to miles if imperial (e.g. "21.1" → "13.1") |
+| `distUnit(units)` | Returns `"KM"` or `"MI"` label string |
+| `fmtPaceSecPerKm(secPerKm, units)` | Format pace as `"4:45 /km"` or `"7:38 /mi"` |
+| `paceUnit(units)` | Returns `"/km"` or `"/mi"` |
+| `fmtSpeedKmh(kmh, units)` | Format speed as `"12.5 km/h"` or `"7.8 mph"` |
+| `computePaceSecPerKm(distKm, finishTime)` | Compute pace in sec/km from distance string + `HH:MM:SS` time; returns null if invalid |
+| `resolveDistKm(dist)` | Map distance label ("Half Marathon") or numeric string → `{km, isNumeric}` for display |
+| `countryNameHaystack(code)` | Resolve ISO-2 country code to full name string for autocomplete haystack expansion |
+| `addUpcomingRace(race)` | Add a future race to `upcomingRaces` array in `useRaceStore` |
+| `autoMoveExpiredUpcoming()` | Move past-dated entries from `upcomingRaces` → `races` on app rehydration |
 
 ---
 
@@ -725,6 +736,13 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 - `#pageTitleBar` is a mobile-only sticky element updated by `go()` — it must stay in sync with the `_pageNames` map in `go()` when new pages are added.
 - `initAuth()` races against a 4-second timeout. If Supabase is cold, the user sees the landing screen (not a blank page). The landing spinner (`#landing-auth-spinner`) shows during this window.
 - FIT file upload: `handleGarminFitImport()` guards against `FitParser` being undefined (CDN not yet loaded) and files > 100 MB. Both checks must stay in place.
+- Race catalog fetch (`useRaceCatalog`) takes 1-3s on cold load (8,284 rows, two parallel Supabase pages). `AddRaceModal` has a `useEffect([catalog])` that fires `runSearch()` when catalog arrives — do not remove this or searches typed before catalog loads will silently return nothing.
+- Race catalog stores `country` as full names ("Oman", "United States", "France") — NOT ISO codes. The tokenized search haystacks include `countryNameHaystack()` output for ISO-code entries too, but the primary catalog data is full names.
+- `updateRace` in `useRaceStore` patches `races`, `upcomingRaces`, AND `nextRace` — all three must be updated together. Missing the `nextRace` patch causes widgets like `GapToGoalWidget` to show stale data after an edit.
+- `Athlete.units` defaults to `'metric'` if unset. All distance/pace display code must use `useUnits()` and the helpers in `src/lib/units.ts` — never hardcode KM/MI labels.
+- Weather forecast uses `forecast_days=2` so the 5-hour strip always spans midnight. Do not revert to `forecast_days=1` — it leaves only 1 slot after ~9PM.
+- `IS_STAGING` from `src/env.ts` drives `proAccessGranted` in `useAuthStore` — all Pro features are unlocked on `dev.breaktapes.com`. Production (`app.breaktapes.com`) keeps `proAccessGranted: false`.
+- Dashboard test `YESTERDAY`/`FUTURE` constants use local-time date arithmetic (`localDateStr(n)` helper) — not `.toISOString()` which is UTC and drifts ±1 day in non-UTC timezones after midnight.
 
 ---
 
@@ -819,6 +837,74 @@ Direct DB access (psql/psycopg2) is blocked from localhost — Supabase only exp
 - After removing floating stat elements (map pills), always grep for all JS references — `renderMap()` had 4 `getElementById` calls to the removed elements that would have crashed on every invocation.
 - Canvas `fillStyle` does not resolve CSS custom properties (`var(--orange)`) — use hardcoded hex values in canvas draw functions.
 - `canvas.toBlob()` is not a Promise — async errors inside the callback are not caught by an outer `try/catch`; wrap the async work inside the callback in its own `try/catch`.
+
+---
+
+### Session 17 (2026-04-16) — Dashboard analytics widgets + Profile page redesign (v0.5.1.0)
+
+**Branch:** `staging` → main (PR #113)
+
+#### Changes shipped
+- **PreRaceBriefing hero card** — four states: PRE-RACE (countdown + last race pill), JUST RACED (days since + finish time), ADD YOUR FIRST RACE (onboarding), WHAT'S NEXT (no upcoming race). Orange pin icon + briefing tag pattern.
+- **10 new dashboard analytics widgets** — SeasonPlannerWidget (90-day race lineup with taper days), RecoveryIntelWidget (days remaining + load score with large numeral), TrainingCorrelWidget (Strava-gated dashed locked), BostonQualWidget (live BQ gap vs marathon PB), PacingIQWidget (FADER/NEGATIVE SPLITTER/EVEN PACER from splits), CareerMomentumWidget (form trend score + HOT/RISING badge), AgeGradeWidget (WA gate on DOB+gender), RaceDNAWidget (temperature fit + fade rate), PatternScanWidget (deep trends + EXPLAIN WITH AI), WhyResultWidget (COACH BRIEF).
+- **DashCustomizeModal redesigned** — bottom sheet with zone sections, PRO badges per widget, iOS-style toggle switches (pure CSS/JSX), ▲/▼ reorder within zones, sticky DONE button.
+- **Profile page full redesign** — AchievementsSection (green gradient hero, 19 achievements, SPECIAL/MILESTONE/EVENT groups), RaceActivityHeatmap (2yr × 12mo clickable grid → race list), MajorsQualifiers (7 WMM board with COMPLETED/IN PROGRESS stats), RacePersonality (STARTER/DIESEL/BIG-DAY PERFORMER), CountriesRaced pills, PersonalBests grid, AgeGradeTrajectory card.
+- **Infinite render loop fix** — `selectDashLayout` and `selectDashZoneCollapse` in `selectors.ts` were calling `getDashLayout()` / `getDashZoneCollapse()` inline. Both functions return new arrays/objects every call, causing Zustand's `useSyncExternalStore` to force infinite re-renders. Fixed: selectors now return raw `s.widgets` / `s.zoneCollapse`; components compute merged layout via `useMemo([storeWidgets, getDashLayout])`.
+
+#### Key learnings
+- Zustand selectors MUST return stable references — if a selector function returns a new object/array on every call (via spread operator or object creation), `useSyncExternalStore` sees a changed reference and triggers an infinite re-render loop. Never call store methods that return derived data as selectors; either return raw state or use `useMemo` in the component.
+- `computePersonality()` and similar aggregation functions must guard all division with `> 0` checks — avoid divide-by-zero when race list is empty.
+- `DashCustomizeModal` must read `s.widgets` (not `s.getDashLayout()`) and compute merged layout via `useMemo` — same infinite loop risk if getDashLayout is called in a Zustand selector.
+
+---
+
+### Session 18 (2026-04-16) — Race past/upcoming architecture + modal polish
+
+**Branch:** `staging` (direct commits — not merged to main yet)
+
+#### Changes shipped (commits `6fb1ed7`, `a04e5db`, `feb159f`)
+
+- **Race past/upcoming architecture** — `useRaceStore` gets `addUpcomingRace(race)` and `autoMoveExpiredUpcoming()`. On every app rehydration, upcoming races whose date is in the past are automatically moved to `races`. Dashboard RACE DAY empty state and season planner CTAs open the upcoming tab; all other "log race" CTAs open the past tab.
+- **Two-tab AddRaceModal** — "🏁 LOG A RACE" (full form: outcome, time, placing, medal → saves via `addRace`) and "📅 ADD UPCOMING" (simplified, no result fields → saves via `addUpcomingRace`). Tabs are orange/green themed. Save button label switches between "LOG RACE" and "ADD TO CALENDAR".
+- **Rich autocomplete dropdown** — two-line entries: race name + sport type badge on line 1; city · country · distance · date on line 2. Searches both past races AND upcoming races alongside the catalog.
+- **BQ safe buffer** — 5 min → **7 min** (420 sec); label updated to "SAFE BUFFER (−7 MIN)".
+- **Modal scroll lock** — All 3 modals (`AddRaceModal`, `ViewEditRaceModal`, `EditProfileModal`) now call `document.body.style.overflow = 'hidden'` via `useEffect` on mount (restored on unmount). `overscrollBehavior: 'contain'` added to each modal's scroll container. Fixes background scrolling on iOS.
+- **Country + City side by side** — `1fr 1fr` grid in AddRaceModal. Shortened placeholder text ("Country...", "City...") to fit.
+- **Date input iOS overflow fix** — `WebkitAppearance: none` + `appearance: none` + `maxWidth: 100%` on `input[type=date]` strips native iOS date picker intrinsic width that was overflowing the container.
+- **Stale branch cleanup** — Deleted 13 stale local branches (all squash-merged or pre-React migration). Removed 3 stale worktrees. Repo now has only `main` and `staging` local branches.
+
+#### Key learnings
+- `input[type=date]` on iOS Safari has an intrinsic minimum width tied to the native date display — `width: 100%` alone does NOT constrain it. Must add `WebkitAppearance: none` + `appearance: none` to opt out of native styling, plus `maxWidth: 100%` as a safety net.
+- Body scroll lock in React modals: `document.body.style.overflow = 'hidden'` in a `useEffect` with cleanup is the most reliable cross-browser approach. `overscrollBehavior: contain` on the scroll container is a required complement — it prevents rubber-banding at scroll edges from propagating to the body on iOS.
+- React passive event listeners: `e.preventDefault()` on `onTouchMove` does NOT work in React (all touch listeners are passive by default since React 17). The body lock approach is the correct iOS scroll isolation pattern.
+- `autoMoveExpiredUpcoming()` uses lexicographic date comparison (`date < today` where both are `YYYY-MM-DD`) — correct and zero-cost. No Date parsing needed.
+
+---
+
+### Session 19 (2026-04-16/17) — Goal time sync, units preference, catalog search, weather forecast
+
+**Branch:** `claude/units-and-fixes` → staging (#121), `claude/catalog-search-fix` → staging (#122, #123, #124)
+
+#### Changes shipped
+
+- **Goal time sync fix** — `updateRace` in `useRaceStore` now also patches `nextRace` when the updated race IS the current `nextRace`. Previously edits to goal time were invisible to `GapToGoalWidget` until a hard reload.
+- **`GapToGoalWidget` uses `selectFocusRace`** — was using `selectNextRace`; now follows user's pinned focus race instead of always the nearest upcoming race.
+- **Distance display in ViewEditRaceModal** — "Half Marathon" label → "21.1 KM" via new `resolveDistKm()` helper + `_DIST_KM_MAP`. Auto-computed PACE stat box (from time + distance) added.
+- **Pro features unlocked on staging** — `useAuthStore` sets `proAccessGranted: IS_STAGING` so all beta testers see all pro widgets and themes on `dev.breaktapes.com`.
+- **Imperial/Metric units preference** — new `src/lib/units.ts` with `useUnits()` hook (reads `athlete.units ?? 'metric'`), `fmtDistKm()`, `distUnit()`, `fmtPaceSecPerKm()`, `paceUnit()`, `fmtSpeedKmh()`, `computePaceSecPerKm()`. New "Preferences" section in Settings.tsx with 2-button toggle. StatsStrip in Dashboard/Races/Profile all convert and relabel dynamically. `Athlete.units?: 'metric' | 'imperial'` added to `src/types/index.ts`.
+- **TimePickerWheel `maxHours` prop** — supports 0–99h for ultra finish times.
+- **Tokenized multi-word catalog search** — `AddRaceModal` autocomplete now splits query on whitespace and requires ALL tokens to match across the combined haystack (name + city + country + resolved country name + aliases). "Ironman Oman" now finds "IRONMAN Oman" (country stored as "Oman"). New `src/lib/countries.ts` ISO-2 → country name map for ~80 racing countries.
+- **Catalog load race condition fix** — new `useEffect([catalog])` in `AddRaceModal` fires `runSearch()` immediately when catalog arrives if user already has a query typed. Previously suggestions never appeared if user typed before the 1-3s catalog fetch completed. "Searching race catalog…" inline loading hint added.
+- **5-hour weather forecast always shows** — was `forecast_days=1`, filtered by `hour >= currentHour` — left only 1 slot at 11PM. Now fetches `forecast_days=2`, filters by actual timestamp. Always shows next 5 hours across midnight.
+- **Dashboard test timezone fix** — `YESTERDAY`/`FUTURE` constants switched from `.toISOString()` (UTC) to local-time date arithmetic. Was failing nightly in UTC+4 after midnight.
+- **Branch cleanup** — closed PRs #115 and #117 (upcoming race modal improvements, conflicts too large to resolve against units/widgets changes). All stale branches deleted. Only `main` and `staging` remain.
+
+#### Key learnings
+- `updateRace` in Zustand stores must patch ALL derived copies of a race — `races`, `upcomingRaces`, AND `nextRace` — otherwise widgets reading `nextRace` see stale data after an edit.
+- `useRaceCatalog` is fetched inside `AddRaceModal` on mount — the 8,284-row fetch takes 1-3s. Always add a `useEffect([catalog])` re-trigger so search fires when data arrives, not just when query changes.
+- Race catalog stores `country` as full names ("Oman", "United States") not ISO codes. The `countries.ts` mapping handles both directions for search haystacks.
+- `new Date().toISOString()` is UTC — never use it for "today/yesterday" date strings in tests or components that compare against local-time YYYY-MM-DD. Use `localDateStr()` helpers that use `d.getFullYear()`, `d.getMonth()`, `d.getDate()`.
+- Open-Meteo `forecast_days=1` + `hour >= currentHour` filter fails at night — always fetch `forecast_days=2` and filter by `timestamp >= now - 1hr`, then `.slice(0, 5)`.
 
 ---
 
