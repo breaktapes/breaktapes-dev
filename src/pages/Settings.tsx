@@ -228,6 +228,72 @@ export function Settings() {
         </div>
       </section>
 
+      {/* ── Wearables section ── */}
+      <section>
+        <p style={sectionLabel}>Wearables</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          {[
+            { id: 'whoop',  name: 'WHOOP',        desc: 'Recovery, strain & sleep coaching',        status: 'connect' as const },
+            { id: 'garmin', name: 'Garmin',        desc: 'GPS activities & performance metrics',     status: 'connect' as const },
+            { id: 'coros',  name: 'COROS',         desc: 'Training load & endurance data',           status: 'soon'    as const },
+            { id: 'oura',   name: 'Oura',          desc: 'Readiness, sleep & HRV',                  status: 'soon'    as const },
+            { id: 'apple',  name: 'Apple Health',  desc: 'Import export.xml from the Health app',   status: 'connect' as const },
+          ].map(w => (
+            <div
+              key={w.id}
+              style={{
+                ...card,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '1rem',
+              }}
+            >
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{
+                  margin: 0,
+                  fontFamily: 'var(--headline)',
+                  fontWeight: 900,
+                  fontSize: '14px',
+                  letterSpacing: '0.06em',
+                  textTransform: 'uppercase',
+                  color: 'var(--white)',
+                }}>
+                  {w.name}
+                </p>
+                <p style={{ margin: '3px 0 0', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
+                  {w.desc}
+                </p>
+              </div>
+              {w.status === 'soon' ? (
+                <span style={{
+                  padding: '3px 10px',
+                  borderRadius: '4px',
+                  background: 'var(--surface3)',
+                  border: '1px solid var(--border)',
+                  fontSize: 'var(--text-xs)',
+                  fontFamily: 'var(--headline)',
+                  fontWeight: 700,
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  color: 'var(--muted)',
+                  whiteSpace: 'nowrap',
+                }}>
+                  Soon
+                </span>
+              ) : (
+                <button
+                  style={{ ...btnMain, padding: '0.5rem 1rem', whiteSpace: 'nowrap', flexShrink: 0 }}
+                  onClick={() => console.log(`Connect ${w.name}`)}
+                >
+                  Connect
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* ── About section ── */}
       <section>
         <p style={sectionLabel}>About</p>
