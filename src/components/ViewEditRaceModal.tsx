@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useRaceStore } from '@/stores/useRaceStore'
+import { useAthleteStore } from '@/stores/useAthleteStore'
+import { RaceShareCard } from '@/components/RaceShareCard'
 import type { Race } from '@/types'
 
 // ─── Config (mirrors AddRaceModal) ──────────────────────────────────────────
@@ -107,7 +109,7 @@ interface Props {
 
 // ─── View panel (read mode) ───────────────────────────────────────────────────
 
-function ViewPanel({ race, onEdit, onDelete }: { race: Race; onEdit: () => void; onDelete: () => void }) {
+function ViewPanel({ race, onEdit, onDelete, onShare }: { race: Race; onEdit: () => void; onDelete: () => void; onShare: () => void }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const medalColor = race.medal ? (MEDAL_COLORS[race.medal] ?? 'var(--orange)') : null
 
@@ -204,8 +206,12 @@ function ViewPanel({ race, onEdit, onDelete }: { race: Race; onEdit: () => void;
       )}
 
       {/* Action buttons */}
-      <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
+      <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
         <button style={st.editBtn} onClick={onEdit}>Edit Race</button>
+        <button
+          style={{ ...st.editBtn, background: 'transparent', border: '1px solid var(--border2)', color: 'var(--muted)' }}
+          onClick={onShare}
+        >Share</button>
         {confirmDelete ? (
           <div style={{ display: 'flex', gap: '0.5rem', flex: 1 }}>
             <button
@@ -445,9 +451,11 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 // ─── Modal shell ──────────────────────────────────────────────────────────────
 
 export function ViewEditRaceModal({ race, onClose }: Props) {
-  const updateRace = useRaceStore(s => s.updateRace)
-  const deleteRace = useRaceStore(s => s.deleteRace)
-  const [mode, setMode] = useState<'view' | 'edit'>('view')
+  const updateRace  = useRaceStore(s => s.updateRace)
+  const deleteRace  = useRaceStore(s => s.deleteRace)
+  const athlete     = useAthleteStore(s => s.athlete)
+  const [mode, setMode]       = useState<'view' | 'edit'>('view')
+  const [showShare, setShowShare] = useState(false)
 
   // Lock body scroll while modal is open
   useEffect(() => {
@@ -466,6 +474,7 @@ export function ViewEditRaceModal({ race, onClose }: Props) {
   }
 
   return (
+    <>
     <div style={st.overlay} onClick={onClose}>
       <div style={st.sheet} onClick={e => e.stopPropagation()}>
         <div style={st.handle} />
@@ -483,6 +492,7 @@ export function ViewEditRaceModal({ race, onClose }: Props) {
               race={race}
               onEdit={() => setMode('edit')}
               onDelete={handleDelete}
+              onShare={() => setShowShare(true)}
             />
           ) : (
             <EditPanel
@@ -494,6 +504,16 @@ export function ViewEditRaceModal({ race, onClose }: Props) {
         </div>
       </div>
     </div>
+
+    {/* Share card overlay */}
+    {showShare && (
+      <RaceShareCard
+        race={race}
+        athleteName={[athlete?.firstName, athlete?.lastName].filter(Boolean).join(' ') || 'Athlete'}
+        onClose={() => setShowShare(false)}
+      />
+    )}
+    </>
   )
 }
 

@@ -3,6 +3,25 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.6.0.0] - 2026-04-16
+
+### Added
+- **WHOOP OAuth 2.0 integration**: connect your WHOOP band to see workout activity + recovery scores in the Train tab. Token exchange via health-proxy, auto-refresh 60s before expiry, tokens stored in Supabase `wearable_tokens`.
+- **Garmin OAuth + PKCE integration**: secure authorization using SHA-256 code challenge via `crypto.subtle.digest`. Workout activities pulled from Garmin Wellness API (90-day window), PKCE verifier stored in `sessionStorage`.
+- **Strava OAuth integration**: read-only activity sync via `activity:read_all` scope.
+- **Apple Health XML import**: upload your `export.xml` — files < 500 MB parse inline; files > 500 MB stream in 8 MB chunks with incremental Supabase upserts so even 2 GB exports never OOM.
+- **Claude AI race parsing** (`src/lib/claude.ts`): paste race result text or upload a screenshot and the form auto-fills name, date, city, country, distance, sport, finish time, placing, and splits. Uses `claude-haiku-4-5-20251001` with user-supplied API key.
+- **Race Share Card** (`src/components/RaceShareCard.tsx`): 1200×630 canvas card showing race name, location, date, finish time, distance, placing, and medal badge. Download as PNG or copy to clipboard.
+- **Wearable activity feed in Train**: parallel WHOOP + Garmin activity fetch, merged and sorted by date, with OAuth callback handling for `?state=whoop|garmin|strava` return URLs.
+- **Live wearable Connect/Disconnect buttons in Settings**: shows ● Connected status in green with real token state from Zustand; Apple Health card has file upload with streaming progress bar.
+- **Race search + pagination in Races sheet**: search bar filters by name/city/country with 150ms debounce and × clear; results paginated 20 per page with "Show more" button.
+- **Share Profile button on Athlete page**: visible when `username` + `isPublic` are both set, copies `https://app.breaktapes.com/u/{username}` to clipboard.
+- **`addUpcomingRace` + `autoMoveExpiredUpcoming`** in `useRaceStore`: upcoming races whose date passes automatically move to the past races list on every rehydration.
+- **Map pin markers**: replaced arc routes with MapLibre `<Marker>` pin dots (orange circles), removing the deck.gl dependency entirely.
+
+### Fixed
+- **TypeScript `Record<MedalTier, number>` indexing error** in `Profile.tsx`: added explicit `MedalTier` union type so `tierCounts` is correctly typed.
+
 ## [0.5.1.0] - 2026-04-16
 
 ### Added

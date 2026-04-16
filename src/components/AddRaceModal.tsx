@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { useRaceCatalog, type CatalogRace } from '@/hooks/useRaceCatalog'
+import { parseRaceText, importRaceScreenshot, getClaudeApiKey } from '@/lib/claude'
 import type { Race, Split } from '@/types'
 
 type Mode = 'past' | 'upcoming'
@@ -263,6 +264,13 @@ export function AddRaceModal({ onClose, defaultMode = 'past' }: Props) {
   const [error, setError]           = useState('')
   const [saving, setSaving]         = useState(false)
 
+  // AI parse state
+  const [showParseText, setShowParseText] = useState(false)
+  const [parseTextInput, setParseTextInput] = useState('')
+  const [aiParsing, setAiParsing] = useState(false)
+  const [aiError, setAiError] = useState('')
+  const screenshotInputRef = useRef<HTMLInputElement>(null)
+
   const debounceRef  = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const nameWrapRef  = useRef<HTMLDivElement>(null)
   const [dropRect, setDropRect] = useState<{ top: number; left: number; width: number } | null>(null)
@@ -382,6 +390,79 @@ export function AddRaceModal({ onClose, defaultMode = 'past' }: Props) {
   const finalDist = needsCustomDist ? customDist : distance
   const finalMedal = medal === '__custom__' ? customMedal : medal
 
+  function applyParsed(p: Awaited<ReturnType<typeof parseRaceText>>) {
+    if (p.name)    { setName(p.name); setQuery(p.name) }
+    if (p.date)    setDate(p.date)
+    if (p.country) { setCountry(p.country); setCitySelect(''); setCityText('') }
+    if (p.city)    { setCitySelect(p.city); setCityText(p.city) }
+    if (p.sport) {
+      const TYPE_MAP: Record<string, string> = {
+        run: 'Running', running: 'Running',
+        tri: 'Triathlon', triathlon: 'Triathlon',
+        cycle: 'Cycling', cycling: 'Cycling',
+        swim: 'Swimming', swimming: 'Swimming',
+        hyrox: 'HYROX',
+      }
+      const mapped = TYPE_MAP[p.sport.toLowerCase()] ?? p.sport
+      setSport(mapped)
+    }
+    if (p.distance) {
+      const presets = DISTANCES_BY_SPORT[sport] ?? []
+      const match = presets.find(pr => pr.value === p.distance)
+      if (match) { setDistance(p.distance) } else { setDistance('__custom__'); setCustomDist(p.distance) }
+    }
+    if (p.time) {
+      const parts = p.time.split(':').map(Number)
+      if (parts.length === 3 && !parts.some(isNaN)) {
+        setTime({ h: parts[0], m: parts[1], s: parts[2] })
+      }
+    }
+    if (p.placing) setPlacing(p.placing)
+  }
+
+  async function handleParseText() {
+    const apiKey = getClaudeApiKey()
+    if (!apiKey) { setAiError('Add your Anthropic API key in Settings first.'); return }
+    if (!parseTextInput.trim()) return
+    setAiParsing(true); setAiError('')
+    try {
+      const parsed = await parseRaceText(parseTextInput, apiKey)
+      applyParsed(parsed)
+      setShowParseText(false)
+      setParseTextInput('')
+    } catch (e) {
+      setAiError(e instanceof Error ? e.message : 'Parse failed')
+    } finally {
+      setAiParsing(false)
+    }
+  }
+
+  async function handleScreenshotImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const apiKey = getClaudeApiKey()
+    if (!apiKey) { setAiError('Add your Anthropic API key in Settings first.'); e.target.value = ''; return }
+    setAiParsing(true); setAiError('')
+    try {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => {
+          const result = reader.result as string
+          resolve(result.split(',')[1])
+        }
+        reader.onerror = () => reject(reader.error)
+        reader.readAsDataURL(file)
+      })
+      const parsed = await importRaceScreenshot(base64, file.type, apiKey)
+      applyParsed(parsed)
+    } catch (e) {
+      setAiError(e instanceof Error ? e.message : 'Screenshot import failed')
+    } finally {
+      setAiParsing(false)
+      e.target.value = ''
+    }
+  }
+
   function buildSplits(): Split[] {
     if (sport !== 'Triathlon') return []
     return TRI_SEGMENTS.map(seg => {
@@ -488,6 +569,75 @@ export function AddRaceModal({ onClose, defaultMode = 'past' }: Props) {
 
         {/* Scrollable body */}
         <div style={{ ...st.body, paddingTop: '12px' }}>
+
+          {/* ── AI import bar ── */}
+          <div style={{ display: 'flex', gap: '6px', marginBottom: '12px' }}>
+            <button
+              type="button"
+              style={{
+                flex: 1, background: 'var(--surface3)', border: '1px solid var(--border2)',
+                borderRadius: '6px', padding: '8px 10px', color: 'var(--muted)',
+                fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px',
+                letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+              }}
+              onClick={() => { setShowParseText(p => !p); setAiError('') }}
+            >
+              ✦ Parse Text
+            </button>
+            <button
+              type="button"
+              style={{
+                flex: 1, background: 'var(--surface3)', border: '1px solid var(--border2)',
+                borderRadius: '6px', padding: '8px 10px', color: 'var(--muted)',
+                fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px',
+                letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                opacity: aiParsing ? 0.5 : 1,
+              }}
+              onClick={() => screenshotInputRef.current?.click()}
+              disabled={aiParsing}
+            >
+              📸 Import Screenshot
+            </button>
+            <input
+              ref={screenshotInputRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              style={{ display: 'none' }}
+              onChange={handleScreenshotImport}
+            />
+          </div>
+
+          {/* Parse text panel */}
+          {showParseText && (
+            <div style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '12px', marginBottom: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <textarea
+                rows={4}
+                placeholder="Paste your race result — bib confirmation, Garmin summary, race website result, etc."
+                value={parseTextInput}
+                onChange={e => setParseTextInput(e.target.value)}
+                style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: '6px', color: 'var(--white)', fontSize: '13px', padding: '8px', fontFamily: 'var(--body)', resize: 'vertical', minHeight: '80px' }}
+              />
+              <button
+                type="button"
+                style={{ background: 'var(--orange)', color: 'var(--black)', border: 'none', borderRadius: '4px', padding: '8px', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '12px', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer', opacity: aiParsing ? 0.6 : 1 }}
+                onClick={handleParseText}
+                disabled={aiParsing || !parseTextInput.trim()}
+              >
+                {aiParsing ? 'Parsing…' : 'Autofill Form'}
+              </button>
+            </div>
+          )}
+
+          {/* AI error */}
+          {aiError && (
+            <div style={{ background: 'rgba(255,80,80,0.1)', border: '1px solid rgba(255,80,80,0.3)', borderRadius: '6px', padding: '8px 12px', marginBottom: '8px', fontSize: '12px', color: '#ff8080', display: 'flex', justifyContent: 'space-between' }}>
+              <span>{aiError}</span>
+              <button onClick={() => setAiError('')} style={{ background: 'none', border: 'none', color: '#ff8080', cursor: 'pointer', padding: 0 }}>✕</button>
+            </div>
+          )}
 
           {/* ── Race Name autocomplete ── */}
           <div ref={nameWrapRef}>

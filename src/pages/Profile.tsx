@@ -264,6 +264,177 @@ function AthleteHero({ onEdit }: { onEdit: () => void }) {
           </div>
         )
       })()}
+
+      {/* Share Profile button — visible when username set + is_public */}
+      {athlete?.username && athlete?.isPublic && (
+        <button
+          style={{
+            background: 'transparent',
+            border: '1px solid var(--border2)',
+            borderRadius: '6px',
+            color: 'var(--muted)',
+            padding: '8px 16px',
+            fontFamily: 'var(--headline)',
+            fontWeight: 700,
+            fontSize: '12px',
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            cursor: 'pointer',
+            alignSelf: 'flex-start',
+          }}
+          onClick={() => {
+            const url = `https://app.breaktapes.com/u/${athlete.username}`
+            navigator.clipboard.writeText(url).catch(() => {})
+          }}
+        >
+          Share Profile ↗
+        </button>
+      )}
+    </div>
+  )
+}
+
+// ─── Medal Wall ───────────────────────────────────────────────────────────────
+
+const MEDAL_COLORS: Record<string, { bg: string; border: string; text: string; label: string }> = {
+  gold:     { bg: 'rgba(255,215,112,0.12)', border: 'rgba(255,215,112,0.35)', text: '#FFD770', label: 'GOLD' },
+  silver:   { bg: 'rgba(200,212,220,0.12)', border: 'rgba(200,212,220,0.35)', text: '#C8D4DC', label: 'SILVER' },
+  bronze:   { bg: 'rgba(205,140,90,0.12)',  border: 'rgba(205,140,90,0.35)',  text: '#CD8C5A', label: 'BRONZE' },
+  finisher: { bg: 'rgba(var(--orange-ch),0.10)', border: 'rgba(var(--orange-ch),0.3)', text: 'var(--orange)', label: 'FINISHER' },
+}
+
+type MedalTier = 'gold' | 'silver' | 'bronze' | 'finisher'
+
+function medalTier(medal: string): MedalTier {
+  const m = medal.toLowerCase()
+  if (m === 'gold')     return 'gold'
+  if (m === 'silver')   return 'silver'
+  if (m === 'bronze')   return 'bronze'
+  return 'finisher'
+}
+
+function MedalWall() {
+  const races  = useRaceStore(selectRaces)
+
+  const medalRaces = useMemo(
+    () => races.filter(r => r.medal && r.medal !== '').sort((a, b) => b.date.localeCompare(a.date)),
+    [races],
+  )
+
+  // PB map so we can show shimmer on PB races
+  const pbMap = useMemo(() => {
+    const map: Record<string, string> = {} // distance → best time
+    for (const r of races) {
+      if (!r.time || !r.distance) continue
+      if (!map[r.distance] || r.time < map[r.distance]) map[r.distance] = r.time
+    }
+    return map
+  }, [races])
+
+  const tierCounts = useMemo(() => {
+    const counts: Record<MedalTier, number> = { gold: 0, silver: 0, bronze: 0, finisher: 0 }
+    for (const r of medalRaces) {
+      const tier = medalTier(r.medal!)
+      counts[tier]++
+    }
+    return counts
+  }, [medalRaces])
+
+  return (
+    <div style={st.section}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+        <div style={st.sectionTitle}>MEDALS</div>
+        <div style={{ height: '1px', flex: 1, background: 'var(--border)', marginLeft: '16px' }} />
+      </div>
+
+      {medalRaces.length === 0 ? (
+        <div style={st.emptyState}>
+          <div style={st.emptyIcon}>🥇</div>
+          <div style={st.emptyText}>Your medal wall is empty. Log a race with a medal to start your collection.</div>
+        </div>
+      ) : (
+        <>
+          {/* Stats strip */}
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '14px', flexWrap: 'wrap' }}>
+            {(Object.keys(MEDAL_COLORS) as (keyof typeof MEDAL_COLORS)[]).map(tier => {
+              const count = tierCounts[tier as keyof typeof tierCounts]
+              if (count === 0) return null
+              const col = MEDAL_COLORS[tier]
+              return (
+                <div key={tier} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: col.bg, border: `1px solid ${col.border}`, borderRadius: '100px', padding: '5px 12px' }}>
+                  <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', color: col.text, lineHeight: 1 }}>{count}</span>
+                  <span style={{ fontFamily: 'var(--headline)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', color: col.text, textTransform: 'uppercase' }}>{col.label}</span>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Medal grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+            {medalRaces.map(r => {
+              const tier  = medalTier(r.medal!)
+              const col   = MEDAL_COLORS[tier]
+              const isPB  = r.time && r.distance && pbMap[r.distance] === r.time
+              const hasPhoto = !!r.medalPhoto
+
+              return (
+                <div
+                  key={r.id}
+                  style={{
+                    background: hasPhoto ? 'transparent' : col.bg,
+                    border: `1px solid ${isPB ? col.border : 'var(--border)'}`,
+                    borderRadius: '12px',
+                    overflow: 'hidden',
+                    position: 'relative',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    minWidth: 0,
+                    // PB shimmer via box-shadow glow
+                    boxShadow: isPB ? `0 0 0 1px ${col.border}, 0 0 16px ${col.bg}` : undefined,
+                  }}
+                >
+                  {/* Community photo background */}
+                  {hasPhoto && (
+                    <img
+                      src={r.medalPhoto}
+                      alt={r.name}
+                      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.35, mixBlendMode: 'multiply' }}
+                    />
+                  )}
+
+                  <div style={{ padding: '14px', position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
+                    {/* Tier badge */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: col.text }}>
+                        {col.label}
+                      </span>
+                      {isPB && (
+                        <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase', color: col.text, background: col.bg, border: `1px solid ${col.border}`, borderRadius: '100px', padding: '2px 7px' }}>
+                          PB
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Race name */}
+                    <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {r.name}
+                    </div>
+
+                    {/* Meta */}
+                    <div style={{ fontSize: '11px', color: 'var(--muted)', lineHeight: 1.4 }}>
+                      {[distLabel(r.distance), r.time].filter(Boolean).join(' · ')}
+                    </div>
+                    <div style={{ fontSize: '10px', color: 'var(--muted)' }}>
+                      {r.date ? new Date(r.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : ''}
+                      {r.city ? ` · ${r.city}` : ''}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </>
+      )}
     </div>
   )
 }
@@ -801,6 +972,7 @@ export function Profile() {
     <div style={st.page}>
       {showEdit && <EditProfileModal onClose={() => setShowEdit(false)} />}
       <AthleteHero onEdit={() => setShowEdit(true)} />
+      <MedalWall />
       <AchievementsSection />
       <CountriesRaced />
       <PersonalBests />
