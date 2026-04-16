@@ -22,10 +22,15 @@ export const useAthleteStore = create<AthleteState>()(
 
       updateAthlete: (partial) => {
         const current = get().athlete
+        // Strip undefined values so existing data is never silently cleared.
+        // To intentionally clear a field, callers must pass null or ''.
+        const defined = Object.fromEntries(
+          Object.entries(partial).filter(([, v]) => v !== undefined)
+        ) as Partial<Athlete>
         if (!current) {
-          set({ athlete: partial as Athlete })
+          set({ athlete: defined as Athlete })
         } else {
-          set({ athlete: { ...current, ...partial } })
+          set({ athlete: { ...current, ...defined } })
         }
       },
 
