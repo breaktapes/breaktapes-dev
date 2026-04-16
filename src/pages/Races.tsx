@@ -10,6 +10,7 @@ import Map from 'react-map-gl/maplibre'
 import type { MapRef } from 'react-map-gl/maplibre'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { useRaceStore } from '@/stores/useRaceStore'
+import { ViewEditRaceModal } from '@/components/ViewEditRaceModal'
 import type { Race } from '@/types'
 
 const CARTO_DARK = 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json'
@@ -103,13 +104,13 @@ function StatsStrip({ races }: { races: Race[] }) {
 
 // ── Compact race row ──────────────────────────────────────────────────────────
 
-function CompactRow({ race, isPB }: { race: Race; isPB: boolean }) {
+function CompactRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onClick: () => void }) {
   const d = new Date(race.date + 'T00:00:00')
   const mon = d.toLocaleString('en', { month: 'short' }).toUpperCase()
   const day = d.getDate()
 
   return (
-    <div className={`race-row-compact${isPB ? ' is-pb' : ''}`}>
+    <div className={`race-row-compact${isPB ? ' is-pb' : ''}`} onClick={onClick} style={{ cursor: 'pointer' }}>
       <div style={{ minWidth: 0 }}>
         <div className="rrc-name">{race.name}</div>
         <div className="rrc-meta">{race.city}, {race.country} · {mon} {day}</div>
@@ -124,7 +125,7 @@ function CompactRow({ race, isPB }: { race: Race; isPB: boolean }) {
 
 // ── Detailed race row ─────────────────────────────────────────────────────────
 
-function DetailedRow({ race, isPB }: { race: Race; isPB: boolean }) {
+function DetailedRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onClick: () => void }) {
   const medalColors: Record<string, string> = {
     gold:     'rgba(255,215,112,0.9)',
     silver:   'rgba(200,212,220,0.9)',
@@ -133,7 +134,7 @@ function DetailedRow({ race, isPB }: { race: Race; isPB: boolean }) {
   }
 
   return (
-    <div className="race-row-detailed">
+    <div className="race-row-detailed" onClick={onClick} style={{ cursor: 'pointer' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
         <div style={{ minWidth: 0 }}>
           <div style={{
@@ -192,6 +193,7 @@ function RacesSheet({ races }: { races: Race[] }) {
   const [expanded, setExpanded] = useState(false)
   const [yearFilter, setYearFilter] = useState('all')
   const [viewMode, setViewMode] = useState<ViewMode>('compact')
+  const [selectedRace, setSelectedRace] = useState<Race | null>(null)
   const startY = useRef(0)
 
   const pbMap = useMemo(() => buildPBMap(races), [races])
@@ -250,11 +252,11 @@ function RacesSheet({ races }: { races: Race[] }) {
           </div>
         ) : viewMode === 'compact' ? (
           sorted.map(r => (
-            <CompactRow key={r.id} race={r} isPB={pbMap[r.distance]?.id === r.id} />
+            <CompactRow key={r.id} race={r} isPB={pbMap[r.distance]?.id === r.id} onClick={() => setSelectedRace(r)} />
           ))
         ) : (
           sorted.map(r => (
-            <DetailedRow key={r.id} race={r} isPB={pbMap[r.distance]?.id === r.id} />
+            <DetailedRow key={r.id} race={r} isPB={pbMap[r.distance]?.id === r.id} onClick={() => setSelectedRace(r)} />
           ))
         )}
       </div>
@@ -272,6 +274,14 @@ function RacesSheet({ races }: { races: Race[] }) {
           + Log Race
         </button>
       </div>
+
+      {/* Race detail / edit modal */}
+      {selectedRace && (
+        <ViewEditRaceModal
+          race={selectedRace}
+          onClose={() => setSelectedRace(null)}
+        />
+      )}
     </div>
   )
 }

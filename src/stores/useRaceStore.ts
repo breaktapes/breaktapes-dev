@@ -8,6 +8,7 @@ export interface RaceState {
   wishlistRaces: Race[]
   nextRace: Race | null
   addRace: (race: Race) => void
+  updateRace: (id: string, patch: Partial<Race>) => void
   deleteRace: (id: string) => void
   setRaces: (races: Race[]) => void
   setUpcomingRaces: (races: Race[]) => void
@@ -31,6 +32,11 @@ export const useRaceStore = create<RaceState>()(
       nextRace: null,
 
       addRace: (race) => set(s => ({ races: [...s.races, race] })),
+
+      updateRace: (id, patch) => set(s => ({
+        races: s.races.map(r => r.id === id ? { ...r, ...patch } : r),
+        upcomingRaces: s.upcomingRaces.map(r => r.id === id ? { ...r, ...patch } : r),
+      })),
 
       deleteRace: (id) => set(s => ({
         races: s.races.filter(r => r.id !== id),

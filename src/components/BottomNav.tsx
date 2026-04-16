@@ -2,11 +2,11 @@ import { NavLink, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 
 const NAV_TABS = [
-  { to: '/',         label: 'Home',   icon: '⬜' },
-  { to: '/races',    label: 'Races',  icon: '🏁' },
-  { to: '/train',    label: 'Train',  icon: '📈' },
-  { to: '/gear',     label: 'Gear',   icon: '👟' },
-  { to: '/you',      label: 'You',    icon: '👤' },
+  { to: '/',          label: 'Home',  icon: '⬜' },
+  { to: '/races',     label: 'Races', icon: '🏁' },
+  { to: '/train',     label: 'Train', icon: '📈' },
+  { to: '/you',       label: 'You',   icon: '👤' },
+  { to: '/settings',  label: 'More',  icon: '···' },
 ] as const
 
 export function BottomNav() {
