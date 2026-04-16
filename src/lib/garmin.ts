@@ -1,9 +1,9 @@
 import { supabase } from '@/lib/supabase'
 import { useWearableStore } from '@/stores/useWearableStore'
+import { GARMIN_CLIENT_ID } from '@/env'
 import type { WearableToken } from '@/types'
 
-// Fill in via Cloudflare Worker secret / wrangler secret put GARMIN_CLIENT_ID
-export const GARMIN_CLIENT_ID = ''
+export { GARMIN_CLIENT_ID }
 
 const HEALTH_PROXY = 'https://health.breaktapes.com'
 

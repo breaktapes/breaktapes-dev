@@ -1,9 +1,9 @@
 import { supabase } from '@/lib/supabase'
 import { useWearableStore } from '@/stores/useWearableStore'
+import { WHOOP_CLIENT_ID } from '@/env'
 import type { WearableToken } from '@/types'
 
-// Fill in via Cloudflare Worker secret / wrangler secret put WHOOP_CLIENT_ID
-export const WHOOP_CLIENT_ID = ''
+export { WHOOP_CLIENT_ID }
 export const WHOOP_SCOPES = 'read:workout read:recovery read:body_measurement offline'
 
 const HEALTH_PROXY = 'https://health.breaktapes.com'

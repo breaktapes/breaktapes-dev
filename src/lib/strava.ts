@@ -1,9 +1,9 @@
 import { supabase } from '@/lib/supabase'
 import { useWearableStore } from '@/stores/useWearableStore'
+import { STRAVA_CLIENT_ID } from '@/env'
 import type { WearableToken } from '@/types'
 
-// Fill in via Cloudflare Worker secret / wrangler secret put STRAVA_CLIENT_ID
-export const STRAVA_CLIENT_ID = ''
+export { STRAVA_CLIENT_ID }
 
 const HEALTH_PROXY = 'https://health.breaktapes.com'
 
