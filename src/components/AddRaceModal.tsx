@@ -485,41 +485,46 @@ export function AddRaceModal({ onClose, defaultMode = 'past' }: Props) {
     if (!validate()) return
     setSaving(true)
 
-    const totalSecs = hmsToSecs(time.h, time.m, time.s)
-    let finalTime = outcome === 'Finished' && totalSecs > 0 ? secsToHMS(totalSecs) : undefined
+    try {
+      const totalSecs = hmsToSecs(time.h, time.m, time.s)
+      let finalTime = outcome === 'Finished' && totalSecs > 0 ? secsToHMS(totalSecs) : undefined
 
-    // Triathlon: auto-sum splits if no manual time entered
-    if (sport === 'Triathlon' && outcome === 'Finished' && !finalTime) {
-      const triTotal = TRI_SEGMENTS.reduce((acc, seg) => {
-        const t = triSplits[seg.key] ?? { h: 0, m: 0, s: 0 }
-        return acc + hmsToSecs(t.h, t.m, t.s)
-      }, 0)
-      if (triTotal > 0) finalTime = secsToHMS(triTotal)
-    }
+      // Triathlon: auto-sum splits if no manual time entered
+      if (sport === 'Triathlon' && outcome === 'Finished' && !finalTime) {
+        const triTotal = TRI_SEGMENTS.reduce((acc, seg) => {
+          const t = triSplits[seg.key] ?? { h: 0, m: 0, s: 0 }
+          return acc + hmsToSecs(t.h, t.m, t.s)
+        }, 0)
+        if (triTotal > 0) finalTime = secsToHMS(triTotal)
+      }
 
-    const race: Race = {
-      id: crypto.randomUUID(),
-      name: name.trim(),
-      date,
-      city: finalCity.trim() || '',
-      country: country.trim() || '',
-      distance: finalDist,
-      sport,
-      time: finalTime,
-      placing: placing.trim() || undefined,
-      medal: finalMedal || undefined,
-      priority: (priority as 'A' | 'B' | 'C') || undefined,
-      outcome: outcome !== 'Finished' ? outcome : undefined,
-      splits: buildSplits(),
-    }
+      const race: Race = {
+        id: crypto.randomUUID(),
+        name: name.trim(),
+        date,
+        city: finalCity.trim() || '',
+        country: country.trim() || '',
+        distance: finalDist,
+        sport,
+        time: finalTime,
+        placing: placing.trim() || undefined,
+        medal: finalMedal || undefined,
+        priority: (priority as 'A' | 'B' | 'C') || undefined,
+        outcome: outcome !== 'Finished' ? outcome : undefined,
+        splits: buildSplits(),
+      }
 
-    if (mode === 'upcoming') {
-      addUpcomingRace(race)
-    } else {
-      addRace(race)
+      if (mode === 'upcoming') {
+        addUpcomingRace(race)
+      } else {
+        addRace(race)
+      }
+      onClose()
+    } catch (e) {
+      setError('Failed to save race. Please try again.')
+    } finally {
+      setSaving(false)
     }
-    setSaving(false)
-    onClose()
   }
 
   const distancePresets = DISTANCES_BY_SPORT[sport] ?? []

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useCallback } from 'react'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { useAuthStore } from '@/stores/useAuthStore'
@@ -79,6 +79,29 @@ function distLabel(d: string | undefined): string {
 }
 
 const DIST_ORDER: string[] = ['5', '10', '21.1', '42.2', '1.5', '3', '15', '20', '25', '30', '50', '100']
+
+const SPORT_ORDER = ['Running', 'Triathlon', 'Cycling', 'Swimming', 'HYROX']
+const SPORT_ICONS: Record<string, string> = {
+  Running: '🏃', Triathlon: '🏆', Cycling: '🚴', Swimming: '🏊', HYROX: '💪',
+}
+
+function buildPBBySport(races: Race[]): Array<{ sport: string; bests: Array<{ key: string; label: string; race: Race }> }> {
+  const groups: Record<string, Race[]> = {}
+  for (const r of races) {
+    const s = r.sport ?? 'Running'
+    if (!groups[s]) groups[s] = []
+    groups[s].push(r)
+  }
+  return Object.entries(groups)
+    .map(([sport, rs]) => ({ sport, bests: buildPBByDist(rs) }))
+    .filter(g => g.bests.length > 0)
+    .sort((a, b) => {
+      const ai = SPORT_ORDER.indexOf(a.sport); const bi = SPORT_ORDER.indexOf(b.sport)
+      if (ai !== -1 && bi !== -1) return ai - bi
+      if (ai !== -1) return -1; if (bi !== -1) return 1
+      return a.sport.localeCompare(b.sport)
+    })
+}
 
 function buildPBByDist(races: Race[]): Array<{ key: string; label: string; race: Race }> {
   const map: Record<string, Race> = {}
@@ -226,7 +249,10 @@ function AthleteHero({ onEdit }: { onEdit: () => void }) {
 
   return (
     <div style={st.heroCard}>
-      {/* Avatar row */}
+      {/* Orange top glow stripe */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: 'linear-gradient(90deg, var(--orange) 0%, rgba(var(--orange-ch),0.3) 100%)', borderRadius: '16px 16px 0 0' }} />
+
+      {/* Top row: avatar + info + edit */}
       <div style={st.avatarRow}>
         <div style={st.avatar}>
           <span style={st.avatarInitials}>{initials}</span>
@@ -234,18 +260,21 @@ function AthleteHero({ onEdit }: { onEdit: () => void }) {
         <div style={st.avatarInfo}>
           <div style={st.athleteName}>{fullName}</div>
           {sportCity && <div style={st.athleteSub}>{sportCity}</div>}
-          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '4px' }}>
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '6px' }}>
             <span style={st.levelBadge}>{level}</span>
-            {age !== null && <span style={st.levelBadge}>{age}yr{ag ? ` · ${ag}` : ''}</span>}
+            {age !== null && <span style={{ ...st.levelBadge, background: 'rgba(245,245,245,0.06)', border: '1px solid rgba(245,245,245,0.12)', color: 'var(--muted)' }}>{age}yr{ag ? ` · ${ag}` : ''}</span>}
           </div>
         </div>
         <button style={st.editBtnSmall} onClick={onEdit}>Edit</button>
       </div>
 
+      {/* Divider */}
+      <div style={{ height: '1px', background: 'var(--border)', margin: '0 -24px' }} />
+
       {/* Stats row */}
       <div style={st.heroStats}>
-        {stats.map(s => (
-          <div key={s.label} style={st.heroStatCell}>
+        {stats.map((s, i) => (
+          <div key={s.label} style={{ ...st.heroStatCell, borderRight: i < stats.length - 1 ? '1px solid var(--border)' : 'none' }}>
             <div style={st.heroStatValue}>{s.value}</div>
             <div style={st.heroStatLabel}>{s.label}</div>
           </div>
@@ -257,10 +286,14 @@ function AthleteHero({ onEdit }: { onEdit: () => void }) {
         const days = daysUntil(nextRace.date)
         return (
           <div style={st.focusCard}>
-            <div style={st.focusLabel}>FOCUS RACE</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+              <div style={st.focusLabel}>FOCUS RACE</div>
+              <div style={{ fontFamily: 'var(--headline)', fontSize: '11px', fontWeight: 800, letterSpacing: '0.08em', color: 'var(--orange)', background: 'rgba(var(--orange-ch),0.15)', border: '1px solid rgba(var(--orange-ch),0.3)', borderRadius: '100px', padding: '3px 10px' }}>
+                {days === 0 ? 'TODAY' : `${days}D`}
+              </div>
+            </div>
             <div style={st.focusName}>{nextRace.name}</div>
-            <div style={st.focusMeta}>{distLabel(nextRace.distance)} · {fmtDate(nextRace.date)}</div>
-            <div style={st.focusDays}>{days === 0 ? 'TODAY' : `${days} days away`}</div>
+            <div style={st.focusMeta}>{[distLabel(nextRace.distance), fmtDate(nextRace.date), nextRace.city].filter(Boolean).join(' · ')}</div>
           </div>
         )
       })()}
@@ -268,20 +301,7 @@ function AthleteHero({ onEdit }: { onEdit: () => void }) {
       {/* Share Profile button — visible when username set + is_public */}
       {athlete?.username && athlete?.isPublic && (
         <button
-          style={{
-            background: 'transparent',
-            border: '1px solid var(--border2)',
-            borderRadius: '6px',
-            color: 'var(--muted)',
-            padding: '8px 16px',
-            fontFamily: 'var(--headline)',
-            fontWeight: 700,
-            fontSize: '12px',
-            letterSpacing: '0.1em',
-            textTransform: 'uppercase',
-            cursor: 'pointer',
-            alignSelf: 'flex-start',
-          }}
+          style={{ background: 'transparent', border: '1px solid var(--border2)', borderRadius: '6px', color: 'var(--muted)', padding: '8px 16px', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '12px', letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer', alignSelf: 'flex-start' }}
           onClick={() => {
             const url = `https://app.breaktapes.com/u/${athlete.username}`
             navigator.clipboard.writeText(url).catch(() => {})
@@ -439,11 +459,109 @@ function MedalWall() {
   )
 }
 
+// ─── Achievement helpers ──────────────────────────────────────────────────────
+
+function findUnlockRace(
+  ach: Achievement,
+  races: Race[],
+  athlete: ReturnType<typeof selectAthlete>,
+): Race | null {
+  const sorted = [...races].sort((a, b) => a.date.localeCompare(b.date))
+  for (let i = 0; i < sorted.length; i++) {
+    if (ach.check(sorted.slice(0, i + 1), athlete)) return sorted[i]
+  }
+  return null
+}
+
+// ─── Achievement Detail Sheet ─────────────────────────────────────────────────
+
+function AchievementDetailSheet({
+  ach,
+  isUnlocked,
+  unlockRace,
+  onClose,
+}: {
+  ach: Achievement
+  isUnlocked: boolean
+  unlockRace: Race | null
+  onClose: () => void
+}) {
+  const groupColor = ach.group === 'special'
+    ? 'var(--green)'
+    : ach.group === 'milestone'
+      ? 'var(--orange)'
+      : '#FFD770'
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 900 }}
+        onClick={onClose}
+      />
+      {/* Sheet */}
+      <div style={{
+        position: 'fixed', bottom: 'calc(var(--bottom-nav-base-height, 64px) + var(--safe-bottom, 0px))',
+        left: 0, right: 0, zIndex: 910,
+        background: 'var(--surface2)',
+        borderTop: `2px solid ${groupColor}`,
+        borderRadius: '16px 16px 0 0',
+        padding: '20px 24px 32px',
+        display: 'flex', flexDirection: 'column', gap: '16px',
+      }}>
+        {/* Handle */}
+        <div style={{ width: '36px', height: '4px', background: 'var(--border2)', borderRadius: '2px', margin: '-8px auto 4px' }} />
+
+        {/* Icon + name */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+          <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: isUnlocked ? `rgba(${ach.group === 'special' ? 'var(--green-ch)' : 'var(--orange-ch)'}, 0.12)` : 'var(--surface3)', border: `1px solid ${isUnlocked ? groupColor : 'var(--border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px', flexShrink: 0 }}>
+            {ach.icon}
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '18px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', lineHeight: 1.1 }}>
+              {ach.name}
+            </div>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
+              {ach.group.toUpperCase()} ACHIEVEMENT
+            </div>
+          </div>
+        </div>
+
+        {/* Status */}
+        <div style={{ background: isUnlocked ? (ach.group === 'special' ? 'rgba(var(--green-ch),0.08)' : 'rgba(var(--orange-ch),0.08)') : 'var(--surface3)', border: `1px solid ${isUnlocked ? groupColor : 'var(--border)'}`, borderRadius: '10px', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <span style={{ fontSize: '20px' }}>{isUnlocked ? '✅' : '🔒'}</span>
+          <div>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '13px', letterSpacing: '0.08em', textTransform: 'uppercase', color: isUnlocked ? groupColor : 'var(--muted)' }}>
+              {isUnlocked ? 'UNLOCKED' : 'LOCKED'}
+            </div>
+            {isUnlocked && unlockRace ? (
+              <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '3px', lineHeight: 1.4 }}>
+                {unlockRace.date ? new Date(unlockRace.date + 'T00:00:00').toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }) : ''}
+                {unlockRace.name ? ` · ${unlockRace.name}` : ''}
+              </div>
+            ) : !isUnlocked ? (
+              <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '3px' }}>Keep racing to unlock this achievement.</div>
+            ) : null}
+          </div>
+        </div>
+
+        <button
+          onClick={onClose}
+          style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '12px', fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '13px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)', cursor: 'pointer' }}
+        >
+          Close
+        </button>
+      </div>
+    </>
+  )
+}
+
 // ─── Achievements Section ─────────────────────────────────────────────────────
 
 function AchievementsSection() {
   const races   = useRaceStore(selectRaces)
   const athlete = useAthleteStore(selectAthlete)
+  const [selectedAch, setSelectedAch] = useState<Achievement | null>(null)
 
   const unlocked = useMemo(
     () => ACHIEVEMENTS.filter(a => a.check(races, athlete)),
@@ -456,12 +574,29 @@ function AchievementsSection() {
   // Recent unlocked pills (last 3)
   const recentPills = unlocked.slice(-3).reverse()
 
+  const handleAchClick = useCallback((a: Achievement) => setSelectedAch(a), [])
+
+  const selectedIsUnlocked = selectedAch ? unlockedIds.has(selectedAch.id) : false
+  const selectedUnlockRace = selectedAch && selectedIsUnlocked
+    ? findUnlockRace(selectedAch, races, athlete)
+    : null
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      {/* Achievement detail sheet */}
+      {selectedAch && (
+        <AchievementDetailSheet
+          ach={selectedAch}
+          isUnlocked={selectedIsUnlocked}
+          unlockRace={selectedUnlockRace}
+          onClose={() => setSelectedAch(null)}
+        />
+      )}
+
       {/* Hero achievement card */}
       <div style={st.achievementHero}>
         <div style={{ fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.14em', color: 'rgba(var(--green-ch), 0.6)', textTransform: 'uppercase', marginBottom: '8px' }}>
-          SUPABASE-BACKED ACHIEVEMENTS
+          ACHIEVEMENTS
         </div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', marginBottom: '10px' }}>
           <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '56px', color: 'var(--white)', lineHeight: 1, letterSpacing: '-0.02em' }}>
@@ -509,7 +644,7 @@ function AchievementsSection() {
             {ACHIEVEMENTS.filter(a => a.group === 'special').map(a => {
               const isUnlocked = unlockedIds.has(a.id)
               return (
-                <div key={a.id} style={{ ...st.achievementTile, opacity: isUnlocked ? 1 : 0.7 }}>
+                <div key={a.id} style={{ ...st.achievementTile, opacity: isUnlocked ? 1 : 0.7, cursor: 'pointer' }} onClick={() => handleAchClick(a)}>
                   <div style={{ ...st.achievementIconBox, background: isUnlocked ? 'rgba(var(--green-ch), 0.12)' : 'var(--surface)' }}>
                     <span style={{ fontSize: '24px' }}>{a.icon}</span>
                   </div>
@@ -537,7 +672,7 @@ function AchievementsSection() {
             {ACHIEVEMENTS.filter(a => a.group === 'milestone' || a.group === 'event').map(a => {
               const isUnlocked = unlockedIds.has(a.id)
               return (
-                <div key={a.id} style={{ ...st.achievementTile, opacity: isUnlocked ? 1 : 0.7 }}>
+                <div key={a.id} style={{ ...st.achievementTile, opacity: isUnlocked ? 1 : 0.7, cursor: 'pointer' }} onClick={() => handleAchClick(a)}>
                   <div style={{ ...st.achievementIconBox, background: isUnlocked ? 'rgba(var(--orange-ch), 0.1)' : 'var(--surface)' }}>
                     <span style={{ fontSize: '24px' }}>{a.icon}</span>
                   </div>
@@ -586,9 +721,9 @@ function CountriesRaced() {
 
 function PersonalBests() {
   const races = useRaceStore(selectRaces)
-  const pbs = useMemo(() => buildPBByDist(races), [races])
+  const pbsBySport = useMemo(() => buildPBBySport(races), [races])
 
-  if (pbs.length === 0) {
+  if (pbsBySport.length === 0) {
     return (
       <div style={st.section}>
         <div style={st.sectionTitle}>PERSONAL BESTS</div>
@@ -603,12 +738,25 @@ function PersonalBests() {
   return (
     <div style={st.section}>
       <div style={st.sectionTitle}>PERSONAL BESTS</div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', minWidth: 0, marginTop: '4px' }}>
-        {pbs.slice(0, 8).map(({ key, label, race }) => (
-          <div key={key} style={st.pbCard}>
-            <div style={st.pbDist}>{label}</div>
-            <div style={st.pbTime}>{race.time}</div>
-            <div style={st.pbRaceName} title={race.name}>{race.name}</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '8px' }}>
+        {pbsBySport.map(({ sport, bests }) => (
+          <div key={sport}>
+            {/* Sport row header */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '8px' }}>
+              <span style={{ fontSize: '13px' }}>{SPORT_ICONS[sport] ?? '🏅'}</span>
+              <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '11px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)' }}>{sport}</span>
+              <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
+            </div>
+            {/* Horizontal swipable distance cards */}
+            <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
+              {bests.map(({ key, label, race }) => (
+                <div key={key} style={{ ...st.pbCard, flexShrink: 0, minWidth: '110px' }}>
+                  <div style={st.pbDist}>{label}</div>
+                  <div style={st.pbTime}>{race.time}</div>
+                  <div style={st.pbRaceName} title={race.name}>{race.name}</div>
+                </div>
+              ))}
+            </div>
           </div>
         ))}
       </div>
@@ -1001,14 +1149,17 @@ const st = {
 
   // ── Hero card
   heroCard: {
-    background: 'var(--surface2)',
-    border: '1px solid var(--border2)',
+    background: 'linear-gradient(160deg, rgba(var(--orange-ch),0.10) 0%, rgba(var(--orange-ch),0.04) 35%, var(--surface2) 65%)',
+    border: '1px solid rgba(var(--orange-ch),0.25)',
     borderRadius: '16px',
     padding: '24px',
     display: 'flex',
     flexDirection: 'column',
     gap: '20px',
     minWidth: 0,
+    position: 'relative',
+    boxShadow: '0 4px 32px rgba(0,0,0,0.35), 0 0 0 1px rgba(var(--orange-ch),0.1)',
+    overflow: 'hidden',
   } as React.CSSProperties,
 
   avatarRow: {
@@ -1019,8 +1170,8 @@ const st = {
   } as React.CSSProperties,
 
   avatar: {
-    width: '72px',
-    height: '72px',
+    width: '80px',
+    height: '80px',
     borderRadius: '50%',
     background: 'var(--surface3)',
     border: '2px solid var(--orange)',
@@ -1028,11 +1179,12 @@ const st = {
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
+    boxShadow: '0 0 0 4px rgba(var(--orange-ch),0.15), 0 0 20px rgba(var(--orange-ch),0.2)',
   } as React.CSSProperties,
 
   avatarInitials: {
     fontFamily: 'var(--headline)',
-    fontSize: '26px',
+    fontSize: '28px',
     fontWeight: 900,
     color: 'var(--orange)',
     letterSpacing: '0.04em',
@@ -1048,11 +1200,11 @@ const st = {
 
   athleteName: {
     fontFamily: 'var(--headline)',
-    fontSize: '22px',
+    fontSize: '26px',
     fontWeight: 900,
     letterSpacing: '0.04em',
     textTransform: 'uppercase',
-    lineHeight: 1.1,
+    lineHeight: 1.05,
     color: 'var(--white)',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
@@ -1094,10 +1246,9 @@ const st = {
     flexDirection: 'column',
     alignItems: 'center',
     gap: '3px',
-    background: 'var(--surface3)',
-    borderRadius: '10px',
     padding: '12px 8px',
     minWidth: 0,
+    flex: 1,
   } as React.CSSProperties,
 
   heroStatValue: {
