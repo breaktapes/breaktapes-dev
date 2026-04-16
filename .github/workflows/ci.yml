@@ -63,17 +63,19 @@ jobs:
           fi
           echo "✅ wrangler.toml has both production and staging environments"
 
-      # ── 6. dist/ size check (warn at 5MB, fail at 15MB) ─────────────────
+      # ── 6. dist/ size check (warn at 20MB, fail at 40MB) ────────────────
+      # React app with MapLibre GL + deck.gl is ~17MB uncompressed (gzip: ~5MB).
+      # Limits updated from 5/15MB (SPA era) to 20/40MB (React + map libs).
       - name: Check dist/ bundle size
         run: |
           TOTAL=$(du -sb dist/ | cut -f1)
           TOTAL_MB=$(echo "scale=2; $TOTAL / 1048576" | bc)
           echo "dist/ total size: ${TOTAL_MB} MB (${TOTAL} bytes)"
-          if [ $TOTAL -gt 15728640 ]; then
-            echo "❌ dist/ exceeds 15MB limit ($TOTAL bytes)"
+          if [ $TOTAL -gt 41943040 ]; then
+            echo "❌ dist/ exceeds 40MB limit ($TOTAL bytes)"
             exit 1
-          elif [ $TOTAL -gt 5242880 ]; then
-            echo "⚠️  dist/ is over 5MB — check bundle analyzer"
+          elif [ $TOTAL -gt 20971520 ]; then
+            echo "⚠️  dist/ is over 20MB — check bundle analyzer"
           else
             echo "✅ Bundle size OK"
           fi
