@@ -26,8 +26,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       <main style={{
         flex: 1,
-        overflow: 'hidden',
+        overflowY: 'auto',
+        overflowX: 'hidden',
         position: 'relative',
+        WebkitOverflowScrolling: 'touch' as any,
       }}>
         {children}
       </main>

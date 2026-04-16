@@ -29,7 +29,7 @@ function AnimatedRoutes() {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={transitions.page}
-        style={{ height: '100%', overflow: 'hidden' }}
+        style={{ minHeight: '100%' }}
       >
         <Routes location={location}>
           <Route path="/"         element={<Dashboard />} />
