@@ -3,7 +3,7 @@ main = "worker/index.js"
 compatibility_date = "2024-09-23"
 account_id = "b09f233e618dc7f23bcb247c947eb303"
 
-assets = { directory = "dist", html_handling = "auto-trailing-slash" }
+assets = { directory = "public", html_handling = "auto-trailing-slash" }
 
 # Production: app.breaktapes.com
 # Deploy: wrangler deploy

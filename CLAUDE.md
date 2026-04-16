@@ -822,24 +822,6 @@ Direct DB access (psql/psycopg2) is blocked from localhost — Supabase only exp
 
 ---
 
-### Session 17 (2026-04-16) — Dashboard analytics widgets + Profile page redesign (v0.5.1.0)
-
-**Branch:** `staging` → main (PR #113)
-
-#### Changes shipped
-- **PreRaceBriefing hero card** — four states: PRE-RACE (countdown + last race pill), JUST RACED (days since + finish time), ADD YOUR FIRST RACE (onboarding), WHAT'S NEXT (no upcoming race). Orange pin icon + briefing tag pattern.
-- **10 new dashboard analytics widgets** — SeasonPlannerWidget (90-day race lineup with taper days), RecoveryIntelWidget (days remaining + load score with large numeral), TrainingCorrelWidget (Strava-gated dashed locked), BostonQualWidget (live BQ gap vs marathon PB), PacingIQWidget (FADER/NEGATIVE SPLITTER/EVEN PACER from splits), CareerMomentumWidget (form trend score + HOT/RISING badge), AgeGradeWidget (WA gate on DOB+gender), RaceDNAWidget (temperature fit + fade rate), PatternScanWidget (deep trends + EXPLAIN WITH AI), WhyResultWidget (COACH BRIEF).
-- **DashCustomizeModal redesigned** — bottom sheet with zone sections, PRO badges per widget, iOS-style toggle switches (pure CSS/JSX), ▲/▼ reorder within zones, sticky DONE button.
-- **Profile page full redesign** — AchievementsSection (green gradient hero, 19 achievements, SPECIAL/MILESTONE/EVENT groups), RaceActivityHeatmap (2yr × 12mo clickable grid → race list), MajorsQualifiers (7 WMM board with COMPLETED/IN PROGRESS stats), RacePersonality (STARTER/DIESEL/BIG-DAY PERFORMER), CountriesRaced pills, PersonalBests grid, AgeGradeTrajectory card.
-- **Infinite render loop fix** — `selectDashLayout` and `selectDashZoneCollapse` in `selectors.ts` were calling `getDashLayout()` / `getDashZoneCollapse()` inline. Both functions return new arrays/objects every call, causing Zustand's `useSyncExternalStore` to force infinite re-renders. Fixed: selectors now return raw `s.widgets` / `s.zoneCollapse`; components compute merged layout via `useMemo([storeWidgets, getDashLayout])`.
-
-#### Key learnings
-- Zustand selectors MUST return stable references — if a selector function returns a new object/array on every call (via spread operator or object creation), `useSyncExternalStore` sees a changed reference and triggers an infinite re-render loop. Never call store methods that return derived data as selectors; either return raw state or use `useMemo` in the component.
-- `computePersonality()` and similar aggregation functions must guard all division with `> 0` checks — avoid divide-by-zero when race list is empty.
-- `DashCustomizeModal` must read `s.widgets` (not `s.getDashLayout()`) and compute merged layout via `useMemo` — same infinite loop risk if getDashLayout is called in a Zustand selector.
-
----
-
 ## Skill routing
 
 When the user's request matches an available skill, ALWAYS invoke it using the Skill

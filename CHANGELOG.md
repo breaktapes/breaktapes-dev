@@ -3,17 +3,6 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [0.5.1.0] - 2026-04-16
-
-### Added
-- **Dashboard PreRaceBriefing card**: context-aware hero card with four states — PRE-RACE (countdown + last race pill), JUST RACED (days since + finish time), ADD YOUR FIRST RACE (onboarding CTA), and WHAT'S NEXT (no upcoming race).
-- **10 new dashboard analytics widgets**: Season Planner (90-day race lineup with taper/recover days), Recovery Intelligence (estimated recovery days remaining with load score), Training Correlation (Strava-connected gate), Boston Qualifier (live BQ gap vs personal marathon PB), Pacing IQ (FADER/NEGATIVE SPLITTER/EVEN PACER from splits data), Career Momentum (form trend score + HOT/RISING/NEUTRAL/COOLING badge), Age-Grade Score (WA standards gate on DOB+gender), Race DNA (temperature fit + fade rate), Pattern Scan (deep pacing trends + EXPLAIN WITH AI), Why Result (COACH BRIEF for last race).
-- **Dashboard Customize modal redesigned**: bottom sheet with zone sections (NOW / RECENTLY / CONSISTENCY / PATTERNS), per-widget PRO badges, iOS-style toggle switches, ▲/▼ reorder buttons.
-- **Profile page full redesign**: Achievements hero card (green gradient, 19 achievements, SPECIAL/MILESTONE/EVENT groups), Countries Raced pill chips, Age-Grade Trajectory, Race Activity Heatmap (2-year × 12-month clickable grid), World Marathon Majors board (7 majors with COMPLETED/IN PROGRESS/ENTRY READY stats), Race Personality widget (STARTER/DIESEL/BIG-DAY PERFORMER computed from race history), Personal Bests grid.
-
-### Fixed
-- **Zustand infinite render loop**: `selectDashLayout` and `selectDashZoneCollapse` selectors were calling `getDashLayout()` / `getDashZoneCollapse()` inline which returned new object references on every render, triggering `useSyncExternalStore` to force re-renders infinitely. Selectors now return stable `s.widgets` / `s.zoneCollapse` references; components compute merged layout via `useMemo`.
-
 ## [0.4.0.0] - 2026-04-16
 
 ### Added
