@@ -14,6 +14,7 @@ export interface RaceState {
   deleteRace: (id: string) => void
   setRaces: (races: Race[]) => void
   setUpcomingRaces: (races: Race[]) => void
+  setNextRace: (race: Race) => void
   promoteNextRace: () => void
   addToWishlist: (race: Race) => void
   removeFromWishlist: (id: string) => void
@@ -66,6 +67,8 @@ export const useRaceStore = create<RaceState>()(
       })),
 
       setRaces: (races) => set({ races }),
+
+      setNextRace: (race) => set({ nextRace: race }),
 
       setUpcomingRaces: (upcomingRaces) => {
         set({ upcomingRaces })

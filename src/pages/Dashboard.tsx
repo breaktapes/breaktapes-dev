@@ -1,9 +1,9 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { useDashStore } from '@/stores/useDashStore'
-import { selectRaces, selectNextRace, selectAthlete, selectDashZoneCollapse } from '@/stores/selectors'
+import { selectRaces, selectNextRace, selectUpcomingRaces, selectAthlete, selectDashZoneCollapse } from '@/stores/selectors'
 import { AddRaceModal } from '@/components/AddRaceModal'
 import type { Race } from '@/types'
 
@@ -370,7 +370,7 @@ function PreRaceBriefing({ onAddRace }: { onAddRace: () => void }) {
 
 // ─── Countdown Card ───────────────────────────────────────────────────────────
 
-function CountdownCard({ race }: { race: Race }) {
+function CountdownCard({ race, onShowUpcoming }: { race: Race; onShowUpcoming: () => void }) {
   const navigate = useNavigate()
   const [now, setNow] = useState(() => Date.now())
 
@@ -443,7 +443,7 @@ function CountdownCard({ race }: { race: Race }) {
       </div>
 
       <div style={st.countdownDivider} />
-      <button style={st.allRacesBtn} onClick={() => navigate('/races')}>ALL UPCOMING RACES →</button>
+      <button style={st.allRacesBtn} onClick={onShowUpcoming}>ALL UPCOMING RACES →</button>
     </div>
   )
 }
@@ -472,11 +472,107 @@ function CourseInfoCard({ race }: { race: Race }) {
   )
 }
 
+// ─── Weather helpers ──────────────────────────────────────────────────────────
+
+const _geocache = new Map<string, { lat: number; lon: number }>()
+
+async function geocodeCity(city: string, country: string): Promise<{ lat: number; lon: number } | null> {
+  const key = `${city},${country}`
+  if (_geocache.has(key)) return _geocache.get(key)!
+  try {
+    const q = encodeURIComponent([city, country].filter(Boolean).join(', '))
+    const r = await fetch(`https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1`, {
+      headers: { 'Accept-Language': 'en' },
+    })
+    const data = await r.json()
+    if (data[0]) {
+      const coords = { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) }
+      _geocache.set(key, coords)
+      return coords
+    }
+  } catch {}
+  return null
+}
+
+function wmoIcon(code: number): string {
+  if (code === 0) return '☀️'
+  if (code <= 3) return '⛅'
+  if (code <= 48) return '🌫'
+  if (code <= 67) return '🌧'
+  if (code <= 77) return '❄️'
+  if (code <= 82) return '🌦'
+  if (code <= 86) return '🌨'
+  return '⛈'
+}
+
+function fmtDateISO(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
 // ─── Weather Card ─────────────────────────────────────────────────────────────
+
+interface WeatherInfo { icon: string; tempMin: number; tempMax: number; label: string }
 
 function WeatherCard({ race }: { race: Race }) {
   const days = daysUntil(race.date)
   const location = [race.city, race.country].filter(Boolean).join(', ').toUpperCase()
+  const [weather, setWeather] = useState<WeatherInfo | null>(null)
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    const city = race.city ?? ''
+    const country = race.country ?? ''
+    if (!city && !country) return
+    let cancelled = false
+    setLoading(true)
+    setWeather(null)
+
+    ;(async () => {
+      const coords = await geocodeCity(city, country)
+      if (!coords || cancelled) { setLoading(false); return }
+
+      try {
+        if (days <= 14) {
+          // Actual forecast
+          const url = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&daily=temperature_2m_max,temperature_2m_min,weathercode&start_date=${race.date}&end_date=${race.date}&timezone=auto`
+          const resp = await fetch(url)
+          const data = await resp.json()
+          if (!cancelled && data.daily?.temperature_2m_max?.length) {
+            setWeather({
+              icon: wmoIcon(data.daily.weathercode[0]),
+              tempMin: Math.round(data.daily.temperature_2m_min[0]),
+              tempMax: Math.round(data.daily.temperature_2m_max[0]),
+              label: 'Race day forecast',
+            })
+          }
+        } else {
+          // Historical climate estimate — same ±7 days last year
+          const raceD = new Date(race.date + 'T00:00:00')
+          const lastYr = raceD.getFullYear() - 1
+          const start = new Date(lastYr, raceD.getMonth(), raceD.getDate() - 7)
+          const end   = new Date(lastYr, raceD.getMonth(), raceD.getDate() + 7)
+          const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${coords.lat}&longitude=${coords.lon}&start_date=${fmtDateISO(start)}&end_date=${fmtDateISO(end)}&daily=temperature_2m_max,temperature_2m_min&timezone=auto`
+          const resp = await fetch(url)
+          const data = await resp.json()
+          if (!cancelled && data.daily?.temperature_2m_max?.length) {
+            const maxes = data.daily.temperature_2m_max.filter((t: number) => t != null)
+            const mins  = data.daily.temperature_2m_min.filter((t: number) => t != null)
+            if (maxes.length) {
+              setWeather({
+                icon: '🌤',
+                tempMin: Math.round(mins.reduce((s: number, t: number) => s + t, 0) / mins.length),
+                tempMax: Math.round(maxes.reduce((s: number, t: number) => s + t, 0) / maxes.length),
+                label: 'Typical for this time of year',
+              })
+            }
+          }
+        }
+      } catch {}
+      if (!cancelled) setLoading(false)
+    })()
+
+    return () => { cancelled = true }
+  }, [race.date, race.city, race.country, days])
 
   return (
     <div style={st.weatherCard}>
@@ -484,13 +580,15 @@ function WeatherCard({ race }: { race: Race }) {
         {location}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <span style={{ fontSize: '32px', lineHeight: 1, flexShrink: 0 }}>🌤</span>
+        <span style={{ fontSize: '32px', lineHeight: 1, flexShrink: 0 }}>
+          {weather ? weather.icon : loading ? '⏳' : '🌤'}
+        </span>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '15px', color: 'var(--white)', letterSpacing: '0.02em' }}>
-            −° − −°C
+            {weather ? `${weather.tempMin}° – ${weather.tempMax}°C` : loading ? 'Loading…' : '— °C'}
           </div>
           <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px', lineHeight: 1.4 }}>
-            {days > 14 ? 'Forecast available 14 days before race day.' : 'Loading forecast…'}
+            {weather ? weather.label : days > 14 ? 'Typical conditions for race week' : 'Fetching forecast…'}
           </div>
         </div>
         <div style={st.daysPill}>{days} DAYS</div>
@@ -1278,6 +1376,391 @@ function PaceCalculator() {
   )
 }
 
+// ─── Set Next Race Modal ──────────────────────────────────────────────────────
+
+const PRIORITY_OPTIONS = [
+  { value: 'A', label: '🎯 A Race — Goal Event' },
+  { value: 'B', label: '🥈 B Race — Tune-Up' },
+  { value: 'C', label: '🏃 C Race — Training Race' },
+]
+
+interface WeatherInsight {
+  tempMin: number
+  tempMax: number
+  humidity: number
+  wind: number
+  label: string
+}
+
+function SetNextRaceModal({
+  race,
+  onClose,
+  onSave,
+  onRemove,
+}: {
+  race: Race
+  onClose: () => void
+  onSave: (patch: Partial<Race>) => void
+  onRemove: () => void
+}) {
+  const races = useRaceStore(selectRaces)
+
+  // Form state
+  const [country,  setCountry]  = useState(race.country ?? '')
+  const [city,     setCity]     = useState(race.city ?? '')
+  const [priority, setPriority] = useState<'A' | 'B' | 'C'>(race.priority ?? 'A')
+
+  // Goal time spinners
+  const initGoal = useMemo(() => {
+    if (!race.goalTime) return { h: 0, m: 0, s: 0 }
+    const parts = race.goalTime.split(':').map(Number)
+    return { h: parts[0] ?? 0, m: parts[1] ?? 0, s: parts[2] ?? 0 }
+  }, [race.goalTime])
+  const [goalH, setGoalH] = useState(initGoal.h)
+  const [goalM, setGoalM] = useState(initGoal.m)
+  const [goalS, setGoalS] = useState(initGoal.s)
+
+  // Weather insight
+  const [weather, setWeather] = useState<WeatherInsight | null>(null)
+  const cancelledRef = useRef(false)
+
+  useEffect(() => {
+    cancelledRef.current = false
+    const cityKey = city || race.city
+    const countryKey = country || race.country
+    if (!cityKey) return
+    ;(async () => {
+      const coords = await geocodeCity(cityKey, countryKey)
+      if (cancelledRef.current || !coords) return
+      const days = daysUntil(race.date)
+      let url: string
+      if (days <= 14) {
+        url = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&daily=temperature_2m_max,temperature_2m_min,relative_humidity_2m_max,wind_speed_10m_max&timezone=auto&forecast_days=14`
+      } else {
+        // Historical climate: same ±7 days last year
+        const d = new Date(race.date + 'T00:00:00')
+        d.setFullYear(d.getFullYear() - 1)
+        const start = new Date(d); start.setDate(start.getDate() - 7)
+        const end   = new Date(d); end.setDate(end.getDate() + 7)
+        const s = start.toISOString().split('T')[0]
+        const e = end.toISOString().split('T')[0]
+        url = `https://archive-api.open-meteo.com/v1/archive?latitude=${coords.lat}&longitude=${coords.lon}&start_date=${s}&end_date=${e}&daily=temperature_2m_max,temperature_2m_min,relative_humidity_2m_max,wind_speed_10m_max&timezone=auto`
+      }
+      try {
+        const res = await fetch(url)
+        if (cancelledRef.current) return
+        const data = await res.json()
+        const maxArr: number[] = data.daily?.temperature_2m_max ?? []
+        const minArr: number[] = data.daily?.temperature_2m_min ?? []
+        const humArr: number[] = data.daily?.relative_humidity_2m_max ?? []
+        const windArr: number[] = data.daily?.wind_speed_10m_max ?? []
+        const avg = (arr: number[]) => arr.length ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : 0
+        setWeather({
+          tempMax:  avg(maxArr),
+          tempMin:  avg(minArr),
+          humidity: avg(humArr),
+          wind:     avg(windArr),
+          label:    days <= 14 ? 'Race day forecast' : 'Typical for this time of year',
+        })
+      } catch {}
+    })()
+    return () => { cancelledRef.current = true }
+  }, [race.date, city, country, race.city, race.country])
+
+  // Scroll lock
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = '' }
+  }, [])
+
+  // Race DNA: compare expected temp to user's best races
+  const dnaSummary = useMemo(() => {
+    if (!weather) return null
+    const withWeather = races.filter(r => r.weather?.temp != null && r.time)
+    if (withWeather.length < 3) return null
+    const warmRaces = withWeather.filter(r => (r.weather!.temp ?? 0) >= 18)
+    const coolRaces = withWeather.filter(r => (r.weather!.temp ?? 0) < 18)
+    const label = weather.tempMax >= 22
+      ? (warmRaces.length > coolRaces.length ? 'Favourable conditions' : 'Warm race — monitor pacing')
+      : (coolRaces.length > warmRaces.length ? 'Favourable conditions' : 'Cool race — good for speed')
+    return { label, count: withWeather.length }
+  }, [weather, races])
+
+  // Course summary derived from race fields
+  const courseSummary = useMemo(() => {
+    const parts: string[] = []
+    const km = distanceToKm(race.distance)
+    if (km > 0) parts.push(`${km}KM`)
+    if (race.sport) parts.push(race.sport.charAt(0).toUpperCase() + race.sport.slice(1))
+    if (race.surface) parts.push(`${race.surface.charAt(0).toUpperCase() + race.surface.slice(1)} surface`)
+    if (typeof race.elevation === 'number') parts.push(race.elevation > 300 ? 'Hilly profile' : 'Flat profile')
+    const loc = [race.city, race.country].filter(Boolean).join(', ')
+    const desc = parts.length > 0 ? parts.join(' · ') : 'No additional course info available.'
+    return { loc, desc }
+  }, [race])
+
+  const goalTimeSecs = goalH * 3600 + goalM * 60 + goalS
+  const paceKm = goalTimeSecs > 0 ? secsToMMSS(goalTimeSecs / distanceToKm(race.distance)) : null
+
+  function Spinner({ val, onChange, max }: { val: number; onChange: (v: number) => void; max: number }) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '10px', padding: '8px 0', width: '72px', gap: '4px' }}>
+        <button onClick={() => onChange(Math.min(max, val + 1))} style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '12px', cursor: 'pointer', padding: '2px 12px', lineHeight: 1 }}>▲</button>
+        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '28px', color: 'var(--white)', lineHeight: 1, letterSpacing: '-0.01em' }}>
+          {val.toString().padStart(2, '0')}
+        </div>
+        <button onClick={() => onChange(Math.max(0, val - 1))} style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '12px', cursor: 'pointer', padding: '2px 12px', lineHeight: 1 }}>▼</button>
+      </div>
+    )
+  }
+
+  return (
+    <div style={snSt.overlay} onClick={onClose}>
+      <div style={snSt.sheet} onClick={e => e.stopPropagation()}>
+        {/* Header */}
+        <div style={{ marginBottom: '20px' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '24px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)', lineHeight: 1.1 }}>
+            SET NEXT RACE
+          </div>
+          <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '4px' }}>Your countdown starts now.</div>
+          <div style={{ height: '1px', background: 'var(--border)', marginTop: '16px' }} />
+        </div>
+
+        {/* Scrollable body */}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '96px', WebkitOverflowScrolling: 'touch' as React.CSSProperties['WebkitOverflowScrolling'] }}>
+          {/* Country */}
+          <div style={snSt.fieldGroup}>
+            <label style={snSt.fieldLabel}>COUNTRY</label>
+            <input value={country} onChange={e => setCountry(e.target.value)} placeholder="Country" style={snSt.input} />
+          </div>
+
+          {/* City */}
+          <div style={snSt.fieldGroup}>
+            <label style={snSt.fieldLabel}>CITY / DISTRICT</label>
+            <input value={city} onChange={e => setCity(e.target.value)} placeholder="City" style={snSt.input} />
+          </div>
+
+          {/* Priority */}
+          <div style={snSt.fieldGroup}>
+            <label style={snSt.fieldLabel}>RACE PRIORITY</label>
+            <select value={priority} onChange={e => setPriority(e.target.value as 'A' | 'B' | 'C')} style={snSt.input}>
+              {PRIORITY_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+          </div>
+
+          {/* Time Goal */}
+          <div style={snSt.fieldGroup}>
+            <label style={snSt.fieldLabel}>TIME GOAL</label>
+            <div style={{ display: 'grid', gridTemplateColumns: 'auto auto auto 1fr', gap: '8px', alignItems: 'center' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                <Spinner val={goalH} onChange={setGoalH} max={23} />
+                <div style={snSt.spinnerLabel}>HRS</div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                <Spinner val={goalM} onChange={setGoalM} max={59} />
+                <div style={snSt.spinnerLabel}>MIN</div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                <Spinner val={goalS} onChange={setGoalS} max={59} />
+                <div style={snSt.spinnerLabel}>SEC</div>
+              </div>
+              {/* Pace target card */}
+              <div style={{ background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: '10px', padding: '12px', alignSelf: 'flex-start', marginLeft: '4px' }}>
+                <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '4px' }}>PACE TARGET</div>
+                {paceKm ? (
+                  <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '20px', color: 'var(--orange)', lineHeight: 1.1 }}>{paceKm}<span style={{ fontSize: '11px', color: 'var(--muted)', fontWeight: 600, marginLeft: '4px' }}>min/km</span></div>
+                ) : (
+                  <>
+                    <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', color: 'var(--orange)', lineHeight: 1.1 }}>Add a goal time</div>
+                    <div style={{ fontSize: '11px', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>Once you set a target time, we'll calculate the pace goal automatically from the selected distance.</div>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Upcoming Insights */}
+          <div style={{ marginTop: '20px', background: 'var(--surface3)', border: '1px solid rgba(var(--orange-ch),0.25)', borderTop: '2px solid var(--orange)', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '11px', letterSpacing: '0.16em', color: 'var(--orange)', textTransform: 'uppercase' }}>UPCOMING INSIGHTS</div>
+
+            {/* Location */}
+            <div>
+              <div style={snSt.insightLabel}>LOCATION</div>
+              <div style={snSt.insightText}>{courseSummary.loc || '—'}</div>
+              <div style={snSt.insightText}>{race.name}</div>
+            </div>
+
+            {/* Course */}
+            <div>
+              <div style={snSt.insightLabel}>COURSE</div>
+              <div style={snSt.insightText}>{courseSummary.desc}</div>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '8px' }}>
+                {race.surface && (
+                  <span style={snSt.courseTag}>Surface: {race.surface.charAt(0).toUpperCase() + race.surface.slice(1)}</span>
+                )}
+                {typeof race.elevation === 'number' && (
+                  <span style={snSt.courseTag}>Profile: {race.elevation > 300 ? 'Mountainous' : race.elevation > 100 ? 'Rolling' : 'Flat'}</span>
+                )}
+              </div>
+            </div>
+
+            {/* Weather */}
+            <div>
+              <div style={snSt.insightLabel}>WEATHER</div>
+              {weather ? (
+                <>
+                  <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '16px', color: 'var(--white)', lineHeight: 1.2 }}>{weather.tempMin}° – {weather.tempMax}°C</div>
+                  <div style={snSt.insightText}>Humidity {weather.humidity}% · Wind {weather.wind} km/h · {weather.label}.</div>
+                </>
+              ) : (
+                <div style={snSt.insightText}>{courseSummary.loc ? 'Loading weather data...' : 'Add a city to see weather estimates.'}</div>
+              )}
+            </div>
+
+            {/* Race DNA Outlook */}
+            {dnaSummary && (
+              <div>
+                <div style={snSt.insightLabel}>RACE DNA OUTLOOK</div>
+                <div style={{ fontSize: '13px', color: dnaSummary.label.startsWith('Favourable') ? 'var(--green)' : 'var(--orange)', fontWeight: 600, lineHeight: 1.4 }}>
+                  {dnaSummary.label}
+                </div>
+                <div style={snSt.insightText}>Based on {dnaSummary.count} weather-tagged races in your history.</div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Bottom actions — fixed */}
+        <div style={snSt.bottomBar}>
+          <button style={snSt.cancelBtn} onClick={onClose}>CANCEL</button>
+          <button style={snSt.removeBtn} onClick={onRemove}>REMOVE</button>
+          <button style={snSt.saveBtn} onClick={() => {
+            const goalTime = goalTimeSecs > 0
+              ? `${goalH.toString().padStart(2,'0')}:${goalM.toString().padStart(2,'0')}:${goalS.toString().padStart(2,'0')}`
+              : undefined
+            onSave({ city, country, priority, goalTime })
+          }}>SAVE RACE</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Upcoming Races Modal ─────────────────────────────────────────────────────
+
+function UpcomingRacesModal({
+  onClose,
+  onAddRace,
+  onSelectRace,
+}: {
+  onClose: () => void
+  onAddRace: () => void
+  onSelectRace: (race: Race) => void
+}) {
+  const upcomingRaces = useRaceStore(selectUpcomingRaces)
+  const nextRace      = useRaceStore(selectNextRace)
+  const today         = todayStr()
+
+  const sorted = useMemo(
+    () => [...upcomingRaces].filter(r => r.date >= today).sort((a, b) => a.date.localeCompare(b.date)),
+    [upcomingRaces, today],
+  )
+
+  // Scroll lock
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = '' }
+  }, [])
+
+  function priorityColor(p?: string) {
+    if (p === 'A') return 'var(--orange)'
+    if (p === 'B') return '#E8A825'
+    return 'var(--muted)'
+  }
+
+  return (
+    <div style={upSt.overlay} onClick={onClose}>
+      <div style={upSt.modal} onClick={e => e.stopPropagation()}>
+        {/* Header */}
+        <div style={upSt.header}>
+          <div>
+            <div style={upSt.title}>UPCOMING RACES</div>
+            <div style={upSt.subtitle}>Tap a race to show it on your dashboard.</div>
+          </div>
+          <button style={upSt.addBtn} onClick={() => { onClose(); onAddRace() }}>+ ADD RACE</button>
+        </div>
+
+        {/* Race list */}
+        <div style={upSt.list}>
+          {sorted.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '32px 16px', color: 'var(--muted)', fontSize: '14px', lineHeight: 1.6 }}>
+              No upcoming races yet.<br />
+              <button style={{ ...upSt.addBtn, marginTop: '12px' }} onClick={() => { onClose(); onAddRace() }}>+ Add a Race</button>
+            </div>
+          ) : sorted.map((race, idx) => {
+            const prev = idx > 0 ? sorted[idx - 1] : null
+            const daysBetween = prev
+              ? Math.round((new Date(race.date + 'T00:00:00').getTime() - new Date(prev.date + 'T00:00:00').getTime()) / 86400000)
+              : null
+            const isActive = nextRace?.id === race.id
+            const p = race.priority ?? 'C'
+            const pc = priorityColor(p)
+            const dist = distBadge(race.distance) || (race.distance ? race.distance + 'K' : '')
+            const meta = [race.city, race.country].filter(Boolean).join(', ')
+
+            return (
+              <div key={race.id}>
+                {/* Days between separator */}
+                {daysBetween != null && daysBetween > 0 && (
+                  <div style={upSt.separator}>
+                    <div style={upSt.sepLine} />
+                    <span style={upSt.sepText}>{daysBetween} DAYS BETWEEN RACES</span>
+                    <div style={upSt.sepLine} />
+                  </div>
+                )}
+
+                {/* Race card */}
+                <div
+                  style={{
+                    ...upSt.raceCard,
+                    border: isActive
+                      ? '1px solid rgba(var(--orange-ch),0.5)'
+                      : '1px solid var(--border)',
+                    background: isActive
+                      ? 'linear-gradient(135deg, rgba(var(--orange-ch),0.08) 0%, var(--surface3) 100%)'
+                      : 'var(--surface3)',
+                  }}
+                  onClick={() => onSelectRace(race)}
+                >
+                  {/* Priority badge */}
+                  <div style={{ ...upSt.priorityBadge, background: pc, color: p === 'C' ? 'var(--white)' : '#000' }}>{p}</div>
+
+                  {/* Race info */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                      <div style={upSt.raceName}>{(race.name ?? '').toUpperCase()}</div>
+                      {isActive && (
+                        <span style={upSt.activePill}>ACTIVE</span>
+                      )}
+                    </div>
+                    <div style={upSt.raceMeta}>{[meta, dist].filter(Boolean).join(' · ')}</div>
+                  </div>
+
+                  {/* Date + days away */}
+                  <div style={upSt.dateCol}>
+                    <div style={upSt.dateText}>{fmtShortDate(race.date).replace(' ', '\n')}</div>
+                    <div style={upSt.daysAway}>{daysUntil(race.date)}d away</div>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Customize Modal ──────────────────────────────────────────────────────────
 
 const ZONE_META: Record<string, { tag: string; label: string }> = {
@@ -1402,22 +1885,67 @@ function isEnabled(widgets: ReturnType<typeof useDashStore.getState>['widgets'],
 }
 
 export function Dashboard() {
-  const [showCustomize,  setShowCustomize]  = useState(false)
-  const [showAddRace,    setShowAddRace]    = useState(false)
-  const [addRaceMode,    setAddRaceMode]    = useState<'past' | 'upcoming'>('past')
-  const nextRace      = useRaceStore(selectNextRace)
-  const storeWidgets  = useDashStore(s => s.widgets)
-  const getDashLayout = useDashStore(s => s.getDashLayout)
-  const widgets       = useMemo(() => getDashLayout(), [storeWidgets, getDashLayout])
+  const [showCustomize,    setShowCustomize]    = useState(false)
+  const [showAddRace,      setShowAddRace]      = useState(false)
+  const [addRaceMode,      setAddRaceMode]      = useState<'past' | 'upcoming'>('past')
+  const [showUpcoming,     setShowUpcoming]     = useState(false)
+  const [editingRace,      setEditingRace]      = useState<Race | null>(null)
+  const nextRace       = useRaceStore(selectNextRace)
+  const setNextRace    = useRaceStore(s => s.setNextRace)
+  const updateRace     = useRaceStore(s => s.updateRace)
+  const deleteRace     = useRaceStore(s => s.deleteRace)
+  const storeWidgets   = useDashStore(s => s.widgets)
+  const getDashLayout  = useDashStore(s => s.getDashLayout)
+  const widgets        = useMemo(() => getDashLayout(), [storeWidgets, getDashLayout])
 
-  const openAddRace          = () => { setAddRaceMode('past');     setShowAddRace(true) }
-  const openAddUpcomingRace  = () => { setAddRaceMode('upcoming'); setShowAddRace(true) }
+  const openAddRace         = () => { setAddRaceMode('past');     setShowAddRace(true) }
+  const openAddUpcomingRace = () => { setAddRaceMode('upcoming'); setShowAddRace(true) }
   const en = (id: string) => isEnabled(widgets, id)
+
+  function handleSelectRace(race: Race) {
+    setNextRace(race)
+    setShowUpcoming(false)
+    setEditingRace(race)
+  }
+
+  function handleSaveEdit(patch: Partial<Race>) {
+    if (!editingRace) return
+    updateRace(editingRace.id, patch)
+    // If this race is nextRace, update nextRace too
+    if (nextRace?.id === editingRace.id) {
+      setNextRace({ ...editingRace, ...patch })
+    }
+    setEditingRace(null)
+  }
+
+  function handleRemoveEdit() {
+    if (!editingRace) return
+    deleteRace(editingRace.id)
+    if (nextRace?.id === editingRace.id) {
+      useRaceStore.setState({ nextRace: null })
+    }
+    setEditingRace(null)
+  }
 
   return (
     <div style={st.page}>
       {showCustomize && <DashCustomizeModal onClose={() => setShowCustomize(false)} />}
       {showAddRace   && <AddRaceModal defaultMode={addRaceMode} onClose={() => setShowAddRace(false)} />}
+      {showUpcoming  && (
+        <UpcomingRacesModal
+          onClose={() => setShowUpcoming(false)}
+          onAddRace={openAddUpcomingRace}
+          onSelectRace={handleSelectRace}
+        />
+      )}
+      {editingRace && (
+        <SetNextRaceModal
+          race={editingRace}
+          onClose={() => setEditingRace(null)}
+          onSave={handleSaveEdit}
+          onRemove={handleRemoveEdit}
+        />
+      )}
 
       <GreetingCard onCustomize={() => setShowCustomize(true)} />
       <PreRaceBriefing onAddRace={openAddRace} />
@@ -1425,7 +1953,7 @@ export function Dashboard() {
       {/* NOW — RACE DAY */}
       <DashZone id="now" tag="NOW" label="RACE DAY">
         {nextRace
-          ? <>{en('countdown') && <CountdownCard race={nextRace} />}
+          ? <>{en('countdown') && <CountdownCard race={nextRace} onShowUpcoming={() => setShowUpcoming(true)} />}
               {en('race-forecast') && <WeatherCard race={nextRace} />}
               <CourseInfoCard race={nextRace} /></>
           : <NoUpcomingRaceCTA onAddRace={openAddUpcomingRace} />
@@ -2224,6 +2752,344 @@ const st = {
     fontSize: '15px',
     letterSpacing: '0.1em',
     textTransform: 'uppercase' as const,
+    cursor: 'pointer',
+  } as React.CSSProperties,
+} as const
+
+// ─── Upcoming Races Modal styles ──────────────────────────────────────────────
+
+const upSt = {
+  overlay: {
+    position: 'fixed' as const,
+    inset: 0,
+    background: 'rgba(0,0,0,0.72)',
+    zIndex: 1000,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '20px 16px',
+  } as React.CSSProperties,
+
+  modal: {
+    background: 'var(--surface2)',
+    border: '1px solid rgba(var(--orange-ch),0.3)',
+    borderTop: '2px solid var(--orange)',
+    borderRadius: '20px',
+    width: '100%',
+    maxWidth: '520px',
+    maxHeight: 'calc(100dvh - 80px)',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    overflow: 'hidden',
+  } as React.CSSProperties,
+
+  header: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: '12px',
+    padding: '20px 20px 16px',
+    borderBottom: '1px solid var(--border)',
+  } as React.CSSProperties,
+
+  title: {
+    fontFamily: 'var(--headline)',
+    fontWeight: 900,
+    fontSize: '22px',
+    letterSpacing: '0.06em',
+    textTransform: 'uppercase' as const,
+    color: 'var(--white)',
+    lineHeight: 1.1,
+  } as React.CSSProperties,
+
+  subtitle: {
+    fontSize: '13px',
+    color: 'var(--muted)',
+    marginTop: '4px',
+    lineHeight: 1.4,
+  } as React.CSSProperties,
+
+  addBtn: {
+    background: 'var(--orange)',
+    color: '#000',
+    border: 'none',
+    borderRadius: '8px',
+    padding: '10px 16px',
+    fontFamily: 'var(--headline)',
+    fontWeight: 800,
+    fontSize: '13px',
+    letterSpacing: '0.06em',
+    textTransform: 'uppercase' as const,
+    cursor: 'pointer',
+    whiteSpace: 'nowrap' as const,
+    flexShrink: 0,
+  } as React.CSSProperties,
+
+  list: {
+    flex: 1,
+    overflowY: 'auto' as const,
+    padding: '12px 16px 20px',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '0',
+    WebkitOverflowScrolling: 'touch' as React.CSSProperties['WebkitOverflowScrolling'],
+  } as React.CSSProperties,
+
+  separator: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    margin: '10px 0',
+  } as React.CSSProperties,
+
+  sepLine: {
+    flex: 1,
+    height: '1px',
+    background: 'var(--border)',
+  } as React.CSSProperties,
+
+  sepText: {
+    fontFamily: 'var(--headline)',
+    fontWeight: 700,
+    fontSize: '10px',
+    letterSpacing: '0.1em',
+    color: 'var(--muted)',
+    textTransform: 'uppercase' as const,
+    whiteSpace: 'nowrap' as const,
+  } as React.CSSProperties,
+
+  raceCard: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    padding: '14px 14px',
+    borderRadius: '12px',
+    cursor: 'pointer',
+    transition: 'opacity 0.15s',
+    minWidth: 0,
+    marginBottom: '0',
+  } as React.CSSProperties,
+
+  priorityBadge: {
+    width: '34px',
+    height: '34px',
+    borderRadius: '8px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontFamily: 'var(--headline)',
+    fontWeight: 900,
+    fontSize: '16px',
+    flexShrink: 0,
+  } as React.CSSProperties,
+
+  raceName: {
+    fontFamily: 'var(--headline)',
+    fontWeight: 800,
+    fontSize: '14px',
+    letterSpacing: '0.04em',
+    color: 'var(--white)',
+    lineHeight: 1.2,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap' as const,
+  } as React.CSSProperties,
+
+  activePill: {
+    background: 'rgba(var(--orange-ch),0.15)',
+    border: '1px solid rgba(var(--orange-ch),0.4)',
+    color: 'var(--orange)',
+    borderRadius: '100px',
+    padding: '2px 8px',
+    fontFamily: 'var(--headline)',
+    fontWeight: 700,
+    fontSize: '10px',
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase' as const,
+    flexShrink: 0,
+  } as React.CSSProperties,
+
+  raceMeta: {
+    fontSize: '12px',
+    color: 'var(--muted)',
+    marginTop: '3px',
+    lineHeight: 1.3,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap' as const,
+  } as React.CSSProperties,
+
+  dateCol: {
+    textAlign: 'right' as const,
+    flexShrink: 0,
+    minWidth: '72px',
+  } as React.CSSProperties,
+
+  dateText: {
+    fontFamily: 'var(--headline)',
+    fontWeight: 800,
+    fontSize: '13px',
+    color: 'var(--orange)',
+    lineHeight: 1.3,
+    whiteSpace: 'pre' as const,
+  } as React.CSSProperties,
+
+  daysAway: {
+    fontSize: '11px',
+    color: 'var(--muted)',
+    marginTop: '2px',
+  } as React.CSSProperties,
+} as const
+
+// ─── Set Next Race Modal styles ───────────────────────────────────────────────
+
+const snSt = {
+  overlay: {
+    position: 'fixed' as const,
+    inset: 0,
+    background: 'rgba(0,0,0,0.78)',
+    zIndex: 1100,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '20px 16px',
+  } as React.CSSProperties,
+
+  sheet: {
+    background: 'var(--surface2)',
+    border: '1px solid rgba(var(--orange-ch),0.3)',
+    borderTop: '2px solid var(--orange)',
+    borderRadius: '20px',
+    width: '100%',
+    maxWidth: '520px',
+    maxHeight: 'calc(100dvh - 80px)',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    overflow: 'hidden',
+    padding: '20px 20px 0',
+    position: 'relative' as const,
+  } as React.CSSProperties,
+
+  fieldGroup: {
+    marginBottom: '16px',
+  } as React.CSSProperties,
+
+  fieldLabel: {
+    display: 'block',
+    fontFamily: 'var(--headline)',
+    fontWeight: 700,
+    fontSize: '11px',
+    letterSpacing: '0.12em',
+    textTransform: 'uppercase' as const,
+    color: 'var(--muted)',
+    marginBottom: '6px',
+  } as React.CSSProperties,
+
+  input: {
+    width: '100%',
+    background: 'var(--surface3)',
+    border: '1px solid var(--border2)',
+    borderRadius: '8px',
+    color: 'var(--white)',
+    fontSize: '15px',
+    padding: '12px 14px',
+    fontFamily: 'var(--body)',
+    boxSizing: 'border-box' as const,
+  } as React.CSSProperties,
+
+  spinnerLabel: {
+    fontFamily: 'var(--headline)',
+    fontWeight: 700,
+    fontSize: '10px',
+    letterSpacing: '0.1em',
+    textTransform: 'uppercase' as const,
+    color: 'var(--muted)',
+    textAlign: 'center' as const,
+  } as React.CSSProperties,
+
+  insightLabel: {
+    fontFamily: 'var(--headline)',
+    fontWeight: 800,
+    fontSize: '11px',
+    letterSpacing: '0.12em',
+    textTransform: 'uppercase' as const,
+    color: 'var(--white)',
+    marginBottom: '5px',
+  } as React.CSSProperties,
+
+  insightText: {
+    fontSize: '13px',
+    color: 'var(--muted)',
+    lineHeight: 1.55,
+  } as React.CSSProperties,
+
+  courseTag: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    background: 'transparent',
+    border: '1px solid var(--border2)',
+    borderRadius: '100px',
+    padding: '4px 10px',
+    fontSize: '11px',
+    fontFamily: 'var(--body)',
+    fontWeight: 500,
+    color: 'var(--muted)',
+  } as React.CSSProperties,
+
+  bottomBar: {
+    position: 'absolute' as const,
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: '12px 20px 24px',
+    background: 'var(--surface2)',
+    borderTop: '1px solid var(--border)',
+    display: 'flex',
+    gap: '10px',
+  } as React.CSSProperties,
+
+  cancelBtn: {
+    flex: 1,
+    background: 'transparent',
+    border: '1px solid var(--border2)',
+    borderRadius: '10px',
+    color: 'var(--muted)',
+    fontFamily: 'var(--headline)',
+    fontWeight: 800,
+    fontSize: '13px',
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase' as const,
+    padding: '14px 0',
+    cursor: 'pointer',
+  } as React.CSSProperties,
+
+  removeBtn: {
+    flex: 1,
+    background: 'transparent',
+    border: '1px solid rgba(var(--orange-ch),0.4)',
+    borderRadius: '10px',
+    color: 'var(--orange)',
+    fontFamily: 'var(--headline)',
+    fontWeight: 800,
+    fontSize: '13px',
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase' as const,
+    padding: '14px 0',
+    cursor: 'pointer',
+  } as React.CSSProperties,
+
+  saveBtn: {
+    flex: 2,
+    background: 'var(--orange)',
+    border: 'none',
+    borderRadius: '10px',
+    color: '#000',
+    fontFamily: 'var(--headline)',
+    fontWeight: 900,
+    fontSize: '14px',
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase' as const,
+    padding: '14px 0',
     cursor: 'pointer',
   } as React.CSSProperties,
 } as const
