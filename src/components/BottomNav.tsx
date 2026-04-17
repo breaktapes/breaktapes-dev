@@ -62,8 +62,10 @@ export function BottomNav() {
         paddingBottom: 'var(--safe-bottom)',
         flexShrink: 0,
         display: 'flex',
-        borderTop: '1px solid var(--border)',
-        background: 'var(--surface)',
+        borderTop: '1px solid var(--border2)',
+        background: 'linear-gradient(180deg, rgba(13,13,13,0.97) 0%, rgba(5,5,5,0.99) 100%)',
+        backdropFilter: 'blur(20px)',
+        boxShadow: '0 -2px 24px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04)',
       }}
     >
       {NAV_TABS.map(({ to, label, Icon }) => {
@@ -79,22 +81,30 @@ export function BottomNav() {
             style={{
               flex: 1,
               position: 'relative',
+              overflow: 'hidden',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '3px',
+              gap: '4px',
               textDecoration: 'none',
               color: isActive ? 'var(--orange)' : 'var(--muted)',
               minHeight: '44px',
+              background: isActive
+                ? 'linear-gradient(180deg, rgba(232,78,27,0.10) 0%, rgba(232,78,27,0.04) 100%)'
+                : 'transparent',
+              transition: 'background 0.18s ease',
             }}
           >
             <Icon />
             <span style={{
-              fontFamily: 'var(--body)',
+              fontFamily: 'var(--headline)',
               fontSize: '10px',
-              fontWeight: isActive ? 600 : 400,
-              letterSpacing: '0.02em',
+              fontWeight: 700,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              color: isActive ? 'var(--orange)' : 'var(--muted)',
+              transition: 'color 0.18s',
             }}>
               {label}
             </span>
@@ -103,10 +113,11 @@ export function BottomNav() {
                 layoutId="nav-indicator"
                 style={{
                   position: 'absolute',
-                  top: 0, left: 0, right: 0,
+                  top: 0, left: '20%', right: '20%',
                   height: '2px',
-                  background: 'var(--orange)',
-                  borderRadius: '0 0 2px 2px',
+                  background: 'linear-gradient(135deg, #E84E1B 0%, #C03A10 100%)',
+                  borderRadius: '0 0 3px 3px',
+                  boxShadow: '0 0 10px rgba(232,78,27,0.6)',
                 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 30 }}
               />
