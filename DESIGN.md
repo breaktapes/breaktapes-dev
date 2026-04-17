@@ -48,44 +48,68 @@ The emotional register is **pride + ambition + memory**. Think sports almanac, n
 
 ## Color Tokens — Dark Mode (canonical, default)
 
+> **Implementation note:** Token names in the codebase use legacy names copied verbatim from the original `index.html`. Do NOT rename them — 494+ references exist across the codebase. The semantic concepts below map to these actual CSS variable names.
+
 ```css
-/* Accent */
---accent:        #E84E1B;              /* primary action, active states, CTAs */
---accent-dim:    rgba(232,78,27,0.14); /* tinted backgrounds */
---accent-glow:   rgba(232,78,27,0.28); /* hover glow, radial accents */
+/* Accent (primary action, active states, CTAs) */
+--orange:      #E84E1B;
+--orange-ch:   232,78,27;             /* channel var for rgba() gradients */
+--orange-dim:  rgba(232,78,27,0.14);
+--orange-glow: rgba(232,78,27,0.28);
 
 /* Pro / Achievements */
---gold:          #C8963C;              /* Pro badge, tier indicator, medal gold */
---gold-dim:      rgba(200,150,60,0.12);
---gold-border:   rgba(200,150,60,0.30);
+--gold:        #C8963C;
+--gold-dim:    rgba(200,150,60,0.12);
+--gold-border: rgba(200,150,60,0.30);
+/* gradient shorthands */
+--grad-orange: linear-gradient(135deg, #E84E1B 0%, #C03A10 100%);
+--grad-gold:   linear-gradient(135deg, #C8963C 0%, #A07030 100%);
 
 /* Health data only — never decorative */
---health:        #00FF88;
---health-dim:    rgba(0,255,136,0.12);
+--green:       #00FF88;
+--green-ch:    0,255,136;
+--green-dim:   rgba(0,255,136,0.12);
+
+/* Purple — triathlon / special variants only */
+--purple:      #7C3AED;
+--purple-ch:   124,58,237;
 
 /* Surfaces */
---surface-base:  #080808;  /* page background */
---surface-1:     #111111;  /* cards, modals */
---surface-2:     #1C1C1C;  /* nested elements, inputs */
---surface-lift:  #242424;  /* hover states, selected */
+--black:       #000000;   /* page background */
+--surface:     #0D0D0D;   /* cards, modals */
+--surface2:    #141414;   /* nested elements, inputs */
+--surface3:    #1A1A1A;   /* hover states, selected */
 
 /* Text */
---stone:         #E8E0D5;              /* primary text */
---muted:         rgba(232,224,213,0.40);
---muted2:        rgba(232,224,213,0.20);
+--white:       #E8E0D5;              /* primary text (warm stone) */
+--muted:       rgba(232,224,213,0.40);
+--muted2:      rgba(232,224,213,0.20);
 
 /* Borders */
---border:        rgba(255,255,255,0.07);
---border2:       rgba(255,255,255,0.14);
+--border:      rgba(245,245,245,0.06);
+--border2:     rgba(245,245,245,0.12);
 
 /* Semantic */
---error:         #ff5555;
---error-dim:     rgba(255,85,85,0.14);
+--error:       #ff5555;
+--error-dim:   rgba(255,85,85,0.14);
 
 /* Flatlay marketplace only */
---flatlay-tile:  #F2EDE6;  /* warm cream product tile backgrounds */
---flatlay-text:  #111111;
+--flatlay-tile: #F2EDE6;  /* warm cream product tile backgrounds */
+--flatlay-text: #111111;
 ```
+
+### Semantic concept → actual token mapping
+
+| Concept | Token name | Value |
+|---|---|---|
+| Primary accent | `--orange` | `#E84E1B` |
+| Page background | `--black` | `#000000` |
+| Card surface | `--surface` | `#0D0D0D` |
+| Nested surface | `--surface2` | `#141414` |
+| Hover surface | `--surface3` | `#1A1A1A` |
+| Primary text | `--white` | `#E8E0D5` |
+| Secondary accent | `--green` | `#00FF88` |
+| Pro / gold | `--gold` | `#C8963C` |
 
 ---
 
@@ -95,42 +119,31 @@ Applied via `[data-theme="light"]` on `<html>`. Dark mode is the default. User p
 
 ```css
 [data-theme="light"] {
-  /* Surfaces */
-  --surface-base:  #F5F0E8;
-  --surface-1:     #EDEBE6;
-  --surface-2:     #E4E1DA;
-  --surface-lift:  #D8D4CC;
-
-  /* Text */
-  --stone:         #1A1A1A;
-  --muted:         rgba(26,26,26,0.50);
-  --muted2:        rgba(26,26,26,0.30);
-
-  /* Borders */
-  --border:        rgba(0,0,0,0.08);
-  --border2:       rgba(0,0,0,0.14);
-
-  /* Accent (slightly darker for light mode contrast) */
-  --accent:        #D4421A;
-  --accent-dim:    rgba(212,66,26,0.12);
-  --accent-glow:   rgba(212,66,26,0.22);
-
-  /* Gold */
-  --gold:          #9E6F20;
-  --gold-dim:      rgba(158,111,32,0.10);
-  --gold-border:   rgba(158,111,32,0.28);
-
-  /* Health */
-  --health:        #008840;
-  --health-dim:    rgba(0,136,64,0.12);
-
-  /* Semantic */
-  --error:         #cc2200;
-  --error-dim:     rgba(204,34,0,0.12);
-
-  /* Flatlay */
-  --flatlay-tile:  #ffffff;
-  --flatlay-text:  #111111;
+  color-scheme: light;
+  --black:    #F5F0E8;
+  --surface:  #EDE9E0;
+  --surface2: #E4E1DA;
+  --surface3: #D8D4CC;
+  --white:    #1A1A1A;
+  --orange:   #D4421A;
+  --orange-ch: 212,66,26;
+  --orange-dim:  rgba(212,66,26,0.12);
+  --orange-glow: rgba(212,66,26,0.22);
+  --muted:    rgba(26,26,26,0.50);
+  --muted2:   rgba(26,26,26,0.30);
+  --border:   rgba(0,0,0,0.08);
+  --border2:  rgba(0,0,0,0.14);
+  --green:    #008840;
+  --green-dim: rgba(0,136,64,0.12);
+  --gold:     #9E6F20;
+  --gold-dim: rgba(158,111,32,0.10);
+  --gold-border: rgba(158,111,32,0.28);
+  --error:    #cc2200;
+  --error-dim: rgba(204,34,0,0.12);
+  --flatlay-tile: #ffffff;
+  --flatlay-text: #111111;
+  --shell-top-gradient: #F5F0E8;
+  --shell-bottom-gradient: #F5F0E8;
 }
 ```
 
@@ -138,14 +151,18 @@ Applied via `[data-theme="light"]` on `<html>`. Dark mode is the default. User p
 
 ```js
 // Toggle
-function setTheme(mode) {
-  document.documentElement.setAttribute('data-theme', mode);
-  sv('bt_theme', mode);
+const PRO_THEMES = ['deep-space','race-night','obsidian','acid-track','titanium','ember','polar-circuit'];
+function setTheme(name) {
+  if (PRO_THEMES.includes(name) && !hasProAccess()) { openProModal('themes'); return; }
+  document.documentElement.setAttribute('data-theme', name === 'carbon-chrome' ? '' : name);
+  localStorage.setItem('bt_theme', name);
 }
 
-// Init (restore saved preference, default dark)
-const savedTheme = lv('bt_theme') || 'dark';
-document.documentElement.setAttribute('data-theme', savedTheme);
+// Init (restore saved preference, default carbon-chrome)
+const savedTheme = localStorage.getItem('bt_theme') || 'carbon-chrome';
+if (savedTheme !== 'carbon-chrome') {
+  document.documentElement.setAttribute('data-theme', savedTheme);
+}
 ```
 
 Toggle button: sun/moon SVG icon in the header or Settings page. Label: "Light mode" / "Dark mode". Never show both simultaneously.
@@ -182,6 +199,13 @@ Toggle button: sun/moon SVG icon in the header or Settings page. Label: "Light m
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Barlow:wght@400;500;600&family=Geist+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 ```
 
+CSS font vars:
+```css
+--headline: 'Barlow Condensed', sans-serif;
+--body:     'Barlow', sans-serif;
+--mono:     'Geist Mono', monospace;
+```
+
 ### Type Scale Tokens
 ```css
 --text-xs:   10px;  /* captions, badges, sub-labels */
@@ -194,9 +218,13 @@ Toggle button: sun/moon SVG icon in the header or Settings page. Label: "Light m
 ### Data/Metrics Type Scale
 ```css
 /* Hero metric — finish times, career totals, momentum scores */
+font-family: 'Barlow Condensed', sans-serif;  /* card-v3 value uses Barlow Condensed 900 48px */
+font-size: 48px; font-weight: 900;
+letter-spacing: -0.02em; line-height: 1;
+
+/* Exception: insight-card data values use Geist Mono */
 font-family: 'Geist Mono', monospace;
-font-size: 48–72px; font-weight: 300;
-letter-spacing: -0.02em;
+font-size: 40–48px; font-weight: 300;
 
 /* Primary metric — split times, pace, scores */
 font-family: 'Geist Mono', monospace;
@@ -210,7 +238,7 @@ color: var(--muted);
 ```
 
 ### Rules
-- **All metric/numeric values:** Geist Mono, never Barlow
+- **All metric/numeric values:** Geist Mono (except card-v3 values which use Barlow Condensed 900)
 - **Headlines:** Barlow Condensed 700+ with uppercase + `letter-spacing: 0.06em+`
 - **Body:** Barlow regular weight — no uppercase
 - **Filter pills, category tags:** Geist Mono lowercase (not uppercase)
@@ -254,13 +282,17 @@ Sub-mobile (existing patterns only — do not add new ones):
 ### Mobile (≤767px)
 Persistent 5-tab bottom nav bar:
 ```
-[ Home ]  [ History ]  [ Medals ]  [ Map ]  [ Me ]
+[ Home ]  [ Races ]  [ Gear ]  [ Train ]  [ You ]
+   /       /races     /gear     /train     /you
 ```
-- Touch targets: `min-height: 48px; min-width: 44px` (WCAG minimum)
-- Active: `color: var(--accent)`, `stroke: var(--accent)` on SVG
+- Touch targets: `min-height: 44px; min-width: 44px` (WCAG minimum)
+- Active: `color: var(--orange)`, `stroke: var(--orange)` on SVG
 - Inactive: `color: var(--muted)`
+- Active indicator: 2px gradient bar at top of tab (`--grad-orange`), spring animation via framer-motion
+- Active bg: `linear-gradient(180deg, rgba(232,78,27,0.10) 0%, rgba(232,78,27,0.04) 100%)`
 - Press/tap: `transform: scale(0.92)` on `:active`
 - Hamburger hidden on mobile (`display: none`)
+- Labels: Barlow Condensed 700, 10px, uppercase, 0.08em tracking. At `max-width: 360px`: 9px.
 
 ### Desktop (≥768px)
 Side menu via hamburger trigger. Bottom nav hidden.
@@ -275,13 +307,13 @@ Side menu uses `transform: translateX(100%)` + `display: none` (closed) and `tra
 Each `.menu-item` wraps its label in `.menu-item-label` with an optional `.menu-item-sub` sub-label (9px, `var(--muted2)`). This provides context at a glance without crowding the nav.
 
 ### Settings (mobile)
-Accessible via Settings button inside the Me/Athlete page — NOT in the hamburger.
+Accessible via Settings button inside the You/Athlete page — NOT in the hamburger.
 
 ### Theme Toggle
 - Placed in the header or Settings section
 - Sun icon = currently dark (shows "Light mode" label)
 - Moon icon = currently light (shows "Dark mode" label)
-- Persisted via `sv('bt_theme', mode)`, restored on init
+- Persisted via `localStorage.setItem('bt_theme', name)`, restored on init
 
 ---
 
@@ -290,7 +322,7 @@ Accessible via Settings button inside the Me/Athlete page — NOT in the hamburg
 **Style:** Line icons only.
 
 ```html
-<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
   <!-- paths here -->
 </svg>
 ```
@@ -301,7 +333,7 @@ Rules:
 - `stroke="currentColor"` always
 - Inline SVG only — no external icon libraries
 - No emoji as design elements (emoji only in achievement badges)
-- No filled/solid icon variants
+- No filled/solid icon variants — no `fill="currentColor"` polygons
 
 ---
 
@@ -311,9 +343,11 @@ Rules:
 - `.open` class toggles visibility
 - Swipe-to-close: touch handler on `.modal-drag` and `.modal-head` only, 80px threshold
 - `overscroll-behavior: contain` on `.modal-body`
+- Body scroll lock: `document.body.style.overflow = 'hidden'` on mount, restored on unmount
 - Safe area: `padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px))` on `.modal-foot`
 - Landscape: `max-height: 85vh` at `(orientation: landscape) and (max-height: 500px)`
 - Always include: `role="dialog"`, `aria-modal="true"`, `aria-labelledby="<title-id>"`
+- Wire `id` on modal `<h2>` title to `aria-labelledby` on the outer modal div
 
 ---
 
@@ -327,6 +361,29 @@ Rules:
 .fg-err-msg.show { display: block; }
 ```
 
+### Form Input v3
+
+```css
+.fi {
+  font-family: var(--body);
+  font-size: 14px; font-weight: 400;
+  color: var(--white);
+  background: linear-gradient(135deg, rgba(20,20,20,0.9) 0%, rgba(15,15,15,0.95) 100%);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 12px 14px;
+  outline: none;
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+.fi::placeholder { color: var(--muted2); }
+.fi:focus {
+  border-color: rgba(232,78,27,0.5);
+  box-shadow: 0 0 0 3px rgba(232,78,27,0.08), inset 0 1px 0 rgba(232,78,27,0.08);
+}
+```
+
+Focus ring: `box-shadow: 0 0 0 3px rgba(232,78,27,0.08)` — subtle orange glow ring, not a hard outline.
+
 ### Safari Autofill — DO NOT TOUCH
 `#authEmail` must stay `type="text"` + `autocomplete="off"`. This prevents Safari from incorrectly autofilling the email field. Do NOT change to `type="email"`.
 
@@ -338,13 +395,90 @@ Rules:
 
 ---
 
+## Button v3 System
+
+```css
+.btn-v3 {
+  position: relative; overflow: hidden;
+  font-family: var(--headline);
+  font-size: 13px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.10em;
+  border: none; border-radius: 10px;
+  padding: 12px 24px;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+/* Shimmer sweep on hover via ::after pseudo */
+.btn-v3::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.18) 50%, transparent 100%);
+  transform: translateX(-150%) skewX(-12deg);
+  transition: none;
+}
+.btn-v3:hover::after { animation: shimmer 0.65s ease; }
+.btn-v3:hover { transform: translateY(-2px); }
+.btn-v3:active { transform: translateY(0); }
+```
+
+### Variants
+
+```css
+/* Primary — orange fill + glow shadow */
+.btn-primary-v3 {
+  background: var(--grad-orange);
+  color: #fff;
+  box-shadow: 0 4px 20px rgba(232,78,27,0.35), inset 0 1px 0 rgba(255,255,255,0.15);
+}
+.btn-primary-v3:hover {
+  box-shadow: 0 8px 30px rgba(232,78,27,0.55), inset 0 1px 0 rgba(255,255,255,0.15);
+}
+
+/* Ghost — orange outline */
+.btn-ghost-v3 {
+  background: rgba(232,78,27,0.08);
+  color: var(--orange);
+  border: 1px solid rgba(232,78,27,0.30);
+  box-shadow: inset 0 1px 0 rgba(232,78,27,0.10);
+}
+.btn-ghost-v3:hover {
+  background: rgba(232,78,27,0.14);
+  border-color: rgba(232,78,27,0.55);
+  box-shadow: 0 0 20px rgba(232,78,27,0.20), inset 0 1px 0 rgba(232,78,27,0.15);
+}
+
+/* Pro — gold gradient fill, black text */
+.btn-pro-v3 {
+  background: var(--grad-gold);
+  color: #000;
+  box-shadow: 0 4px 20px rgba(200,150,60,0.35), inset 0 1px 0 rgba(255,255,255,0.25);
+}
+.btn-pro-v3:hover {
+  box-shadow: 0 8px 30px rgba(200,150,60,0.55), inset 0 1px 0 rgba(255,255,255,0.25);
+}
+
+/* Health — green outline */
+.btn-health-v3 {
+  background: linear-gradient(135deg, rgba(0,255,136,0.14) 0%, rgba(0,200,100,0.08) 100%);
+  color: var(--green);
+  border: 1px solid rgba(0,255,136,0.30);
+  box-shadow: 0 0 16px rgba(0,255,136,0.08);
+}
+.btn-health-v3:hover {
+  box-shadow: 0 0 28px rgba(0,255,136,0.25);
+  border-color: rgba(0,255,136,0.55);
+}
+```
+
+---
+
 ## Dashboard Widgets (Insight Cards)
 
 All analytics dashboard cards share the `.insight-card` pattern.
 
 ```css
 .insight-card {
-  background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.015) 100%), var(--surface-1);
+  background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.015) 100%), var(--surface);
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 16px;
@@ -358,7 +492,7 @@ All analytics dashboard cards share the `.insight-card` pattern.
   content: '';
   position: absolute; top: 0; left: 0; right: 0;
   height: 3px;
-  background: var(--insight-accent, var(--accent));
+  background: var(--insight-accent, var(--orange));
   border-radius: 14px 14px 0 0;
 }
 ```
@@ -366,14 +500,14 @@ All analytics dashboard cards share the `.insight-card` pattern.
 **Per-widget accent colors:**
 | Widget | `--insight-accent` |
 |---|---|
-| Career Momentum | `var(--accent)` |
-| Pacing IQ | `var(--health)` |
+| Career Momentum | `var(--orange)` |
+| Pacing IQ | `var(--green)` |
 | Age-Grade | `var(--gold)` |
-| Training Streak | `var(--accent)` |
-| Race DNA | `var(--accent)` |
-| Race Day Forecast | `var(--health)` |
+| Training Streak | `var(--orange)` |
+| Race DNA | `var(--orange)` |
+| Race Day Forecast | `var(--green)` |
 | On This Day | `var(--gold)` |
-| Performance Map | `var(--accent)` |
+| Performance Map | `var(--orange)` |
 
 **Kicker labels:** Geist Mono, 9px, uppercase, letter-spacing 0.14em, color = `var(--insight-accent)`
 **Widget titles:** Barlow Condensed 900, 13px, uppercase, color = `var(--muted)`
@@ -384,23 +518,195 @@ All analytics dashboard cards share the `.insight-card` pattern.
 
 ---
 
+## Card System v3
+
+The card-v3 system is used for primary analytics and stat surfaces across the dashboard and profile pages.
+
+```css
+.card-v3 {
+  position: relative; overflow: hidden;
+  border-radius: 16px;
+  padding: 20px;
+  border: 1px solid var(--border2);
+  cursor: pointer;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+  animation: fadeUp 0.5s ease both;
+}
+
+/* 1px gradient top line — variant-colored */
+.card-v3::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  opacity: 0.6;
+}
+
+/* Shimmer sweep on hover */
+.card-v3::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.06) 50%, transparent 100%);
+  transform: translateX(-150%) skewX(-12deg);
+}
+.card-v3:hover::after { animation: shimmer 0.7s ease; }
+.card-v3:hover { transform: translateY(-3px) scale(1.01); }
+```
+
+### Card Variants
+
+```css
+/* Orange */
+.card-orange {
+  background: linear-gradient(145deg, rgba(232,78,27,0.13) 0%, rgba(200,150,60,0.06) 60%, rgba(13,13,13,0.8) 100%);
+  box-shadow: inset 0 1px 0 rgba(232,78,27,0.18), 0 4px 24px rgba(0,0,0,0.4);
+}
+.card-orange::before { background: linear-gradient(90deg, rgba(232,78,27,0.6) 0%, rgba(200,150,60,0.3) 100%); }
+.card-orange:hover { border-color: rgba(232,78,27,0.35); box-shadow: 0 8px 32px rgba(232,78,27,0.18), inset 0 1px 0 rgba(232,78,27,0.2); }
+.card-orange .card-v3-kicker { color: var(--orange); }
+.card-orange .card-v3-value  { color: var(--orange); }
+
+/* Green / health */
+.card-green {
+  background: linear-gradient(145deg, rgba(0,255,136,0.10) 0%, rgba(0,200,100,0.04) 60%, rgba(13,13,13,0.8) 100%);
+  box-shadow: inset 0 1px 0 rgba(0,255,136,0.14), 0 4px 24px rgba(0,0,0,0.4);
+}
+.card-green::before { background: linear-gradient(90deg, rgba(0,255,136,0.6) 0%, rgba(0,200,100,0.2) 100%); }
+.card-green:hover { border-color: rgba(0,255,136,0.30); box-shadow: 0 8px 32px rgba(0,255,136,0.12), inset 0 1px 0 rgba(0,255,136,0.16); }
+.card-green .card-v3-kicker { color: var(--green); }
+.card-green .card-v3-value  { color: var(--green); }
+
+/* Gold */
+.card-gold-v3 {
+  background: linear-gradient(145deg, rgba(200,150,60,0.13) 0%, rgba(200,150,60,0.05) 60%, rgba(13,13,13,0.8) 100%);
+  box-shadow: inset 0 1px 0 rgba(200,150,60,0.18), 0 4px 24px rgba(0,0,0,0.4);
+}
+.card-gold-v3::before { background: linear-gradient(90deg, rgba(200,150,60,0.7) 0%, rgba(200,150,60,0.2) 100%); }
+.card-gold-v3:hover { border-color: rgba(200,150,60,0.35); box-shadow: 0 8px 32px rgba(200,150,60,0.15), inset 0 1px 0 rgba(200,150,60,0.2); }
+.card-gold-v3 .card-v3-kicker { color: var(--gold); }
+.card-gold-v3 .card-v3-value  { color: var(--gold); }
+```
+
+### Card Typography
+
+```css
+.card-v3-kicker {
+  font-family: var(--mono);
+  font-size: 9px; font-weight: 400;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.card-v3-title {
+  font-family: var(--headline);
+  font-size: 13px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--muted); margin-bottom: 12px;
+}
+.card-v3-value {
+  font-family: var(--headline);   /* Barlow Condensed 900 — NOT Geist Mono */
+  font-size: 48px; font-weight: 900;
+  letter-spacing: -0.02em; line-height: 1;
+  margin-bottom: 6px;
+}
+.card-v3-sub { font-size: 11px; color: var(--muted2); }
+```
+
+> **Note:** `card-v3-value` uses **Barlow Condensed 900** at 48px — NOT Geist Mono. This differs from the general data metrics rule which specifies Geist Mono. Card-v3 values are headline numbers, not precision data.
+
+---
+
+## Motion System
+
+Six named keyframe animations. Use these — do not define new ones without approval.
+
+```css
+@keyframes shimmer {
+  0%   { transform: translateX(-150%) skewX(-12deg); }
+  100% { transform: translateX(350%)  skewX(-12deg); }
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulseGlow {
+  0%,100% { box-shadow: 0 0 6px rgba(0,255,136,0.4); }
+  50%     { box-shadow: 0 0 16px rgba(0,255,136,0.9); }
+}
+@keyframes breathe {
+  0%,100% { opacity: 0.6; transform: scale(1); }
+  50%     { opacity: 1;   transform: scale(1.15); }
+}
+@keyframes orbFloat {
+  0%,100% { transform: translate(0, 0) scale(1); }
+  33%     { transform: translate(30px, -20px) scale(1.05); }
+  66%     { transform: translate(-20px, 15px) scale(0.95); }
+}
+@keyframes gradientShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+```
+
+| Animation | Usage |
+|---|---|
+| `shimmer` | Hover sweep on cards + buttons (via `::after` pseudo, `translateX(-150%) skewX(-12deg)`) |
+| `fadeUp` | Section + card entry — `0.5–0.8s ease both`, staggered delays on lists |
+| `breathe` | Sport status dot, live health indicator — scale 1→1.15 pulse |
+| `pulseGlow` | Orange glow on active states — `pulseGlowOrange` variant uses orange shadows |
+| `orbFloat` | Ambient background orbs, achievement badge float |
+| `gradientShift` | PB time celebration, gradient text — requires `background-size: 200% auto` |
+
+---
+
+## Tag System
+
+```css
+/* Base tag */
+.tag {
+  font-family: var(--headline);
+  font-size: 9px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  padding: 5px 10px; border-radius: 5px;
+  border: 1px solid var(--border2);
+  color: var(--muted);
+  transition: border-color 0.15s, color 0.15s, box-shadow 0.15s;
+}
+.tag:hover { border-color: rgba(245,245,245,0.25); color: var(--white); }
+
+/* PB — orange fill */
+.tag-pb  { border-color: rgba(232,78,27,.35); color: var(--orange); background: rgba(232,78,27,.08); }
+.tag-pb:hover { box-shadow: 0 0 12px rgba(232,78,27,0.2); }
+
+/* A-Race — orange outline only */
+.tag-a   { border-color: rgba(232,78,27,.35); color: var(--orange); }
+
+/* World Major — gold */
+.tag-wm  { border-color: rgba(200,150,60,.35); color: var(--gold); background: rgba(200,150,60,.08); }
+.tag-wm:hover { box-shadow: 0 0 12px rgba(200,150,60,0.2); }
+
+/* Health / wearable */
+.tag-health { border-color: rgba(0,255,136,.30); color: var(--green); background: rgba(0,255,136,.06); }
+.tag-health:hover { box-shadow: 0 0 12px rgba(0,255,136,0.15); }
+```
+
+---
+
 ## Pro Tier System
 
-### Badge
+### Badge (v3 — solid gold fill)
 ```html
 <span class="pro-pill">PRO</span>
 ```
 ```css
 .pro-pill {
-  font-family: 'Barlow Condensed', sans-serif;
+  font-family: var(--headline);
   font-weight: 700; font-size: 10px;
   text-transform: uppercase; letter-spacing: 0.10em;
-  color: var(--gold);
-  background: var(--gold-dim);
-  border: 1px solid var(--gold-border);
+  color: #000;                        /* dark text on gold bg */
+  background: var(--grad-gold);       /* solid gold gradient fill */
   border-radius: 4px;
-  padding: 2px 7px;
+  padding: 3px 9px;
   display: inline-flex; align-items: center;
+  box-shadow: 0 2px 10px rgba(200,150,60,0.35);
 }
 ```
 - Width fits text — never fixed-width
@@ -424,7 +730,7 @@ On hover: content brightens to `opacity: 0.55`, thin `var(--gold)` border appear
 ```
 Headline:   "YOUR RACE CAREER, UNREDACTED."
 Sub-copy:   "Pro unlocks deeper analysis — the numbers behind your numbers."
-CTA:        Full-width button, --gold fill, #080808 text, Barlow Condensed 700
+CTA:        Full-width button, --grad-gold fill, #000 text, Barlow Condensed 700
 ```
 Single column. No pricing table layout. Three lines of copy. One button.
 
@@ -447,9 +753,9 @@ Small `AI` badge: Geist Mono 9px, gold, top-right corner. Same gold border treat
 The marketplace is a **fully distinct visual zone**. Users should feel they've entered a different room.
 
 ### Color rules inside marketplace
-- **No `--accent` (brick red) anywhere in this section** — it fights with product photography
+- **No `--orange` (brick red) anywhere in this section** — it fights with product photography
 - Card tiles use `var(--flatlay-tile)` (#F2EDE6 dark / #ffffff light) — warm cream lightbox treatment
-- Category filter pills use `var(--stone)` active state — no orange highlight
+- Category filter pills use `var(--white)` active state — no orange highlight
 
 ### Grid and spacing
 - 8px base unit (vs 4px elsewhere) — more breathing room
@@ -474,8 +780,8 @@ The marketplace is a **fully distinct visual zone**. Users should feel they've e
 }
 .flatlay-filter.active {
   background: rgba(232,224,213,0.10);
-  border-color: var(--stone);
-  color: var(--stone);
+  border-color: var(--white);
+  color: var(--white);
 }
 ```
 
@@ -491,7 +797,7 @@ Priority-based sizing system: A (hero), B (standard), C (compact).
 ```css
 /* Base */
 .upcoming-row {
-  background: var(--surface-1);
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 10px; padding: 14px 16px;
   display: flex; align-items: center; justify-content: space-between;
@@ -500,15 +806,274 @@ Priority-based sizing system: A (hero), B (standard), C (compact).
 /* Priority A — hero treatment */
 .upcoming-row.priority-a {
   min-height: 80px;
-  background: linear-gradient(90deg, var(--accent-dim) 0%, transparent 60%), var(--surface-1);
+  background: linear-gradient(90deg, var(--orange-dim) 0%, transparent 60%), var(--surface);
   border-color: rgba(232,78,27,0.14);
 }
 ```
 
 - **Race name:** Barlow Condensed 800, 15px, uppercase
 - **Meta (sport + location):** Barlow 400, 12px, `var(--muted)`
-- **Date:** Geist Mono 12px, `var(--accent)`
+- **Date:** Geist Mono 12px, `var(--orange)`
 - **Countdown days:** Geist Mono 11px, `var(--muted)`
+
+---
+
+## Race History — Canonical Pattern
+
+The race list uses a specific container + row system. This is the canonical pattern — do not deviate.
+
+```css
+.race-list-wrap {
+  background: linear-gradient(145deg, #141414 0%, #111013 100%);
+  border: 1px solid var(--border2);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 4px 24px rgba(0,0,0,0.4);
+}
+
+.race-row {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 0 16px;
+  align-items: center;
+  position: relative;
+  transition: background 0.18s ease;
+}
+.race-row:last-child { border-bottom: none; }
+.race-row:hover { background: rgba(255,255,255,0.025); }
+```
+
+### iOS Calendar Date Chip
+
+```css
+.race-date-chip {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  width: 44px; min-height: 50px; flex-shrink: 0;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 5px 6px 6px;
+  gap: 2px;
+}
+.race-date-chip-mon {
+  font-family: var(--mono);
+  font-size: 8px; font-weight: 600;
+  letter-spacing: 0.10em; text-transform: uppercase;
+  color: var(--orange); line-height: 1;
+}
+.race-date-chip-day {
+  font-family: var(--headline);
+  font-size: 26px; font-weight: 900;
+  color: var(--white); line-height: 1;
+  letter-spacing: -0.02em;
+}
+/* PB rows: gold-tinted chip */
+.race-row.is-pb .race-date-chip {
+  border-color: rgba(200,150,60,0.35);
+  background: linear-gradient(145deg, #1A1400 0%, #141414 100%);
+}
+```
+
+### Race Row Typography
+
+```css
+.race-name {
+  font-family: var(--headline);
+  font-size: 14px; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--white); margin-bottom: 3px;
+}
+.race-meta { font-size: 11px; color: var(--muted); }
+.race-time {
+  font-family: var(--headline);
+  font-size: 20px; font-weight: 900;
+  color: var(--orange); letter-spacing: -0.01em;
+}
+```
+
+### PB Row — Gold Diagonal Treatment
+
+```css
+.race-row.is-pb {
+  background: linear-gradient(105deg,
+    rgba(232,78,27,0.11) 0%,
+    rgba(200,150,60,0.07) 45%,
+    transparent 72%
+  );
+  border-bottom-color: rgba(200,150,60,0.14);
+  box-shadow: inset 0 1px 0 rgba(200,150,60,0.55), 0 -1px 12px rgba(200,150,60,0.06);
+}
+/* 3px left accent bar */
+.race-row.is-pb::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  border-radius: 0 2px 2px 0;
+  background: linear-gradient(180deg, #E84E1B 0%, rgba(200,150,60,0.45) 100%);
+}
+.race-row.is-pb .race-time { color: #C8963C; }
+
+/* Perpetual shimmer on PB rows */
+.race-row.is-pb::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(200,150,60,0.06) 50%, transparent 100%);
+  animation: shimmer 4s ease-in-out infinite;
+  pointer-events: none;
+}
+```
+
+### Year Divider
+
+```css
+.yr-b {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 20px;
+}
+.yr-b-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--orange);
+  animation: pulseGlowOrange 2.5s ease-in-out infinite;
+  flex-shrink: 0;
+}
+.yr-b-label {
+  font-family: var(--headline);
+  font-size: 11px; font-weight: 900;
+  text-transform: uppercase; letter-spacing: 0.22em;
+  color: var(--orange);
+}
+.yr-b::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, rgba(232,78,27,0.25) 0%, transparent 100%);
+}
+```
+
+### PB Badge Pill
+
+```css
+.pb-badge {
+  display: inline-flex; align-items: center;
+  font-family: var(--mono);
+  font-size: 8px; font-weight: 500;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--orange);
+  background: rgba(232,78,27,0.11);
+  border: 1px solid rgba(232,78,27,0.28);
+  border-radius: 3px; padding: 2px 6px;
+  margin-left: 8px; vertical-align: middle;
+}
+```
+
+---
+
+## Personal Bests Cards
+
+Horizontal scrolling card strip, one card per distance.
+
+```css
+.pb-scroll {
+  display: flex; gap: 14px;
+  overflow-x: auto; padding-bottom: 4px;
+  scrollbar-width: none;
+}
+.pb-scroll::-webkit-scrollbar { display: none; }
+
+.pb-card {
+  position: relative;
+  min-width: 188px; max-width: 188px;
+  border: 1px solid var(--border2);
+  border-radius: 18px;
+  padding: 18px 16px 14px;
+  overflow: hidden;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+/* Run variant — green left border */
+.pb-card-run {
+  background: linear-gradient(145deg, #141414 0%, rgba(0,255,136,0.06) 100%);
+  border-left: 3px solid #00FF88;
+  box-shadow: inset 0 1px 0 rgba(0,255,136,0.10), 0 4px 20px rgba(0,0,0,0.4);
+}
+.pb-card-run:hover {
+  transform: translateY(-3px);
+  border-color: rgba(0,255,136,0.55);
+  box-shadow: 0 0 10px rgba(0,255,136,0.18), inset 0 1px 0 rgba(0,255,136,0.12);
+}
+
+/* Tri variant — purple left border */
+.pb-card-tri {
+  background: linear-gradient(145deg, #141414 0%, rgba(124,58,237,0.08) 100%);
+  border-left: 3px solid #7C3AED;
+  box-shadow: inset 0 1px 0 rgba(124,58,237,0.10), 0 4px 20px rgba(0,0,0,0.4);
+}
+.pb-card-tri:hover {
+  transform: translateY(-3px);
+  border-color: rgba(124,58,237,0.55);
+  box-shadow: 0 0 10px rgba(124,58,237,0.20), inset 0 1px 0 rgba(124,58,237,0.12);
+}
+
+/* Gold shimmer on time text on hover */
+.pb-card:hover .pb-card-time {
+  background: linear-gradient(135deg, #FFE066 0%, #C8963C 45%, #FFD700 70%, #C8963C 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientShift 2s ease infinite;
+}
+
+/* Shimmer sweep on hover */
+.pb-card::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.06) 50%, transparent 100%);
+  transform: translateX(-150%) skewX(-12deg);
+}
+.pb-card:hover::before { animation: shimmer 0.7s ease; }
+```
+
+### PB Card Typography
+
+```css
+.pb-card-dist {
+  font-family: var(--headline);
+  font-size: 10px; font-weight: 700;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--muted2); margin-bottom: 6px;
+}
+.pb-card-time {
+  font-family: var(--headline);
+  font-size: 32px; font-weight: 900;
+  letter-spacing: -0.01em; line-height: 1;
+  margin-bottom: 10px;
+}
+.pb-card-time-run { color: #00FF88; }
+.pb-card-time-tri { color: #7C3AED; }
+.pb-card-race { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+```
+
+### Sport Header
+
+```css
+.pb-sport-hdr {
+  display: flex; align-items: center; gap: 10px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+.pb-sport-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.pb-sport-dot-run  { background: #00FF88; animation: breathe 2s ease-in-out infinite; box-shadow: 0 0 8px rgba(0,255,136,0.6); }
+.pb-sport-dot-tri  { background: #7C3AED; animation: breathe 2s ease-in-out infinite 0.5s; box-shadow: 0 0 8px rgba(124,58,237,0.6); }
+.pb-sport-name {
+  font-family: var(--headline);
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.22em; text-transform: uppercase;
+  color: var(--muted);
+}
+```
 
 ---
 
@@ -535,7 +1100,7 @@ Priority-based sizing system: A (hero), B (standard), C (compact).
 ### Achievement badges
 - Fixed 72×72px, 12px border radius
 - **Unlocked:** `rgba(232,78,27,0.08)` bg, `rgba(232,78,27,0.22)` border, shadow present
-- **Locked:** `var(--surface-2)` bg, `opacity: 0.5`
+- **Locked:** `var(--surface2)` bg, `opacity: 0.5`
 - Emoji only for badge icons — SVG icons feel too cold for this context
 - Badge label: Geist Mono 8px, uppercase
 
@@ -547,14 +1112,16 @@ Priority-based sizing system: A (hero), B (standard), C (compact).
 Gold:     border #C8963C / bg rgba(200,150,60,0.12) / text #C8963C
 Silver:   border #C8D4DC / bg rgba(200,212,220,0.10)
 Bronze:   border #CD8C5A / bg rgba(205,140,90,0.10)
-Finisher: border var(--accent) / bg var(--accent-dim)
+Finisher: border var(--orange) / bg var(--orange-dim)
 ```
 
 Gold medal uses the same `--gold` token as Pro tier — consistent vocabulary: gold = achievement + earned.
 
 ---
 
-## Race Cards (History)
+## Race Cards (History) — Simple Variant
+
+For compact contexts (modal, sidebar) that don't use the full canonical race row:
 
 ```html
 <div class="race-card">
@@ -563,14 +1130,14 @@ Gold medal uses the same `--gold` token as Pro tier — consistent vocabulary: g
     <div class="race-meta">Apr 15, 2024 · Full Marathon · Boston, USA</div>
   </div>
   <div>
-    <div class="race-time">2:58:44</div>   <!-- Geist Mono 300 -->
+    <div class="race-time">2:58:44</div>   <!-- Barlow Condensed 900 -->
     <div class="race-placing">342 / 28,409</div>
   </div>
 </div>
 ```
 
 - **Race name:** Barlow Condensed 800, 15–16px, uppercase
-- **Time:** Geist Mono 300, 20px — visually lighter than the headline
+- **Time:** Barlow Condensed 900, 20px — orange accent color
 - **Meta/placing:** Barlow/Geist Mono 11–12px, `var(--muted)`
 
 ---
@@ -581,11 +1148,11 @@ Every empty state: warmth + primary action + context. Never "No items found."
 
 | Surface | Headline | CTA |
 |---|---|---|
-| History — no races | "No races yet. Every finish line starts with one." | `+ Log your first race` → `openRaceModal()` |
-| History — no search results | "No races match — try a different search." | — |
-| Medals — no medals | "No medals yet. Every race earns one." | `+ Log a race` → `openRaceModal()` |
+| Races — no races | "No races yet. Every finish line starts with one." | `+ Log your first race` → open AddRaceModal |
+| Races — no search results | "No races match — try a different search." | — |
+| Medals — no medals | "No medals yet. Every race earns one." | `+ Log a race` → open AddRaceModal |
 | Map — no routes | "No routes yet. Log a race with a city to see your world map." | — |
-| Dashboard — no races | "Your story starts here. Log a race →" | inline accent link → `openRaceModal()` |
+| Dashboard — no races | "Your story starts here. Log a race →" | inline orange link → open AddRaceModal |
 
 CSS pattern: `.hist-empty { text-align: center; padding: 3rem 1rem; }` with Barlow Condensed 700 headline.
 
@@ -594,7 +1161,7 @@ CSS pattern: `.hist-empty { text-align: center; padding: 3rem 1rem; }` with Barl
 ## Accessibility (required, not optional)
 
 ```css
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 3px; }
+:focus-visible { outline: 2px solid var(--orange); outline-offset: 3px; border-radius: 3px; }
 :focus:not(:focus-visible) { outline: none; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
@@ -603,7 +1170,7 @@ CSS pattern: `.hist-empty { text-align: center; padding: 3rem 1rem; }` with Barl
 Requirements:
 - All interactive elements: `min-height: 44px; min-width: 44px`
 - ARIA live region: `<div aria-live="polite" aria-atomic="true" id="a11y-status" class="sr-only">`
-- Modals: `role="dialog"`, `aria-modal="true"`, `aria-labelledby`
+- Modals: `role="dialog"`, `aria-modal="true"`, `aria-labelledby` on outer div; `id` on title `<h2>`
 - Navigation: `aria-current="page"` on active item; `class="active"` on active bottom nav tab
 - Buttons without visible text: `aria-label`
 - Form inputs: `<label for="...">` wired to each input
@@ -647,16 +1214,28 @@ Sentence case. Energetic. Athletic. Personal. Never corporate SaaS.
 
 ## App Architecture
 
-- Single-file SPA: all code in `index.html` (~22,900+ lines)
-- No build step, no bundler
-- Vanilla HTML/CSS/JS
-- Supabase for auth + data
-- Cloudflare Pages for hosting
+- **Framework:** React 18 + TypeScript
+- **Build:** Vite
+- **Routing:** react-router-dom v6 (`/`, `/races`, `/gear`, `/train`, `/you`, `/settings`)
+- **State management:** Zustand
+- **Auth + data:** Supabase
+- **Hosting:** Cloudflare Workers (static assets via wrangler)
+- **Global styles:** `src/styles/tokens.css` (CSS variables) + `src/styles/index.css` (global rules + reset)
+- **Component styles:** Inline style objects (React `style` prop) for component-scoped styles
+- **Fonts:** Google Fonts loaded in `index.html` `<head>`
+
+### Redirects
+```
+/pace     → /         (legacy)
+/history  → /races    (legacy)
+/map      → /races    (legacy, map is embedded in races page)
+```
 
 ### Authentication
 - App is **authenticated-only** — no guest mode
 - If unauthenticated, the landing screen / auth modal handles it
-- Auth state variable: `authUser`
+- Auth state: `useAuthStore` (Zustand) with `authUser`, `proAccessGranted`, etc.
+- Pro features unlocked on staging (`dev.breaktapes.com`) for beta testers
 
 ---
 
@@ -673,29 +1252,10 @@ Sentence case. Energetic. Athletic. Personal. Never corporate SaaS.
 
 ## Theme System
 
-Themes are applied via `data-theme` attribute on `<html>`. Stored in `localStorage` under `bt_theme`. Default is `carbon-chrome` (the `:root` values). Pro themes are gated by `hasProAccess()`.
+Themes are applied via `data-theme` attribute on `<html>`. Stored in `localStorage` under `bt_theme`. Default is `carbon-chrome` (the `:root` values). Pro themes are gated by `hasProAccess()` / `proAccessGranted` in `useAuthStore`.
 
 ### Typography rule (non-negotiable)
 **All themes share identical typography.** Barlow Condensed / Barlow / Geist Mono weights, sizes, and letter-spacing NEVER change between themes. Only color tokens change.
-
-### Theme init
-```js
-const savedTheme = localStorage.getItem('bt_theme') || 'carbon-chrome';
-if (savedTheme !== 'carbon-chrome') {
-  document.documentElement.setAttribute('data-theme', savedTheme);
-}
-```
-
-### `setTheme(name)` — guarded by Pro access
-```js
-const PRO_THEMES = ['deep-space','race-night','obsidian','acid-track','titanium','ember','polar-circuit'];
-function setTheme(name) {
-  if (PRO_THEMES.includes(name) && !hasProAccess()) { openProModal('themes'); return; }
-  document.documentElement.setAttribute('data-theme', name === 'carbon-chrome' ? '' : name);
-  document.documentElement.setAttribute('data-theme', name);
-  localStorage.setItem('bt_theme', name);
-}
-```
 
 ### Token overrides per theme (only changes from `:root`)
 
@@ -796,4 +1356,11 @@ Location: Settings modal, above the API key section.
 | 2026-03-30 | Documented Flatlay marketplace as fully distinct zone | No orange accent inside marketplace; warm cream tiles; Geist Mono lowercase filter pills |
 | 2026-03-30 | Documented upcoming race card priority system (A/B/C) | Gradient + border treatment for Priority A; pure surface for B/C |
 | 2026-03-30 | Documented achievement surface patterns | Hero gradient (orange+green), unlocked badge glow, locked at 50% opacity |
-| 2026-03-30 | Restricted --health (#00FF88) to live health data only | Was being used decoratively; should signal real-time wearable data exclusively |
+| 2026-03-30 | Restricted --green (#00FF88) to live health data only | Was being used decoratively; should signal real-time wearable data exclusively |
+| 2026-04-16 | React migration — vanilla index.html → React 18 + TypeScript + Vite | Scale, type safety, component reuse. Token names retained from index.html for zero-diff migration. |
+| 2026-04-16 | Nav tabs renamed: History→Races, Medals→Gear, Map embedded in Races, Me→You | Clearer labeling: "Races" covers all race surfaces including map; "You" is friendlier than "Me" |
+| 2026-04-16 | Token names retained as legacy (--orange not --accent, --white not --stone) | 494+ references — renaming would require a separate focused migration. DESIGN.md now documents actual names. |
+| 2026-04-16 | Pro pill updated: solid gold fill (--grad-gold) + #000 text, not bordered outline | Solid fill reads as earned/premium in context. Preview v3 canonical. |
+| 2026-04-16 | Form input v3: gradient background + 3px orange glow ring on focus | Gradient bg adds depth; glow ring is softer than hard outline, matches card-v3 shimmer language |
+| 2026-04-16 | Card v3 values use Barlow Condensed 900 (not Geist Mono) | Hero numbers like "87" or "−4:12" read as performance headlines, not precision data. |
+| 2026-04-17 | DESIGN.md comprehensively updated from breaktapes-design-preview-v3.html | Preview is canonical visual reference. All card, button, race history, PB, motion, and tag patterns extracted. |

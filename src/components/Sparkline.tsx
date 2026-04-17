@@ -27,7 +27,7 @@ export function Sparkline({ values, width, height = 40, color }: SparklineProps)
           type="monotone"
           dataKey="v"
           stroke={lineColor}
-          strokeWidth={1.5}
+          strokeWidth={1.8}
           dot={false}
           isAnimationActive={false}
         />

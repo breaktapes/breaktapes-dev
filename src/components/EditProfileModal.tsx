@@ -86,11 +86,17 @@ export function EditProfileModal({ onClose }: Props) {
 
   return (
     <div style={st.overlay} onClick={onClose}>
-      <div style={st.sheet} onClick={e => e.stopPropagation()}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="edit-profile-modal-title"
+        style={st.sheet}
+        onClick={e => e.stopPropagation()}
+      >
         <div style={st.handle} />
 
         <div style={st.header}>
-          <span style={st.title}>EDIT PROFILE</span>
+          <span id="edit-profile-modal-title" style={st.title}>EDIT PROFILE</span>
           <button style={st.closeBtn} onClick={onClose} aria-label="Close">✕</button>
         </div>
 
