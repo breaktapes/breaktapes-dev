@@ -1838,6 +1838,11 @@ function GapToGoalWidget() {
         <div>
           <div style={st.widgetLabel}>GAP TO GOAL</div>
           <div style={st.widgetTitle}>{distBadge(nextRace.distance) || 'NEXT RACE'}</div>
+          {nextRace.name && (
+            <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '3px', fontFamily: 'var(--body)', fontWeight: 500 }}>
+              {nextRace.name}
+            </div>
+          )}
         </div>
         <span style={{ ...st.badgePill, background: 'rgba(var(--orange-ch),0.12)', color: 'var(--orange)', border: '1px solid rgba(var(--orange-ch),0.3)', flexShrink: 0 }}>
           🎯
