@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'framer-motion'
+import { Component } from 'react'
+import type { ReactNode } from 'react'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import { AuthGate } from '@/components/AuthGate'
 import { Layout } from '@/components/Layout'
@@ -11,6 +13,24 @@ import { Profile } from '@/pages/Profile'
 import { Gear } from '@/pages/Gear'
 import { Settings } from '@/pages/Settings'
 import { transitions } from '@/lib/motion'
+
+class RootErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
+  state = { error: null }
+  static getDerivedStateFromError(error: Error) { return { error } }
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{ position: 'fixed', inset: 0, background: '#0d0d0d', color: '#f5f5f5', fontFamily: 'monospace', padding: '24px', overflowY: 'auto', fontSize: '13px', lineHeight: 1.6 }}>
+          <div style={{ color: '#E84E1B', fontWeight: 700, marginBottom: '12px' }}>⚠ App crashed</div>
+          <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{(this.state.error as Error).message}</pre>
+          <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all', color: 'rgba(245,245,245,0.45)', marginTop: '12px', fontSize: '11px' }}>{(this.state.error as Error).stack}</pre>
+          <button onClick={() => window.location.reload()} style={{ marginTop: '20px', background: '#E84E1B', color: '#000', border: 'none', borderRadius: '8px', padding: '10px 20px', fontWeight: 700, cursor: 'pointer' }}>Reload</button>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -52,16 +72,18 @@ function AnimatedRoutes() {
 
 export function App() {
   return (
-    <BrowserRouter>
-      <ThemeProvider>
-        <QueryClientProvider client={queryClient}>
-          <AuthGate>
-            <Layout>
-              <AnimatedRoutes />
-            </Layout>
-          </AuthGate>
-        </QueryClientProvider>
-      </ThemeProvider>
-    </BrowserRouter>
+    <RootErrorBoundary>
+      <BrowserRouter>
+        <ThemeProvider>
+          <QueryClientProvider client={queryClient}>
+            <AuthGate>
+              <Layout>
+                <AnimatedRoutes />
+              </Layout>
+            </AuthGate>
+          </QueryClientProvider>
+        </ThemeProvider>
+      </BrowserRouter>
+    </RootErrorBoundary>
   )
 }
