@@ -10218,11 +10218,11 @@ async function loadRemoteState() {
       };
       const { error: upsertError } = await client.from('user_state').upsert(emptyPayload, { onConflict: 'user_id' });
       if (upsertError) throw upsertError;
-      cacheProAccessState(false);
+      cacheProAccessState(_IS_STAGING);
       updateAuthUI();
       return true;
     }
-    cacheProAccessState(data.pro_access === true);
+    cacheProAccessState(_IS_STAGING || data.pro_access === true);
     const hasRemoteData = (Array.isArray(data.races) && data.races.length > 0) ||
       (data.athlete?.name) || (data.next_race) ||
       (Array.isArray(data.upcoming_races) && data.upcoming_races.length > 0);
