@@ -491,7 +491,7 @@ function EditPanel({ race, onSave, onCancel }: { race: Race; onSave: (patch: Par
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '0.75rem' }}>
         <button style={st.cancelBtn} onClick={onCancel}>Cancel</button>
-        <button style={st.saveBtn} onClick={handleSave}>Save Changes</button>
+        <button className="btn-v3 btn-primary-v3" style={st.saveBtn} onClick={handleSave}>Save Changes</button>
       </div>
     </div>
   )
@@ -777,17 +777,7 @@ const st = {
   } as React.CSSProperties,
 
   saveBtn: {
-    background: 'var(--orange)',
-    color: 'var(--black)',
-    border: 'none',
-    borderRadius: '8px',
     padding: '13px',
-    fontFamily: 'var(--headline)',
-    fontWeight: 900,
-    fontSize: '13px',
-    letterSpacing: '0.1em',
-    textTransform: 'uppercase' as const,
-    cursor: 'pointer',
   } as React.CSSProperties,
 
   fieldLabel: {
