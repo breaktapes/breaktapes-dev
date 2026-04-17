@@ -3373,12 +3373,7 @@ function PersonalBestsWidget() {
               const accentColor = isTri ? '#7C3AED' : '#00FF88'
               const accentBg = isTri ? 'rgba(124,58,237,0.08)' : 'rgba(0,255,136,0.06)'
               const accentGlow = isTri ? 'rgba(124,58,237,0.10)' : 'rgba(0,255,136,0.10)'
-              const displayKey = key.includes('half') ? 'Half Marathon'
-                : key.includes('marathon') ? 'Marathon'
-                : key.includes('70.3') ? '70.3'
-                : key.includes('ironman') ? 'Ironman'
-                : key.includes('olympic') ? 'Olympic'
-                : key.toUpperCase()
+              const displayKey = distBadge(r.distance) || key.toUpperCase()
               return (
                 <div
                   key={key}
