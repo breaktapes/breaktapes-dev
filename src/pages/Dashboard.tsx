@@ -1025,10 +1025,13 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
   const races = useRaceStore(selectRaces)
   const today = todayStr()
   const pbMap = useMemo(() => buildPBMap(races), [races])
-  const recent = useMemo(
-    () => races.filter(r => r.date <= today).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 4),
-    [races, today],
-  )
+  const recent = useMemo(() => {
+    const cutoff = new Date(); cutoff.setMonth(cutoff.getMonth() - 3)
+    const cutoffStr = cutoff.toISOString().split('T')[0]
+    return races
+      .filter(r => r.date <= today && r.date >= cutoffStr)
+      .sort((a, b) => b.date.localeCompare(a.date))
+  }, [races, today])
 
   if (races.length === 0) {
     return (
@@ -1038,6 +1041,17 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
           <div style={{ fontSize: '28px' }}>🏁</div>
           <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', maxWidth: '240px', lineHeight: 1.5, textAlign: 'center' }}>No races logged yet.</div>
           <button style={st.ctaOutline} onClick={onAddRace}>+ Log a Race</button>
+        </div>
+      </div>
+    )
+  }
+
+  if (recent.length === 0) {
+    return (
+      <div className="card-v3" style={st.glowCard}>
+        <div style={st.widgetLabel}>RECENT RACES</div>
+        <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5, marginTop: '8px' }}>
+          No races in the last 3 months.
         </div>
       </div>
     )
@@ -1055,27 +1069,27 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
           const label = distBadge(r.distance)
           return (
             <div key={r.id} style={{
-              display: 'flex', alignItems: 'center', gap: '10px',
-              padding: '10px 0',
+              display: 'flex', alignItems: 'center', gap: '12px',
+              padding: '14px 0',
               borderBottom: i < recent.length - 1 ? '1px solid var(--border)' : 'none',
             }}>
               {/* Left: name + meta */}
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-                  <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '13px', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '7px', flexWrap: 'wrap' }}>
+                  <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {r.name ?? 'Untitled'}
                   </span>
                   {isPB && (
-                    <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: '#C8963C', background: 'rgba(200,150,60,0.12)', border: '1px solid rgba(200,150,60,0.3)', borderRadius: '4px', padding: '1px 5px', flexShrink: 0 }}>PB</span>
+                    <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: '#C8963C', background: 'rgba(200,150,60,0.12)', border: '1px solid rgba(200,150,60,0.3)', borderRadius: '4px', padding: '2px 6px', flexShrink: 0 }}>PB</span>
                   )}
                 </div>
-                <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>
+                <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '3px' }}>
                   {dateStr}{city ? ` · ${city}` : ''}{label ? ` · ${label}` : ''}
                 </div>
               </div>
               {/* Right: time */}
               {r.time && (
-                <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '15px', color: isPB ? '#C8963C' : 'var(--orange)', flexShrink: 0, letterSpacing: '0.02em' }}>
+                <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '18px', color: isPB ? '#C8963C' : 'var(--orange)', flexShrink: 0, letterSpacing: '0.02em' }}>
                   {r.time}
                 </div>
               )}
