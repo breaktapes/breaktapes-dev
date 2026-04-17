@@ -1,5 +1,52 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useAuthStore } from '@/stores/useAuthStore'
+
+// ─── Static gear catalog ─────────────────────────────────────────────────────
+interface GearItem {
+  id: string
+  name: string
+  brand: string
+  category: string   // used for category filter chips
+  sport: string      // 'Running' | 'Triathlon' | 'Cycling' | 'Swimming' | 'All Sports'
+  image: string      // stable public image URL
+  tags: string[]
+}
+
+const GEAR_CATALOG: GearItem[] = [
+  // Running — Shoes
+  { id: 'g1',  name: 'Alphafly 3',         brand: 'Nike',       category: 'Running', sport: 'Running',   image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop', tags: ['marathon', 'carbon plate', 'race day'] },
+  { id: 'g2',  name: 'Vaporfly 3',          brand: 'Nike',       category: 'Running', sport: 'Running',   image: 'https://images.unsplash.com/photo-1556906781-9a412961a28c?w=400&h=400&fit=crop', tags: ['marathon', 'carbon plate', 'race day'] },
+  { id: 'g3',  name: 'Adizero Adios Pro 3', brand: 'Adidas',     category: 'Running', sport: 'Running',   image: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=400&h=400&fit=crop', tags: ['marathon', 'carbon plate', 'fast'] },
+  { id: 'g4',  name: 'SuperBlast 2',        brand: 'ASICS',      category: 'Running', sport: 'Running',   image: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&h=400&fit=crop', tags: ['training', 'cushion', 'daily'] },
+  { id: 'g5',  name: 'Cloudboom Strike LS', brand: 'On Running', category: 'Running', sport: 'Running',   image: 'https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=400&h=400&fit=crop', tags: ['race day', 'lace-free'] },
+  // Running — GPS Watch
+  { id: 'g6',  name: 'Forerunner 965',      brand: 'Garmin',     category: 'Running', sport: 'Running',   image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400&h=400&fit=crop', tags: ['GPS', 'training', 'metrics'] },
+  { id: 'g7',  name: 'Epix Pro Gen 2',      brand: 'Garmin',     category: 'Running', sport: 'Running',   image: 'https://images.unsplash.com/photo-1524592094714-0f0654e20314?w=400&h=400&fit=crop', tags: ['GPS', 'premium', 'AMOLED'] },
+  { id: 'g8',  name: 'Stryd Foot Pod',      brand: 'Stryd',      category: 'Running', sport: 'Running',   image: 'https://images.unsplash.com/photo-1575311373937-040b8e1fd5b6?w=400&h=400&fit=crop', tags: ['power meter', 'run metrics'] },
+  // Triathlon
+  { id: 'g9',  name: 'Blueseventy Thermal', brand: 'BlueSeventy',category: 'Tri',     sport: 'Triathlon', image: 'https://images.unsplash.com/photo-1530549387789-4c1017266635?w=400&h=400&fit=crop', tags: ['wetsuit', 'swim', 'open water'] },
+  { id: 'g10', name: 'TT9 Tri Suit',        brand: '2XU',        category: 'Tri',     sport: 'Triathlon', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=400&fit=crop', tags: ['tri suit', 'race day', 'aero'] },
+  { id: 'g11', name: 'Multisport Pro',       brand: 'Garmin',     category: 'Tri',     sport: 'Triathlon', image: 'https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?w=400&h=400&fit=crop', tags: ['GPS', 'triathlon', 'multisport'] },
+  { id: 'g12', name: 'Tri Transition Bag',   brand: 'ROKA',       category: 'Tri',     sport: 'Triathlon', image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=400&fit=crop', tags: ['transition', 'bag', 'gear'] },
+  { id: 'g13', name: 'Kona Pro 2 Helmet',    brand: 'Giro',       category: 'Tri',     sport: 'Triathlon', image: 'https://images.unsplash.com/photo-1558981033-0f0309284409?w=400&h=400&fit=crop', tags: ['aero helmet', 'cycling', 'aero'] },
+  // Cycling
+  { id: 'g14', name: 'Edge 1050',            brand: 'Garmin',     category: 'Cycling', sport: 'Cycling',   image: 'https://images.unsplash.com/photo-1485965120184-e220f721d03e?w=400&h=400&fit=crop', tags: ['cycling computer', 'GPS', 'navigation'] },
+  { id: 'g15', name: 'Assioma Duo Pedals',   brand: 'Favero',     category: 'Cycling', sport: 'Cycling',   image: 'https://images.unsplash.com/photo-1571068316344-75bc76f77890?w=400&h=400&fit=crop', tags: ['power meter', 'pedals', 'dual-sided'] },
+  { id: 'g16', name: 'Bib Shorts Pro',       brand: 'Rapha',      category: 'Cycling', sport: 'Cycling',   image: 'https://images.unsplash.com/photo-1517649763962-0c623066013b?w=400&h=400&fit=crop', tags: ['apparel', 'comfort', 'chamois'] },
+  // Swimming
+  { id: 'g17', name: 'Finis Tempo Trainer',  brand: 'FINIS',      category: 'Swim',    sport: 'Swimming',  image: 'https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=400&h=400&fit=crop', tags: ['swim', 'tempo', 'training'] },
+  { id: 'g18', name: 'Swim Skin Pro',        brand: 'BlueSeventy',category: 'Swim',    sport: 'Swimming',  image: 'https://images.unsplash.com/photo-1530549387789-4c1017266635?w=400&h=400&fit=crop', tags: ['swim skin', 'open water', 'fast'] },
+  // Nutrition
+  { id: 'g19', name: 'SIS Go Isotonic Gels', brand: 'SIS',        category: 'Running', sport: 'All Sports',image: 'https://images.unsplash.com/photo-1593095948071-474c5cc2989d?w=400&h=400&fit=crop', tags: ['nutrition', 'gels', 'race day', 'energy'] },
+  { id: 'g20', name: 'Maurten Gel 100',      brand: 'Maurten',    category: 'Running', sport: 'All Sports',image: 'https://images.unsplash.com/photo-1559181567-c3190ca9d213?w=400&h=400&fit=crop', tags: ['nutrition', 'gels', 'marathon', 'hydrogel'] },
+  { id: 'g21', name: 'Precision Hydration', brand: 'PH',          category: 'Running', sport: 'All Sports',image: 'https://images.unsplash.com/photo-1606143604453-2c3f9e4c4e27?w=400&h=400&fit=crop', tags: ['hydration', 'electrolytes', 'sodium'] },
+  // Recovery
+  { id: 'g22', name: 'Normatec 3 Legs',      brand: 'Hyperice',   category: 'Running', sport: 'All Sports',image: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=400&h=400&fit=crop', tags: ['recovery', 'compression', 'normatec'] },
+  { id: 'g23', name: 'Calf Sleeves R2',      brand: '2XU',        category: 'Running', sport: 'Running',   image: 'https://images.unsplash.com/photo-1556909172-54557c7e4fb7?w=400&h=400&fit=crop', tags: ['compression', 'calves', 'recovery'] },
+  // HYROX
+  { id: 'g24', name: 'Metcon 9',             brand: 'Nike',       category: 'Running', sport: 'HYROX',     image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=400&fit=crop', tags: ['hyrox', 'training shoe', 'functional'] },
+  { id: 'g25', name: 'Speed Rope',           brand: 'RPM',        category: 'Running', sport: 'HYROX',     image: 'https://images.unsplash.com/photo-1598971861713-54ad16a7e72e?w=400&h=400&fit=crop', tags: ['hyrox', 'skipping', 'cardio'] },
+]
 
 const btnMain: React.CSSProperties = {
   background: 'var(--orange)',
@@ -119,10 +166,20 @@ function AuthGate() {
 
 export function Gear() {
   const authUser = useAuthStore(s => s.authUser)
-  const [activeTab, setActiveTab] = useState<Tab>('discover')
+  const [activeTab, setActiveTab]   = useState<Tab>('discover')
   const [searchQuery, setSearchQuery] = useState('')
-  const [category, setCategory] = useState('All')
-  const [sport, setSport] = useState('All Sports')
+  const [category, setCategory]     = useState('All')
+  const [sport, setSport]           = useState('All Sports')
+
+  const filteredGear = useMemo(() => {
+    const q = searchQuery.toLowerCase()
+    return GEAR_CATALOG.filter(item => {
+      const matchesCat   = category === 'All' || item.category === category
+      const matchesSport = sport === 'All Sports' || item.sport === sport || item.sport === 'All Sports'
+      const matchesQuery = !q || [item.name, item.brand, ...item.tags].some(t => t.toLowerCase().includes(q))
+      return matchesCat && matchesSport && matchesQuery
+    })
+  }, [searchQuery, category, sport])
 
   const tabStyle = (id: Tab): React.CSSProperties => ({
     background: 'none',
@@ -208,9 +265,10 @@ export function Gear() {
                 />
                 <button
                   style={{ ...btnMain, padding: '0.6rem 1rem' }}
-                  onClick={() => console.log('Search:', searchQuery)}
+                  onClick={() => setSearchQuery(searchQuery)}
+                  aria-label="Search gear"
                 >
-                  Search
+                  🔍
                 </button>
               </div>
 
@@ -236,11 +294,84 @@ export function Gear() {
                 </select>
               </div>
 
-              {/* Results */}
-              <EmptyState
-                title="Search for gear"
-                body="Search the catalog above to find shoes, wetsuits, watches, nutrition, and more."
-              />
+              {/* Product grid */}
+              {filteredGear.length === 0 ? (
+                <EmptyState
+                  title="No gear found"
+                  body="Try a different search term or filter."
+                />
+              ) : (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '0.75rem',
+                }}>
+                  {filteredGear.map(item => (
+                    <div key={item.id} style={{
+                      ...card,
+                      padding: 0,
+                      overflow: 'hidden',
+                      display: 'flex',
+                      flexDirection: 'column',
+                    }}>
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        loading="lazy"
+                        style={{
+                          width: '100%',
+                          aspectRatio: '1',
+                          objectFit: 'cover',
+                          background: 'var(--surface3)',
+                        }}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = 'none'
+                        }}
+                      />
+                      <div style={{ padding: '0.6rem 0.75rem 0.75rem' }}>
+                        <p style={{
+                          margin: 0,
+                          fontFamily: 'var(--headline)',
+                          fontWeight: 900,
+                          fontSize: '12px',
+                          letterSpacing: '0.06em',
+                          textTransform: 'uppercase',
+                          color: 'var(--orange)',
+                        }}>
+                          {item.brand}
+                        </p>
+                        <p style={{
+                          margin: '2px 0 0',
+                          fontSize: 'var(--text-sm)',
+                          fontWeight: 600,
+                          color: 'var(--white)',
+                          lineHeight: 1.3,
+                        }}>
+                          {item.name}
+                        </p>
+                        <div style={{ marginTop: '6px', display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                          {item.tags.slice(0, 2).map(tag => (
+                            <span key={tag} style={{
+                              fontSize: '9px',
+                              fontFamily: 'var(--headline)',
+                              fontWeight: 700,
+                              letterSpacing: '0.06em',
+                              textTransform: 'uppercase',
+                              background: 'var(--surface3)',
+                              border: '1px solid var(--border)',
+                              color: 'var(--muted)',
+                              padding: '2px 6px',
+                              borderRadius: '4px',
+                            }}>
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -284,7 +415,7 @@ export function Gear() {
                 </p>
                 <button
                   style={{ ...btnGhost, padding: '0.5rem 0.9rem', fontSize: 'var(--text-xs)' }}
-                  onClick={() => console.log('Create list')}
+                  onClick={() => {}}
                 >
                   + New List
                 </button>
@@ -293,7 +424,7 @@ export function Gear() {
                 title="No lists yet"
                 body="Create a list to organize your race day kit — shoes, nutrition, gear by distance."
                 cta="Create a List"
-                onCta={() => console.log('Create list')}
+                onCta={() => {}}
               />
             </div>
           )}

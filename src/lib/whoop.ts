@@ -13,6 +13,10 @@ export const WHOOP_SCOPES = 'read:workout read:recovery read:body_measurement of
 const HEALTH_PROXY = 'https://health.breaktapes.com'
 
 export function startWhoopOAuth() {
+  if (!WHOOP_CLIENT_ID) {
+    alert('WHOOP integration is not configured for this environment.')
+    return
+  }
   const nonce = crypto.randomUUID()
   const state = `whoop:${nonce}`
   sessionStorage.setItem('oauth_state', state)

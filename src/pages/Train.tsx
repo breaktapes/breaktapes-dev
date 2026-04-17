@@ -108,13 +108,26 @@ export function Train() {
   const hasAnyWearable = !!(whoopToken || garminToken || stravaToken)
 
   // Handle OAuth callbacks — detect ?state=whoop|garmin|strava&code=
+  // Also handles ?error=... returned by providers on denied/failed auth
   useEffect(() => {
-    const state = searchParams.get('state')
-    const code  = searchParams.get('code')
-    if (!code || !state) return
+    const state    = searchParams.get('state')
+    const code     = searchParams.get('code')
+    const oauthErr = searchParams.get('error')
+
+    if (!state) return
 
     // Strip query params from URL without reload
     window.history.replaceState({}, '', window.location.pathname)
+
+    // Provider rejected the OAuth — e.g. user denied or invalid client_id
+    if (oauthErr) {
+      const provider = state.split(':')[0]
+      const desc = searchParams.get('error_description') ?? oauthErr
+      setOauthStatus(`Failed to connect ${provider}: ${desc}`)
+      return
+    }
+
+    if (!code) return
 
     async function finish() {
       try {
@@ -123,12 +136,13 @@ export function Train() {
         if (provider === 'garmin') await handleGarminCallback(code!, state!)
         if (provider === 'strava') await handleStravaCallback(code!, state!)
         if (!provider || !['whoop', 'garmin', 'strava'].includes(provider)) return
-        setOauthStatus(`${provider} connected!`)
+        setOauthStatus(`${provider.charAt(0).toUpperCase() + provider.slice(1)} connected! ✓`)
         setActiveTab('activities')
       } catch (err) {
         const provider = state?.split(':')[0] ?? state
         console.error('OAuth callback failed:', err)
-        setOauthStatus(`Failed to connect ${provider}. Please try again.`)
+        const msg = err instanceof Error ? err.message : String(err)
+        setOauthStatus(`Failed to connect ${provider}: ${msg}`)
       }
     }
     finish()

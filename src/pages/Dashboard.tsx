@@ -2665,8 +2665,6 @@ function WidgetShell({ label }: { label: string }) {
 
 function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRace: () => void }) {
   const upcoming       = useRaceStore(selectUpcomingRaces)
-  const focusRaceId    = useRaceStore(selectFocusRaceId)
-  const setFocusRaceId = useRaceStore(s => s.setFocusRaceId)
   const today          = todayStr()
   const [editingId, setEditingId] = useState<string | null>(null)
 
@@ -2744,16 +2742,10 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                             <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>{r.name ?? 'Unnamed race'}</span>
                           </div>
                           <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-                            <button onClick={() => setFocusRaceId(focusRaceId === r.id ? null : r.id)}
-                              title={focusRaceId === r.id ? 'Unpin focus race' : 'Set as focus race'}
-                              style={{ background: focusRaceId === r.id ? 'rgba(var(--orange-ch),0.3)' : 'rgba(var(--orange-ch),0.1)', border: '1px solid rgba(var(--orange-ch),0.4)', borderRadius: '6px', color: 'var(--orange)', fontSize: '14px', padding: '5px 8px', cursor: 'pointer', flexShrink: 0 }}>
-                              📌
-                            </button>
                             <button onClick={() => setEditingId(r.id)} style={{ background: 'rgba(var(--orange-ch),0.15)', border: '1px solid rgba(var(--orange-ch),0.4)', borderRadius: '6px', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px', letterSpacing: '0.06em', padding: '5px 10px', cursor: 'pointer', flexShrink: 0 }}>EDIT</button>
                           </div>
                         </div>
                         <div style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: 1.5 }}>
-                          {focusRaceId === r.id && <span style={{ color: 'var(--orange)', marginRight: '6px', fontSize: '10px', fontWeight: 700 }}>📌 FOCUS</span>}
                           {[r.city, r.country].filter(Boolean).join(', ')}
                           {r.distance ? ` · ${distBadge(r.distance) || r.distance + 'K'}` : ''}
                           {' · '}{fmtDateIntl(r.date)}
@@ -2786,11 +2778,6 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                           {d === 0 ? 'TODAY' : `${d}D`}
                         </div>
                         <div style={{ display: 'flex', gap: '4px' }}>
-                          <button onClick={() => setFocusRaceId(focusRaceId === r.id ? null : r.id)}
-                            title={focusRaceId === r.id ? 'Unpin' : 'Set as focus'}
-                            style={{ background: focusRaceId === r.id ? 'rgba(var(--orange-ch),0.2)' : 'var(--surface2)', border: `1px solid ${focusRaceId === r.id ? 'rgba(var(--orange-ch),0.4)' : 'var(--border2)'}`, borderRadius: '5px', fontSize: '11px', padding: '3px 6px', cursor: 'pointer' }}>
-                            📌
-                          </button>
                           <button onClick={() => setEditingId(r.id)} style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: '5px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '10px', letterSpacing: '0.06em', padding: '3px 8px', cursor: 'pointer' }}>EDIT</button>
                         </div>
                       </div>

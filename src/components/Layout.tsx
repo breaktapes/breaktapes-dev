@@ -28,13 +28,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <DataSync />
 
       <header style={{
-        height: 'var(--header-base-height)',
+        height: 'calc(var(--header-base-height) + var(--safe-top, 0px))',
+        paddingTop: 'var(--safe-top, 0px)',
         flexShrink: 0,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '0 16px',
+        padding: 'var(--safe-top, 0px) 16px 0',
         borderBottom: '1px solid var(--border)',
+        overflow: 'hidden',
       }}>
         <span style={{
           fontFamily: 'var(--headline)',

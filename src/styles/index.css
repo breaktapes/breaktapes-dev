@@ -318,7 +318,12 @@ body::after {
 #page-races {
   position: relative;
   overflow: hidden;
-  height: calc(100dvh - var(--header-base-height) - var(--bottom-nav-base-height));
+  /* Subtract header (including safe-top) and bottom nav (including safe-bottom) */
+  height: calc(
+    100dvh
+    - (var(--header-base-height) + var(--safe-top, 0px))
+    - (var(--bottom-nav-base-height) + var(--safe-bottom, 0px))
+  );
 }
 .races-sheet {
   position: absolute; bottom: 0; left: 0; right: 0;

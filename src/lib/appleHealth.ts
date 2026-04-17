@@ -34,19 +34,38 @@ function extractRecords(text: string): HealthRecord[] {
 }
 
 async function flushDate(userId: string, date: string, records: HealthRecord[]) {
+  // Aggregate by type — multiple records of the same type on the same day
+  // (e.g., dozens of heart rate readings) must collapse to one row per type
+  // because the unique constraint is (user_id, date, type).
+  const byType = new Map<string, { count: number; sum: number; unit: string; source: string }>()
+  for (const r of records) {
+    const num = parseFloat(r.value)
+    const existing = byType.get(r.type)
+    if (existing) {
+      existing.count++
+      if (!isNaN(num)) existing.sum += num
+    } else {
+      byType.set(r.type, { count: 1, sum: isNaN(num) ? 0 : num, unit: r.unit, source: r.sourceName })
+    }
+  }
+
+  const rows = Array.from(byType.entries()).map(([type, agg]) => ({
+    user_id: userId,
+    date,
+    type,
+    // Average numeric values across the day; keep raw if only one reading
+    value:  String(agg.count > 1 ? (agg.sum / agg.count).toFixed(2) : agg.sum || 0),
+    unit:   agg.unit,
+    source: agg.source,
+    count:  agg.count,
+  }))
+
   // Upsert in 100-row batches
-  for (let i = 0; i < records.length; i += 100) {
-    const batch = records.slice(i, i + 100).map(r => ({
-      user_id: userId,
-      date,
-      type:   r.type,
-      value:  r.value,
-      unit:   r.unit,
-      source: r.sourceName,
-    }))
-    await supabase.from('apple_health_data').upsert(batch, {
+  for (let i = 0; i < rows.length; i += 100) {
+    const { error } = await supabase.from('apple_health_data').upsert(rows.slice(i, i + 100), {
       onConflict: 'user_id,date,type',
     })
+    if (error) throw new Error(`Supabase upsert failed: ${error.message}`)
   }
 }
 

@@ -222,7 +222,8 @@ export function Settings() {
       }
     } catch (err) {
       console.error('Apple Health import failed:', err)
-      alert('Import failed. Please try again.')
+      const msg = err instanceof Error ? err.message : String(err)
+      alert(`Import failed: ${msg}`)
     } finally {
       setAppleImporting(false)
       e.target.value = ''

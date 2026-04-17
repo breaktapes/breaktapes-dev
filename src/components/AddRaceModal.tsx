@@ -260,12 +260,17 @@ export function AddRaceModal({ onClose, defaultMode = 'past' }: Props) {
   // Final city value
   const finalCity = citySelect === '__other__' ? cityText : (citySelect || cityText)
 
-  // Reset distance preset when sport changes
+  // Reset distance preset when sport changes — but only if current distance
+  // isn't valid for the new sport (prevents catalog suggestion from being overwritten).
   useEffect(() => {
     const presets = DISTANCES_BY_SPORT[sport] ?? []
-    const first = presets.find(p => !CUSTOM_DIST_VALUES.includes(p.value))
-    setDistance(first?.value ?? '__custom__')
-    setCustomDist('')
+    const isValid = presets.some(p => p.value === distance) || CUSTOM_DIST_VALUES.includes(distance)
+    if (!isValid) {
+      const first = presets.find(p => !CUSTOM_DIST_VALUES.includes(p.value))
+      setDistance(first?.value ?? '__custom__')
+      setCustomDist('')
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sport])
 
   // Update dropdown portal position whenever suggestions open
