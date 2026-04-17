@@ -251,7 +251,7 @@ function DetailedRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onCli
     >
       {/* Top row: date chip + name + time */}
       <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: '10px', alignItems: 'center' }}>
-        <div className={`rrc-date-chip${isPB ? ' is-pb' : ''}`} style={{ width: '40px', minHeight: '46px' }}>
+        <div className={`rrc-date-chip${isPB ? ' is-pb' : ''}`}>
           <div className="rrc-date-chip-mon">{mon}</div>
           <div className="rrc-date-chip-day">{day}</div>
         </div>
