@@ -942,6 +942,7 @@ Key routing rules:
 - Ship, deploy, push, create PR → invoke ship
 - QA, test the site, find bugs → invoke qa
 - Code review, check my diff → invoke review
+- Fix issue, fix bug, "fix #N", fix from issue, bug report → invoke fix-from-issue
 - Update docs after shipping → invoke document-release
 - Weekly retro → invoke retro
 - Design system, brand → invoke design-consultation
