@@ -4,13 +4,14 @@ import { motion } from 'framer-motion'
 // ─── SVG Icons ────────────────────────────────────────────────────────────────
 
 const IconHome = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-    <polygon points="13,1.5 3,15 10.5,15 9.5,22.5 21,9 13.5,9"/>
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9.5z"/>
+    <path d="M9 21V12h6v9"/>
   </svg>
 )
 
 const IconRaces = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
     <line x1="3" y1="6"  x2="21" y2="6"/>
     <line x1="3" y1="12" x2="21" y2="12"/>
     <line x1="3" y1="18" x2="16" y2="18"/>
@@ -18,7 +19,7 @@ const IconRaces = () => (
 )
 
 const IconGear = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
     <rect x="2" y="7" width="20" height="14" rx="2"/>
     <path d="M2 11h20"/>
     <path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
@@ -26,13 +27,13 @@ const IconGear = () => (
 )
 
 const IconTrain = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="2,12 6,12 8.5,5 11.5,19 14,12 16,12 17.5,7.5 19,12 22,12"/>
   </svg>
 )
 
 const IconYou = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
     <circle cx="12" cy="7" r="4"/>
     <path d="M4 21c0-4.418 3.582-8 8-8s8 3.582 8 8"/>
   </svg>

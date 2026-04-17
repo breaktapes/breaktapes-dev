@@ -445,7 +445,7 @@ function GreetingCard({ onCustomize }: { onCustomize: () => void }) {
         ) : geoState === 'asking' ? (
           <button
             onClick={requestWeather}
-            style={{ marginTop: '8px', background: 'rgba(255,77,0,0.12)', border: '1px solid rgba(255,77,0,0.35)', borderRadius: '8px', padding: '8px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '12px', letterSpacing: '0.06em', textTransform: 'uppercase' }}
+            style={{ marginTop: '8px', background: 'rgba(var(--orange-ch),0.12)', border: '1px solid rgba(var(--orange-ch),0.35)', borderRadius: '8px', padding: '8px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '12px', letterSpacing: '0.06em', textTransform: 'uppercase' }}
           >
             📍 Tap to show local weather
           </button>
@@ -627,7 +627,7 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
                     padding: '12px 8px',
                     borderRadius: '10px',
                     border: priority === p.key ? '2px solid var(--orange)' : '1.5px solid var(--border2)',
-                    background: priority === p.key ? 'rgba(255,77,0,0.12)' : 'var(--surface3)',
+                    background: priority === p.key ? 'rgba(var(--orange-ch),0.12)' : 'var(--surface3)',
                     cursor: 'pointer',
                     display: 'flex',
                     flexDirection: 'column',
@@ -665,8 +665,8 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
             onClick={() => { setFocusRaceId(isFocused ? null : race.id); onClose() }}
             style={{
               width: '100%',
-              background: isFocused ? 'rgba(255,77,0,0.12)' : 'var(--surface3)',
-              border: isFocused ? '1.5px solid rgba(255,77,0,0.5)' : '1.5px solid var(--border2)',
+              background: isFocused ? 'rgba(var(--orange-ch),0.12)' : 'var(--surface3)',
+              border: isFocused ? '1.5px solid rgba(var(--orange-ch),0.5)' : '1.5px solid var(--border2)',
               borderRadius: '10px',
               color: isFocused ? 'var(--orange)' : 'var(--white)',
               fontFamily: 'var(--headline)',
@@ -1121,7 +1121,7 @@ function SeasonPlannerWidget({ onAddRace }: { onAddRace: () => void }) {
   }
 
   const badge = upcoming90.length >= 3 ? 'HIGH' : upcoming90.length >= 1 ? 'MEDIUM' : 'LOW'
-  const badgeColors = { HIGH: 'var(--orange)', MEDIUM: '#FFD770', LOW: 'var(--muted)' }
+  const badgeColors = { HIGH: 'var(--orange)', MEDIUM: 'var(--gold)', LOW: 'var(--muted)' }
   const bc = badgeColors[badge]
 
   return (
@@ -1188,7 +1188,7 @@ function RecoveryIntelWidget() {
   const daysLeft = Math.max(0, recoveryDays - daysSince)
   const loadScore = Math.min(100, Math.round(dist * 2))
   const badge = recoveryDays >= 14 ? 'HIGH' : recoveryDays >= 7 ? 'MEDIUM' : 'LOW'
-  const bc = badge === 'HIGH' ? 'var(--orange)' : badge === 'MEDIUM' ? '#FFD770' : 'var(--green)'
+  const bc = badge === 'HIGH' ? 'var(--orange)' : badge === 'MEDIUM' ? 'var(--gold)' : 'var(--green)'
 
   return (
     <div style={st.glowCard}>
@@ -1322,7 +1322,7 @@ function BostonQualWidget() {
             const gapBuffer = pbSecs - (bqTarget - BQ_BUFFER_SECS)
             const safelyIn  = gapBuffer <= 0
             const qualified = gapStd <= 0
-            const color = safelyIn ? 'var(--green)' : qualified ? '#FFD770' : 'var(--orange)'
+            const color = safelyIn ? 'var(--green)' : qualified ? 'var(--gold)' : 'var(--orange)'
             const label = safelyIn
               ? `${secsToHMS(Math.abs(gapBuffer))} inside safe buffer ✓`
               : qualified
@@ -1434,7 +1434,7 @@ function CareerMomentumWidget() {
   const races = useRaceStore(selectRaces)
   const { score, badge } = useMemo(() => computeMomentum(races), [races])
 
-  const bc = badge === 'HOT' ? 'var(--orange)' : badge === 'RISING' ? '#FFD770' :
+  const bc = badge === 'HOT' ? 'var(--orange)' : badge === 'RISING' ? 'var(--gold)' :
     badge === 'NEUTRAL' ? 'var(--muted)' : 'rgba(var(--orange-ch), 0.4)'
 
   return (
@@ -1687,7 +1687,7 @@ function RaceReadinessWidget() {
     return { signal, score: s, detail: `${daysSince}d since ${distBadge(last.distance)} · recovery window: ${recoveryDays}d` }
   }, [races, whoopRecovery, today])
 
-  const sigColor = signal === 'READY' ? 'var(--green)' : signal === 'BUILDING' ? '#FFD770' : 'var(--orange)'
+  const sigColor = signal === 'READY' ? 'var(--green)' : signal === 'BUILDING' ? 'var(--gold)' : 'var(--orange)'
 
   return (
     <div style={st.glowCard}>
@@ -1901,7 +1901,7 @@ function PressurePerformerWidget() {
     return { aPct, otherPct, label, aCount: aRaces.length, otherCount: otherRaces.length }
   }, [races, today])
 
-  const labelColor = result?.label === 'CLUTCH' ? 'var(--green)' : result?.label === 'RELAXED RACER' ? '#FFD770' : 'var(--orange)'
+  const labelColor = result?.label === 'CLUTCH' ? 'var(--green)' : result?.label === 'RELAXED RACER' ? 'var(--gold)' : 'var(--orange)'
 
   return (
     <div style={st.glowCard}>
@@ -2221,7 +2221,7 @@ function CourseFitWidget() {
 
     const score = Math.round((surfAvg * 0.6 + elevFit * 0.4))
     const label = score >= 70 ? 'GREAT FIT' : score >= 50 ? 'SOLID FIT' : 'TOUGH COURSE'
-    const color = score >= 70 ? 'var(--green)' : score >= 50 ? '#FFD770' : 'var(--orange)'
+    const color = score >= 70 ? 'var(--green)' : score >= 50 ? 'var(--gold)' : 'var(--orange)'
 
     return { score, label, color, nextSurface, surfaceRaceCount: surfaceRaces.length }
   }, [races, nextRace, today])
@@ -2317,7 +2317,7 @@ function PBProbabilityWidget() {
     const clamped = Math.max(5, Math.min(95, weighted))
 
     const label = clamped >= 65 ? 'HIGH' : clamped >= 40 ? 'MODERATE' : 'LOW'
-    const color = clamped >= 65 ? 'var(--green)' : clamped >= 40 ? '#FFD770' : 'var(--orange)'
+    const color = clamped >= 65 ? 'var(--green)' : clamped >= 40 ? 'var(--gold)' : 'var(--orange)'
 
     return { probability: clamped, label, color, hasPBForDist }
   }, [races, nextRace, today])
@@ -2401,7 +2401,7 @@ function StreakRiskWidget() {
 
     const isRisk = streak >= 14
     const label = isRisk ? 'RISK' : streak >= 7 ? 'BUILDING' : 'HEALTHY'
-    const color = isRisk ? 'var(--orange)' : streak >= 7 ? '#FFD770' : 'var(--green)'
+    const color = isRisk ? 'var(--orange)' : streak >= 7 ? 'var(--gold)' : 'var(--green)'
     const note = isRisk
       ? `${streak}-day streak — consider a rest day to avoid overtraining.`
       : streak >= 7
@@ -2735,7 +2735,7 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
 
                   {/* A-race — large highlighted card */}
                   {isA ? (
-                    <div style={{ background: 'linear-gradient(135deg, rgba(255,77,0,0.18) 0%, rgba(255,77,0,0.08) 100%)', border: '1.5px solid rgba(255,77,0,0.5)', borderRadius: '12px', padding: '16px', position: 'relative', overflow: 'hidden' }}>
+                    <div style={{ background: 'linear-gradient(135deg, rgba(var(--orange-ch),0.18) 0%, rgba(var(--orange-ch),0.08) 100%)', border: '1.5px solid rgba(var(--orange-ch),0.5)', borderRadius: '12px', padding: '16px', position: 'relative', overflow: 'hidden' }}>
                       <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: '4px', background: 'var(--orange)', borderRadius: '12px 0 0 12px' }} />
                       <div style={{ paddingLeft: '10px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '6px' }}>
@@ -2746,10 +2746,10 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                           <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
                             <button onClick={() => setFocusRaceId(focusRaceId === r.id ? null : r.id)}
                               title={focusRaceId === r.id ? 'Unpin focus race' : 'Set as focus race'}
-                              style={{ background: focusRaceId === r.id ? 'rgba(255,77,0,0.3)' : 'rgba(255,77,0,0.1)', border: '1px solid rgba(255,77,0,0.4)', borderRadius: '6px', color: 'var(--orange)', fontSize: '14px', padding: '5px 8px', cursor: 'pointer', flexShrink: 0 }}>
+                              style={{ background: focusRaceId === r.id ? 'rgba(var(--orange-ch),0.3)' : 'rgba(var(--orange-ch),0.1)', border: '1px solid rgba(var(--orange-ch),0.4)', borderRadius: '6px', color: 'var(--orange)', fontSize: '14px', padding: '5px 8px', cursor: 'pointer', flexShrink: 0 }}>
                               📌
                             </button>
-                            <button onClick={() => setEditingId(r.id)} style={{ background: 'rgba(255,77,0,0.15)', border: '1px solid rgba(255,77,0,0.4)', borderRadius: '6px', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px', letterSpacing: '0.06em', padding: '5px 10px', cursor: 'pointer', flexShrink: 0 }}>EDIT</button>
+                            <button onClick={() => setEditingId(r.id)} style={{ background: 'rgba(var(--orange-ch),0.15)', border: '1px solid rgba(var(--orange-ch),0.4)', borderRadius: '6px', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px', letterSpacing: '0.06em', padding: '5px 10px', cursor: 'pointer', flexShrink: 0 }}>EDIT</button>
                           </div>
                         </div>
                         <div style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: 1.5 }}>
@@ -2760,7 +2760,7 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                           {r.goalTime ? <span style={{ color: 'var(--orange)', marginLeft: '6px' }}>🎯 {r.goalTime}</span> : ''}
                         </div>
                         <div style={{ marginTop: '10px' }}>
-                          <span style={{ display: 'inline-block', background: d === 0 ? 'var(--orange)' : 'rgba(255,77,0,0.2)', color: d === 0 ? '#000' : 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', letterSpacing: '0.06em', padding: '4px 12px', borderRadius: '6px' }}>
+                          <span style={{ display: 'inline-block', background: d === 0 ? 'var(--orange)' : 'rgba(var(--orange-ch),0.2)', color: d === 0 ? '#000' : 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', letterSpacing: '0.06em', padding: '4px 12px', borderRadius: '6px' }}>
                             {d === 0 ? 'TODAY' : `${d} DAYS`}
                           </span>
                         </div>
@@ -2788,7 +2788,7 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                         <div style={{ display: 'flex', gap: '4px' }}>
                           <button onClick={() => setFocusRaceId(focusRaceId === r.id ? null : r.id)}
                             title={focusRaceId === r.id ? 'Unpin' : 'Set as focus'}
-                            style={{ background: focusRaceId === r.id ? 'rgba(255,77,0,0.2)' : 'var(--surface2)', border: `1px solid ${focusRaceId === r.id ? 'rgba(255,77,0,0.4)' : 'var(--border2)'}`, borderRadius: '5px', fontSize: '11px', padding: '3px 6px', cursor: 'pointer' }}>
+                            style={{ background: focusRaceId === r.id ? 'rgba(var(--orange-ch),0.2)' : 'var(--surface2)', border: `1px solid ${focusRaceId === r.id ? 'rgba(var(--orange-ch),0.4)' : 'var(--border2)'}`, borderRadius: '5px', fontSize: '11px', padding: '3px 6px', cursor: 'pointer' }}>
                             📌
                           </button>
                           <button onClick={() => setEditingId(r.id)} style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: '5px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '10px', letterSpacing: '0.06em', padding: '3px 8px', cursor: 'pointer' }}>EDIT</button>
@@ -2819,7 +2819,7 @@ function NoUpcomingRaceCTA({ onAddRace }: { onAddRace: () => void }) {
   return (
     <div style={{
       background: 'linear-gradient(135deg, var(--surface2) 0%, var(--surface3) 100%)',
-      border: '1px dashed rgba(255,77,0,0.35)',
+      border: '1px dashed rgba(var(--orange-ch),0.35)',
       borderRadius: '12px',
       padding: '20px',
       display: 'flex',

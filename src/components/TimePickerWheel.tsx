@@ -168,9 +168,9 @@ export function TimePickerWheel({
         right:        0,
         top:          ITEM_H,
         height:       ITEM_H,
-        background:   'rgba(255,77,0,0.08)',
-        borderTop:    '1px solid rgba(255,77,0,0.18)',
-        borderBottom: '1px solid rgba(255,77,0,0.18)',
+        background:   'rgba(var(--orange-ch),0.08)',
+        borderTop:    '1px solid rgba(var(--orange-ch),0.18)',
+        borderBottom: '1px solid rgba(var(--orange-ch),0.18)',
         pointerEvents: 'none',
         zIndex:       1,
       }} />

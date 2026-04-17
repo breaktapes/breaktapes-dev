@@ -534,12 +534,18 @@ export function ViewEditRaceModal({ race, onClose }: Props) {
   return (
     <>
     <div style={st.overlay} onClick={onClose}>
-      <div style={st.sheet} onClick={e => e.stopPropagation()}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="view-edit-race-modal-title"
+        style={st.sheet}
+        onClick={e => e.stopPropagation()}
+      >
         <div style={st.handle} />
 
         {/* Header */}
         <div style={st.header}>
-          <span style={st.title}>{mode === 'edit' ? 'EDIT RACE' : 'RACE DETAIL'}</span>
+          <span id="view-edit-race-modal-title" style={st.title}>{mode === 'edit' ? 'EDIT RACE' : 'RACE DETAIL'}</span>
           <button style={st.closeBtn} onClick={onClose} aria-label="Close">✕</button>
         </div>
 

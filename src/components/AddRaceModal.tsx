@@ -544,6 +544,9 @@ export function AddRaceModal({ onClose, defaultMode = 'past' }: Props) {
       onTouchMove={e => e.stopPropagation()}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="add-race-modal-title"
         style={st.sheet}
         onClick={e => e.stopPropagation()}
         onTouchMove={e => e.stopPropagation()}
@@ -554,7 +557,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past' }: Props) {
         {/* Header */}
         <div style={st.header}>
           <div>
-            <span style={st.title}>{mode === 'past' ? 'LOG A RACE' : 'ADD UPCOMING RACE'}</span>
+            <span id="add-race-modal-title" style={st.title}>{mode === 'past' ? 'LOG A RACE' : 'ADD UPCOMING RACE'}</span>
             <p style={st.subtitle}>{mode === 'past' ? 'Cross the line. Claim the medal.' : 'Plan ahead. Chase the goal.'}</p>
           </div>
           <button style={st.closeBtn} onClick={onClose} aria-label="Close">✕</button>
