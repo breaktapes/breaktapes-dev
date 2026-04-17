@@ -4,7 +4,7 @@
  * Canvas note: fillStyle cannot resolve CSS custom properties (var(--orange)).
  * All colours are hardcoded hex values from the BREAKTAPES design system.
  */
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import type { Race } from '@/types'
 
 // ── Design tokens (canvas-safe, no CSS vars) ──────────────────────────────────
@@ -186,6 +186,14 @@ export function RaceShareCard({ race, athleteName, onClose }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [drawn, setDrawn] = useState(false)
   const [copying, setCopying] = useState(false)
+
+  // Auto-generate card on open — no extra tap required
+  useEffect(() => {
+    if (canvasRef.current) {
+      drawCard(canvasRef.current, race, athleteName)
+      setDrawn(true)
+    }
+  }, [])
 
   function draw() {
     if (!canvasRef.current) return

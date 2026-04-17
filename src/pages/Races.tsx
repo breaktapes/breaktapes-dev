@@ -216,7 +216,15 @@ function CompactRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onClic
   const label = distLabel(race.distance)
 
   return (
-    <div className={`race-row-compact${isPB ? ' is-pb' : ''}`} onClick={onClick} style={{ cursor: 'pointer' }}>
+    <div
+      className={`race-row-compact${isPB ? ' is-pb' : ''}`}
+      onClick={onClick}
+      style={{
+        cursor: 'pointer',
+        // Extend PB gradient to full list width by overcoming container padding
+        ...(isPB ? { marginLeft: '-1rem', marginRight: '-1rem', paddingLeft: 'calc(1rem + 6px)', paddingRight: '1rem' } : {}),
+      }}
+    >
       <div className={`rrc-date-chip${isPB ? ' is-pb' : ''}`}>
         <div className="rrc-date-chip-mon">{mon}</div>
         <div className="rrc-date-chip-day">{day}</div>

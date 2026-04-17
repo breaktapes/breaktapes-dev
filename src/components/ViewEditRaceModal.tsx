@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { RaceShareCard } from '@/components/RaceShareCard'
@@ -133,6 +133,43 @@ function resolveDistKm(dist: string): { km: string; isNumeric: boolean } {
   return { km: dist, isNumeric: false }
 }
 
+// ─── PB detection ────────────────────────────────────────────────────────────
+
+function _timeToSecs(t: string): number | null {
+  const parts = t.split(':').map(Number)
+  if (parts.some(isNaN)) return null
+  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2]
+  if (parts.length === 2) return parts[0] * 60 + parts[1]
+  return null
+}
+
+function _normKey(d: string): string {
+  const km = parseFloat(d)
+  if (!isNaN(km)) {
+    if (km >= 225.9 && km <= 226.1) return 'ironman'
+    if (km >= 112.9 && km <= 113.1) return '70.3'
+    if (km >= 51.4 && km <= 51.6) return 'olympic'
+    if (km >= 42.1 && km <= 42.3) return 'marathon'
+    if (km >= 21.0 && km <= 21.2) return 'half'
+    return `${km}`
+  }
+  return d.toLowerCase()
+}
+
+function _checkIsPB(race: Race, allRaces: Race[]): boolean {
+  if (!race.time || !race.distance) return false
+  const key = _normKey(race.distance)
+  const secs = _timeToSecs(race.time)
+  if (secs == null) return false
+  for (const r of allRaces) {
+    if (r.id === race.id || !r.time || !r.distance) continue
+    if (_normKey(r.distance) !== key) continue
+    const s = _timeToSecs(r.time)
+    if (s != null && s < secs) return false
+  }
+  return true
+}
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 interface Props {
@@ -142,25 +179,27 @@ interface Props {
 
 // ─── View panel (read mode) ───────────────────────────────────────────────────
 
-function ViewPanel({ race, onEdit, onDelete, onShare }: { race: Race; onEdit: () => void; onDelete: () => void; onShare: () => void }) {
+function ViewPanel({ race, isPB, onEdit, onDelete, onShare }: { race: Race; isPB: boolean; onEdit: () => void; onDelete: () => void; onShare: () => void }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
   const medalColor = race.medal ? (MEDAL_COLORS[race.medal] ?? 'var(--orange)') : null
   const units = useUnits()
 
   return (
     <div style={st.body}>
-      {/* Name + date */}
-      <div>
-        <h2 style={st.raceName}>{race.name || 'Untitled Race'}</h2>
-        <p style={st.raceMeta}>{fmtDate(race.date)}</p>
+      {/* Name + date — centered hero */}
+      <div style={{ textAlign: 'center', paddingBottom: '4px' }}>
+        <h2 style={{ ...st.raceName, textAlign: 'center', textTransform: 'uppercase' }}>{race.name || 'UNTITLED RACE'}</h2>
+        <p style={{ ...st.raceMeta, textAlign: 'center' }}>{fmtDate(race.date)}</p>
       </div>
 
       {/* Key stats row */}
       <div style={st.statsRow}>
         {race.time && (
-          <div style={st.statBox}>
-            <div style={st.statVal}>{race.time}</div>
-            <div style={st.statLabel}>FINISH TIME</div>
+          <div style={{ ...st.statBox, ...(isPB ? { borderColor: 'rgba(200,150,60,0.45)', background: 'rgba(200,150,60,0.07)' } : {}) }}>
+            <div style={{ ...st.statVal, color: isPB ? '#C8963C' : 'var(--orange)' }}>{race.time}</div>
+            <div style={{ ...st.statLabel, ...(isPB ? { color: 'rgba(200,150,60,0.7)' } : {}) }}>
+              {isPB ? '⭐ PERSONAL BEST' : 'FINISH TIME'}
+            </div>
           </div>
         )}
         {race.distance && (() => {
@@ -197,24 +236,32 @@ function ViewPanel({ race, onEdit, onDelete, onShare }: { race: Race; onEdit: ()
         )}
       </div>
 
-      {/* Info rows */}
+      {/* Pill chips — location, priority, medal */}
+      {(race.city || race.country || race.priority || race.medal) && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+          {(race.city || race.country) && (
+            <span style={st.infoPill}>
+              📍 {[race.city, race.country].filter(Boolean).join(', ')}
+            </span>
+          )}
+          {race.priority && (
+            <span style={{ ...st.infoPill, ...(race.priority === 'A' ? { borderColor: 'rgba(var(--orange-ch),0.4)', color: 'var(--orange)' } : {}) }}>
+              {race.priority === 'A' ? '🎯 A Race' : race.priority === 'B' ? '⭐ B Race' : '🏃 C Race'}
+            </span>
+          )}
+          {race.medal && (
+            <span style={{ ...st.infoPill, borderColor: `${medalColor}55`, color: medalColor ?? 'var(--white)' }}>
+              {race.medal === 'gold' ? '🥇' : race.medal === 'silver' ? '🥈' : race.medal === 'bronze' ? '🥉' : '🏅'}{' '}
+              {race.medal === '__custom__' ? 'Custom' : race.medal.charAt(0).toUpperCase() + race.medal.slice(1)}
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* Info rows — remaining details */}
       <div style={st.infoGrid}>
         {race.sport && <InfoRow label="Sport" value={race.sport} />}
-        {(race.city || race.country) && <InfoRow label="Location" value={[race.city, race.country].filter(Boolean).join(', ')} />}
         {race.outcome && <InfoRow label="Outcome" value={race.outcome} />}
-        {race.priority && (
-          <InfoRow label="Priority" value={
-            race.priority === 'A' ? '🎯 A Race' :
-            race.priority === 'B' ? '⭐ B Race' : '🏃 C Race'
-          } />
-        )}
-        {race.medal && (
-          <InfoRow
-            label="Medal"
-            value={race.medal === '__custom__' ? 'Custom' : race.medal.charAt(0).toUpperCase() + race.medal.slice(1)}
-            valueColor={medalColor ?? undefined}
-          />
-        )}
         {race.bibNumber && <InfoRow label="Bib" value={race.bibNumber} />}
         {race.goalTime && <InfoRow label="Goal Time" value={race.goalTime} />}
         {race.elevation != null && <InfoRow label="Elevation" value={`${race.elevation}m`} />}
@@ -511,9 +558,12 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 export function ViewEditRaceModal({ race, onClose }: Props) {
   const updateRace  = useRaceStore(s => s.updateRace)
   const deleteRace  = useRaceStore(s => s.deleteRace)
+  const allRaces    = useRaceStore(s => s.races)
   const athlete     = useAthleteStore(s => s.athlete)
   const [mode, setMode]       = useState<'view' | 'edit'>('view')
   const [showShare, setShowShare] = useState(false)
+
+  const isPB = useMemo(() => _checkIsPB(race, allRaces), [race, allRaces])
 
   // Lock body scroll while modal is open
   useEffect(() => {
@@ -545,7 +595,9 @@ export function ViewEditRaceModal({ race, onClose }: Props) {
 
         {/* Header */}
         <div style={st.header}>
-          <span id="view-edit-race-modal-title" style={st.title}>{mode === 'edit' ? 'EDIT RACE' : 'RACE DETAIL'}</span>
+          <span id="view-edit-race-modal-title" style={mode === 'edit' ? st.title : st.titleMono}>
+            {mode === 'edit' ? 'EDIT RACE' : 'RACE DETAIL'}
+          </span>
           <button style={st.closeBtn} onClick={onClose} aria-label="Close">✕</button>
         </div>
 
@@ -554,6 +606,7 @@ export function ViewEditRaceModal({ race, onClose }: Props) {
           {mode === 'view' ? (
             <ViewPanel
               race={race}
+              isPB={isPB}
               onEdit={() => setMode('edit')}
               onDelete={handleDelete}
               onShare={() => setShowShare(true)}
@@ -633,6 +686,15 @@ const st = {
     color: 'var(--white)',
   } as React.CSSProperties,
 
+  titleMono: {
+    fontFamily: 'var(--mono)',
+    fontWeight: 400,
+    fontSize: '11px',
+    letterSpacing: '0.14em',
+    textTransform: 'uppercase',
+    color: 'var(--muted)',
+  } as React.CSSProperties,
+
   closeBtn: {
     background: 'transparent',
     border: 'none',
@@ -707,6 +769,20 @@ const st = {
   infoGrid: {
     display: 'flex',
     flexDirection: 'column' as const,
+  } as React.CSSProperties,
+
+  infoPill: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '4px',
+    padding: '5px 10px',
+    background: 'var(--surface3)',
+    border: '1px solid var(--border2)',
+    borderRadius: '20px',
+    fontSize: '12px',
+    color: 'var(--white)',
+    fontWeight: 500,
+    lineHeight: 1.2,
   } as React.CSSProperties,
 
   sectionLabel: {

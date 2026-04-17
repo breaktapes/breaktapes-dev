@@ -95,10 +95,14 @@ function distBadge(d: string | undefined): string {
   if (!d) return ''
   const n = distanceToKm(d)
   if (n === 0) return d
+  if (n >= 225.9 && n <= 226.1) return 'Ironman / Full Distance'
+  if (n >= 112.9 && n <= 113.1) return '70.3 / Middle Distance'
+  if (n >= 51.4 && n <= 51.6) return 'Olympic'
   if (n >= 42 && n <= 42.3) return 'Marathon'
   if (n >= 21 && n <= 21.2) return 'Half Marathon'
   if (n >= 10 && n <= 10.1) return '10K'
   if (n >= 5 && n <= 5.1) return '5K'
+  if (n > 42.3) return 'Ultra Marathon'
   return `${n}K`
 }
 
