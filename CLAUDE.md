@@ -946,6 +946,7 @@ Key routing rules:
 - Weekly retro → invoke retro
 - Design system, brand → invoke design-consultation
 - Visual audit, design polish → invoke design-review
+- UI redesign, "give me options", "upgrade this UI/UX", "show me alternatives", design variants → invoke design-variants
 - Architecture review → invoke plan-eng-review
 - Save progress, checkpoint, resume → invoke checkpoint
 - Code quality, health check → invoke health
