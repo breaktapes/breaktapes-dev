@@ -469,7 +469,7 @@ function GreetingCard({ onCustomize }: { onCustomize: () => void }) {
 
 function PreRaceBriefing({ onAddRace }: { onAddRace: () => void }) {
   const races    = useRaceStore(selectRaces)
-  const nextRace = useRaceStore(selectFocusRace)   // uses focus race if set, else nearest
+  const nextRace = useRaceStore(selectNextRace)   // always nearest upcoming — never follows focus pin
   const today    = todayStr()
   const pbMap    = useMemo(() => buildPBMap(races), [races])
 
@@ -2495,11 +2495,105 @@ function AdvancedRaceDNAWidget() {
 // ─── Weather Fit Score Widget (Pro) ──────────────────────────────────────────
 
 function WeatherFitWidget() {
+  const races    = useRaceStore(selectRaces)
   const nextRace = useRaceStore(selectNextRace)
-  const teaser = nextRace
-    ? `Next race: ${nextRace.name ?? 'upcoming'}. Compare your historical weather performance against the forecast.`
-    : 'Add an upcoming race to see your weather fit score.'
-  return <ProGate label="WEATHER FIT SCORE" teaser={teaser} />
+  const today    = todayStr()
+
+  const result = useMemo(() => {
+    const past = races.filter(r => r.date <= today && r.placing && r.weather?.temp != null)
+    if (past.length < 2) return null
+
+    // Bucket performance by temp
+    const buckets: { label: string; min: number; max: number; pcts: number[]; emoji: string }[] = [
+      { label: 'Cold (<5°C)',  min: -99, max:  5, pcts: [], emoji: '🥶' },
+      { label: 'Cool (5–12)', min:   5, max: 12, pcts: [], emoji: '🌤' },
+      { label: 'Mild (12–18)',min:  12, max: 18, pcts: [], emoji: '☀️' },
+      { label: 'Warm (18–24)',min:  18, max: 24, pcts: [], emoji: '🌡' },
+      { label: 'Hot (>24°C)', min:  24, max: 99, pcts: [], emoji: '🔥' },
+    ]
+
+    for (const r of past) {
+      const t = r.weather!.temp!
+      const p = parsePlacing(r.placing)
+      if (!p) continue
+      const b = buckets.find(b => t >= b.min && t < b.max)
+      if (b) b.pcts.push(p.percentile)
+    }
+
+    const ranked = buckets
+      .filter(b => b.pcts.length > 0)
+      .map(b => ({ ...b, avg: Math.round(b.pcts.reduce((a, c) => a + c, 0) / b.pcts.length) }))
+      .sort((a, b) => b.avg - a.avg)
+
+    if (!ranked.length) return null
+
+    const best = ranked[0]
+
+    // Estimate next race month's typical temp (rough heuristic by month)
+    let fitLabel = 'UNKNOWN'
+    let fitColor = 'var(--muted)'
+    if (nextRace?.date) {
+      const m = parseInt(nextRace.date.split('-')[1] ?? '6')
+      // rough northern-hemisphere estimate
+      const estTemp = [2, 3, 7, 11, 16, 20, 23, 22, 17, 12, 6, 3][m - 1]
+      const matchBucket = ranked.find(b => estTemp >= b.min && estTemp < b.max)
+      if (matchBucket) {
+        const rank = ranked.indexOf(matchBucket)
+        if (rank === 0) { fitLabel = 'IDEAL CONDITIONS'; fitColor = 'var(--green)' }
+        else if (rank === 1) { fitLabel = 'GOOD CONDITIONS'; fitColor = '#7CFC00' }
+        else { fitLabel = 'CHALLENGING CONDITIONS'; fitColor = 'var(--orange)' }
+      }
+    }
+
+    return { ranked: ranked.slice(0, 3), best, fitLabel, fitColor, total: past.length }
+  }, [races, nextRace, today])
+
+  return (
+    <div className="card-v3" style={st.glowCard}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+        <div>
+          <div style={st.widgetLabel}>WEATHER FIT SCORE</div>
+          <div style={st.widgetTitle}>
+            {result ? result.fitLabel : 'YOUR CLIMATE PROFILE'}
+          </div>
+        </div>
+        <span style={{ fontSize: '20px', flexShrink: 0 }}>🌤</span>
+      </div>
+
+      {!result ? (
+        <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>
+          Log 2+ races with placing data to build your weather performance profile.
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '4px' }}>
+          {nextRace && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '13px', color: result.fitColor, letterSpacing: '0.08em' }}>
+                {result.fitLabel}
+              </span>
+            </div>
+          )}
+          <div style={st.widgetDivider} />
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '10px', letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase' }}>
+            YOUR BEST PERFORMING CONDITIONS
+          </div>
+          {result.ranked.map((b, i) => (
+            <div key={b.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '12px', color: i === 0 ? 'var(--white)' : 'var(--muted)', fontWeight: i === 0 ? 700 : 400 }}>
+                {b.emoji} {b.label}
+              </span>
+              <span style={{ fontSize: '12px', fontWeight: 700, color: i === 0 ? 'var(--green)' : 'var(--muted)' }}>
+                Top {100 - b.avg}% {i === 0 && '★'}
+              </span>
+            </div>
+          ))}
+          <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>
+            Based on {result.total} races with weather + placing data
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
 
 // ─── Race Gap Analysis Widget (Pro) ──────────────────────────────────────────
@@ -2580,10 +2674,116 @@ function RaceComparerWidget() {
 
 function RaceStackWidget() {
   const nextRace = useRaceStore(selectNextRace)
-  const teaser = nextRace
-    ? `Your next race is ${nextRace.name ?? 'upcoming'} (${distBadge(nextRace.distance) || nextRace.distance + 'K'}). Generate a personalised race-day checklist based on course type, climate, and travel.`
-    : 'Add an upcoming race to generate a personalised race-day checklist.'
-  return <ProGate label="RACE STACK PLANNER" teaser={teaser} />
+
+  const checklist = useMemo(() => {
+    if (!nextRace) return null
+
+    const dist    = distanceToKm(nextRace.distance)
+    const surface = (nextRace.surface ?? 'road').toLowerCase()
+    const sport   = (nextRace.sport   ?? 'run').toLowerCase()
+    const isTri   = sport.includes('tri') || sport.includes('iron') || sport === 'duathlon'
+    const isUltra = dist > 50
+    const isTrail = surface.includes('trail') || surface.includes('mountain')
+    const month   = nextRace.date ? parseInt(nextRace.date.split('-')[1] ?? '6') : 6
+    const isHot   = [5, 6, 7, 8, 9].includes(month)
+    const isCold  = [11, 12, 1, 2].includes(month)
+
+    const categories: { label: string; emoji: string; items: string[] }[] = []
+
+    // Core running kit
+    const core: string[] = [
+      isTrail ? 'Trail shoes' : 'Race flats / carbon shoes',
+      'Race kit (top + shorts/tights)',
+      'Race bib + safety pins',
+      'GPS watch + charged',
+    ]
+    if (isHot)  core.push('Cap / visor', 'Sunscreen SPF50+', 'Extra electrolytes')
+    if (isCold) core.push('Arm warmers', 'Gloves', 'Throwaway top for start')
+    categories.push({ label: 'RACE KIT', emoji: '👟', items: core })
+
+    // Nutrition
+    const nutrition: string[] = []
+    if (dist >= 21)  nutrition.push('Gels × ' + Math.ceil(dist / 10), 'Electrolyte tabs')
+    if (dist >= 42)  nutrition.push('Real food / bars', 'Hydration vest or belt')
+    if (isUltra)     nutrition.push('Drop bags packed', 'Headtorch + spare batteries')
+    if (nutrition.length) categories.push({ label: 'NUTRITION', emoji: '⚡', items: nutrition })
+
+    // Triathlon-specific
+    if (isTri) {
+      const triItems = [
+        'Wetsuit + wetsuit lube', 'Goggles (+ spare pair)',
+        'Transition bag', 'Helmet (must)', 'Cycling shoes + cleats',
+        'Race number belt', 'Flat kit (tube, CO2, tyre levers)',
+      ]
+      categories.push({ label: 'TRIATHLON', emoji: '🏊', items: triItems })
+    }
+
+    // Trail-specific
+    if (isTrail && !isTri) {
+      const trailItems = ['Poles (check rules)', 'Mandatory kit bag', 'Buff / beanie']
+      if (dist >= 42) trailItems.push('Emergency blanket', 'Whistle')
+      categories.push({ label: 'TRAIL EXTRAS', emoji: '⛰', items: trailItems })
+    }
+
+    // Day-before / travel
+    const prep = ['Lay out kit tonight', 'Charge all devices', 'Check bib pickup time']
+    if (nextRace.city) prep.push('Route to venue saved offline')
+    categories.push({ label: 'DAY BEFORE', emoji: '📋', items: prep })
+
+    return categories
+  }, [nextRace])
+
+  const [openCat, setOpenCat] = useState<string | null>('RACE KIT')
+
+  return (
+    <div className="card-v3" style={st.glowCard}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+        <div>
+          <div style={st.widgetLabel}>RACE STACK PLANNER</div>
+          <div style={st.widgetTitle}>
+            {nextRace ? (nextRace.name ?? 'RACE DAY').toUpperCase() : 'ADD A RACE'}
+          </div>
+        </div>
+        <span style={{ fontSize: '20px', flexShrink: 0 }}>🎒</span>
+      </div>
+
+      {!checklist ? (
+        <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>
+          Add an upcoming race to generate your personalised race-day kit list.
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px' }}>
+          {checklist.map(cat => (
+            <div key={cat.label}>
+              <button
+                onClick={() => setOpenCat(openCat === cat.label ? null : cat.label)}
+                style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0' }}
+              >
+                <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px', letterSpacing: '0.12em', color: 'var(--white)', textTransform: 'uppercase' as const }}>
+                  {cat.emoji} {cat.label}
+                </span>
+                <span style={{ fontSize: '10px', color: 'var(--muted)' }}>{openCat === cat.label ? '▲' : '▼'} {cat.items.length}</span>
+              </button>
+              {openCat === cat.label && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', paddingBottom: '6px' }}>
+                  {cat.items.map(item => (
+                    <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '12px', color: 'var(--muted)' }}>
+                      <span style={{ color: 'var(--orange)', flexShrink: 0, marginTop: '1px' }}>✓</span>
+                      {item}
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div style={st.widgetDivider} />
+            </div>
+          ))}
+          <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>
+            Tailored for {distBadge(nextRace?.distance) || nextRace?.distance || 'your race'} · {(nextRace?.surface ?? 'road')}
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
 
 // ─── Adaptive Goals Widget (Pro) ─────────────────────────────────────────────
