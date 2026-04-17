@@ -3453,9 +3453,9 @@ const st = {
 
   briefingTitle: {
     fontFamily: 'var(--headline)',
-    fontSize: '26px',
-    fontWeight: 900,
-    letterSpacing: '0.04em',
+    fontSize: '22px',
+    fontWeight: 700,
+    letterSpacing: '0.06em',
     textTransform: 'uppercase' as const,
     lineHeight: 1.1,
     color: 'var(--white)',
