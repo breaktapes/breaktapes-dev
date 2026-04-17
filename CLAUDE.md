@@ -417,6 +417,28 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 
 ---
 
+## Worktree Cleanup
+
+- **NEVER delete the worktree that the current shell session is rooted in.** If cleanup requires deleting the current worktree, `cd` to the main repo first (`/Users/akrish/DEV/breaktapes-dev`), or instruct the user to run the final cleanup commands manually.
+- Always verify `pwd` resolves before running git/bash commands after any worktree removal.
+
+---
+
+## Ship Workflow
+
+- Standard ship sequence: run tests → commit → push → open PR → merge to staging → verify deploy at `dev.breaktapes.com` → merge to main → verify prod → clean up branches/worktrees.
+- **Always verify deploys are live** (not just green CI) before declaring done — curl or screenshot the live URL.
+- Handle staging/main divergence from prior squash merges with local cherry-pick without asking.
+
+---
+
+## Planning vs. Research Queries
+
+- For research, advice, or recommendation queries (e.g. "what map SDK should I use?"), respond directly with recommendations rather than writing a plan or asking clarifying questions first.
+- Reserve the plan-first workflow for implementation tasks.
+
+---
+
 ## UI / Frontend
 
 - **After every UI change**, take a screenshot at desktop (1280px) and mobile (375px) viewports using the Claude Preview MCP screenshot tool. Compare both and flag any layout issues before the user reviews.
