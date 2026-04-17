@@ -276,23 +276,44 @@ body::after {
    SHARED FORM ELEMENTS
    ============================================= */
 .btn-main {
+  position: relative; overflow: hidden;
   flex: 1; background: var(--orange); color: var(--black);
   border: none; border-radius: 4px;
   font-family: var(--headline); font-size: 14px; font-weight: 900;
   letter-spacing: 0.1em; text-transform: uppercase;
-  padding: 0.8rem; cursor: pointer; transition: all 0.15s;
+  padding: 0.8rem; cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
 }
-.btn-main:hover { filter: brightness(1.15); box-shadow: 0 4px 20px var(--orange-glow); }
-.btn-main:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-main::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.22) 50%, transparent 100%);
+  transform: translateX(-150%) skewX(-12deg);
+  pointer-events: none;
+}
+.btn-main:hover { filter: brightness(1.1); box-shadow: 0 4px 20px var(--orange-glow); transform: translateY(-2px); }
+.btn-main:hover::after { animation: shimmer 0.65s ease; }
+.btn-main:active { transform: translateY(0); }
+.btn-main:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 .btn-ghost {
+  position: relative; overflow: hidden;
   padding: 0.8rem 1.1rem; background: none;
   border: 1px solid var(--border2); border-radius: 4px;
   color: var(--muted); cursor: pointer;
   font-family: var(--headline); font-size: 12px; font-weight: 700;
   letter-spacing: 0.1em; text-transform: uppercase;
-  transition: all 0.15s;
+  transition: transform 0.18s ease, border-color 0.18s ease, color 0.18s ease;
 }
-.btn-ghost:hover { border-color: var(--muted); color: var(--white); }
+.btn-ghost::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%);
+  transform: translateX(-150%) skewX(-12deg);
+  pointer-events: none;
+}
+.btn-ghost:hover { border-color: var(--muted); color: var(--white); transform: translateY(-2px); }
+.btn-ghost:hover::after { animation: shimmer 0.65s ease; }
+.btn-ghost:active { transform: translateY(0); }
 .fg { display: flex; flex-direction: column; gap: 0.35rem; }
 .fl {
   font-family: var(--headline); font-size: 9px; font-weight: 800;

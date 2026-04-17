@@ -144,7 +144,6 @@ interface Props {
 
 function ViewPanel({ race, onEdit, onDelete, onShare }: { race: Race; onEdit: () => void; onDelete: () => void; onShare: () => void }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
-  const medalColor = race.medal ? (MEDAL_COLORS[race.medal] ?? 'var(--orange)') : null
   const units = useUnits()
 
   return (
@@ -208,13 +207,16 @@ function ViewPanel({ race, onEdit, onDelete, onShare }: { race: Race; onEdit: ()
             race.priority === 'B' ? '⭐ B Race' : '🏃 C Race'
           } />
         )}
-        {race.medal && (
-          <InfoRow
-            label="Medal"
-            value={race.medal === '__custom__' ? 'Custom' : race.medal.charAt(0).toUpperCase() + race.medal.slice(1)}
-            valueColor={medalColor ?? undefined}
-          />
-        )}
+        {race.medal && (() => {
+          const tier = ['gold','silver','bronze','finisher'].includes(race.medal) ? race.medal : 'finisher'
+          const label = race.medal === '__custom__' ? 'Custom' : race.medal.toUpperCase()
+          return (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
+              <span style={{ fontSize: '11px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Medal</span>
+              <span className={`medal-chip medal-${tier}`} style={{ padding: '4px 12px', fontSize: '11px' }}>{label}</span>
+            </div>
+          )
+        })()}
         {race.bibNumber && <InfoRow label="Bib" value={race.bibNumber} />}
         {race.goalTime && <InfoRow label="Goal Time" value={race.goalTime} />}
         {race.elevation != null && <InfoRow label="Elevation" value={`${race.elevation}m`} />}

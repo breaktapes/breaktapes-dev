@@ -358,16 +358,14 @@ function MedalWall() {
       ) : (
         <>
           {/* Stats strip */}
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '14px', flexWrap: 'wrap' }}>
+          <div className="medal-row" style={{ marginBottom: '14px' }}>
             {(Object.keys(MEDAL_COLORS) as (keyof typeof MEDAL_COLORS)[]).map(tier => {
               const count = tierCounts[tier as keyof typeof tierCounts]
               if (count === 0) return null
-              const col = MEDAL_COLORS[tier]
               return (
-                <div key={tier} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: col.bg, border: `1px solid ${col.border}`, borderRadius: '100px', padding: '5px 12px' }}>
-                  <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', color: col.text, lineHeight: 1 }}>{count}</span>
-                  <span style={{ fontFamily: 'var(--headline)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', color: col.text, textTransform: 'uppercase' }}>{col.label}</span>
-                </div>
+                <span key={tier} className={`medal-chip medal-${tier}`}>
+                  {count} {MEDAL_COLORS[tier].label}
+                </span>
               )
             })}
           </div>
@@ -407,15 +405,11 @@ function MedalWall() {
 
                   <div style={{ padding: '14px', position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
                     {/* Tier badge */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: col.text }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px' }}>
+                      <span className={`medal-chip medal-${tier}`} style={{ padding: '4px 10px', fontSize: '10px' }}>
                         {col.label}
                       </span>
-                      {isPB && (
-                        <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase', color: col.text, background: col.bg, border: `1px solid ${col.border}`, borderRadius: '100px', padding: '2px 7px' }}>
-                          PB
-                        </span>
-                      )}
+                      {isPB && <span className="tag tag-pb">PB</span>}
                     </div>
 
                     {/* Race name */}
