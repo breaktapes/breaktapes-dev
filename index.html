@@ -15,6 +15,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/fit-file-parser@1.9.0/dist/fit-file-parser.min.js"></script>
 
@@ -4331,17 +4332,31 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 }
 .leaflet-control-attribution a { color: rgba(245,245,245,0.25) !important; }
 
-/* ── Clean dot marker ── */
+/* ── Race pin marker ── */
 .fl-dot {
-  width: 10px; height: 10px; border-radius: 50%;
-  background: var(--white);
-  box-shadow: 0 0 0 3px rgba(255,255,255,0.12), 0 0 12px rgba(255,255,255,0.25);
+  position: relative;
+  width: 14px; height: 14px; border-radius: 50%;
+  background: var(--orange);
+  border: 2px solid #FFFFFF;
+  box-shadow: 0 0 0 2px rgba(var(--orange-ch),0.35), 0 0 18px rgba(var(--orange-ch),0.55), 0 2px 6px rgba(0,0,0,0.6);
   cursor: pointer; transition: all 0.2s;
 }
+.fl-dot::after {
+  content: '';
+  position: absolute; inset: -6px;
+  border-radius: 50%;
+  border: 1px solid rgba(var(--orange-ch),0.25);
+  animation: pulseRing 2.4s ease-out infinite;
+  pointer-events: none;
+}
+@keyframes pulseRing {
+  0%   { transform: scale(0.6); opacity: 0.9; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
 .fl-dot.active {
-  background: var(--orange);
-  box-shadow: 0 0 0 4px rgba(var(--orange-ch),0.2), 0 0 20px rgba(var(--orange-ch),0.5);
-  transform: scale(1.3);
+  background: #FFD770;
+  box-shadow: 0 0 0 3px rgba(255,215,112,0.3), 0 0 22px rgba(255,215,112,0.6);
+  transform: scale(1.25);
 }
 
 /* ── Hover tooltip ── */
@@ -7702,6 +7717,15 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
         <input type="file" id="rdAttachmentInput" accept="image/*" multiple style="display:none" onchange="handleRaceAttachmentFiles(event)">
         <div id="rdAttachmentHelp" class="ai-hint" style="margin-bottom:0.65rem">Attach up to 3 images for notes, medal details, or race-day context.</div>
         <div id="rdAttachmentGrid"></div>
+      </div>
+      <div class="rd-section">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:0.75rem;margin-bottom:0.85rem">
+          <div class="rd-label" style="margin:0">Race Route (GPX)</div>
+          <button class="btn-ghost" type="button" style="padding:0.35rem 0.7rem;font-size:11px" onclick="document.getElementById('rdGpxInput').click()">+ Upload GPX</button>
+        </div>
+        <input type="file" id="rdGpxInput" accept=".gpx,application/gpx+xml,text/xml" style="display:none" onchange="handleRaceGpxFile(event)">
+        <div class="ai-hint" style="margin-bottom:0.65rem">Upload a GPX file to render your route as a heatmap on the world map.</div>
+        <div id="rdGpxStatus" style="font-size:11px;color:var(--muted)"></div>
       </div>
       <div class="rd-section">
         <div class="rd-label">Race Notes</div>
@@ -18133,6 +18157,7 @@ function openRaceDetailFromParsed(obj) {
   document.getElementById('rdImportProvenance').value = obj.importProvenance || '';
   _rdAttachmentDraft = normalizeAttachmentList(obj.attachments || []);
   renderRaceAttachmentEditor();
+  populateRaceGpxEditor(null);
   populateRaceAchievementContextFields({});
   // Splits
   document.getElementById('rdSplits').innerHTML = (obj.splits || []).map(_splitRowHtml).join('');
@@ -18467,6 +18492,73 @@ function populateRaceAchievementContextFields(context = {}) {
   toggleAchievementContextSection(hasAchievementContextData(context));
 }
 let _rdAttachmentDraft = [];
+let _rdGpxDraft = null;
+
+function parseGpxString(str) {
+  const pts = [];
+  const re = /<trkpt[^>]*\blat="([-\d.]+)"[^>]*\blon="([-\d.]+)"|<trkpt[^>]*\blon="([-\d.]+)"[^>]*\blat="([-\d.]+)"/g;
+  let m;
+  while ((m = re.exec(str)) !== null) {
+    const lat = parseFloat(m[1] || m[4]);
+    const lon = parseFloat(m[2] || m[3]);
+    if (Number.isFinite(lat) && Number.isFinite(lon)) pts.push([lat, lon]);
+  }
+  if (!pts.length) {
+    const rpe = /<rtept[^>]*\blat="([-\d.]+)"[^>]*\blon="([-\d.]+)"/g;
+    while ((m = rpe.exec(str)) !== null) {
+      pts.push([parseFloat(m[1]), parseFloat(m[2])]);
+    }
+  }
+  const step = Math.max(1, Math.floor(pts.length / 2000));
+  return step > 1 ? pts.filter((_, i) => i % step === 0) : pts;
+}
+
+async function handleRaceGpxFile(event) {
+  const file = event.target.files && event.target.files[0];
+  const status = document.getElementById('rdGpxStatus');
+  if (!file) return;
+  if (file.size > 20 * 1024 * 1024) {
+    status.textContent = 'GPX file too large (max 20 MB).';
+    status.style.color = 'var(--orange)';
+    return;
+  }
+  status.textContent = 'Parsing…';
+  status.style.color = 'var(--muted)';
+  try {
+    const text = await file.text();
+    const pts = parseGpxString(text);
+    if (!pts.length) {
+      status.textContent = 'No track points found in file.';
+      status.style.color = 'var(--orange)';
+      return;
+    }
+    _rdGpxDraft = { name: file.name, points: pts };
+    status.innerHTML = `Loaded <strong style="color:var(--white)">${file.name}</strong> · ${pts.length} points <button class="btn-ghost" type="button" style="padding:0.15rem 0.45rem;font-size:10px;margin-left:0.5rem" onclick="clearRaceGpxDraft()">Remove</button>`;
+    status.style.color = 'var(--muted)';
+  } catch (e) {
+    status.textContent = 'Could not parse GPX.';
+    status.style.color = 'var(--orange)';
+  }
+  event.target.value = '';
+}
+
+function clearRaceGpxDraft() {
+  _rdGpxDraft = null;
+  const status = document.getElementById('rdGpxStatus');
+  if (status) { status.textContent = ''; status.style.color = 'var(--muted)'; }
+}
+
+function populateRaceGpxEditor(gpx) {
+  _rdGpxDraft = gpx && Array.isArray(gpx.points) && gpx.points.length ? gpx : null;
+  const status = document.getElementById('rdGpxStatus');
+  if (!status) return;
+  if (_rdGpxDraft) {
+    status.innerHTML = `Saved route · ${_rdGpxDraft.points.length} points <button class="btn-ghost" type="button" style="padding:0.15rem 0.45rem;font-size:10px;margin-left:0.5rem" onclick="clearRaceGpxDraft()">Remove</button>`;
+    status.style.color = 'var(--muted)';
+  } else {
+    status.textContent = '';
+  }
+}
 
 function renderRaceAttachmentEditor() {
   const el = document.getElementById('rdAttachmentGrid');
@@ -18685,6 +18777,7 @@ function openRaceDetail(id) {
   document.getElementById('rdImportProvenance').value = r.importProvenance || '';
   _rdAttachmentDraft = normalizeAttachmentList(r.attachments || []);
   renderRaceAttachmentEditor();
+  populateRaceGpxEditor(r.gpx || null);
   populateRaceAchievementContextFields(r.achievementContext || {});
   // Podium banner
   const ovPos = getPodiumPos(r.placing), agPos = getPodiumPos(r.ageCategoryPos);
@@ -18763,6 +18856,7 @@ function _collectRdFields() {
     resultConfidence: document.getElementById('rdResultConfidence').value ? Number(document.getElementById('rdResultConfidence').value) : null,
     importProvenance: document.getElementById('rdImportProvenance').value.trim(),
     attachments: normalizeAttachmentList(_rdAttachmentDraft),
+    gpx:          _rdGpxDraft && _rdGpxDraft.points && _rdGpxDraft.points.length ? _rdGpxDraft : null,
     achievementContext: collectRaceAchievementContextFields(),
     splits:       [...document.getElementById('rdSplits').querySelectorAll('tr')].map(tr => {
       const ins = tr.querySelectorAll('input');
@@ -18852,6 +18946,7 @@ function saveRaceDetail() {
   r.resultConfidence = document.getElementById('rdResultConfidence').value ? Number(document.getElementById('rdResultConfidence').value) : null;
   r.importProvenance = document.getElementById('rdImportProvenance').value.trim();
   r.attachments = normalizeAttachmentList(_rdAttachmentDraft);
+  r.gpx = _rdGpxDraft && _rdGpxDraft.points && _rdGpxDraft.points.length ? _rdGpxDraft : null;
   r.achievementContext = collectRaceAchievementContextFields();
   if (r.type === 'tri') {
     const keys = ['swim','t1','bike','t2','run'];
@@ -19919,6 +20014,8 @@ let activeMarkerEl = null;
 let geoCache = JSON.parse(localStorage.getItem('fl2_geocache') || '{}');
 let routeCache  = {};   // raceName → coords[] | null
 let routeLayers = [];
+let gpxHeatLayer = null;
+let gpxTrackLayers = [];
 let countryRaceMap  = {};
 let countryLayers   = {};
 let countryPolyCache = JSON.parse(localStorage.getItem('fl2_countrypolycache') || '{}');
@@ -19958,6 +20055,9 @@ async function renderMap() {
     // Clear old markers
     mapMarkers.forEach(m => leafletMap.removeLayer(m));
     Object.values(countryLayers).forEach(l => leafletMap.removeLayer(l));
+    if (gpxHeatLayer) { leafletMap.removeLayer(gpxHeatLayer); gpxHeatLayer = null; }
+    gpxTrackLayers.forEach(l => leafletMap.removeLayer(l));
+    gpxTrackLayers = [];
     mapMarkers = []; perfMapMarkers = {}; cityRaceMap = {}; countryLayers = {}; countryRaceMap = {};
   }
 
@@ -20026,7 +20126,7 @@ async function renderMap() {
     const icon = L.divIcon({
       className: '',
       html: `<div class="fl-dot" data-key="${key}"></div>`,
-      iconSize: [10, 10], iconAnchor: [5, 5],
+      iconSize: [14, 14], iconAnchor: [7, 7],
     });
 
     const marker = L.marker([coord.lat, coord.lng], { icon })
@@ -20063,6 +20163,9 @@ async function renderMap() {
     }
   }
 
+  // ── GPX heatmap + route traces ─────────────────────
+  renderGpxHeatmap();
+
   // ── Keep world view — don't auto-zoom to fit races ─────────────
   // Flighty-style: show full world context, let users zoom in manually
   if (!leafletMap._hasInitialFit) {
@@ -20083,6 +20186,40 @@ async function renderMap() {
   if (failed > 0) errEl.classList.add('show');
 
   fetchAndAddCountries(); // non-blocking — loads country polygons for hover
+}
+
+/* GPX heatmap + route lines for races with uploaded GPX */
+function renderGpxHeatmap() {
+  if (!leafletMap) return;
+  if (gpxHeatLayer) { leafletMap.removeLayer(gpxHeatLayer); gpxHeatLayer = null; }
+  gpxTrackLayers.forEach(l => leafletMap.removeLayer(l));
+  gpxTrackLayers = [];
+
+  const heatPts = [];
+  for (const r of races) {
+    const pts = r.gpx && Array.isArray(r.gpx.points) ? r.gpx.points : null;
+    if (!pts || !pts.length) continue;
+    // Heat intensity 0.6 — repeated overlap creates hot zones
+    for (const [lat, lng] of pts) heatPts.push([lat, lng, 0.6]);
+    // Orange route line
+    const line = L.polyline(pts, {
+      color: '#FF4D00', weight: 2.2, opacity: 0.55,
+      lineJoin: 'round', lineCap: 'round',
+    }).addTo(leafletMap);
+    gpxTrackLayers.push(line);
+  }
+
+  if (heatPts.length && typeof L.heatLayer === 'function') {
+    gpxHeatLayer = L.heatLayer(heatPts, {
+      radius: 18, blur: 22, maxZoom: 14, minOpacity: 0.35,
+      gradient: {
+        0.2: 'rgba(255,77,0,0.35)',
+        0.5: 'rgba(255,120,30,0.75)',
+        0.8: '#FFB347',
+        1.0: '#FFD770',
+      },
+    }).addTo(leafletMap);
+  }
 }
 
 /* Great-circle arc points for Leaflet polyline */
