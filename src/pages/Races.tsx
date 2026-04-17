@@ -221,8 +221,9 @@ function CompactRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onClic
       onClick={onClick}
       style={{
         cursor: 'pointer',
-        // Extend PB gradient to full list width by overcoming container padding
-        ...(isPB ? { marginLeft: '-1rem', marginRight: '-1rem', paddingLeft: 'calc(1rem + 6px)', paddingRight: '1rem' } : {}),
+        // Extend PB gradient to full list width; calc(1rem - 3px) keeps content
+        // column-aligned with non-PB rows (border-left: 3px eats back the 3px)
+        ...(isPB ? { marginLeft: '-1rem', marginRight: '-1rem', paddingLeft: 'calc(1rem - 3px)', paddingRight: '1rem' } : {}),
       }}
     >
       <div className={`rrc-date-chip${isPB ? ' is-pb' : ''}`}>
