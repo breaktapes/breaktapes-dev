@@ -1649,6 +1649,23 @@ function WhyResultWidget() {
 // ─── Pro Gate ────────────────────────────────────────────────────────────────
 
 function ProGate({ label, teaser }: { label: string; teaser: string }) {
+  const isPro = useAuthStore(s => s.proAccessGranted)
+
+  if (isPro) {
+    return (
+      <div style={{ ...st.glowCard, border: '1px dashed rgba(var(--orange-ch),0.3)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+          <div>
+            <div style={st.widgetLabel}>{label}</div>
+            <div style={st.widgetTitle}>COMING SOON</div>
+          </div>
+          <span style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', color: 'var(--orange)', background: 'rgba(var(--orange-ch),0.12)', border: '1px solid rgba(var(--orange-ch),0.3)', borderRadius: '4px', padding: '2px 6px', flexShrink: 0 }}>BETA</span>
+        </div>
+        <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.6, marginTop: '2px' }}>{teaser}</div>
+      </div>
+    )
+  }
+
   return (
     <div style={{ ...st.glowCard, border: '1px dashed var(--border2)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
