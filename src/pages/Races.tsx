@@ -11,8 +11,10 @@ import Map, { Marker } from 'react-map-gl/maplibre'
 import type { MapRef } from 'react-map-gl/maplibre'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { useRaceStore } from '@/stores/useRaceStore'
+import { useAthleteStore } from '@/stores/useAthleteStore'
 import { ViewEditRaceModal } from '@/components/ViewEditRaceModal'
 import { AddRaceModal } from '@/components/AddRaceModal'
+import { RaceLogPassport } from '@/components/RaceLogPassport'
 import type { Race } from '@/types'
 import { useUnits, distUnit } from '@/lib/units'
 
@@ -138,11 +140,17 @@ function CompactRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onClic
   const mon = d.toLocaleString('en', { month: 'short' }).toUpperCase()
   const day = d.getDate()
 
+  const city = [race.city, race.country].filter(Boolean).join(', ')
+
   return (
     <div className={`race-row-compact${isPB ? ' is-pb' : ''}`} onClick={onClick} style={{ cursor: 'pointer' }}>
+      <div className={`rrc-date-chip${isPB ? ' is-pb' : ''}`}>
+        <div className="rrc-date-chip-mon">{mon}</div>
+        <div className="rrc-date-chip-day">{day}</div>
+      </div>
       <div style={{ minWidth: 0 }}>
         <div className="rrc-name">{race.name}</div>
-        <div className="rrc-meta">{[race.city, race.country].filter(Boolean).join(', ')} · {mon} {day}</div>
+        {city && <div className="rrc-meta">{city}</div>}
       </div>
       <div style={{ textAlign: 'right', flexShrink: 0 }}>
         <div className="rrc-time">{race.time ?? '—'}</div>
@@ -265,7 +273,7 @@ function WishlistRow({ race, onPlan, onRemove }: {
 
 type ViewMode = 'compact' | 'detailed' | 'wishlist'
 
-function RacesSheet({ races, onAddRace }: { races: Race[]; onAddRace: () => void }) {
+function RacesSheet({ races, onAddRace, onOpenPassport }: { races: Race[]; onAddRace: () => void; onOpenPassport: () => void }) {
   const [expanded, setExpanded] = useState(false)
   const [yearFilter, setYearFilter] = useState('all')
   const [viewMode, setViewMode] = useState<ViewMode>('compact')
@@ -458,13 +466,22 @@ function RacesSheet({ races, onAddRace }: { races: Race[]; onAddRace: () => void
         <button
           style={{
             flex: 1, background: 'var(--orange)', color: 'var(--black)',
-            border: 'none', borderRadius: '4px', padding: '0.8rem',
+            border: 'none', borderRadius: '8px', padding: '0.8rem',
             fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px',
             letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer',
+            boxShadow: '0 4px 20px rgba(232,78,27,0.35)',
+            transition: 'box-shadow 0.18s, transform 0.18s',
           }}
           onClick={onAddRace}
         >
           + Log Race
+        </button>
+        <button
+          className="passport-dossier-btn"
+          onClick={onOpenPassport}
+          title="Export Race Log Passport"
+        >
+          ⬛ DOSSIER
         </button>
       </div>
 
@@ -483,9 +500,11 @@ function RacesSheet({ races, onAddRace }: { races: Race[]; onAddRace: () => void
 
 export function Races() {
   const races = useRaceStore(s => s.races)
+  const athlete = useAthleteStore(s => s.athlete)
   const [viewState, setViewState] = useState(INITIAL_VIEW)
   const mapRef = useRef<MapRef>(null)
   const [addRaceOpen, setAddRaceOpen] = useState(false)
+  const [passportOpen, setPassportOpen] = useState(false)
 
   // Fly-to bounds when races load
   useEffect(() => {
@@ -540,9 +559,18 @@ export function Races() {
       </MapErrorBoundary>
 
       {/* Bottom sheet */}
-      <RacesSheet races={races} onAddRace={() => setAddRaceOpen(true)} />
+      <RacesSheet races={races} onAddRace={() => setAddRaceOpen(true)} onOpenPassport={() => setPassportOpen(true)} />
 
       {addRaceOpen && <AddRaceModal onClose={() => setAddRaceOpen(false)} />}
+
+      {passportOpen && (
+        <RaceLogPassport
+          races={races}
+          athlete={athlete ?? undefined}
+          onClose={() => setPassportOpen(false)}
+        />
+
+      )}
     </div>
   )
 }

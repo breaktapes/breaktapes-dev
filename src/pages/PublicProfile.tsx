@@ -135,20 +135,56 @@ export function PublicProfile({ profile }: PublicProfileProps) {
         </div>
       </div>
 
-      {/* Personal Bests */}
-      {Object.keys(pbMap).length > 0 && (
-        <div style={styles.section}>
-          <p style={styles.sectionTitle}>Personal Bests</p>
-          <div style={{ background: '#141414', border: '1px solid rgba(245,245,245,0.06)', borderRadius: '12px', padding: '0.75rem 1rem' }}>
-            {Object.entries(pbMap).slice(0, 5).map(([dist, r]) => (
-              <div key={dist} style={styles.raceRow}>
-                <div style={styles.raceName}>{escapeHtml(dist)}</div>
-                <div style={styles.raceTime}>{escapeHtml(r.time)}</div>
+      {/* Personal Bests — sport-grouped card grid */}
+      {Object.keys(pbMap).length > 0 && (() => {
+        const RUN_DISTS: [string, string][] = [
+          ['5K', '5KM'], ['10K', '10KM'], ['10 Miles', '10 MI'],
+          ['Half Marathon', 'HALF'], ['Marathon', 'MARATHON'], ['Ultra', 'ULTRA'],
+        ]
+        const TRI_DISTS: [string, string][] = [
+          ['Olympic', 'OLYMPIC'], ['70.3 / Half Ironman', '70.3'], ['Ironman / Full', 'IRONMAN'],
+        ]
+        const cardStyle = (accent: string) => ({
+          background: '#141414',
+          border: '1px solid rgba(245,245,245,0.06)',
+          borderLeft: `2px solid ${accent}`,
+          borderRadius: '10px',
+          padding: '11px 10px 10px',
+          minWidth: 0,
+        })
+        const renderCards = (dists: [string, string][], accent: string) =>
+          dists
+            .filter(([d]) => pbMap[d])
+            .map(([d, label]) => (
+              <div key={d} style={cardStyle(accent)}>
+                <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 800, fontSize: '8px', letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: 'rgba(232,224,213,0.40)', marginBottom: '4px', lineHeight: 1 }}>{label}</div>
+                <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: '20px', color: '#E84E1B', lineHeight: 1, letterSpacing: '-0.02em' }}>{escapeHtml(pbMap[d].time)}</div>
               </div>
-            ))}
+            ))
+        const runCards = renderCards(RUN_DISTS, '#00FF88')
+        const triCards = renderCards(TRI_DISTS, '#7C3AED')
+        return (
+          <div style={styles.section}>
+            <p style={styles.sectionTitle}>Personal Bests</p>
+            {runCards.length > 0 && (
+              <>
+                <p style={{ ...styles.sectionTitle, fontSize: '8px', marginBottom: '6px' }}>Running</p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '8px', marginBottom: '12px' }}>
+                  {runCards}
+                </div>
+              </>
+            )}
+            {triCards.length > 0 && (
+              <>
+                <p style={{ ...styles.sectionTitle, fontSize: '8px', marginBottom: '6px' }}>Triathlon</p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '8px', marginBottom: '4px' }}>
+                  {triCards}
+                </div>
+              </>
+            )}
           </div>
-        </div>
-      )}
+        )
+      })()}
 
       {/* Recent Races */}
       {recentRaces.length > 0 && (

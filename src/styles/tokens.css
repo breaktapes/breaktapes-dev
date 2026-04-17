@@ -31,6 +31,17 @@
   /* RGB channel vars — used in rgba(var(--orange-ch), alpha) for theme-aware gradients */
   --orange-ch:  232, 78, 27;
   --green-ch:   0, 255, 136;
+  --purple:     #7C3AED;
+  --purple-ch:  124, 58, 237;
+  --gold:       #C8963C;
+  --gold-dim:   rgba(200,150,60,0.12);
+  --gold-border:rgba(200,150,60,0.30);
+  /* gradient shorthands */
+  --grad-orange: linear-gradient(135deg, #E84E1B 0%, #C03A10 100%);
+  --grad-gold:   linear-gradient(135deg, #C8963C 0%, #A07030 100%);
+  --grad-surface:linear-gradient(135deg, #141414 0%, #111013 60%, #121214 100%);
+  /* mono font */
+  --mono: 'Geist Mono', 'Courier New', monospace;
   /* error states */
   --error:      #ff5555;
   --error-dim:  #ff7070;

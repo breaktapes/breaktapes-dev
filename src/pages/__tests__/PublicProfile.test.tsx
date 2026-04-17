@@ -25,7 +25,7 @@ const RACE = {
   date: '2024-04-21',
   city: 'London',
   country: 'UK',
-  distance: '42.2',
+  distance: 'Marathon',
   sport: 'Running',
   time: '3:45:00',
   placing: '342/5000',
@@ -89,7 +89,8 @@ describe('PublicProfile — personal bests', () => {
   it('renders PBs section when races have times', () => {
     render(<PublicProfile profile={{ ...BASE_PROFILE, races: [RACE] }} />)
     expect(screen.getByText('Personal Bests')).toBeInTheDocument()
-    expect(screen.getByText('42.2')).toBeInTheDocument()
+    // Marathon card label is uppercase 'MARATHON' in the card grid
+    expect(screen.getByText('MARATHON')).toBeInTheDocument()
     // Time appears in both PBs and recent races rows — just confirm it's present
     const timeEls = screen.getAllByText('3:45:00')
     expect(timeEls.length).toBeGreaterThanOrEqual(1)
@@ -101,9 +102,8 @@ describe('PublicProfile — personal bests', () => {
     // Both times may appear (PB section + recent races list), but 3:30:00 must be present
     const faster_els = screen.getAllByText('3:30:00')
     expect(faster_els.length).toBeGreaterThanOrEqual(1)
-    // 3:45:00 appears in recent races (slower) but NOT in PBs
-    // PBs section shows only 1 row per distance, so '42.2' appears exactly once there
-    const distanceEls = screen.queryAllByText('42.2')
+    // Marathon card appears exactly once in PB grid
+    const distanceEls = screen.queryAllByText('MARATHON')
     expect(distanceEls.length).toBeGreaterThanOrEqual(1)
   })
 
