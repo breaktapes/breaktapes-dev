@@ -995,7 +995,10 @@ function WeatherCard({ race }: { race: Race }) {
                   {climate.min}° – {climate.max}°C
                 </div>
                 <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px', lineHeight: 1.4 }}>
-                  Typical for {new Date(race.date + 'T00:00:00').toLocaleString('default', { month: 'long' })} · ~{climate.precip}mm/day · Forecast from {days - 14}d out
+                  Typical for {new Date(race.date + 'T00:00:00').toLocaleString('default', { month: 'long' })} · ~{climate.precip}mm/day
+                </div>
+                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '1px', lineHeight: 1.4 }}>
+                  Forecast from {days - 14}d out
                 </div>
               </>
             ) : (
@@ -2667,9 +2670,16 @@ function WidgetShell({ label }: { label: string }) {
 // ─── All Upcoming Races Modal ─────────────────────────────────────────────────
 
 function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRace: () => void }) {
-  const upcoming       = useRaceStore(selectUpcomingRaces)
-  const today          = todayStr()
+  const upcoming        = useRaceStore(selectUpcomingRaces)
+  const focusRaceId     = useRaceStore(selectFocusRaceId)
+  const setFocusRaceId  = useRaceStore(s => s.setFocusRaceId)
+  const today           = todayStr()
   const [editingId, setEditingId] = useState<string | null>(null)
+
+  function selectFocus(id: string) {
+    setFocusRaceId(focusRaceId === id ? null : id)  // tap again to deselect
+    onClose()
+  }
 
   const sorted = useMemo(
     () => [...upcoming].filter(r => r.date >= today).sort((a, b) => a.date.localeCompare(b.date)),
@@ -2736,8 +2746,11 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
 
                   {/* A-race — large highlighted card */}
                   {isA ? (
-                    <div style={{ background: 'linear-gradient(135deg, rgba(var(--orange-ch),0.18) 0%, rgba(var(--orange-ch),0.08) 100%)', border: '1.5px solid rgba(var(--orange-ch),0.5)', borderRadius: '12px', padding: '16px', position: 'relative', overflow: 'hidden' }}>
+                    <div onClick={() => selectFocus(r.id)} style={{ background: 'linear-gradient(135deg, rgba(var(--orange-ch),0.18) 0%, rgba(var(--orange-ch),0.08) 100%)', border: focusRaceId === r.id ? '2px solid var(--orange)' : '1.5px solid rgba(var(--orange-ch),0.5)', borderRadius: '12px', padding: '16px', position: 'relative', overflow: 'hidden', cursor: 'pointer' }}>
                       <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: '4px', background: 'var(--orange)', borderRadius: '12px 0 0 12px' }} />
+                      {focusRaceId === r.id && (
+                        <div style={{ position: 'absolute', top: '10px', right: '10px', width: '18px', height: '18px', borderRadius: '50%', background: 'var(--orange)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', color: '#000', fontWeight: 900 }}>✓</div>
+                      )}
                       <div style={{ paddingLeft: '10px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '6px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
@@ -2745,7 +2758,7 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                             <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>{r.name ?? 'Unnamed race'}</span>
                           </div>
                           <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-                            <button onClick={() => setEditingId(r.id)} style={{ background: 'rgba(var(--orange-ch),0.15)', border: '1px solid rgba(var(--orange-ch),0.4)', borderRadius: '6px', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px', letterSpacing: '0.06em', padding: '5px 10px', cursor: 'pointer', flexShrink: 0 }}>EDIT</button>
+                            <button onClick={e => { e.stopPropagation(); setEditingId(r.id) }} style={{ background: 'rgba(var(--orange-ch),0.15)', border: '1px solid rgba(var(--orange-ch),0.4)', borderRadius: '6px', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px', letterSpacing: '0.06em', padding: '5px 10px', cursor: 'pointer', flexShrink: 0 }}>EDIT</button>
                           </div>
                         </div>
                         <div style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: 1.5 }}>
@@ -2763,7 +2776,7 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                     </div>
                   ) : (
                     /* Standard B/C card */
-                    <div style={{ background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: '10px', padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                    <div onClick={() => selectFocus(r.id)} style={{ background: focusRaceId === r.id ? 'rgba(var(--orange-ch),0.08)' : 'var(--surface3)', border: focusRaceId === r.id ? '1px solid rgba(var(--orange-ch),0.5)' : '1px solid var(--border)', borderRadius: '10px', padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', cursor: 'pointer' }}>
                       <div style={{ minWidth: 0, flex: 1 }}>
                         <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '14px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {r.priority && r.priority !== 'A' && <span style={{ color: 'var(--muted)', marginRight: '6px', fontSize: '11px' }}>{r.priority}</span>}
@@ -2781,7 +2794,7 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                           {d === 0 ? 'TODAY' : `${d}D`}
                         </div>
                         <div style={{ display: 'flex', gap: '4px' }}>
-                          <button onClick={() => setEditingId(r.id)} style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: '5px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '10px', letterSpacing: '0.06em', padding: '3px 8px', cursor: 'pointer' }}>EDIT</button>
+                          <button onClick={e => { e.stopPropagation(); setEditingId(r.id) }} style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: '5px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '10px', letterSpacing: '0.06em', padding: '3px 8px', cursor: 'pointer' }}>EDIT</button>
                         </div>
                       </div>
                     </div>
