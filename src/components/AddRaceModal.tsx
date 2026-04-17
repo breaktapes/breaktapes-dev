@@ -915,7 +915,7 @@ const st = {
 
   sheet: {
     width: '100%',
-    maxHeight: '92vh',
+    maxHeight: '100%',
     background: 'var(--surface2)',
     borderTop: '2px solid var(--orange)',
     borderRadius: '16px 16px 0 0',

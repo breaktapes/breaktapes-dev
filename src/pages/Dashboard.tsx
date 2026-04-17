@@ -1041,31 +1041,32 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
   return (
     <div style={st.sectionCard}>
       <div style={st.sectionHeader}>RECENT RACES</div>
-      {recent.map((r, i) => {
-        const isPB = !!r.time && pbMap[normalizeDistKey(r.distance)]?.id === r.id
-        return (
-          <div key={r.id} style={{
-            ...st.raceRow,
-            borderBottom: i < recent.length - 1 ? '1px solid var(--border)' : 'none',
-            ...(isPB ? st.raceRowPB : {}),
-          }}>
-            <div style={st.raceDate}>{r.date ? fmtShortDate(r.date) : '—'}</div>
-            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '2px' }}>
-              <div style={{ fontSize: 'var(--text-sm)', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', color: 'var(--white)' }}>
-                {r.name}
+      <div style={{ padding: '0 0.25rem' }}>
+        {recent.map(r => {
+          const isPB = !!r.time && pbMap[normalizeDistKey(r.distance)]?.id === r.id
+          const d = new Date(r.date + 'T00:00:00')
+          const mon = d.toLocaleString('en', { month: 'short' }).toUpperCase()
+          const day = d.getDate()
+          const city = [r.city, r.country].filter(Boolean).join(', ')
+          const label = distBadge(r.distance)
+          return (
+            <div key={r.id} className={`race-row-compact${isPB ? ' is-pb' : ''}`}>
+              <div className={`rrc-date-chip${isPB ? ' is-pb' : ''}`}>
+                <div className="rrc-date-chip-mon">{mon}</div>
+                <div className="rrc-date-chip-day">{day}</div>
               </div>
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {[r.city, r.country].filter(Boolean).join(', ')}
-                {distBadge(r.distance) ? ` · ${distBadge(r.distance)}` : ''}
+              <div style={{ minWidth: 0 }}>
+                <div className="rrc-name">{r.name}</div>
+                {city && <div className="rrc-meta">{city}</div>}
+              </div>
+              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                {r.time && <div className="rrc-time">{r.time}</div>}
+                {label && <div className="rrc-dist">{label}</div>}
               </div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '3px', flexShrink: 0 }}>
-              {r.time && <div style={st.raceTime}>{r.time}</div>}
-              {isPB && <div style={st.pbTag}>PB</div>}
-            </div>
-          </div>
-        )
-      })}
+          )
+        })}
+      </div>
     </div>
   )
 }

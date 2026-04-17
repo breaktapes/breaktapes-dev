@@ -57,14 +57,78 @@ const INITIAL_VIEW = {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
+const DIST_LABEL_KM: Record<string, number> = {
+  'marathon': 42.195, 'full marathon': 42.195,
+  'half marathon': 21.0975, 'half': 21.0975,
+  'ironman': 226, 'full ironman': 226, 'full distance': 226,
+  'half ironman': 113, '70.3': 113, 'middle distance': 113,
+  'olympic': 51.5, 'olympic triathlon': 51.5,
+  'sprint': 25.75, 'sprint triathlon': 25.75,
+  '5k': 5, '10k': 10, '15k': 15, '20k': 20, '25k': 25, '30k': 30,
+  '50k': 50, '60k': 60, '80k': 80, '90k': 90, '100k': 100,
+  '160k': 160, '50mi': 80.47, '100mi': 160.93,
+  'ultra': 50, 'ultramarathon': 50,
+  'mile': 1.609, '1 mile': 1.609, '5 mile': 8.047, '10 mile': 16.09,
+  'hyrox': 8,
+}
+
+function distanceToKm(d: string | undefined): number {
+  if (!d) return 0
+  const n = parseFloat(d)
+  if (!isNaN(n)) return n
+  return DIST_LABEL_KM[d.toLowerCase().trim()] ?? 0
+}
+
+/** Human-readable distance label for display */
+function distLabel(d: string | undefined): string {
+  if (!d) return ''
+  const km = distanceToKm(d)
+  if (km === 0) return d
+  if (km >= 225.9 && km <= 226.1) return 'Ironman / Full Distance'
+  if (km >= 112.9 && km <= 113.1) return '70.3 / Middle Distance'
+  if (km >= 51.4 && km <= 51.6) return 'Olympic'
+  if (km >= 42.1 && km <= 42.3) return 'Marathon'
+  if (km >= 21.0 && km <= 21.2) return 'Half Marathon'
+  if (km > 42.3) return 'Ultra Marathon'
+  if (km === 10) return '10K'
+  if (km === 5) return '5K'
+  return `${km}K`
+}
+
+/** Country code → flag emoji */
+function countryFlag(country: string | undefined): string {
+  if (!country) return ''
+  // Map common full names to ISO-2
+  const nameToCode: Record<string, string> = {
+    'united arab emirates': 'ae', 'south africa': 'za', 'united kingdom': 'gb',
+    'united states': 'us', 'new zealand': 'nz', 'saudi arabia': 'sa',
+    'czech republic': 'cz', 'south korea': 'kr', 'north korea': 'kp',
+  }
+  const lower = country.toLowerCase().trim()
+  let code = nameToCode[lower] ?? (lower.length === 2 ? lower : '')
+  if (!code) return ''
+  return code.toUpperCase().replace(/./g, c => String.fromCodePoint(0x1F1E5 + c.charCodeAt(0)))
+}
+
+function normKey(d: string | undefined): string {
+  const km = distanceToKm(d)
+  if (km <= 0) return (d ?? '').toLowerCase().trim()
+  if (km >= 42.1 && km <= 42.3) return 'marathon'
+  if (km >= 21.0 && km <= 21.2) return 'half marathon'
+  if (km >= 112.9 && km <= 113.1) return '70.3'
+  if (km >= 225.9 && km <= 226.1) return 'ironman'
+  return `${km}`
+}
+
 function buildPBMap(races: Race[]): Record<string, Race> {
   const pb: Record<string, Race> = {}
   for (const r of races) {
     if (!r.time || !r.distance) continue
     const secs = timeToSecs(r.time)
     if (secs == null) continue
-    if (!pb[r.distance] || timeToSecs(pb[r.distance].time!)! > secs) {
-      pb[r.distance] = r
+    const key = normKey(r.distance)
+    if (!pb[key] || timeToSecs(pb[key].time!)! > secs) {
+      pb[key] = r
     }
   }
   return pb
@@ -76,6 +140,15 @@ function timeToSecs(t: string): number | null {
   if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2]
   if (parts.length === 2) return parts[0] * 60 + parts[1]
   return null
+}
+
+function parsePlacing(str: string | undefined): { pos: number; total: number; pct: number } | null {
+  if (!str) return null
+  const m = str.match(/(\d+)\s*[/\\]\s*(\d+)/)
+  if (!m) return null
+  const pos = parseInt(m[1], 10), total = parseInt(m[2], 10)
+  if (!pos || !total) return null
+  return { pos, total, pct: Math.round((1 - (pos - 1) / total) * 100) }
 }
 
 function fmtDate(dateStr: string): string {
@@ -109,7 +182,7 @@ function YearTabs({
 
 function StatsStrip({ races }: { races: Race[] }) {
   const units = useUnits()
-  const km = races.reduce((s, r) => s + (parseFloat(r.distance) || 0), 0)
+  const km = races.reduce((s, r) => s + distanceToKm(r.distance), 0)
   const totalDist = Math.round(units === 'imperial' ? km * 0.621371 : km)
   const countries = new Set(races.map(r => r.country).filter(Boolean)).size
   const medals = races.filter(r => r.medal).length
@@ -139,8 +212,8 @@ function CompactRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onClic
   const d = new Date(race.date + 'T00:00:00')
   const mon = d.toLocaleString('en', { month: 'short' }).toUpperCase()
   const day = d.getDate()
-
   const city = [race.city, race.country].filter(Boolean).join(', ')
+  const label = distLabel(race.distance)
 
   return (
     <div className={`race-row-compact${isPB ? ' is-pb' : ''}`} onClick={onClick} style={{ cursor: 'pointer' }}>
@@ -154,7 +227,7 @@ function CompactRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onClic
       </div>
       <div style={{ textAlign: 'right', flexShrink: 0 }}>
         <div className="rrc-time">{race.time ?? '—'}</div>
-        <div className="rrc-dist dist-pill">{race.distance}</div>
+        {label && <div className="rrc-dist">{label}</div>}
       </div>
     </div>
   )
@@ -163,49 +236,60 @@ function CompactRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onClic
 // ── Detailed race row ─────────────────────────────────────────────────────────
 
 function DetailedRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onClick: () => void }) {
+  const d = new Date(race.date + 'T00:00:00')
+  const mon = d.toLocaleString('en', { month: 'short' }).toUpperCase()
+  const day = d.getDate()
+  const flag = countryFlag(race.country)
+  const placing = parsePlacing(race.placing)
+  const label = distLabel(race.distance)
+
   return (
-    <div className="race-row-detailed" onClick={onClick} style={{ cursor: 'pointer' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
+    <div
+      className={`race-row-detailed${isPB ? ' is-pb' : ''}`}
+      onClick={onClick}
+      style={{ cursor: 'pointer' }}
+    >
+      {/* Top row: date chip + name + time */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: '10px', alignItems: 'center' }}>
+        <div className={`rrc-date-chip${isPB ? ' is-pb' : ''}`} style={{ width: '40px', minHeight: '46px' }}>
+          <div className="rrc-date-chip-mon">{mon}</div>
+          <div className="rrc-date-chip-day">{day}</div>
+        </div>
         <div style={{ minWidth: 0 }}>
-          <div style={{
-            fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '14px',
-            color: 'var(--white)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-          }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '14px', color: 'var(--white)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {race.name}
           </div>
-          <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-            <span>{[race.city, race.country].filter(Boolean).join(', ')}</span>
-            <span className="dist-pill">{race.distance}</span>
-            <span>· {fmtDate(race.date)}</span>
+          <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+            {flag && <span>{flag}</span>}
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{[race.city, race.country].filter(Boolean).join(', ')}</span>
           </div>
         </div>
-        <div style={{ flexShrink: 0, textAlign: 'right' }}>
-          <div style={{
-            fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '15px',
-            color: isPB ? 'var(--green)' : 'var(--white)',
-          }}>
+        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '15px', color: isPB ? 'var(--green)' : 'var(--orange)', letterSpacing: '0.02em' }}>
             {race.time ?? '—'}
           </div>
-          {isPB && (
-            <div style={{
-              fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 800,
-              color: 'var(--green)', letterSpacing: '0.1em',
-            }}>PB</div>
-          )}
+          {label && <div style={{ fontSize: '10px', color: 'var(--muted)', textAlign: 'right', marginTop: '1px' }}>{label}</div>}
         </div>
       </div>
-      {(race.placing || race.medal || race.sport || isPB) && (
-        <div className="tag-row" style={{ marginTop: '0.5rem' }}>
-          {isPB && <span className="tag tag-pb">PB</span>}
-          {race.placing && <span className="tag">{race.placing}</span>}
-          {race.medal && (
-            <span className={`medal-chip medal-${race.medal}`} style={{ padding: '4px 10px', fontSize: '10px', borderRadius: '5px' }}>
-              {race.medal.toUpperCase()}
-            </span>
-          )}
-          {race.sport && <span className="tag">{race.sport}</span>}
-        </div>
-      )}
+
+      {/* Stats row: placing + percentile + distance badge */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px', flexWrap: 'wrap' }}>
+        {isPB && <span className="tag tag-pb">PB</span>}
+        {race.medal && (
+          <span className={`medal-chip medal-${race.medal}`} style={{ padding: '3px 8px', fontSize: '10px', borderRadius: '5px' }}>
+            {race.medal.toUpperCase()}
+          </span>
+        )}
+        {placing && (
+          <span className="tag" style={{ fontFamily: 'var(--mono)', fontSize: '10px' }}>
+            {placing.pos}/{placing.total} <span style={{ color: 'var(--muted)', marginLeft: '2px' }}>· top {placing.pct}%</span>
+          </span>
+        )}
+        {race.sport && !label.toLowerCase().includes(race.sport.toLowerCase()) && (
+          <span className="tag">{race.sport}</span>
+        )}
+        {label && <span className="dist-pill" style={{ fontSize: '10px' }}>{label}</span>}
+      </div>
     </div>
   )
 }
@@ -421,7 +505,7 @@ function RacesSheet({ races, onAddRace, onOpenPassport }: { races: Race[]; onAdd
         ) : viewMode === 'compact' ? (
           <>
             {sorted.slice(0, visibleCount).map(r => (
-              <CompactRow key={r.id} race={r} isPB={pbMap[r.distance]?.id === r.id} onClick={() => setSelectedRace(r)} />
+              <CompactRow key={r.id} race={r} isPB={pbMap[normKey(r.distance)]?.id === r.id} onClick={() => setSelectedRace(r)} />
             ))}
             {sorted.length > visibleCount && (
               <button
@@ -435,7 +519,7 @@ function RacesSheet({ races, onAddRace, onOpenPassport }: { races: Race[]; onAdd
         ) : (
           <>
             {sorted.slice(0, visibleCount).map(r => (
-              <DetailedRow key={r.id} race={r} isPB={pbMap[r.distance]?.id === r.id} onClick={() => setSelectedRace(r)} />
+              <DetailedRow key={r.id} race={r} isPB={pbMap[normKey(r.distance)]?.id === r.id} onClick={() => setSelectedRace(r)} />
             ))}
             {sorted.length > visibleCount && (
               <button
