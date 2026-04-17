@@ -36,6 +36,7 @@ jobs:
         env:
           VITE_SUPABASE_URL: https://yqzycwuyhvzkbofwkazr.supabase.co
           VITE_SUPABASE_ANON_KEY: sb_publishable_XiI5lGzh_3rWoA2TxrKnWg_gPtPKSRp
+          VITE_IS_STAGING: 'true'
 
       # ── 2. Push Supabase migrations → staging ────────────────────────────
       - name: Setup Supabase CLI
