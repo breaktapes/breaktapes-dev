@@ -885,7 +885,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past' }: Props) {
           {/* ── Actions ── */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '0.75rem' }}>
             <button style={st.cancelBtn} onClick={onClose} type="button">CANCEL</button>
-            <button style={{ ...st.saveBtn, background: mode === 'upcoming' ? 'var(--green)' : 'var(--orange)', color: '#000' }} onClick={handleSave} disabled={saving} type="button">
+            <button className={`btn-v3 ${mode === 'upcoming' ? 'btn-health-v3' : 'btn-primary-v3'}`} style={st.saveBtn} onClick={handleSave} disabled={saving} type="button">
               {saving ? 'SAVING…' : mode === 'past' ? 'LOG RACE' : 'ADD TO CALENDAR'}
             </button>
           </div>
@@ -1041,18 +1041,8 @@ const st = {
   } as React.CSSProperties,
 
   saveBtn: {
-    background: 'var(--orange)',
-    color: '#000',
-    border: 'none',
-    borderRadius: '8px',
-    padding: '14px',
-    fontFamily: 'var(--headline)',
-    fontWeight: 900,
-    fontSize: '14px',
-    letterSpacing: '0.1em',
-    textTransform: 'uppercase',
-    cursor: 'pointer',
     width: '100%',
+    padding: '14px',
   } as React.CSSProperties,
 
   cancelBtn: {

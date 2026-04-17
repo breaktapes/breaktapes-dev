@@ -154,7 +154,7 @@ function CompactRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onClic
       </div>
       <div style={{ textAlign: 'right', flexShrink: 0 }}>
         <div className="rrc-time">{race.time ?? '—'}</div>
-        <div className="rrc-dist">{race.distance}</div>
+        <div className="rrc-dist dist-pill">{race.distance}</div>
       </div>
     </div>
   )
@@ -163,13 +163,6 @@ function CompactRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onClic
 // ── Detailed race row ─────────────────────────────────────────────────────────
 
 function DetailedRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onClick: () => void }) {
-  const medalColors: Record<string, string> = {
-    gold:     'rgba(255,215,112,0.9)',
-    silver:   'rgba(200,212,220,0.9)',
-    bronze:   'rgba(205,140,90,0.9)',
-    finisher: 'var(--orange)',
-  }
-
   return (
     <div className="race-row-detailed" onClick={onClick} style={{ cursor: 'pointer' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
@@ -180,8 +173,10 @@ function DetailedRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onCli
           }}>
             {race.name}
           </div>
-          <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>
-            {[race.city, race.country].filter(Boolean).join(', ')} · {race.distance} · {fmtDate(race.date)}
+          <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+            <span>{[race.city, race.country].filter(Boolean).join(', ')}</span>
+            <span className="dist-pill">{race.distance}</span>
+            <span>· {fmtDate(race.date)}</span>
           </div>
         </div>
         <div style={{ flexShrink: 0, textAlign: 'right' }}>
@@ -199,23 +194,16 @@ function DetailedRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onCli
           )}
         </div>
       </div>
-      {(race.placing || race.medal || race.sport) && (
-        <div style={{ display: 'flex', gap: '0.4rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
-          {race.placing && (
-            <span style={{ fontSize: '10px', color: 'var(--muted)', background: 'var(--surface3)', padding: '2px 6px', borderRadius: '4px' }}>
-              {race.placing}
-            </span>
-          )}
+      {(race.placing || race.medal || race.sport || isPB) && (
+        <div className="tag-row" style={{ marginTop: '0.5rem' }}>
+          {isPB && <span className="tag tag-pb">PB</span>}
+          {race.placing && <span className="tag">{race.placing}</span>}
           {race.medal && (
-            <span style={{ fontSize: '10px', color: medalColors[race.medal] ?? 'var(--orange)', background: 'var(--surface3)', padding: '2px 6px', borderRadius: '4px' }}>
+            <span className={`medal-chip medal-${race.medal}`} style={{ padding: '4px 10px', fontSize: '10px', borderRadius: '5px' }}>
               {race.medal.toUpperCase()}
             </span>
           )}
-          {race.sport && (
-            <span style={{ fontSize: '10px', color: 'var(--muted)', background: 'var(--surface3)', padding: '2px 6px', borderRadius: '4px', textTransform: 'uppercase' }}>
-              {race.sport}
-            </span>
-          )}
+          {race.sport && <span className="tag">{race.sport}</span>}
         </div>
       )}
     </div>

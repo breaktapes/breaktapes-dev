@@ -162,7 +162,7 @@ export function EditProfileModal({ onClose }: Props) {
             <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: '#ff6b6b' }}>{error}</p>
           )}
 
-          <button style={st.saveBtn} onClick={handleSave} disabled={saving}>
+          <button className="btn-v3 btn-primary-v3" style={st.saveBtn} onClick={handleSave} disabled={saving}>
             {saving ? 'SAVING…' : 'SAVE PROFILE'}
           </button>
         </div>
@@ -273,18 +273,8 @@ const st = {
   } as React.CSSProperties,
 
   saveBtn: {
-    background: 'var(--orange)',
-    color: '#000',
-    border: 'none',
-    borderRadius: '8px',
-    padding: '14px',
-    fontFamily: 'var(--headline)',
-    fontWeight: 900,
-    fontSize: '14px',
-    letterSpacing: '0.1em',
-    textTransform: 'uppercase',
-    cursor: 'pointer',
     width: '100%',
     marginTop: '4px',
+    padding: '14px',
   } as React.CSSProperties,
 }

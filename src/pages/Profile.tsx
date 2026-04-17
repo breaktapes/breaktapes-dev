@@ -358,15 +358,15 @@ function MedalWall() {
       ) : (
         <>
           {/* Stats strip */}
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '14px', flexWrap: 'wrap' }}>
+          <div className="medal-row" style={{ marginBottom: '14px' }}>
             {(Object.keys(MEDAL_COLORS) as (keyof typeof MEDAL_COLORS)[]).map(tier => {
               const count = tierCounts[tier as keyof typeof tierCounts]
               if (count === 0) return null
               const col = MEDAL_COLORS[tier]
               return (
-                <div key={tier} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: col.bg, border: `1px solid ${col.border}`, borderRadius: '100px', padding: '5px 12px' }}>
-                  <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', color: col.text, lineHeight: 1 }}>{count}</span>
-                  <span style={{ fontFamily: 'var(--headline)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.1em', color: col.text, textTransform: 'uppercase' }}>{col.label}</span>
+                <div key={tier} className={`medal-chip medal-${tier}`} style={{ padding: '6px 14px', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontWeight: 900, fontSize: '14px', lineHeight: 1 }}>{count}</span>
+                  <span>{col.label}</span>
                 </div>
               )
             })}

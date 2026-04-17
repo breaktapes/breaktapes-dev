@@ -1125,7 +1125,7 @@ function SeasonPlannerWidget({ onAddRace }: { onAddRace: () => void }) {
   const bc = badgeColors[badge]
 
   return (
-    <div style={st.glowCard}>
+    <div className="card-v3" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>SEASON PLANNER</div>
@@ -1175,7 +1175,7 @@ function RecoveryIntelWidget() {
 
   if (!lastRace) {
     return (
-      <div style={st.glowCard}>
+      <div className="card-v3" style={st.glowCard}>
         <div style={st.widgetLabel}>RECOVERY INTELLIGENCE</div>
         <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '6px' }}>Log your first race to track recovery.</div>
       </div>
@@ -1191,7 +1191,7 @@ function RecoveryIntelWidget() {
   const bc = badge === 'HIGH' ? 'var(--orange)' : badge === 'MEDIUM' ? 'var(--gold)' : 'var(--green)'
 
   return (
-    <div style={st.glowCard}>
+    <div className="card-v3" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>RECOVERY INTELLIGENCE</div>
@@ -1269,7 +1269,7 @@ function BostonQualWidget() {
   }
 
   return (
-    <div style={st.glowCard}>
+    <div className="card-v3" style={st.glowCard}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
@@ -1398,7 +1398,7 @@ function PacingIQWidget() {
   }, [races])
 
   return (
-    <div style={st.glowCard}>
+    <div className="card-v3" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>PACING IQ</div>
@@ -1438,7 +1438,7 @@ function CareerMomentumWidget() {
     badge === 'NEUTRAL' ? 'var(--muted)' : 'rgba(var(--orange-ch), 0.4)'
 
   return (
-    <div style={st.glowCard}>
+    <div className="card-v3" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>CAREER MOMENTUM</div>
@@ -1475,7 +1475,7 @@ function AgeGradeWidget() {
   const hasProfile = !!(athlete?.dob && athlete?.gender)
 
   return (
-    <div style={st.glowCard}>
+    <div className="card-v3" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>AGE-GRADE SCORE</div>
@@ -1519,7 +1519,7 @@ function RaceDNAWidget() {
   }, [past])
 
   return (
-    <div style={st.glowCard}>
+    <div className="card-v3" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>RACE DNA</div>
@@ -1573,7 +1573,7 @@ function PatternScanWidget() {
   }, [past])
 
   return (
-    <div style={st.glowCard}>
+    <div className="card-v3" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>DEEP TRENDS</div>
@@ -1612,7 +1612,7 @@ function WhyResultWidget() {
 
   if (!lastRace) {
     return (
-      <div style={st.glowCard}>
+      <div className="card-v3" style={st.glowCard}>
         <div style={st.widgetLabel}>WHY RESULT</div>
         <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '6px' }}>Log a timed race to unlock result analysis.</div>
       </div>
@@ -1620,7 +1620,7 @@ function WhyResultWidget() {
   }
 
   return (
-    <div style={st.glowCard}>
+    <div className="card-v3" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>WHY RESULT</div>
@@ -1690,7 +1690,7 @@ function RaceReadinessWidget() {
   const sigColor = signal === 'READY' ? 'var(--green)' : signal === 'BUILDING' ? 'var(--gold)' : 'var(--orange)'
 
   return (
-    <div style={st.glowCard}>
+    <div className="card-v3" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>READINESS</div>
@@ -1740,7 +1740,7 @@ function GapToGoalWidget() {
 
   if (!nextRace) {
     return (
-      <div style={st.glowCard}>
+      <div className="card-v3" style={st.glowCard}>
         <div style={st.widgetLabel}>GAP TO GOAL</div>
         <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '6px' }}>Add an upcoming race to track your gap to goal.</div>
       </div>
@@ -1749,7 +1749,7 @@ function GapToGoalWidget() {
 
   if (!result?.goal) {
     return (
-      <div style={st.glowCard}>
+      <div className="card-v3" style={st.glowCard}>
         <div style={st.widgetLabel}>GAP TO GOAL</div>
         <div style={st.widgetTitle}>{(nextRace.name ?? '').toUpperCase()}</div>
         <div style={st.lockedBox}>
@@ -1768,7 +1768,7 @@ function GapToGoalWidget() {
       : `${secsToHMS(result.gap)} BEHIND GOAL`
 
   return (
-    <div style={st.glowCard}>
+    <div className="card-v3" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>GAP TO GOAL</div>
@@ -1824,7 +1824,7 @@ function SurfaceProfileWidget() {
   }, [races, today])
 
   return (
-    <div style={st.glowCard}>
+    <div className="card-v3" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>SURFACE PROFILE</div>
@@ -1904,7 +1904,7 @@ function PressurePerformerWidget() {
   const labelColor = result?.label === 'CLUTCH' ? 'var(--green)' : result?.label === 'RELAXED RACER' ? 'var(--gold)' : 'var(--orange)'
 
   return (
-    <div style={st.glowCard}>
+    <div className="card-v3" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>PRESSURE PERFORMER</div>
@@ -1972,7 +1972,7 @@ function TravelLoadWidget() {
   }, [races, athlete, today])
 
   return (
-    <div style={st.glowCard}>
+    <div className="card-v3" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>TRAVEL LOAD</div>
@@ -2052,7 +2052,7 @@ function RaceDensityWidget() {
   }, [races, today])
 
   return (
-    <div style={st.glowCard}>
+    <div className="card-v3" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>RACE DENSITY</div>
@@ -2145,7 +2145,7 @@ function BestConditionsWidget() {
   }, [races, today])
 
   return (
-    <div style={st.glowCard}>
+    <div className="card-v3" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>BEST CONDITIONS</div>
@@ -2228,7 +2228,7 @@ function CourseFitWidget() {
 
   if (!nextRace) {
     return (
-      <div style={st.glowCard}>
+      <div className="card-v3" style={st.glowCard}>
         <div style={st.widgetLabel}>COURSE FIT</div>
         <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '6px' }}>Add an upcoming race to calculate your course fit score.</div>
       </div>
@@ -2236,7 +2236,7 @@ function CourseFitWidget() {
   }
 
   return (
-    <div style={st.glowCard}>
+    <div className="card-v3" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>COURSE FIT</div>
@@ -2324,7 +2324,7 @@ function PBProbabilityWidget() {
 
   if (!nextRace) {
     return (
-      <div style={st.glowCard}>
+      <div className="card-v3" style={st.glowCard}>
         <div style={st.widgetLabel}>PB PROBABILITY</div>
         <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '6px' }}>Add an upcoming race to estimate your PB chance.</div>
       </div>
@@ -2332,7 +2332,7 @@ function PBProbabilityWidget() {
   }
 
   return (
-    <div style={st.glowCard}>
+    <div className="card-v3" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>PB PROBABILITY</div>
@@ -2414,7 +2414,7 @@ function StreakRiskWidget() {
   }, [garminActivities, whoopActivities, races, today])
 
   return (
-    <div style={st.glowCard}>
+    <div className="card-v3" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>STREAK RISK</div>
@@ -3638,13 +3638,8 @@ const st = {
     color: 'var(--muted)',
   } as React.CSSProperties,
 
-  // ── Glow card (analytics widgets)
+  // ── Glow card (analytics widgets) — visuals provided by .card-v3 class
   glowCard: {
-    background: 'var(--surface2)',
-    border: '1px solid var(--border)',
-    borderTop: '1px solid rgba(var(--orange-ch), 0.3)',
-    borderRadius: '14px',
-    padding: '18px',
     display: 'flex',
     flexDirection: 'column' as const,
     gap: '14px',
