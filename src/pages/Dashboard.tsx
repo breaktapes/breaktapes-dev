@@ -3304,6 +3304,118 @@ function DashZone({ id, tag, label, children }: ZoneProps) {
   )
 }
 
+// ─── Personal Bests Widget ────────────────────────────────────────────────────
+
+function PersonalBestsWidget() {
+  const races = useRaceStore(selectRaces)
+  const pbMap = useMemo(() => buildPBMap(races), [races])
+
+  // Group PBs by sport
+  const groups = useMemo(() => {
+    const run: { key: string; r: Race }[] = []
+    const tri: { key: string; r: Race }[] = []
+    const other: { key: string; r: Race }[] = []
+
+    const distOrder: Record<string, number> = {
+      '5K': 1, '10K': 2, 'Half Marathon': 3, 'Marathon': 4,
+      'Ultra Marathon': 5, 'Olympic': 6, '70.3': 7, 'Ironman': 8,
+    }
+
+    for (const [key, r] of Object.entries(pbMap)) {
+      const sport = (r.sport ?? 'Running').toLowerCase()
+      const entry = { key, r }
+      if (sport.includes('tri') || sport.includes('iron')) tri.push(entry)
+      else if (sport.includes('run') || sport.includes('cycling') || sport.includes('swim')) run.push(entry)
+      else other.push(entry)
+    }
+
+    const sortFn = (a: { key: string }, b: { key: string }) =>
+      (distOrder[a.key] ?? 99) - (distOrder[b.key] ?? 99)
+
+    return [
+      ...(run.length ? [{ sport: 'Running', dot: '#00FF88', dotGlow: 'rgba(0,255,136,0.6)', entries: run.sort(sortFn) }] : []),
+      ...(tri.length ? [{ sport: 'Triathlon', dot: '#7C3AED', dotGlow: 'rgba(124,58,237,0.6)', entries: tri.sort(sortFn) }] : []),
+      ...(other.length ? [{ sport: 'Other', dot: 'var(--orange)', dotGlow: 'rgba(232,78,27,0.6)', entries: other.sort(sortFn) }] : []),
+    ]
+  }, [pbMap])
+
+  if (!groups.length) {
+    return (
+      <div className="card-v3" style={st.glowCard}>
+        <div style={st.widgetLabel}>PERSONAL BESTS</div>
+        <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5, marginTop: '8px' }}>
+          Log timed races to build your PB board.
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="card-v3" style={st.glowCard}>
+      <div style={st.widgetLabel}>PERSONAL BESTS</div>
+      {groups.map(g => (
+        <div key={g.sport} style={{ marginTop: '14px' }}>
+          {/* Sport header */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingBottom: '12px', borderBottom: '1px solid var(--border)', marginBottom: '14px' }}>
+            <span style={{ width: '8px', height: '8px', borderRadius: '50%', flexShrink: 0, background: g.dot, boxShadow: `0 0 8px ${g.dotGlow}`, display: 'inline-block', animation: 'breathe 2s ease-in-out infinite' }} />
+            <span style={{ fontFamily: 'var(--headline)', fontSize: '11px', fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--muted)' }}>{g.sport}</span>
+          </div>
+
+          {/* Horizontal scrolling PB cards */}
+          <div style={{ display: 'flex', gap: '14px', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' as any }}>
+            {g.entries.map(({ key, r }) => {
+              const isTri = g.sport === 'Triathlon'
+              const accentColor = isTri ? '#7C3AED' : '#00FF88'
+              const accentBg = isTri ? 'rgba(124,58,237,0.08)' : 'rgba(0,255,136,0.06)'
+              const accentGlow = isTri ? 'rgba(124,58,237,0.10)' : 'rgba(0,255,136,0.10)'
+              const displayKey = key.includes('half') ? 'Half Marathon'
+                : key.includes('marathon') ? 'Marathon'
+                : key.includes('70.3') ? '70.3'
+                : key.includes('ironman') ? 'Ironman'
+                : key.includes('olympic') ? 'Olympic'
+                : key.toUpperCase()
+              return (
+                <div
+                  key={key}
+                  style={{
+                    position: 'relative',
+                    minWidth: '160px', maxWidth: '160px',
+                    background: `linear-gradient(145deg, #141414 0%, ${accentBg} 100%)`,
+                    border: `1px solid var(--border2)`,
+                    borderLeft: `3px solid ${accentColor}`,
+                    borderRadius: '14px',
+                    padding: '14px 14px 12px',
+                    overflow: 'hidden',
+                    flexShrink: 0,
+                    boxShadow: `inset 0 1px 0 ${accentGlow}, 0 4px 20px rgba(0,0,0,0.4)`,
+                  }}
+                >
+                  {/* Distance label */}
+                  <div style={{ fontFamily: 'var(--headline)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '6px' }}>
+                    {displayKey}
+                  </div>
+                  {/* Time */}
+                  <div style={{ fontFamily: 'var(--headline)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.01em', lineHeight: 1, marginBottom: '8px', color: accentColor }}>
+                    {r.time}
+                  </div>
+                  {/* Race name */}
+                  <div style={{ fontSize: '11px', color: 'var(--muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {r.name ?? r.date}
+                  </div>
+                  {/* Date */}
+                  <div style={{ fontSize: '10px', color: 'var(--muted2)', marginTop: '2px' }}>
+                    {new Date(r.date + 'T00:00:00').toLocaleDateString('en', { month: 'short', year: 'numeric' })}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 // ─── Widget placeholder ───────────────────────────────────────────────────────
 
 function WidgetShell({ label }: { label: string }) {
@@ -3741,7 +3853,7 @@ export function Dashboard() {
       <DashZone id="recently" tag="RECENTLY" label="YOUR SEASON">
         <StatsStrip />
         {en('recent-races')   && <RecentRaces onAddRace={openAddRace} />}
-        {en('personal-bests') && <WidgetShell label="Personal Bests" />}
+        {en('personal-bests') && <PersonalBestsWidget />}
         {en('why-prd')        && <WhyPRdWidget />}
         {en('why-faded')      && <WhyFadedWidget />}
         {en('break-tape')     && <BreakTapeWidget />}
