@@ -138,11 +138,17 @@ function CompactRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onClic
   const mon = d.toLocaleString('en', { month: 'short' }).toUpperCase()
   const day = d.getDate()
 
+  const city = [race.city, race.country].filter(Boolean).join(', ')
+
   return (
     <div className={`race-row-compact${isPB ? ' is-pb' : ''}`} onClick={onClick} style={{ cursor: 'pointer' }}>
+      <div className={`rrc-date-chip${isPB ? ' is-pb' : ''}`}>
+        <div className="rrc-date-chip-mon">{mon}</div>
+        <div className="rrc-date-chip-day">{day}</div>
+      </div>
       <div style={{ minWidth: 0 }}>
         <div className="rrc-name">{race.name}</div>
-        <div className="rrc-meta">{[race.city, race.country].filter(Boolean).join(', ')} · {mon} {day}</div>
+        {city && <div className="rrc-meta">{city}</div>}
       </div>
       <div style={{ textAlign: 'right', flexShrink: 0 }}>
         <div className="rrc-time">{race.time ?? '—'}</div>
