@@ -439,9 +439,8 @@ body::after {
 .race-row-detailed:active { background: var(--surface3); }
 .race-row-detailed.is-pb {
   background: linear-gradient(105deg, rgba(232,78,27,0.12) 0%, rgba(200,150,60,0.07) 40%, rgba(200,150,60,0.02) 100%);
-  border-left: 3px solid;
-  border-image: linear-gradient(180deg, #E84E1B 0%, rgba(200,150,60,0.45) 100%) 1;
-  border-color: rgba(200,150,60,0.25);
+  border: 1px solid rgba(200,150,60,0.25);
+  border-left: 3px solid #E84E1B;
 }
 .races-stat-cell {
   background: var(--surface2); border: 1px solid var(--border);

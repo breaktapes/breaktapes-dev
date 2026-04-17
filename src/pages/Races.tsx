@@ -297,7 +297,6 @@ function DetailedRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onCli
         {race.sport && !label.toLowerCase().includes(race.sport.toLowerCase()) && (
           <span className="tag">{race.sport}</span>
         )}
-        {label && <span className="dist-pill" style={{ fontSize: '10px' }}>{label}</span>}
       </div>
     </div>
   )

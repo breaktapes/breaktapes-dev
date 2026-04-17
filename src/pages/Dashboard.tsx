@@ -7,6 +7,7 @@ import { useWearableStore } from '@/stores/useWearableStore'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { selectRaces, selectNextRace, selectAthlete, selectDashZoneCollapse, selectUpcomingRaces, selectFocusRace, selectFocusRaceId } from '@/stores/selectors'
 import { AddRaceModal } from '@/components/AddRaceModal'
+import { ViewEditRaceModal } from '@/components/ViewEditRaceModal'
 import { TimePickerWheel } from '@/components/TimePickerWheel'
 import type { HMS } from '@/components/TimePickerWheel'
 import type { Race } from '@/types'
@@ -3314,6 +3315,7 @@ function DashZone({ id, tag, label, children }: ZoneProps) {
 function PersonalBestsWidget() {
   const races = useRaceStore(selectRaces)
   const pbMap = useMemo(() => buildPBMap(races), [races])
+  const [selectedRace, setSelectedRace] = useState<Race | null>(null)
 
   // Group PBs by sport
   const groups = useMemo(() => {
@@ -3377,6 +3379,7 @@ function PersonalBestsWidget() {
               return (
                 <div
                   key={key}
+                  onClick={() => setSelectedRace(r)}
                   style={{
                     position: 'relative',
                     minWidth: '160px', maxWidth: '160px',
@@ -3387,6 +3390,7 @@ function PersonalBestsWidget() {
                     padding: '14px 14px 12px',
                     overflow: 'hidden',
                     flexShrink: 0,
+                    cursor: 'pointer',
                     boxShadow: `inset 0 1px 0 ${accentGlow}, 0 4px 20px rgba(0,0,0,0.4)`,
                   }}
                 >
@@ -3412,6 +3416,13 @@ function PersonalBestsWidget() {
           </div>
         </div>
       ))}
+
+      {selectedRace && (
+        <ViewEditRaceModal
+          race={selectedRace}
+          onClose={() => setSelectedRace(null)}
+        />
+      )}
     </div>
   )
 }
