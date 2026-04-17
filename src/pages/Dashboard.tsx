@@ -527,7 +527,10 @@ function PreRaceBriefing({ onAddRace }: { onAddRace: () => void }) {
           <span style={st.briefingTag}>NEXT RACE</span>
         </div>
         <div style={st.briefingTitle}>
-          {(nextRace.name ?? '').toUpperCase()} {dayLabel}
+          {(nextRace.name ?? '').toUpperCase()}
+        </div>
+        <div style={st.briefingTitle}>
+          {dayLabel}
         </div>
         <div style={st.briefingMeta}>
           {fmtDateIntl(nextRace.date)}
