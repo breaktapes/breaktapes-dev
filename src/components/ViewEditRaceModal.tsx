@@ -721,9 +721,9 @@ const st = {
 
   editBtn: {
     flex: 1,
-    background: 'var(--orange)',
-    color: 'var(--black)',
-    border: 'none',
+    background: 'var(--surface3)',
+    color: 'var(--orange)',
+    border: '1px solid var(--orange)',
     borderRadius: '8px',
     padding: '13px',
     fontFamily: 'var(--headline)',
