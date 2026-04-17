@@ -869,11 +869,16 @@ export default {
       }
     }
 
+    // Guard: ASSETS binding must exist
+    if (!env.ASSETS) {
+      return new Response('Worker misconfigured: ASSETS binding missing', { status: 500 });
+    }
+
     // SPA fallback: routes without a file extension that aren't /u/* get index.html
     // This enables React Router client-side routing (direct nav to /train, /you, /races etc.)
     const hasExtension = /\.[a-z0-9]{2,6}$/i.test(path);
     if (!hasExtension && !path.startsWith('/u/')) {
-      return env.ASSETS.fetch(new Request(new URL('/', request.url), request));
+      return env.ASSETS.fetch(new Request(new URL('/', request.url).toString()));
     }
 
     return env.ASSETS.fetch(request);

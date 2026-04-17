@@ -29,6 +29,7 @@ SUPABASE_URL = "https://kmdpufauamadwavqsinj.supabase.co"
 # Deploy: wrangler deploy --env staging
 [env.staging]
 name = "breaktapes-app-staging"
+assets = { directory = "dist", html_handling = "auto-trailing-slash" }
 routes = [
   { pattern = "dev.breaktapes.com/*", zone_id = "7d1d8be858893e977e57b0455ed2388f" }
 ]
