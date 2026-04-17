@@ -1026,48 +1026,59 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
   const today = todayStr()
   const pbMap = useMemo(() => buildPBMap(races), [races])
   const recent = useMemo(
-    () => races.filter(r => r.date <= today).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3),
+    () => races.filter(r => r.date <= today).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 4),
     [races, today],
   )
 
   if (races.length === 0) {
     return (
-      <div style={st.sectionCard}>
-        <div style={st.sectionHeader}>RECENT RACES</div>
+      <div className="card-v3" style={st.glowCard}>
+        <div style={st.widgetLabel}>RECENT RACES</div>
         <div style={st.emptyState}>
           <div style={{ fontSize: '28px' }}>🏁</div>
-          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', maxWidth: '240px', lineHeight: 1.5, textAlign: 'center' }}>No races yet.</div>
-          <button style={st.ctaOutline} onClick={onAddRace}>+ Add Race</button>
+          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', maxWidth: '240px', lineHeight: 1.5, textAlign: 'center' }}>No races logged yet.</div>
+          <button style={st.ctaOutline} onClick={onAddRace}>+ Log a Race</button>
         </div>
       </div>
     )
   }
 
   return (
-    <div style={st.sectionCard}>
-      <div style={st.sectionHeader}>RECENT RACES</div>
-      <div style={{ padding: '0 0.25rem' }}>
-        {recent.map(r => {
+    <div className="card-v3" style={st.glowCard}>
+      <div style={st.widgetLabel}>RECENT RACES</div>
+      <div style={{ display: 'flex', flexDirection: 'column', marginTop: '10px' }}>
+        {recent.map((r, i) => {
           const isPB = !!r.time && pbMap[normalizeDistKey(r.distance)]?.id === r.id
           const d = new Date(r.date + 'T00:00:00')
-          const mon = d.toLocaleString('en', { month: 'short' }).toUpperCase()
-          const day = d.getDate()
+          const dateStr = d.toLocaleDateString('en', { day: 'numeric', month: 'short', year: '2-digit' })
           const city = [r.city, r.country].filter(Boolean).join(', ')
           const label = distBadge(r.distance)
           return (
-            <div key={r.id} className={`race-row-compact${isPB ? ' is-pb' : ''}`}>
-              <div className={`rrc-date-chip${isPB ? ' is-pb' : ''}`}>
-                <div className="rrc-date-chip-mon">{mon}</div>
-                <div className="rrc-date-chip-day">{day}</div>
+            <div key={r.id} style={{
+              display: 'flex', alignItems: 'center', gap: '10px',
+              padding: '10px 0',
+              borderBottom: i < recent.length - 1 ? '1px solid var(--border)' : 'none',
+            }}>
+              {/* Left: name + meta */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                  <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '13px', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>
+                    {r.name ?? 'Untitled'}
+                  </span>
+                  {isPB && (
+                    <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: '#C8963C', background: 'rgba(200,150,60,0.12)', border: '1px solid rgba(200,150,60,0.3)', borderRadius: '4px', padding: '1px 5px', flexShrink: 0 }}>PB</span>
+                  )}
+                </div>
+                <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>
+                  {dateStr}{city ? ` · ${city}` : ''}{label ? ` · ${label}` : ''}
+                </div>
               </div>
-              <div style={{ minWidth: 0 }}>
-                <div className="rrc-name">{r.name}</div>
-                {city && <div className="rrc-meta">{city}</div>}
-              </div>
-              <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                {r.time && <div className="rrc-time">{r.time}</div>}
-                {label && <div className="rrc-dist">{label}</div>}
-              </div>
+              {/* Right: time */}
+              {r.time && (
+                <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '15px', color: isPB ? '#C8963C' : 'var(--orange)', flexShrink: 0, letterSpacing: '0.02em' }}>
+                  {r.time}
+                </div>
+              )}
             </div>
           )
         })}
@@ -1081,29 +1092,40 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
 function StatsStrip() {
   const races = useRaceStore(selectRaces)
   const units = useUnits()
+
   const stats = useMemo(() => {
     const km = totalKm(races)
     const dist = units === 'imperial'
       ? Math.round(km * 0.621371).toLocaleString()
       : Math.round(km).toLocaleString()
+    const pbCount = Object.keys(buildPBMap(races)).length
+    const avgTime = (() => {
+      const timed = races.filter(r => r.time)
+      if (!timed.length) return null
+      const avg = timed.reduce((s, r) => s + (parseHMS(r.time!) ?? 0), 0) / timed.length
+      return secsToHMS(Math.round(avg))
+    })()
     return [
-      { label: 'RACES',                 value: races.length.toString() },
-      { label: 'COUNTRIES',             value: uniqueCountries(races).toString() },
-      { label: `TOTAL ${distUnit(units)}`, value: dist },
-      { label: 'MEDALS',               value: medalCount(races).toString() },
+      { label: 'RACES',     value: races.length.toString(),   sub: 'logged' },
+      { label: 'COUNTRIES', value: uniqueCountries(races).toString(), sub: 'visited' },
+      { label: distUnit(units), value: dist, sub: 'total dist' },
+      { label: 'PBs',       value: pbCount.toString(),        sub: 'distances' },
+      { label: 'MEDALS',    value: medalCount(races).toString(), sub: 'earned' },
+      ...(avgTime ? [{ label: 'AVG TIME', value: avgTime, sub: 'per race' }] : []),
     ]
   }, [races, units])
 
   return (
-    <div style={st.statsStrip}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
       {stats.map(s => (
-        <div key={s.label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px', minWidth: 0 }}>
-          <div style={{ fontFamily: 'var(--headline)', fontSize: '22px', fontWeight: 900, lineHeight: 1, color: 'var(--green)', letterSpacing: '0.02em' }}>
+        <div key={s.label} className="card-v3" style={{ padding: '10px 12px', textAlign: 'center' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontSize: '20px', fontWeight: 900, lineHeight: 1, color: 'var(--white)', letterSpacing: '0.02em' }}>
             {s.value}
           </div>
-          <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)' }}>
+          <div style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--orange)', marginTop: '3px' }}>
             {s.label}
           </div>
+          <div style={{ fontSize: '9px', color: 'var(--muted)', marginTop: '1px' }}>{s.sub}</div>
         </div>
       ))}
     </div>
@@ -1113,16 +1135,16 @@ function StatsStrip() {
 // ─── Season Planner Widget ────────────────────────────────────────────────────
 
 function SeasonPlannerWidget({ onAddRace }: { onAddRace: () => void }) {
-  const races = useRaceStore(selectRaces)
+  const upcoming = useRaceStore(selectUpcomingRaces)
   const navigate = useNavigate()
   const today = todayStr()
 
   const upcoming90 = useMemo(() => {
     const cutoff = new Date(); cutoff.setDate(cutoff.getDate() + 90)
     const cutoffStr = cutoff.toISOString().split('T')[0]
-    return races.filter(r => r.date > today && r.date <= cutoffStr)
+    return upcoming.filter(r => r.date >= today && r.date <= cutoffStr)
       .sort((a, b) => a.date.localeCompare(b.date))
-  }, [races, today])
+  }, [upcoming, today])
 
   const taperFor = (dist: string) => {
     const n = distanceToKm(dist)
