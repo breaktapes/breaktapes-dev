@@ -4171,18 +4171,32 @@ select:focus-visible { outline: none; border-color: var(--orange) !important; bo
 
 /* ── Compact row ── */
 .race-row-compact {
-  display: grid; grid-template-columns: 1fr auto;
+  display: grid; grid-template-columns: auto 1fr auto;
   padding: .55rem 0; border-bottom: 1px solid var(--border);
-  gap: .25rem; cursor: pointer; align-items: center;
+  gap: 0 12px; cursor: pointer; align-items: center;
 }
-.race-row-compact:active {
-  background: rgba(255,255,255,.03);
-  margin: 0 -.5rem; padding-left: .5rem; padding-right: .5rem;
-}
+.race-row-compact:active { background: rgba(255,255,255,.03); }
 .race-row-compact.is-pb {
-  border-left: 2px solid var(--orange);
-  padding-left: calc(.5rem - 2px);
-  background: linear-gradient(90deg, rgba(var(--orange-ch),.10) 0%, transparent 70%);
+  background: linear-gradient(90deg, rgba(var(--orange-ch),.08) 0%, transparent 80%);
+}
+.rrc-date-chip {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  width: 42px; min-height: 48px; flex-shrink: 0;
+  background: var(--surface2); border: 1px solid var(--border2); border-radius: 10px;
+  padding: 4px 5px 5px; gap: 1px;
+}
+.rrc-date-chip.is-pb {
+  border-color: rgba(200,150,60,0.35);
+  background: linear-gradient(145deg, #1A1400 0%, var(--surface2) 100%);
+}
+.rrc-date-chip-mon {
+  font-family: var(--mono); font-size: 7px; font-weight: 600;
+  letter-spacing: 0.10em; text-transform: uppercase;
+  color: var(--orange); line-height: 1;
+}
+.rrc-date-chip-day {
+  font-family: var(--headline); font-size: 24px; font-weight: 900;
+  color: var(--white); line-height: 1; letter-spacing: -0.02em;
 }
 .rrc-name {
   font-family: var(--headline); font-size: 14px; font-weight: 800; color: var(--white);
@@ -10770,13 +10784,21 @@ function _checkIsPBForRow(r, pb, triPB) {
 
 function buildCompactRow(r, pb, triPB) {
   const isPB = _checkIsPBForRow(r, pb, triPB);
-  const d = r.date ? new Date(r.date+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}) : '';
   const city = escapeHtml(r.city||'');
-  const meta = city && d ? city+' · '+d : city||d;
+  let mon = '', day = '';
+  if (r.date) {
+    const dt = new Date(r.date+'T00:00:00');
+    mon = dt.toLocaleDateString('en-US',{month:'short'}).toUpperCase();
+    day = dt.getDate();
+  }
   return `<div class="race-row-compact${isPB?' is-pb':''}" onclick="openRaceView(${r.id})">
+    <div class="rrc-date-chip${isPB?' is-pb':''}">
+      <div class="rrc-date-chip-mon">${mon||'—'}</div>
+      <div class="rrc-date-chip-day">${day||'—'}</div>
+    </div>
     <div style="min-width:0">
       <div class="rrc-name">${escapeHtml(r.name||'Unnamed Race')}</div>
-      <div class="rrc-meta">${meta}</div>
+      ${city ? `<div class="rrc-meta">${city}</div>` : ''}
     </div>
     <div style="text-align:right;flex-shrink:0">
       <div class="rrc-time">${escapeHtml(r.time||'—')}</div>

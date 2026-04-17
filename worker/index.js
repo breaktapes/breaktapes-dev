@@ -179,19 +179,34 @@ function renderProfile(row, username) {
   const totalMedals = countMedals(races);
   const countries = uniqueCountries(races);
 
-  // PBs
+  // PBs — sport-grouped card grid, ascending distance
   const pbs = computePBs(races);
-  const pbDistances = ['Marathon', 'Half Marathon', '10K', '5K',
-    '70.3 / Half Ironman', 'Ironman / Full', '10 Miles', 'Ultra'];
+  const RUN_DISTS = ['5K', '10K', '10 Miles', 'Half Marathon', 'Marathon', 'Ultra'];
+  const TRI_DISTS = ['Olympic', '70.3 / Half Ironman', 'Ironman / Full'];
+  const DIST_LABEL = {
+    '5K':'5KM','10K':'10KM','10 Miles':'10 MI','Half Marathon':'HALF',
+    'Marathon':'MARATHON','Ultra':'ULTRA','Olympic':'OLYMPIC',
+    '70.3 / Half Ironman':'70.3','Ironman / Full':'IRONMAN'
+  };
 
-  const pbRows = pbDistances
-    .filter(d => pbs[d])
-    .slice(0, 5)
-    .map(d => `
-      <div class="pb-row">
-        <span class="pb-dist">${escapeHtml(d)}</span>
-        <span class="pb-time">${escapeHtml(fmtTime(pbs[d].time))}</span>
-      </div>`).join('');
+  function pbCardHtml(d, type) {
+    if (!pbs[d]) return '';
+    const label = DIST_LABEL[d] || escapeHtml(d);
+    const time = escapeHtml(fmtTime(pbs[d].time));
+    const race = escapeHtml((pbs[d].raceName || '').replace(/\s+\d{4}$/, '').substring(0, 24));
+    return `<div class="pb-card pb-card-${type}">
+      <div class="pb-card-dist">${label}</div>
+      <div class="pb-card-time">${time}</div>
+      ${race ? `<div class="pb-card-race">${race}</div>` : ''}
+    </div>`;
+  }
+
+  const runCards = RUN_DISTS.map(d => pbCardHtml(d, 'run')).filter(Boolean);
+  const triCards = TRI_DISTS.map(d => pbCardHtml(d, 'tri')).filter(Boolean);
+
+  let pbRows = '';
+  if (runCards.length) pbRows += `<div class="pb-sport-label">Running</div><div class="pb-card-grid">${runCards.join('')}</div>`;
+  if (triCards.length) pbRows += `<div class="pb-sport-label">Triathlon</div><div class="pb-card-grid">${triCards.join('')}</div>`;
 
   // Recent races (last 5, sorted by date descending)
   const pastRaces = races
@@ -272,7 +287,7 @@ function renderProfile(row, username) {
     ${pbRows ? `
     <section class="profile-section">
       <h2 class="section-title">PERSONAL BESTS</h2>
-      <div class="pb-list">${pbRows}</div>
+      ${pbRows}
     </section>` : ''}
 
     ${raceRows ? `
@@ -398,15 +413,17 @@ function pageShell({ title, description, ogTitle, ogDescription, ogImage, canoni
 
     :root {
       --black:      #000000;
-      --white:      #F5F5F5;
-      --orange:     #FF4D00;
+      --white:      #E8E0D5;
+      --orange:     #E84E1B;
+      --green:      #00FF88;
+      --purple:     #7C3AED;
       --surface:    #0D0D0D;
       --surface2:   #141414;
       --surface3:   #1A1A1A;
       --border:     rgba(245,245,245,0.06);
       --border2:    rgba(245,245,245,0.12);
-      --muted:      rgba(245,245,245,0.35);
-      --muted2:     rgba(245,245,245,0.18);
+      --muted:      rgba(232,224,213,0.40);
+      --muted2:     rgba(232,224,213,0.20);
     }
 
     html, body {
@@ -576,34 +593,48 @@ function pageShell({ title, description, ogTitle, ogDescription, ogImage, canoni
     }
 
     /* PBs */
-    .pb-list {
+    .pb-sport-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 9px; font-weight: 800;
+      letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 8px; margin-top: 16px;
+    }
+    .pb-sport-label:first-child { margin-top: 0; }
+
+    .pb-card-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .pb-card {
       background: var(--surface2);
       border: 1px solid var(--border);
       border-radius: 10px;
-      overflow: hidden;
+      padding: 11px 10px 10px;
+      min-width: 0;
     }
 
-    .pb-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--border);
-    }
+    .pb-card-run { border-left: 2px solid #00FF88; }
+    .pb-card-tri { border-left: 2px solid #7C3AED; }
 
-    .pb-row:last-child { border-bottom: none; }
-
-    .pb-dist {
-      font-weight: 500;
-      font-size: 15px;
-      color: var(--white);
-    }
-
-    .pb-time {
+    .pb-card-dist {
       font-family: 'Barlow Condensed', sans-serif;
-      font-weight: 800;
-      font-size: 18px;
-      color: var(--orange);
+      font-size: 8px; font-weight: 800;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 5px; line-height: 1;
+    }
+
+    .pb-card-time {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 20px; font-weight: 900;
+      color: var(--orange); line-height: 1; letter-spacing: -0.02em;
+    }
+
+    .pb-card-race {
+      font-size: 9px; color: var(--muted); margin-top: 4px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
 
     /* Races */
