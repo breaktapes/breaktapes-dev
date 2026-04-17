@@ -151,11 +151,6 @@ function parsePlacing(str: string | undefined): { pos: number; total: number; pc
   return { pos, total, pct: Math.round((1 - (pos - 1) / total) * 100) }
 }
 
-function fmtDate(dateStr: string): string {
-  const d = new Date(dateStr + 'T00:00:00')
-  return d.toLocaleDateString('en', { month: 'short', day: 'numeric', year: '2-digit' })
-}
-
 // ── Year-filter tabs ──────────────────────────────────────────────────────────
 
 function YearTabs({

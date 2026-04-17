@@ -4,14 +4,13 @@ import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { useDashStore } from '@/stores/useDashStore'
 import { useWearableStore } from '@/stores/useWearableStore'
-import { useAuthStore } from '@/stores/useAuthStore'
 import { selectRaces, selectNextRace, selectAthlete, selectDashZoneCollapse, selectUpcomingRaces, selectFocusRace, selectFocusRaceId } from '@/stores/selectors'
 import { AddRaceModal } from '@/components/AddRaceModal'
 import { ViewEditRaceModal } from '@/components/ViewEditRaceModal'
 import { TimePickerWheel } from '@/components/TimePickerWheel'
 import type { HMS } from '@/components/TimePickerWheel'
 import type { Race } from '@/types'
-import { useUnits, fmtDistKm, distUnit, fmtPaceSecPerKm, paceUnit } from '@/lib/units'
+import { useUnits, distUnit } from '@/lib/units'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -33,9 +32,6 @@ function fmtDateIntl(dateStr: string): string {
   return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`
 }
 
-function fmtShortDate(dateStr: string): string {
-  return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-}
 
 // Canonical label → km mapping (covers both numeric strings and named distances)
 const DIST_LABEL_KM: Record<string, number> = {
@@ -1685,42 +1681,6 @@ function WhyResultWidget() {
 
       <div style={st.widgetDivider} />
       <button style={st.ghostOutlineBtn}>COACH BRIEF</button>
-    </div>
-  )
-}
-
-// ─── Pro Gate ────────────────────────────────────────────────────────────────
-
-function ProGate({ label, teaser }: { label: string; teaser: string }) {
-  const isPro = useAuthStore(s => s.proAccessGranted)
-
-  if (isPro) {
-    return (
-      <div style={{ ...st.glowCard, border: '1px dashed rgba(var(--orange-ch),0.3)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
-          <div>
-            <div style={st.widgetLabel}>{label}</div>
-            <div style={st.widgetTitle}>COMING SOON</div>
-          </div>
-          <span style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', color: 'var(--orange)', background: 'rgba(var(--orange-ch),0.12)', border: '1px solid rgba(var(--orange-ch),0.3)', borderRadius: '4px', padding: '2px 6px', flexShrink: 0 }}>BETA</span>
-        </div>
-        <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.6, marginTop: '2px' }}>{teaser}</div>
-      </div>
-    )
-  }
-
-  return (
-    <div style={{ ...st.glowCard, border: '1px dashed var(--border2)' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
-        <div>
-          <div style={st.widgetLabel}>{label}</div>
-          <div style={st.widgetTitle}>PRO FEATURE</div>
-        </div>
-        <span style={{ fontSize: '18px', flexShrink: 0 }}>🔒</span>
-      </div>
-      <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.6, marginTop: '2px' }}>{teaser}</div>
-      <div style={st.widgetDivider} />
-      <button style={st.ghostOutlineBtn}>UPGRADE TO PRO</button>
     </div>
   )
 }
@@ -3423,17 +3383,6 @@ function PersonalBestsWidget() {
           onClose={() => setSelectedRace(null)}
         />
       )}
-    </div>
-  )
-}
-
-// ─── Widget placeholder ───────────────────────────────────────────────────────
-
-function WidgetShell({ label }: { label: string }) {
-  return (
-    <div style={st.widgetShell}>
-      <div style={st.widgetShellLabel}>{label}</div>
-      <div style={{ height: '44px', background: 'var(--surface)', borderRadius: '8px', opacity: 0.4 }} />
     </div>
   )
 }

@@ -29,6 +29,12 @@ jobs:
       - name: Run tests
         run: npm test
 
+      - name: Run React component tests
+        run: npm run test:react
+
+      - name: TypeScript type check
+        run: npx tsc --noEmit
+
       # ── 3. Build ─────────────────────────────────────────────────────────
       - name: Build
         run: npm run build

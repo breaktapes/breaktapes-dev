@@ -1,5 +1,23 @@
 # BREAKTAPES — Claude Project Memory (Trunk)
 
+## Quick Reference
+
+| Task | Command |
+|------|---------|
+| Local dev server | `npm run dev` (Vite, http://localhost:5173) |
+| Legacy tests | `npm test` (Jest, SPA snapshot) |
+| React component tests | `npm run test:react` (vitest) |
+| Both test suites | `npm test && npm run test:react` |
+| Build for deploy | `npm run build` |
+| Deploy to staging | `git push origin staging` (auto-deploy via GitHub Actions) |
+| Deploy to prod | `git push origin main` |
+| Staging URL | https://dev.breaktapes.com |
+| Production URL | https://app.breaktapes.com |
+
+> For full architecture, store patterns, and session history see sections below.
+
+---
+
 > **Instruction:** After every commit merged to `main`, update this file and all memory documents under `docs/memory/` to reflect new learnings, architectural changes, and session decisions. Keep these files current — they are the source of truth for every Claude session.
 
 ---
