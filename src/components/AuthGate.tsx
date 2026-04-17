@@ -225,10 +225,10 @@ function AuthModal({ open, mode, onModeChange, onClose }: AuthModalProps) {
       className={`auth-modal-overlay${open ? ' open' : ''}`}
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
-      <div className="auth-modal" role="dialog" aria-modal="true">
+      <div className="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
         <div className="auth-modal-drag" />
         <div className="auth-modal-head">
-          <h2>{mode === 'signin' ? 'Sign In' : 'Create Account'}</h2>
+          <h2 id="auth-modal-title">{mode === 'signin' ? 'Sign In' : 'Create Account'}</h2>
         </div>
         <div className="auth-modal-body" onKeyDown={handleKeyDown}>
           <div className="auth-switch">

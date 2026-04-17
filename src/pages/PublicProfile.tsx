@@ -61,10 +61,10 @@ function fmtDate(d: string): string {
 }
 
 const MEDAL_COLORS: Record<string, string> = {
-  gold:     '#FFD770',
+  gold:     'var(--gold-a)',
   silver:   '#C8D4DC',
   bronze:   '#CD8C5A',
-  finisher: '#E84E1B',
+  finisher: 'var(--orange)',
 }
 
 /** Personal bests: best time per distance */

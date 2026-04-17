@@ -116,7 +116,7 @@ export function BottomNav() {
                   position: 'absolute',
                   top: 0, left: '20%', right: '20%',
                   height: '2px',
-                  background: 'linear-gradient(135deg, #E84E1B 0%, #C03A10 100%)',
+                  background: 'var(--grad-orange)',
                   borderRadius: '0 0 3px 3px',
                   boxShadow: '0 0 10px rgba(232,78,27,0.6)',
                 }}

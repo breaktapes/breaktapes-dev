@@ -547,9 +547,9 @@ export function Races() {
                 width: '10px',
                 height: '10px',
                 borderRadius: '50%',
-                background: '#E84E1B',
+                background: 'var(--orange)',
                 border: '2px solid rgba(245,245,245,0.5)',
-                boxShadow: '0 0 6px rgba(232,78,27,0.6)',
+                boxShadow: '0 0 6px rgba(var(--orange-ch),0.6)',
                 cursor: 'pointer',
               }}
             />

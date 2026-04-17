@@ -89,7 +89,7 @@ const MEDALS = [
 ]
 
 const MEDAL_COLORS: Record<string, string> = {
-  gold:     '#FFD770',
+  gold:     'var(--gold-a)',
   silver:   '#C8D4DC',
   bronze:   '#CD8C5A',
   finisher: 'var(--orange)',
