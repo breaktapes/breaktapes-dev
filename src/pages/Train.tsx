@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { useWearableStore } from '@/stores/useWearableStore'
-import { handleWhoopCallback, fetchWhoopActivities } from '@/lib/whoop'
+import { handleWhoopCallback, fetchWhoopActivities, fetchWhoopRecovery } from '@/lib/whoop'
 import { handleGarminCallback, fetchGarminActivities } from '@/lib/garmin'
-import { handleStravaCallback } from '@/lib/strava'
+import { handleStravaCallback, fetchStravaActivities, stravaActivitiesToRaces } from '@/lib/strava'
 
 const btnMain: React.CSSProperties = {
   background: 'var(--orange)',
@@ -58,11 +58,12 @@ function parseHMS(str: string): number | null {
   return null
 }
 
-type Tab = 'pace' | 'activities'
+type Tab = 'pace' | 'activities' | 'readiness'
 
 const TAB_LABELS: { id: Tab; label: string }[] = [
   { id: 'pace',       label: 'Pace' },
   { id: 'activities', label: 'Activities' },
+  { id: 'readiness',  label: 'Readiness' },
 ]
 
 // ── Activity feed types ────────────────────────────────────────────────────
@@ -100,8 +101,14 @@ export function Train() {
   // Activity feed state
   const [activities, setActivities] = useState<ActivityItem[]>([])
   const [feedLoading, setFeedLoading] = useState(false)
+  const [stravaRaceCount, setStravaRaceCount] = useState(0)
+  const [importingRaces, setImportingRaces] = useState(false)
+  const [importDone, setImportDone] = useState<string | null>(null)
+  const [recoveryData, setRecoveryData] = useState<Array<{ date: string; score: number; hrv?: number; rhr?: number }>>([])
+  const [recoveryLoading, setRecoveryLoading] = useState(false)
 
   const races = useRaceStore(s => s.races)
+  const addRace = useRaceStore(s => s.addRace)
   const whoopToken  = useWearableStore(s => s.whoopToken)
   const garminToken = useWearableStore(s => s.garminToken)
   const stravaToken = useWearableStore(s => s.stravaToken)
@@ -155,11 +162,17 @@ export function Train() {
     async function load() {
       setFeedLoading(true)
       try {
-        const [whoopActs, garminActs] = await Promise.all([
-          whoopToken  ? fetchWhoopActivities(20) : Promise.resolve([]),
-          garminToken ? fetchGarminActivities(20) : Promise.resolve([]),
+        const [whoopActs, garminActs, stravaActs] = await Promise.all([
+          whoopToken  ? fetchWhoopActivities(20)    : Promise.resolve([]),
+          garminToken ? fetchGarminActivities(20)   : Promise.resolve([]),
+          stravaToken ? fetchStravaActivities(100)  : Promise.resolve([]),
         ])
         if (cancelled) return
+
+        // Count Strava race activities not yet imported
+        const newRaces = stravaActivitiesToRaces(stravaActs, races)
+        setStravaRaceCount(newRaces.length)
+
         const merged: ActivityItem[] = [
           ...whoopActs.map(a => ({
             id: String(a.id),
@@ -178,6 +191,14 @@ export function Train() {
             durationMin: a.duration ? Math.round(a.duration / 60) : undefined,
             avgHR: a.averageHR,
           })),
+          ...stravaActs.map(a => ({
+            id: `strava-${a.id}`,
+            source: 'Strava' as const,
+            name: a.name,
+            date: a.start_date_local ?? '',
+            distanceKm: a.distance ? Math.round(a.distance / 100) / 10 : undefined,
+            durationMin: a.elapsed_time ? Math.round(a.elapsed_time / 60) : undefined,
+          })),
         ]
         merged.sort((a, b) => b.date.localeCompare(a.date))
         setActivities(merged)
@@ -187,7 +208,56 @@ export function Train() {
     }
     load()
     return () => { cancelled = true }
-  }, [activeTab, hasAnyWearable, whoopToken, garminToken]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [activeTab, hasAnyWearable, whoopToken, garminToken, stravaToken]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function handleImportStravaRaces() {
+    setImportingRaces(true)
+    setImportDone(null)
+    try {
+      const stravaActs = await fetchStravaActivities(100)
+      const newRaces = stravaActivitiesToRaces(stravaActs, races)
+      for (const r of newRaces) {
+        addRace({ ...r, id: crypto.randomUUID() } as import('@/types').Race)
+      }
+      setStravaRaceCount(0)
+      setImportDone(
+        newRaces.length > 0
+          ? `${newRaces.length} race${newRaces.length > 1 ? 's' : ''} imported from Strava`
+          : 'No new races to import'
+      )
+    } catch {
+      setImportDone('Import failed — try again')
+    } finally {
+      setImportingRaces(false)
+    }
+  }
+
+  // Load WHOOP recovery data for Readiness tab
+  useEffect(() => {
+    if (activeTab !== 'readiness' || !whoopToken) return
+    let cancelled = false
+    async function loadRecovery() {
+      setRecoveryLoading(true)
+      try {
+        const records = await fetchWhoopRecovery(30)
+        if (cancelled) return
+        const parsed = records
+          .map(r => ({
+            date: r.created_at?.slice(0, 10) ?? '',
+            score: r.score?.recovery_score ?? 0,
+            hrv: r.score?.hrv_rmssd_milli,
+            rhr: r.score?.resting_heart_rate,
+          }))
+          .filter(r => r.date && r.score > 0)
+          .sort((a, b) => b.date.localeCompare(a.date))
+        setRecoveryData(parsed)
+      } finally {
+        if (!cancelled) setRecoveryLoading(false)
+      }
+    }
+    loadRecovery()
+    return () => { cancelled = true }
+  }, [activeTab, whoopToken]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function calcPace() {
     const totalSecs = parseHMS(goalTime)
@@ -393,6 +463,45 @@ export function Train() {
             </div>
           )}
 
+          {/* Strava race import banner */}
+          {stravaToken && stravaRaceCount > 0 && (
+            <div style={{
+              background: 'rgba(252,76,2,0.08)',
+              border: '1px solid rgba(252,76,2,0.3)',
+              borderRadius: '8px',
+              padding: '0.85rem 1rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '0.75rem',
+            }}>
+              <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--white)', lineHeight: 1.4 }}>
+                <span style={{ color: '#fc4c02', fontWeight: 700 }}>Strava</span>{' '}
+                found {stravaRaceCount} race{stravaRaceCount > 1 ? 's' : ''} not in BREAKTAPES
+              </p>
+              <button
+                onClick={handleImportStravaRaces}
+                disabled={importingRaces}
+                style={{ ...btnMain, padding: '0.5rem 0.85rem', fontSize: '11px', flexShrink: 0, opacity: importingRaces ? 0.6 : 1 }}
+              >
+                {importingRaces ? 'Importing…' : `Import ${stravaRaceCount}`}
+              </button>
+            </div>
+          )}
+          {importDone && (
+            <div style={{
+              background: importDone.includes('failed') ? 'rgba(255,80,80,0.12)' : 'rgba(var(--green-ch),0.12)',
+              border: `1px solid ${importDone.includes('failed') ? 'rgba(255,80,80,0.3)' : 'rgba(var(--green-ch),0.3)'}`,
+              borderRadius: '6px', padding: '0.75rem 1rem',
+              fontSize: 'var(--text-sm)',
+              color: importDone.includes('failed') ? '#ff8080' : 'var(--green)',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            }}>
+              <span>{importDone}</span>
+              <button onClick={() => setImportDone(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontSize: '16px', padding: '0 0 0 8px' }}>✕</button>
+            </div>
+          )}
+
           {!hasAnyWearable ? (
             <div style={card}>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', padding: '2rem 1rem', textAlign: 'center' }}>
@@ -451,6 +560,102 @@ export function Train() {
                 })}
               </div>
             </div>
+          )}
+        </>
+      )}
+
+      {activeTab === 'readiness' && (
+        <>
+          {!whoopToken ? (
+            <div style={card}>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', padding: '2rem 1rem', textAlign: 'center' }}>
+                <div style={{ fontSize: '36px', opacity: 0.5 }}>💚</div>
+                <p style={{ margin: 0, fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '15px', color: 'var(--white)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Connect WHOOP</p>
+                <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--muted)', maxWidth: '260px', lineHeight: 1.5 }}>
+                  Link your WHOOP to see recovery scores, HRV, and resting heart rate trends.
+                </p>
+                <button style={btnMain} onClick={() => navigate('/settings')}>Go to Settings → Wearables</button>
+              </div>
+            </div>
+          ) : recoveryLoading ? (
+            <div style={{ ...card, textAlign: 'center', padding: '2rem', color: 'var(--muted)', fontSize: '13px', fontFamily: 'var(--headline)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              Loading recovery data…
+            </div>
+          ) : recoveryData.length === 0 ? (
+            <div style={{ ...card, textAlign: 'center', padding: '2rem', color: 'var(--muted)', fontSize: '13px', fontFamily: 'var(--headline)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+              No recovery data found
+            </div>
+          ) : (
+            <>
+              {/* Today's readiness hero */}
+              {(() => {
+                const today = recoveryData[0]
+                const score = today.score
+                const color = score >= 67 ? 'var(--green)' : score >= 34 ? '#FFD770' : '#ff8080'
+                const label = score >= 67 ? 'READY' : score >= 34 ? 'MODERATE' : 'RECOVER'
+                return (
+                  <div style={{ ...card, display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                    {/* Score ring */}
+                    <div style={{ position: 'relative', flexShrink: 0 }}>
+                      <svg width="80" height="80" viewBox="0 0 80 80">
+                        <circle cx="40" cy="40" r="33" fill="none" stroke="var(--surface3)" strokeWidth="8" />
+                        <circle
+                          cx="40" cy="40" r="33" fill="none"
+                          stroke={color} strokeWidth="8"
+                          strokeDasharray={`${2 * Math.PI * 33 * score / 100} ${2 * Math.PI * 33}`}
+                          strokeLinecap="round"
+                          transform="rotate(-90 40 40)"
+                        />
+                      </svg>
+                      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
+                        <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', color, lineHeight: 1 }}>{score}</span>
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '11px', letterSpacing: '0.12em', textTransform: 'uppercase', color, marginBottom: '4px' }}>
+                        {label}
+                      </div>
+                      <div style={{ fontSize: '13px', color: 'var(--white)', fontWeight: 600 }}>Today's Recovery</div>
+                      <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '4px', display: 'flex', gap: '10px' }}>
+                        {today.hrv !== undefined && <span>HRV {Math.round(today.hrv)}ms</span>}
+                        {today.rhr !== undefined && <span>RHR {Math.round(today.rhr)}bpm</span>}
+                      </div>
+                    </div>
+                  </div>
+                )
+              })()}
+
+              {/* Rolling 30-day history */}
+              <div style={card}>
+                <p style={sectionLabel}>Recovery History (30 days)</p>
+                {/* Mini bar chart */}
+                <div style={{ display: 'flex', alignItems: 'flex-end', gap: '3px', height: '56px', marginBottom: '8px' }}>
+                  {recoveryData.slice(0, 30).reverse().map((r, i) => {
+                    const h = Math.max(4, Math.round(r.score * 0.54))
+                    const c = r.score >= 67 ? 'var(--green)' : r.score >= 34 ? '#FFD770' : '#ff8080'
+                    return (
+                      <div key={i} style={{ flex: 1, height: `${h}px`, background: c, borderRadius: '2px 2px 0 0', opacity: 0.85, minWidth: 0 }} title={`${r.date}: ${r.score}%`} />
+                    )
+                  })}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginTop: '4px' }}>
+                  {recoveryData.slice(0, 7).map(r => {
+                    const d = new Date(r.date + 'T00:00:00')
+                    const dateStr = isNaN(d.getTime()) ? r.date : d.toLocaleDateString('en', { month: 'short', day: 'numeric' })
+                    const color = r.score >= 67 ? 'var(--green)' : r.score >= 34 ? '#FFD770' : '#ff8080'
+                    return (
+                      <div key={r.date} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.4rem 0', borderBottom: '1px solid var(--border)' }}>
+                        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>{dateStr}</div>
+                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                          {r.hrv !== undefined && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{Math.round(r.hrv)}ms HRV</span>}
+                          <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', color }}>{r.score}%</span>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            </>
           )}
         </>
       )}

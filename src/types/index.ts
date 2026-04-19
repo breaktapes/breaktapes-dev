@@ -28,6 +28,7 @@ export interface Race {
   bibNumber?: string
   lat?: number
   lng?: number
+  strava_id?: number    // Strava activity ID — used to de-duplicate imports
 }
 
 export interface Split {

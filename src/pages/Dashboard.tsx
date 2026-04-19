@@ -1685,6 +1685,104 @@ function WhyResultWidget() {
   )
 }
 
+// ─── Activity Feed Preview Widget ────────────────────────────────────────────
+
+const ACTIVITY_ICON: Record<string, string> = {
+  Run: '🏃', TrailRun: '🏔', Ride: '🚴', Swim: '🏊', Walk: '🚶',
+  Hike: '⛰', Workout: '💪', Yoga: '🧘', VirtualRide: '🚴', VirtualRun: '🏃',
+  WeightTraining: '🏋', Triathlon: '🏊',
+}
+
+function ActivityPreviewWidget() {
+  const stravaToken = useWearableStore(s => s.stravaToken)
+  const garminToken = useWearableStore(s => s.garminToken)
+  const whoopToken  = useWearableStore(s => s.whoopToken)
+
+  // Use WHOOP activities from store if available
+  const whoopActs = useWearableStore(s => s.whoopActivities)
+
+  if (!stravaToken && !garminToken && !whoopToken) {
+    return (
+      <div style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: '12px', padding: '14px' }}>
+        <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '8px' }}>
+          Activity Feed
+        </div>
+        <div style={{ fontSize: '12px', color: 'var(--muted)' }}>Connect Strava, Garmin, or WHOOP to see recent training.</div>
+      </div>
+    )
+  }
+
+  const items = whoopActs.slice(0, 3).map(a => ({
+    icon: '💚',
+    name: String(a.sport_id),
+    meta: a.end ? `${Math.round((new Date(a.end).getTime() - new Date(a.start).getTime()) / 60000)}min` : '',
+    date: a.start.slice(0, 10),
+  }))
+
+  if (!items.length) return null
+
+  return (
+    <div style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: '12px', padding: '14px' }}>
+      <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '8px' }}>
+        Recent Training
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        {items.map((a, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingBottom: i < items.length - 1 ? '6px' : 0, borderBottom: i < items.length - 1 ? '1px solid var(--border)' : 'none' }}>
+            <span style={{ fontSize: '18px', lineHeight: 1, flexShrink: 0 }}>{a.icon}</span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: '13px', color: 'var(--white)', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.name}</div>
+              <div style={{ fontSize: '11px', color: 'var(--muted)' }}>{[a.date, a.meta].filter(Boolean).join(' · ')}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─── On This Day Widget ───────────────────────────────────────────────────────
+
+function OnThisDayWidget() {
+  const races = useRaceStore(selectRaces)
+
+  const race = useMemo(() => {
+    const now = new Date()
+    const mmdd = `${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+    const thisYear = now.getFullYear()
+    const matches = races.filter(r => r.date && r.date.slice(5) === mmdd && parseInt(r.date.slice(0, 4)) < thisYear)
+    if (!matches.length) return null
+    return matches[Math.floor(Date.now() / 86400000) % matches.length]
+  }, [races])
+
+  if (!race) return null
+
+  const years = new Date().getFullYear() - parseInt(race.date.slice(0, 4))
+  const yearStr = years === 1 ? '1 year ago' : `${years} years ago`
+
+  return (
+    <div style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: '12px', padding: '14px', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+      <span style={{ fontSize: '22px', lineHeight: 1, flexShrink: 0 }}>📅</span>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '4px' }}>
+          On This Day
+        </div>
+        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', color: 'var(--white)', letterSpacing: '0.04em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          {race.name}
+        </div>
+        <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '4px' }}>
+          {yearStr}{race.city ? ` · ${race.city}` : ''}{race.country ? `, ${race.country}` : ''}
+        </div>
+        {race.time && (
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', color: 'var(--orange)', marginTop: '4px' }}>
+            {race.time}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ─── Race Readiness Widget ────────────────────────────────────────────────────
 
 function RaceReadinessWidget() {
@@ -3801,6 +3899,7 @@ export function Dashboard() {
               <CourseInfoCard race={nextRace} /></>
           : <NoUpcomingRaceCTA onAddRace={openAddUpcomingRace} />
         }
+        {en('on-this-day')    && <OnThisDayWidget />}
         {en('race-readiness') && <RaceReadinessWidget />}
         {en('gap-to-goal')    && <GapToGoalWidget />}
         {en('course-fit')     && <CourseFitWidget />}
@@ -3812,8 +3911,9 @@ export function Dashboard() {
       {/* RECENTLY — YOUR SEASON */}
       <DashZone id="recently" tag="RECENTLY" label="YOUR SEASON">
         <StatsStrip />
-        {en('recent-races')   && <RecentRaces onAddRace={openAddRace} />}
-        {en('personal-bests') && <PersonalBestsWidget />}
+        {en('recent-races')      && <RecentRaces onAddRace={openAddRace} />}
+        {en('activity-preview')  && <ActivityPreviewWidget />}
+        {en('personal-bests')    && <PersonalBestsWidget />}
         {en('why-prd')        && <WhyPRdWidget />}
         {en('why-faded')      && <WhyFadedWidget />}
         {en('break-tape')     && <BreakTapeWidget />}

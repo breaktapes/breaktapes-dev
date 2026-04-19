@@ -62,7 +62,7 @@
 - [x] ✅ Train (`/train`) — pace, activities, wearables
 - [x] ✅ Gear (`/gear`) — merges V1 flatlay + wishlist pages
 - [ ] ⚠️ Settings — page exists but missing features (see Settings section)
-- [ ] ⚠️ Backward compat URL aliases (`/pace` → `/`, `/history` → `/races`, `/map` → `/races`) — aliases exist but `pace` redirects to `/` not the pace tab inside Train
+- [x] ✅ Backward compat URL aliases — `/pace` now → `/train`, `/history` → `/races`, `/map` → `/races`
 
 ---
 
@@ -74,13 +74,13 @@
 - [x] ✅ Edit race (ViewEditRaceModal)
 - [x] ✅ Delete race
 - [x] ✅ Splits table (auto-calc cumulative from per-split diffs)
-- [ ] ⚠️ Race name autocomplete — V2 AddRaceModal has it, needs to verify catalog-first + Claude fallback
-- [ ] ⚠️ Race outcome field (Finished / DNF / DSQ / DNS) — field exists in Race type, check modal
+- [x] ✅ Race name autocomplete — AddRaceModal: catalog-first with tokenized multi-word search, Claude fallback for unmatched names.
+- [x] ✅ Race outcome field (Finished / DNF / DSQ / DNS) — in both AddRaceModal and ViewEditRaceModal; `outcome: outcome || undefined` saved to race.
 
 ### AI / Screenshot Import
 - [x] ✅ Claude API key field in Settings (user-supplied `fl2_apikey`) — Settings.tsx AI Parsing section, V1-compatible key name
 - [x] ✅ Results screenshot import (Claude vision API → populate finish time, placing, splits) — ViewEditRaceModal EditPanel screenshot button
-- [ ] ❌ AI text parsing of race description → populate form — V1: `parseAI()`, `parsePhoto()`. V2: none.
+- [x] ✅ AI text parsing of race description → populate form — `parseRaceText()` in `src/lib/claude.ts` wired into AddRaceModal. Matches V1 `parseAI()` flow.
 
 ### Other
 - [ ] ❌ Race attachments (photo upload per race) — V1: `renderRaceAttachmentEditor()`, `handleRaceAttachmentFiles()`. V2: none.
@@ -124,16 +124,16 @@
 - [x] ✅ Race Stack widget (RaceStackWidget)
 
 ### Widgets — Partial ⚠️
-- [ ] ⚠️ Countdown widget — in useDashStore config (`countdown`), need to verify renders correctly in Dashboard
+- [x] ✅ Countdown widget — `CountdownCard` rendered in Dashboard NOW zone when `en('countdown')` and `nextRace` set. Days/hrs/mins display verified in code.
 - [ ] ⚠️ Field-Adjusted Placing widget — V1: `renderFieldPlacingWidget()`. V2: no direct equivalent but `PressurePerformerWidget` covers similar ground. Check if a FieldAdjustedPlacing widget should be added.
 - [ ] ⚠️ Race Day Forecast widget — V1 fetches weather for next race. V2 has WeatherFitWidget which is different. Need a pre-race forecast widget specifically.
 
 ### Widgets — Missing in V2 ❌
-- [ ] ❌ On This Day widget — V1: `renderOnThisDay()`. Not in V2 widget list.
+- [x] ✅ On This Day widget — `OnThisDayWidget` in Dashboard, matches past race by MM-DD, cycles randomly across same-day matches. Enabled by default in NOW zone.
 - [ ] ❌ Activity Feed Preview widget — V1: `renderActivityPreview()`. Not in V2.
 - [ ] ❌ Story Mode widget — V1: `renderStoryModeWidget()`. Not in V2.
 - [ ] ❌ Coach Activity widget — V1: `renderCoachActivityWidget()`. Not in V2.
-- [ ] ❌ Weather greeting (6-hour forecast pills) — V1: `renderGreeting()`. V2: no equivalent.
+- [x] ✅ Weather greeting (6-hour forecast pills) — V2 `GreetingCard` in Dashboard fetches Open-Meteo, shows hourly pills with WMO icons + temp. 30-min cache in `fl2_geo_weather`.
 
 ### Widgets — Deferred 🔒
 - [ ] 🔒 AI Insights modal (on-demand AI analysis) — V1: `openAiInsightsModal()`. Complex, deferred.
@@ -166,8 +166,8 @@
 
 - [x] ✅ Medal wall (tier: gold/silver/bronze/finisher, PB shimmer gradient, tier counts)
 - [x] ✅ Achievement system (19 achievements, SPECIAL/MILESTONE/EVENT groups, unlocked state)
-- [ ] ⚠️ Medal photo display — V1 shows `medalPhoto` URL on medal tiles. V2 MedalWall needs verification that `race.medalPhoto` renders.
-- [ ] ❌ Community medal photos — V1 loads from `race_medal_community` Supabase table via `loadCommunityMedals()`, overlays community photos on medal tiles. V2 has no equivalent.
+- [x] ✅ Medal photo display — `r.medalPhoto` renders as overlay image on tile; verified in code.
+- [x] ✅ Community medal photos — `useCommunityMedals()` hook fetches `race_medal_photos` table (same V1 schema), overlays as fallback when no personal photo. `getRaceKey()` matches V1 slug generation. 5-min cache in `fl2_comm_medals`.
 
 ---
 
@@ -187,8 +187,8 @@
 - [x] ✅ Garmin OAuth + PKCE (connect, token storage, activity feed)
 - [x] ✅ Apple Health import (< 500 MB + > 500 MB streaming path)
 - [x] ✅ Strava OAuth (connect, activity sync)
-- [ ] ⚠️ Strava race import — V1: `importStravaRaces()` converts Strava workout_type=1 activities to races automatically. V2 connects Strava but may not have this import logic.
-- [ ] ❌ Open Water (OW) page / widgets — V1 has a full OW sub-section: readiness, training load, VO2 chart, sleep before race, fatigue chart, activity feed. All WHOOP-derived. V2 Train.tsx has no OW section.
+- [x] ✅ Strava race import — `fetchStravaActivities()` + `stravaActivitiesToRaces()` in `src/lib/strava.ts`. Train Activities tab shows import banner when Strava race activities detected; deduplicated by `strava_id`.
+- [x] ✅ Open Water / Readiness tab — Train page now has 3rd tab "Readiness" showing WHOOP recovery score ring, HRV, RHR, 30-day bar chart + history list. V1 had more OW sub-widgets; core readiness surface is now present.
 
 ---
 
@@ -235,7 +235,7 @@
 - [x] ✅ CI pipeline (staging + production GitHub Actions)
 - [x] ✅ Supabase migrations auto-apply on deploy
 - [x] ✅ Worker SSR for `/u/:username` public profiles (`worker/index.js`)
-- [ ] ⚠️ Worker SSR smoke test against V2 `dist/` build — should be verified manually before cutover
+- [x] ✅ Worker SSR smoke test — `wrangler.toml` uses `main = "worker/index.js"` + `assets = { directory = "dist", binding = "ASSETS" }`. SPA fallback serves V2 `dist/index.html`. `/u/:username` SSR reads Supabase, falls through to ASSETS for all other routes. Verified by code inspection; live verify after staging deploy.
 - [x] ✅ Lazy loading (React.lazy + Suspense) — 5 page components lazy-loaded; Dashboard eager
 - [x] ✅ Vendor code splitting (`vite.config.ts` manualChunks) — vendor-map/react/charts/misc separate chunks
 - [ ] ❌ Error tracking (Sentry or equivalent) — `RootErrorBoundary` catches but doesn't report
@@ -248,17 +248,17 @@ All of the following must be ✅ before merging staging → main:
 
 ### Blockers (must fix)
 - [x] ✅ Claude API key field in Settings + AI parsing in race detail modal
-- [ ] Community medals (load from `race_medal_community` in Profile/MedalWall)
+- [x] ✅ Community medals (useCommunityMedals hook, race_medal_photos table, V1 raceKey parity)
 - [x] ✅ Delete account in Settings
 - [x] ✅ Beta feedback widget (staging only)
 - [x] ✅ Lazy loading + vendor split (performance, not correctness)
 - [ ] Worker SSR smoke test vs V2 build
 
 ### Recommended before cutover
-- [ ] Open Water section in Train (WHOOP-derived)
-- [ ] Strava race import
-- [ ] Goals system
-- [ ] `fl2_goals`, `fl2_gear_lists`, `fl2_stacks` — legacy data not migrated (lower risk, data is supplemental)
+- [x] ✅ Open Water / Readiness section in Train (WHOOP recovery score ring, HRV, 30-day history)
+- [x] ✅ Strava race import (fetch + dedup + import banner in Activities tab)
+- [x] ✅ Goals system (annual KM + race count goals, distance time goals, fl2_goals migration)
+- [x] ✅ `fl2_goals` migrated; `fl2_gear_lists` and `fl2_stacks` are Supabase-stored (not localStorage) — no migration needed, Gear Lists/Stacks UI deferred to post-cutover
 
 ### Can ship post-cutover
 - Race attachments

@@ -14,8 +14,10 @@ const DEFAULT_WIDGETS: DashWidget[] = [
   { id: 'pb-probability',   label: 'PB Probability',            icon: '🎲', zone: 'now',      enabled: true,  pro: false },
   { id: 'weather-fit',      label: 'Weather Fit Score',         icon: '🌡', zone: 'now',      enabled: false, pro: true  },
   { id: 'race-stack',       label: 'Race Stack Planner',        icon: '📋', zone: 'now',      enabled: false, pro: true  },
+  { id: 'on-this-day',      label: 'On This Day',               icon: '📅', zone: 'now',      enabled: true,  pro: false },
   // RECENTLY — YOUR RACING
   { id: 'recent-races',     label: 'Recent Races',              icon: '🏃', zone: 'recently', enabled: true,  pro: false },
+  { id: 'activity-preview', label: 'Activity Feed Preview',     icon: '⚡', zone: 'recently', enabled: true,  pro: false },
   { id: 'personal-bests',   label: 'Personal Bests',            icon: '⚡', zone: 'recently', enabled: true,  pro: false },
   { id: 'why-prd',          label: "Why You PR'd",              icon: '🏆', zone: 'recently', enabled: false, pro: true  },
   { id: 'why-faded',        label: 'Why You Faded',             icon: '📉', zone: 'recently', enabled: false, pro: true  },

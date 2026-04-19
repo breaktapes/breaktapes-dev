@@ -17,9 +17,9 @@ import { BrowserManager } from './browser-manager';
 import { handleReadCommand } from './read-commands';
 import { handleWriteCommand } from './write-commands';
 import { handleMetaCommand } from './meta-commands';
-import { handleCookiePickerRoute } from './cookie-picker-routes';
+import { handleCookiePickerRoute, hasActivePicker } from './cookie-picker-routes';
 import { sanitizeExtensionUrl } from './sidebar-utils';
-import { COMMAND_DESCRIPTIONS, PAGE_CONTENT_COMMANDS, wrapUntrustedContent } from './commands';
+import { COMMAND_DESCRIPTIONS, PAGE_CONTENT_COMMANDS, wrapUntrustedContent, canonicalizeCommand, buildUnknownCommandError, ALL_COMMANDS } from './commands';
 import {
   wrapUntrustedPageContent, datamarkContent,
   runContentFilters, type ContentFilterResult,
@@ -35,9 +35,11 @@ import {
 import { validateTempPath } from './path-security';
 import { resolveConfig, ensureStateDir, readVersionHash } from './config';
 import { emitActivity, subscribe, getActivityAfter, getActivityHistory, getSubscriberCount } from './activity';
+import { initAuditLog, writeAuditEntry } from './audit';
 import { inspectElement, modifyStyle, resetModifications, getModificationHistory, detachSession, type InspectorResult } from './cdp-inspector';
 // Bun.spawn used instead of child_process.spawn (compiled bun binaries
 // fail posix_spawn on all executables including /bin/bash)
+import { safeUnlink, safeUnlinkQuiet, safeKill } from './error-handling';
 import * as fs from 'fs';
 import * as net from 'net';
 import * as path from 'path';
@@ -46,6 +48,7 @@ import * as crypto from 'crypto';
 // ─── Config ─────────────────────────────────────────────────────
 const config = resolveConfig();
 ensureStateDir(config);
+initAuditLog(config.auditLog);
 
 // ─── Auth ───────────────────────────────────────────────────────
 const AUTH_TOKEN = crypto.randomUUID();
@@ -233,7 +236,9 @@ function findBrowseBin(): string {
     path.join(process.env.HOME || '', '.claude', 'skills', 'gstack', 'browse', 'dist', 'browse'),
   ];
   for (const c of candidates) {
-    try { if (fs.existsSync(c)) return c; } catch {}
+    try { if (fs.existsSync(c)) return c; } catch (err: any) {
+      if (err?.code !== 'ENOENT') throw err;
+    }
   }
   return 'browse'; // fallback to PATH
 }
@@ -265,13 +270,17 @@ function findClaudeBin(): string | null {
       const p = proc.stdout.toString().trim();
       if (p) candidates.unshift(p);
     }
-  } catch {}
+  } catch (err: any) {
+    if (err?.code !== 'ENOENT') throw err;
+  }
   for (const c of candidates) {
     try {
       if (!fs.existsSync(c)) continue;
       // Resolve symlinks — posix_spawn can fail on symlinks in compiled bun binaries
       return fs.realpathSync(c);
-    } catch {}
+    } catch (err: any) {
+      if (err?.code !== 'ENOENT') throw err;
+    }
   }
   return null;
 }
@@ -465,8 +474,8 @@ function listSessions(): Array<SidebarSession & { chatLines: number }> {
       try {
         const session = JSON.parse(fs.readFileSync(path.join(SESSIONS_DIR, d, 'session.json'), 'utf-8'));
         let chatLines = 0;
-        try { chatLines = fs.readFileSync(path.join(SESSIONS_DIR, d, 'chat.jsonl'), 'utf-8').split('\n').filter(Boolean).length; } catch {
-          // Expected: no chat file yet
+        try { chatLines = fs.readFileSync(path.join(SESSIONS_DIR, d, 'chat.jsonl'), 'utf-8').split('\n').filter(Boolean).length; } catch (err: any) {
+          if (err?.code !== 'ENOENT') throw err;
         }
         return { ...session, chatLines };
       } catch { return null; }
@@ -602,7 +611,9 @@ function spawnClaude(userMessage: string, extensionUrl?: string | null, forTabId
   try {
     fs.mkdirSync(gstackDir, { recursive: true, mode: 0o700 });
     fs.appendFileSync(agentQueue, entry + '\n');
-    try { fs.chmodSync(agentQueue, 0o600); } catch {}
+    try { fs.chmodSync(agentQueue, 0o600); } catch (err: any) {
+      if (err?.code !== 'ENOENT') throw err;
+    }
   } catch (err: any) {
     addChatEntry({ ts: new Date().toISOString(), role: 'agent', type: 'agent_error', error: `Failed to queue: ${err.message}` });
     agentStatus = 'idle';
@@ -617,12 +628,11 @@ function spawnClaude(userMessage: string, extensionUrl?: string | null, forTabId
 
 function killAgent(targetTabId?: number | null): void {
   if (agentProcess) {
-    try { agentProcess.kill('SIGTERM'); } catch (err: any) {
-      console.warn('[browse] Failed to SIGTERM agent:', err.message);
+    const pid = agentProcess.pid;
+    if (pid) {
+      safeKill(pid, 'SIGTERM');
+      setTimeout(() => { safeKill(pid, 'SIGKILL'); }, 3000);
     }
-    setTimeout(() => { try { agentProcess?.kill('SIGKILL'); } catch (err: any) {
-      console.warn('[browse] Failed to SIGKILL agent:', err.message);
-    } }, 3000);
   }
   // Signal the sidebar-agent worker to cancel via a per-tab cancel file.
   // Using per-tab files prevents race conditions where one agent's cancel
@@ -631,7 +641,12 @@ function killAgent(targetTabId?: number | null): void {
   const cancelDir = path.join(process.env.HOME || '/tmp', '.gstack');
   const tabId = targetTabId ?? agentTabId ?? 0;
   const cancelFile = path.join(cancelDir, `sidebar-agent-cancel-${tabId}`);
-  try { fs.writeFileSync(cancelFile, Date.now().toString()); } catch {}
+  try {
+    fs.mkdirSync(cancelDir, { recursive: true });
+    fs.writeFileSync(cancelFile, Date.now().toString());
+  } catch (err: any) {
+    if (err?.code !== 'EACCES' && err?.code !== 'ENOENT') throw err;
+  }
   agentProcess = null;
   agentStartTime = null;
   currentMessage = null;
@@ -742,16 +757,51 @@ const idleCheckInterval = setInterval(() => {
 // server can become an orphan — keeping chrome-headless-shell alive and
 // causing console-window flicker on Windows. Poll the parent PID every 15s
 // and self-terminate if it is gone.
+//
+// Headed mode (BROWSE_HEADED=1 or BROWSE_PARENT_PID=0): The user controls
+// the browser window lifecycle. The CLI exits immediately after connect,
+// so the watchdog would kill the server prematurely. Disabled in both cases
+// as defense-in-depth — the CLI sets PID=0 for headed mode, and the server
+// also checks BROWSE_HEADED in case a future launcher forgets.
+// Cleanup happens via browser disconnect event or $B disconnect.
 const BROWSE_PARENT_PID = parseInt(process.env.BROWSE_PARENT_PID || '0', 10);
-if (BROWSE_PARENT_PID > 0) {
+// Outer gate: if the spawner explicitly marks this as headed (env var set at
+// launch time), skip registering the watchdog entirely. Cheaper than entering
+// the closure every 15s. The CLI's connect path sets BROWSE_HEADED=1 + PID=0,
+// so this branch is the normal path for /open-gstack-browser.
+const IS_HEADED_WATCHDOG = process.env.BROWSE_HEADED === '1';
+if (BROWSE_PARENT_PID > 0 && !IS_HEADED_WATCHDOG) {
+  let parentGone = false;
   setInterval(() => {
     try {
       process.kill(BROWSE_PARENT_PID, 0); // signal 0 = existence check only, no signal sent
     } catch {
-      console.log(`[browse] Parent process ${BROWSE_PARENT_PID} exited, shutting down`);
-      shutdown();
+      // Parent exited. Resolution order:
+      // 1. Active cookie picker (one-time code or session live)? Stay alive
+      //    regardless of mode — tearing down the server mid-import leaves the
+      //    picker UI with a stale "Failed to fetch" error.
+      // 2. Headed / tunnel mode? Shutdown. The idle timeout doesn't apply in
+      //    these modes (see idleCheckInterval above — both early-return), so
+      //    ignoring parent death here would leak orphan daemons after
+      //    /pair-agent or /open-gstack-browser sessions.
+      // 3. Normal (headless) mode? Stay alive. Claude Code's Bash tool kills
+      //    the parent shell between invocations. The idle timeout (30 min)
+      //    handles eventual cleanup.
+      if (hasActivePicker()) return;
+      const headed = browserManager.getConnectionMode() === 'headed';
+      if (headed || tunnelActive) {
+        console.log(`[browse] Parent process ${BROWSE_PARENT_PID} exited in ${headed ? 'headed' : 'tunnel'} mode, shutting down`);
+        shutdown();
+      } else if (!parentGone) {
+        parentGone = true;
+        console.log(`[browse] Parent process ${BROWSE_PARENT_PID} exited (server stays alive, idle timeout will clean up)`);
+      }
     }
   }, 15_000);
+} else if (IS_HEADED_WATCHDOG) {
+  console.log('[browse] Parent-process watchdog disabled (headed mode)');
+} else if (BROWSE_PARENT_PID === 0) {
+  console.log('[browse] Parent-process watchdog disabled (BROWSE_PARENT_PID=0)');
 }
 
 // ─── Command Sets (from commands.ts — single source of truth) ───
@@ -778,6 +828,10 @@ function emitInspectorEvent(event: any): void {
 
 // ─── Server ────────────────────────────────────────────────────
 const browserManager = new BrowserManager();
+// When the user closes the headed browser window, run full cleanup
+// (kill sidebar-agent, save session, remove profile locks, delete state file)
+// before exiting with code 2. Exit code 2 distinguishes user-close from crashes (1).
+browserManager.onDisconnect = () => shutdown(2);
 let isShuttingDown = false;
 
 // Test if a port is available by binding and immediately releasing.
@@ -862,11 +916,20 @@ async function handleCommandInternal(
   tokenInfo?: TokenInfo | null,
   opts?: { skipRateCheck?: boolean; skipActivity?: boolean; chainDepth?: number },
 ): Promise<CommandResult> {
-  const { command, args = [], tabId } = body;
+  const { args = [], tabId } = body;
+  const rawCommand = body.command;
 
-  if (!command) {
+  if (!rawCommand) {
     return { status: 400, result: JSON.stringify({ error: 'Missing "command" field' }), json: true };
   }
+
+  // ─── Alias canonicalization (before scope, watch, tab-ownership, dispatch) ─
+  // Agent-friendly names like 'setcontent' route to canonical 'load-html'. Must
+  // happen BEFORE scope check so a read-scoped token calling 'setcontent' is still
+  // rejected (load-html lives in SCOPE_WRITE). Audit logging preserves rawCommand
+  // so the trail records what the agent actually typed.
+  const command = canonicalizeCommand(rawCommand);
+  const isAliased = command !== rawCommand;
 
   // ─── Recursion guard: reject nested chains ──────────────────
   if (command === 'chain' && (opts?.chainDepth ?? 0) > 0) {
@@ -1000,7 +1063,7 @@ async function handleCommandInternal(
           await cleanupHiddenMarkers(page);
         }
       } else {
-        result = await handleReadCommand(command, args, session);
+        result = await handleReadCommand(command, args, session, browserManager);
       }
     } else if (WRITE_COMMANDS.has(command)) {
       result = await handleWriteCommand(command, args, session, browserManager);
@@ -1036,10 +1099,13 @@ async function handleCommandInternal(
       const helpText = generateHelpText();
       return { status: 200, result: helpText };
     } else {
+      // Use the rich unknown-command helper: names the input, suggests the closest
+      // match via Levenshtein (≤ 2 distance, ≥ 4 chars input), and appends an upgrade
+      // hint if the command is listed in NEW_IN_VERSION.
       return {
         status: 400, json: true,
         result: JSON.stringify({
-          error: `Unknown command: ${command}`,
+          error: buildUnknownCommandError(rawCommand, ALL_COMMANDS),
           hint: `Available commands: ${[...READ_COMMANDS, ...WRITE_COMMANDS, ...META_COMMANDS].sort().join(', ')}`,
         }),
       };
@@ -1075,13 +1141,14 @@ async function handleCommandInternal(
     }
 
     // Activity: emit command_end (skipped for chain subcommands)
+    const successDuration = Date.now() - startTime;
     if (!opts?.skipActivity) {
       emitActivity({
         type: 'command_end',
         command,
         args,
         url: browserManager.getCurrentUrl(),
-        duration: Date.now() - startTime,
+        duration: successDuration,
         status: 'ok',
         result: result,
         tabs: browserManager.getTabCount(),
@@ -1089,6 +1156,18 @@ async function handleCommandInternal(
         clientId: tokenInfo?.clientId,
       });
     }
+
+    writeAuditEntry({
+      ts: new Date().toISOString(),
+      cmd: command,
+      aliasOf: isAliased ? rawCommand : undefined,
+      args: args.join(' '),
+      origin: browserManager.getCurrentUrl(),
+      durationMs: successDuration,
+      status: 'ok',
+      hasCookies: browserManager.hasCookieImports(),
+      mode: browserManager.getConnectionMode(),
+    });
 
     browserManager.resetFailures();
     // Restore original active tab if we pinned to a specific one
@@ -1107,13 +1186,14 @@ async function handleCommandInternal(
     }
 
     // Activity: emit command_end (error) — skipped for chain subcommands
+    const errorDuration = Date.now() - startTime;
     if (!opts?.skipActivity) {
       emitActivity({
         type: 'command_end',
         command,
         args,
         url: browserManager.getCurrentUrl(),
-        duration: Date.now() - startTime,
+        duration: errorDuration,
         status: 'error',
         error: err.message,
         tabs: browserManager.getTabCount(),
@@ -1121,6 +1201,19 @@ async function handleCommandInternal(
         clientId: tokenInfo?.clientId,
       });
     }
+
+    writeAuditEntry({
+      ts: new Date().toISOString(),
+      cmd: command,
+      aliasOf: isAliased ? rawCommand : undefined,
+      args: args.join(' '),
+      origin: browserManager.getCurrentUrl(),
+      durationMs: errorDuration,
+      status: 'error',
+      error: err.message,
+      hasCookies: browserManager.hasCookieImports(),
+      mode: browserManager.getConnectionMode(),
+    });
 
     browserManager.incrementFailures();
     let errorMsg = wrapError(err);
@@ -1140,7 +1233,7 @@ async function handleCommand(body: any, tokenInfo?: TokenInfo | null): Promise<R
   });
 }
 
-async function shutdown() {
+async function shutdown(exitCode: number = 0) {
   if (isShuttingDown) return;
   isShuttingDown = true;
 
@@ -1175,29 +1268,51 @@ async function shutdown() {
   // Clean up Chromium profile locks (prevent SingletonLock on next launch)
   const profileDir = path.join(process.env.HOME || '/tmp', '.gstack', 'chromium-profile');
   for (const lockFile of ['SingletonLock', 'SingletonSocket', 'SingletonCookie']) {
-    try { fs.unlinkSync(path.join(profileDir, lockFile)); } catch (err: any) {
-      console.debug('[browse] Lock cleanup:', lockFile, err.message);
-    }
+    safeUnlinkQuiet(path.join(profileDir, lockFile));
   }
 
   // Clean up state file
-  try { fs.unlinkSync(config.stateFile); } catch (err: any) {
-    console.debug('[browse] State file cleanup:', err.message);
-  }
+  safeUnlinkQuiet(config.stateFile);
 
-  process.exit(0);
+  process.exit(exitCode);
 }
 
 // Handle signals
-process.on('SIGTERM', shutdown);
-process.on('SIGINT', shutdown);
+//
+// Node passes the signal name (e.g. 'SIGTERM') as the first arg to listeners.
+// Wrap calls to shutdown() so it receives no args — otherwise the string gets
+// passed as exitCode and process.exit() coerces it to NaN, exiting with code 1
+// instead of 0. (Caught in v0.18.1.0 #1025.)
+//
+// SIGINT (Ctrl+C): user intentionally stopping → shutdown.
+process.on('SIGINT', () => shutdown());
+// SIGTERM behavior depends on mode:
+// - Normal (headless) mode: Claude Code's Bash sandbox fires SIGTERM when the
+//   parent shell exits between tool invocations. Ignoring it keeps the server
+//   alive across $B calls. Idle timeout (30 min) handles eventual cleanup.
+// - Headed / tunnel mode: idle timeout doesn't apply in these modes. Respect
+//   SIGTERM so external tooling (systemd, supervisord, CI) can shut cleanly
+//   without waiting forever. Ctrl+C and /stop still work either way.
+// - Active cookie picker: never tear down mid-import regardless of mode —
+//   would strand the picker UI with "Failed to fetch."
+process.on('SIGTERM', () => {
+  if (hasActivePicker()) {
+    console.log('[browse] Received SIGTERM but cookie picker is active, ignoring to avoid stranding the picker UI');
+    return;
+  }
+  const headed = browserManager.getConnectionMode() === 'headed';
+  if (headed || tunnelActive) {
+    console.log(`[browse] Received SIGTERM in ${headed ? 'headed' : 'tunnel'} mode, shutting down`);
+    shutdown();
+  } else {
+    console.log('[browse] Received SIGTERM (ignoring — use /stop or Ctrl+C for intentional shutdown)');
+  }
+});
 // Windows: taskkill /F bypasses SIGTERM, but 'exit' fires for some shutdown paths.
 // Defense-in-depth — primary cleanup is the CLI's stale-state detection via health check.
 if (process.platform === 'win32') {
   process.on('exit', () => {
-    try { fs.unlinkSync(config.stateFile); } catch {
-      // Best-effort on exit
-    }
+    safeUnlinkQuiet(config.stateFile);
   });
 }
 
@@ -1216,13 +1331,9 @@ function emergencyCleanup() {
   // Clean Chromium profile locks
   const profileDir = path.join(process.env.HOME || '/tmp', '.gstack', 'chromium-profile');
   for (const lockFile of ['SingletonLock', 'SingletonSocket', 'SingletonCookie']) {
-    try { fs.unlinkSync(path.join(profileDir, lockFile)); } catch (err: any) {
-      console.debug('[browse] Emergency lock cleanup:', lockFile, err.message);
-    }
+    safeUnlinkQuiet(path.join(profileDir, lockFile));
   }
-  try { fs.unlinkSync(config.stateFile); } catch (err: any) {
-    console.debug('[browse] Emergency state cleanup:', err.message);
-  }
+  safeUnlinkQuiet(config.stateFile);
 }
 process.on('uncaughtException', (err) => {
   console.error('[browse] FATAL uncaught exception:', err.message);
@@ -1238,15 +1349,9 @@ process.on('unhandledRejection', (err: any) => {
 // ─── Start ─────────────────────────────────────────────────────
 async function start() {
   // Clear old log files
-  try { fs.unlinkSync(CONSOLE_LOG_PATH); } catch (err: any) {
-    if (err.code !== 'ENOENT') console.debug('[browse] Log cleanup console:', err.message);
-  }
-  try { fs.unlinkSync(NETWORK_LOG_PATH); } catch (err: any) {
-    if (err.code !== 'ENOENT') console.debug('[browse] Log cleanup network:', err.message);
-  }
-  try { fs.unlinkSync(DIALOG_LOG_PATH); } catch (err: any) {
-    if (err.code !== 'ENOENT') console.debug('[browse] Log cleanup dialog:', err.message);
-  }
+  safeUnlink(CONSOLE_LOG_PATH);
+  safeUnlink(NETWORK_LOG_PATH);
+  safeUnlink(DIALOG_LOG_PATH);
 
   const port = await findPort();
 
@@ -1282,15 +1387,11 @@ async function start() {
           const slug = process.env.GSTACK_SLUG || 'unknown';
           const homeDir = process.env.HOME || process.env.USERPROFILE || '/tmp';
           const projectWelcome = `${homeDir}/.gstack/projects/${slug}/designs/welcome-page-20260331/finalized.html`;
-          try { if (require('fs').existsSync(projectWelcome)) return projectWelcome; } catch (err: any) {
-            console.warn('[browse] Error checking project welcome page:', err.message);
-          }
+          if (fs.existsSync(projectWelcome)) return projectWelcome;
           // Fallback: built-in welcome page from gstack install
           const skillRoot = process.env.GSTACK_SKILL_ROOT || `${homeDir}/.claude/skills/gstack`;
           const builtinWelcome = `${skillRoot}/browse/src/welcome.html`;
-          try { if (require('fs').existsSync(builtinWelcome)) return builtinWelcome; } catch (err: any) {
-            console.warn('[browse] Error checking builtin welcome page:', err.message);
-          }
+          if (fs.existsSync(builtinWelcome)) return builtinWelcome;
           return null;
         })();
         if (welcomePath) {
@@ -1814,8 +1915,9 @@ async function start() {
         chatBuffer = [];
         chatNextId = 0;
         if (sidebarSession) {
-          try { fs.writeFileSync(path.join(SESSIONS_DIR, sidebarSession.id, 'chat.jsonl'), '', { mode: 0o600 }); } catch (err: any) {
-            console.error('[browse] Failed to clear chat file:', err.message);
+          const chatFile = path.join(SESSIONS_DIR, sidebarSession.id, 'chat.jsonl');
+          try { fs.writeFileSync(chatFile, '', { mode: 0o600 }); } catch (err: any) {
+            if (err?.code !== 'ENOENT') console.error('[browse] Failed to clear chat file:', err.message);
           }
         }
         return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { 'Content-Type': 'application/json' } });

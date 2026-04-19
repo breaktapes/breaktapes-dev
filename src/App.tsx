@@ -64,7 +64,7 @@ function AnimatedRoutes() {
             <Route path="/gear"     element={<Gear />} />
             <Route path="/settings" element={<Settings />} />
             {/* Backwards compat aliases */}
-            <Route path="/pace"    element={<Navigate to="/" replace />} />
+            <Route path="/pace"    element={<Navigate to="/train" replace />} />
             <Route path="/history" element={<Navigate to="/races" replace />} />
             <Route path="/map"     element={<Navigate to="/races" replace />} />
             {/* Catch-all */}

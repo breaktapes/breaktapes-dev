@@ -1,1 +1,1 @@
-/Users/akrish/DEV/.claude/worktrees/unruffled-dhawan/.claude/skills/gstack/learn/SKILL.md
+/Users/akrish/DEV/.claude/worktrees/admiring-mendeleev-85074c/.claude/skills/gstack/learn/SKILL.md

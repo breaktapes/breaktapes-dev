@@ -31,6 +31,18 @@ export interface BrowserState {
     url: string;
     isActive: boolean;
     storage: { localStorage: Record<string, string>; sessionStorage: Record<string, string> } | null;
+    /**
+     * HTML content loaded via load-html (setContent), replayed after context recreation.
+     * In-memory only — never persisted to disk (HTML may contain secrets or customer data).
+     */
+    loadedHtml?: string;
+    loadedHtmlWaitUntil?: 'load' | 'domcontentloaded' | 'networkidle';
+    /**
+     * Tab owner clientId for multi-agent isolation. Survives context recreation so
+     * scoped agents don't get locked out of their own tabs after viewport --scale.
+     * In-memory only.
+     */
+    owner?: string;
   }>;
 }
 
@@ -44,6 +56,14 @@ export class BrowserManager {
   private extraHeaders: Record<string, string> = {};
   private customUserAgent: string | null = null;
 
+  // ─── Viewport + deviceScaleFactor (context options) ──────────
+  // Tracked at the manager level so recreateContext() preserves them.
+  // deviceScaleFactor is a *context* option, not a page-level setter — changes
+  // require recreateContext(). Viewport width/height can change on-page, but we
+  // track the latest so context recreation restores it instead of hardcoding 1280x720.
+  private deviceScaleFactor: number = 1;
+  private currentViewport: { width: number; height: number } = { width: 1280, height: 720 };
+
   /** Server port — set after server starts, used by cookie-import-browser command */
   public serverPort: number = 0;
 
@@ -54,6 +74,9 @@ export class BrowserManager {
   // ─── Dialog Handling (global, not per-tab) ──────────────────
   private dialogAutoAccept: boolean = true;
   private dialogPromptText: string | null = null;
+
+  // ─── Cookie Origin Tracking ────────────────────────────────
+  private cookieImportedDomains: Set<string> = new Set();
 
   // ─── Handoff State ─────────────────────────────────────────
   private isHeaded: boolean = false;
@@ -68,6 +91,12 @@ export class BrowserManager {
   // ─── Headed State ────────────────────────────────────────
   private connectionMode: 'launched' | 'headed' = 'launched';
   private intentionalDisconnect = false;
+
+  // Called when the headed browser disconnects without intentional teardown
+  // (user closed the window). Wired up by server.ts to run full cleanup
+  // (sidebar-agent, state file, profile locks) before exiting with code 2.
+  // Returns void or a Promise; rejections are caught and fall back to exit(2).
+  public onDisconnect: (() => void | Promise<void>) | null = null;
 
   getConnectionMode(): 'launched' | 'headed' { return this.connectionMode; }
 
@@ -127,7 +156,9 @@ export class BrowserManager {
         if (fs.existsSync(path.join(candidate, 'manifest.json'))) {
           return candidate;
         }
-      } catch {}
+      } catch (err: any) {
+        if (err?.code !== 'ENOENT' && err?.code !== 'EACCES') throw err;
+      }
     }
     return null;
   }
@@ -186,7 +217,8 @@ export class BrowserManager {
     });
 
     const contextOptions: BrowserContextOptions = {
-      viewport: { width: 1280, height: 720 },
+      viewport: { width: this.currentViewport.width, height: this.currentViewport.height },
+      deviceScaleFactor: this.deviceScaleFactor,
     };
     if (this.customUserAgent) {
       contextOptions.userAgent = this.customUserAgent;
@@ -288,11 +320,16 @@ export class BrowserManager {
           let origIcon = iconMatch ? iconMatch[1] : 'app';
           if (!origIcon.endsWith('.icns')) origIcon += '.icns';
           const destIcon = path.join(chromeResources, origIcon);
-          try { fs.copyFileSync(iconSrc, destIcon); } catch { /* non-fatal */ }
+          try {
+            fs.copyFileSync(iconSrc, destIcon);
+          } catch (err: any) {
+            if (err?.code !== 'ENOENT' && err?.code !== 'EACCES') throw err;
+          }
         }
       }
-    } catch {
-      // Non-fatal: app name just stays as Chrome for Testing
+    } catch (err: any) {
+      // Non-fatal: app name stays as Chrome for Testing (ENOENT/EACCES expected)
+      if (err?.code !== 'ENOENT' && err?.code !== 'EACCES') throw err;
     }
 
     // Build custom user agent: keep Chrome version for site compatibility,
@@ -364,7 +401,11 @@ export class BrowserManager {
       const cleanup = () => {
         for (const key of Object.keys(window)) {
           if (key.startsWith('cdc_') || key.startsWith('__webdriver')) {
-            try { delete (window as any)[key]; } catch {}
+            try {
+              delete (window as any)[key];
+            } catch (e: any) {
+              if (!(e instanceof TypeError)) throw e;
+            }
           }
         }
       };
@@ -446,18 +487,39 @@ export class BrowserManager {
       this.activeTabId = id;
       this.wirePageEvents(page);
       // Inject indicator on restored page (addInitScript only fires on new navigations)
-      try { await page.evaluate(indicatorScript); } catch {}
+      try {
+        await page.evaluate(indicatorScript);
+      } catch {}
     } else {
       await this.newTab();
     }
 
-    // Browser disconnect handler — exit code 2 distinguishes from crashes (1)
+    // Browser disconnect handler — exit code 2 distinguishes from crashes (1).
+    // Calls onDisconnect() to trigger full shutdown (kill sidebar-agent, save
+    // session, clean profile locks + state file) before exit. Falls back to
+    // direct process.exit(2) if no callback is wired up, or if the callback
+    // throws/rejects — never leave the process running with a dead browser.
     if (this.browser) {
       this.browser.on('disconnected', () => {
         if (this.intentionalDisconnect) return;
         console.error('[browse] Real browser disconnected (user closed or crashed).');
         console.error('[browse] Run `$B connect` to reconnect.');
-        process.exit(2);
+        if (!this.onDisconnect) {
+          process.exit(2);
+          return;
+        }
+        try {
+          const result = this.onDisconnect();
+          if (result && typeof (result as Promise<void>).catch === 'function') {
+            (result as Promise<void>).catch((err) => {
+              console.error('[browse] onDisconnect rejected:', err);
+              process.exit(2);
+            });
+          }
+        } catch (err) {
+          console.error('[browse] onDisconnect threw:', err);
+          process.exit(2);
+        }
       });
     }
 
@@ -509,9 +571,12 @@ export class BrowserManager {
   async newTab(url?: string, clientId?: string): Promise<number> {
     if (!this.context) throw new Error('Browser not launched');
 
-    // Validate URL before allocating page to avoid zombie tabs on rejection
+    // Validate URL before allocating page to avoid zombie tabs on rejection.
+    // Use the normalized return value for navigation — it handles file://./x and
+    // file://<segment> cwd-relative forms that the standard URL parser doesn't.
+    let normalizedUrl: string | undefined;
     if (url) {
-      await validateNavigationUrl(url);
+      normalizedUrl = await validateNavigationUrl(url);
     }
 
     const page = await this.context.newPage();
@@ -528,8 +593,8 @@ export class BrowserManager {
     // Wire up console/network/dialog capture
     this.wirePageEvents(page);
 
-    if (url) {
-      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 });
+    if (normalizedUrl) {
+      await page.goto(normalizedUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
     }
 
     return id;
@@ -581,7 +646,9 @@ export class BrowserManager {
     try {
       const u = new URL(activeUrl);
       activeOriginPath = u.origin + u.pathname;
-    } catch {}
+    } catch (err: any) {
+      if (!(err instanceof TypeError)) throw err;
+    }
 
     for (const [id, page] of this.pages) {
       try {
@@ -598,7 +665,9 @@ export class BrowserManager {
             if (pu.origin + pu.pathname === activeOriginPath) {
               fuzzyId = id;
             }
-          } catch {}
+          } catch (err: any) {
+            if (!(err instanceof TypeError)) throw err;
+          }
         }
       } catch {}
     }
@@ -732,8 +801,22 @@ export class BrowserManager {
     return this.dialogPromptText;
   }
 
+  // ─── Cookie Origin Tracking ────────────────────────────────
+  trackCookieImportDomains(domains: string[]): void {
+    for (const d of domains) this.cookieImportedDomains.add(d);
+  }
+
+  getCookieImportedDomains(): ReadonlySet<string> {
+    return this.cookieImportedDomains;
+  }
+
+  hasCookieImports(): boolean {
+    return this.cookieImportedDomains.size > 0;
+  }
+
   // ─── Viewport ──────────────────────────────────────────────
   async setViewport(width: number, height: number) {
+    this.currentViewport = { width, height };
     await this.getPage().setViewportSize({ width, height });
   }
 
@@ -800,10 +883,21 @@ export class BrowserManager {
           sessionStorage: { ...sessionStorage },
         }));
       } catch {}
+
+      // Capture load-html content so a later context recreation (viewport --scale)
+      // can replay it via setTabContent. Never persisted to disk.
+      const session = this.tabSessions.get(id);
+      const loaded = session?.getLoadedHtml();
+      // Preserve tab ownership through recreation so scoped agents aren't locked out.
+      const owner = this.tabOwnership.get(id);
+
       pages.push({
         url: url === 'about:blank' ? '' : url,
         isActive: id === this.activeTabId,
         storage,
+        loadedHtml: loaded?.html,
+        loadedHtmlWaitUntil: loaded?.waitUntil,
+        owner,
       });
     }
 
@@ -823,25 +917,49 @@ export class BrowserManager {
       await this.context.addCookies(state.cookies);
     }
 
+    // Clear stale ownership — the old tab IDs are gone. We'll re-add per-tab
+    // owners below as each saved tab gets a fresh ID. Without this reset, old
+    // tabId → clientId entries would linger and match new tabs with the same
+    // sequential IDs, silently granting ownership to the wrong clients.
+    this.tabOwnership.clear();
+
     // Re-create pages
     let activeId: number | null = null;
     for (const saved of state.pages) {
       const page = await this.context.newPage();
       const id = this.nextTabId++;
       this.pages.set(id, page);
-      this.tabSessions.set(id, new TabSession(page));
+      const newSession = new TabSession(page);
+      this.tabSessions.set(id, newSession);
       this.wirePageEvents(page);
 
-      if (saved.url) {
-        // Validate the saved URL before navigating — the state file is user-writable and
-        // a tampered URL could navigate to cloud metadata endpoints or file:// URIs.
+      // Restore tab ownership for the new ID — preserves scoped-agent isolation
+      // across context recreation (viewport --scale, user-agent change, handoff).
+      if (saved.owner) {
+        this.tabOwnership.set(id, saved.owner);
+      }
+
+      if (saved.loadedHtml) {
+        // Replay load-html content via setTabContent — this rehydrates
+        // TabSession.loadedHtml so the next saveState sees it. page.setContent()
+        // alone would restore the DOM but lose the replay metadata.
         try {
-          await validateNavigationUrl(saved.url);
+          await newSession.setTabContent(saved.loadedHtml, { waitUntil: saved.loadedHtmlWaitUntil });
+        } catch (err: any) {
+          console.warn(`[browse] Failed to replay loadedHtml for tab ${id}: ${err.message}`);
+        }
+      } else if (saved.url) {
+        // Validate the saved URL before navigating — the state file is user-writable and
+        // a tampered URL could navigate to cloud metadata endpoints. Use the normalized
+        // return value so file:// forms get consistent treatment with live goto.
+        let normalizedUrl: string;
+        try {
+          normalizedUrl = await validateNavigationUrl(saved.url);
         } catch (err: any) {
           console.warn(`[browse] Skipping invalid URL in state file: ${saved.url} — ${err.message}`);
           continue;
         }
-        await page.goto(saved.url, { waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {});
+        await page.goto(normalizedUrl, { waitUntil: 'domcontentloaded', timeout: 15000 }).catch(() => {});
       }
 
       if (saved.storage) {
@@ -902,7 +1020,8 @@ export class BrowserManager {
 
       // 3. Create new context with updated settings
       const contextOptions: BrowserContextOptions = {
-        viewport: { width: 1280, height: 720 },
+        viewport: { width: this.currentViewport.width, height: this.currentViewport.height },
+        deviceScaleFactor: this.deviceScaleFactor,
       };
       if (this.customUserAgent) {
         contextOptions.userAgent = this.customUserAgent;
@@ -925,7 +1044,8 @@ export class BrowserManager {
         if (this.context) await this.context.close().catch(() => {});
 
         const contextOptions: BrowserContextOptions = {
-          viewport: { width: 1280, height: 720 },
+          viewport: { width: this.currentViewport.width, height: this.currentViewport.height },
+          deviceScaleFactor: this.deviceScaleFactor,
         };
         if (this.customUserAgent) {
           contextOptions.userAgent = this.customUserAgent;
@@ -938,6 +1058,63 @@ export class BrowserManager {
       }
       return `Context recreation failed: ${err instanceof Error ? err.message : String(err)}. Browser reset to blank tab.`;
     }
+  }
+
+  /**
+   * Change deviceScaleFactor + viewport size atomically.
+   *
+   * deviceScaleFactor is a context-level option, so Playwright requires a full context
+   * recreation. This method validates the input, stores the new values, calls
+   * recreateContext(), and rolls back the fields on failure so a bad call doesn't
+   * leave the manager in an inconsistent state.
+   *
+   * Returns null on success, or an error string if the new context couldn't be built
+   * (state may have been lost, per recreateContext's fallback behavior).
+   */
+  async setDeviceScaleFactor(scale: number, width: number, height: number): Promise<string | null> {
+    if (!Number.isFinite(scale)) {
+      throw new Error(`viewport --scale: value must be a finite number, got ${scale}`);
+    }
+    if (scale < 1 || scale > 3) {
+      throw new Error(`viewport --scale: value must be between 1 and 3 (gstack policy cap), got ${scale}`);
+    }
+    if (this.connectionMode === 'headed') {
+      throw new Error('viewport --scale is not supported in headed mode — scale is controlled by the real browser window.');
+    }
+
+    const prevScale = this.deviceScaleFactor;
+    const prevViewport = { ...this.currentViewport };
+    this.deviceScaleFactor = scale;
+    this.currentViewport = { width, height };
+
+    const err = await this.recreateContext();
+    if (err !== null) {
+      // recreateContext's fallback path built a blank context using the NEW scale +
+      // viewport (the fields we just set). Rolling the fields back without a second
+      // recreate would leave the live context at new-scale while state says old-scale.
+      // Roll back fields FIRST, then force a second recreate against the old values
+      // so live state matches tracked state.
+      this.deviceScaleFactor = prevScale;
+      this.currentViewport = prevViewport;
+      const rollbackErr = await this.recreateContext();
+      if (rollbackErr !== null) {
+        // Second recreate also failed — we're in a clean blank slate via fallback, but
+        // with old scale. Return the original error so the caller sees the primary failure.
+        return `${err} (rollback also encountered: ${rollbackErr})`;
+      }
+      return err;
+    }
+    return null;
+  }
+
+  /** Read current deviceScaleFactor (for tests + debug). */
+  getDeviceScaleFactor(): number {
+    return this.deviceScaleFactor;
+  }
+
+  /** Read current tracked viewport (for tests + `viewport --scale` size fallback). */
+  getCurrentViewport(): { width: number; height: number } {
+    return { ...this.currentViewport };
   }
 
   // ─── Handoff: Headless → Headed ─────────────────────────────
@@ -1131,7 +1308,7 @@ export class BrowserManager {
           await dialog.dismiss();
         }
       } catch {
-        // Dialog may have been dismissed by navigation — ignore
+        // Dialog may have been dismissed by navigation
       }
     });
 

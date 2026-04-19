@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect, useRef } from 'react'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { useAuthStore } from '@/stores/useAuthStore'
@@ -6,6 +6,7 @@ import { selectRaces, selectNextRace, selectAthlete, selectAuthUser } from '@/st
 import { EditProfileModal } from '@/components/EditProfileModal'
 import type { Race } from '@/types'
 import { useUnits, distUnit } from '@/lib/units'
+import { supabase } from '@/lib/supabase'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -297,6 +298,62 @@ function AthleteHero({ onEdit }: { onEdit: () => void }) {
   )
 }
 
+// ─── Community medals ─────────────────────────────────────────────────────────
+
+const COMM_CACHE_TTL = 5 * 60 * 1000 // 5 min
+
+/** Matches V1 getRaceKey: slug from race name + year */
+function getRaceKey(race: Race): string {
+  const year = (race.date || '').slice(0, 4)
+  const slug = (race.name || '')
+    .replace(/\s+\d{4}$/, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+  return year ? `${slug}-${year}` : slug
+}
+
+/** Returns map of raceKey → photo_url loaded from race_medal_photos table. */
+function useCommunityMedals(raceKeys: string[]): Record<string, string> {
+  const [photos, setPhotos] = useState<Record<string, string>>(() => {
+    try {
+      const raw = JSON.parse(localStorage.getItem('fl2_comm_medals') ?? 'null')
+      if (raw && typeof raw === 'object' && Date.now() - (raw.ts ?? 0) < COMM_CACHE_TTL) {
+        return raw.data ?? {}
+      }
+    } catch { /* ignore */ }
+    return {}
+  })
+  const fetchedRef = useRef(false)
+
+  useEffect(() => {
+    if (!raceKeys.length || fetchedRef.current) return
+    // Check cache freshness
+    try {
+      const raw = JSON.parse(localStorage.getItem('fl2_comm_medals') ?? 'null')
+      if (raw && typeof raw === 'object' && Date.now() - (raw.ts ?? 0) < COMM_CACHE_TTL) return
+    } catch { /* ignore */ }
+    fetchedRef.current = true
+    supabase
+      .from('race_medal_photos')
+      .select('race_key, variant, photo_url')
+      .in('race_key', raceKeys)
+      .then(({ data, error }) => {
+        if (error || !data) return
+        const map: Record<string, string> = {}
+        data.forEach(row => {
+          const k = row.variant ? `${row.race_key}::${row.variant}` : row.race_key
+          map[k] = row.photo_url
+        })
+        setPhotos(map)
+        localStorage.setItem('fl2_comm_medals', JSON.stringify({ ts: Date.now(), data: map }))
+      })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [raceKeys.join(',')])
+
+  return photos
+}
+
 // ─── Medal Wall ───────────────────────────────────────────────────────────────
 
 const MEDAL_COLORS: Record<string, { bg: string; border: string; text: string; label: string }> = {
@@ -333,6 +390,10 @@ function MedalWall() {
     }
     return map
   }, [races])
+
+  // Community photos — keyed by raceKey (or raceKey::variant for Comrades)
+  const raceKeys = useMemo(() => medalRaces.map(getRaceKey), [medalRaces])
+  const communityPhotos = useCommunityMedals(raceKeys)
 
   const tierCounts = useMemo(() => {
     const counts: Record<MedalTier, number> = { gold: 0, silver: 0, bronze: 0, finisher: 0 }
@@ -378,7 +439,10 @@ function MedalWall() {
               const tier  = medalTier(r.medal!)
               const col   = MEDAL_COLORS[tier]
               const isPB  = r.time && r.distance && pbMap[r.distance] === r.time
-              const hasPhoto = !!r.medalPhoto
+              // Personal upload first; community photo as fallback
+              const communityUrl = communityPhotos[getRaceKey(r)] ?? null
+              const displayPhoto = r.medalPhoto || communityUrl
+              const hasPhoto = !!displayPhoto
 
               return (
                 <div
@@ -396,10 +460,10 @@ function MedalWall() {
                     boxShadow: isPB ? `0 0 0 1px ${col.border}, 0 0 16px ${col.bg}` : undefined,
                   }}
                 >
-                  {/* Community photo background */}
+                  {/* Medal photo — personal upload or community fallback */}
                   {hasPhoto && (
                     <img
-                      src={r.medalPhoto}
+                      src={displayPhoto!}
                       alt={r.name}
                       style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.35, mixBlendMode: 'multiply' }}
                     />
@@ -954,6 +1018,197 @@ function BioDetails({ onEdit }: { onEdit: () => void }) {
   )
 }
 
+// ─── Goals Section ────────────────────────────────────────────────────────────
+
+function secsToHMS(secs: number): string {
+  const h = Math.floor(secs / 3600)
+  const m = Math.floor((secs % 3600) / 60)
+  const s = secs % 60
+  if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
+  return `${m}:${String(s).padStart(2,'0')}`
+}
+
+function GoalsSection() {
+  const races = useRaceStore(selectRaces)
+  const goals = useAthleteStore(s => s.goals)
+  const setAnnualGoal = useAthleteStore(s => s.setAnnualGoal)
+  const addDistGoal = useAthleteStore(s => s.addDistGoal)
+  const deleteDistGoal = useAthleteStore(s => s.deleteDistGoal)
+
+  const year = new Date().getFullYear()
+  const ag = goals.annual[String(year)] ?? {}
+
+  const yrRaces = races.filter(r => (r.date ?? '').startsWith(String(year)))
+  const yrCount = yrRaces.length
+  const yrKm = yrRaces.reduce((sum, r) => {
+    // resolve distance to km
+    const KM_MAP: Record<string, number> = {
+      '5KM': 5, '10KM': 10, '10 Mile': 16.1, 'Half Marathon': 21.1, 'Marathon': 42.2,
+      '50KM': 50, '50 Mile': 80.5, '100KM': 100, '100 Mile': 161,
+    }
+    return sum + (KM_MAP[r.distance] ?? parseFloat(r.distance) ?? 0)
+  }, 0)
+
+  // Per-distance PBs for dist goals
+  const pbByDist: Record<string, number> = {}
+  for (const r of races) {
+    if (!r.time || !r.distance) continue
+    const secs = r.time.split(':').reduce((s, v, i, a) => s + Number(v) * Math.pow(60, a.length - 1 - i), 0)
+    if (!pbByDist[r.distance] || secs < pbByDist[r.distance]) pbByDist[r.distance] = secs
+  }
+
+  // Add-goal form state
+  const [addMode, setAddMode] = useState<'km' | 'races' | 'dist' | null>(null)
+  const [annualVal, setAnnualVal] = useState('')
+  const [distTarget, setDistTarget] = useState({ dist: '', h: '', m: '', s: '', deadline: '' })
+
+  const distOptions = [...new Set(races.map(r => r.distance).filter(Boolean))].sort()
+
+  function saveAnnual() {
+    const v = parseInt(annualVal)
+    if (!v || !addMode || (addMode !== 'km' && addMode !== 'races')) return
+    setAnnualGoal(year, { [addMode]: v })
+    setAnnualVal('')
+    setAddMode(null)
+  }
+
+  function saveDist() {
+    const h = parseInt(distTarget.h) || 0
+    const m = parseInt(distTarget.m) || 0
+    const s = parseInt(distTarget.s) || 0
+    const secs = h * 3600 + m * 60 + s
+    if (!distTarget.dist || secs <= 0) return
+    addDistGoal({ dist: distTarget.dist, targetSecs: secs, deadline: distTarget.deadline || undefined })
+    setDistTarget({ dist: '', h: '', m: '', s: '', deadline: '' })
+    setAddMode(null)
+  }
+
+  const inputSt: React.CSSProperties = {
+    background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px',
+    color: 'var(--white)', fontSize: '14px', padding: '0.5rem 0.75rem', fontFamily: 'var(--body)',
+  }
+  const smallBtn: React.CSSProperties = {
+    background: 'var(--orange)', color: 'var(--black)', border: 'none', borderRadius: '4px',
+    padding: '0.45rem 0.9rem', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '11px',
+    letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer',
+  }
+
+  return (
+    <div style={st.section}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+        <div style={st.sectionTitle}>GOALS</div>
+        <div style={{ height: '1px', flex: 1, background: 'var(--border)', marginLeft: '16px' }} />
+      </div>
+
+      {/* Annual cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '12px' }}>
+        {(['km', 'races'] as const).map(type => {
+          const target = type === 'km' ? (ag.km ?? 0) : (ag.races ?? 0)
+          const current = type === 'km' ? Math.round(yrKm) : yrCount
+          const pct = target ? Math.min(100, Math.round(current / target * 100)) : 0
+          const achieved = target > 0 && current >= target
+          return (
+            <div key={type} style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '10px', padding: '12px', position: 'relative' }}>
+              <button
+                onClick={() => { setAddMode(type); setAnnualVal(target ? String(target) : '') }}
+                style={{ position: 'absolute', top: '8px', right: '8px', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}
+              >Edit</button>
+              <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '4px' }}>
+                {year} · {type === 'km' ? 'KM' : 'RACES'}
+              </div>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', color: 'var(--white)', lineHeight: 1 }}>
+                {current}
+                <span style={{ fontSize: '12px', color: 'var(--muted)', fontWeight: 400 }}> / {target || '—'}{type === 'km' ? ' km' : ''}</span>
+              </div>
+              {target > 0 ? (
+                <>
+                  <div style={{ height: '4px', background: 'var(--surface)', borderRadius: '2px', marginTop: '8px', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${pct}%`, background: achieved ? 'var(--green)' : 'var(--orange)', borderRadius: '2px', transition: 'width 0.3s' }} />
+                  </div>
+                  <div style={{ fontSize: '10px', color: achieved ? 'var(--green)' : 'var(--muted)', marginTop: '4px', fontFamily: 'var(--headline)', fontWeight: 700 }}>
+                    {pct}%{achieved ? ' · Achieved!' : ''}
+                  </div>
+                </>
+              ) : (
+                <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '6px', fontFamily: 'var(--headline)' }}>Tap Edit to set target</div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Distance time goals */}
+      {goals.distGoals.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '10px' }}>
+          {goals.distGoals.map(g => {
+            const pb = pbByDist[g.dist]
+            const done = pb !== undefined && pb <= g.targetSecs
+            return (
+              <div key={g.id} style={{ display: 'flex', alignItems: 'center', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '10px 12px', gap: '10px' }}>
+                <span style={{ fontSize: '18px' }}>🎯</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '13px', color: 'var(--white)', fontWeight: 600, lineHeight: 1.2 }}>{g.dist}</div>
+                  <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>
+                    Sub {secsToHMS(g.targetSecs)}{g.deadline ? ` · ${fmtDate(g.deadline)}` : ''}
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                  <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', color: done ? 'var(--green)' : 'var(--orange)' }}>
+                    {done ? '✓ Done' : pb !== undefined ? secsToHMS(pb) : '—'}
+                  </div>
+                  <button onClick={() => deleteDistGoal(g.id)} style={{ background: 'none', border: 'none', color: 'var(--muted2)', cursor: 'pointer', fontSize: '10px', marginTop: '2px' }}>✕ Remove</button>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Add goal button */}
+      {!addMode && (
+        <button onClick={() => setAddMode('dist')} style={{ ...st.ctaOutline, width: '100%', marginTop: '4px' }}>
+          + Add Distance Goal
+        </button>
+      )}
+
+      {/* Add-goal inline form */}
+      {addMode === 'km' && (
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '8px' }}>
+          <input type="number" placeholder={`${year} KM target`} value={annualVal} onChange={e => setAnnualVal(e.target.value)} style={{ ...inputSt, flex: 1 }} />
+          <button onClick={saveAnnual} style={smallBtn}>Save</button>
+          <button onClick={() => setAddMode(null)} style={{ ...smallBtn, background: 'var(--surface3)', color: 'var(--muted)' }}>✕</button>
+        </div>
+      )}
+      {addMode === 'races' && (
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '8px' }}>
+          <input type="number" placeholder={`${year} race count target`} value={annualVal} onChange={e => setAnnualVal(e.target.value)} style={{ ...inputSt, flex: 1 }} />
+          <button onClick={saveAnnual} style={smallBtn}>Save</button>
+          <button onClick={() => setAddMode(null)} style={{ ...smallBtn, background: 'var(--surface3)', color: 'var(--muted)' }}>✕</button>
+        </div>
+      )}
+      {addMode === 'dist' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '12px' }}>
+          <select value={distTarget.dist} onChange={e => setDistTarget(d => ({ ...d, dist: e.target.value }))} style={{ ...inputSt, width: '100%' }}>
+            <option value="">Select distance…</option>
+            {distOptions.map(d => <option key={d} value={d}>{d}</option>)}
+          </select>
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+            <span style={{ fontSize: '11px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700 }}>TARGET</span>
+            <input type="number" placeholder="H" min={0} value={distTarget.h} onChange={e => setDistTarget(d => ({ ...d, h: e.target.value }))} style={{ ...inputSt, width: '50px' }} />
+            <input type="number" placeholder="M" min={0} max={59} value={distTarget.m} onChange={e => setDistTarget(d => ({ ...d, m: e.target.value }))} style={{ ...inputSt, width: '50px' }} />
+            <input type="number" placeholder="S" min={0} max={59} value={distTarget.s} onChange={e => setDistTarget(d => ({ ...d, s: e.target.value }))} style={{ ...inputSt, width: '50px' }} />
+          </div>
+          <input type="date" placeholder="Deadline (optional)" value={distTarget.deadline} onChange={e => setDistTarget(d => ({ ...d, deadline: e.target.value }))} style={{ ...inputSt, width: '100%' }} />
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button onClick={saveDist} style={{ ...smallBtn, flex: 1 }}>Add Goal</button>
+            <button onClick={() => setAddMode(null)} style={{ ...smallBtn, background: 'var(--surface3)', color: 'var(--muted)', flex: 1 }}>Cancel</button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Profile Page ─────────────────────────────────────────────────────────────
 
 export function Profile() {
@@ -983,6 +1238,7 @@ export function Profile() {
       <RaceActivityHeatmap />
       <MajorsQualifiers />
       <RacePersonality />
+      <GoalsSection />
       <BioDetails onEdit={() => setShowEdit(true)} />
     </div>
   )
