@@ -45,18 +45,36 @@ export const useAthleteStore = create<AthleteState>()(
       name: 'fl2_ath',  // must match existing localStorage key
       // Migrate old SPA format: raw athlete object stored at root, not wrapped in {state:{...}}
       onRehydrateStorage: () => (state) => {
-        if (!state || state.athlete !== null) return
-        try {
-          const raw = localStorage.getItem('fl2_ath')
-          if (!raw) return
-          const parsed = JSON.parse(raw)
-          // Old SPA stored: {"firstName":"...","lastName":"...",...} (no "state" wrapper)
-          if (parsed && typeof parsed === 'object' && !Array.isArray(parsed) && !('state' in parsed)) {
-            if (parsed.firstName !== undefined || parsed.lastName !== undefined || parsed.mainSport !== undefined) {
-              state.setAthlete(parsed)
+        if (!state) return
+
+        // Migrate V1 athlete object (stored directly, no Zustand wrapper)
+        if (state.athlete === null) {
+          try {
+            const raw = localStorage.getItem('fl2_ath')
+            if (raw) {
+              const parsed = JSON.parse(raw)
+              // Old SPA stored: {"firstName":"...","lastName":"...",...} (no "state" wrapper)
+              if (parsed && typeof parsed === 'object' && !Array.isArray(parsed) && !('state' in parsed)) {
+                if (parsed.firstName !== undefined || parsed.lastName !== undefined || parsed.mainSport !== undefined) {
+                  state.setAthlete(parsed)
+                }
+              }
             }
-          }
-        } catch {}
+          } catch {}
+        }
+
+        // Migrate V1 season plans (stored separately as fl2_season_plans)
+        if (state.seasonPlans.length === 0) {
+          try {
+            const raw = localStorage.getItem('fl2_season_plans')
+            if (raw) {
+              const parsed = JSON.parse(raw)
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                state.setSeasonPlans(parsed)
+              }
+            }
+          } catch {}
+        }
       },
     }
   ),
