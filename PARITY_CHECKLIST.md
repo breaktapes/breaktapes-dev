@@ -1,7 +1,7 @@
 # BREAKTAPES V1 → V2 Parity Checklist
 
 **Generated:** 2026-04-19  
-**Updated:** 2026-04-19 (Sprint 4 — performance timeline + error tracking)  
+**Updated:** 2026-04-19 (Sprint 5 — medal bg removal, gear lists/stacks, story/coach widgets)  
 **Auditor:** CEO review session  
 **V1 source:** `public/index.html` (20,061 lines)  
 **V2 source:** `src/` (React + Vite)
@@ -20,18 +20,18 @@
 | Authentication | 5 | 0 | 0 | 1 |
 | Pages / Navigation | 5 | 2 | 0 | 0 |
 | Race CRUD | 6 | 2 | 1 | 0 |
-| Dashboard | 12 | 1 | 2 | 4 |
+| Dashboard | 14 | 1 | 0 | 4 |
 | Profile / Athlete | 10 | 0 | 0 | 2 |
 | Medals | 4 | 0 | 0 | 0 |
 | Map | 3 | 1 | 0 | 0 |
 | Train / Wearables | 7 | 0 | 0 | 0 |
-| Gear / Flatlay | 3 | 1 | 2 | 0 |
+| Gear / Flatlay | 5 | 0 | 0 | 0 |
 | Settings | 6 | 0 | 1 | 1 |
 | Data / localStorage | 5 | 0 | 0 | 0 |
 | Infrastructure | 9 | 0 | 0 | 0 |
-| **TOTAL** | **74** | **7** | **8** | **8** |
+| **TOTAL** | **78** | **6** | **4** | **8** |
 
-**Overall parity: ~87%** (74 done out of 97 items, partials counted as 0.5)
+**Overall parity: ~90%** (78 done out of 96 items, partials counted as 0.5)
 
 ### Sprint 2 changes (2026-04-19)
 - ✅ Claude API key field in Settings (`fl2_apikey`, V1-compatible key)
@@ -59,6 +59,13 @@
 ### Sprint 4 changes (2026-04-19)
 - ✅ Athlete Performance Timeline — `PerformanceTimeline` component in Profile.tsx, season-by-season bar chart (Speed / Distance / Races), last 5 years, mirrors V1 `renderAthletePerformanceTimeline()`
 - ✅ Error tracking — `RootErrorBoundary.componentDidCatch` sends crash reports via `navigator.sendBeacon('/api/error-report')`. Worker `POST /api/error-report` persists to `beta_errors` Supabase table (anon INSERT, authenticated SELECT). Migration `20260419120000_beta_errors.sql`.
+
+### Sprint 5 changes (2026-04-19)
+- ✅ Medal photo background removal — `src/lib/removeBg.ts` wraps `@imgly/background-removal` (ONNX WASM, runs entirely in browser). `ViewEditRaceModal` auto-removes bg on medal photo select; spinner overlay during ~1-2s; falls back to original on failure. Model cached by browser after first use.
+- ✅ Gear Lists — full CRUD in Lists tab: create, add/reorder/remove library items, delete. `useGearLists` + `fl2_gear_lists` localStorage.
+- ✅ Race Stacks — 5 preset templates + custom stacks, link to upcoming race. `useGearStacks` + `fl2_stacks` localStorage.
+- ✅ Story Mode widget — `StoryModeWidget` in Dashboard RECENTLY zone: current-year race count / countries / medals.
+- ✅ Coach Activity widget — `CoachActivityWidget` in Dashboard PATTERNS zone; reads `fl2_coach_relationships` + `fl2_coach_comments`.
 
 ---
 
@@ -150,8 +157,8 @@
 ### Widgets — Missing in V2 ❌
 - [x] ✅ On This Day widget — `OnThisDayWidget` in Dashboard, matches past race by MM-DD, cycles randomly across same-day matches. Enabled by default in NOW zone.
 - [x] ✅ Activity Feed Preview widget — `ActivityPreviewWidget` in Dashboard RECENTLY zone shows last 3 WHOOP activities; shows connect-prompt when no wearable linked.
-- [ ] ❌ Story Mode widget — V1: `renderStoryModeWidget()`. Not in V2.
-- [ ] ❌ Coach Activity widget — V1: `renderCoachActivityWidget()`. Not in V2.
+- [x] ✅ Story Mode widget — `StoryModeWidget` in Dashboard RECENTLY zone: year / races / countries / medals recap.
+- [x] ✅ Coach Activity widget — `CoachActivityWidget` in Dashboard PATTERNS zone; reads `fl2_coach_relationships` + `fl2_coach_comments`.
 - [x] ✅ Weather greeting (6-hour forecast pills) — V2 `GreetingCard` in Dashboard fetches Open-Meteo, shows hourly pills with WMO icons + temp. 30-min cache in `fl2_geo_weather`.
 
 ### Widgets — Deferred 🔒
@@ -214,8 +221,8 @@
 - [x] ✅ Gear catalog (25-item static catalog with filters by category/sport)
 - [x] ✅ Library tab (save catalog items via "+ Save" button; saved IDs in `fl2_saved_gear`)
 - [x] ✅ Custom gear items — Library tab has "+ Custom Product" modal (brand, name, category, notes). Stored in `fl2_custom_gear` (localStorage). V1 used Supabase `user_products`; post-cutover migration can sync to Supabase when that table is added.
-- [ ] ❌ Gear Lists — V1: `renderFlatlayLists()`, user-defined lists of gear, `openFlatlayListModal()`. V2: none.
-- [ ] ❌ Race Stacks — V1: `renderFlatlayStacks()`, curated race-day gear sets per race, `openFlatlayStackModal()`. V2: none.
+- [x] ✅ Gear Lists — `useGearLists` hook, Lists tab: create/edit/delete lists, add/reorder/remove items from library. `fl2_gear_lists` localStorage (V1 used Supabase; post-cutover migration optional).
+- [x] ✅ Race Stacks — `useGearStacks` hook, Stacks tab: 5 preset templates + custom stacks, optional race link. `fl2_stacks` localStorage.
 
 ---
 
