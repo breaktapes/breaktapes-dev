@@ -1,6 +1,7 @@
 # BREAKTAPES V1 → V2 Parity Checklist
 
 **Generated:** 2026-04-19  
+**Updated:** 2026-04-19 (Sprint 2 — 4 blockers closed)  
 **Auditor:** CEO review session  
 **V1 source:** `public/index.html` (20,061 lines)  
 **V2 source:** `src/` (React + Vite)
@@ -18,19 +19,27 @@
 |---------|------|---------|---------|----------|
 | Authentication | 4 | 1 | 0 | 1 |
 | Pages / Navigation | 5 | 2 | 0 | 0 |
-| Race CRUD | 5 | 2 | 2 | 0 |
+| Race CRUD | 6 | 2 | 1 | 0 |
 | Dashboard | 6 | 3 | 5 | 4 |
 | Profile / Athlete | 6 | 1 | 4 | 2 |
 | Medals | 2 | 1 | 1 | 0 |
 | Map | 3 | 1 | 0 | 0 |
 | Train / Wearables | 5 | 1 | 2 | 0 |
 | Gear / Flatlay | 2 | 1 | 3 | 0 |
-| Settings | 4 | 0 | 3 | 1 |
+| Settings | 6 | 0 | 1 | 1 |
 | Data / localStorage | 5 | 0 | 0 | 0 |
-| Infrastructure | 5 | 1 | 3 | 0 |
-| **TOTAL** | **52** | **14** | **23** | **8** |
+| Infrastructure | 7 | 0 | 2 | 0 |
+| **TOTAL** | **57** | **13** | **19** | **8** |
 
-**Overall parity: ~58%** (52 done out of 89 items)
+**Overall parity: ~66%** (57 done out of 89 items)
+
+### Sprint 2 changes (2026-04-19)
+- ✅ Claude API key field in Settings (`fl2_apikey`, V1-compatible key)
+- ✅ Results screenshot import in ViewEditRaceModal (Claude vision → time + placing + splits)
+- ✅ Delete account in Settings (inline confirmation, `delete_my_account()` RPC)
+- ✅ Beta feedback widget (`BetaFeedback` component, staging only, → `beta_feedback` table)
+- ✅ Lazy loading (`React.lazy` + `Suspense` for 5 page components)
+- ✅ Vendor code splitting (`manualChunks` in vite.config.ts: map/react/charts/misc)
 
 ---
 
@@ -69,8 +78,8 @@
 - [ ] ⚠️ Race outcome field (Finished / DNF / DSQ / DNS) — field exists in Race type, check modal
 
 ### AI / Screenshot Import
-- [ ] ❌ Claude API key field in Settings (user-supplied `fl2_apikey`) — NOT in V2 Settings.tsx
-- [ ] ❌ Results screenshot import (Claude vision API → populate finish time, placing, splits) — V1: `importResultsScreenshot()` + `handleResultsImg()`. V2: no equivalent.
+- [x] ✅ Claude API key field in Settings (user-supplied `fl2_apikey`) — Settings.tsx AI Parsing section, V1-compatible key name
+- [x] ✅ Results screenshot import (Claude vision API → populate finish time, placing, splits) — ViewEditRaceModal EditPanel screenshot button
 - [ ] ❌ AI text parsing of race description → populate form — V1: `parseAI()`, `parsePhoto()`. V2: none.
 
 ### Other
@@ -199,9 +208,9 @@
 - [x] ✅ Theme picker (9 themes, PRO gated via `proAccessGranted`)
 - [x] ✅ Username input + availability check + `is_public` toggle + profile link preview
 - [x] ✅ Change password (Supabase `updateUser`)
-- [ ] ❌ Claude API key field — V1: `fl2_apikey` stored in Settings. User supplies their own key for AI parsing. V2 Settings.tsx has no API key field. **Blocks AI parsing feature.**
-- [ ] ❌ Delete account — V1: `openDeleteAccountModal()`, `submitDeleteAccount()`. V2 Settings.tsx — verify.
-- [ ] ❌ Beta feedback widget — V1 (staging only): `feedbackPill` + `feedbackModal` → `beta_feedback` table. V2 has no equivalent. Important for beta.
+- [x] ✅ Claude API key field — `fl2_apikey` in localStorage. Settings AI Parsing section with show/hide + remove.
+- [x] ✅ Delete account — inline confirmation in Settings, `delete_my_account()` RPC + localStorage clear.
+- [x] ✅ Beta feedback widget — `BetaFeedback` component, staging + auth only, 5-star + message → `beta_feedback` table.
 - [ ] 🔒 Pro modal / upgrade flow — V1: `openProModal()`, `startProCheckout()`. V2 uses `IS_STAGING` flag. Need real entitlement before prod if any V1 users paid.
 
 ---
@@ -227,8 +236,8 @@
 - [x] ✅ Supabase migrations auto-apply on deploy
 - [x] ✅ Worker SSR for `/u/:username` public profiles (`worker/index.js`)
 - [ ] ⚠️ Worker SSR smoke test against V2 `dist/` build — should be verified manually before cutover
-- [ ] ❌ Lazy loading (React.lazy + Suspense) — all pages load synchronously, 927KB bundle
-- [ ] ❌ Vendor code splitting (`vite.config.ts` manualChunks) — 1MB MapLibre + 927KB app in same pass
+- [x] ✅ Lazy loading (React.lazy + Suspense) — 5 page components lazy-loaded; Dashboard eager
+- [x] ✅ Vendor code splitting (`vite.config.ts` manualChunks) — vendor-map/react/charts/misc separate chunks
 - [ ] ❌ Error tracking (Sentry or equivalent) — `RootErrorBoundary` catches but doesn't report
 
 ---
@@ -238,11 +247,11 @@
 All of the following must be ✅ before merging staging → main:
 
 ### Blockers (must fix)
-- [ ] Claude API key field in Settings + AI parsing in race detail modal
+- [x] ✅ Claude API key field in Settings + AI parsing in race detail modal
 - [ ] Community medals (load from `race_medal_community` in Profile/MedalWall)
-- [ ] Delete account in Settings
-- [ ] Beta feedback widget (staging only)
-- [ ] Lazy loading + vendor split (performance, not correctness)
+- [x] ✅ Delete account in Settings
+- [x] ✅ Beta feedback widget (staging only)
+- [x] ✅ Lazy loading + vendor split (performance, not correctness)
 - [ ] Worker SSR smoke test vs V2 build
 
 ### Recommended before cutover
