@@ -1,5 +1,80 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { useAuthStore } from '@/stores/useAuthStore'
+
+// ─── Custom gear local storage helpers ────────────────────────────────────────
+
+interface CustomGearItem {
+  id: string
+  name: string
+  brand: string
+  category: string
+  notes: string
+  createdAt: number
+}
+
+function loadSavedIds(): string[] {
+  try { return JSON.parse(localStorage.getItem('fl2_saved_gear') ?? '[]') } catch { return [] }
+}
+function saveSavedIds(ids: string[]) {
+  localStorage.setItem('fl2_saved_gear', JSON.stringify(ids))
+}
+function loadCustomGear(): CustomGearItem[] {
+  try { return JSON.parse(localStorage.getItem('fl2_custom_gear') ?? '[]') } catch { return [] }
+}
+function saveCustomGear(items: CustomGearItem[]) {
+  localStorage.setItem('fl2_custom_gear', JSON.stringify(items))
+}
+
+function useSavedGear() {
+  const [savedIds, setSavedIds]     = useState<string[]>(loadSavedIds)
+  const [customGear, setCustomGear] = useState<CustomGearItem[]>(loadCustomGear)
+
+  const toggleSave = useCallback((id: string) => {
+    setSavedIds(prev => {
+      const next = prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
+      saveSavedIds(next)
+      return next
+    })
+  }, [])
+
+  const addCustom = useCallback((item: Omit<CustomGearItem, 'id' | 'createdAt'>) => {
+    const newItem: CustomGearItem = {
+      ...item,
+      id: `c-${Date.now()}`,
+      createdAt: Date.now(),
+    }
+    setCustomGear(prev => {
+      const next = [newItem, ...prev]
+      saveCustomGear(next)
+      return next
+    })
+    return newItem
+  }, [])
+
+  const updateCustom = useCallback((id: string, item: Omit<CustomGearItem, 'id' | 'createdAt'>) => {
+    setCustomGear(prev => {
+      const next = prev.map(x => x.id === id ? { ...x, ...item } : x)
+      saveCustomGear(next)
+      return next
+    })
+  }, [])
+
+  const deleteCustom = useCallback((id: string) => {
+    setCustomGear(prev => {
+      const next = prev.filter(x => x.id !== id)
+      saveCustomGear(next)
+      return next
+    })
+    // Also remove from saved
+    setSavedIds(prev => {
+      const next = prev.filter(x => x !== id)
+      saveSavedIds(next)
+      return next
+    })
+  }, [])
+
+  return { savedIds, customGear, toggleSave, addCustom, updateCustom, deleteCustom }
+}
 
 // ─── Static gear catalog ─────────────────────────────────────────────────────
 interface GearItem {
@@ -166,10 +241,35 @@ function AuthGate() {
 
 export function Gear() {
   const authUser = useAuthStore(s => s.authUser)
-  const [activeTab, setActiveTab]   = useState<Tab>('discover')
+  const [activeTab, setActiveTab]     = useState<Tab>('discover')
   const [searchQuery, setSearchQuery] = useState('')
-  const [category, setCategory]     = useState('All')
-  const [sport, setSport]           = useState('All Sports')
+  const [category, setCategory]       = useState('All')
+  const [sport, setSport]             = useState('All Sports')
+
+  // ── Saved gear + custom products ──────────────────────────────────────────
+  const { savedIds, customGear, toggleSave, addCustom, updateCustom, deleteCustom } = useSavedGear()
+  const [customModal, setCustomModal] = useState<{ mode: 'add' } | { mode: 'edit'; item: CustomGearItem } | null>(null)
+  const [customForm, setCustomForm]   = useState({ name: '', brand: '', category: 'Running', notes: '' })
+
+  const openAddCustom = () => {
+    setCustomForm({ name: '', brand: '', category: 'Running', notes: '' })
+    setCustomModal({ mode: 'add' })
+  }
+
+  const openEditCustom = (item: CustomGearItem) => {
+    setCustomForm({ name: item.name, brand: item.brand, category: item.category, notes: item.notes })
+    setCustomModal({ mode: 'edit', item })
+  }
+
+  const saveCustomModal = () => {
+    if (!customForm.name.trim() || !customForm.brand.trim()) return
+    if (customModal?.mode === 'edit') {
+      updateCustom(customModal.item.id, customForm)
+    } else {
+      addCustom(customForm)
+    }
+    setCustomModal(null)
+  }
 
   const filteredGear = useMemo(() => {
     const q = searchQuery.toLowerCase()
@@ -349,7 +449,7 @@ export function Gear() {
                         }}>
                           {item.name}
                         </p>
-                        <div style={{ marginTop: '6px', display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                        <div style={{ marginTop: '6px', display: 'flex', gap: '4px', flexWrap: 'wrap', alignItems: 'center' }}>
                           {item.tags.slice(0, 2).map(tag => (
                             <span key={tag} style={{
                               fontSize: '9px',
@@ -366,6 +466,26 @@ export function Gear() {
                               {tag}
                             </span>
                           ))}
+                          <button
+                            onClick={e => { e.stopPropagation(); toggleSave(item.id) }}
+                            title={savedIds.includes(item.id) ? 'Remove from library' : 'Save to library'}
+                            style={{
+                              marginLeft: 'auto',
+                              background: savedIds.includes(item.id) ? 'rgba(var(--orange-ch),0.15)' : 'var(--surface3)',
+                              border: `1px solid ${savedIds.includes(item.id) ? 'rgba(var(--orange-ch),0.4)' : 'var(--border)'}`,
+                              color: savedIds.includes(item.id) ? 'var(--orange)' : 'var(--muted)',
+                              borderRadius: '4px',
+                              padding: '3px 8px',
+                              fontSize: '11px',
+                              cursor: 'pointer',
+                              fontFamily: 'var(--headline)',
+                              fontWeight: 700,
+                              letterSpacing: '0.06em',
+                              textTransform: 'uppercase',
+                            }}
+                          >
+                            {savedIds.includes(item.id) ? '✓ Saved' : '+ Save'}
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -378,23 +498,98 @@ export function Gear() {
           {/* ── Library tab ── */}
           {activeTab === 'library' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <p style={{
-                margin: 0,
-                fontFamily: 'var(--headline)',
-                fontWeight: 900,
-                fontSize: '15px',
-                letterSpacing: '0.06em',
-                textTransform: 'uppercase',
-                color: 'var(--white)',
-              }}>
-                Your Saved Gear
-              </p>
-              <EmptyState
-                title="No gear saved yet"
-                body="Search the catalog to add items to your library."
-                cta="Discover Gear"
-                onCta={() => setActiveTab('discover')}
-              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <p style={{ margin: 0, fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '15px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>
+                  Your Gear Library
+                </p>
+                <button style={{ ...btnGhost, padding: '0.5rem 0.9rem', fontSize: 'var(--text-xs)' }} onClick={openAddCustom}>
+                  + Custom Product
+                </button>
+              </div>
+
+              {/* Custom product modal */}
+              {customModal && (
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 900, display: 'flex', alignItems: 'flex-end' }} onClick={() => setCustomModal(null)}>
+                  <div style={{ width: '100%', background: 'var(--surface2)', borderRadius: '16px 16px 0 0', padding: '24px', display: 'flex', flexDirection: 'column', gap: '14px' }} onClick={e => e.stopPropagation()}>
+                    <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '18px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)' }}>
+                      {customModal.mode === 'edit' ? 'Edit Product' : 'Custom Product'}
+                    </div>
+                    {(['brand', 'name'] as const).map(field => (
+                      <div key={field} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <label style={{ fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)' }}>{field}</label>
+                        <input
+                          type="text"
+                          value={customForm[field]}
+                          onChange={e => setCustomForm(f => ({ ...f, [field]: e.target.value }))}
+                          placeholder={field === 'brand' ? 'Brand name' : 'Product name'}
+                          style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '10px 12px', color: 'var(--white)', fontFamily: 'var(--body)', fontSize: '14px' }}
+                        />
+                      </div>
+                    ))}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <label style={{ fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)' }}>Category</label>
+                      <select value={customForm.category} onChange={e => setCustomForm(f => ({ ...f, category: e.target.value }))} style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '10px 12px', color: 'var(--white)', fontFamily: 'var(--body)', fontSize: '14px' }}>
+                        {CATEGORIES.filter(c => c !== 'All').map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <label style={{ fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)' }}>Notes</label>
+                      <input type="text" value={customForm.notes} onChange={e => setCustomForm(f => ({ ...f, notes: e.target.value }))} placeholder="Optional notes" style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '10px 12px', color: 'var(--white)', fontFamily: 'var(--body)', fontSize: '14px' }} />
+                    </div>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                      <button
+                        onClick={saveCustomModal}
+                        disabled={!customForm.name.trim() || !customForm.brand.trim()}
+                        style={{ ...btnMain, flex: 1, opacity: (!customForm.name.trim() || !customForm.brand.trim()) ? 0.5 : 1 }}
+                      >
+                        {customModal.mode === 'edit' ? 'Save Changes' : 'Add Product'}
+                      </button>
+                      <button onClick={() => setCustomModal(null)} style={{ ...btnGhost, flex: 1 }}>Cancel</button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Saved catalog items + custom items */}
+              {savedIds.length === 0 && customGear.length === 0 ? (
+                <EmptyState
+                  title="No gear saved yet"
+                  body="Tap + Save on any item in Discover, or add a custom product you own."
+                  cta="Discover Gear"
+                  onCta={() => setActiveTab('discover')}
+                />
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {/* Custom items first */}
+                  {customGear.map(item => (
+                    <div key={item.id} style={{ ...card, display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: 'var(--surface3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0 }}>🎒</div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--orange)' }}>{item.brand}</div>
+                        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', fontWeight: 600 }}>{item.name}</div>
+                        {item.notes && <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>{item.notes}</div>}
+                        <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--muted2)', marginTop: '2px' }}>Custom · {item.category}</div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+                        <button onClick={() => openEditCustom(item)} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: '4px', color: 'var(--muted)', fontSize: '11px', padding: '3px 8px', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700 }}>Edit</button>
+                        <button onClick={() => deleteCustom(item.id)} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: '4px', color: 'var(--muted2)', fontSize: '11px', padding: '3px 8px', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700 }}>✕</button>
+                      </div>
+                    </div>
+                  ))}
+                  {/* Saved catalog items */}
+                  {GEAR_CATALOG.filter(g => savedIds.includes(g.id)).map(item => (
+                    <div key={item.id} style={{ ...card, display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <img src={item.image} alt={item.name} style={{ width: '40px', height: '40px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }} />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--orange)' }}>{item.brand}</div>
+                        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', fontWeight: 600 }}>{item.name}</div>
+                        <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--muted2)', marginTop: '2px' }}>{item.category} · {item.sport}</div>
+                      </div>
+                      <button onClick={() => toggleSave(item.id)} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: '4px', color: 'var(--muted2)', fontSize: '11px', padding: '3px 8px', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700, flexShrink: 0 }}>✕ Remove</button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 

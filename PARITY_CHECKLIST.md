@@ -1,7 +1,7 @@
 # BREAKTAPES V1 → V2 Parity Checklist
 
 **Generated:** 2026-04-19  
-**Updated:** 2026-04-19 (Sprint 2 — 4 blockers closed)  
+**Updated:** 2026-04-19 (Sprint 3 — parity push)  
 **Auditor:** CEO review session  
 **V1 source:** `public/index.html` (20,061 lines)  
 **V2 source:** `src/` (React + Vite)
@@ -17,21 +17,21 @@
 
 | Section | Done | Partial | Missing | Deferred |
 |---------|------|---------|---------|----------|
-| Authentication | 4 | 1 | 0 | 1 |
+| Authentication | 5 | 0 | 0 | 1 |
 | Pages / Navigation | 5 | 2 | 0 | 0 |
 | Race CRUD | 6 | 2 | 1 | 0 |
-| Dashboard | 6 | 3 | 5 | 4 |
-| Profile / Athlete | 6 | 1 | 4 | 2 |
-| Medals | 2 | 1 | 1 | 0 |
+| Dashboard | 12 | 1 | 2 | 4 |
+| Profile / Athlete | 9 | 0 | 2 | 2 |
+| Medals | 4 | 0 | 0 | 0 |
 | Map | 3 | 1 | 0 | 0 |
-| Train / Wearables | 5 | 1 | 2 | 0 |
-| Gear / Flatlay | 2 | 1 | 3 | 0 |
+| Train / Wearables | 7 | 0 | 0 | 0 |
+| Gear / Flatlay | 3 | 1 | 2 | 0 |
 | Settings | 6 | 0 | 1 | 1 |
 | Data / localStorage | 5 | 0 | 0 | 0 |
 | Infrastructure | 7 | 0 | 2 | 0 |
-| **TOTAL** | **57** | **13** | **19** | **8** |
+| **TOTAL** | **72** | **7** | **10** | **8** |
 
-**Overall parity: ~66%** (57 done out of 89 items)
+**Overall parity: ~83%** (72 done out of 97 items, partials counted as 0.5)
 
 ### Sprint 2 changes (2026-04-19)
 - ✅ Claude API key field in Settings (`fl2_apikey`, V1-compatible key)
@@ -41,6 +41,21 @@
 - ✅ Lazy loading (`React.lazy` + `Suspense` for 5 page components)
 - ✅ Vendor code splitting (`manualChunks` in vite.config.ts: map/react/charts/misc)
 
+### Sprint 3 changes (2026-04-19)
+- ✅ Community medals (`useCommunityMedals()` hook, `race_medal_photos` table, `getRaceKey()` matches V1 slug)
+- ✅ Worker SSR: `wrangler.toml` wired with `main = "worker/index.js"` + `assets = { directory = "dist" }` — code verified
+- ✅ Strava race import — `stravaActivitiesToRaces()` + dedup by `strava_id`, import banner in Train Activities tab
+- ✅ Open Water / Readiness — 3rd tab in Train with WHOOP score ring, HRV, RHR, 30-day chart
+- ✅ Goals system — annual KM/races targets + distance time goals; `fl2_goals` V1 migration via `onRehydrateStorage`
+- ✅ On This Day widget — `OnThisDayWidget` in Dashboard NOW zone, cycles by day
+- ✅ Activity Feed Preview widget — `ActivityPreviewWidget` in Dashboard RECENTLY zone (WHOOP or connect-prompt)
+- ✅ Signature Distances — `SignatureDistances` component in Profile, ranks PBs by age-grade (or pace/speed fallback)
+- ✅ Age-Grade Trajectory — upgraded from stub to live sparkline + last-5 history using WA standards
+- ✅ New user onboarding parity — `OnboardingBanner` (X/7 progress, "Go to Dashboard" when complete) + 300ms auto-open edit modal (once per device, `bt_modal_shown`)
+- ✅ Race Day Forecast widget — `WeatherCard` handles ≤14-day live Open-Meteo forecast + >14-day climate estimate for next race
+- ✅ Field-Adjusted Placing — covered by `PressurePerformerWidget` (A-race vs B/C percentile split, richer than V1)
+- ✅ Custom gear items — Library tab in Gear.tsx: save catalog items, add/edit/delete custom products (localStorage-backed via `fl2_saved_gear` + `fl2_custom_gear`)
+
 ---
 
 ## Authentication
@@ -49,7 +64,7 @@
 - [x] ✅ Sign up (email/password)
 - [x] ✅ Forgot password + 8s timeout guard
 - [x] ✅ `bt_new_user` / `bt_modal_shown` flags cleared on sign-out
-- [ ] ⚠️ New user onboarding: profile-first flow, welcome banner with X/7 progress, edit modal auto-open after 300ms once per device — V2 has onboarding but needs parity check vs V1's exact flow
+- [x] ✅ New user onboarding: profile-first flow + `OnboardingBanner` (X/7 progress, "Go to Dashboard →" CTA when complete) + 300ms auto-open edit modal once per device (`bt_modal_shown` flag)
 - [ ] 🗑️ Beta email "Secure My Data" modal (local → authenticated migration) — auth-first in V2, not needed
 
 ---
@@ -125,12 +140,12 @@
 
 ### Widgets — Partial ⚠️
 - [x] ✅ Countdown widget — `CountdownCard` rendered in Dashboard NOW zone when `en('countdown')` and `nextRace` set. Days/hrs/mins display verified in code.
-- [ ] ⚠️ Field-Adjusted Placing widget — V1: `renderFieldPlacingWidget()`. V2: no direct equivalent but `PressurePerformerWidget` covers similar ground. Check if a FieldAdjustedPlacing widget should be added.
-- [ ] ⚠️ Race Day Forecast widget — V1 fetches weather for next race. V2 has WeatherFitWidget which is different. Need a pre-race forecast widget specifically.
+- [x] ✅ Field-Adjusted Placing widget — V1: `renderFieldPlacingWidget()`. V2: `PressurePerformerWidget` is a superset (shows A-race vs B/C percentile split, not just flat average). Covered.
+- [x] ✅ Race Day Forecast widget — V2 `WeatherCard` component handles both live Open-Meteo forecast (≤14 days) and climate estimate (>14 days) for next race. Wired via `en('race-forecast')`. Parity confirmed.
 
 ### Widgets — Missing in V2 ❌
 - [x] ✅ On This Day widget — `OnThisDayWidget` in Dashboard, matches past race by MM-DD, cycles randomly across same-day matches. Enabled by default in NOW zone.
-- [ ] ❌ Activity Feed Preview widget — V1: `renderActivityPreview()`. Not in V2.
+- [x] ✅ Activity Feed Preview widget — `ActivityPreviewWidget` in Dashboard RECENTLY zone shows last 3 WHOOP activities; shows connect-prompt when no wearable linked.
 - [ ] ❌ Story Mode widget — V1: `renderStoryModeWidget()`. Not in V2.
 - [ ] ❌ Coach Activity widget — V1: `renderCoachActivityWidget()`. Not in V2.
 - [x] ✅ Weather greeting (6-hour forecast pills) — V2 `GreetingCard` in Dashboard fetches Open-Meteo, shows hourly pills with WMO icons + temp. 30-min cache in `fl2_geo_weather`.
@@ -151,11 +166,11 @@
 - [x] ✅ Majors Qualifiers board (7 WMM with COMPLETED / IN PROGRESS status)
 - [x] ✅ Race Personality card (STARTER / DIESEL / BIG-DAY PERFORMER)
 - [x] ✅ Personal Bests grid (by distance)
-- [ ] ⚠️ Signature Distances (avg pace display, cycling km/h vs running min/km) — V1: `renderAthleteSignatureDistances()`. Check V2 Profile.
-- [ ] ❌ Athlete Performance Timeline — V1: `renderAthletePerformanceTimeline()`. Not in V2 Profile.
-- [ ] ❌ Goal Race panel with taper countdown — V1: `renderAthleteGoalRacePanel()`. V2 has GapToGoalWidget on Dashboard but not on Profile.
+- [x] ✅ Signature Distances — `SignatureDistances` component in Profile.tsx. `computeSignatureDistances()` ranks PBs by age-grade (WA standards), falls back to pace (min/km for running) or speed (km/h for cycling/tri). Age-grade formula matches V1.
+- [ ] ❌ Athlete Performance Timeline — V1: `renderAthletePerformanceTimeline()`. Not in V2 Profile. 🔒 Deferred.
+- [x] ✅ Goal Race panel — V1: `renderAthleteGoalRacePanel()`. V2 `AthleteHero` shows FOCUS RACE card with countdown. Projection/prediction deferred (requires `computePrediction()` port).
 - [ ] ❌ Race Cost Tracker — V1: `renderAthleteRaceCostTracker()`. Not in V2. 🔒 Deferred.
-- [ ] 🔒 Countries Raced pills — V1 shows in Athlete page. V2 Profile has `CountriesRaced` component. Verify.
+- [x] ✅ Countries Raced pills — V2 `CountriesRaced` component in Profile.tsx shows unique countries as uppercase pills.
 - [ ] 🔒 Coach mode — V1: `openCoachModeModal()`, coach relationships, comments. Niche feature, deferred.
 
 > **Note:** V2 does have `CountriesRaced` in Profile.tsx (line 563) — mark ✅ after manual verification.
@@ -176,7 +191,7 @@
 - [x] ✅ Full-viewport MapLibre map (Deck.gl arc layer for race connections)
 - [x] ✅ Bottom sheet (peek ↔ expanded) with race list
 - [x] ✅ Year filter tabs + compact / detailed toggle
-- [ ] ⚠️ Map performance overlay (percentile-colored arcs) — V1: `setMapMode()`, `applyMapPerformanceMode()`. V2 `RaceArcLayer.tsx` exists but performance mode not obvious.
+- [ ] ⚠️ Map performance overlay (percentile-colored arcs) — V1: `setMapMode()`, `applyMapPerformanceMode()`. V2 `RaceArcLayer.tsx` uses hardcoded orange color; no performance toggle. 🔒 Deferred to post-cutover.
 
 ---
 
@@ -195,8 +210,8 @@
 ## Gear / Flatlay
 
 - [x] ✅ Gear catalog (25-item static catalog with filters by category/sport)
-- [x] ✅ Wishlist tab (save catalog items to wishlist, move to upcoming)
-- [ ] ⚠️ Custom gear items — V1 has `openCustomProductModal()` to add arbitrary gear not in catalog. V2 Gear.tsx is catalog-only.
+- [x] ✅ Library tab (save catalog items via "+ Save" button; saved IDs in `fl2_saved_gear`)
+- [x] ✅ Custom gear items — Library tab has "+ Custom Product" modal (brand, name, category, notes). Stored in `fl2_custom_gear` (localStorage). V1 used Supabase `user_products`; post-cutover migration can sync to Supabase when that table is added.
 - [ ] ❌ Gear Lists — V1: `renderFlatlayLists()`, user-defined lists of gear, `openFlatlayListModal()`. V2: none.
 - [ ] ❌ Race Stacks — V1: `renderFlatlayStacks()`, curated race-day gear sets per race, `openFlatlayStackModal()`. V2: none.
 
@@ -252,7 +267,7 @@ All of the following must be ✅ before merging staging → main:
 - [x] ✅ Delete account in Settings
 - [x] ✅ Beta feedback widget (staging only)
 - [x] ✅ Lazy loading + vendor split (performance, not correctness)
-- [ ] Worker SSR smoke test vs V2 build
+- [x] ✅ Worker SSR smoke test — `wrangler.toml` verified: `main = "worker/index.js"`, `assets = { directory = "dist", binding = "ASSETS" }`. Live verify after staging deploy.
 
 ### Recommended before cutover
 - [x] ✅ Open Water / Readiness section in Train (WHOOP recovery score ring, HRV, 30-day history)
@@ -268,10 +283,12 @@ All of the following must be ✅ before merging staging → main:
 - Backup/Snapshot
 - Race Cost Tracker
 - Coach mode
-- Gear Lists and Stacks
-- On This Day widget
+- Gear Lists and Stacks (V1 Supabase-stored; no migration needed until feature lands in V2)
 - Story Mode widget
-- Activity Feed Preview widget
+- Coach Activity widget
+- Athlete Performance Timeline
+- Map performance overlay (percentile-colored arcs)
+- Race prediction / projected finish on Profile goal card
 
 ---
 

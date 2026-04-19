@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { useAuthStore } from '@/stores/useAuthStore'
@@ -81,6 +82,116 @@ function distLabel(d: string | undefined): string {
 }
 
 const DIST_ORDER: string[] = ['5', '10', '21.1', '42.2', '1.5', '3', '15', '20', '25', '30', '50', '100']
+
+// ─── Age-Grade Standards (WA road-race tables) ────────────────────────────────
+
+const AGE_GRADE_STANDARDS: Record<string, Record<string, Array<[number, number]>>> = {
+  M: {
+    '5K':           [[18,757],[35,780],[40,808],[45,852],[50,913],[55,1002],[60,1110],[65,1254],[70,1440]],
+    '10K':          [[18,1571],[35,1620],[40,1680],[45,1770],[50,1890],[55,2070],[60,2295],[65,2580],[70,2970]],
+    'Half Marathon':[[18,3561],[35,3660],[40,3810],[45,4020],[50,4290],[55,4680],[60,5190],[65,5820],[70,6720]],
+    'Marathon':     [[18,7377],[35,7560],[40,7890],[45,8340],[50,8910],[55,9720],[60,10800],[65,12060],[70,13920]],
+  },
+  F: {
+    '5K':           [[18,855],[35,885],[40,922],[45,975],[50,1050],[55,1155],[60,1290],[65,1470],[70,1710]],
+    '10K':          [[18,1771],[35,1830],[40,1908],[45,2010],[50,2160],[55,2370],[60,2640],[65,3000],[70,3480]],
+    'Half Marathon':[[18,3975],[35,4110],[40,4290],[45,4530],[50,4890],[55,5370],[60,6000],[65,6840],[70,7920]],
+    'Marathon':     [[18,8231],[35,8520],[40,8910],[45,9420],[50,10140],[55,11100],[60,12420],[65,14100],[70,16320]],
+  },
+}
+
+function getAgeGradeStandard(gender: string, distLabel: string, age: number): number | null {
+  const table = (AGE_GRADE_STANDARDS[gender] ?? {})[distLabel]
+  if (!table) return null
+  let std: number | null = null
+  for (const [ageFrom, secs] of table) {
+    if (age >= ageFrom) std = secs
+  }
+  return std
+}
+
+function parseTimeToSecs(str: string | undefined): number | null {
+  if (!str) return null
+  const p = str.trim().split(':').map(Number)
+  if (p.some(isNaN) || p.length === 0) return null
+  if (p.length === 3) return p[0] * 3600 + p[1] * 60 + p[2]
+  if (p.length === 2) return p[0] * 60 + p[1]
+  return null
+}
+
+interface AgeGradeResult { pct: number; distance: string; raceName: string; raceDate: string }
+
+function computeAgeGradeForRace(
+  race: Race,
+  gender: string | undefined,
+  age: number | null,
+): number | null {
+  if (!gender || !age) return null
+  const dl = distLabel(race.distance)
+  const std = getAgeGradeStandard(gender, dl, age)
+  if (!std || !race.time) return null
+  const secs = parseTimeToSecs(race.time)
+  if (!secs) return null
+  return Math.min(100, (std / secs) * 100)
+}
+
+interface SigDistEntry {
+  distance: string
+  race: Race
+  score: number
+  label: string
+  metric: 'age-grade' | 'pace' | 'speed'
+}
+
+function computeSignatureDistances(
+  races: Race[],
+  gender: string | undefined,
+  age: number | null,
+): SigDistEntry[] {
+  // build PBs by distance
+  const pbMap: Record<string, Race> = {}
+  for (const r of races) {
+    if (!r.time || !r.distance) continue
+    if (!pbMap[r.distance] || r.time < pbMap[r.distance].time!) pbMap[r.distance] = r
+  }
+
+  const entries: SigDistEntry[] = []
+  for (const [, race] of Object.entries(pbMap)) {
+    const ageGrade = computeAgeGradeForRace(race, gender, age)
+    const secs = parseTimeToSecs(race.time)
+    const distKm = parseFloat(race.distance) || 0
+    const isRunning = ['run', 'ultra', 'hyrox'].includes(race.sport ?? 'run')
+    const speedScore = secs && distKm ? distKm / (secs / 3600) : 0
+    const paceSecsPerKm = isRunning && distKm > 0 && secs ? secs / distKm : 0
+    const paceLabel = paceSecsPerKm > 0
+      ? `${Math.floor(paceSecsPerKm / 60)}:${String(Math.round(paceSecsPerKm % 60)).padStart(2, '0')}/km`
+      : `${speedScore.toFixed(1)} km/h`
+    entries.push({
+      distance: distLabel(race.distance),
+      race,
+      score: ageGrade ?? speedScore,
+      label: ageGrade ? `${ageGrade.toFixed(1)}% age-grade` : paceLabel,
+      metric: ageGrade ? 'age-grade' : isRunning ? 'pace' : 'speed',
+    })
+  }
+  return entries.sort((a, b) => b.score - a.score).slice(0, 3)
+}
+
+function computeAgeGradeHistory(
+  races: Race[],
+  gender: string | undefined,
+  age: number | null,
+): AgeGradeResult[] {
+  const COVERED = new Set(['5K', '10K', 'Half Marathon', 'Marathon'])
+  return races
+    .filter(r => r.time && r.date && COVERED.has(distLabel(r.distance)))
+    .map(r => {
+      const pct = computeAgeGradeForRace(r, gender, age)
+      return pct ? { pct, distance: distLabel(r.distance), raceName: r.name ?? '', raceDate: r.date } : null
+    })
+    .filter((x): x is AgeGradeResult => x !== null)
+    .sort((a, b) => a.raceDate.localeCompare(b.raceDate))
+}
 
 function buildPBByDist(races: Race[]): Array<{ key: string; label: string; race: Race }> {
   const map: Record<string, Race> = {}
@@ -683,26 +794,180 @@ function PersonalBests() {
   )
 }
 
+// ─── Signature Distances ──────────────────────────────────────────────────────
+
+function SignatureDistances() {
+  const races   = useRaceStore(selectRaces)
+  const athlete = useAthleteStore(selectAthlete)
+
+  const age    = useMemo(() => computeAge(athlete?.dob), [athlete?.dob])
+  const gender = athlete?.gender
+
+  const top = useMemo(
+    () => computeSignatureDistances(races, gender, age),
+    [races, gender, age],
+  )
+
+  if (top.length === 0) {
+    return (
+      <div style={st.section}>
+        <div style={st.sectionTitle}>SIGNATURE DISTANCES</div>
+        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', padding: '8px 0', lineHeight: 1.6 }}>
+          Log a few more timed races to see which distances are becoming your signature.
+        </div>
+      </div>
+    )
+  }
+
+  const rankColors = ['var(--orange)', 'var(--white)', 'var(--muted)']
+
+  return (
+    <div style={st.section}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
+        <div style={st.sectionTitle}>SIGNATURE DISTANCES</div>
+        <div style={{ height: '1px', flex: 1, background: 'var(--border)' }} />
+      </div>
+      <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '12px', fontFamily: 'var(--headline)', fontWeight: 600, letterSpacing: '0.06em' }}>
+        {gender && age ? 'RANKED BY AGE-GRADE WHEN AVAILABLE' : 'RANKED BY PACE / SPEED'}
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {top.map((item, i) => (
+          <div
+            key={item.distance}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              background: 'var(--surface2)',
+              border: `1px solid ${i === 0 ? 'rgba(var(--orange-ch),0.3)' : 'var(--border)'}`,
+              borderRadius: '10px',
+              padding: '12px 14px',
+            }}
+          >
+            <div style={{
+              fontFamily: 'var(--headline)',
+              fontWeight: 900,
+              fontSize: '22px',
+              color: rankColors[i],
+              width: '20px',
+              flexShrink: 0,
+              textAlign: 'center',
+              lineHeight: 1,
+            }}>
+              {i + 1}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', lineHeight: 1.1 }}>
+                {item.distance}
+              </div>
+              <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {item.race.name ?? ''} · {item.race.time}
+              </div>
+            </div>
+            <div style={{
+              fontFamily: 'var(--headline)',
+              fontWeight: 800,
+              fontSize: '12px',
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase',
+              color: item.metric === 'age-grade' ? 'var(--orange)' : 'var(--white)',
+              flexShrink: 0,
+              textAlign: 'right',
+            }}>
+              {item.label}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ─── Age-Grade Trajectory ─────────────────────────────────────────────────────
 
 function AgeGradeTrajectory() {
-  const athlete = useAthleteStore(selectAthlete)
+  const athlete    = useAthleteStore(selectAthlete)
+  const races      = useRaceStore(selectRaces)
   const hasProfile = !!(athlete?.dob && athlete?.gender)
+  const age        = useMemo(() => computeAge(athlete?.dob), [athlete?.dob])
 
-  return (
-    <div style={{ ...st.section, padding: '20px' }}>
-      <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '20px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', lineHeight: 1.1, marginBottom: '12px' }}>
-        AGE-GRADE TRAJECTORY
-      </div>
-      {!hasProfile ? (
-        <div style={{ fontSize: '14px', color: 'var(--muted)', lineHeight: 1.6 }}>
+  const history = useMemo(
+    () => hasProfile ? computeAgeGradeHistory(races, athlete?.gender, age) : [],
+    [races, athlete?.gender, age, hasProfile],
+  )
+
+  if (!hasProfile) {
+    return (
+      <div style={st.section}>
+        <div style={st.sectionTitle}>AGE-GRADE TRAJECTORY</div>
+        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', padding: '8px 0', lineHeight: 1.6 }}>
           Add your date of birth and gender in profile to unlock age-grade scoring.
         </div>
-      ) : (
-        <div style={{ fontSize: '14px', color: 'var(--muted)', lineHeight: 1.6 }}>
-          Log 5K, 10K, Half Marathon, or Marathon races to see your trajectory.
+      </div>
+    )
+  }
+
+  if (history.length < 2) {
+    return (
+      <div style={st.section}>
+        <div style={st.sectionTitle}>AGE-GRADE TRAJECTORY</div>
+        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', padding: '8px 0', lineHeight: 1.6 }}>
+          Log at least two 5K / 10K / Half / Marathon results to see your age-grade trend.
         </div>
-      )}
+      </div>
+    )
+  }
+
+  // SVG sparkline
+  const W = 300; const H = 56
+  const pcts = history.map(h => h.pct)
+  const minP = Math.min(...pcts); const maxP = Math.max(...pcts)
+  const range = maxP - minP || 1
+  const pts = history.map((h, i) => {
+    const x = (i / (history.length - 1)) * W
+    const y = H - ((h.pct - minP) / range) * (H - 8) - 4
+    return `${x.toFixed(1)},${y.toFixed(1)}`
+  }).join(' ')
+  const latestPct = pcts[pcts.length - 1]
+
+  return (
+    <div style={st.section}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
+        <div style={st.sectionTitle}>AGE-GRADE</div>
+        <div style={{ height: '1px', flex: 1, background: 'var(--border)' }} />
+        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', color: 'var(--orange)', letterSpacing: '0.02em' }}>
+          {latestPct.toFixed(1)}%
+        </div>
+      </div>
+      <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 600, letterSpacing: '0.08em', marginBottom: '12px' }}>
+        WA ROAD-RACE STANDARD · {history.length} RESULTS
+      </div>
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: `${H}px`, display: 'block', marginBottom: '14px' }}>
+        <polyline
+          points={pts}
+          fill="none"
+          stroke="var(--orange)"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        {history.map((h, i) => {
+          const x = (i / (history.length - 1)) * W
+          const y = H - ((h.pct - minP) / range) * (H - 8) - 4
+          return (
+            <circle key={i} cx={x} cy={y} r="3" fill="var(--orange)" />
+          )
+        })}
+      </svg>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        {history.slice(-5).reverse().map((h, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px' }}>
+            <div style={{ color: 'var(--muted)', width: '80px', flexShrink: 0, fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '10px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{h.raceDate.slice(0, 7)}</div>
+            <div style={{ color: 'var(--muted)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.distance} · {h.raceName}</div>
+            <div style={{ color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '12px', flexShrink: 0 }}>{h.pct.toFixed(1)}%</div>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
@@ -1211,9 +1476,96 @@ function GoalsSection() {
 
 // ─── Profile Page ─────────────────────────────────────────────────────────────
 
+// ─── Onboarding Banner ───────────────────────────────────────────────────────
+
+function getProfileCompleteness(ath: ReturnType<typeof selectAthlete>): { filled: number; total: number } {
+  const fields = [
+    ath?.firstName, ath?.lastName, ath?.mainSport,
+    ath?.city, ath?.country, ath?.dob, ath?.gender,
+  ]
+  return { filled: fields.filter(Boolean).length, total: fields.length }
+}
+
+function OnboardingBanner({ onEdit }: { onEdit: () => void }) {
+  const athlete  = useAthleteStore(selectAthlete)
+  const navigate = useNavigate()
+  const isNew = !!localStorage.getItem('bt_new_user')
+
+  if (!isNew) return null
+
+  const { filled, total } = getProfileCompleteness(athlete)
+  const complete = filled >= total
+
+  return (
+    <div style={{
+      background: complete ? 'rgba(var(--green-ch),0.08)' : 'rgba(var(--orange-ch),0.08)',
+      border: `1px solid ${complete ? 'rgba(var(--green-ch),0.3)' : 'rgba(var(--orange-ch),0.3)'}`,
+      borderRadius: '12px',
+      padding: '16px',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '12px',
+      marginBottom: '4px',
+    }}>
+      <span style={{ fontSize: '20px' }}>{complete ? '✅' : '👋'}</span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', letterSpacing: '0.04em', textTransform: 'uppercase', color: complete ? 'var(--green)' : 'var(--orange)', lineHeight: 1.1 }}>
+          {complete ? 'Profile Complete' : `Profile ${filled}/${total} Complete`}
+        </div>
+        <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '2px', lineHeight: 1.4 }}>
+          {complete
+            ? 'Your profile is ready.'
+            : 'Fill in your details to unlock the full experience.'}
+        </div>
+      </div>
+      <button
+        onClick={() => {
+          if (complete) {
+            localStorage.removeItem('bt_new_user')
+            navigate('/')
+          } else {
+            onEdit()
+          }
+        }}
+        style={{
+          flexShrink: 0,
+          background: complete ? 'var(--green)' : 'var(--orange)',
+          color: '#000',
+          border: 'none',
+          borderRadius: '8px',
+          padding: '8px 14px',
+          fontFamily: 'var(--headline)',
+          fontWeight: 800,
+          fontSize: '12px',
+          letterSpacing: '0.08em',
+          textTransform: 'uppercase',
+          cursor: 'pointer',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {complete ? 'Go to Dashboard →' : 'Edit Profile'}
+      </button>
+    </div>
+  )
+}
+
+// ─── Profile Page ─────────────────────────────────────────────────────────────
+
 export function Profile() {
   const authUser = useAuthStore(selectAuthUser)
   const [showEdit, setShowEdit] = useState(false)
+
+  // Auto-open edit modal 300ms after mount for new users (once per device)
+  useEffect(() => {
+    if (!authUser) return
+    if (localStorage.getItem('bt_new_user') && !localStorage.getItem('bt_modal_shown')) {
+      const t = setTimeout(() => {
+        localStorage.setItem('bt_modal_shown', '1')
+        setShowEdit(true)
+      }, 300)
+      return () => clearTimeout(t)
+    }
+  }, [authUser])
 
   if (!authUser) {
     return (
@@ -1229,11 +1581,13 @@ export function Profile() {
   return (
     <div style={st.page}>
       {showEdit && <EditProfileModal onClose={() => setShowEdit(false)} />}
+      <OnboardingBanner onEdit={() => { localStorage.setItem('bt_modal_shown', '1'); setShowEdit(true) }} />
       <AthleteHero onEdit={() => setShowEdit(true)} />
       <MedalWall />
       <AchievementsSection />
       <CountriesRaced />
       <PersonalBests />
+      <SignatureDistances />
       <AgeGradeTrajectory />
       <RaceActivityHeatmap />
       <MajorsQualifiers />
