@@ -3336,6 +3336,106 @@ function WhatToRaceNextWidget() {
   )
 }
 
+// ─── Story Mode widget ────────────────────────────────────────────────────────
+
+function StoryModeWidget() {
+  const races = useRaceStore(selectRaces)
+  const year  = new Date().getFullYear()
+
+  const story = useMemo(() => {
+    if (!races.length) return null
+    const thisYear = races.filter(r => (r.date ?? '').startsWith(String(year)))
+    if (!thisYear.length) return null
+    const countries = new Set(thisYear.map(r => r.country).filter(Boolean)).size
+    const medals    = thisYear.filter(r => r.medal && r.medal !== '').length
+    return {
+      raceCount: thisYear.length,
+      countries,
+      medals,
+      headline: `${thisYear.length} race${thisYear.length !== 1 ? 's' : ''} across ${countries || 1} countr${countries === 1 ? 'y' : 'ies'}`,
+    }
+  }, [races, year])
+
+  if (!story) {
+    return (
+      <div className="card-v3">
+        <div style={st.widgetLabel}>STORY MODE</div>
+        <div style={st.widgetTitle}>{year} RECAP</div>
+        <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5, marginTop: 4 }}>
+          Log races through the year to unlock annual recaps and season highlights.
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="card-v3">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <div style={st.widgetLabel}>STORY MODE</div>
+          <div style={st.widgetTitle}>{year} RECAP</div>
+        </div>
+        <span style={{ fontSize: 22 }}>📖</span>
+      </div>
+      <div style={{ fontSize: '13px', color: 'var(--white)', lineHeight: 1.5, marginTop: 6 }}>{story.headline}</div>
+      <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+        {[
+          { label: 'RACES', value: story.raceCount },
+          { label: 'COUNTRIES', value: story.countries || 1 },
+          { label: 'MEDALS', value: story.medals },
+        ].map(({ label, value }) => (
+          <div key={label} style={{ flex: 1, background: 'var(--surface3)', borderRadius: 6, padding: '8px 6px', textAlign: 'center' }}>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 20, color: 'var(--orange)' }}>{value}</div>
+            <div style={{ fontSize: 9, color: 'var(--muted)', fontFamily: 'var(--headline)', letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 2 }}>{label}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 8 }}>
+        Annual recap and season cards build on this data.
+      </div>
+    </div>
+  )
+}
+
+// ─── Coach Activity widget ────────────────────────────────────────────────────
+
+function CoachActivityWidget() {
+  const coachRelationships: unknown[] = useMemo(() => {
+    try { return JSON.parse(localStorage.getItem('fl2_coach_relationships') ?? '[]') } catch { return [] }
+  }, [])
+  const coachComments: unknown[] = useMemo(() => {
+    try { return JSON.parse(localStorage.getItem('fl2_coach_comments') ?? '[]') } catch { return [] }
+  }, [])
+
+  const relCount = coachRelationships.length
+  const comCount = coachComments.length
+
+  return (
+    <div className="card-v3">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <div style={st.widgetLabel}>COACH ACTIVITY</div>
+          <div style={st.widgetTitle}>SHARED VIEW</div>
+        </div>
+        <span style={{ fontSize: 22, background: 'rgba(var(--orange-ch),0.1)', borderRadius: 8, padding: '4px 8px' }}>{relCount}</span>
+      </div>
+      <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5, marginTop: 6 }}>
+        {relCount
+          ? `${relCount} coach connection${relCount > 1 ? 's' : ''} active.`
+          : 'Coach mode scaffold ready for shared athlete review.'}
+      </div>
+      {comCount > 0 && (
+        <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>
+          {comCount} coach comment{comCount > 1 ? 's' : ''} logged.
+        </div>
+      )}
+      <div style={{ marginTop: 10, fontSize: 11, color: 'var(--muted)', background: 'var(--surface3)', borderRadius: 6, padding: '8px 10px' }}>
+        Coach mode coming soon — shared views, annotations, and training comments.
+      </div>
+    </div>
+  )
+}
+
 // ─── Zone accordion ───────────────────────────────────────────────────────────
 
 interface ZoneProps {
@@ -3917,6 +4017,7 @@ export function Dashboard() {
         {en('why-prd')        && <WhyPRdWidget />}
         {en('why-faded')      && <WhyFadedWidget />}
         {en('break-tape')     && <BreakTapeWidget />}
+        {en('story-mode')     && <StoryModeWidget />}
       </DashZone>
 
       {/* CONSISTENCY — BUILD */}
@@ -3946,6 +4047,7 @@ export function Dashboard() {
         {en('advanced-race-dna') && <AdvancedRaceDNAWidget />}
         {en('race-comparer')     && <RaceComparerWidget />}
         {en('what-to-race-next') && <WhatToRaceNextWidget />}
+        {en('coach-activity')    && <CoachActivityWidget />}
       </DashZone>
 
       <PaceCalculator />

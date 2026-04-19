@@ -7,6 +7,7 @@ import { TimePickerWheel, type HMS } from '@/components/TimePickerWheel'
 import type { Race, Split } from '@/types'
 import { useUnits, fmtDistKm, distUnit, fmtPaceSecPerKm, computePaceSecPerKm } from '@/lib/units'
 import { getClaudeApiKey, importRaceScreenshot } from '@/lib/claude'
+import { removeMedalBackground } from '@/lib/removeBg'
 
 // ─── Config (mirrors AddRaceModal) ──────────────────────────────────────────
 
@@ -395,6 +396,9 @@ function EditPanel({ race, onSave, onCancel }: { race: Race; onSave: (patch: Par
   const [elevation, setElevation] = useState(race.elevation != null ? String(race.elevation) : '')
   const [surface, setSurface]   = useState(race.surface ?? '')
   const [splits, setSplits]     = useState<Split[]>(race.splits ?? [])
+  const [medalPhoto, setMedalPhoto]   = useState<string | undefined>(race.medalPhoto)
+  const [bgRemoving, setBgRemoving]   = useState(false)
+  const medalInputRef = useRef<HTMLInputElement>(null)
 
   // Screenshot import state
   const [screenshotParsing, setScreenshotParsing] = useState(false)
@@ -404,6 +408,26 @@ function EditPanel({ race, onSave, onCancel }: { race: Race; onSave: (patch: Par
   const sportDists = DISTANCES_BY_SPORT[sport] ?? []
   const isCustomDist = CUSTOM_DIST_VALUES.includes(distance)
   const showTime = outcome === 'Finished'
+
+  async function handleMedalPhotoSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = ''
+    // Show original preview immediately
+    const originalUrl = URL.createObjectURL(file)
+    setMedalPhoto(originalUrl)
+    // Auto-remove background
+    setBgRemoving(true)
+    try {
+      const processed = await removeMedalBackground(file)
+      setMedalPhoto(processed)
+    } catch {
+      // Keep original if removal fails — not a blocking error
+    } finally {
+      setBgRemoving(false)
+      URL.revokeObjectURL(originalUrl)
+    }
+  }
 
   async function handleScreenshotImport(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -467,6 +491,7 @@ function EditPanel({ race, onSave, onCancel }: { race: Race; onSave: (patch: Par
       elevation: elevation ? Number(elevation) : undefined,
       surface: surface || undefined,
       splits: splits.length > 0 ? splits : undefined,
+      medalPhoto: medalPhoto ?? undefined,
     }
     onSave(patch)
   }
@@ -581,6 +606,44 @@ function EditPanel({ race, onSave, onCancel }: { race: Race; onSave: (patch: Par
             placeholder="e.g. Sub-3 Finisher"
           />
         )}
+      </Field>
+
+      <Field label="Medal Photo">
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+          {/* Preview tile */}
+          {medalPhoto && (
+            <div style={{ position: 'relative', flexShrink: 0 }}>
+              <img
+                src={medalPhoto}
+                alt="Medal"
+                style={{ width: 72, height: 72, objectFit: 'contain', borderRadius: 6, background: 'var(--surface3)', border: '1px solid var(--border)' }}
+              />
+              {bgRemoving && (
+                <div style={{ position: 'absolute', inset: 0, background: 'rgba(13,13,13,0.7)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ fontSize: 18 }}>✨</span>
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => setMedalPhoto(undefined)}
+                style={{ position: 'absolute', top: -6, right: -6, width: 18, height: 18, borderRadius: '50%', background: 'var(--surface3)', border: '1px solid var(--border2)', color: 'var(--muted)', fontSize: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+              >×</button>
+            </div>
+          )}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
+            <button
+              type="button"
+              onClick={() => medalInputRef.current?.click()}
+              style={{ ...st.input, cursor: 'pointer', textAlign: 'left', color: 'var(--muted)', fontSize: 13 }}
+            >
+              {bgRemoving ? '✨ Removing background…' : medalPhoto ? '↺ Replace photo' : '📷 Upload medal photo'}
+            </button>
+            <span style={{ fontSize: 11, color: 'var(--muted)', lineHeight: 1.4 }}>
+              Background removed automatically
+            </span>
+            <input ref={medalInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleMedalPhotoSelect} />
+          </div>
+        </div>
       </Field>
 
       <Field label="Priority">

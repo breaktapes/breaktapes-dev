@@ -45,6 +45,8 @@ const DEFAULT_WIDGETS: DashWidget[] = [
   { id: 'advanced-race-dna',label: 'Advanced Race DNA',         icon: '🧬', zone: 'context',  enabled: false, pro: true  },
   { id: 'race-comparer',    label: 'Race Comparer',             icon: '⚖️', zone: 'context',  enabled: false, pro: true  },
   { id: 'what-to-race-next',label: 'What To Race Next',         icon: '🗺', zone: 'context',  enabled: false, pro: true  },
+  { id: 'story-mode',       label: 'Story Mode',                icon: '📖', zone: 'recently', enabled: true,  pro: false },
+  { id: 'coach-activity',   label: 'Coach Activity',            icon: '🎽', zone: 'context',  enabled: false, pro: true  },
 ]
 
 const DEFAULT_ZONE_COLLAPSE: DashZoneCollapse = {
