@@ -1,5 +1,5 @@
 // Claude API wrapper for AI race parsing features.
-// API key is user-supplied, stored in localStorage under 'fl2_claude_key'.
+// API key is user-supplied, stored in localStorage under 'fl2_apikey' (V1 key name, kept for migration compatibility).
 
 export interface ParsedRace {
   name?: string
@@ -19,7 +19,16 @@ interface ClaudeMessage {
 }
 
 export function getClaudeApiKey(): string {
-  return localStorage.getItem('fl2_claude_key') ?? ''
+  // 'fl2_apikey' matches V1 localStorage key — users migrating from V1 keep their key automatically
+  return localStorage.getItem('fl2_apikey') ?? ''
+}
+
+export function setClaudeApiKey(key: string): void {
+  if (key) {
+    localStorage.setItem('fl2_apikey', key)
+  } else {
+    localStorage.removeItem('fl2_apikey')
+  }
 }
 
 async function callClaude(messages: ClaudeMessage[], apiKey: string): Promise<string> {
@@ -29,6 +38,8 @@ async function callClaude(messages: ClaudeMessage[], apiKey: string): Promise<st
       'x-api-key': apiKey,
       'anthropic-version': '2023-06-01',
       'content-type': 'application/json',
+      // Required for direct browser-to-Anthropic API calls (CORS policy)
+      'anthropic-dangerous-direct-browser-access': 'true',
     },
     body: JSON.stringify({
       model: 'claude-haiku-4-5-20251001',

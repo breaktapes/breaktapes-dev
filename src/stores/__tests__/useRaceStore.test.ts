@@ -15,7 +15,11 @@ function makeRace(overrides: Partial<Race> = {}): Race {
   }
 }
 
-const TODAY = new Date().toISOString().split('T')[0]
+function localToday() {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+const TODAY = localToday()
 const FUTURE = '2099-01-01'
 const PAST   = '2000-01-01'
 
@@ -112,5 +116,94 @@ describe('useRaceStore — nextRace auto-promote (Session 13 regression)', () =>
     useRaceStore.setState({ nextRace: null, upcomingRaces: [todayRace] })
     useRaceStore.getState().promoteNextRace()
     expect(useRaceStore.getState().nextRace?.id).toBe(todayRace.id)
+  })
+})
+
+// ── V1 → V2 localStorage migration (cutover safety) ──────────────────────────
+// Uses persist.rehydrate() to trigger the real onRehydrateStorage path.
+// Setup: write empty Zustand wrapper to fl2_races so rehydrate has a valid base.
+
+function emptyRaceStorage() {
+  window.localStorage.setItem('fl2_races', JSON.stringify({
+    state: { races: [], upcomingRaces: [], wishlistRaces: [], nextRace: null, focusRaceId: null },
+    version: 0,
+  }))
+}
+
+describe('useRaceStore — V1 localStorage migration', () => {
+  beforeEach(() => {
+    window.localStorage.clear()
+    useRaceStore.setState({
+      races: [],
+      upcomingRaces: [],
+      wishlistRaces: [],
+      nextRace: null,
+      focusRaceId: null,
+    })
+  })
+
+  it('migrates fl2_upcoming → upcomingRaces on rehydration', async () => {
+    const upcoming = [makeRace({ date: FUTURE, name: 'Upcoming Race' })]
+    emptyRaceStorage()
+    window.localStorage.setItem('fl2_upcoming', JSON.stringify(upcoming))
+
+    await useRaceStore.persist.rehydrate()
+
+    expect(useRaceStore.getState().upcomingRaces).toHaveLength(1)
+    expect(useRaceStore.getState().upcomingRaces[0].name).toBe('Upcoming Race')
+  })
+
+  it('does not overwrite existing upcomingRaces with fl2_upcoming', async () => {
+    const existing = makeRace({ date: FUTURE, name: 'Already migrated' })
+    window.localStorage.setItem('fl2_races', JSON.stringify({
+      state: { races: [], upcomingRaces: [existing], wishlistRaces: [], nextRace: null, focusRaceId: null },
+      version: 0,
+    }))
+    window.localStorage.setItem('fl2_upcoming', JSON.stringify([makeRace({ name: 'Old V1 race' })]))
+
+    await useRaceStore.persist.rehydrate()
+
+    expect(useRaceStore.getState().upcomingRaces[0].name).toBe('Already migrated')
+  })
+
+  it('migrates fl2_wishlist → wishlistRaces on rehydration', async () => {
+    const wishlist = [makeRace({ name: 'Dream Race' })]
+    emptyRaceStorage()
+    window.localStorage.setItem('fl2_wishlist', JSON.stringify(wishlist))
+
+    await useRaceStore.persist.rehydrate()
+
+    expect(useRaceStore.getState().wishlistRaces).toHaveLength(1)
+    expect(useRaceStore.getState().wishlistRaces[0].name).toBe('Dream Race')
+  })
+
+  it('migrates fl2_focus_race_id → focusRaceId on rehydration', async () => {
+    emptyRaceStorage()
+    window.localStorage.setItem('fl2_focus_race_id', 'race-abc-123')
+
+    await useRaceStore.persist.rehydrate()
+
+    expect(useRaceStore.getState().focusRaceId).toBe('race-abc-123')
+  })
+
+  it('does not overwrite existing focusRaceId with fl2_focus_race_id', async () => {
+    window.localStorage.setItem('fl2_races', JSON.stringify({
+      state: { races: [], upcomingRaces: [], wishlistRaces: [], nextRace: null, focusRaceId: 'already-set' },
+      version: 0,
+    }))
+    window.localStorage.setItem('fl2_focus_race_id', 'old-v1-id')
+
+    await useRaceStore.persist.rehydrate()
+
+    expect(useRaceStore.getState().focusRaceId).toBe('already-set')
+  })
+
+  it('handles missing or malformed fl2_upcoming gracefully', async () => {
+    emptyRaceStorage()
+    window.localStorage.setItem('fl2_upcoming', 'not-valid-json{{{')
+
+    await expect(useRaceStore.persist.rehydrate()).resolves.not.toThrow()
+
+    expect(useRaceStore.getState().upcomingRaces).toHaveLength(0)
   })
 })

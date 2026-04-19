@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { useAuthStore } from '@/stores/useAuthStore'
@@ -6,6 +7,7 @@ import { selectRaces, selectNextRace, selectAthlete, selectAuthUser } from '@/st
 import { EditProfileModal } from '@/components/EditProfileModal'
 import type { Race } from '@/types'
 import { useUnits, distUnit } from '@/lib/units'
+import { supabase } from '@/lib/supabase'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -80,6 +82,116 @@ function distLabel(d: string | undefined): string {
 }
 
 const DIST_ORDER: string[] = ['5', '10', '21.1', '42.2', '1.5', '3', '15', '20', '25', '30', '50', '100']
+
+// ─── Age-Grade Standards (WA road-race tables) ────────────────────────────────
+
+const AGE_GRADE_STANDARDS: Record<string, Record<string, Array<[number, number]>>> = {
+  M: {
+    '5K':           [[18,757],[35,780],[40,808],[45,852],[50,913],[55,1002],[60,1110],[65,1254],[70,1440]],
+    '10K':          [[18,1571],[35,1620],[40,1680],[45,1770],[50,1890],[55,2070],[60,2295],[65,2580],[70,2970]],
+    'Half Marathon':[[18,3561],[35,3660],[40,3810],[45,4020],[50,4290],[55,4680],[60,5190],[65,5820],[70,6720]],
+    'Marathon':     [[18,7377],[35,7560],[40,7890],[45,8340],[50,8910],[55,9720],[60,10800],[65,12060],[70,13920]],
+  },
+  F: {
+    '5K':           [[18,855],[35,885],[40,922],[45,975],[50,1050],[55,1155],[60,1290],[65,1470],[70,1710]],
+    '10K':          [[18,1771],[35,1830],[40,1908],[45,2010],[50,2160],[55,2370],[60,2640],[65,3000],[70,3480]],
+    'Half Marathon':[[18,3975],[35,4110],[40,4290],[45,4530],[50,4890],[55,5370],[60,6000],[65,6840],[70,7920]],
+    'Marathon':     [[18,8231],[35,8520],[40,8910],[45,9420],[50,10140],[55,11100],[60,12420],[65,14100],[70,16320]],
+  },
+}
+
+function getAgeGradeStandard(gender: string, distLabel: string, age: number): number | null {
+  const table = (AGE_GRADE_STANDARDS[gender] ?? {})[distLabel]
+  if (!table) return null
+  let std: number | null = null
+  for (const [ageFrom, secs] of table) {
+    if (age >= ageFrom) std = secs
+  }
+  return std
+}
+
+function parseTimeToSecs(str: string | undefined): number | null {
+  if (!str) return null
+  const p = str.trim().split(':').map(Number)
+  if (p.some(isNaN) || p.length === 0) return null
+  if (p.length === 3) return p[0] * 3600 + p[1] * 60 + p[2]
+  if (p.length === 2) return p[0] * 60 + p[1]
+  return null
+}
+
+interface AgeGradeResult { pct: number; distance: string; raceName: string; raceDate: string }
+
+function computeAgeGradeForRace(
+  race: Race,
+  gender: string | undefined,
+  age: number | null,
+): number | null {
+  if (!gender || !age) return null
+  const dl = distLabel(race.distance)
+  const std = getAgeGradeStandard(gender, dl, age)
+  if (!std || !race.time) return null
+  const secs = parseTimeToSecs(race.time)
+  if (!secs) return null
+  return Math.min(100, (std / secs) * 100)
+}
+
+interface SigDistEntry {
+  distance: string
+  race: Race
+  score: number
+  label: string
+  metric: 'age-grade' | 'pace' | 'speed'
+}
+
+function computeSignatureDistances(
+  races: Race[],
+  gender: string | undefined,
+  age: number | null,
+): SigDistEntry[] {
+  // build PBs by distance
+  const pbMap: Record<string, Race> = {}
+  for (const r of races) {
+    if (!r.time || !r.distance) continue
+    if (!pbMap[r.distance] || r.time < pbMap[r.distance].time!) pbMap[r.distance] = r
+  }
+
+  const entries: SigDistEntry[] = []
+  for (const [, race] of Object.entries(pbMap)) {
+    const ageGrade = computeAgeGradeForRace(race, gender, age)
+    const secs = parseTimeToSecs(race.time)
+    const distKm = parseFloat(race.distance) || 0
+    const isRunning = ['run', 'ultra', 'hyrox'].includes(race.sport ?? 'run')
+    const speedScore = secs && distKm ? distKm / (secs / 3600) : 0
+    const paceSecsPerKm = isRunning && distKm > 0 && secs ? secs / distKm : 0
+    const paceLabel = paceSecsPerKm > 0
+      ? `${Math.floor(paceSecsPerKm / 60)}:${String(Math.round(paceSecsPerKm % 60)).padStart(2, '0')}/km`
+      : `${speedScore.toFixed(1)} km/h`
+    entries.push({
+      distance: distLabel(race.distance),
+      race,
+      score: ageGrade ?? speedScore,
+      label: ageGrade ? `${ageGrade.toFixed(1)}% age-grade` : paceLabel,
+      metric: ageGrade ? 'age-grade' : isRunning ? 'pace' : 'speed',
+    })
+  }
+  return entries.sort((a, b) => b.score - a.score).slice(0, 3)
+}
+
+function computeAgeGradeHistory(
+  races: Race[],
+  gender: string | undefined,
+  age: number | null,
+): AgeGradeResult[] {
+  const COVERED = new Set(['5K', '10K', 'Half Marathon', 'Marathon'])
+  return races
+    .filter(r => r.time && r.date && COVERED.has(distLabel(r.distance)))
+    .map(r => {
+      const pct = computeAgeGradeForRace(r, gender, age)
+      return pct ? { pct, distance: distLabel(r.distance), raceName: r.name ?? '', raceDate: r.date } : null
+    })
+    .filter((x): x is AgeGradeResult => x !== null)
+    .sort((a, b) => a.raceDate.localeCompare(b.raceDate))
+}
 
 function buildPBByDist(races: Race[]): Array<{ key: string; label: string; race: Race }> {
   const map: Record<string, Race> = {}
@@ -297,6 +409,62 @@ function AthleteHero({ onEdit }: { onEdit: () => void }) {
   )
 }
 
+// ─── Community medals ─────────────────────────────────────────────────────────
+
+const COMM_CACHE_TTL = 5 * 60 * 1000 // 5 min
+
+/** Matches V1 getRaceKey: slug from race name + year */
+function getRaceKey(race: Race): string {
+  const year = (race.date || '').slice(0, 4)
+  const slug = (race.name || '')
+    .replace(/\s+\d{4}$/, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+  return year ? `${slug}-${year}` : slug
+}
+
+/** Returns map of raceKey → photo_url loaded from race_medal_photos table. */
+function useCommunityMedals(raceKeys: string[]): Record<string, string> {
+  const [photos, setPhotos] = useState<Record<string, string>>(() => {
+    try {
+      const raw = JSON.parse(localStorage.getItem('fl2_comm_medals') ?? 'null')
+      if (raw && typeof raw === 'object' && Date.now() - (raw.ts ?? 0) < COMM_CACHE_TTL) {
+        return raw.data ?? {}
+      }
+    } catch { /* ignore */ }
+    return {}
+  })
+  const fetchedRef = useRef(false)
+
+  useEffect(() => {
+    if (!raceKeys.length || fetchedRef.current) return
+    // Check cache freshness
+    try {
+      const raw = JSON.parse(localStorage.getItem('fl2_comm_medals') ?? 'null')
+      if (raw && typeof raw === 'object' && Date.now() - (raw.ts ?? 0) < COMM_CACHE_TTL) return
+    } catch { /* ignore */ }
+    fetchedRef.current = true
+    supabase
+      .from('race_medal_photos')
+      .select('race_key, variant, photo_url')
+      .in('race_key', raceKeys)
+      .then(({ data, error }) => {
+        if (error || !data) return
+        const map: Record<string, string> = {}
+        data.forEach(row => {
+          const k = row.variant ? `${row.race_key}::${row.variant}` : row.race_key
+          map[k] = row.photo_url
+        })
+        setPhotos(map)
+        localStorage.setItem('fl2_comm_medals', JSON.stringify({ ts: Date.now(), data: map }))
+      })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [raceKeys.join(',')])
+
+  return photos
+}
+
 // ─── Medal Wall ───────────────────────────────────────────────────────────────
 
 const MEDAL_COLORS: Record<string, { bg: string; border: string; text: string; label: string }> = {
@@ -333,6 +501,10 @@ function MedalWall() {
     }
     return map
   }, [races])
+
+  // Community photos — keyed by raceKey (or raceKey::variant for Comrades)
+  const raceKeys = useMemo(() => medalRaces.map(getRaceKey), [medalRaces])
+  const communityPhotos = useCommunityMedals(raceKeys)
 
   const tierCounts = useMemo(() => {
     const counts: Record<MedalTier, number> = { gold: 0, silver: 0, bronze: 0, finisher: 0 }
@@ -378,7 +550,10 @@ function MedalWall() {
               const tier  = medalTier(r.medal!)
               const col   = MEDAL_COLORS[tier]
               const isPB  = r.time && r.distance && pbMap[r.distance] === r.time
-              const hasPhoto = !!r.medalPhoto
+              // Personal upload first; community photo as fallback
+              const communityUrl = communityPhotos[getRaceKey(r)] ?? null
+              const displayPhoto = r.medalPhoto || communityUrl
+              const hasPhoto = !!displayPhoto
 
               return (
                 <div
@@ -396,10 +571,10 @@ function MedalWall() {
                     boxShadow: isPB ? `0 0 0 1px ${col.border}, 0 0 16px ${col.bg}` : undefined,
                   }}
                 >
-                  {/* Community photo background */}
+                  {/* Medal photo — personal upload or community fallback */}
                   {hasPhoto && (
                     <img
-                      src={r.medalPhoto}
+                      src={displayPhoto!}
                       alt={r.name}
                       style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.35, mixBlendMode: 'multiply' }}
                     />
@@ -619,26 +794,287 @@ function PersonalBests() {
   )
 }
 
+// ─── Signature Distances ──────────────────────────────────────────────────────
+
+function SignatureDistances() {
+  const races   = useRaceStore(selectRaces)
+  const athlete = useAthleteStore(selectAthlete)
+
+  const age    = useMemo(() => computeAge(athlete?.dob), [athlete?.dob])
+  const gender = athlete?.gender
+
+  const top = useMemo(
+    () => computeSignatureDistances(races, gender, age),
+    [races, gender, age],
+  )
+
+  if (top.length === 0) {
+    return (
+      <div style={st.section}>
+        <div style={st.sectionTitle}>SIGNATURE DISTANCES</div>
+        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', padding: '8px 0', lineHeight: 1.6 }}>
+          Log a few more timed races to see which distances are becoming your signature.
+        </div>
+      </div>
+    )
+  }
+
+  const rankColors = ['var(--orange)', 'var(--white)', 'var(--muted)']
+
+  return (
+    <div style={st.section}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
+        <div style={st.sectionTitle}>SIGNATURE DISTANCES</div>
+        <div style={{ height: '1px', flex: 1, background: 'var(--border)' }} />
+      </div>
+      <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '12px', fontFamily: 'var(--headline)', fontWeight: 600, letterSpacing: '0.06em' }}>
+        {gender && age ? 'RANKED BY AGE-GRADE WHEN AVAILABLE' : 'RANKED BY PACE / SPEED'}
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {top.map((item, i) => (
+          <div
+            key={item.distance}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              background: 'var(--surface2)',
+              border: `1px solid ${i === 0 ? 'rgba(var(--orange-ch),0.3)' : 'var(--border)'}`,
+              borderRadius: '10px',
+              padding: '12px 14px',
+            }}
+          >
+            <div style={{
+              fontFamily: 'var(--headline)',
+              fontWeight: 900,
+              fontSize: '22px',
+              color: rankColors[i],
+              width: '20px',
+              flexShrink: 0,
+              textAlign: 'center',
+              lineHeight: 1,
+            }}>
+              {i + 1}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', lineHeight: 1.1 }}>
+                {item.distance}
+              </div>
+              <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {item.race.name ?? ''} · {item.race.time}
+              </div>
+            </div>
+            <div style={{
+              fontFamily: 'var(--headline)',
+              fontWeight: 800,
+              fontSize: '12px',
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase',
+              color: item.metric === 'age-grade' ? 'var(--orange)' : 'var(--white)',
+              flexShrink: 0,
+              textAlign: 'right',
+            }}>
+              {item.label}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ─── Age-Grade Trajectory ─────────────────────────────────────────────────────
 
 function AgeGradeTrajectory() {
-  const athlete = useAthleteStore(selectAthlete)
+  const athlete    = useAthleteStore(selectAthlete)
+  const races      = useRaceStore(selectRaces)
   const hasProfile = !!(athlete?.dob && athlete?.gender)
+  const age        = useMemo(() => computeAge(athlete?.dob), [athlete?.dob])
 
-  return (
-    <div style={{ ...st.section, padding: '20px' }}>
-      <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '20px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', lineHeight: 1.1, marginBottom: '12px' }}>
-        AGE-GRADE TRAJECTORY
-      </div>
-      {!hasProfile ? (
-        <div style={{ fontSize: '14px', color: 'var(--muted)', lineHeight: 1.6 }}>
+  const history = useMemo(
+    () => hasProfile ? computeAgeGradeHistory(races, athlete?.gender, age) : [],
+    [races, athlete?.gender, age, hasProfile],
+  )
+
+  if (!hasProfile) {
+    return (
+      <div style={st.section}>
+        <div style={st.sectionTitle}>AGE-GRADE TRAJECTORY</div>
+        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', padding: '8px 0', lineHeight: 1.6 }}>
           Add your date of birth and gender in profile to unlock age-grade scoring.
         </div>
-      ) : (
-        <div style={{ fontSize: '14px', color: 'var(--muted)', lineHeight: 1.6 }}>
-          Log 5K, 10K, Half Marathon, or Marathon races to see your trajectory.
+      </div>
+    )
+  }
+
+  if (history.length < 2) {
+    return (
+      <div style={st.section}>
+        <div style={st.sectionTitle}>AGE-GRADE TRAJECTORY</div>
+        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', padding: '8px 0', lineHeight: 1.6 }}>
+          Log at least two 5K / 10K / Half / Marathon results to see your age-grade trend.
         </div>
-      )}
+      </div>
+    )
+  }
+
+  // SVG sparkline
+  const W = 300; const H = 56
+  const pcts = history.map(h => h.pct)
+  const minP = Math.min(...pcts); const maxP = Math.max(...pcts)
+  const range = maxP - minP || 1
+  const pts = history.map((h, i) => {
+    const x = (i / (history.length - 1)) * W
+    const y = H - ((h.pct - minP) / range) * (H - 8) - 4
+    return `${x.toFixed(1)},${y.toFixed(1)}`
+  }).join(' ')
+  const latestPct = pcts[pcts.length - 1]
+
+  return (
+    <div style={st.section}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
+        <div style={st.sectionTitle}>AGE-GRADE</div>
+        <div style={{ height: '1px', flex: 1, background: 'var(--border)' }} />
+        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', color: 'var(--orange)', letterSpacing: '0.02em' }}>
+          {latestPct.toFixed(1)}%
+        </div>
+      </div>
+      <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 600, letterSpacing: '0.08em', marginBottom: '12px' }}>
+        WA ROAD-RACE STANDARD · {history.length} RESULTS
+      </div>
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: `${H}px`, display: 'block', marginBottom: '14px' }}>
+        <polyline
+          points={pts}
+          fill="none"
+          stroke="var(--orange)"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        {history.map((h, i) => {
+          const x = (i / (history.length - 1)) * W
+          const y = H - ((h.pct - minP) / range) * (H - 8) - 4
+          return (
+            <circle key={i} cx={x} cy={y} r="3" fill="var(--orange)" />
+          )
+        })}
+      </svg>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        {history.slice(-5).reverse().map((h, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px' }}>
+            <div style={{ color: 'var(--muted)', width: '80px', flexShrink: 0, fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '10px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{h.raceDate.slice(0, 7)}</div>
+            <div style={{ color: 'var(--muted)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.distance} · {h.raceName}</div>
+            <div style={{ color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '12px', flexShrink: 0 }}>{h.pct.toFixed(1)}%</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─── Performance Timeline ────────────────────────────────────────────────────
+
+interface TimelineYear {
+  year: string
+  raceCount: number
+  avgSpeedKmh: number
+  avgDistKm: number
+  metrics: { speed: number; endurance: number; frequency: number }
+  labels:  { speed: string; endurance: string; frequency: string }
+}
+
+function clamp(v: number, lo = 0, hi = 100): number {
+  return Math.max(lo, Math.min(hi, v))
+}
+
+function computeTimeline(races: Race[]): TimelineYear[] {
+  const byYear: Record<string, Race[]> = {}
+  for (const r of races) {
+    if (!r.date) continue
+    const y = r.date.slice(0, 4)
+    if (!byYear[y]) byYear[y] = []
+    byYear[y].push(r)
+  }
+  return Object.entries(byYear)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .slice(-5)
+    .map(([year, yr]) => {
+      const timed = yr.filter(r => r.time && r.distance)
+      const speeds = timed.map(r => {
+        const secs = parseTimeToSecs(r.time)
+        const km   = parseFloat(r.distance) || 0
+        return secs && km ? km / (secs / 3600) : null
+      }).filter((v): v is number => v !== null && isFinite(v))
+
+      const avgSpeed = speeds.length ? speeds.reduce((a, b) => a + b, 0) / speeds.length : 0
+      const avgDist  = yr.reduce((sum, r) => sum + (parseFloat(r.distance) || 0), 0) / yr.length
+
+      return {
+        year,
+        raceCount: yr.length,
+        avgSpeedKmh: avgSpeed,
+        avgDistKm: avgDist,
+        metrics: {
+          speed:     clamp((avgSpeed / 18) * 100),
+          endurance: clamp((avgDist  / 50) * 100),
+          frequency: clamp((yr.length / 10) * 100),
+        },
+        labels: {
+          speed:     avgSpeed > 0 ? `${Math.round(avgSpeed)} km/h` : '—',
+          endurance: avgDist  > 0 ? `${Math.round(avgDist)} km avg` : '—',
+          frequency: `${yr.length} race${yr.length !== 1 ? 's' : ''}`,
+        },
+      }
+    })
+}
+
+const TIMELINE_METRICS: Array<{ key: keyof TimelineYear['metrics']; label: string }> = [
+  { key: 'speed',     label: 'Speed' },
+  { key: 'endurance', label: 'Distance' },
+  { key: 'frequency', label: 'Races' },
+]
+
+function PerformanceTimeline() {
+  const races = useRaceStore(selectRaces)
+  const timeline = useMemo(() => computeTimeline(races), [races])
+
+  if (timeline.length < 2) {
+    return (
+      <div style={st.section}>
+        <div style={st.sectionTitle}>PERFORMANCE TIMELINE</div>
+        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', padding: '8px 0', lineHeight: 1.6 }}>
+          Log races across two or more seasons to unlock your season-by-season story.
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div style={st.section}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+        <div style={st.sectionTitle}>PERFORMANCE TIMELINE</div>
+        <div style={{ height: '1px', flex: 1, background: 'var(--border)' }} />
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        {timeline.map(row => (
+          <div key={row.year} style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: '10px', padding: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', letterSpacing: '0.04em', color: 'var(--orange)' }}>
+              {row.year}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
+              {TIMELINE_METRICS.map(({ key, label }) => (
+                <div key={key} style={{ display: 'grid', gridTemplateColumns: '70px 1fr 70px', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)' }}>{label}</div>
+                  <div style={{ height: '5px', background: 'var(--surface3)', borderRadius: '3px', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${row.metrics[key]}%`, background: 'var(--orange)', borderRadius: '3px', transition: 'width 0.4s ease' }} />
+                  </div>
+                  <div style={{ fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700, color: 'var(--white)', textAlign: 'right' }}>{row.labels[key]}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
@@ -954,11 +1390,289 @@ function BioDetails({ onEdit }: { onEdit: () => void }) {
   )
 }
 
+// ─── Goals Section ────────────────────────────────────────────────────────────
+
+function secsToHMS(secs: number): string {
+  const h = Math.floor(secs / 3600)
+  const m = Math.floor((secs % 3600) / 60)
+  const s = secs % 60
+  if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
+  return `${m}:${String(s).padStart(2,'0')}`
+}
+
+function GoalsSection() {
+  const races = useRaceStore(selectRaces)
+  const goals = useAthleteStore(s => s.goals)
+  const setAnnualGoal = useAthleteStore(s => s.setAnnualGoal)
+  const addDistGoal = useAthleteStore(s => s.addDistGoal)
+  const deleteDistGoal = useAthleteStore(s => s.deleteDistGoal)
+
+  const year = new Date().getFullYear()
+  const ag = goals.annual[String(year)] ?? {}
+
+  const yrRaces = races.filter(r => (r.date ?? '').startsWith(String(year)))
+  const yrCount = yrRaces.length
+  const yrKm = yrRaces.reduce((sum, r) => {
+    // resolve distance to km
+    const KM_MAP: Record<string, number> = {
+      '5KM': 5, '10KM': 10, '10 Mile': 16.1, 'Half Marathon': 21.1, 'Marathon': 42.2,
+      '50KM': 50, '50 Mile': 80.5, '100KM': 100, '100 Mile': 161,
+    }
+    return sum + (KM_MAP[r.distance] ?? parseFloat(r.distance) ?? 0)
+  }, 0)
+
+  // Per-distance PBs for dist goals
+  const pbByDist: Record<string, number> = {}
+  for (const r of races) {
+    if (!r.time || !r.distance) continue
+    const secs = r.time.split(':').reduce((s, v, i, a) => s + Number(v) * Math.pow(60, a.length - 1 - i), 0)
+    if (!pbByDist[r.distance] || secs < pbByDist[r.distance]) pbByDist[r.distance] = secs
+  }
+
+  // Add-goal form state
+  const [addMode, setAddMode] = useState<'km' | 'races' | 'dist' | null>(null)
+  const [annualVal, setAnnualVal] = useState('')
+  const [distTarget, setDistTarget] = useState({ dist: '', h: '', m: '', s: '', deadline: '' })
+
+  const distOptions = [...new Set(races.map(r => r.distance).filter(Boolean))].sort()
+
+  function saveAnnual() {
+    const v = parseInt(annualVal)
+    if (!v || !addMode || (addMode !== 'km' && addMode !== 'races')) return
+    setAnnualGoal(year, { [addMode]: v })
+    setAnnualVal('')
+    setAddMode(null)
+  }
+
+  function saveDist() {
+    const h = parseInt(distTarget.h) || 0
+    const m = parseInt(distTarget.m) || 0
+    const s = parseInt(distTarget.s) || 0
+    const secs = h * 3600 + m * 60 + s
+    if (!distTarget.dist || secs <= 0) return
+    addDistGoal({ dist: distTarget.dist, targetSecs: secs, deadline: distTarget.deadline || undefined })
+    setDistTarget({ dist: '', h: '', m: '', s: '', deadline: '' })
+    setAddMode(null)
+  }
+
+  const inputSt: React.CSSProperties = {
+    background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px',
+    color: 'var(--white)', fontSize: '14px', padding: '0.5rem 0.75rem', fontFamily: 'var(--body)',
+  }
+  const smallBtn: React.CSSProperties = {
+    background: 'var(--orange)', color: 'var(--black)', border: 'none', borderRadius: '4px',
+    padding: '0.45rem 0.9rem', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '11px',
+    letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer',
+  }
+
+  return (
+    <div style={st.section}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+        <div style={st.sectionTitle}>GOALS</div>
+        <div style={{ height: '1px', flex: 1, background: 'var(--border)', marginLeft: '16px' }} />
+      </div>
+
+      {/* Annual cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '12px' }}>
+        {(['km', 'races'] as const).map(type => {
+          const target = type === 'km' ? (ag.km ?? 0) : (ag.races ?? 0)
+          const current = type === 'km' ? Math.round(yrKm) : yrCount
+          const pct = target ? Math.min(100, Math.round(current / target * 100)) : 0
+          const achieved = target > 0 && current >= target
+          return (
+            <div key={type} style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '10px', padding: '12px', position: 'relative' }}>
+              <button
+                onClick={() => { setAddMode(type); setAnnualVal(target ? String(target) : '') }}
+                style={{ position: 'absolute', top: '8px', right: '8px', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}
+              >Edit</button>
+              <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '4px' }}>
+                {year} · {type === 'km' ? 'KM' : 'RACES'}
+              </div>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', color: 'var(--white)', lineHeight: 1 }}>
+                {current}
+                <span style={{ fontSize: '12px', color: 'var(--muted)', fontWeight: 400 }}> / {target || '—'}{type === 'km' ? ' km' : ''}</span>
+              </div>
+              {target > 0 ? (
+                <>
+                  <div style={{ height: '4px', background: 'var(--surface)', borderRadius: '2px', marginTop: '8px', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${pct}%`, background: achieved ? 'var(--green)' : 'var(--orange)', borderRadius: '2px', transition: 'width 0.3s' }} />
+                  </div>
+                  <div style={{ fontSize: '10px', color: achieved ? 'var(--green)' : 'var(--muted)', marginTop: '4px', fontFamily: 'var(--headline)', fontWeight: 700 }}>
+                    {pct}%{achieved ? ' · Achieved!' : ''}
+                  </div>
+                </>
+              ) : (
+                <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '6px', fontFamily: 'var(--headline)' }}>Tap Edit to set target</div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Distance time goals */}
+      {goals.distGoals.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '10px' }}>
+          {goals.distGoals.map(g => {
+            const pb = pbByDist[g.dist]
+            const done = pb !== undefined && pb <= g.targetSecs
+            return (
+              <div key={g.id} style={{ display: 'flex', alignItems: 'center', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '10px 12px', gap: '10px' }}>
+                <span style={{ fontSize: '18px' }}>🎯</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '13px', color: 'var(--white)', fontWeight: 600, lineHeight: 1.2 }}>{g.dist}</div>
+                  <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>
+                    Sub {secsToHMS(g.targetSecs)}{g.deadline ? ` · ${fmtDate(g.deadline)}` : ''}
+                  </div>
+                </div>
+                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                  <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', color: done ? 'var(--green)' : 'var(--orange)' }}>
+                    {done ? '✓ Done' : pb !== undefined ? secsToHMS(pb) : '—'}
+                  </div>
+                  <button onClick={() => deleteDistGoal(g.id)} style={{ background: 'none', border: 'none', color: 'var(--muted2)', cursor: 'pointer', fontSize: '10px', marginTop: '2px' }}>✕ Remove</button>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Add goal button */}
+      {!addMode && (
+        <button onClick={() => setAddMode('dist')} style={{ ...st.ctaOutline, width: '100%', marginTop: '4px' }}>
+          + Add Distance Goal
+        </button>
+      )}
+
+      {/* Add-goal inline form */}
+      {addMode === 'km' && (
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '8px' }}>
+          <input type="number" placeholder={`${year} KM target`} value={annualVal} onChange={e => setAnnualVal(e.target.value)} style={{ ...inputSt, flex: 1 }} />
+          <button onClick={saveAnnual} style={smallBtn}>Save</button>
+          <button onClick={() => setAddMode(null)} style={{ ...smallBtn, background: 'var(--surface3)', color: 'var(--muted)' }}>✕</button>
+        </div>
+      )}
+      {addMode === 'races' && (
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '8px' }}>
+          <input type="number" placeholder={`${year} race count target`} value={annualVal} onChange={e => setAnnualVal(e.target.value)} style={{ ...inputSt, flex: 1 }} />
+          <button onClick={saveAnnual} style={smallBtn}>Save</button>
+          <button onClick={() => setAddMode(null)} style={{ ...smallBtn, background: 'var(--surface3)', color: 'var(--muted)' }}>✕</button>
+        </div>
+      )}
+      {addMode === 'dist' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '12px' }}>
+          <select value={distTarget.dist} onChange={e => setDistTarget(d => ({ ...d, dist: e.target.value }))} style={{ ...inputSt, width: '100%' }}>
+            <option value="">Select distance…</option>
+            {distOptions.map(d => <option key={d} value={d}>{d}</option>)}
+          </select>
+          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+            <span style={{ fontSize: '11px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700 }}>TARGET</span>
+            <input type="number" placeholder="H" min={0} value={distTarget.h} onChange={e => setDistTarget(d => ({ ...d, h: e.target.value }))} style={{ ...inputSt, width: '50px' }} />
+            <input type="number" placeholder="M" min={0} max={59} value={distTarget.m} onChange={e => setDistTarget(d => ({ ...d, m: e.target.value }))} style={{ ...inputSt, width: '50px' }} />
+            <input type="number" placeholder="S" min={0} max={59} value={distTarget.s} onChange={e => setDistTarget(d => ({ ...d, s: e.target.value }))} style={{ ...inputSt, width: '50px' }} />
+          </div>
+          <input type="date" placeholder="Deadline (optional)" value={distTarget.deadline} onChange={e => setDistTarget(d => ({ ...d, deadline: e.target.value }))} style={{ ...inputSt, width: '100%' }} />
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <button onClick={saveDist} style={{ ...smallBtn, flex: 1 }}>Add Goal</button>
+            <button onClick={() => setAddMode(null)} style={{ ...smallBtn, background: 'var(--surface3)', color: 'var(--muted)', flex: 1 }}>Cancel</button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Profile Page ─────────────────────────────────────────────────────────────
+
+// ─── Onboarding Banner ───────────────────────────────────────────────────────
+
+function getProfileCompleteness(ath: ReturnType<typeof selectAthlete>): { filled: number; total: number } {
+  const fields = [
+    ath?.firstName, ath?.lastName, ath?.mainSport,
+    ath?.city, ath?.country, ath?.dob, ath?.gender,
+  ]
+  return { filled: fields.filter(Boolean).length, total: fields.length }
+}
+
+function OnboardingBanner({ onEdit }: { onEdit: () => void }) {
+  const athlete  = useAthleteStore(selectAthlete)
+  const navigate = useNavigate()
+  const isNew = !!localStorage.getItem('bt_new_user')
+
+  if (!isNew) return null
+
+  const { filled, total } = getProfileCompleteness(athlete)
+  const complete = filled >= total
+
+  return (
+    <div style={{
+      background: complete ? 'rgba(var(--green-ch),0.08)' : 'rgba(var(--orange-ch),0.08)',
+      border: `1px solid ${complete ? 'rgba(var(--green-ch),0.3)' : 'rgba(var(--orange-ch),0.3)'}`,
+      borderRadius: '12px',
+      padding: '16px',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '12px',
+      marginBottom: '4px',
+    }}>
+      <span style={{ fontSize: '20px' }}>{complete ? '✅' : '👋'}</span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', letterSpacing: '0.04em', textTransform: 'uppercase', color: complete ? 'var(--green)' : 'var(--orange)', lineHeight: 1.1 }}>
+          {complete ? 'Profile Complete' : `Profile ${filled}/${total} Complete`}
+        </div>
+        <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '2px', lineHeight: 1.4 }}>
+          {complete
+            ? 'Your profile is ready.'
+            : 'Fill in your details to unlock the full experience.'}
+        </div>
+      </div>
+      <button
+        onClick={() => {
+          if (complete) {
+            localStorage.removeItem('bt_new_user')
+            navigate('/')
+          } else {
+            onEdit()
+          }
+        }}
+        style={{
+          flexShrink: 0,
+          background: complete ? 'var(--green)' : 'var(--orange)',
+          color: '#000',
+          border: 'none',
+          borderRadius: '8px',
+          padding: '8px 14px',
+          fontFamily: 'var(--headline)',
+          fontWeight: 800,
+          fontSize: '12px',
+          letterSpacing: '0.08em',
+          textTransform: 'uppercase',
+          cursor: 'pointer',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {complete ? 'Go to Dashboard →' : 'Edit Profile'}
+      </button>
+    </div>
+  )
+}
+
 // ─── Profile Page ─────────────────────────────────────────────────────────────
 
 export function Profile() {
   const authUser = useAuthStore(selectAuthUser)
   const [showEdit, setShowEdit] = useState(false)
+
+  // Auto-open edit modal 300ms after mount for new users (once per device)
+  useEffect(() => {
+    if (!authUser) return
+    if (localStorage.getItem('bt_new_user') && !localStorage.getItem('bt_modal_shown')) {
+      const t = setTimeout(() => {
+        localStorage.setItem('bt_modal_shown', '1')
+        setShowEdit(true)
+      }, 300)
+      return () => clearTimeout(t)
+    }
+  }, [authUser])
 
   if (!authUser) {
     return (
@@ -974,15 +1688,19 @@ export function Profile() {
   return (
     <div style={st.page}>
       {showEdit && <EditProfileModal onClose={() => setShowEdit(false)} />}
+      <OnboardingBanner onEdit={() => { localStorage.setItem('bt_modal_shown', '1'); setShowEdit(true) }} />
       <AthleteHero onEdit={() => setShowEdit(true)} />
       <MedalWall />
       <AchievementsSection />
       <CountriesRaced />
       <PersonalBests />
+      <SignatureDistances />
       <AgeGradeTrajectory />
+      <PerformanceTimeline />
       <RaceActivityHeatmap />
       <MajorsQualifiers />
       <RacePersonality />
+      <GoalsSection />
       <BioDetails onEdit={() => setShowEdit(true)} />
     </div>
   )

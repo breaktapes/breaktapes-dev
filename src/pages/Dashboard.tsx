@@ -1685,6 +1685,104 @@ function WhyResultWidget() {
   )
 }
 
+// ─── Activity Feed Preview Widget ────────────────────────────────────────────
+
+const ACTIVITY_ICON: Record<string, string> = {
+  Run: '🏃', TrailRun: '🏔', Ride: '🚴', Swim: '🏊', Walk: '🚶',
+  Hike: '⛰', Workout: '💪', Yoga: '🧘', VirtualRide: '🚴', VirtualRun: '🏃',
+  WeightTraining: '🏋', Triathlon: '🏊',
+}
+
+function ActivityPreviewWidget() {
+  const stravaToken = useWearableStore(s => s.stravaToken)
+  const garminToken = useWearableStore(s => s.garminToken)
+  const whoopToken  = useWearableStore(s => s.whoopToken)
+
+  // Use WHOOP activities from store if available
+  const whoopActs = useWearableStore(s => s.whoopActivities)
+
+  if (!stravaToken && !garminToken && !whoopToken) {
+    return (
+      <div style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: '12px', padding: '14px' }}>
+        <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '8px' }}>
+          Activity Feed
+        </div>
+        <div style={{ fontSize: '12px', color: 'var(--muted)' }}>Connect Strava, Garmin, or WHOOP to see recent training.</div>
+      </div>
+    )
+  }
+
+  const items = whoopActs.slice(0, 3).map(a => ({
+    icon: '💚',
+    name: String(a.sport_id),
+    meta: a.end ? `${Math.round((new Date(a.end).getTime() - new Date(a.start).getTime()) / 60000)}min` : '',
+    date: a.start.slice(0, 10),
+  }))
+
+  if (!items.length) return null
+
+  return (
+    <div style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: '12px', padding: '14px' }}>
+      <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '8px' }}>
+        Recent Training
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        {items.map((a, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingBottom: i < items.length - 1 ? '6px' : 0, borderBottom: i < items.length - 1 ? '1px solid var(--border)' : 'none' }}>
+            <span style={{ fontSize: '18px', lineHeight: 1, flexShrink: 0 }}>{a.icon}</span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: '13px', color: 'var(--white)', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.name}</div>
+              <div style={{ fontSize: '11px', color: 'var(--muted)' }}>{[a.date, a.meta].filter(Boolean).join(' · ')}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─── On This Day Widget ───────────────────────────────────────────────────────
+
+function OnThisDayWidget() {
+  const races = useRaceStore(selectRaces)
+
+  const race = useMemo(() => {
+    const now = new Date()
+    const mmdd = `${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+    const thisYear = now.getFullYear()
+    const matches = races.filter(r => r.date && r.date.slice(5) === mmdd && parseInt(r.date.slice(0, 4)) < thisYear)
+    if (!matches.length) return null
+    return matches[Math.floor(Date.now() / 86400000) % matches.length]
+  }, [races])
+
+  if (!race) return null
+
+  const years = new Date().getFullYear() - parseInt(race.date.slice(0, 4))
+  const yearStr = years === 1 ? '1 year ago' : `${years} years ago`
+
+  return (
+    <div style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: '12px', padding: '14px', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+      <span style={{ fontSize: '22px', lineHeight: 1, flexShrink: 0 }}>📅</span>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '4px' }}>
+          On This Day
+        </div>
+        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', color: 'var(--white)', letterSpacing: '0.04em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          {race.name}
+        </div>
+        <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '4px' }}>
+          {yearStr}{race.city ? ` · ${race.city}` : ''}{race.country ? `, ${race.country}` : ''}
+        </div>
+        {race.time && (
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', color: 'var(--orange)', marginTop: '4px' }}>
+            {race.time}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ─── Race Readiness Widget ────────────────────────────────────────────────────
 
 function RaceReadinessWidget() {
@@ -3238,6 +3336,106 @@ function WhatToRaceNextWidget() {
   )
 }
 
+// ─── Story Mode widget ────────────────────────────────────────────────────────
+
+function StoryModeWidget() {
+  const races = useRaceStore(selectRaces)
+  const year  = new Date().getFullYear()
+
+  const story = useMemo(() => {
+    if (!races.length) return null
+    const thisYear = races.filter(r => (r.date ?? '').startsWith(String(year)))
+    if (!thisYear.length) return null
+    const countries = new Set(thisYear.map(r => r.country).filter(Boolean)).size
+    const medals    = thisYear.filter(r => r.medal && r.medal !== '').length
+    return {
+      raceCount: thisYear.length,
+      countries,
+      medals,
+      headline: `${thisYear.length} race${thisYear.length !== 1 ? 's' : ''} across ${countries || 1} countr${countries === 1 ? 'y' : 'ies'}`,
+    }
+  }, [races, year])
+
+  if (!story) {
+    return (
+      <div className="card-v3">
+        <div style={st.widgetLabel}>STORY MODE</div>
+        <div style={st.widgetTitle}>{year} RECAP</div>
+        <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5, marginTop: 4 }}>
+          Log races through the year to unlock annual recaps and season highlights.
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="card-v3">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <div style={st.widgetLabel}>STORY MODE</div>
+          <div style={st.widgetTitle}>{year} RECAP</div>
+        </div>
+        <span style={{ fontSize: 22 }}>📖</span>
+      </div>
+      <div style={{ fontSize: '13px', color: 'var(--white)', lineHeight: 1.5, marginTop: 6 }}>{story.headline}</div>
+      <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+        {[
+          { label: 'RACES', value: story.raceCount },
+          { label: 'COUNTRIES', value: story.countries || 1 },
+          { label: 'MEDALS', value: story.medals },
+        ].map(({ label, value }) => (
+          <div key={label} style={{ flex: 1, background: 'var(--surface3)', borderRadius: 6, padding: '8px 6px', textAlign: 'center' }}>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 20, color: 'var(--orange)' }}>{value}</div>
+            <div style={{ fontSize: 9, color: 'var(--muted)', fontFamily: 'var(--headline)', letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 2 }}>{label}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 8 }}>
+        Annual recap and season cards build on this data.
+      </div>
+    </div>
+  )
+}
+
+// ─── Coach Activity widget ────────────────────────────────────────────────────
+
+function CoachActivityWidget() {
+  const coachRelationships: unknown[] = useMemo(() => {
+    try { return JSON.parse(localStorage.getItem('fl2_coach_relationships') ?? '[]') } catch { return [] }
+  }, [])
+  const coachComments: unknown[] = useMemo(() => {
+    try { return JSON.parse(localStorage.getItem('fl2_coach_comments') ?? '[]') } catch { return [] }
+  }, [])
+
+  const relCount = coachRelationships.length
+  const comCount = coachComments.length
+
+  return (
+    <div className="card-v3">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <div style={st.widgetLabel}>COACH ACTIVITY</div>
+          <div style={st.widgetTitle}>SHARED VIEW</div>
+        </div>
+        <span style={{ fontSize: 22, background: 'rgba(var(--orange-ch),0.1)', borderRadius: 8, padding: '4px 8px' }}>{relCount}</span>
+      </div>
+      <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5, marginTop: 6 }}>
+        {relCount
+          ? `${relCount} coach connection${relCount > 1 ? 's' : ''} active.`
+          : 'Coach mode scaffold ready for shared athlete review.'}
+      </div>
+      {comCount > 0 && (
+        <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>
+          {comCount} coach comment{comCount > 1 ? 's' : ''} logged.
+        </div>
+      )}
+      <div style={{ marginTop: 10, fontSize: 11, color: 'var(--muted)', background: 'var(--surface3)', borderRadius: 6, padding: '8px 10px' }}>
+        Coach mode coming soon — shared views, annotations, and training comments.
+      </div>
+    </div>
+  )
+}
+
 // ─── Zone accordion ───────────────────────────────────────────────────────────
 
 interface ZoneProps {
@@ -3801,6 +3999,7 @@ export function Dashboard() {
               <CourseInfoCard race={nextRace} /></>
           : <NoUpcomingRaceCTA onAddRace={openAddUpcomingRace} />
         }
+        {en('on-this-day')    && <OnThisDayWidget />}
         {en('race-readiness') && <RaceReadinessWidget />}
         {en('gap-to-goal')    && <GapToGoalWidget />}
         {en('course-fit')     && <CourseFitWidget />}
@@ -3812,11 +4011,13 @@ export function Dashboard() {
       {/* RECENTLY — YOUR SEASON */}
       <DashZone id="recently" tag="RECENTLY" label="YOUR SEASON">
         <StatsStrip />
-        {en('recent-races')   && <RecentRaces onAddRace={openAddRace} />}
-        {en('personal-bests') && <PersonalBestsWidget />}
+        {en('recent-races')      && <RecentRaces onAddRace={openAddRace} />}
+        {en('activity-preview')  && <ActivityPreviewWidget />}
+        {en('personal-bests')    && <PersonalBestsWidget />}
         {en('why-prd')        && <WhyPRdWidget />}
         {en('why-faded')      && <WhyFadedWidget />}
         {en('break-tape')     && <BreakTapeWidget />}
+        {en('story-mode')     && <StoryModeWidget />}
       </DashZone>
 
       {/* CONSISTENCY — BUILD */}
@@ -3846,6 +4047,7 @@ export function Dashboard() {
         {en('advanced-race-dna') && <AdvancedRaceDNAWidget />}
         {en('race-comparer')     && <RaceComparerWidget />}
         {en('what-to-race-next') && <WhatToRaceNextWidget />}
+        {en('coach-activity')    && <CoachActivityWidget />}
       </DashZone>
 
       <PaceCalculator />

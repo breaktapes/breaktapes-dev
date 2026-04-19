@@ -1,0 +1,1 @@
+/Users/akrish/DEV/.claude/worktrees/admiring-mendeleev-85074c/.claude/skills/gstack/unfreeze/SKILL.md

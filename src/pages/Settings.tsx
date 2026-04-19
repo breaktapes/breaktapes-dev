@@ -11,6 +11,7 @@ import { importAppleHealthXML, importAppleHealthXMLStreaming } from '@/lib/apple
 import { removeWearableToken } from '@/lib/wearableUtils'
 import { THEMES } from '@/types'
 import type { ThemeId } from '@/types'
+import { getClaudeApiKey, setClaudeApiKey } from '@/lib/claude'
 
 const btnMain: React.CSSProperties = {
   background: 'var(--orange)',
@@ -89,6 +90,44 @@ export function Settings() {
   const [activeTheme, setActiveTheme] = useState<ThemeId>(
     () => (localStorage.getItem('bt_theme') as ThemeId) || 'carbon'
   )
+
+  // Delete account state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deleteInput, setDeleteInput] = useState('')
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState('')
+
+  async function handleDeleteAccount() {
+    if (deleteInput.trim().toUpperCase() !== 'DELETE') {
+      setDeleteError('Type DELETE (all caps) to confirm.')
+      return
+    }
+    setDeleting(true)
+    setDeleteError('')
+    try {
+      const { error } = await supabase.rpc('delete_my_account', { confirm_text: 'DELETE' })
+      if (error) throw error
+      const keysToRemove = ['bt_new_user', 'bt_modal_shown', 'fl2_races', 'fl2_ath',
+        'fl2_upcoming', 'fl2_wishlist', 'fl2_season_plans', 'fl2_focus_race_id',
+        'fl2_apikey', 'bt_theme', 'fl2_dash_layout', 'fl2_dash_zone_collapse']
+      keysToRemove.forEach(k => localStorage.removeItem(k))
+      setTimeout(() => window.location.reload(), 500)
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : 'Could not delete account. Try again.')
+      setDeleting(false)
+    }
+  }
+
+  // Claude API key state
+  const [apiKey, setApiKeyState] = useState(() => getClaudeApiKey())
+  const [apiKeyMasked, setApiKeyMasked] = useState(true)
+  const [apiKeySaved, setApiKeySaved] = useState(false)
+
+  function handleSaveApiKey() {
+    setClaudeApiKey(apiKey.trim())
+    setApiKeySaved(true)
+    setTimeout(() => setApiKeySaved(false), 2000)
+  }
 
   // Username + public profile state
   const [username, setUsername] = useState(athlete?.username ?? '')
@@ -272,6 +311,49 @@ export function Settings() {
             >
               Sign Out
             </button>
+            {/* Delete account — inline confirmation */}
+            {!showDeleteConfirm ? (
+              <button
+                style={{ ...btnGhost, width: '100%', color: '#ff6b6b', borderColor: 'rgba(255,107,107,0.3)', fontSize: '12px', padding: '0.55rem 1rem' }}
+                onClick={() => setShowDeleteConfirm(true)}
+              >
+                Delete Account
+              </button>
+            ) : (
+              <div style={{ border: '1px solid rgba(255,107,107,0.3)', borderRadius: '6px', padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <p style={{ margin: 0, fontSize: '12px', color: '#ff8e8e', lineHeight: 1.5 }}>
+                  This permanently removes your account, races, and all synced data. Type <strong>DELETE</strong> to confirm.
+                </p>
+                <input
+                  style={{ ...inputStyle, borderColor: 'rgba(255,107,107,0.4)' }}
+                  value={deleteInput}
+                  onChange={e => { setDeleteInput(e.target.value); setDeleteError('') }}
+                  placeholder="DELETE"
+                  autoCapitalize="characters"
+                  autoComplete="off"
+                  spellCheck={false}
+                />
+                {deleteError && (
+                  <p style={{ margin: 0, fontSize: '11px', color: '#ff6b6b' }}>{deleteError}</p>
+                )}
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    style={{ ...btnGhost, flex: 1, fontSize: '12px', padding: '0.55rem' }}
+                    onClick={() => { setShowDeleteConfirm(false); setDeleteInput(''); setDeleteError('') }}
+                    disabled={deleting}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    style={{ ...btnGhost, flex: 1, fontSize: '12px', padding: '0.55rem', color: '#ff6b6b', borderColor: 'rgba(255,107,107,0.4)', background: 'rgba(255,107,107,0.08)' }}
+                    onClick={handleDeleteAccount}
+                    disabled={deleting}
+                  >
+                    {deleting ? 'Deleting…' : 'Delete Permanently'}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -447,6 +529,63 @@ export function Settings() {
               })}
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* ── AI Parsing section ── */}
+      <section>
+        <p style={sectionLabel}>AI Parsing</p>
+        <div style={{ ...card, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: 'var(--text-xs)', color: 'var(--muted)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '6px', fontFamily: 'var(--headline)', fontWeight: 700 }}>
+              Anthropic API Key
+            </label>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <div style={{ flex: 1, position: 'relative' }}>
+                <input
+                  type={apiKeyMasked ? 'password' : 'text'}
+                  style={{ ...inputStyle, paddingRight: '40px', fontFamily: apiKey ? 'monospace' : 'inherit' }}
+                  value={apiKey}
+                  onChange={e => { setApiKeyState(e.target.value); setApiKeySaved(false) }}
+                  placeholder="sk-ant-..."
+                  autoComplete="new-password"
+                  spellCheck={false}
+                />
+                <button
+                  onClick={() => setApiKeyMasked(v => !v)}
+                  style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: '14px', padding: '2px' }}
+                  title={apiKeyMasked ? 'Show' : 'Hide'}
+                >
+                  {apiKeyMasked ? '👁' : '🙈'}
+                </button>
+              </div>
+              <button
+                style={{
+                  ...btnMain,
+                  padding: '0 16px',
+                  flexShrink: 0,
+                  opacity: apiKeySaved ? 0.7 : 1,
+                }}
+                onClick={handleSaveApiKey}
+              >
+                {apiKeySaved ? '✓ Saved' : 'Save'}
+              </button>
+            </div>
+            <p style={{ margin: '6px 0 0', fontSize: '11px', color: 'var(--muted)', lineHeight: 1.5 }}>
+              Required for AI race import and screenshot parsing.{' '}
+              <a href="https://console.anthropic.com" target="_blank" rel="noreferrer" style={{ color: 'var(--orange)', textDecoration: 'none' }}>
+                Get your key at console.anthropic.com
+              </a>
+            </p>
+          </div>
+          {apiKey && (
+            <button
+              style={{ ...btnGhost, fontSize: '12px', padding: '0.6rem 1rem', color: 'rgba(var(--orange-ch),0.7)', borderColor: 'rgba(var(--orange-ch),0.3)', alignSelf: 'flex-start' }}
+              onClick={() => { setApiKeyState(''); setClaudeApiKey('') }}
+            >
+              Remove Key
+            </button>
+          )}
         </div>
       </section>
 

@@ -14,8 +14,10 @@ const DEFAULT_WIDGETS: DashWidget[] = [
   { id: 'pb-probability',   label: 'PB Probability',            icon: '🎲', zone: 'now',      enabled: true,  pro: false },
   { id: 'weather-fit',      label: 'Weather Fit Score',         icon: '🌡', zone: 'now',      enabled: false, pro: true  },
   { id: 'race-stack',       label: 'Race Stack Planner',        icon: '📋', zone: 'now',      enabled: false, pro: true  },
+  { id: 'on-this-day',      label: 'On This Day',               icon: '📅', zone: 'now',      enabled: true,  pro: false },
   // RECENTLY — YOUR RACING
   { id: 'recent-races',     label: 'Recent Races',              icon: '🏃', zone: 'recently', enabled: true,  pro: false },
+  { id: 'activity-preview', label: 'Activity Feed Preview',     icon: '⚡', zone: 'recently', enabled: true,  pro: false },
   { id: 'personal-bests',   label: 'Personal Bests',            icon: '⚡', zone: 'recently', enabled: true,  pro: false },
   { id: 'why-prd',          label: "Why You PR'd",              icon: '🏆', zone: 'recently', enabled: false, pro: true  },
   { id: 'why-faded',        label: 'Why You Faded',             icon: '📉', zone: 'recently', enabled: false, pro: true  },
@@ -43,6 +45,8 @@ const DEFAULT_WIDGETS: DashWidget[] = [
   { id: 'advanced-race-dna',label: 'Advanced Race DNA',         icon: '🧬', zone: 'context',  enabled: false, pro: true  },
   { id: 'race-comparer',    label: 'Race Comparer',             icon: '⚖️', zone: 'context',  enabled: false, pro: true  },
   { id: 'what-to-race-next',label: 'What To Race Next',         icon: '🗺', zone: 'context',  enabled: false, pro: true  },
+  { id: 'story-mode',       label: 'Story Mode',                icon: '📖', zone: 'recently', enabled: true,  pro: false },
+  { id: 'coach-activity',   label: 'Coach Activity',            icon: '🎽', zone: 'context',  enabled: false, pro: true  },
 ]
 
 const DEFAULT_ZONE_COLLAPSE: DashZoneCollapse = {

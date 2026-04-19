@@ -15,6 +15,7 @@ export interface RaceState {
   deleteRace: (id: string) => void
   setRaces: (races: Race[]) => void
   setUpcomingRaces: (races: Race[]) => void
+  setWishlistRaces: (races: Race[]) => void
   promoteNextRace: () => void
   setFocusRaceId: (id: string | null) => void
   addToWishlist: (race: Race) => void
@@ -22,8 +23,14 @@ export interface RaceState {
   moveToUpcoming: (id: string) => void
 }
 
+/** Returns YYYY-MM-DD in local time (not UTC). */
+function localToday(): string {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
 function findNextRace(upcoming: Race[]): Race | null {
-  const today = new Date().toISOString().split('T')[0]
+  const today = localToday()
   const future = upcoming
     .filter(r => r.date >= today)
     .sort((a, b) => a.date.localeCompare(b.date))
@@ -47,7 +54,7 @@ export const useRaceStore = create<RaceState>()(
       },
 
       autoMoveExpiredUpcoming: () => {
-        const today = new Date().toISOString().split('T')[0]
+        const today = localToday()
         const { upcomingRaces, races } = get()
         const expired = upcomingRaces.filter(r => r.date < today)
         if (expired.length === 0) return
@@ -76,6 +83,8 @@ export const useRaceStore = create<RaceState>()(
 
       setRaces: (races) => set({ races }),
 
+      setWishlistRaces: (wishlistRaces) => set({ wishlistRaces }),
+
       setUpcomingRaces: (upcomingRaces) => {
         set({ upcomingRaces })
         // Auto-promote nextRace from upcoming (regression fix: Session 13)
@@ -84,7 +93,7 @@ export const useRaceStore = create<RaceState>()(
 
       promoteNextRace: () => {
         const { nextRace, upcomingRaces } = get()
-        const today = new Date().toISOString().split('T')[0]
+        const today = localToday()
         if (!nextRace || nextRace.date < today) {
           set({ nextRace: findNextRace(upcomingRaces) })
         }
@@ -113,7 +122,8 @@ export const useRaceStore = create<RaceState>()(
       // Migrate old SPA format: raw array stored directly, not wrapped in {state:{...}}
       onRehydrateStorage: () => (state) => {
         if (!state) return
-        // Migrate old SPA format: raw array stored directly
+
+        // Migrate V1 SPA format: raw array stored directly (no Zustand wrapper)
         if (state.races.length === 0) {
           try {
             const raw = localStorage.getItem('fl2_races')
@@ -125,6 +135,41 @@ export const useRaceStore = create<RaceState>()(
             }
           } catch {}
         }
+
+        // Migrate V1 upcoming races (stored separately as fl2_upcoming)
+        if (state.upcomingRaces.length === 0) {
+          try {
+            const raw = localStorage.getItem('fl2_upcoming')
+            if (raw) {
+              const parsed = JSON.parse(raw)
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                state.setUpcomingRaces(parsed)
+              }
+            }
+          } catch {}
+        }
+
+        // Migrate V1 wishlist (stored separately as fl2_wishlist)
+        if (state.wishlistRaces.length === 0) {
+          try {
+            const raw = localStorage.getItem('fl2_wishlist')
+            if (raw) {
+              const parsed = JSON.parse(raw)
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                state.setWishlistRaces(parsed)
+              }
+            }
+          } catch {}
+        }
+
+        // Migrate V1 focus race ID (stored as plain string, not JSON)
+        if (!state.focusRaceId) {
+          try {
+            const raw = localStorage.getItem('fl2_focus_race_id')
+            if (raw) state.setFocusRaceId(raw)
+          } catch {}
+        }
+
         // Auto-move any expired upcoming races to past on app load
         state.autoMoveExpiredUpcoming()
       },
