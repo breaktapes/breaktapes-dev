@@ -1,19 +1,22 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Component } from 'react'
+import { Component, lazy, Suspense } from 'react'
 import type { ReactNode } from 'react'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import { AuthGate } from '@/components/AuthGate'
 import { Layout } from '@/components/Layout'
-import { Dashboard } from '@/pages/Dashboard'
-import { Races } from '@/pages/Races'
-import { Train } from '@/pages/Train'
-import { Profile } from '@/pages/Profile'
-import { Gear } from '@/pages/Gear'
-import { Settings } from '@/pages/Settings'
 import { transitions } from '@/lib/motion'
 import { BetaFeedback } from '@/components/BetaFeedback'
+
+// Lazy-loaded pages — each is a separate JS chunk.
+// Dashboard loads eagerly (it's the default route, always shown first).
+import { Dashboard } from '@/pages/Dashboard'
+const Races    = lazy(() => import('@/pages/Races').then(m => ({ default: m.Races })))
+const Train    = lazy(() => import('@/pages/Train').then(m => ({ default: m.Train })))
+const Profile  = lazy(() => import('@/pages/Profile').then(m => ({ default: m.Profile })))
+const Gear     = lazy(() => import('@/pages/Gear').then(m => ({ default: m.Gear })))
+const Settings = lazy(() => import('@/pages/Settings').then(m => ({ default: m.Settings })))
 
 class RootErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
   state = { error: null }
@@ -52,20 +55,22 @@ function AnimatedRoutes() {
         transition={transitions.page}
         style={{ minHeight: '100%' }}
       >
-        <Routes location={location}>
-          <Route path="/"         element={<Dashboard />} />
-          <Route path="/races"    element={<Races />} />
-          <Route path="/train"    element={<Train />} />
-          <Route path="/you"      element={<Profile />} />
-          <Route path="/gear"     element={<Gear />} />
-          <Route path="/settings" element={<Settings />} />
-          {/* Backwards compat aliases */}
-          <Route path="/pace"    element={<Navigate to="/" replace />} />
-          <Route path="/history" element={<Navigate to="/races" replace />} />
-          <Route path="/map"     element={<Navigate to="/races" replace />} />
-          {/* Catch-all */}
-          <Route path="*"        element={<Navigate to="/" replace />} />
-        </Routes>
+        <Suspense fallback={<div style={{ minHeight: '40vh' }} />}>
+          <Routes location={location}>
+            <Route path="/"         element={<Dashboard />} />
+            <Route path="/races"    element={<Races />} />
+            <Route path="/train"    element={<Train />} />
+            <Route path="/you"      element={<Profile />} />
+            <Route path="/gear"     element={<Gear />} />
+            <Route path="/settings" element={<Settings />} />
+            {/* Backwards compat aliases */}
+            <Route path="/pace"    element={<Navigate to="/" replace />} />
+            <Route path="/history" element={<Navigate to="/races" replace />} />
+            <Route path="/map"     element={<Navigate to="/races" replace />} />
+            {/* Catch-all */}
+            <Route path="*"        element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
       </motion.div>
     </AnimatePresence>
   )
