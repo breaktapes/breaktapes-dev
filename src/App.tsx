@@ -13,6 +13,7 @@ import { Profile } from '@/pages/Profile'
 import { Gear } from '@/pages/Gear'
 import { Settings } from '@/pages/Settings'
 import { transitions } from '@/lib/motion'
+import { BetaFeedback } from '@/components/BetaFeedback'
 
 class RootErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
   state = { error: null }
@@ -79,6 +80,7 @@ export function App() {
             <AuthGate>
               <Layout>
                 <AnimatedRoutes />
+                <BetaFeedback />
               </Layout>
             </AuthGate>
           </QueryClientProvider>
