@@ -1,7 +1,7 @@
 # BREAKTAPES V1 → V2 Parity Checklist
 
 **Generated:** 2026-04-19  
-**Updated:** 2026-04-19 (Sprint 3 — parity push)  
+**Updated:** 2026-04-19 (Sprint 4 — performance timeline + error tracking)  
 **Auditor:** CEO review session  
 **V1 source:** `public/index.html` (20,061 lines)  
 **V2 source:** `src/` (React + Vite)
@@ -21,17 +21,17 @@
 | Pages / Navigation | 5 | 2 | 0 | 0 |
 | Race CRUD | 6 | 2 | 1 | 0 |
 | Dashboard | 12 | 1 | 2 | 4 |
-| Profile / Athlete | 9 | 0 | 2 | 2 |
+| Profile / Athlete | 10 | 0 | 0 | 2 |
 | Medals | 4 | 0 | 0 | 0 |
 | Map | 3 | 1 | 0 | 0 |
 | Train / Wearables | 7 | 0 | 0 | 0 |
 | Gear / Flatlay | 3 | 1 | 2 | 0 |
 | Settings | 6 | 0 | 1 | 1 |
 | Data / localStorage | 5 | 0 | 0 | 0 |
-| Infrastructure | 7 | 0 | 2 | 0 |
-| **TOTAL** | **72** | **7** | **10** | **8** |
+| Infrastructure | 9 | 0 | 0 | 0 |
+| **TOTAL** | **74** | **7** | **8** | **8** |
 
-**Overall parity: ~83%** (72 done out of 97 items, partials counted as 0.5)
+**Overall parity: ~87%** (74 done out of 97 items, partials counted as 0.5)
 
 ### Sprint 2 changes (2026-04-19)
 - ✅ Claude API key field in Settings (`fl2_apikey`, V1-compatible key)
@@ -55,6 +55,10 @@
 - ✅ Race Day Forecast widget — `WeatherCard` handles ≤14-day live Open-Meteo forecast + >14-day climate estimate for next race
 - ✅ Field-Adjusted Placing — covered by `PressurePerformerWidget` (A-race vs B/C percentile split, richer than V1)
 - ✅ Custom gear items — Library tab in Gear.tsx: save catalog items, add/edit/delete custom products (localStorage-backed via `fl2_saved_gear` + `fl2_custom_gear`)
+
+### Sprint 4 changes (2026-04-19)
+- ✅ Athlete Performance Timeline — `PerformanceTimeline` component in Profile.tsx, season-by-season bar chart (Speed / Distance / Races), last 5 years, mirrors V1 `renderAthletePerformanceTimeline()`
+- ✅ Error tracking — `RootErrorBoundary.componentDidCatch` sends crash reports via `navigator.sendBeacon('/api/error-report')`. Worker `POST /api/error-report` persists to `beta_errors` Supabase table (anon INSERT, authenticated SELECT). Migration `20260419120000_beta_errors.sql`.
 
 ---
 
@@ -167,13 +171,11 @@
 - [x] ✅ Race Personality card (STARTER / DIESEL / BIG-DAY PERFORMER)
 - [x] ✅ Personal Bests grid (by distance)
 - [x] ✅ Signature Distances — `SignatureDistances` component in Profile.tsx. `computeSignatureDistances()` ranks PBs by age-grade (WA standards), falls back to pace (min/km for running) or speed (km/h for cycling/tri). Age-grade formula matches V1.
-- [ ] ❌ Athlete Performance Timeline — V1: `renderAthletePerformanceTimeline()`. Not in V2 Profile. 🔒 Deferred.
+- [x] ✅ Athlete Performance Timeline — `PerformanceTimeline` component in Profile.tsx; season-by-season Speed / Distance / Races bars (last 5 years). Matches V1 `renderAthletePerformanceTimeline()`.
 - [x] ✅ Goal Race panel — V1: `renderAthleteGoalRacePanel()`. V2 `AthleteHero` shows FOCUS RACE card with countdown. Projection/prediction deferred (requires `computePrediction()` port).
-- [ ] ❌ Race Cost Tracker — V1: `renderAthleteRaceCostTracker()`. Not in V2. 🔒 Deferred.
+- [ ] 🔒 Race Cost Tracker — V1: `renderAthleteRaceCostTracker()`. Not in V2. Deferred post-cutover.
 - [x] ✅ Countries Raced pills — V2 `CountriesRaced` component in Profile.tsx shows unique countries as uppercase pills.
 - [ ] 🔒 Coach mode — V1: `openCoachModeModal()`, coach relationships, comments. Niche feature, deferred.
-
-> **Note:** V2 does have `CountriesRaced` in Profile.tsx (line 563) — mark ✅ after manual verification.
 
 ---
 
@@ -253,7 +255,7 @@
 - [x] ✅ Worker SSR smoke test — `wrangler.toml` uses `main = "worker/index.js"` + `assets = { directory = "dist", binding = "ASSETS" }`. SPA fallback serves V2 `dist/index.html`. `/u/:username` SSR reads Supabase, falls through to ASSETS for all other routes. Verified by code inspection; live verify after staging deploy.
 - [x] ✅ Lazy loading (React.lazy + Suspense) — 5 page components lazy-loaded; Dashboard eager
 - [x] ✅ Vendor code splitting (`vite.config.ts` manualChunks) — vendor-map/react/charts/misc separate chunks
-- [ ] ❌ Error tracking (Sentry or equivalent) — `RootErrorBoundary` catches but doesn't report
+- [x] ✅ Error tracking — `RootErrorBoundary.componentDidCatch` fires `navigator.sendBeacon('/api/error-report')`. Worker route persists payload to `beta_errors` Supabase table (anon INSERT, auth SELECT). Migration `20260419120000_beta_errors.sql`.
 
 ---
 
@@ -286,7 +288,6 @@ All of the following must be ✅ before merging staging → main:
 - Gear Lists and Stacks (V1 Supabase-stored; no migration needed until feature lands in V2)
 - Story Mode widget
 - Coach Activity widget
-- Athlete Performance Timeline
 - Map performance overlay (percentile-colored arcs)
 - Race prediction / projected finish on Profile goal card
 

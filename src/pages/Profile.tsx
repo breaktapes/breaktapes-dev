@@ -972,6 +972,113 @@ function AgeGradeTrajectory() {
   )
 }
 
+// ─── Performance Timeline ────────────────────────────────────────────────────
+
+interface TimelineYear {
+  year: string
+  raceCount: number
+  avgSpeedKmh: number
+  avgDistKm: number
+  metrics: { speed: number; endurance: number; frequency: number }
+  labels:  { speed: string; endurance: string; frequency: string }
+}
+
+function clamp(v: number, lo = 0, hi = 100): number {
+  return Math.max(lo, Math.min(hi, v))
+}
+
+function computeTimeline(races: Race[]): TimelineYear[] {
+  const byYear: Record<string, Race[]> = {}
+  for (const r of races) {
+    if (!r.date) continue
+    const y = r.date.slice(0, 4)
+    if (!byYear[y]) byYear[y] = []
+    byYear[y].push(r)
+  }
+  return Object.entries(byYear)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .slice(-5)
+    .map(([year, yr]) => {
+      const timed = yr.filter(r => r.time && r.distance)
+      const speeds = timed.map(r => {
+        const secs = parseTimeToSecs(r.time)
+        const km   = parseFloat(r.distance) || 0
+        return secs && km ? km / (secs / 3600) : null
+      }).filter((v): v is number => v !== null && isFinite(v))
+
+      const avgSpeed = speeds.length ? speeds.reduce((a, b) => a + b, 0) / speeds.length : 0
+      const avgDist  = yr.reduce((sum, r) => sum + (parseFloat(r.distance) || 0), 0) / yr.length
+
+      return {
+        year,
+        raceCount: yr.length,
+        avgSpeedKmh: avgSpeed,
+        avgDistKm: avgDist,
+        metrics: {
+          speed:     clamp((avgSpeed / 18) * 100),
+          endurance: clamp((avgDist  / 50) * 100),
+          frequency: clamp((yr.length / 10) * 100),
+        },
+        labels: {
+          speed:     avgSpeed > 0 ? `${Math.round(avgSpeed)} km/h` : '—',
+          endurance: avgDist  > 0 ? `${Math.round(avgDist)} km avg` : '—',
+          frequency: `${yr.length} race${yr.length !== 1 ? 's' : ''}`,
+        },
+      }
+    })
+}
+
+const TIMELINE_METRICS: Array<{ key: keyof TimelineYear['metrics']; label: string }> = [
+  { key: 'speed',     label: 'Speed' },
+  { key: 'endurance', label: 'Distance' },
+  { key: 'frequency', label: 'Races' },
+]
+
+function PerformanceTimeline() {
+  const races = useRaceStore(selectRaces)
+  const timeline = useMemo(() => computeTimeline(races), [races])
+
+  if (timeline.length < 2) {
+    return (
+      <div style={st.section}>
+        <div style={st.sectionTitle}>PERFORMANCE TIMELINE</div>
+        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', padding: '8px 0', lineHeight: 1.6 }}>
+          Log races across two or more seasons to unlock your season-by-season story.
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div style={st.section}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+        <div style={st.sectionTitle}>PERFORMANCE TIMELINE</div>
+        <div style={{ height: '1px', flex: 1, background: 'var(--border)' }} />
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        {timeline.map(row => (
+          <div key={row.year} style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: '10px', padding: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', letterSpacing: '0.04em', color: 'var(--orange)' }}>
+              {row.year}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
+              {TIMELINE_METRICS.map(({ key, label }) => (
+                <div key={key} style={{ display: 'grid', gridTemplateColumns: '70px 1fr 70px', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)' }}>{label}</div>
+                  <div style={{ height: '5px', background: 'var(--surface3)', borderRadius: '3px', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${row.metrics[key]}%`, background: 'var(--orange)', borderRadius: '3px', transition: 'width 0.4s ease' }} />
+                  </div>
+                  <div style={{ fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700, color: 'var(--white)', textAlign: 'right' }}>{row.labels[key]}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ─── Race Activity Heatmap ────────────────────────────────────────────────────
 
 function RaceActivityHeatmap() {
@@ -1589,6 +1696,7 @@ export function Profile() {
       <PersonalBests />
       <SignatureDistances />
       <AgeGradeTrajectory />
+      <PerformanceTimeline />
       <RaceActivityHeatmap />
       <MajorsQualifiers />
       <RacePersonality />

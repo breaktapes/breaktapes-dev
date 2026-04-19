@@ -21,6 +21,27 @@ const Settings = lazy(() => import('@/pages/Settings').then(m => ({ default: m.S
 class RootErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
   state = { error: null }
   static getDerivedStateFromError(error: Error) { return { error } }
+
+  componentDidCatch(error: Error, info: { componentStack: string }) {
+    // Always log to console
+    console.error('[RootErrorBoundary]', error, info)
+    // Best-effort report — fire and forget, never blocks UI
+    try {
+      const payload = {
+        message: String(error?.message ?? '').slice(0, 500),
+        stack:   String(error?.stack   ?? '').slice(0, 2000),
+        component_stack: String(info?.componentStack ?? '').slice(0, 2000),
+        url:     window.location.href,
+        ua:      navigator.userAgent.slice(0, 300),
+        ts:      new Date().toISOString(),
+        env:     import.meta.env.MODE,
+      }
+      // Use sendBeacon so it fires even as the page is crashing
+      const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' })
+      navigator.sendBeacon('/api/error-report', blob)
+    } catch { /* ignore — reporting must never throw */ }
+  }
+
   render() {
     if (this.state.error) {
       return (

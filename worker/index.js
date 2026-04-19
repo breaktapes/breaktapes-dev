@@ -845,6 +845,33 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
 
+    // POST /api/error-report — client-side crash reporting (sendBeacon)
+    if (request.method === 'POST' && path === '/api/error-report') {
+      try {
+        const body = await request.json();
+        // Store in Supabase beta_errors if table exists; otherwise silently drop
+        if (env.SUPABASE_URL && env.SUPABASE_ANON_KEY) {
+          await fetch(`${env.SUPABASE_URL}/rest/v1/beta_errors`, {
+            method: 'POST',
+            headers: {
+              'apikey': env.SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${env.SUPABASE_ANON_KEY}`,
+              'Content-Type': 'application/json',
+              'Prefer': 'return=minimal',
+            },
+            body: JSON.stringify({
+              message: String(body.message ?? '').slice(0, 500),
+              stack:   String(body.stack   ?? '').slice(0, 2000),
+              url:     String(body.url ?? '').slice(0, 500),
+              env:     String(body.env ?? '').slice(0, 50),
+              ts:      body.ts ?? new Date().toISOString(),
+            }),
+          }).catch(() => {}); // never fail the response
+        }
+      } catch { /* malformed body — ignore */ }
+      return new Response(null, { status: 204 });
+    }
+
     // Only handle GET requests for profile routes
     if (request.method === 'GET') {
       // /u/:username
