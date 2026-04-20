@@ -18,14 +18,6 @@ const IconRaces = () => (
   </svg>
 )
 
-const IconGear = () => (
-  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="2" y="7" width="20" height="14" rx="2"/>
-    <path d="M2 11h20"/>
-    <path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
-  </svg>
-)
-
 const IconTrain = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
     <polyline points="2,12 6,12 8.5,5 11.5,19 14,12 16,12 17.5,7.5 19,12 22,12"/>
@@ -44,7 +36,6 @@ const IconYou = () => (
 const NAV_TABS = [
   { to: '/',      label: 'Home',  Icon: IconHome  },
   { to: '/races', label: 'Races', Icon: IconRaces },
-  { to: '/gear',  label: 'Gear',  Icon: IconGear  },
   { to: '/train', label: 'Train', Icon: IconTrain },
   { to: '/you',   label: 'You',   Icon: IconYou   },
 ] as const
