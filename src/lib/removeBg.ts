@@ -15,7 +15,7 @@ import { removeBackground, type Config } from '@imgly/background-removal'
 const RMBG_CONFIG: Config = {
   publicPath: 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/',
   debug: false,
-  model: 'isnet_quint8',  // smallest/fastest model (~15 MB quantized)
+  model: 'isnet_quint8',
 }
 
 let _warmingUp = false
