@@ -1,5 +1,5 @@
 import { useWearableStore } from '@/stores/useWearableStore'
-import { saveWearableToken } from '@/lib/wearableUtils'
+import { saveWearableToken, removeWearableToken } from '@/lib/wearableUtils'
 import { GARMIN_CLIENT_ID } from '@/env'
 import type { WearableToken } from '@/types'
 import type { GarminActivity } from '@/types/wearables'
@@ -73,9 +73,38 @@ export async function handleGarminCallback(code: string, returnedState: string):
   useWearableStore.getState().setToken('garmin', token)
 }
 
-export async function fetchGarminActivities(limit = 20): Promise<GarminActivity[]> {
+export async function refreshGarminToken(): Promise<void> {
   const token = useWearableStore.getState().garminToken
+  if (!token?.refresh_token) return
+  const res = await fetch(`${HEALTH_PROXY}/garmin/refresh`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refresh_token: token.refresh_token }),
+  })
+  if (!res.ok) {
+    await removeWearableToken('garmin')
+    useWearableStore.getState().setToken('garmin', null)
+    return
+  }
+  const data = await res.json()
+  const updated: WearableToken = {
+    provider: 'garmin',
+    access_token: data.access_token,
+    refresh_token: data.refresh_token ?? token.refresh_token,
+    expires_at: data.expires_in ? Math.floor(Date.now() / 1000) + data.expires_in : undefined,
+  }
+  await saveWearableToken(updated)
+  useWearableStore.getState().setToken('garmin', updated)
+}
+
+export async function fetchGarminActivities(limit = 20): Promise<GarminActivity[]> {
+  let token = useWearableStore.getState().garminToken
   if (!token) return []
+  if (token.expires_at && token.expires_at - Math.floor(Date.now() / 1000) < 300) {
+    await refreshGarminToken()
+    token = useWearableStore.getState().garminToken
+    if (!token) return []
+  }
   const end = Math.floor(Date.now() / 1000)
   const start = end - 90 * 24 * 3600
   const res = await fetch(
