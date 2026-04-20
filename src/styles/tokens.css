@@ -36,10 +36,14 @@
   --gold:       #C8963C;
   --gold-dim:   rgba(200,150,60,0.12);
   --gold-border:rgba(200,150,60,0.30);
+  --gold-ch:    200, 150, 60;
   /* gradient shorthands */
-  --grad-orange: linear-gradient(135deg, #E84E1B 0%, #C03A10 100%);
-  --grad-gold:   linear-gradient(135deg, #C8963C 0%, #A07030 100%);
-  --grad-surface:linear-gradient(135deg, #141414 0%, #111013 60%, #121214 100%);
+  --grad-orange:   linear-gradient(135deg, #E84E1B 0%, #C03A10 100%);
+  --grad-gold:     linear-gradient(135deg, #C8963C 0%, #A07030 100%);
+  --grad-surface:  linear-gradient(135deg, #141414 0%, #111013 60%, #121214 100%);
+  --grad-primary:  linear-gradient(135deg, var(--orange) 0%, rgba(var(--orange-ch),0.6) 100%);
+  --grad-secondary:linear-gradient(135deg, var(--green) 0%, rgba(var(--green-ch),0.6) 100%);
+  --shell-gradient:linear-gradient(180deg, var(--black) 0%, var(--surface) 100%);
   /* mono font */
   --mono: 'Geist Mono', 'Courier New', monospace;
   /* error states */
@@ -85,6 +89,9 @@
   --shell-bottom-gradient: #F5F0E8;
   --flatlay-tile: #ffffff;
   --flatlay-text: #111111;
+  --grad-primary:  linear-gradient(135deg, #D4421A 0%, rgba(212,66,26,0.6) 100%);
+  --grad-secondary:linear-gradient(135deg, #008840 0%, rgba(0,136,64,0.6) 100%);
+  --shell-gradient:linear-gradient(180deg, #F5F0E8 0%, #EDE9E0 100%);
 }
 
 /* Deep Space — Pro */
@@ -107,6 +114,9 @@
   --border2:    rgba(91,110,245,0.18);
   --shell-top-gradient: #020206;
   --shell-bottom-gradient: #020206;
+  --grad-primary:  linear-gradient(135deg, #5B6EF5 0%, rgba(91,110,245,0.6) 100%);
+  --grad-secondary:linear-gradient(135deg, #7ED4FF 0%, rgba(126,212,255,0.6) 100%);
+  --shell-gradient:linear-gradient(180deg, #020206 0%, #0A0A14 100%);
 }
 
 /* Race Night — Pro */
@@ -129,6 +139,9 @@
   --border2:    rgba(232,240,0,0.16);
   --shell-top-gradient: #050505;
   --shell-bottom-gradient: #050505;
+  --grad-primary:  linear-gradient(135deg, #E8F000 0%, rgba(232,240,0,0.6) 100%);
+  --grad-secondary:linear-gradient(135deg, #00FF88 0%, rgba(0,255,136,0.6) 100%);
+  --shell-gradient:linear-gradient(180deg, #050505 0%, #0D0D0D 100%);
 }
 
 /* Obsidian — Pro */
@@ -151,6 +164,9 @@
   --border2:    rgba(255,255,255,0.13);
   --shell-top-gradient: #000000;
   --shell-bottom-gradient: #000000;
+  --grad-primary:  linear-gradient(135deg, #B8C4D0 0%, rgba(184,196,208,0.6) 100%);
+  --grad-secondary:linear-gradient(135deg, #A0C8E0 0%, rgba(160,200,224,0.6) 100%);
+  --shell-gradient:linear-gradient(180deg, #000000 0%, #080808 100%);
 }
 
 /* Acid Track — Pro */
@@ -173,6 +189,9 @@
   --border2:    rgba(57,255,20,0.16);
   --shell-top-gradient: #030603;
   --shell-bottom-gradient: #030603;
+  --grad-primary:  linear-gradient(135deg, #39FF14 0%, rgba(57,255,20,0.6) 100%);
+  --grad-secondary:linear-gradient(135deg, #39FF14 0%, rgba(57,255,20,0.6) 100%);
+  --shell-gradient:linear-gradient(180deg, #030603 0%, #080E08 100%);
 }
 
 /* Titanium — Pro */
@@ -195,6 +214,9 @@
   --border2:    rgba(255,255,255,0.13);
   --shell-top-gradient: #080A0C;
   --shell-bottom-gradient: #080A0C;
+  --grad-primary:  linear-gradient(135deg, #8FA0B0 0%, rgba(143,160,176,0.6) 100%);
+  --grad-secondary:linear-gradient(135deg, #80C8E8 0%, rgba(128,200,232,0.6) 100%);
+  --shell-gradient:linear-gradient(180deg, #080A0C 0%, #10141A 100%);
 }
 
 /* Ember — Pro */
@@ -217,6 +239,9 @@
   --border2:    rgba(255,140,0,0.16);
   --shell-top-gradient: #0A0400;
   --shell-bottom-gradient: #0A0400;
+  --grad-primary:  linear-gradient(135deg, #FF8C00 0%, rgba(255,140,0,0.6) 100%);
+  --grad-secondary:linear-gradient(135deg, #FFB347 0%, rgba(255,179,71,0.6) 100%);
+  --shell-gradient:linear-gradient(180deg, #0A0400 0%, #140800 100%);
 }
 
 /* Polar Circuit — Pro */
@@ -239,4 +264,7 @@
   --border2:    rgba(0,196,240,0.16);
   --shell-top-gradient: #020810;
   --shell-bottom-gradient: #020810;
+  --grad-primary:  linear-gradient(135deg, #00C4F0 0%, rgba(0,196,240,0.6) 100%);
+  --grad-secondary:linear-gradient(135deg, #00F0C4 0%, rgba(0,240,196,0.6) 100%);
+  --shell-gradient:linear-gradient(180deg, #020810 0%, #060E18 100%);
 }
