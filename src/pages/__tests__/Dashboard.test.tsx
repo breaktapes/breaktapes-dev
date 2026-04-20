@@ -118,7 +118,7 @@ describe('Dashboard — StatsStrip', () => {
     // Labels use uppercase text
     expect(screen.getByText('RACES')).toBeInTheDocument()
     expect(screen.getByText('COUNTRIES')).toBeInTheDocument()
-    expect(screen.getAllByText(/TOTAL (KM|MI)/i).length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText(/^(KM|MI)$/).length).toBeGreaterThanOrEqual(1)
     expect(screen.getByText('MEDALS')).toBeInTheDocument()
   })
 
@@ -149,7 +149,7 @@ describe('Dashboard — RecentRaces', () => {
 
   it('shows empty state message when no races', () => {
     renderDashboard()
-    const emptyStates = screen.getAllByText(/No races yet/)
+    const emptyStates = screen.getAllByText(/No races (yet|logged yet)/)
     expect(emptyStates.length).toBeGreaterThanOrEqual(1)
   })
 })
