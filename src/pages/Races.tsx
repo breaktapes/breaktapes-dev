@@ -14,6 +14,7 @@ import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { ViewEditRaceModal } from '@/components/ViewEditRaceModal'
 import { AddRaceModal } from '@/components/AddRaceModal'
+import { RaceImportModal } from '@/components/RaceImportModal'
 import { RaceLogPassport } from '@/components/RaceLogPassport'
 import type { Race } from '@/types'
 import { useUnits, distUnit } from '@/lib/units'
@@ -348,7 +349,7 @@ function WishlistRow({ race, onPlan, onRemove }: {
 
 type ViewMode = 'compact' | 'detailed' | 'wishlist'
 
-function RacesSheet({ races, onAddRace, onOpenPassport }: { races: Race[]; onAddRace: () => void; onOpenPassport: () => void }) {
+function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport }: { races: Race[]; onAddRace: () => void; onImportRace: () => void; onOpenPassport: () => void }) {
   const [expanded, setExpanded] = useState(false)
   const [yearFilter, setYearFilter] = useState('all')
   const [viewMode, setViewMode] = useState<ViewMode>('compact')
@@ -552,6 +553,18 @@ function RacesSheet({ races, onAddRace, onOpenPassport }: { races: Race[]; onAdd
           + Log Race
         </button>
         <button
+          style={{
+            background: 'transparent', color: 'var(--muted)',
+            border: '1px solid var(--border2)', borderRadius: '8px', padding: '0.8rem',
+            fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '11px',
+            letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer',
+            whiteSpace: 'nowrap', flexShrink: 0,
+          }}
+          onClick={onImportRace}
+        >
+          ↓ Import
+        </button>
+        <button
           className="passport-dossier-btn"
           onClick={onOpenPassport}
           title="Export Race Log Passport"
@@ -578,8 +591,9 @@ export function Races() {
   const athlete = useAthleteStore(s => s.athlete)
   const [viewState, setViewState] = useState(INITIAL_VIEW)
   const mapRef = useRef<MapRef>(null)
-  const [addRaceOpen, setAddRaceOpen] = useState(false)
-  const [passportOpen, setPassportOpen] = useState(false)
+  const [addRaceOpen, setAddRaceOpen]     = useState(false)
+  const [importOpen, setImportOpen]       = useState(false)
+  const [passportOpen, setPassportOpen]   = useState(false)
 
   // Fly-to bounds when races load
   useEffect(() => {
@@ -634,9 +648,10 @@ export function Races() {
       </MapErrorBoundary>
 
       {/* Bottom sheet */}
-      <RacesSheet races={races} onAddRace={() => setAddRaceOpen(true)} onOpenPassport={() => setPassportOpen(true)} />
+      <RacesSheet races={races} onAddRace={() => setAddRaceOpen(true)} onImportRace={() => setImportOpen(true)} onOpenPassport={() => setPassportOpen(true)} />
 
-      {addRaceOpen && <AddRaceModal onClose={() => setAddRaceOpen(false)} />}
+      {addRaceOpen  && <AddRaceModal     onClose={() => setAddRaceOpen(false)} />}
+      {importOpen   && <RaceImportModal  onClose={() => setImportOpen(false)} />}
 
       {passportOpen && (
         <RaceLogPassport
