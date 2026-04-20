@@ -36,7 +36,7 @@
   --gold:       #C8963C;
   --gold-dim:   rgba(200,150,60,0.12);
   --gold-border:rgba(200,150,60,0.30);
-  --gold-ch:    200, 150, 60;
+  --gold-ch:    200, 150, 60; /* intentionally not overridden per-theme — PRO gold is universal */
   /* gradient shorthands */
   --grad-orange:   linear-gradient(135deg, #E84E1B 0%, #C03A10 100%);
   --grad-gold:     linear-gradient(135deg, #C8963C 0%, #A07030 100%);

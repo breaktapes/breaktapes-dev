@@ -397,7 +397,7 @@ body::after {
 .race-row-compact.is-pb {
   background: linear-gradient(105deg, rgba(var(--orange-ch),0.13) 0%, rgba(var(--gold-ch),0.08) 40%, rgba(var(--gold-ch),0.03) 100%);
   border-bottom-color: rgba(var(--gold-ch),0.18);
-  border-left: 3px solid;
+  border-left: 3px solid var(--orange); /* Safari fallback: border-image ignores var() */
   border-image: linear-gradient(180deg, var(--orange) 0%, rgba(var(--gold-ch),0.45) 100%) 1;
   padding-left: 6px;
 }
