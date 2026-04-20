@@ -1687,11 +1687,6 @@ function WhyResultWidget() {
 
 // ─── Activity Feed Preview Widget ────────────────────────────────────────────
 
-const ACTIVITY_ICON: Record<string, string> = {
-  Run: '🏃', TrailRun: '🏔', Ride: '🚴', Swim: '🏊', Walk: '🚶',
-  Hike: '⛰', Workout: '💪', Yoga: '🧘', VirtualRide: '🚴', VirtualRun: '🏃',
-  WeightTraining: '🏋', Triathlon: '🏊',
-}
 
 function ActivityPreviewWidget() {
   const stravaToken = useWearableStore(s => s.stravaToken)
