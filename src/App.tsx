@@ -7,7 +7,6 @@ import { ThemeProvider } from '@/components/ThemeProvider'
 import { AuthGate } from '@/components/AuthGate'
 import { Layout } from '@/components/Layout'
 import { transitions } from '@/lib/motion'
-import { BetaFeedback } from '@/components/BetaFeedback'
 
 // Lazy-loaded pages — each is a separate JS chunk.
 // Dashboard loads eagerly (it's the default route, always shown first).
@@ -106,7 +105,6 @@ export function App() {
             <AuthGate>
               <Layout>
                 <AnimatedRoutes />
-                <BetaFeedback />
               </Layout>
             </AuthGate>
           </QueryClientProvider>
