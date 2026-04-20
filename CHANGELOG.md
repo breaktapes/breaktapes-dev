@@ -3,6 +3,50 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.6.0.1] - 2026-04-20
+
+### Added
+- **Theme packs for all 9 themes**: every color-bearing UI element (widget cards, buttons, animations, tags, badges, map pills, PB rows, year dividers, passport modal) now derives its color from CSS custom properties. Switching theme changes everything — not just the background.
+- **New CSS variables**: `--gold-ch` (RGB channels for gold), `--grad-primary`, `--grad-secondary`, `--shell-gradient` added globally and overridden per-theme for Deep Space, Race Night, Obsidian, Acid Track, Titanium, Ember, and Polar Circuit.
+
+### Fixed
+- Widget card gradients were always orange regardless of active theme — converted all hardcoded `rgba(232,78,27,...)`, `rgba(0,255,136,...)`, and `rgba(200,150,60,...)` values to `rgba(var(--orange-ch),...)`, `rgba(var(--green-ch),...)`, and `rgba(var(--gold-ch),...)`.
+- Removed beta feedback floating button.
+- Fixed CI: pinned `onnxruntime-web` to 1.21.0, added `.npmrc` legacy-peer-deps for `@imgly/background-removal` compatibility.
+- Fixed two Dashboard test matchers that had drifted from refactored component text.
+- Safari: added `border-left-color: var(--orange)` fallback on PB race rows — `border-image` with `var()` is unsupported in Safari so the solid fallback now renders in the correct theme color.
+- **Athlete Dossier share card** now exports in the active theme's colors. The canvas 2D API bypasses CSS custom properties, so the card was always rendering in default Carbon+Chrome orange. Fixed by reading `--orange-ch`, `--green-ch`, `--gold-ch`, `--black`, `--white`, `--muted`, `--muted2`, and `--gold` from `getComputedStyle` at draw time. Deep Space users get a blue dossier, Race Night gets yellow, etc.
+
+## [0.6.0.0] - 2026-04-16
+
+### Added
+- **WHOOP OAuth 2.0 integration**: connect your WHOOP band to see workout activity + recovery scores in the Train tab. Token exchange via health-proxy, auto-refresh 60s before expiry, tokens stored in Supabase `wearable_tokens`.
+- **Garmin OAuth + PKCE integration**: secure authorization using SHA-256 code challenge via `crypto.subtle.digest`. Workout activities pulled from Garmin Wellness API (90-day window), PKCE verifier stored in `sessionStorage`.
+- **Strava OAuth integration**: read-only activity sync via `activity:read_all` scope.
+- **Apple Health XML import**: upload your `export.xml` — files < 500 MB parse inline; files > 500 MB stream in 8 MB chunks with incremental Supabase upserts so even 2 GB exports never OOM.
+- **Claude AI race parsing** (`src/lib/claude.ts`): paste race result text or upload a screenshot and the form auto-fills name, date, city, country, distance, sport, finish time, placing, and splits. Uses `claude-haiku-4-5-20251001` with user-supplied API key.
+- **Race Share Card** (`src/components/RaceShareCard.tsx`): 1200×630 canvas card showing race name, location, date, finish time, distance, placing, and medal badge. Download as PNG or copy to clipboard.
+- **Wearable activity feed in Train**: parallel WHOOP + Garmin activity fetch, merged and sorted by date, with OAuth callback handling for `?state=whoop|garmin|strava` return URLs.
+- **Live wearable Connect/Disconnect buttons in Settings**: shows ● Connected status in green with real token state from Zustand; Apple Health card has file upload with streaming progress bar.
+- **Race search + pagination in Races sheet**: search bar filters by name/city/country with 150ms debounce and × clear; results paginated 20 per page with "Show more" button.
+- **Share Profile button on Athlete page**: visible when `username` + `isPublic` are both set, copies `https://app.breaktapes.com/u/{username}` to clipboard.
+- **`addUpcomingRace` + `autoMoveExpiredUpcoming`** in `useRaceStore`: upcoming races whose date passes automatically move to the past races list on every rehydration.
+- **Map pin markers**: replaced arc routes with MapLibre `<Marker>` pin dots (orange circles), removing the deck.gl dependency entirely.
+
+### Fixed
+- **TypeScript `Record<MedalTier, number>` indexing error** in `Profile.tsx`: added explicit `MedalTier` union type so `tierCounts` is correctly typed.
+
+## [0.5.1.0] - 2026-04-16
+
+### Added
+- **Dashboard PreRaceBriefing card**: context-aware hero card with four states — PRE-RACE (countdown + last race pill), JUST RACED (days since + finish time), ADD YOUR FIRST RACE (onboarding CTA), and WHAT'S NEXT (no upcoming race).
+- **10 new dashboard analytics widgets**: Season Planner (90-day race lineup with taper/recover days), Recovery Intelligence (estimated recovery days remaining with load score), Training Correlation (Strava-connected gate), Boston Qualifier (live BQ gap vs personal marathon PB), Pacing IQ (FADER/NEGATIVE SPLITTER/EVEN PACER from splits data), Career Momentum (form trend score + HOT/RISING/NEUTRAL/COOLING badge), Age-Grade Score (WA standards gate on DOB+gender), Race DNA (temperature fit + fade rate), Pattern Scan (deep pacing trends + EXPLAIN WITH AI), Why Result (COACH BRIEF for last race).
+- **Dashboard Customize modal redesigned**: bottom sheet with zone sections (NOW / RECENTLY / CONSISTENCY / PATTERNS), per-widget PRO badges, iOS-style toggle switches, ▲/▼ reorder buttons.
+- **Profile page full redesign**: Achievements hero card (green gradient, 19 achievements, SPECIAL/MILESTONE/EVENT groups), Countries Raced pill chips, Age-Grade Trajectory, Race Activity Heatmap (2-year × 12-month clickable grid), World Marathon Majors board (7 majors with COMPLETED/IN PROGRESS/ENTRY READY stats), Race Personality widget (STARTER/DIESEL/BIG-DAY PERFORMER computed from race history), Personal Bests grid.
+
+### Fixed
+- **Zustand infinite render loop**: `selectDashLayout` and `selectDashZoneCollapse` selectors were calling `getDashLayout()` / `getDashZoneCollapse()` inline which returned new object references on every render, triggering `useSyncExternalStore` to force re-renders infinitely. Selectors now return stable `s.widgets` / `s.zoneCollapse` references; components compute merged layout via `useMemo`.
+
 ## [0.4.0.0] - 2026-04-16
 
 ### Added

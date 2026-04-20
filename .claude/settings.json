@@ -34,6 +34,11 @@
           {
             "type": "command",
             "command": "if pgrep -f 'preview-server' > /dev/null; then pkill -HUP -f 'preview-server'; fi"
+          },
+          {
+            "type": "command",
+            "command": "cd \"${CLAUDE_PROJECT_DIR:-.}\" && npx tsc --noEmit 2>&1 | head -30",
+            "timeout": 15000
           }
         ]
       },

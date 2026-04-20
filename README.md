@@ -1,35 +1,38 @@
 # BREAKTAPES
 
-Single-page app for endurance athletes — track race history, medals, personal bests, upcoming races, and wearable health data.
+Race history, medals, personal bests, upcoming races and wearable data for endurance athletes.
 
 - **Production:** [app.breaktapes.com](https://app.breaktapes.com)
 - **Staging:** [dev.breaktapes.com](https://dev.breaktapes.com)
 
-## Local preview
+## Local Development
 
 ```bash
-python3 -m http.server 3000
+cp .env.example .env   # fill in Supabase URL + anon key (see comments inside)
+npm install
+npm run dev            # Vite dev server at http://localhost:5173
 ```
 
-Then open `http://localhost:3000` in your browser.
+## Project Structure
 
-## Project structure
-
-- `index.html` — entire app (single-file SPA, ~10,000 lines of HTML/CSS/JS)
-- `public/index.html` — deploy copy (always synced: `cp index.html public/index.html`)
-- `supabase/` — Supabase project config + database migrations
-- `tests/` — Jest + jsdom test suite (`npm test`)
-- `CLAUDE.md` — project memory and architecture reference
-- `DESIGN.md` — frontend design system (read before any UI changes)
+- `src/` — React app (pages, components, stores, hooks, lib)
+- `worker/index.js` — Cloudflare Worker (SSR for `/u/:username` public profiles)
+- `supabase/` — Supabase config + database migrations
+- `tests/` — Legacy Jest/jsdom tests (SPA snapshot, kept for regression coverage)
+- `CLAUDE.md` — Project memory and architecture reference (primary source of truth)
+- `DESIGN.md` — Frontend design system (read before any UI change)
 - `.claude/skills/` — gstack skills for Claude Code workflows
 
 ## Tests
 
 ```bash
-npm test              # run all tests (218 tests)
-npm run test:coverage # with coverage report
+npm test                # Legacy Jest tests (SPA snapshot)
+npm run test:react      # Vitest + React Testing Library (React components)
+npm run test:coverage   # Coverage report
 ```
 
 ## Deploy
 
-Cloudflare Workers via GitHub Actions — push to `staging` branch deploys to `dev.breaktapes.com`, push to `main` deploys to `app.breaktapes.com`. See `CLAUDE.md` for the full pipeline and manual deploy instructions.
+Push to `staging` → auto-deploys to `dev.breaktapes.com`.
+Push to `main` → auto-deploys to `app.breaktapes.com`.
+Cloudflare Workers via GitHub Actions. See `CLAUDE.md` for the full pipeline and manual deploy instructions.

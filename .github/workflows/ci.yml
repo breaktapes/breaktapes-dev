@@ -7,6 +7,26 @@ on:
       - main
 
 jobs:
+  build:
+    name: V2 React Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build V2 (Vite)
+        run: npm run build
+
   validate:
     name: Validate
     runs-on: ubuntu-latest
@@ -15,46 +35,40 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # ── 1. index.html exists ─────────────────────────────────────────────
-      - name: Check index.html exists
+      # ── 1. Node.js + dependencies ────────────────────────────────────────
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      # ── 2. Run tests ─────────────────────────────────────────────────────
+      - name: Run tests
+        run: npm test
+
+      - name: Run React component tests
+        run: npm run test:react
+
+      - name: TypeScript type check
+        run: npx tsc --noEmit
+
+      # ── 3. Build ─────────────────────────────────────────────────────────
+      - name: Build
+        run: npm run build
+
+      # ── 4. dist/index.html exists ────────────────────────────────────────
+      - name: Check dist/index.html exists
         run: |
-          if [ ! -f index.html ]; then
-            echo "❌ index.html not found"
+          if [ ! -f dist/index.html ]; then
+            echo "❌ dist/index.html not found — build may have failed"
             exit 1
           fi
-          echo "✅ index.html exists"
+          echo "✅ dist/index.html exists"
 
-      # ── 2. Required env-detection markers present ────────────────────────
-      - name: Check env-detection markers
-        run: |
-          MARKERS=("_IS_PROD" "_IS_STAGING" "SUPABASE_URL" "SUPABASE_ANON_KEY" "applyEnvRestrictions" "kmdpufauamadwavqsinj" "yqzycwuyhvzkbofwkazr")
-          FAILED=0
-          for marker in "${MARKERS[@]}"; do
-            if ! grep -q "$marker" index.html; then
-              echo "❌ Missing required marker: $marker"
-              FAILED=1
-            else
-              echo "✅ Found: $marker"
-            fi
-          done
-          if [ $FAILED -eq 1 ]; then exit 1; fi
-
-      # ── 3. File size check (warn at 5MB, fail at 10MB) ───────────────────
-      - name: Check file size
-        run: |
-          SIZE=$(wc -c < index.html)
-          SIZE_MB=$(echo "scale=2; $SIZE / 1048576" | bc)
-          echo "index.html size: ${SIZE_MB} MB (${SIZE} bytes)"
-          if [ $SIZE -gt 10485760 ]; then
-            echo "❌ index.html exceeds 10MB limit ($SIZE bytes)"
-            exit 1
-          elif [ $SIZE -gt 5242880 ]; then
-            echo "⚠️  index.html is over 5MB — consider splitting"
-          else
-            echo "✅ File size OK"
-          fi
-
-      # ── 4. wrangler.toml has both environments ───────────────────────────
+      # ── 5. wrangler.toml has both environments ───────────────────────────
       - name: Check wrangler.toml environments
         run: |
           if ! grep -q 'app.breaktapes.com' wrangler.toml; then
@@ -69,22 +83,36 @@ jobs:
             echo "❌ wrangler.toml missing [env.staging] block"
             exit 1
           fi
+          if ! grep -q 'directory = "dist"' wrangler.toml; then
+            echo "❌ wrangler.toml assets.directory should be dist (not public)"
+            exit 1
+          fi
           echo "✅ wrangler.toml has both production and staging environments"
 
-      # ── 5. public/ sync check ────────────────────────────────────────────
-      - name: Sync index.html → public/
+      # ── 6. dist/ size check (warn at 20MB, fail at 40MB) ────────────────
+      # React app with MapLibre GL + deck.gl is ~17MB uncompressed (gzip: ~5MB).
+      # Limits updated from 5/15MB (SPA era) to 20/40MB (React + map libs).
+      - name: Check dist/ bundle size
         run: |
-          mkdir -p public
-          cp index.html public/index.html
-          echo "✅ public/index.html synced from index.html"
+          TOTAL=$(du -sb dist/ | cut -f1)
+          TOTAL_MB=$(echo "scale=2; $TOTAL / 1048576" | bc)
+          echo "dist/ total size: ${TOTAL_MB} MB (${TOTAL} bytes)"
+          if [ $TOTAL -gt 41943040 ]; then
+            echo "❌ dist/ exceeds 40MB limit ($TOTAL bytes)"
+            exit 1
+          elif [ $TOTAL -gt 20971520 ]; then
+            echo "⚠️  dist/ is over 20MB — check bundle analyzer"
+          else
+            echo "✅ Bundle size OK"
+          fi
 
-      # ── 6. Wrangler config validation (dry-run) ──────────────────────────
+      # ── 7. Wrangler config validation (dry-run) ──────────────────────────
       - name: Validate wrangler config
         run: npx wrangler deploy --env="" --dry-run 2>&1 | tail -5 || true
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
-      # ── 7. Summary ───────────────────────────────────────────────────────
+      # ── 8. Summary ───────────────────────────────────────────────────────
       - name: Summary
         if: always()
         run: |

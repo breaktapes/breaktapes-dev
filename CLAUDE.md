@@ -1,5 +1,23 @@
 # BREAKTAPES — Claude Project Memory (Trunk)
 
+## Quick Reference
+
+| Task | Command |
+|------|---------|
+| Local dev server | `npm run dev` (Vite, http://localhost:5173) |
+| Legacy tests | `npm test` (Jest, SPA snapshot) |
+| React component tests | `npm run test:react` (vitest) |
+| Both test suites | `npm test && npm run test:react` |
+| Build for deploy | `npm run build` |
+| Deploy to staging | `git push origin staging` (auto-deploy via GitHub Actions) |
+| Deploy to prod | `git push origin main` |
+| Staging URL | https://dev.breaktapes.com |
+| Production URL | https://app.breaktapes.com |
+
+> For full architecture, store patterns, and session history see sections below.
+
+---
+
 > **Instruction:** After every commit merged to `main`, update this file and all memory documents under `docs/memory/` to reflect new learnings, architectural changes, and session decisions. Keep these files current — they are the source of truth for every Claude session.
 
 ---
@@ -407,6 +425,28 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 - When merging PRs, first check if any open PRs have their base branch set to the branch being merged: `gh pr list --state open` and inspect `baseRefName`. Rebase those PRs onto the new base before squash-merging to avoid auto-closed PRs.
 - If a PR does get auto-closed due to a squash merge, rebase the branch onto the updated base and open a new PR.
 - **Before deleting any git worktrees**, first `cd` to the main repository root directory (`/Users/akrish/DEV/breaktapes-dev` or equivalent). Then clean up worktrees. Never delete the directory the current shell is inside of.
+
+---
+
+## Worktree Cleanup
+
+- **NEVER delete the worktree that the current shell session is rooted in.** If cleanup requires deleting the current worktree, `cd` to the main repo first (`/Users/akrish/DEV/breaktapes-dev`), or instruct the user to run the final cleanup commands manually.
+- Always verify `pwd` resolves before running git/bash commands after any worktree removal.
+
+---
+
+## Ship Workflow
+
+- Standard ship sequence: run tests → commit → push → open PR → merge to staging → verify deploy at `dev.breaktapes.com` → merge to main → verify prod → clean up branches/worktrees.
+- **Always verify deploys are live** (not just green CI) before declaring done — curl or screenshot the live URL.
+- Handle staging/main divergence from prior squash merges with local cherry-pick without asking.
+
+---
+
+## Planning vs. Research Queries
+
+- For research, advice, or recommendation queries (e.g. "what map SDK should I use?"), respond directly with recommendations rather than writing a plan or asking clarifying questions first.
+- Reserve the plan-first workflow for implementation tasks.
 
 ---
 
@@ -902,7 +942,7 @@ Direct DB access (psql/psycopg2) is blocked from localhost — Supabase only exp
 #### Key learnings
 - `updateRace` in Zustand stores must patch ALL derived copies of a race — `races`, `upcomingRaces`, AND `nextRace` — otherwise widgets reading `nextRace` see stale data after an edit.
 - `useRaceCatalog` is fetched inside `AddRaceModal` on mount — the 8,284-row fetch takes 1-3s. Always add a `useEffect([catalog])` re-trigger so search fires when data arrives, not just when query changes.
-- Race catalog stores `country` as full names ("Oman", "United States") not ISO codes. The `countries.ts` mapping handles both directions for search haystacks.
+- Race catalog stores `country` as full names ("Oman", "United States", "France") — NOT ISO codes. The `countries.ts` mapping handles both directions for search haystacks.
 - `new Date().toISOString()` is UTC — never use it for "today/yesterday" date strings in tests or components that compare against local-time YYYY-MM-DD. Use `localDateStr()` helpers that use `d.getFullYear()`, `d.getMonth()`, `d.getDate()`.
 - Open-Meteo `forecast_days=1` + `hour >= currentHour` filter fails at night — always fetch `forecast_days=2` and filter by `timestamp >= now - 1hr`, then `.slice(0, 5)`.
 
@@ -920,10 +960,12 @@ Key routing rules:
 - Ship, deploy, push, create PR → invoke ship
 - QA, test the site, find bugs → invoke qa
 - Code review, check my diff → invoke review
+- Fix issue, fix bug, "fix #N", fix from issue, bug report → invoke fix-from-issue
 - Update docs after shipping → invoke document-release
 - Weekly retro → invoke retro
 - Design system, brand → invoke design-consultation
 - Visual audit, design polish → invoke design-review
+- UI redesign, "give me options", "upgrade this UI/UX", "show me alternatives", design variants → invoke design-variants
 - Architecture review → invoke plan-eng-review
 - Save progress, checkpoint, resume → invoke checkpoint
 - Code quality, health check → invoke health

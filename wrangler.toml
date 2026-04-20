@@ -3,7 +3,7 @@ main = "worker/index.js"
 compatibility_date = "2024-09-23"
 account_id = "b09f233e618dc7f23bcb247c947eb303"
 
-assets = { directory = "public", html_handling = "auto-trailing-slash" }
+assets = { directory = "dist", html_handling = "auto-trailing-slash", binding = "ASSETS" }
 
 # Production: app.breaktapes.com
 # Deploy: wrangler deploy
@@ -29,6 +29,8 @@ SUPABASE_URL = "https://kmdpufauamadwavqsinj.supabase.co"
 # Deploy: wrangler deploy --env staging
 [env.staging]
 name = "breaktapes-app-staging"
+main = "worker/index.js"
+assets = { directory = "dist", html_handling = "auto-trailing-slash", binding = "ASSETS" }
 routes = [
   { pattern = "dev.breaktapes.com/*", zone_id = "7d1d8be858893e977e57b0455ed2388f" }
 ]

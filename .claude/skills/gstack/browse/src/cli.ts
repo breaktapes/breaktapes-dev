@@ -11,6 +11,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
+import { safeUnlink, safeUnlinkQuiet, safeKill, isProcessAlive } from './error-handling';
 import { resolveConfig, ensureStateDir, readVersionHash } from './config';
 
 const config = resolveConfig();
@@ -103,27 +104,7 @@ function readState(): ServerState | null {
   }
 }
 
-function isProcessAlive(pid: number): boolean {
-  if (IS_WINDOWS) {
-    // Bun's compiled binary can't signal Windows PIDs (always throws ESRCH).
-    // Use tasklist as a fallback. Only for one-shot calls — too slow for polling loops.
-    try {
-      const result = Bun.spawnSync(
-        ['tasklist', '/FI', `PID eq ${pid}`, '/NH', '/FO', 'CSV'],
-        { stdout: 'pipe', stderr: 'pipe', timeout: 3000 }
-      );
-      return result.stdout.toString().includes(`"${pid}"`);
-    } catch {
-      return false;
-    }
-  }
-  try {
-    process.kill(pid, 0);
-    return true;
-  } catch {
-    return false;
-  }
-}
+// isProcessAlive is imported from ./error-handling
 
 /**
  * HTTP health check — definitive proof the server is alive and responsive.
@@ -153,7 +134,9 @@ async function killServer(pid: number): Promise<void> {
         ['taskkill', '/PID', String(pid), '/T', '/F'],
         { stdout: 'pipe', stderr: 'pipe', timeout: 5000 }
       );
-    } catch {}
+    } catch (err: any) {
+      if (err?.code !== 'ENOENT') throw err;
+    }
     const deadline = Date.now() + 2000;
     while (Date.now() < deadline && isProcessAlive(pid)) {
       await Bun.sleep(100);
@@ -161,7 +144,7 @@ async function killServer(pid: number): Promise<void> {
     return;
   }
 
-  try { process.kill(pid, 'SIGTERM'); } catch { return; }
+  safeKill(pid, 'SIGTERM');
 
   // Wait up to 2s for graceful shutdown
   const deadline = Date.now() + 2000;
@@ -171,7 +154,7 @@ async function killServer(pid: number): Promise<void> {
 
   // Force kill if still alive
   if (isProcessAlive(pid)) {
-    try { process.kill(pid, 'SIGKILL'); } catch {}
+    safeKill(pid, 'SIGKILL');
   }
 }
 
@@ -197,10 +180,10 @@ function cleanupLegacyState(): void {
           });
           const cmd = check.stdout.toString().trim();
           if (cmd.includes('bun') || cmd.includes('server.ts')) {
-            try { process.kill(data.pid, 'SIGTERM'); } catch {}
+            safeKill(data.pid, 'SIGTERM');
           }
         }
-        fs.unlinkSync(fullPath);
+        safeUnlink(fullPath);
       } catch {
         // Best effort — skip files we can't parse or clean up
       }
@@ -210,7 +193,7 @@ function cleanupLegacyState(): void {
       f.startsWith('browse-console') || f.startsWith('browse-network') || f.startsWith('browse-dialog')
     );
     for (const file of logFiles) {
-      try { fs.unlinkSync(`/tmp/${file}`); } catch {}
+      safeUnlink(`/tmp/${file}`);
     }
   } catch {
     // /tmp read failed — skip legacy cleanup
@@ -222,17 +205,25 @@ async function startServer(extraEnv?: Record<string, string>): Promise<ServerSta
   ensureStateDir(config);
 
   // Clean up stale state file and error log
-  try { fs.unlinkSync(config.stateFile); } catch {}
-  try { fs.unlinkSync(path.join(config.stateDir, 'browse-startup-error.log')); } catch {}
+  safeUnlink(config.stateFile);
+  safeUnlink(path.join(config.stateDir, 'browse-startup-error.log'));
 
   let proc: any = null;
+
+  // Allow the caller to opt out of the parent-process watchdog by setting
+  // BROWSE_PARENT_PID=0 in the environment. Useful for CI, non-interactive
+  // shells, and short-lived Bash invocations that need the server to outlive
+  // the spawning CLI. Defaults to the current process PID (watchdog active).
+  // Parse as int so stray whitespace ("0\n") still opts out — matches the
+  // server's own parseInt at server.ts:760.
+  const parentPid = parseInt(process.env.BROWSE_PARENT_PID || '', 10) === 0 ? '0' : String(process.pid);
 
   if (IS_WINDOWS && NODE_SERVER_SCRIPT) {
     // Windows: Bun.spawn() + proc.unref() doesn't truly detach on Windows —
     // when the CLI exits, the server dies with it. Use Node's child_process.spawn
     // with { detached: true } instead, which is the gold standard for Windows
     // process independence. Credit: PR #191 by @fqueiro.
-    const extraEnvStr = JSON.stringify({ BROWSE_STATE_FILE: config.stateFile, BROWSE_PARENT_PID: String(process.pid), ...(extraEnv || {}) });
+    const extraEnvStr = JSON.stringify({ BROWSE_STATE_FILE: config.stateFile, BROWSE_PARENT_PID: parentPid, ...(extraEnv || {}) });
     const launcherCode =
       `const{spawn}=require('child_process');` +
       `spawn(process.execPath,[${JSON.stringify(NODE_SERVER_SCRIPT)}],` +
@@ -243,7 +234,7 @@ async function startServer(extraEnv?: Record<string, string>): Promise<ServerSta
     // macOS/Linux: Bun.spawn + unref works correctly
     proc = Bun.spawn(['bun', 'run', SERVER_SCRIPT], {
       stdio: ['ignore', 'pipe', 'pipe'],
-      env: { ...process.env, BROWSE_STATE_FILE: config.stateFile, BROWSE_PARENT_PID: String(process.pid), ...extraEnv },
+      env: { ...process.env, BROWSE_STATE_FILE: config.stateFile, BROWSE_PARENT_PID: parentPid, ...extraEnv },
     });
     proc.unref();
   }
@@ -297,7 +288,7 @@ function acquireServerLock(): (() => void) | null {
     const fd = fs.openSync(lockPath, 'wx');
     fs.writeSync(fd, `${process.pid}\n`);
     fs.closeSync(fd);
-    return () => { try { fs.unlinkSync(lockPath); } catch {} };
+    return () => { safeUnlink(lockPath); };
   } catch {
     // Lock already held — check if the holder is still alive
     try {
@@ -469,7 +460,9 @@ function isNgrokAvailable(): boolean {
     try {
       const content = fs.readFileSync(conf, 'utf-8');
       if (content.includes('authtoken:')) return true;
-    } catch {}
+    } catch (err: any) {
+      if (err?.code !== 'ENOENT') throw err;
+    }
   }
 
   return false;
@@ -797,10 +790,10 @@ Refs:           After 'snapshot', use @e1, @e2... as selectors:
 
     // Kill ANY existing server (SIGTERM → wait 2s → SIGKILL)
     if (existingState && isProcessAlive(existingState.pid)) {
-      try { process.kill(existingState.pid, 'SIGTERM'); } catch {}
+      safeKill(existingState.pid, 'SIGTERM');
       await new Promise(resolve => setTimeout(resolve, 2000));
       if (isProcessAlive(existingState.pid)) {
-        try { process.kill(existingState.pid, 'SIGKILL'); } catch {}
+        safeKill(existingState.pid, 'SIGKILL');
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }
@@ -814,24 +807,24 @@ Refs:           After 'snapshot', use @e1, @e2... as selectors:
       const lockTarget = fs.readlinkSync(singletonLock); // e.g. "hostname-12345"
       const orphanPid = parseInt(lockTarget.split('-').pop() || '', 10);
       if (orphanPid && isProcessAlive(orphanPid)) {
-        try { process.kill(orphanPid, 'SIGTERM'); } catch {}
+        safeKill(orphanPid, 'SIGTERM');
         await new Promise(resolve => setTimeout(resolve, 1000));
         if (isProcessAlive(orphanPid)) {
-          try { process.kill(orphanPid, 'SIGKILL'); } catch {}
+          safeKill(orphanPid, 'SIGKILL');
           await new Promise(resolve => setTimeout(resolve, 500));
         }
       }
-    } catch {
-      // No lock symlink or not readable — nothing to kill
+    } catch (err: any) {
+      if (err?.code !== 'ENOENT' && err?.code !== 'EINVAL') throw err;
     }
 
     // Clean up Chromium profile locks (can persist after crashes)
     for (const lockFile of ['SingletonLock', 'SingletonSocket', 'SingletonCookie']) {
-      try { fs.unlinkSync(path.join(profileDir, lockFile)); } catch {}
+      safeUnlinkQuiet(path.join(profileDir, lockFile));
     }
 
     // Delete stale state file
-    try { fs.unlinkSync(config.stateFile); } catch {}
+    safeUnlinkQuiet(config.stateFile);
 
     console.log('Launching headed Chromium with extension + sidebar agent...');
     try {
@@ -841,12 +834,12 @@ Refs:           After 'snapshot', use @e1, @e2... as selectors:
         BROWSE_HEADED: '1',
         BROWSE_PORT: '34567',
         BROWSE_SIDEBAR_CHAT: '1',
+        // Disable parent-process watchdog: the user controls the headed browser
+        // window lifecycle. The CLI exits immediately after connect, so watching
+        // it would kill the server ~15s later. Cleanup happens via browser
+        // disconnect event or $B disconnect.
+        BROWSE_PARENT_PID: '0',
       };
-      // If parent explicitly set BROWSE_PARENT_PID=0 (pair-agent disabling
-      // self-termination), pass it through so startServer doesn't override it.
-      if (process.env.BROWSE_PARENT_PID === '0') {
-        serverEnv.BROWSE_PARENT_PID = '0';
-      }
       const newState = await startServer(serverEnv);
 
       // Print connected status
@@ -877,7 +870,9 @@ Refs:           After 'snapshot', use @e1, @e2... as selectors:
         try {
           fs.mkdirSync(path.dirname(agentQueue), { recursive: true, mode: 0o700 });
           fs.writeFileSync(agentQueue, '', { mode: 0o600 });
-        } catch {}
+        } catch (err: any) {
+          if (err?.code !== 'EACCES') throw err;
+        }
 
         // Resolve browse binary path the same way — execPath-relative
         let browseBin = path.resolve(__dirname, '..', 'dist', 'browse');
@@ -891,7 +886,9 @@ Refs:           After 'snapshot', use @e1, @e2... as selectors:
         try {
           const { spawnSync } = require('child_process');
           spawnSync('pkill', ['-f', 'sidebar-agent\\.ts'], { stdio: 'ignore', timeout: 3000 });
-        } catch {}
+        } catch (err: any) {
+          if (err?.code !== 'ENOENT') throw err;
+        }
 
         const agentProc = Bun.spawn(['bun', 'run', agentScript], {
           cwd: config.projectDir,
@@ -947,18 +944,18 @@ Refs:           After 'snapshot', use @e1, @e2... as selectors:
     }
     // Force kill + cleanup
     if (isProcessAlive(existingState.pid)) {
-      try { process.kill(existingState.pid, 'SIGTERM'); } catch {}
+      safeKill(existingState.pid, 'SIGTERM');
       await new Promise(resolve => setTimeout(resolve, 2000));
       if (isProcessAlive(existingState.pid)) {
-        try { process.kill(existingState.pid, 'SIGKILL'); } catch {}
+        safeKill(existingState.pid, 'SIGKILL');
       }
     }
     // Clean profile locks and state file
     const profileDir = path.join(process.env.HOME || '/tmp', '.gstack', 'chromium-profile');
     for (const lockFile of ['SingletonLock', 'SingletonSocket', 'SingletonCookie']) {
-      try { fs.unlinkSync(path.join(profileDir, lockFile)); } catch {}
+      safeUnlinkQuiet(path.join(profileDir, lockFile));
     }
-    try { fs.unlinkSync(config.stateFile); } catch {}
+    safeUnlinkQuiet(config.stateFile);
     console.log('Disconnected (server was unresponsive — force cleaned).');
     process.exit(0);
   }

@@ -4,6 +4,20 @@ Items captured during eng reviews. Each entry includes context so future session
 
 ---
 
+## Migrate legacy Jest tests to vitest
+
+**What:** Convert `tests/*.test.js` (Jest + jsdom SPA snapshot) to vitest format under `src/`.
+
+**Why:** `tests/index.html.spa` is a 23,425-line snapshot of the old vanilla SPA. As the React migration progresses, this snapshot will drift from the real app and eventually produce false positives/negatives. The dual test system (Jest + vitest) also adds confusion about which suite to run after a change.
+
+**Where to start:** Pick one test file (e.g., `tests/utils.test.js`), convert to vitest in `src/__tests__/`, confirm it passes with `npm run test:react`, delete the Jest original.
+
+**Depends on:** React migration feature parity (all pages migrated to React)
+
+**Priority:** Low — after React migration ships to prod
+
+---
+
 ## Drop unused `profile_views` Supabase table
 
 **What:** Write a new Supabase migration to `DROP TABLE IF EXISTS profile_views`.

@@ -179,19 +179,30 @@ function renderProfile(row, username) {
   const totalMedals = countMedals(races);
   const countries = uniqueCountries(races);
 
-  // PBs
+  // PBs — sport-grouped card grid, ascending distance
   const pbs = computePBs(races);
-  const pbDistances = ['Marathon', 'Half Marathon', '10K', '5K',
-    '70.3 / Half Ironman', 'Ironman / Full', '10 Miles', 'Ultra'];
+  const RUN_DISTS = [['5K','5KM'],['10K','10KM'],['10 Miles','10 MI'],['Half Marathon','HALF'],['Marathon','MARATHON'],['Ultra','ULTRA']];
+  const TRI_DISTS = [['Olympic','OLYMPIC'],['70.3 / Half Ironman','70.3'],['Ironman / Full','IRONMAN']];
 
-  const pbRows = pbDistances
-    .filter(d => pbs[d])
-    .slice(0, 5)
-    .map(d => `
-      <div class="pb-row">
-        <span class="pb-dist">${escapeHtml(d)}</span>
-        <span class="pb-time">${escapeHtml(fmtTime(pbs[d].time))}</span>
-      </div>`).join('');
+  function pbCardHtml(d, label, type) {
+    if (!pbs[d]) return '';
+    const time = escapeHtml(fmtTime(pbs[d].time));
+    const raceName = escapeHtml((pbs[d].raceName || '').replace(/\s+\d{4}$/, '').substring(0, 24));
+    const accent = type === 'run' ? '#00FF88' : '#7C3AED';
+    return `<div style="background:#141414;border:1px solid rgba(245,245,245,0.06);border-left:2px solid ${accent};border-radius:10px;padding:11px 10px 10px;min-width:0;">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(232,224,213,0.40);margin-bottom:4px;line-height:1;">${label}</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;color:#E84E1B;line-height:1;letter-spacing:-0.02em;">${time}</div>
+      ${raceName ? `<div style="font-size:9px;color:rgba(232,224,213,0.35);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${raceName}</div>` : ''}
+    </div>`;
+  }
+
+  const runCards = RUN_DISTS.map(([d,l]) => pbCardHtml(d, l, 'run')).filter(Boolean).join('');
+  const triCards = TRI_DISTS.map(([d,l]) => pbCardHtml(d, l, 'tri')).filter(Boolean).join('');
+  const cardGrid = s => `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;">${s}</div>`;
+
+  let pbRows = '';
+  if (runCards) pbRows += `<p style="font-family:'Barlow Condensed',sans-serif;font-size:8px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:rgba(232,224,213,0.40);margin-bottom:6px;">Running</p>${cardGrid(runCards)}`;
+  if (triCards) pbRows += `<p style="font-family:'Barlow Condensed',sans-serif;font-size:8px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:rgba(232,224,213,0.40);margin-bottom:6px;">Triathlon</p>${cardGrid(triCards)}`;
 
   // Recent races (last 5, sorted by date descending)
   const pastRaces = races
@@ -272,7 +283,7 @@ function renderProfile(row, username) {
     ${pbRows ? `
     <section class="profile-section">
       <h2 class="section-title">PERSONAL BESTS</h2>
-      <div class="pb-list">${pbRows}</div>
+      ${pbRows}
     </section>` : ''}
 
     ${raceRows ? `
@@ -398,15 +409,17 @@ function pageShell({ title, description, ogTitle, ogDescription, ogImage, canoni
 
     :root {
       --black:      #000000;
-      --white:      #F5F5F5;
-      --orange:     #FF4D00;
+      --white:      #E8E0D5;
+      --orange:     #E84E1B;
+      --green:      #00FF88;
+      --purple:     #7C3AED;
       --surface:    #0D0D0D;
       --surface2:   #141414;
       --surface3:   #1A1A1A;
       --border:     rgba(245,245,245,0.06);
       --border2:    rgba(245,245,245,0.12);
-      --muted:      rgba(245,245,245,0.35);
-      --muted2:     rgba(245,245,245,0.18);
+      --muted:      rgba(232,224,213,0.40);
+      --muted2:     rgba(232,224,213,0.20);
     }
 
     html, body {
@@ -832,6 +845,33 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
 
+    // POST /api/error-report — client-side crash reporting (sendBeacon)
+    if (request.method === 'POST' && path === '/api/error-report') {
+      try {
+        const body = await request.json();
+        // Store in Supabase beta_errors if table exists; otherwise silently drop
+        if (env.SUPABASE_URL && env.SUPABASE_ANON_KEY) {
+          await fetch(`${env.SUPABASE_URL}/rest/v1/beta_errors`, {
+            method: 'POST',
+            headers: {
+              'apikey': env.SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${env.SUPABASE_ANON_KEY}`,
+              'Content-Type': 'application/json',
+              'Prefer': 'return=minimal',
+            },
+            body: JSON.stringify({
+              message: String(body.message ?? '').slice(0, 500),
+              stack:   String(body.stack   ?? '').slice(0, 2000),
+              url:     String(body.url ?? '').slice(0, 500),
+              env:     String(body.env ?? '').slice(0, 50),
+              ts:      body.ts ?? new Date().toISOString(),
+            }),
+          }).catch(() => {}); // never fail the response
+        }
+      } catch { /* malformed body — ignore */ }
+      return new Response(null, { status: 204 });
+    }
+
     // Only handle GET requests for profile routes
     if (request.method === 'GET') {
       // /u/:username
@@ -856,7 +896,18 @@ export default {
       }
     }
 
-    // Fall through to static assets (SPA)
+    // Guard: ASSETS binding must exist
+    if (!env.ASSETS) {
+      return new Response('Worker misconfigured: ASSETS binding missing', { status: 500 });
+    }
+
+    // SPA fallback: routes without a file extension that aren't /u/* get index.html
+    // This enables React Router client-side routing (direct nav to /train, /you, /races etc.)
+    const hasExtension = /\.[a-z0-9]{2,6}$/i.test(path);
+    if (!hasExtension && !path.startsWith('/u/')) {
+      return env.ASSETS.fetch(new Request(new URL('/', request.url).toString()));
+    }
+
     return env.ASSETS.fetch(request);
   },
 };
