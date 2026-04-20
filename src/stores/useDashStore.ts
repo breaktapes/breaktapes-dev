@@ -47,6 +47,12 @@ const DEFAULT_WIDGETS: DashWidget[] = [
   { id: 'what-to-race-next',label: 'What To Race Next',         icon: '🗺', zone: 'context',  enabled: false, pro: true  },
   { id: 'story-mode',       label: 'Story Mode',                icon: '📖', zone: 'recently', enabled: true,  pro: false },
   { id: 'coach-activity',   label: 'Coach Activity',            icon: '🎽', zone: 'context',  enabled: false, pro: true  },
+  // Day 2 formula widgets
+  { id: 'riegel-predictor', label: 'Race Predictor (Riegel)',   icon: '🔮', zone: 'recently', enabled: true,  pro: false },
+  { id: 'vdot-score',       label: 'VDOT Fitness Score',        icon: '⚡', zone: 'context',  enabled: true,  pro: false },
+  { id: 'goal-pace',        label: 'Goal Pace Breakdown',       icon: '🎯', zone: 'now',      enabled: true,  pro: false },
+  { id: 'weather-impact',   label: 'Weather Impact Score',      icon: '🌡', zone: 'recently', enabled: true,  pro: false },
+  { id: 'distance-milestones', label: 'Distance Milestones',   icon: '🏅', zone: 'context',  enabled: true,  pro: false },
 ]
 
 const DEFAULT_ZONE_COLLAPSE: DashZoneCollapse = {
