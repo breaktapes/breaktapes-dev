@@ -778,6 +778,24 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 
 ---
 
+### Session 22 (2026-04-20) — Day 4: Strava wiring + import quality
+
+**Branch:** `claude/day4-mvp` → staging (PR #157) → main (PR #158)
+
+#### Changes shipped
+- **TrainingCorrelWidget** — full live implementation replacing the dashed stub. `useEffect` on mount calls `fetchStravaActivities(200)`. For each past race with a finish time, computes 42-day pre-race training load (sum Strava km in window `[race - 49d, race - 7d]`) and performance delta vs PB (`(pbSecs - raceSecs) / pbSecs * 100`). Renders best/worst/most-recent data points with horizontal load bars and delta color coding. Shows "Need more data — log N more races" when fewer than 3 data points.
+- **ActivityPreviewWidget** — merges Strava (up to 10 fetched on mount) + WHOOP activities sorted by date descending, shows top 5. Strava: sport icon (🏃/🚴/🏊/🚶/🏋/⚡) from type string, `name` from activity, `km · min` meta. WHOOP: `WHOOP_SPORT_NAMES` map inline (0=Activity, 1=Running, 2=Cycling, 3=Swimming, etc.), minutes from start/end delta.
+- **RecoveryIntelWidget** — added Strava fallback tier between WHOOP and race-based fallback. When Strava token exists and no race logged: shows days since last activity as large numeral + load ratio (last 7d km / avg prior 3 weeks). When race logged + Strava: appends load stats to existing race-based view.
+- **RaceImportModal** — auto-detect distance from race name via `parseDistKm()` + `kmToDistLabel()` mapper (Marathon/Half/Ironman/70.3 etc.); dedupe guard before `addRace()` checks name+date against existing races, shows "N already logged — skipped" inline; MarathonView filter: skip rows with `raceName.length < 3` (header rows); date normalization `MM/DD/YYYY → YYYY-MM-DD`; Athlinks pill now green with inline "pending API access" note instead of faded opacity.
+
+#### Key learnings
+- `fetchStravaActivities` uses `useWearableStore.getState()` internally — safe to call from `useEffect` without passing token as arg; just guard on `stravaToken?.access_token` before calling to avoid network noise
+- `WHOOP_SPORT_NAMES` was only defined in `Train.tsx` as a local function — inlined it in Dashboard.tsx rather than creating a shared export to avoid cross-page coupling
+- Promote branch to main needs `git merge origin/main -X ours --no-edit` to resolve squash-merge divergence before CI will pass the mergeable check
+- `gh pr checks` only shows commit status checks (not workflow checks) until CI actually queues — `pr checks` showing only "Deploy to dev.breaktapes.com" means CI hasn't queued yet, not that it's failing
+
+---
+
 ## Known Issues / Watch Points
 
 - Beta invite codes: `BETA_INVITE_CODES` array is client-visible in source — intentional tradeoff for self-service beta; update the array and redeploy to staging to add/revoke codes
