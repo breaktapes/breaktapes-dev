@@ -549,11 +549,11 @@ body::after {
 .card-v3:nth-child(3) { animation-delay: 0.16s; }
 
 .card-orange {
-  background: linear-gradient(145deg, rgba(232,78,27,0.13) 0%, rgba(200,150,60,0.06) 60%, rgba(13,13,13,0.8) 100%);
-  box-shadow: inset 0 1px 0 rgba(232,78,27,0.18), 0 4px 24px rgba(0,0,0,0.4);
+  background: linear-gradient(145deg, rgba(var(--orange-ch),0.13) 0%, rgba(var(--orange-ch),0.05) 60%, rgba(13,13,13,0.8) 100%);
+  box-shadow: inset 0 1px 0 rgba(var(--orange-ch),0.18), 0 4px 24px rgba(0,0,0,0.4);
 }
-.card-orange::before { background: linear-gradient(90deg, rgba(232,78,27,0.6) 0%, rgba(200,150,60,0.3) 100%); }
-.card-orange:hover { border-color: rgba(232,78,27,0.35); box-shadow: 0 8px 32px rgba(232,78,27,0.18), inset 0 1px 0 rgba(232,78,27,0.2); }
+.card-orange::before { background: linear-gradient(90deg, rgba(var(--orange-ch),0.6) 0%, rgba(var(--orange-ch),0.2) 100%); }
+.card-orange:hover { border-color: rgba(var(--orange-ch),0.35); box-shadow: 0 8px 32px rgba(var(--orange-ch),0.18), inset 0 1px 0 rgba(var(--orange-ch),0.2); }
 .card-orange .card-v3-kicker { color: var(--orange); }
 .card-orange .card-v3-value  { color: var(--orange); }
 
