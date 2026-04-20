@@ -749,7 +749,7 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
   )
 }
 
-function CountdownCard({ race, onShowAll }: { race: Race; onShowAll: () => void }) {
+function CountdownCard({ race, onShowAll, upcomingRaces, onSelectRace }: { race: Race; onShowAll: () => void; upcomingRaces: Race[]; onSelectRace: (id: string) => void }) {
   const [now, setNow]         = useState(() => Date.now())
   const [showEdit, setShowEdit] = useState(false)
 
@@ -782,6 +782,30 @@ function CountdownCard({ race, onShowAll }: { race: Race; onShowAll: () => void 
             <span>EDIT</span>
           </button>
         </div>
+
+        {/* Race picker chips — shown only when there are multiple upcoming races */}
+        {upcomingRaces.length > 1 && (
+          <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none' as const }}>
+            {[...upcomingRaces].sort((a, b) => a.date.localeCompare(b.date)).map(r => (
+              <button key={r.id} onClick={() => onSelectRace(r.id)} style={{
+                flexShrink: 0,
+                padding: '4px 10px',
+                borderRadius: '20px',
+                border: `1px solid ${r.id === race.id ? 'var(--orange)' : 'var(--border2)'}`,
+                background: r.id === race.id ? 'rgba(var(--orange-ch),0.15)' : 'transparent',
+                color: r.id === race.id ? 'var(--orange)' : 'var(--muted)',
+                fontSize: '11px',
+                fontFamily: 'var(--headline)',
+                fontWeight: 700,
+                letterSpacing: '0.06em',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap' as const,
+              }}>
+                {(r.name ?? '').toUpperCase().slice(0, 20)}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Race name */}
         <div style={st.countdownRaceName}>{(race.name ?? '').toUpperCase()}</div>
@@ -4037,9 +4061,83 @@ function GoalPaceWidget() {
   )
 }
 
+const _raceWeatherCache: Record<string, { temp: number; humidity: number } | null> = {}
+
+async function fetchArchiveWeather(race: Race): Promise<{ temp: number; humidity: number } | null> {
+  if (!race.city && !race.country) return null
+  const cacheKey = `${race.id}-${race.date}`
+  if (cacheKey in _raceWeatherCache) return _raceWeatherCache[cacheKey]
+
+  // Check localStorage cache
+  const lsKey = `fl2_rwc_${race.id}`
+  const cached = localStorage.getItem(lsKey)
+  if (cached) {
+    try {
+      const parsed = JSON.parse(cached)
+      _raceWeatherCache[cacheKey] = parsed
+      return parsed
+    } catch { /* ignore */ }
+  }
+
+  try {
+    const city = race.city ?? race.country ?? ''
+    const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`)
+    const geoData = await geoRes.json()
+    const loc = geoData?.results?.[0]
+    if (!loc) { _raceWeatherCache[cacheKey] = null; return null }
+
+    const { latitude, longitude } = loc
+    const res = await fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${latitude}&longitude=${longitude}&start_date=${race.date}&end_date=${race.date}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&hourly=relativehumidity_2m&timezone=auto`)
+    const data = await res.json()
+
+    const maxArr: number[] = data?.daily?.temperature_2m_max ?? []
+    const minArr: number[] = data?.daily?.temperature_2m_min ?? []
+    const humArr: number[] = data?.hourly?.relativehumidity_2m ?? []
+
+    if (!maxArr.length || !minArr.length) { _raceWeatherCache[cacheKey] = null; return null }
+
+    const temp = Math.round((maxArr[0] + minArr[0]) / 2)
+    const humSlice = humArr.slice(6, 12)
+    const humidity = humSlice.length
+      ? Math.round(humSlice.reduce((s, v) => s + v, 0) / humSlice.length)
+      : 60
+
+    const result = { temp, humidity }
+    _raceWeatherCache[cacheKey] = result
+    localStorage.setItem(lsKey, JSON.stringify(result))
+    return result
+  } catch {
+    _raceWeatherCache[cacheKey] = null
+    return null
+  }
+}
+
 function WeatherImpactWidget() {
   const races  = useRaceStore(selectRaces)
-  const result = useMemo(() => bestWeatherImpact(races), [races])
+  const [fetchedWeather, setFetchedWeather] = useState<Record<string, { temp: number; humidity: number }>>({})
+
+  // Auto-fetch archive weather for past races without weather data
+  useEffect(() => {
+    const today = new Date().toISOString().slice(0, 10)
+    const needFetch = races
+      .filter(r => r.date <= today && r.time && !r.weather?.temp && (r.city || r.country))
+      .sort((a, b) => b.date.localeCompare(a.date))
+      .slice(0, 5)
+
+    for (const r of needFetch) {
+      fetchArchiveWeather(r).then(w => {
+        if (w) setFetchedWeather(prev => ({ ...prev, [r.id]: w }))
+      })
+    }
+  }, [races])
+
+  const racesWithWeather = useMemo(() =>
+    races.map(r => fetchedWeather[r.id]
+      ? { ...r, weather: { ...r.weather, temp: fetchedWeather[r.id].temp, humidity: fetchedWeather[r.id].humidity } }
+      : r
+    ), [races, fetchedWeather])
+
+  const result = useMemo(() => bestWeatherImpact(racesWithWeather), [racesWithWeather])
 
   if (!result) return (
     <div className="card-v3" style={st.glowCard}>
@@ -4263,7 +4361,15 @@ export function Dashboard() {
   const [showAddRace,       setShowAddRace]       = useState(false)
   const [addRaceMode,       setAddRaceMode]       = useState<'past' | 'upcoming'>('past')
   const [showAllUpcoming,   setShowAllUpcoming]   = useState(false)
-  const nextRace      = useRaceStore(selectFocusRace)  // focus race or nearest upcoming
+  const nextRace      = useRaceStore(selectNextRace)   // always nearest upcoming
+  const upcomingRaces = useRaceStore(selectUpcomingRaces)
+  const [countdownRaceId, setCountdownRaceId] = useState<string | null>(null)
+  const countdownRace = useMemo(() => {
+    if (countdownRaceId) {
+      return upcomingRaces.find(r => r.id === countdownRaceId) ?? nextRace
+    }
+    return nextRace
+  }, [countdownRaceId, upcomingRaces, nextRace])
   const storeWidgets  = useDashStore(s => s.widgets)
   const getDashLayout = useDashStore(s => s.getDashLayout)
   const widgets       = useMemo(() => getDashLayout(), [storeWidgets, getDashLayout])
@@ -4283,10 +4389,10 @@ export function Dashboard() {
 
       {/* NOW — RACE DAY */}
       <DashZone id="now" tag="NOW" label="RACE DAY">
-        {nextRace
-          ? <>{en('countdown')       && <CountdownCard race={nextRace} onShowAll={() => setShowAllUpcoming(true)} />}
-              {en('race-forecast')   && <WeatherCard race={nextRace} />}
-              <CourseInfoCard race={nextRace} /></>
+        {(countdownRace ?? nextRace)
+          ? <>{en('countdown')       && countdownRace && <CountdownCard race={countdownRace} onShowAll={() => setShowAllUpcoming(true)} upcomingRaces={upcomingRaces} onSelectRace={setCountdownRaceId} />}
+              {en('race-forecast')   && countdownRace && <WeatherCard race={countdownRace} />}
+              <CourseInfoCard race={countdownRace ?? nextRace!} /></>
           : <NoUpcomingRaceCTA onAddRace={openAddUpcomingRace} />
         }
         {en('goal-pace')      && <GoalPaceWidget />}
