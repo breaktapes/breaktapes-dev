@@ -6,27 +6,37 @@
  * Export: Web Share API (gallery save) → download fallback
  *
  * Canvas rule: fillStyle cannot resolve CSS custom properties.
- * All colours are hardcoded hex from the BREAKTAPES design system.
+ * Colours are read from CSS custom properties at draw time so all 9 themes render correctly.
  */
 import { useRef, useState, useCallback } from 'react'
 import type { Race, Athlete } from '@/types'
 
-// ── Canvas colour palette ─────────────────────────────────────────────────────
-const D = {
-  bg:           '#050505',
-  orange:       '#E84E1B',
-  orangeDim:    'rgba(232,78,27,0.12)',
-  orangeFaint:  'rgba(232,78,27,0.18)',
-  gold:         '#C8963C',
-  green:        '#00FF88',
-  purple:       '#7C3AED',
-  white:        '#E8E0D5',
-  muted:        'rgba(232,224,213,0.35)',
-  muted2:       'rgba(232,224,213,0.20)',
-  cell:         'rgba(255,255,255,0.03)',
-  cellBorder:   'rgba(255,255,255,0.07)',
-  divider:      'rgba(255,255,255,0.06)',
-  headerGrad0:  'rgba(232,78,27,0.15)',
+// ── Runtime CSS var reader ─────────────────────────────────────────────────────
+function readCssPalette() {
+  const cs = getComputedStyle(document.documentElement)
+  const get = (v: string) => cs.getPropertyValue(v).trim()
+  const orangeCh = get('--orange-ch') || '232, 78, 27'
+  const greenCh  = get('--green-ch')  || '0, 255, 136'
+  const goldCh   = get('--gold-ch')   || '200, 150, 60'
+  return {
+    bg:          get('--black')   || '#050505',
+    orange:      get('--orange')  || '#E84E1B',
+    orangeDark:  `rgba(${orangeCh},0.6)`,
+    orangeDim:   `rgba(${orangeCh},0.12)`,
+    orangeFaint: `rgba(${orangeCh},0.18)`,
+    gold:        get('--gold')    || '#C8963C',
+    green:       get('--green')   || '#00FF88',
+    purple:      '#7C3AED',
+    white:       get('--white')   || '#E8E0D5',
+    muted:       get('--muted')   || 'rgba(232,224,213,0.35)',
+    muted2:      get('--muted2')  || 'rgba(232,224,213,0.20)',
+    cell:        'rgba(255,255,255,0.03)',
+    cellBorder:  'rgba(255,255,255,0.07)',
+    divider:     'rgba(255,255,255,0.06)',
+    headerGrad0: `rgba(${orangeCh},0.15)`,
+    // raw channel strings for inline rgba() calls
+    orangeCh, greenCh, goldCh,
+  }
 }
 
 // ── Ratio definitions ─────────────────────────────────────────────────────────
@@ -112,6 +122,8 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
   canvas.width = W
   canvas.height = H
   const ctx = canvas.getContext('2d')!
+  const D = readCssPalette()
+  const { orangeCh } = D
 
   const name = [athlete?.firstName, athlete?.lastName].filter(Boolean).join(' ') || 'Athlete'
   const initials = [athlete?.firstName?.[0], athlete?.lastName?.[0]].filter(Boolean).join('').toUpperCase() || '?'
@@ -139,7 +151,7 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
 
   // Subtle orange vignette top-left
   const vg = ctx.createRadialGradient(0, 0, 0, 0, 0, W * 0.6)
-  vg.addColorStop(0, 'rgba(232,78,27,0.08)')
+  vg.addColorStop(0, `rgba(${orangeCh},0.08)`)
   vg.addColorStop(1, 'rgba(0,0,0,0)')
   ctx.fillStyle = vg
   ctx.fillRect(0, 0, W, H)
@@ -152,8 +164,8 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
   ctx.rotate(0.26) // ~15deg
   ctx.font = `900 ${Math.round(13 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
   ctx.letterSpacing = `${Math.round(4 * s)}px`
-  ctx.fillStyle = 'rgba(232,78,27,0.16)'
-  ctx.strokeStyle = 'rgba(232,78,27,0.16)'
+  ctx.fillStyle = `rgba(${orangeCh},0.16)`
+  ctx.strokeStyle = `rgba(${orangeCh},0.16)`
   ctx.lineWidth = 2 * s
   const stampW = ctx.measureText('CLASSIFIED').width + 20 * s
   const stampH = 24 * s
@@ -165,22 +177,22 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
   const headerH = Math.round(isVertical ? 70 * s : 60 * s)
   const hg = ctx.createLinearGradient(0, 0, W * 0.6, 0)
   hg.addColorStop(0, D.headerGrad0)
-  hg.addColorStop(1, 'rgba(232,78,27,0)')
+  hg.addColorStop(1, `rgba(${orangeCh},0)`)
   ctx.fillStyle = hg
   ctx.fillRect(0, 0, W, headerH)
 
-  ctx.strokeStyle = 'rgba(232,78,27,0.14)'
+  ctx.strokeStyle = `rgba(${orangeCh},0.14)`
   ctx.lineWidth = 1
   ctx.beginPath(); ctx.moveTo(0, headerH); ctx.lineTo(W, headerH); ctx.stroke()
 
   // Left accent bar
   const ag = ctx.createLinearGradient(0, 0, 0, headerH)
-  ag.addColorStop(0, D.orange); ag.addColorStop(1, '#C03A10')
+  ag.addColorStop(0, D.orange); ag.addColorStop(1, D.orangeDark)
   ctx.fillStyle = ag
   ctx.fillRect(0, 0, 4 * s, headerH)
 
   // Header text
-  ctx.fillStyle = 'rgba(232,78,27,0.7)'
+  ctx.fillStyle = `rgba(${orangeCh},0.7)`
   ctx.font = `600 ${Math.round(7 * s)}px "Geist Mono", "Courier New", monospace`
   ctx.letterSpacing = `${Math.round(3 * s)}px`
   ctx.textAlign = 'left'
@@ -192,7 +204,7 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
   ctx.fillText('ATHLETE DOSSIER', 16 * s, headerH - 14 * s)
 
   // Year label top-right
-  ctx.fillStyle = 'rgba(232,78,27,0.5)'
+  ctx.fillStyle = `rgba(${orangeCh},0.5)`
   ctx.font = `700 ${Math.round(8 * s)}px "Geist Mono", "Courier New", monospace`
   ctx.letterSpacing = `${Math.round(2 * s)}px`
   ctx.textAlign = 'right'
@@ -214,13 +226,13 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
     // ID block
     const avatarSize = Math.round(48 * s)
     const ag2 = ctx.createLinearGradient(pad, ly, pad + avatarSize, ly + avatarSize)
-    ag2.addColorStop(0, D.orange); ag2.addColorStop(1, '#C03A10')
+    ag2.addColorStop(0, D.orange); ag2.addColorStop(1, D.orangeDark)
     ctx.fillStyle = ag2
     roundRect(ctx, pad, ly, avatarSize, avatarSize, 8 * s)
     ctx.fill()
 
     // Avatar glow
-    ctx.shadowColor = 'rgba(232,78,27,0.4)'
+    ctx.shadowColor = `rgba(${orangeCh},0.4)`
     ctx.shadowBlur = 16 * s
     ctx.fillStyle = ag2
     roundRect(ctx, pad, ly, avatarSize, avatarSize, 8 * s)
@@ -240,7 +252,7 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
     ctx.letterSpacing = `${Math.round(1.5 * s)}px`
     ctx.fillText(truncateText(ctx, name.toUpperCase(), leftW - nameX - pad), nameX, ly + 16 * s)
 
-    ctx.fillStyle = 'rgba(232,78,27,0.7)'
+    ctx.fillStyle = `rgba(${orangeCh},0.7)`
     ctx.font = `500 ${Math.round(7.5 * s)}px "Geist Mono", "Courier New", monospace`
     ctx.letterSpacing = '0px'
     const idCode = `ID: BT-${raceCount}-${initials}${location ? ' · ' + location : ''}`
@@ -256,7 +268,7 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
       const tagColor = sport === 'Triathlete' ? D.purple : D.orange
       ctx.strokeStyle = tagColor.replace(')', ', 0.35)').replace('rgb', 'rgba')
       if (tagColor === D.orange) {
-        ctx.strokeStyle = 'rgba(232,78,27,0.35)'
+        ctx.strokeStyle = `rgba(${orangeCh},0.35)`
       } else {
         ctx.strokeStyle = 'rgba(124,58,237,0.35)'
       }
@@ -313,13 +325,13 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
       const pbH = Math.round(52 * s)
       // Striped bg
       for (let x = pad; x < leftW - pad * 0.5; x += 8 * s) {
-        ctx.fillStyle = 'rgba(232,78,27,0.04)'
+        ctx.fillStyle = `rgba(${orangeCh},0.04)`
         ctx.fillRect(x, ly, 2 * s, pbH)
       }
-      ctx.strokeStyle = 'rgba(232,78,27,0.18)'; ctx.lineWidth = 1
+      ctx.strokeStyle = `rgba(${orangeCh},0.18)`; ctx.lineWidth = 1
       roundRect(ctx, pad, ly, leftW - pad * 1.5, pbH, 6 * s); ctx.stroke()
 
-      ctx.fillStyle = 'rgba(232,78,27,0.5)'
+      ctx.fillStyle = `rgba(${orangeCh},0.5)`
       ctx.font = `600 ${Math.round(6.5 * s)}px "Geist Mono", "Courier New", monospace`
       ctx.letterSpacing = `${Math.round(2 * s)}px`
       ctx.textAlign = 'left'
@@ -368,7 +380,7 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
     // ── Right column: Mission Log ──
     let ry = bodyY
 
-    ctx.fillStyle = 'rgba(232,78,27,0.5)'
+    ctx.fillStyle = `rgba(${orangeCh},0.5)`
     ctx.font = `600 ${Math.round(7 * s)}px "Geist Mono", "Courier New", monospace`
     ctx.letterSpacing = `${Math.round(3 * s)}px`
     ctx.textAlign = 'left'
@@ -397,7 +409,7 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
       const yr = r.date?.slice(0, 4) ?? ''
       const raceName = r.name.replace(/\s+\d{4}$/, '').substring(0, 32)
 
-      ctx.fillStyle = 'rgba(232,78,27,0.4)'
+      ctx.fillStyle = `rgba(${orangeCh},0.4)`
       ctx.font = `500 ${Math.round(7 * s)}px "Geist Mono", monospace`
       ctx.letterSpacing = '0px'
       ctx.textAlign = 'left'
@@ -435,7 +447,7 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
     // ID block (horizontal)
     const avatarSize = Math.round(44 * s)
     const ag2 = ctx.createLinearGradient(pad, vy, pad + avatarSize, vy + avatarSize)
-    ag2.addColorStop(0, D.orange); ag2.addColorStop(1, '#C03A10')
+    ag2.addColorStop(0, D.orange); ag2.addColorStop(1, D.orangeDark)
     ctx.fillStyle = ag2
     roundRect(ctx, pad, vy, avatarSize, avatarSize, 7 * s); ctx.fill()
     ctx.fillStyle = '#FFF'
@@ -450,7 +462,7 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
     ctx.letterSpacing = `${Math.round(1 * s)}px`
     ctx.fillText(truncateText(ctx, name.toUpperCase(), W - nameX - pad), nameX, vy + 16 * s)
 
-    ctx.fillStyle = 'rgba(232,78,27,0.7)'
+    ctx.fillStyle = `rgba(${orangeCh},0.7)`
     ctx.font = `500 ${Math.round(7 * s)}px "Geist Mono", monospace`
     ctx.letterSpacing = '0px'
     ctx.fillText(truncateText(ctx, `ID: BT-${raceCount}-${initials}${location ? ' · ' + location : ''}`, W - nameX - pad), nameX, vy + 30 * s)
@@ -487,11 +499,11 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
     if (pb) {
       const pbH = Math.round(44 * s)
       for (let x = pad; x < W - pad; x += 8 * s) {
-        ctx.fillStyle = 'rgba(232,78,27,0.04)'; ctx.fillRect(x, vy, 2 * s, pbH)
+        ctx.fillStyle = `rgba(${orangeCh},0.04)`; ctx.fillRect(x, vy, 2 * s, pbH)
       }
-      ctx.strokeStyle = 'rgba(232,78,27,0.18)'; ctx.lineWidth = 1
+      ctx.strokeStyle = `rgba(${orangeCh},0.18)`; ctx.lineWidth = 1
       roundRect(ctx, pad, vy, W - pad * 2, pbH, 5 * s); ctx.stroke()
-      ctx.fillStyle = 'rgba(232,78,27,0.5)'
+      ctx.fillStyle = `rgba(${orangeCh},0.5)`
       ctx.font = `600 ${Math.round(6 * s)}px "Geist Mono", monospace`
       ctx.letterSpacing = `${Math.round(2 * s)}px`; ctx.textAlign = 'left'
       ctx.fillText('BEST RECORDED TIME', pad + 8 * s, vy + 13 * s)
@@ -508,7 +520,7 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
     }
 
     // Mission log
-    ctx.fillStyle = 'rgba(232,78,27,0.5)'
+    ctx.fillStyle = `rgba(${orangeCh},0.5)`
     ctx.font = `600 ${Math.round(6.5 * s)}px "Geist Mono", monospace`
     ctx.letterSpacing = `${Math.round(2.5 * s)}px`; ctx.textAlign = 'left'
     ctx.fillText('MISSION LOG', pad, vy + 10 * s)
@@ -528,7 +540,7 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
       }
       const flag = countryToFlag(r.country)
       const yr = r.date?.slice(0, 4) ?? ''
-      ctx.fillStyle = 'rgba(232,78,27,0.4)'
+      ctx.fillStyle = `rgba(${orangeCh},0.4)`
       ctx.font = `500 ${Math.round(6.5 * s)}px "Geist Mono", monospace`
       ctx.letterSpacing = '0px'; ctx.textAlign = 'left'
       ctx.fillText(yr, pad, ryRow + 13 * s)
@@ -561,7 +573,7 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
   }
 
   // ── Footer watermark ──
-  ctx.fillStyle = 'rgba(232,78,27,0.25)'
+  ctx.fillStyle = `rgba(${orangeCh},0.25)`
   ctx.font = `600 ${Math.round(9 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
   ctx.letterSpacing = `${Math.round(1.5 * s)}px`
   ctx.textAlign = 'right'
@@ -596,6 +608,9 @@ export function RaceLogPassport({ races, athlete, onClose }: Props) {
   const [ratio, setRatio] = useState<string>('16:9')
   const [drawn, setDrawn] = useState(false)
   const [exporting, setExporting] = useState(false)
+
+  // Read theme channel vars for JSX inline styles (CSS vars resolve at render time)
+  const orangeCh = getComputedStyle(document.documentElement).getPropertyValue('--orange-ch').trim() || '232, 78, 27'
 
   const years = getYears(races)
   const currentRatio = RATIOS.find(r => r.label === ratio)!
@@ -658,10 +673,10 @@ export function RaceLogPassport({ races, athlete, onClose }: Props) {
     padding: '5px 12px', borderRadius: '999px', cursor: 'pointer', border: 'none',
     fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '11px',
     letterSpacing: '0.08em', textTransform: 'uppercase',
-    background: active ? 'rgba(232,78,27,0.15)' : 'rgba(255,255,255,0.04)',
+    background: active ? `rgba(${orangeCh},0.15)` : 'rgba(255,255,255,0.04)',
     color: active ? 'var(--orange)' : 'var(--muted)',
     borderWidth: 1, borderStyle: 'solid',
-    borderColor: active ? 'rgba(232,78,27,0.4)' : 'var(--border2)',
+    borderColor: active ? `rgba(${orangeCh},0.4)` : 'var(--border2)',
   })
   const btn = (primary: boolean): React.CSSProperties => ({
     flex: 1, padding: '0.65rem', border: 'none', borderRadius: '6px', cursor: 'pointer',
@@ -706,8 +721,8 @@ export function RaceLogPassport({ races, athlete, onClose }: Props) {
 
         {/* Canvas preview */}
         <div style={{
-          background: '#050505', borderRadius: '10px',
-          border: '1px solid rgba(232,78,27,0.15)',
+          background: 'var(--black)', borderRadius: '10px',
+          border: `1px solid rgba(${orangeCh},0.15)`,
           overflow: 'hidden', position: 'relative',
           aspectRatio: `${currentRatio.W} / ${currentRatio.H}`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -722,13 +737,13 @@ export function RaceLogPassport({ races, athlete, onClose }: Props) {
           />
           {!drawn && (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: '10px', letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(232,78,27,0.5)' }}>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: '10px', letterSpacing: '0.2em', textTransform: 'uppercase', color: `rgba(${orangeCh},0.5)` }}>
                 {filteredRaces.length === 0 ? 'No races to display' : `${filteredRaces.length} mission${filteredRaces.length === 1 ? '' : 's'} · ${currentRatio.label}`}
               </div>
               {filteredRaces.length > 0 && (
                 <button
                   onClick={redraw}
-                  style={{ padding: '10px 24px', background: 'transparent', border: '1px solid rgba(232,78,27,0.35)', borderRadius: '6px', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '12px', letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer' }}
+                  style={{ padding: '10px 24px', background: 'transparent', border: `1px solid rgba(${orangeCh},0.35)`, borderRadius: '6px', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '12px', letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer' }}
                 >
                   Generate Dossier
                 </button>
