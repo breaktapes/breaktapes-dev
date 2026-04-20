@@ -5,6 +5,8 @@ import { useWearableStore } from '@/stores/useWearableStore'
 import { handleWhoopCallback, fetchWhoopActivities, fetchWhoopRecovery } from '@/lib/whoop'
 import { handleGarminCallback, fetchGarminActivities } from '@/lib/garmin'
 import { handleStravaCallback, fetchStravaActivities, stravaActivitiesToRaces } from '@/lib/strava'
+import { computeVDOT, paceZones } from '@/lib/raceFormulas'
+import { useUnits } from '@/lib/units'
 
 const btnMain: React.CSSProperties = {
   background: 'var(--orange)',
@@ -96,6 +98,8 @@ export function Train() {
   const [distanceIdx, setDistanceIdx] = useState(2) // HM default
   const [goalTime, setGoalTime] = useState('')
   const [paceResult, setPaceResult] = useState<{ km: string; mi: string } | null>(null)
+  const [paceZoneResult, setPaceZoneResult] = useState<ReturnType<typeof paceZones> | null>(null)
+  const units = useUnits()
   const [oauthStatus, setOauthStatus] = useState<string | null>(null)
 
   // Activity feed state
@@ -266,6 +270,8 @@ export function Train() {
     const paceKm = totalSecs / dist.km
     const paceMi = totalSecs / (dist.km / 1.60934)
     setPaceResult({ km: secsToMMSS(paceKm), mi: secsToMMSS(paceMi) })
+    const vdot = computeVDOT(totalSecs, dist.km)
+    setPaceZoneResult(vdot ? paceZones(vdot, units) : null)
   }
 
   // Last 3 races with a time (fastest first per group, simplified)
@@ -409,6 +415,37 @@ export function Train() {
               )}
             </div>
           </div>
+
+          {/* Pace zones */}
+          {paceZoneResult && (
+            <div style={card}>
+              <p style={sectionLabel}>Training Zones</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {paceZoneResult.map(z => {
+                  const zoneColors = ['#4ade80','#60a5fa','#facc15','#f97316','#ef4444']
+                  const color = zoneColors[z.zone - 1] ?? 'var(--orange)'
+                  return (
+                    <div key={z.zone} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: color + '22', border: `1px solid ${color}55`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', color }}>{z.abbr}</span>
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{z.description}</span>
+                          <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '13px', color: 'var(--white)' }}>
+                            {z.minPaceStr} – {z.maxPaceStr}
+                          </span>
+                        </div>
+                        <div style={{ height: '4px', background: 'var(--surface3)', borderRadius: '2px', marginTop: '4px', overflow: 'hidden' }}>
+                          <div style={{ height: '100%', width: `${(z.zone / 5) * 100}%`, background: color, borderRadius: '2px' }} />
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Recent PBs */}
           {recentTimed.length > 0 && (
