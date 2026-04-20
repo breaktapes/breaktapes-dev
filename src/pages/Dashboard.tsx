@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react'
+import React, { useMemo, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
@@ -13,9 +13,10 @@ import type { Race } from '@/types'
 import { useUnits, distUnit } from '@/lib/units'
 import {
   bestRiegelTable,
-  bestVDOT, equivalentPerformances, paceZones,
+  bestVDOT, equivalentPerformances, paceZones, vdotHistory,
   goalPaceCalc, parseTimeSecs as fParseTimeSecs, parseDistKm as fParseDistKm,
   bestWeatherImpact, distanceMilestones, secsToHMS as fSecsToHMS,
+  raceDensityWarnings, findCourseRepeats,
 } from '@/lib/raceFormulas'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -3872,7 +3873,7 @@ function PaceCalculator() {
 
 // ─── Formula Widgets (Day 2) ──────────────────────────────────────────────────
 
-function RiegelPredictorWidget() {
+function RiegelPredictorWidget({ onAddGoal }: { onAddGoal?: (distance: string) => void }) {
   const races = useRaceStore(selectRaces)
   const result = useMemo(() => bestRiegelTable(races), [races])
   if (!result) return (
@@ -3892,15 +3893,22 @@ function RiegelPredictorWidget() {
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
         {table.map(row => (
-          <div key={row.distance} style={{
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            padding: '8px 10px', borderRadius: '6px',
-            background: row.isSameAsInput ? 'rgba(var(--orange-ch),0.1)' : 'var(--surface3)',
-            border: `1px solid ${row.isSameAsInput ? 'rgba(var(--orange-ch),0.3)' : 'var(--border)'}`,
-          }}>
+          <div
+            key={row.distance}
+            onClick={() => !row.isSameAsInput && onAddGoal?.(row.distance)}
+            style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              padding: '8px 10px', borderRadius: '6px',
+              background: row.isSameAsInput ? 'rgba(var(--orange-ch),0.1)' : 'var(--surface3)',
+              border: `1px solid ${row.isSameAsInput ? 'rgba(var(--orange-ch),0.3)' : 'var(--border)'}`,
+              cursor: row.isSameAsInput ? 'default' : 'pointer',
+              transition: 'background 0.15s',
+            }}
+          >
             <span style={{ fontSize: '13px', color: row.isSameAsInput ? 'var(--orange)' : 'var(--white)', fontWeight: row.isSameAsInput ? 700 : 400 }}>
               {row.distance}
               {row.isSameAsInput && <span style={{ fontSize: '10px', marginLeft: '6px', color: 'var(--muted)', textTransform: 'uppercase', fontFamily: 'var(--headline)' }}>actual</span>}
+              {!row.isSameAsInput && onAddGoal && <span style={{ fontSize: '10px', marginLeft: '6px', color: 'var(--muted2)', fontFamily: 'var(--headline)' }}>+ GOAL</span>}
             </span>
             <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', color: row.isSameAsInput ? 'var(--orange)' : 'var(--white)' }}>
               {row.predictedTime}
@@ -3909,18 +3917,40 @@ function RiegelPredictorWidget() {
         ))}
       </div>
       <div style={{ fontSize: '11px', color: 'var(--muted2)', lineHeight: 1.5 }}>
-        T₂ = T₁ × (D₂/D₁)^1.06 — Riegel formula
+        T₂ = T₁ × (D₂/D₁)^1.06 · tap a row to add as upcoming goal
       </div>
     </div>
+  )
+}
+
+function VdotSparkline({ history }: { history: { vdot: number }[] }) {
+  const pts = history.slice(-12)
+  if (pts.length < 2) return null
+  const W = 120, H = 32, pad = 2
+  const vals = pts.map(p => p.vdot)
+  const lo = Math.min(...vals), hi = Math.max(...vals)
+  const range = hi - lo || 1
+  const xs = pts.map((_, i) => pad + (i / (pts.length - 1)) * (W - pad * 2))
+  const ys = pts.map(p => H - pad - ((p.vdot - lo) / range) * (H - pad * 2))
+  const d = xs.map((x, i) => `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${ys[i].toFixed(1)}`).join(' ')
+  return (
+    <svg width={W} height={H} style={{ display: 'block' }}>
+      <polyline points={xs.map((x, i) => `${x.toFixed(1)},${ys[i].toFixed(1)}`).join(' ')}
+        fill="none" stroke="rgba(255,77,0,0.5)" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d={`${d} L${xs[xs.length-1].toFixed(1)},${H} L${xs[0].toFixed(1)},${H} Z`}
+        fill="rgba(255,77,0,0.1)" />
+      <circle cx={xs[xs.length-1].toFixed(1)} cy={ys[ys.length-1].toFixed(1)} r="3" fill="var(--orange)" />
+    </svg>
   )
 }
 
 function VDOTScoreWidget() {
   const races = useRaceStore(selectRaces)
   const units = useUnits()
-  const vdotPt = useMemo(() => bestVDOT(races), [races])
-  const equivs = useMemo(() => vdotPt ? equivalentPerformances(vdotPt.vdot) : [], [vdotPt])
-  const zones  = useMemo(() => vdotPt ? paceZones(vdotPt.vdot, units) : [], [vdotPt, units])
+  const history = useMemo(() => vdotHistory(races), [races])
+  const vdotPt  = useMemo(() => bestVDOT(races), [races])
+  const equivs  = useMemo(() => vdotPt ? equivalentPerformances(vdotPt.vdot) : [], [vdotPt])
+  const zones   = useMemo(() => vdotPt ? paceZones(vdotPt.vdot, units) : [], [vdotPt, units])
 
   if (!vdotPt) return (
     <div className="card-v3" style={st.glowCard}>
@@ -3935,7 +3965,8 @@ function VDOTScoreWidget() {
   return (
     <div className="card-v3" style={st.glowCard}>
       <div style={st.widgetLabel}>⚡ VDOT SCORE</div>
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px' }}>
         <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '52px', lineHeight: 1, color: vdotColor }}>
           {vdotPt.vdot}
         </span>
@@ -3943,6 +3974,15 @@ function VDOTScoreWidget() {
           <div style={{ fontSize: '11px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em' }}>VDOT</div>
           <div style={{ fontSize: '11px', color: 'var(--muted)' }}>{vdotPt.raceName}</div>
         </div>
+        </div>
+        {history.length >= 2 && (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+            <VdotSparkline history={history} />
+            <div style={{ fontSize: '9px', color: 'var(--muted2)', fontFamily: 'var(--headline)', letterSpacing: '0.06em' }}>
+              {history.length} RACES
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Equivalent performances */}
@@ -4233,6 +4273,166 @@ function DistanceMilestonesWidget() {
   )
 }
 
+// ─── Equivalent Performances Widget ──────────────────────────────────────────
+
+function EquivPerfWidget() {
+  const races   = useRaceStore(selectRaces)
+  const vdotPt  = useMemo(() => bestVDOT(races), [races])
+  const equivs  = useMemo(() => vdotPt ? equivalentPerformances(vdotPt.vdot) : [], [vdotPt])
+
+  if (!vdotPt) return (
+    <div className="card-v3" style={st.glowCard}>
+      <div style={st.widgetLabel}>🎯 EQUIVALENTS</div>
+      <div style={st.widgetTitle}>EQUIV PERFORMANCES</div>
+      <p style={{ fontSize: '13px', color: 'var(--muted)', margin: 0 }}>Log a race to see equivalent performances across distances.</p>
+    </div>
+  )
+
+  const mainDistances = equivs.filter(e => ['5K','10K','Half Marathon','Marathon'].includes(e.distance))
+
+  return (
+    <div className="card-v3" style={st.glowCard}>
+      <div style={st.widgetLabel}>🎯 EQUIVALENTS</div>
+      <div style={st.widgetTitle}>EQUIV PERFORMANCES</div>
+      <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '-4px' }}>VDOT {vdotPt.vdot} · {vdotPt.raceName}</div>
+
+      {/* One-liner pill row */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
+        {mainDistances.map((e, i) => (
+          <React.Fragment key={e.distance}>
+            {i > 0 && <span style={{ color: 'var(--muted2)', fontSize: '12px' }}>≈</span>}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: '8px', padding: '8px 10px', minWidth: '56px' }}>
+              <span style={{ fontSize: '9px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                {e.distance.replace('Half Marathon','HM').replace('Marathon','MAR')}
+              </span>
+              <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '15px', color: 'var(--white)', marginTop: '2px' }}>
+                {e.timeStr}
+              </span>
+            </div>
+          </React.Fragment>
+        ))}
+      </div>
+
+      {/* Extended distances */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px' }}>
+        {equivs.filter(e => !['5K','10K','Half Marathon','Marathon'].includes(e.distance)).map(e => (
+          <div key={e.distance} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 8px', background: 'var(--surface3)', borderRadius: '5px', border: '1px solid var(--border)' }}>
+            <span style={{ fontSize: '11px', color: 'var(--muted)' }}>{e.distance}</span>
+            <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '12px', color: 'var(--white)' }}>{e.timeStr}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─── Upcoming Race Density Widget ─────────────────────────────────────────────
+
+function UpcomingDensityWidget() {
+  const upcoming = useRaceStore(selectUpcomingRaces)
+  const warnings = useMemo(() => raceDensityWarnings(upcoming), [upcoming])
+
+  return (
+    <div className="card-v3" style={st.glowCard}>
+      <div style={st.widgetLabel}>📆 SCHEDULING</div>
+      <div style={st.widgetTitle}>RACE CONFLICTS</div>
+
+      {upcoming.length < 2 ? (
+        <p style={{ fontSize: '13px', color: 'var(--muted)', margin: 0 }}>Add 2+ upcoming races to check for scheduling conflicts.</p>
+      ) : warnings.length === 0 ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', background: 'rgba(0,255,136,0.06)', borderRadius: '8px', border: '1px solid rgba(0,255,136,0.2)' }}>
+          <span style={{ fontSize: '20px' }}>✅</span>
+          <div>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '13px', color: 'var(--green)' }}>ALL CLEAR</div>
+            <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>No scheduling conflicts in {upcoming.length} upcoming races.</div>
+          </div>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {warnings.map((w, i) => (
+            <div key={i} style={{
+              padding: '10px 12px', borderRadius: '8px',
+              background: w.severity === 'danger' ? 'rgba(255,60,60,0.08)' : 'rgba(var(--orange-ch),0.08)',
+              border: `1px solid ${w.severity === 'danger' ? 'rgba(255,60,60,0.3)' : 'rgba(var(--orange-ch),0.3)'}`,
+            }}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px', color: w.severity === 'danger' ? '#ff6b6b' : 'var(--orange)', letterSpacing: '0.08em', marginBottom: '4px' }}>
+                {w.severity === 'danger' ? '🚨 DANGER' : '⚠ WARNING'} · {w.windowDays}d gap
+              </div>
+              <div style={{ fontSize: '12px', color: 'var(--white)', lineHeight: 1.4 }}>{w.message}</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Course Repeats Widget ────────────────────────────────────────────────────
+
+function CourseRepeatsWidget() {
+  const races = useRaceStore(selectRaces)
+
+  const courses = useMemo(() => {
+    const map = findCourseRepeats(races)
+    return Array.from(map.entries())
+      .filter(([, rs]) => rs.length >= 3)
+      .map(([name, rs]) => {
+        const sorted = [...rs].sort((a, b) => a.date.localeCompare(b.date))
+        const timed  = rs.filter(r => r.time)
+        const pb     = timed.length
+          ? timed.reduce((best, r) => {
+              const secs = (t: string) => t.split(':').reduce((s, v, i, arr) => s + Number(v) * Math.pow(60, arr.length - 1 - i), 0)
+              return secs(r.time!) < secs(best.time!) ? r : best
+            })
+          : null
+        const last2 = timed.slice(-2)
+        let trend: 'improving' | 'declining' | 'flat' = 'flat'
+        if (last2.length === 2) {
+          const secs = (t: string) => t.split(':').reduce((s, v, i, arr) => s + Number(v) * Math.pow(60, arr.length - 1 - i), 0)
+          const t0 = secs(last2[0].time!), t1 = secs(last2[1].time!)
+          trend = t1 < t0 ? 'improving' : t1 > t0 ? 'declining' : 'flat'
+        }
+        return { name, count: rs.length, first: sorted[0].date, pb, trend }
+      })
+      .sort((a, b) => b.count - a.count)
+  }, [races])
+
+  if (!courses.length) return (
+    <div className="card-v3" style={st.glowCard}>
+      <div style={st.widgetLabel}>🔄 REPEATS</div>
+      <div style={st.widgetTitle}>COURSE REPEATS</div>
+      <p style={{ fontSize: '13px', color: 'var(--muted)', margin: 0 }}>Run the same race 3+ times to see your course repeat history.</p>
+    </div>
+  )
+
+  return (
+    <div className="card-v3" style={st.glowCard}>
+      <div style={st.widgetLabel}>🔄 REPEATS</div>
+      <div style={st.widgetTitle}>COURSE REPEATS</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        {courses.slice(0, 4).map(c => (
+          <div key={c.name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: 'var(--surface3)', borderRadius: '8px', border: '1px solid var(--border)' }}>
+            <div>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '13px', color: 'var(--white)' }}>{c.name}</div>
+              <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '2px' }}>{c.count}× · since {c.first}</div>
+            </div>
+            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+              {c.pb?.time && (
+                <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', color: 'var(--orange)' }}>{c.pb.time}</div>
+              )}
+              <div style={{ fontSize: '12px', marginTop: '2px' }}>
+                {c.trend === 'improving' && <span style={{ color: 'var(--green)' }}>▲ FASTER</span>}
+                {c.trend === 'declining' && <span style={{ color: '#ff6b6b' }}>▼ SLOWER</span>}
+                {c.trend === 'flat'      && <span style={{ color: 'var(--muted)' }}>— FLAT</span>}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ─── Customize Modal ──────────────────────────────────────────────────────────
 
 const ZONE_META: Record<string, { tag: string; label: string }> = {
@@ -4374,14 +4574,16 @@ export function Dashboard() {
   const getDashLayout = useDashStore(s => s.getDashLayout)
   const widgets       = useMemo(() => getDashLayout(), [storeWidgets, getDashLayout])
 
-  const openAddRace          = () => { setAddRaceMode('past');     setShowAddRace(true) }
-  const openAddUpcomingRace  = () => { setAddRaceMode('upcoming'); setShowAddRace(true) }
+  const [riegelPrefillDist, setRiegelPrefillDist] = useState<string | undefined>()
+  const openAddRace          = () => { setAddRaceMode('past');     setRiegelPrefillDist(undefined); setShowAddRace(true) }
+  const openAddUpcomingRace  = () => { setAddRaceMode('upcoming'); setRiegelPrefillDist(undefined); setShowAddRace(true) }
+  const openRiegelGoal = (dist: string) => { setAddRaceMode('upcoming'); setRiegelPrefillDist(dist); setShowAddRace(true) }
   const en = (id: string) => isEnabled(widgets, id)
 
   return (
     <div style={st.page}>
       {showCustomize    && <DashCustomizeModal onClose={() => setShowCustomize(false)} />}
-      {showAddRace      && <AddRaceModal defaultMode={addRaceMode} onClose={() => setShowAddRace(false)} />}
+      {showAddRace      && <AddRaceModal defaultMode={addRaceMode} prefillDistance={riegelPrefillDist} onClose={() => { setShowAddRace(false); setRiegelPrefillDist(undefined) }} />}
       {showAllUpcoming  && <AllUpcomingModal onClose={() => setShowAllUpcoming(false)} onAddRace={openAddUpcomingRace} />}
 
       <GreetingCard onCustomize={() => setShowCustomize(true)} />
@@ -4411,7 +4613,7 @@ export function Dashboard() {
         {en('recent-races')       && <RecentRaces onAddRace={openAddRace} />}
         {en('activity-preview')   && <ActivityPreviewWidget />}
         {en('personal-bests')     && <PersonalBestsWidget />}
-        {en('riegel-predictor')   && <RiegelPredictorWidget />}
+        {en('riegel-predictor')   && <RiegelPredictorWidget onAddGoal={openRiegelGoal} />}
         {en('weather-impact')     && <WeatherImpactWidget />}
         {en('why-prd')        && <WhyPRdWidget />}
         {en('why-faded')      && <WhyFadedWidget />}
@@ -4424,6 +4626,7 @@ export function Dashboard() {
         {en('season-planner')    && <SeasonPlannerWidget onAddRace={openAddUpcomingRace} />}
         {en('recovery-intel')    && <RecoveryIntelWidget />}
         {en('race-density')      && <RaceDensityWidget />}
+        {en('upcoming-density')  && <UpcomingDensityWidget />}
         {en('streak-risk')       && <StreakRiskWidget />}
         {en('training-correl')   && <TrainingCorrelWidget />}
         {en('race-gap-analysis') && <RaceGapAnalysisWidget />}
@@ -4432,8 +4635,10 @@ export function Dashboard() {
 
       {/* PATTERNS — ANALYSIS */}
       <DashZone id="context" tag="PATTERNS" label="ANALYSIS">
-        {en('vdot-score')        && <VDOTScoreWidget />}
+        {en('vdot-score')          && <VDOTScoreWidget />}
+        {en('equiv-perf')          && <EquivPerfWidget />}
         {en('distance-milestones') && <DistanceMilestonesWidget />}
+        {en('course-repeats')      && <CourseRepeatsWidget />}
         {en('boston-qual')       && <BostonQualWidget />}
         {en('pacing-iq')         && <PacingIQWidget />}
         {en('career-momentum')   && <CareerMomentumWidget />}

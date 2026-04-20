@@ -186,9 +186,10 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 interface Props {
   onClose: () => void
   defaultMode?: Mode
+  prefillDistance?: string
 }
 
-export function AddRaceModal({ onClose, defaultMode = 'past' }: Props) {
+export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance }: Props) {
   const [mode, setMode] = useState<Mode>(defaultMode)
   const addRace         = useRaceStore(s => s.addRace)
   const addUpcomingRace = useRaceStore(s => s.addUpcomingRace)
@@ -198,6 +199,17 @@ export function AddRaceModal({ onClose, defaultMode = 'past' }: Props) {
 
   // When parent changes defaultMode (e.g. re-opens), sync
   useEffect(() => { setMode(defaultMode) }, [defaultMode])
+
+  // Pre-fill distance if provided (e.g. from Riegel predictor tap)
+  useEffect(() => {
+    if (!prefillDistance) return
+    const LABEL_TO_KM: Record<string, string> = {
+      '5K': '5', '10K': '10', 'Half Marathon': '21.1', 'Marathon': '42.2',
+      '50K': '50', '100K': '100', '50 Mile': '80.5', '100 Mile': '161',
+    }
+    const km = LABEL_TO_KM[prefillDistance]
+    if (km) setDistance(km)
+  }, [prefillDistance])
 
   // Lock body scroll while modal is open
   useEffect(() => {
