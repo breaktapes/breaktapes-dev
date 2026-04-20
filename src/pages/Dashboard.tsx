@@ -11,6 +11,12 @@ import { TimePickerWheel } from '@/components/TimePickerWheel'
 import type { HMS } from '@/components/TimePickerWheel'
 import type { Race } from '@/types'
 import { useUnits, distUnit } from '@/lib/units'
+import {
+  bestRiegelTable,
+  bestVDOT, equivalentPerformances, paceZones,
+  goalPaceCalc, parseTimeSecs as fParseTimeSecs, parseDistKm as fParseDistKm,
+  bestWeatherImpact, distanceMilestones, secsToHMS as fSecsToHMS,
+} from '@/lib/raceFormulas'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -3840,6 +3846,295 @@ function PaceCalculator() {
   )
 }
 
+// ─── Formula Widgets (Day 2) ──────────────────────────────────────────────────
+
+function RiegelPredictorWidget() {
+  const races = useRaceStore(selectRaces)
+  const result = useMemo(() => bestRiegelTable(races), [races])
+  if (!result) return (
+    <div className="card-v3" style={st.glowCard}>
+      <div style={st.widgetLabel}>🔮 RACE PREDICTOR</div>
+      <div style={st.widgetTitle}>RIEGEL PREDICTOR</div>
+      <p style={{ fontSize: '13px', color: 'var(--muted)', margin: 0 }}>Log a race with a finish time to see predictions.</p>
+    </div>
+  )
+  const { race, table } = result
+  return (
+    <div className="card-v3" style={st.glowCard}>
+      <div style={st.widgetLabel}>🔮 RACE PREDICTOR</div>
+      <div style={st.widgetTitle}>RIEGEL PREDICTOR</div>
+      <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '-4px' }}>
+        Based on {race.name} · {race.date}
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        {table.map(row => (
+          <div key={row.distance} style={{
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            padding: '8px 10px', borderRadius: '6px',
+            background: row.isSameAsInput ? 'rgba(var(--orange-ch),0.1)' : 'var(--surface3)',
+            border: `1px solid ${row.isSameAsInput ? 'rgba(var(--orange-ch),0.3)' : 'var(--border)'}`,
+          }}>
+            <span style={{ fontSize: '13px', color: row.isSameAsInput ? 'var(--orange)' : 'var(--white)', fontWeight: row.isSameAsInput ? 700 : 400 }}>
+              {row.distance}
+              {row.isSameAsInput && <span style={{ fontSize: '10px', marginLeft: '6px', color: 'var(--muted)', textTransform: 'uppercase', fontFamily: 'var(--headline)' }}>actual</span>}
+            </span>
+            <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', color: row.isSameAsInput ? 'var(--orange)' : 'var(--white)' }}>
+              {row.predictedTime}
+            </span>
+          </div>
+        ))}
+      </div>
+      <div style={{ fontSize: '11px', color: 'var(--muted2)', lineHeight: 1.5 }}>
+        T₂ = T₁ × (D₂/D₁)^1.06 — Riegel formula
+      </div>
+    </div>
+  )
+}
+
+function VDOTScoreWidget() {
+  const races = useRaceStore(selectRaces)
+  const units = useUnits()
+  const vdotPt = useMemo(() => bestVDOT(races), [races])
+  const equivs = useMemo(() => vdotPt ? equivalentPerformances(vdotPt.vdot) : [], [vdotPt])
+  const zones  = useMemo(() => vdotPt ? paceZones(vdotPt.vdot, units) : [], [vdotPt, units])
+
+  if (!vdotPt) return (
+    <div className="card-v3" style={st.glowCard}>
+      <div style={st.widgetLabel}>⚡ VDOT SCORE</div>
+      <div style={st.widgetTitle}>VDOT FITNESS</div>
+      <p style={{ fontSize: '13px', color: 'var(--muted)', margin: 0 }}>Log a race with a finish time to compute your VDOT.</p>
+    </div>
+  )
+
+  const vdotColor = vdotPt.vdot >= 55 ? '#00FF88' : vdotPt.vdot >= 45 ? 'var(--orange)' : 'var(--white)'
+
+  return (
+    <div className="card-v3" style={st.glowCard}>
+      <div style={st.widgetLabel}>⚡ VDOT SCORE</div>
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px' }}>
+        <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '52px', lineHeight: 1, color: vdotColor }}>
+          {vdotPt.vdot}
+        </span>
+        <div style={{ paddingBottom: '6px' }}>
+          <div style={{ fontSize: '11px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em' }}>VDOT</div>
+          <div style={{ fontSize: '11px', color: 'var(--muted)' }}>{vdotPt.raceName}</div>
+        </div>
+      </div>
+
+      {/* Equivalent performances */}
+      <div>
+        <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '6px' }}>
+          EQUIVALENT PERFORMANCES
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px' }}>
+          {equivs.slice(0, 6).map(e => (
+            <div key={e.distance} style={{ background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: '6px', padding: '8px 6px', textAlign: 'center' }}>
+              <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '2px' }}>
+                {e.distance.replace(' Marathon', 'M').replace('Marathon', 'MAR')}
+              </div>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', color: 'var(--white)' }}>
+                {e.timeStr}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Training zones */}
+      <div>
+        <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '6px' }}>
+          TRAINING ZONES
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          {zones.map(z => (
+            <div key={z.zone} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', background: 'var(--surface3)', borderRadius: '5px', border: '1px solid var(--border)' }}>
+              <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', width: '18px', color: 'var(--orange)' }}>{z.abbr}</span>
+              <span style={{ flex: 1, fontSize: '11px', color: 'var(--muted)' }}>{z.description}</span>
+              <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '12px', color: 'var(--white)', flexShrink: 0 }}>
+                {z.minPaceStr} – {z.maxPaceStr}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function GoalPaceWidget() {
+  const focusRace = useRaceStore(selectFocusRace)
+  const races     = useRaceStore(selectRaces)
+  const units     = useUnits()
+  const vdotPt    = useMemo(() => bestVDOT(races), [races])
+
+  const result = useMemo(() => {
+    if (!focusRace?.goalTime) return null
+    const goalSecs = fParseTimeSecs(focusRace.goalTime)
+    const distKm   = fParseDistKm(focusRace.distance)
+    if (!goalSecs || !distKm) return null
+    return goalPaceCalc(goalSecs, distKm, units, vdotPt?.vdot)
+  }, [focusRace, units, vdotPt])
+
+  if (!focusRace) return null  // no focus race — hide widget entirely
+
+  if (!result) return (
+    <div className="card-v3" style={st.glowCard}>
+      <div style={st.widgetLabel}>🎯 GOAL PACE</div>
+      <div style={st.widgetTitle}>GOAL PACE</div>
+      <p style={{ fontSize: '13px', color: 'var(--muted)', margin: 0 }}>
+        Set a goal time on {focusRace.name} to see your pace breakdown.
+      </p>
+    </div>
+  )
+
+  const gapLabel = result.vsCurrentVDOT !== null
+    ? result.vsCurrentVDOT > 0
+      ? `${fSecsToHMS(result.vsCurrentVDOT)} faster than current fitness`
+      : `${fSecsToHMS(Math.abs(result.vsCurrentVDOT))} within current reach`
+    : null
+
+  const gapColor = result.vsCurrentVDOT !== null && result.vsCurrentVDOT > 0 ? '#ff6b6b' : 'var(--green)'
+
+  return (
+    <div className="card-v3" style={st.glowCard}>
+      <div style={st.widgetLabel}>🎯 GOAL PACE</div>
+      <div style={st.widgetTitle}>GOAL PACE</div>
+      <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '-4px' }}>{focusRace.name}</div>
+
+      {/* Main pace display */}
+      <div style={{ display: 'flex', gap: '12px' }}>
+        <div style={{ flex: 1, background: 'var(--surface3)', borderRadius: '8px', padding: '14px', border: '1px solid var(--border2)', textAlign: 'center' }}>
+          <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, color: 'var(--muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>per KM</div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '26px', color: 'var(--orange)', lineHeight: 1.1, marginTop: '4px' }}>{result.pacePaceStr.split(' ')[0]}</div>
+        </div>
+        <div style={{ flex: 1, background: 'var(--surface3)', borderRadius: '8px', padding: '14px', border: '1px solid var(--border2)', textAlign: 'center' }}>
+          <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, color: 'var(--muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>per MILE</div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '26px', color: 'var(--white)', lineHeight: 1.1, marginTop: '4px' }}>{result.paceMileStr.split(' ')[0]}</div>
+        </div>
+      </div>
+
+      {/* VDOT gap */}
+      {gapLabel && (
+        <div style={{ fontSize: '12px', color: gapColor, padding: '6px 10px', background: 'var(--surface3)', borderRadius: '6px', border: `1px solid ${gapColor}33` }}>
+          {gapLabel}
+          {result.requiredVDOT && <span style={{ color: 'var(--muted)', marginLeft: '6px' }}>VDOT {result.requiredVDOT}</span>}
+        </div>
+      )}
+
+      {/* Splits */}
+      <div>
+        <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '6px' }}>SPLIT TARGETS</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+          {result.splitTargets.map(s => (
+            <div key={s.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 8px', background: 'var(--surface3)', borderRadius: '4px' }}>
+              <span style={{ fontSize: '12px', color: 'var(--muted)' }}>{s.label}</span>
+              <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '13px', color: 'var(--white)' }}>{s.cumStr}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function WeatherImpactWidget() {
+  const races  = useRaceStore(selectRaces)
+  const result = useMemo(() => bestWeatherImpact(races), [races])
+
+  if (!result) return (
+    <div className="card-v3" style={st.glowCard}>
+      <div style={st.widgetLabel}>🌡 WEATHER IMPACT</div>
+      <div style={st.widgetTitle}>WEATHER IMPACT</div>
+      <p style={{ fontSize: '13px', color: 'var(--muted)', margin: 0 }}>Races with weather data will show adjusted performance.</p>
+    </div>
+  )
+
+  const { race, impact } = result
+  const impactColor = impact.improvementSecs > 300 ? '#ff6b6b'
+    : impact.improvementSecs > 120 ? 'var(--orange)'
+    : 'var(--green)'
+
+  return (
+    <div className="card-v3" style={st.glowCard}>
+      <div style={st.widgetLabel}>🌡 WEATHER IMPACT</div>
+      <div style={st.widgetTitle}>WEATHER IMPACT</div>
+      <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '-4px' }}>{race.name} · {race.date}</div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+        <div style={{ background: 'var(--surface3)', borderRadius: '8px', padding: '12px', border: '1px solid var(--border2)' }}>
+          <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, color: 'var(--muted)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '4px' }}>ACTUAL</div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '20px', color: 'var(--white)' }}>{fSecsToHMS(impact.actualSecs)}</div>
+          <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>{impact.tempC}°C · {impact.humidityPct}% humidity</div>
+        </div>
+        <div style={{ background: 'var(--surface3)', borderRadius: '8px', padding: '12px', border: `1px solid ${impactColor}44` }}>
+          <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, color: impactColor, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '4px' }}>IDEAL CONDITIONS</div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '20px', color: impactColor }}>{fSecsToHMS(impact.adjustedSecs)}</div>
+          <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>10°C · 50% humidity</div>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px', background: 'var(--surface3)', borderRadius: '6px', border: `1px solid ${impactColor}33` }}>
+        <span style={{ fontSize: '20px' }}>
+          {impact.improvementSecs > 300 ? '🥵' : impact.improvementSecs > 120 ? '😓' : '😊'}
+        </span>
+        <div>
+          <div style={{ fontSize: '12px', color: 'var(--white)', fontWeight: 500 }}>{impact.label}</div>
+          {impact.improvementSecs > 10 && (
+            <div style={{ fontSize: '11px', color: impactColor }}>
+              +{fSecsToHMS(impact.improvementSecs)} due to heat/humidity ({impact.impactPct}%)
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function DistanceMilestonesWidget() {
+  const races  = useRaceStore(selectRaces)
+  const result = useMemo(() => distanceMilestones(races), [races])
+
+  return (
+    <div className="card-v3" style={st.glowCard}>
+      <div style={st.widgetLabel}>🏅 MILESTONES</div>
+      <div style={st.widgetTitle}>DISTANCE TOTAL</div>
+
+      {/* Hero number */}
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px' }}>
+        <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '48px', lineHeight: 1, color: 'var(--orange)' }}>
+          {result.totalKm.toLocaleString()}
+        </span>
+        <span style={{ fontSize: '14px', color: 'var(--muted)', paddingBottom: '6px', fontFamily: 'var(--headline)', fontWeight: 700 }}>KM TOTAL</span>
+      </div>
+
+      {/* Progress bar to next milestone */}
+      {result.nextMilestone && (
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+            <span style={{ fontSize: '11px', color: 'var(--muted)' }}>
+              {result.lastMilestone ? result.lastMilestone.label : '0 KM'}
+            </span>
+            <span style={{ fontSize: '11px', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 700 }}>
+              {result.nextMilestone.label}
+            </span>
+          </div>
+          <div style={{ height: '6px', background: 'var(--surface3)', borderRadius: '3px', overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${result.progressPct}%`, background: 'var(--orange)', borderRadius: '3px', transition: 'width 0.5s ease' }} />
+          </div>
+          <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '4px' }}>
+            {result.kmToNext.toLocaleString()} km to {result.nextMilestone.label}
+          </div>
+        </div>
+      )}
+
+      {/* Fun fact */}
+      <div style={{ fontSize: '12px', color: 'var(--muted)', fontStyle: 'italic', padding: '8px 10px', background: 'var(--surface3)', borderRadius: '6px', borderLeft: '2px solid var(--orange)' }}>
+        {result.funFact}
+      </div>
+    </div>
+  )
+}
+
 // ─── Customize Modal ──────────────────────────────────────────────────────────
 
 const ZONE_META: Record<string, { tag: string; label: string }> = {
@@ -3994,6 +4289,7 @@ export function Dashboard() {
               <CourseInfoCard race={nextRace} /></>
           : <NoUpcomingRaceCTA onAddRace={openAddUpcomingRace} />
         }
+        {en('goal-pace')      && <GoalPaceWidget />}
         {en('on-this-day')    && <OnThisDayWidget />}
         {en('race-readiness') && <RaceReadinessWidget />}
         {en('gap-to-goal')    && <GapToGoalWidget />}
@@ -4006,9 +4302,11 @@ export function Dashboard() {
       {/* RECENTLY — YOUR SEASON */}
       <DashZone id="recently" tag="RECENTLY" label="YOUR SEASON">
         <StatsStrip />
-        {en('recent-races')      && <RecentRaces onAddRace={openAddRace} />}
-        {en('activity-preview')  && <ActivityPreviewWidget />}
-        {en('personal-bests')    && <PersonalBestsWidget />}
+        {en('recent-races')       && <RecentRaces onAddRace={openAddRace} />}
+        {en('activity-preview')   && <ActivityPreviewWidget />}
+        {en('personal-bests')     && <PersonalBestsWidget />}
+        {en('riegel-predictor')   && <RiegelPredictorWidget />}
+        {en('weather-impact')     && <WeatherImpactWidget />}
         {en('why-prd')        && <WhyPRdWidget />}
         {en('why-faded')      && <WhyFadedWidget />}
         {en('break-tape')     && <BreakTapeWidget />}
@@ -4028,6 +4326,8 @@ export function Dashboard() {
 
       {/* PATTERNS — ANALYSIS */}
       <DashZone id="context" tag="PATTERNS" label="ANALYSIS">
+        {en('vdot-score')        && <VDOTScoreWidget />}
+        {en('distance-milestones') && <DistanceMilestonesWidget />}
         {en('boston-qual')       && <BostonQualWidget />}
         {en('pacing-iq')         && <PacingIQWidget />}
         {en('career-momentum')   && <CareerMomentumWidget />}
