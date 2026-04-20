@@ -317,6 +317,17 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 | `loadSavedSeasonPlan(planId)` | Apply saved plan priorities to `upcomingRaces`; ID-first match, name+date fallback; shows toast with match count |
 | `openSeasonPlannerModal()` | Open Season Planner modal; auto-prunes past events from `upcomingRaces` on open |
 | `saveSeasonPlanDraft(name, items)` | Save season plan to `seasonPlans`; uses `crypto.randomUUID()` for Supabase-compatible UUID IDs |
+| `useUnits()` | React hook returning `'metric' \| 'imperial'` from `athlete.units`; defaults to metric |
+| `fmtDistKm(km, units)` | Format a km string for display — converts to miles if imperial (e.g. "21.1" → "13.1") |
+| `distUnit(units)` | Returns `"KM"` or `"MI"` label string |
+| `fmtPaceSecPerKm(secPerKm, units)` | Format pace as `"4:45 /km"` or `"7:38 /mi"` |
+| `paceUnit(units)` | Returns `"/km"` or `"/mi"` |
+| `fmtSpeedKmh(kmh, units)` | Format speed as `"12.5 km/h"` or `"7.8 mph"` |
+| `computePaceSecPerKm(distKm, finishTime)` | Compute pace in sec/km from distance string + `HH:MM:SS` time; returns null if invalid |
+| `resolveDistKm(dist)` | Map distance label ("Half Marathon") or numeric string → `{km, isNumeric}` for display |
+| `countryNameHaystack(code)` | Resolve ISO-2 country code to full name string for autocomplete haystack expansion |
+| `addUpcomingRace(race)` | Add a future race to `upcomingRaces` array in `useRaceStore` |
+| `autoMoveExpiredUpcoming()` | Move past-dated entries from `upcomingRaces` → `races` on app rehydration |
 
 ---
 
@@ -765,6 +776,13 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 - `#pageTitleBar` is a mobile-only sticky element updated by `go()` — it must stay in sync with the `_pageNames` map in `go()` when new pages are added.
 - `initAuth()` races against a 4-second timeout. If Supabase is cold, the user sees the landing screen (not a blank page). The landing spinner (`#landing-auth-spinner`) shows during this window.
 - FIT file upload: `handleGarminFitImport()` guards against `FitParser` being undefined (CDN not yet loaded) and files > 100 MB. Both checks must stay in place.
+- Race catalog fetch (`useRaceCatalog`) takes 1-3s on cold load (8,284 rows, two parallel Supabase pages). `AddRaceModal` has a `useEffect([catalog])` that fires `runSearch()` when catalog arrives — do not remove this or searches typed before catalog loads will silently return nothing.
+- Race catalog stores `country` as full names ("Oman", "United States", "France") — NOT ISO codes. The tokenized search haystacks include `countryNameHaystack()` output for ISO-code entries too, but the primary catalog data is full names.
+- `updateRace` in `useRaceStore` patches `races`, `upcomingRaces`, AND `nextRace` — all three must be updated together. Missing the `nextRace` patch causes widgets like `GapToGoalWidget` to show stale data after an edit.
+- `Athlete.units` defaults to `'metric'` if unset. All distance/pace display code must use `useUnits()` and the helpers in `src/lib/units.ts` — never hardcode KM/MI labels.
+- Weather forecast uses `forecast_days=2` so the 5-hour strip always spans midnight. Do not revert to `forecast_days=1` — it leaves only 1 slot after ~9PM.
+- `IS_STAGING` from `src/env.ts` drives `proAccessGranted` in `useAuthStore` — all Pro features are unlocked on `dev.breaktapes.com`. Production (`app.breaktapes.com`) keeps `proAccessGranted: false`.
+- Dashboard test `YESTERDAY`/`FUTURE` constants use local-time date arithmetic (`localDateStr(n)` helper) — not `.toISOString()` which is UTC and drifts ±1 day in non-UTC timezones after midnight.
 
 ---
 
