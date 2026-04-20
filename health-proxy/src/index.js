@@ -223,6 +223,60 @@ export default {
       return json(await resp.json(), resp.status, origin);
     }
 
+    // ── Race Import: UltraSignup ──────────────────────────────────────────
+    if (path === '/import/ultrasignup' && request.method === 'POST') {
+      try {
+        const { firstName, lastName } = await request.json();
+        const q = encodeURIComponent(`${firstName} ${lastName}`);
+        const url = `https://ultrasignup.com/service/events.svc/GetParticipantSearch/p=1/q=${q}`;
+        const resp = await fetch(url, {
+          headers: { 'Accept': 'application/json', 'User-Agent': 'Mozilla/5.0' },
+        });
+        if (!resp.ok) throw new Error(`UltraSignup ${resp.status}`);
+        const data = await resp.json();
+        return json({ results: data, status: 'ok' }, 200, origin);
+      } catch (e) {
+        return json({ results: [], status: 'error', message: e.message }, 502, origin);
+      }
+    }
+
+    // ── Race Import: Athlinks (stubbed — key pending) ─────────────────────
+    if (path === '/import/athlinks' && request.method === 'POST') {
+      if (!env.ATHLINKS_API_KEY) {
+        return json({ results: [], status: 'pending_api_key' }, 200, origin);
+      }
+      // TODO: implement when key arrives
+      return json({ results: [], status: 'pending_api_key' }, 200, origin);
+    }
+
+    // ── Race Import: MarathonView ─────────────────────────────────────────
+    if (path === '/import/marathonview' && request.method === 'POST') {
+      try {
+        const { name } = await request.json();
+        const url = `https://marathonview.net/search/runners?query=${encodeURIComponent(name)}`;
+        const resp = await fetch(url, {
+          headers: { 'Accept': 'text/html', 'User-Agent': 'Mozilla/5.0' },
+        });
+        if (!resp.ok) throw new Error(`MarathonView ${resp.status}`);
+        const html = await resp.text();
+        const rows = [];
+        const rowRe = /<tr[^>]*>[\s\S]*?<\/tr>/gi;
+        const cellRe = /<td[^>]*>([\s\S]*?)<\/td>/gi;
+        let rowMatch;
+        while ((rowMatch = rowRe.exec(html)) !== null) {
+          const cells = [];
+          let cellMatch;
+          while ((cellMatch = cellRe.exec(rowMatch[0])) !== null) {
+            cells.push(cellMatch[1].replace(/<[^>]+>/g, '').trim());
+          }
+          if (cells.length >= 3) rows.push({ raceName: cells[0], date: cells[1], time: cells[2], raw: cells });
+        }
+        return json({ results: rows, status: 'ok' }, 200, origin);
+      } catch (e) {
+        return json({ results: [], status: 'error', message: e.message }, 502, origin);
+      }
+    }
+
     // ── OW API proxy (GET only, legacy) ───────────────────────────────────
     if (request.method !== 'GET') {
       return json({ error: 'Method not allowed' }, 405, origin);

@@ -4,14 +4,10 @@ import { useAuthStore } from '@/stores/useAuthStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { useWearableStore } from '@/stores/useWearableStore'
 import { supabase } from '@/lib/supabase'
-import { startWhoopOAuth } from '@/lib/whoop'
-import { startGarminOAuth } from '@/lib/garmin'
 import { startStravaOAuth } from '@/lib/strava'
-import { importAppleHealthXML, importAppleHealthXMLStreaming } from '@/lib/appleHealth'
 import { removeWearableToken } from '@/lib/wearableUtils'
 import { THEMES } from '@/types'
 import type { ThemeId } from '@/types'
-import { getClaudeApiKey, setClaudeApiKey } from '@/lib/claude'
 
 const btnMain: React.CSSProperties = {
   background: 'var(--orange)',
@@ -77,15 +73,8 @@ export function Settings() {
   const athlete = useAthleteStore(s => s.athlete)
   const updateAthlete = useAthleteStore(s => s.updateAthlete)
 
-  const whoopToken  = useWearableStore(s => s.whoopToken)
-  const garminToken = useWearableStore(s => s.garminToken)
   const stravaToken = useWearableStore(s => s.stravaToken)
-  const appleHealth = useWearableStore(s => s.appleHealthSummary)
   const clearToken  = useWearableStore(s => s.clearToken)
-
-  const [appleImporting, setAppleImporting] = useState(false)
-  const [appleProgress, setAppleProgress] = useState(0)
-  const appleInputRef = useRef<HTMLInputElement>(null)
 
   const [activeTheme, setActiveTheme] = useState<ThemeId>(
     () => (localStorage.getItem('bt_theme') as ThemeId) || 'carbon'
@@ -116,17 +105,6 @@ export function Settings() {
       setDeleteError(err instanceof Error ? err.message : 'Could not delete account. Try again.')
       setDeleting(false)
     }
-  }
-
-  // Claude API key state
-  const [apiKey, setApiKeyState] = useState(() => getClaudeApiKey())
-  const [apiKeyMasked, setApiKeyMasked] = useState(true)
-  const [apiKeySaved, setApiKeySaved] = useState(false)
-
-  function handleSaveApiKey() {
-    setClaudeApiKey(apiKey.trim())
-    setApiKeySaved(true)
-    setTimeout(() => setApiKeySaved(false), 2000)
   }
 
   // Username + public profile state
@@ -237,36 +215,6 @@ export function Settings() {
     document.documentElement.dataset.theme = themeId
     localStorage.setItem('bt_theme', themeId)
     setActiveTheme(themeId)
-  }
-
-  async function handleAppleHealthFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    if (!file.name.endsWith('.xml')) {
-      alert('Please select an export.xml file from Apple Health.')
-      return
-    }
-    if (file.size > 100 * 1024 * 1024 * 1024) {
-      alert('File too large.')
-      return
-    }
-    setAppleImporting(true)
-    setAppleProgress(0)
-    try {
-      if (file.size > 500 * 1024 * 1024) {
-        await importAppleHealthXMLStreaming(file, setAppleProgress)
-      } else {
-        await importAppleHealthXML(file)
-        setAppleProgress(100)
-      }
-    } catch (err) {
-      console.error('Apple Health import failed:', err)
-      const msg = err instanceof Error ? err.message : String(err)
-      alert(`Import failed: ${msg}`)
-    } finally {
-      setAppleImporting(false)
-      e.target.value = ''
-    }
   }
 
   async function handleSignOut() {
@@ -532,63 +480,6 @@ export function Settings() {
         </div>
       </section>
 
-      {/* ── AI Parsing section ── */}
-      <section>
-        <p style={sectionLabel}>AI Parsing</p>
-        <div style={{ ...card, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          <div>
-            <label style={{ display: 'block', fontSize: 'var(--text-xs)', color: 'var(--muted)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '6px', fontFamily: 'var(--headline)', fontWeight: 700 }}>
-              Anthropic API Key
-            </label>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <div style={{ flex: 1, position: 'relative' }}>
-                <input
-                  type={apiKeyMasked ? 'password' : 'text'}
-                  style={{ ...inputStyle, paddingRight: '40px', fontFamily: apiKey ? 'monospace' : 'inherit' }}
-                  value={apiKey}
-                  onChange={e => { setApiKeyState(e.target.value); setApiKeySaved(false) }}
-                  placeholder="sk-ant-..."
-                  autoComplete="new-password"
-                  spellCheck={false}
-                />
-                <button
-                  onClick={() => setApiKeyMasked(v => !v)}
-                  style={{ position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: '14px', padding: '2px' }}
-                  title={apiKeyMasked ? 'Show' : 'Hide'}
-                >
-                  {apiKeyMasked ? '👁' : '🙈'}
-                </button>
-              </div>
-              <button
-                style={{
-                  ...btnMain,
-                  padding: '0 16px',
-                  flexShrink: 0,
-                  opacity: apiKeySaved ? 0.7 : 1,
-                }}
-                onClick={handleSaveApiKey}
-              >
-                {apiKeySaved ? '✓ Saved' : 'Save'}
-              </button>
-            </div>
-            <p style={{ margin: '6px 0 0', fontSize: '11px', color: 'var(--muted)', lineHeight: 1.5 }}>
-              Required for AI race import and screenshot parsing.{' '}
-              <a href="https://console.anthropic.com" target="_blank" rel="noreferrer" style={{ color: 'var(--orange)', textDecoration: 'none' }}>
-                Get your key at console.anthropic.com
-              </a>
-            </p>
-          </div>
-          {apiKey && (
-            <button
-              style={{ ...btnGhost, fontSize: '12px', padding: '0.6rem 1rem', color: 'rgba(var(--orange-ch),0.7)', borderColor: 'rgba(var(--orange-ch),0.3)', alignSelf: 'flex-start' }}
-              onClick={() => { setApiKeyState(''); setClaudeApiKey('') }}
-            >
-              Remove Key
-            </button>
-          )}
-        </div>
-      </section>
-
       {/* ── Theme section ── */}
       <section>
         <p style={sectionLabel}>Theme</p>
@@ -670,48 +561,6 @@ export function Settings() {
         <p style={sectionLabel}>Wearables</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
 
-          {/* WHOOP */}
-          <div style={{ ...card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ margin: 0, fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>WHOOP</p>
-              <p style={{ margin: '3px 0 0', fontSize: 'var(--text-xs)', color: whoopToken ? 'var(--green)' : 'var(--muted)' }}>
-                {whoopToken ? '● Connected' : 'Recovery, strain & sleep coaching'}
-              </p>
-            </div>
-            {whoopToken ? (
-              <button
-                style={{ ...btnGhost, padding: '0.5rem 1rem', whiteSpace: 'nowrap', flexShrink: 0, fontSize: '12px' }}
-                onClick={async () => { await removeWearableToken('whoop'); clearToken('whoop') }}
-              >Disconnect</button>
-            ) : (
-              <button
-                style={{ ...btnMain, padding: '0.5rem 1rem', whiteSpace: 'nowrap', flexShrink: 0 }}
-                onClick={startWhoopOAuth}
-              >Connect</button>
-            )}
-          </div>
-
-          {/* Garmin */}
-          <div style={{ ...card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ margin: 0, fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>Garmin</p>
-              <p style={{ margin: '3px 0 0', fontSize: 'var(--text-xs)', color: garminToken ? 'var(--green)' : 'var(--muted)' }}>
-                {garminToken ? '● Connected' : 'GPS activities & performance metrics'}
-              </p>
-            </div>
-            {garminToken ? (
-              <button
-                style={{ ...btnGhost, padding: '0.5rem 1rem', whiteSpace: 'nowrap', flexShrink: 0, fontSize: '12px' }}
-                onClick={async () => { await removeWearableToken('garmin'); clearToken('garmin') }}
-              >Disconnect</button>
-            ) : (
-              <button
-                style={{ ...btnMain, padding: '0.5rem 1rem', whiteSpace: 'nowrap', flexShrink: 0 }}
-                onClick={startGarminOAuth}
-              >Connect</button>
-            )}
-          </div>
-
           {/* Strava */}
           <div style={{ ...card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
             <div style={{ flex: 1, minWidth: 0 }}>
@@ -733,55 +582,20 @@ export function Settings() {
             )}
           </div>
 
-          {/* COROS */}
-          <div style={{ ...card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ margin: 0, fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>COROS</p>
-              <p style={{ margin: '3px 0 0', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Training load & endurance data</p>
-            </div>
-            <span style={{ padding: '3px 10px', borderRadius: '4px', background: 'var(--surface3)', border: '1px solid var(--border)', fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)', whiteSpace: 'nowrap' }}>Soon</span>
-          </div>
-
-          {/* Oura */}
-          <div style={{ ...card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ margin: 0, fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>Oura</p>
-              <p style={{ margin: '3px 0 0', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Readiness, sleep & HRV</p>
-            </div>
-            <span style={{ padding: '3px 10px', borderRadius: '4px', background: 'var(--surface3)', border: '1px solid var(--border)', fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)', whiteSpace: 'nowrap' }}>Soon</span>
-          </div>
-
-          {/* Apple Health */}
-          <div style={{ ...card, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ margin: 0, fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>Apple Health</p>
-                <p style={{ margin: '3px 0 0', fontSize: 'var(--text-xs)', color: appleHealth ? 'var(--green)' : 'var(--muted)' }}>
-                  {appleHealth
-                    ? `● ${appleHealth.totalWorkouts} days imported · ${appleHealth.lastSyncDate}`
-                    : 'Import export.xml from the Health app'}
-                </p>
-              </div>
-              <button
-                style={{ ...btnMain, padding: '0.5rem 1rem', whiteSpace: 'nowrap', flexShrink: 0 }}
-                onClick={() => appleInputRef.current?.click()}
-                disabled={appleImporting}
-              >
-                {appleImporting ? `${appleProgress}%` : 'Import'}
-              </button>
-              <input
-                ref={appleInputRef}
-                type="file"
-                accept=".xml"
-                style={{ display: 'none' }}
-                onChange={handleAppleHealthFile}
-              />
-            </div>
-            {appleImporting && (
-              <div style={{ height: '4px', background: 'var(--surface3)', borderRadius: '2px', overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${appleProgress}%`, background: 'var(--orange)', transition: 'width 0.3s' }} />
-              </div>
-            )}
+          {/* Coming soon placeholder */}
+          <div style={{
+            background: 'var(--surface2)',
+            border: '1px solid var(--border2)',
+            borderRadius: '12px',
+            padding: '32px 24px',
+            textAlign: 'center',
+          }}>
+            <p style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', letterSpacing: '0.08em', color: 'var(--muted)', textTransform: 'uppercase', margin: 0 }}>
+              Wearable Integrations
+            </p>
+            <p style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '8px', fontFamily: 'var(--body)' }}>
+              WHOOP · Garmin · Apple Health — coming soon
+            </p>
           </div>
 
         </div>

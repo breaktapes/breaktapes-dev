@@ -31,7 +31,7 @@ export function BetaFeedback() {
     setSubmitting(true)
     try {
       await supabase.from('beta_feedback').insert({
-        user_id: authUser.id,
+        user_id: authUser!.id,
         rating,
         message: text.trim() || null,
         page: location.pathname,
