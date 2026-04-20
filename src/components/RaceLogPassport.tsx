@@ -143,7 +143,9 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
   const yearLabel = year === 'all' ? 'All Time' : year
 
   const isVertical = H > W
-  const s = W / 1200  // scale factor (base width = 1200px)
+  // Vertical formats (9:16, 3:4) have narrow width — use a smaller divisor so fonts
+  // stay readable. Horizontal base stays at 1200px.
+  const s = isVertical ? W / 700 : W / 1200
 
   // ── Background ──
   ctx.fillStyle = D.bg
