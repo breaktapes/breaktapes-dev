@@ -16,6 +16,7 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Fixed two Dashboard test matchers that had drifted from refactored component text.
 - Safari: added `border-left-color: var(--orange)` fallback on PB race rows — `border-image` with `var()` is unsupported in Safari so the solid fallback now renders in the correct theme color.
 - **Athlete Dossier share card** now exports in the active theme's colors. The canvas 2D API bypasses CSS custom properties, so the card was always rendering in default Carbon+Chrome orange. Fixed by reading `--orange-ch`, `--green-ch`, `--gold-ch`, `--black`, `--white`, `--muted`, `--muted2`, and `--gold` from `getComputedStyle` at draw time. Deep Space users get a blue dossier, Race Night gets yellow, etc.
+- **Garmin token auto-refresh**: tokens now refresh automatically when expiring within 5 minutes. `refreshGarminToken()` calls `POST /garmin/refresh` on health-proxy, saves the updated token, and clears stale tokens on failure so users see a reconnect prompt instead of silent errors.
 
 ## [0.6.0.0] - 2026-04-16
 
