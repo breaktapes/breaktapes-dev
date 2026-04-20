@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useRaceStore } from '@/stores/useRaceStore'
+import { parseDistKm } from '@/lib/raceFormulas'
 import type { Race } from '@/types'
 
 const HEALTH_PROXY = 'https://health.breaktapes.com'
@@ -15,8 +16,33 @@ interface ImportResult {
   raw?: string[]
 }
 
+function kmToDistLabel(km: number): string {
+  if (km <= 0) return ''
+  if (Math.abs(km - 42.195) < 0.1) return 'Marathon'
+  if (Math.abs(km - 21.0975) < 0.1) return 'Half Marathon'
+  if (Math.abs(km - 226) < 1) return 'Ironman'
+  if (Math.abs(km - 113) < 1) return 'Half Ironman / 70.3'
+  if (Math.abs(km - 51.5) < 1) return 'Olympic Tri'
+  if (Math.abs(km - 5) < 0.1) return '5K'
+  if (Math.abs(km - 10) < 0.1) return '10K'
+  if (Math.abs(km - 15) < 0.1) return '15K'
+  if (Math.abs(km - 50) < 1) return '50K'
+  if (Math.abs(km - 100) < 1) return '100K'
+  if (Math.abs(km - 80.47) < 1) return '50 Mile'
+  if (Math.abs(km - 160.93) < 1) return '100 Mile'
+  return `${km}KM`
+}
+
+function normalizeDateStr(d: string): string {
+  // Convert MM/DD/YYYY → YYYY-MM-DD; leave YYYY-MM-DD as-is
+  const mmddyyyy = d.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
+  if (mmddyyyy) return `${mmddyyyy[3]}-${mmddyyyy[1].padStart(2,'0')}-${mmddyyyy[2].padStart(2,'0')}`
+  return d
+}
+
 export function RaceImportModal({ onClose }: { onClose: () => void }) {
-  const addRace = useRaceStore(s => s.addRace)
+  const addRace    = useRaceStore(s => s.addRace)
+  const existingRaces = useRaceStore(s => s.races)
 
   const [step, setStep]               = useState<Step>('search')
   const [firstName, setFirstName]     = useState('')
@@ -26,6 +52,7 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
   const [selected, setSelected]       = useState<Set<number>>(new Set())
   const [importing, setImporting]     = useState(false)
   const [error, setError]             = useState('')
+  const [skippedCount, setSkippedCount] = useState(0)
   const [athlinksStatus, setAthlinksStatus] = useState<'ok' | 'pending_api_key' | ''>('')
 
   useEffect(() => {
@@ -69,7 +96,8 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
     }
     if (mv.status === 'fulfilled' && mv.value.status === 'ok') {
       for (const r of (mv.value.results ?? [])) {
-        all.push({ ...r, source: 'marathonview' })
+        if (!r.raceName || r.raceName.length < 3) continue
+        all.push({ ...r, date: normalizeDateStr(r.date ?? ''), source: 'marathonview' })
       }
     }
     if (ath.status === 'fulfilled') {
@@ -92,22 +120,31 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
   async function handleImport() {
     if (selected.size === 0) return
     setImporting(true)
+    let skipped = 0
     for (const i of selected) {
       const r = results[i]
+      const date = r.date || new Date().toISOString().split('T')[0]
+      const isDupe = existingRaces.some(
+        ex => ex.name?.toLowerCase() === r.raceName.toLowerCase() && ex.date === date
+      )
+      if (isDupe) { skipped++; continue }
+      const distKm = parseDistKm(r.raceName)
+      const distance = kmToDistLabel(distKm)
       const race: Race = {
         id:       crypto.randomUUID(),
         name:     r.raceName,
-        date:     r.date || new Date().toISOString().split('T')[0],
+        date,
         time:     r.time || undefined,
-        distance: '',
+        distance,
         sport:    'Running',
         city:     '',
         country:  '',
       }
       addRace(race)
     }
+    setSkippedCount(skipped)
     setImporting(false)
-    onClose()
+    if (skipped < selected.size) onClose()
   }
 
   return createPortal(
@@ -150,7 +187,7 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                 <span style={st.sourcePill}>✓ UltraSignup</span>
                 <span style={st.sourcePill}>✓ MarathonView</span>
-                <span style={{ ...st.sourcePill, opacity: 0.5 }}>Athlinks (coming soon)</span>
+                <span style={st.sourcePill}>✓ Athlinks <span style={{ fontSize: '9px', color: 'var(--muted)', fontWeight: 400, letterSpacing: '0.02em', textTransform: 'none', fontFamily: 'var(--body)' }}>— pending API access</span></span>
               </div>
               {error && <p style={st.errorText}>{error}</p>}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '0.75rem' }}>
@@ -213,10 +250,20 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
                               {r.source}
                             </span>
                           </p>
+                          {(() => { const lbl = kmToDistLabel(parseDistKm(r.raceName)); return lbl ? (
+                            <p style={{ margin: '2px 0 0', fontSize: '10px', color: 'var(--muted2)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                              {lbl}
+                            </p>
+                          ) : null })()}
                         </div>
                       </div>
                     </button>
                   ))}
+                  {skippedCount > 0 && (
+                    <p style={{ margin: 0, fontSize: '12px', color: 'var(--muted)', textAlign: 'center' }}>
+                      {skippedCount} already logged — skipped.
+                    </p>
+                  )}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '0.75rem' }}>
                     <button style={st.cancelBtn} onClick={() => setStep('search')} type="button">← BACK</button>
                     <button
