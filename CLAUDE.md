@@ -317,6 +317,17 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 | `loadSavedSeasonPlan(planId)` | Apply saved plan priorities to `upcomingRaces`; ID-first match, name+date fallback; shows toast with match count |
 | `openSeasonPlannerModal()` | Open Season Planner modal; auto-prunes past events from `upcomingRaces` on open |
 | `saveSeasonPlanDraft(name, items)` | Save season plan to `seasonPlans`; uses `crypto.randomUUID()` for Supabase-compatible UUID IDs |
+| `useUnits()` | React hook returning `'metric' \| 'imperial'` from `athlete.units`; defaults to metric |
+| `fmtDistKm(km, units)` | Format a km string for display — converts to miles if imperial (e.g. "21.1" → "13.1") |
+| `distUnit(units)` | Returns `"KM"` or `"MI"` label string |
+| `fmtPaceSecPerKm(secPerKm, units)` | Format pace as `"4:45 /km"` or `"7:38 /mi"` |
+| `paceUnit(units)` | Returns `"/km"` or `"/mi"` |
+| `fmtSpeedKmh(kmh, units)` | Format speed as `"12.5 km/h"` or `"7.8 mph"` |
+| `computePaceSecPerKm(distKm, finishTime)` | Compute pace in sec/km from distance string + `HH:MM:SS` time; returns null if invalid |
+| `resolveDistKm(dist)` | Map distance label ("Half Marathon") or numeric string → `{km, isNumeric}` for display |
+| `countryNameHaystack(code)` | Resolve ISO-2 country code to full name string for autocomplete haystack expansion |
+| `addUpcomingRace(race)` | Add a future race to `upcomingRaces` array in `useRaceStore` |
+| `autoMoveExpiredUpcoming()` | Move past-dated entries from `upcomingRaces` → `races` on app rehydration |
 
 ---
 
@@ -738,6 +749,35 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 
 ---
 
+### Session 21 (2026-04-20) — MVP Day 1: strip AI, import wizard, nav cleanup
+
+**Branch:** `claude/day1-mvp` → staging (PR #145) → main (PR #146)
+
+#### Changes shipped
+- **AI surfaces removed** — `AddRaceModal.tsx`: deleted `@/lib/claude` import, `showParseText`/`parseTextInput`/`aiParsing`/`aiError`/`screenshotInputRef` state, `applyParsed()`/`handleParseText()`/`handleScreenshotImport()` functions, Parse Text + Import Screenshot button bar. No Anthropic API key required to use the app.
+- **API key section removed** — `Settings.tsx`: deleted entire "AI Parsing" section + API key state/handlers. No `getClaudeApiKey`/`setClaudeApiKey` imports.
+- **Gear tab removed** — `BottomNav.tsx`: `NAV_TABS` reduced to 4 (Home, Races, Train, You). `App.tsx`: Gear route commented out (`// removed from nav — kept for post-MVP`). `BottomNav.test.tsx` updated.
+- **Wearables coming soon** — `Settings.tsx`: WHOOP, Garmin, COROS, Oura, Apple Health cards replaced with single `<div>` placeholder. Strava card kept. All 5 removed import statements cleaned up.
+- **Race import wizard** — `health-proxy/src/index.js`: 3 new routes: `POST /import/ultrasignup` (fetches `ultrasignup.com/service/events.svc/GetParticipantSearch`), `POST /import/marathonview` (HTML-scrapes `marathonview.net/search/runners`, regex `<tr>/<td>`), `POST /import/athlinks` (stubbed, returns `pending_api_key`). `RaceImportModal.tsx`: 2-step wizard (search → results), `Promise.allSettled` parallel fetch, multi-select with `Set<number>`, `createPortal` sheet. `Races.tsx`: "↓ Import" ghost button in `.races-sheet-footer`, `importOpen` state, modal wire-up.
+- **TS fixes** — `BetaFeedback.tsx`: `authUser.id` → `authUser!.id`. `removeBg.ts`: `'small'` → `'isnet_quint8'`. `Dashboard.tsx`: removed unused `ACTIVITY_ICON` const.
+- **WIP preserved** — `claude/day2-formula-widgets` had 309-line uncommitted WIP (`raceFormulas.ts` library + Dashboard widgets). Committed as `wip:` and pushed to remote before cleanup.
+
+#### Branch/worktree cleanup
+- Closed PR #144 (superseded by #145)
+- Deleted local: `claude/strip-ai-gear-nav`, `claude/day1-mvp`, `promote-day1-main`, `promote-react-mvp`, `claude/admiring-mendeleev-85074c`, `claude/zealous-colden-56a7dc`, `claude/nifty-cray-50c66e`
+- Deleted remote: same + `claude/admiring-mendeleev-85074c`
+- Removed worktrees: `nifty-cray-50c66e`, `zealous-colden-56a7dc`
+- Remaining active: `main` (main repo), `staging-fixes` worktree on `claude/day2-formula-widgets` (WIP), `affectionate-shaw-276afa` worktree (this session — remove after session ends)
+- Open PRs: #141 (`blissful-jang-b59c08` → staging, portrait dossier fix), #126 (`jovial-panini-f7f086` → staging, Garmin token fix)
+
+#### Key learnings
+- `health-proxy` uses `json(data, status, origin)` helper (not `Response.json()`) — always match this pattern when adding new routes
+- Cherry-pick onto current staging base is cleaner than rebasing a diverged feature branch — avoids dragging in intermediate merge commits
+- Pre-existing TS errors on staging will fail CI on any PR that runs `tsc --noEmit` — always fix them as part of the same commit batch
+- `git worktree remove --force` needed if the worktree's branch is not fully merged; always check for uncommitted WIP before forcing
+
+---
+
 ## Known Issues / Watch Points
 
 - Beta invite codes: `BETA_INVITE_CODES` array is client-visible in source — intentional tradeoff for self-service beta; update the array and redeploy to staging to add/revoke codes
@@ -765,6 +805,13 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 - `#pageTitleBar` is a mobile-only sticky element updated by `go()` — it must stay in sync with the `_pageNames` map in `go()` when new pages are added.
 - `initAuth()` races against a 4-second timeout. If Supabase is cold, the user sees the landing screen (not a blank page). The landing spinner (`#landing-auth-spinner`) shows during this window.
 - FIT file upload: `handleGarminFitImport()` guards against `FitParser` being undefined (CDN not yet loaded) and files > 100 MB. Both checks must stay in place.
+- Race catalog fetch (`useRaceCatalog`) takes 1-3s on cold load (8,284 rows, two parallel Supabase pages). `AddRaceModal` has a `useEffect([catalog])` that fires `runSearch()` when catalog arrives — do not remove this or searches typed before catalog loads will silently return nothing.
+- Race catalog stores `country` as full names ("Oman", "United States", "France") — NOT ISO codes. The tokenized search haystacks include `countryNameHaystack()` output for ISO-code entries too, but the primary catalog data is full names.
+- `updateRace` in `useRaceStore` patches `races`, `upcomingRaces`, AND `nextRace` — all three must be updated together. Missing the `nextRace` patch causes widgets like `GapToGoalWidget` to show stale data after an edit.
+- `Athlete.units` defaults to `'metric'` if unset. All distance/pace display code must use `useUnits()` and the helpers in `src/lib/units.ts` — never hardcode KM/MI labels.
+- Weather forecast uses `forecast_days=2` so the 5-hour strip always spans midnight. Do not revert to `forecast_days=1` — it leaves only 1 slot after ~9PM.
+- `IS_STAGING` from `src/env.ts` drives `proAccessGranted` in `useAuthStore` — all Pro features are unlocked on `dev.breaktapes.com`. Production (`app.breaktapes.com`) keeps `proAccessGranted: false`.
+- Dashboard test `YESTERDAY`/`FUTURE` constants use local-time date arithmetic (`localDateStr(n)` helper) — not `.toISOString()` which is UTC and drifts ±1 day in non-UTC timezones after midnight.
 
 ---
 
