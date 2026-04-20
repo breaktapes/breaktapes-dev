@@ -3,7 +3,20 @@ import react from '@vitejs/plugin-react'
 import { resolve } from 'path'
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    // @imgly/background-removal uses a conditional dynamic import for WebGPU
+    // that Vite's import-analysis can't resolve. Stub it out so the WASM path is used.
+    {
+      name: 'stub-onnxruntime-webgpu',
+      resolveId(id: string) {
+        if (id === 'onnxruntime-web/webgpu') return '\0onnxruntime-webgpu-stub'
+      },
+      load(id: string) {
+        if (id === '\0onnxruntime-webgpu-stub') return 'export default null'
+      },
+    },
+  ],
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src'),
@@ -13,6 +26,7 @@ export default defineConfig({
     outDir: 'dist',
     emptyOutDir: true,
     rollupOptions: {
+      external: ['onnxruntime-web/webgpu'],
       output: {
         // Vendor chunks — split large deps so the app chunk stays small.
         // MapLibre + deck.gl together are ~1MB; splitting them means repeat
@@ -38,6 +52,9 @@ export default defineConfig({
         },
       },
     },
+  },
+  optimizeDeps: {
+    exclude: ['@imgly/background-removal'],
   },
   server: {
     port: 5173,
