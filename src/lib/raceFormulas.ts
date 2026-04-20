@@ -52,19 +52,40 @@ function fmtPace(secPerKm: number, units: 'metric' | 'imperial'): string {
   return `${m}:${String(ss).padStart(2, '0')} /${units === 'imperial' ? 'mi' : 'km'}`
 }
 
-// Best finished race across all races for a given distance range (±10%)
+const RUNNING_SPORTS = /^(running|trail|road|cross.?country|track|fell|mountain run)/i
+
+function isRunningRace(r: Race): boolean {
+  const s = (r.sport ?? 'Running').toLowerCase()
+  return RUNNING_SPORTS.test(s) && !s.includes('tri') && !s.includes('duathlon') &&
+    !s.includes('cycl') && !s.includes('bike') && !s.includes('swim')
+}
+
+// Best running race: most recent PB effort (best pace for its distance, ties broken by date desc)
 function bestRaceByDistance(races: Race[]): Race | null {
-  return races
-    .filter(r => r.time && parseDistKm(r.distance) > 0 && r.outcome !== 'DNF' && r.outcome !== 'DNS' && r.outcome !== 'DSQ')
-    .sort((a, b) => {
-      const ta = parseTimeSecs(a.time) ?? Infinity
-      const tb = parseTimeSecs(b.time) ?? Infinity
-      const da = parseDistKm(a.distance)
-      const db = parseDistKm(b.distance)
-      // Normalise to marathon-equivalent pace (sec/km) for cross-distance comparison
-      if (da <= 0 || db <= 0) return 0
-      return (ta / da) - (tb / db)
-    })[0] ?? null
+  const running = races.filter(
+    r => isRunningRace(r) && r.time && parseDistKm(r.distance) > 0 &&
+      r.outcome !== 'DNF' && r.outcome !== 'DNS' && r.outcome !== 'DSQ'
+  )
+  if (!running.length) return null
+
+  // Build per-distance PB map (best sec/km for each distance bucket)
+  const pbPace = new Map<number, number>()
+  for (const r of running) {
+    const d = parseDistKm(r.distance)
+    const t = parseTimeSecs(r.time)!
+    const pace = t / d
+    const existing = pbPace.get(d)
+    if (existing === undefined || pace < existing) pbPace.set(d, pace)
+  }
+
+  // Keep only races that are PBs at their distance, then pick most recent
+  const pbRaces = running.filter(r => {
+    const d = parseDistKm(r.distance)
+    const t = parseTimeSecs(r.time)!
+    return Math.abs(t / d - pbPace.get(d)!) < 0.01
+  })
+
+  return pbRaces.sort((a, b) => b.date.localeCompare(a.date))[0] ?? null
 }
 
 // ─── Riegel Predictor ─────────────────────────────────────────────────────────
