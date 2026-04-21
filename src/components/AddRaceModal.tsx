@@ -353,15 +353,31 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
       grouped.get(key)!.push(r)
     })
 
-    // Sort each group by year desc (rows[0] = most recent = canonical representative)
+    const currentYear = new Date().getFullYear()
+
+    // In upcoming mode, prefer future-dated entries as the representative.
+    // Sort: future years ascending (nearest first), then past years descending.
+    const sortForMode = (rows: CatalogRace[]) => {
+      if (mode !== 'upcoming') return [...rows].sort((a, b) => (b.year ?? 0) - (a.year ?? 0))
+      const future = rows.filter(r => (r.year ?? 0) >= currentYear)
+        .sort((a, b) => (a.year ?? 0) - (b.year ?? 0))
+      const past = rows.filter(r => (r.year ?? 0) < currentYear)
+        .sort((a, b) => (b.year ?? 0) - (a.year ?? 0))
+      return [...future, ...past]
+    }
+
     const catalogHits = Array.from(grouped.values())
       .map(rows => {
-        const sorted = [...rows].sort((a, b) => (b.year ?? 0) - (a.year ?? 0))
+        const sorted = sortForMode(rows)
+        // In upcoming mode, only show future year pills
+        const relevantYears = mode === 'upcoming'
+          ? sorted.filter(r => r.year == null || r.year >= currentYear)
+          : sorted
         return {
           label:    sorted[0].name,
           source:   'catalog' as const,
           data:     sorted[0],
-          allYears: sorted,
+          allYears: relevantYears.length > 0 ? relevantYears : sorted,
         }
       })
       .sort((a, b) => nameMatchScore(b.data) - nameMatchScore(a.data))
@@ -446,7 +462,16 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
       // Single row — auto-fill date immediately, no picker needed
       const row = years[0] ?? representative
       if (row?.month && row?.day) {
-        const yr = row.year ?? new Date().getFullYear()
+        let yr = row.year ?? new Date().getFullYear()
+        // In upcoming mode: if the resolved date is in the past, advance to next occurrence
+        if (mode === 'upcoming') {
+          const today = new Date().toISOString().split('T')[0]
+          let candidate = `${yr}-${pad2(row.month)}-${pad2(row.day)}`
+          while (candidate < today) {
+            yr += 1
+            candidate = `${yr}-${pad2(row.month)}-${pad2(row.day)}`
+          }
+        }
         setDate(`${yr}-${pad2(row.month)}-${pad2(row.day)}`)
       }
       setShowYearPicker(false)
@@ -676,12 +701,22 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
                   const distLabel = s.data.dist ?? (s.data.dist_km ? `${s.data.dist_km} km` : '')
                   if (distLabel) metaParts.push(distLabel)
                   if (s.allYears && s.allYears.length > 1) {
-                    const yrs = [...new Set(s.allYears.map(r => r.year).filter(Boolean))].sort((a,b) => b! - a!).slice(0, 3)
-                    metaParts.push(yrs.join(', ') + (s.allYears.length > 3 ? '…' : ''))
+                    const _cy = new Date().getFullYear()
+                    const yrs = [...new Set(s.allYears.map(r => r.year).filter(Boolean))]
+                      .sort((a, b) => a! - b!)
+                    const futureYrs = yrs.filter(y => y! >= _cy)
+                    const displayYrs = (futureYrs.length > 0 ? futureYrs : yrs).slice(0, 3)
+                    metaParts.push(displayYrs.join(', ') + (yrs.length > 3 ? '…' : ''))
                   } else if (s.data.month && s.data.day) {
                     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-                    const yearSuffix = s.data.year ? ` ${s.data.year}` : ''
-                    metaParts.push(`${months[s.data.month - 1]} ${s.data.day}${yearSuffix}`)
+                    // In upcoming mode: advance displayed year past today if needed
+                    let dispYear = s.data.year ?? new Date().getFullYear()
+                    if (mode === 'upcoming' && s.data.month && s.data.day) {
+                      const today = new Date().toISOString().split('T')[0]
+                      let candidate = `${dispYear}-${pad2(s.data.month)}-${pad2(s.data.day)}`
+                      while (candidate < today) { dispYear += 1; candidate = `${dispYear}-${pad2(s.data.month)}-${pad2(s.data.day)}` }
+                    }
+                    metaParts.push(`${months[s.data.month - 1]} ${s.data.day} ${dispYear}`)
                   }
                 }
                 return (
