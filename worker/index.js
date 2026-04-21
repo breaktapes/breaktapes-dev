@@ -826,6 +826,13 @@ function pageShell({ title, description, ogTitle, ogDescription, ogImage, canoni
     ${bodyContent}
   </main>
 
+  ${username ? `
+  <div style="padding:12px 20px 80px;text-align:center;">
+    <a href="https://app.breaktapes.com/compare?b=${encodeURIComponent(username)}" style="display:inline-block;background:#1a1a1a;border:1px solid rgba(245,245,245,0.12);border-radius:10px;padding:12px 20px;font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:#f5f5f5;text-decoration:none;">
+      Compare with @${escapeHtml(username)} →
+    </a>
+  </div>` : ''}
+
   ${showJoinCta ? `
   <div class="join-cta-bar">
     <div class="join-cta-text">

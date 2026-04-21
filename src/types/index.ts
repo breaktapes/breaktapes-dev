@@ -29,7 +29,8 @@ export interface Race {
   lat?: number
   lng?: number
   strava_id?: number    // Strava activity ID — used to de-duplicate imports
-  gear?: string[]       // race day gear checklist items
+  gear?: string[]       // race day gear checklist items (custom items only)
+  packedGear?: string[] // items checked off as packed
 }
 
 export interface Split {

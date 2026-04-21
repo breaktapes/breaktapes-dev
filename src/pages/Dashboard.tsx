@@ -478,23 +478,27 @@ function GreetingCard({ onCustomize }: { onCustomize: () => void }) {
 
 const DEFAULT_GEAR = ['Shoes', 'Watch', 'Race kit', 'Nutrition', 'Bib']
 
-function RaceMorningBrief({ race }: { race: Race }) {
+function RaceMorningBrief({ race, onEditRace }: { race: Race; onEditRace?: (race: Race) => void }) {
   const updateRace = useRaceStore(s => s.updateRace)
   const units = useUnits()
   const [newItem, setNewItem] = useState('')
 
-  const gear = race.gear ?? DEFAULT_GEAR
+  // All gear items to show: defaults + any custom items added
+  const allItems = [...DEFAULT_GEAR, ...(race.gear ?? []).filter(g => !DEFAULT_GEAR.includes(g))]
+  // Packed = checked off; starts empty (nothing packed yet)
+  const packedGear = race.packedGear ?? []
 
-  function toggleGear(item: string) {
-    // Remove if present, add if not — gear list acts as checklist
-    const next = gear.includes(item) ? gear.filter(g => g !== item) : [...gear, item]
-    updateRace(race.id, { gear: next })
+  function togglePacked(item: string) {
+    const next = packedGear.includes(item)
+      ? packedGear.filter(g => g !== item)
+      : [...packedGear, item]
+    updateRace(race.id, { packedGear: next })
   }
 
   function addGearItem() {
     const trimmed = newItem.trim()
-    if (!trimmed || gear.includes(trimmed)) return
-    updateRace(race.id, { gear: [...gear, trimmed] })
+    if (!trimmed || allItems.includes(trimmed)) return
+    updateRace(race.id, { gear: [...(race.gear ?? []), trimmed] })
     setNewItem('')
   }
 
@@ -524,7 +528,7 @@ function RaceMorningBrief({ race }: { race: Race }) {
       <div style={st.briefingInner}>
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-          <span style={{ fontSize: '16px' }}>🏁</span>
+          <IconPin />
           <span style={st.briefingTag}>{isToday ? 'RACE DAY!' : 'TOMORROW!'}</span>
         </div>
         <div style={st.briefingTitle}>{(race.name ?? '').toUpperCase()}</div>
@@ -552,7 +556,14 @@ function RaceMorningBrief({ race }: { race: Race }) {
           </div>
         ) : (
           <div style={{ marginTop: '10px', fontSize: '12px', color: 'var(--muted)', fontFamily: 'var(--body)' }}>
-            No goal time set — <span style={{ color: 'var(--orange)', cursor: 'pointer' }}>set a goal</span> to see pace
+            No goal time set —{' '}
+            <span
+              style={{ color: 'var(--orange)', cursor: 'pointer' }}
+              onClick={() => onEditRace?.(race)}
+            >
+              set a goal
+            </span>{' '}
+            to see pace
           </div>
         )}
 
@@ -560,44 +571,28 @@ function RaceMorningBrief({ race }: { race: Race }) {
         <div style={{ marginTop: '10px' }}>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '10px', letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '6px' }}>Gear Checklist</div>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-            {DEFAULT_GEAR.map(item => {
-              const checked = gear.includes(item)
+            {allItems.map(item => {
+              const packed = packedGear.includes(item)
               return (
                 <button
                   key={item}
-                  onClick={() => toggleGear(item)}
+                  onClick={() => togglePacked(item)}
+                  aria-pressed={packed}
                   style={{
-                    background: checked ? 'rgba(0,255,136,0.12)' : 'var(--surface3)',
-                    color: checked ? 'var(--green)' : 'var(--muted)',
-                    border: `1px solid ${checked ? 'rgba(0,255,136,0.3)' : 'var(--border2)'}`,
-                    borderRadius: '6px', padding: '4px 10px',
+                    background: packed ? 'rgba(0,255,136,0.12)' : 'var(--surface3)',
+                    color: packed ? 'var(--green)' : 'var(--muted)',
+                    border: `1px solid ${packed ? 'rgba(0,255,136,0.3)' : 'var(--border2)'}`,
+                    borderRadius: '6px', padding: '6px 12px',
                     fontFamily: 'var(--headline)', fontWeight: 700,
                     fontSize: '10px', letterSpacing: '0.06em',
                     textTransform: 'uppercase', cursor: 'pointer',
-                    textDecoration: checked ? 'none' : 'none',
+                    minHeight: '44px',
                   }}
                 >
-                  {checked ? '✓ ' : ''}{item}
+                  {packed ? '✓ ' : ''}{item}
                 </button>
               )
             })}
-            {/* Custom items not in DEFAULT_GEAR */}
-            {gear.filter(g => !DEFAULT_GEAR.includes(g)).map(item => (
-              <button
-                key={item}
-                onClick={() => toggleGear(item)}
-                style={{
-                  background: 'rgba(0,255,136,0.12)', color: 'var(--green)',
-                  border: '1px solid rgba(0,255,136,0.3)',
-                  borderRadius: '6px', padding: '4px 10px',
-                  fontFamily: 'var(--headline)', fontWeight: 700,
-                  fontSize: '10px', letterSpacing: '0.06em',
-                  textTransform: 'uppercase', cursor: 'pointer',
-                }}
-              >
-                ✓ {item}
-              </button>
-            ))}
           </div>
           {/* Add item */}
           <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
@@ -633,7 +628,7 @@ function RaceMorningBrief({ race }: { race: Race }) {
   )
 }
 
-function PreRaceBriefing({ onAddRace }: { onAddRace: () => void }) {
+function PreRaceBriefing({ onAddRace, onEditRace }: { onAddRace: () => void; onEditRace?: (race: Race) => void }) {
   const races    = useRaceStore(selectRaces)
   const nextRace = useRaceStore(selectNextRace)   // always nearest upcoming — never follows focus pin
   const today    = todayStr()
@@ -652,7 +647,7 @@ function PreRaceBriefing({ onAddRace }: { onAddRace: () => void }) {
 
   // RACE_MORNING state: show when next race is today or tomorrow
   if (nextRace && daysUntil(nextRace.date) <= 1) {
-    return <RaceMorningBrief race={nextRace} />
+    return <RaceMorningBrief race={nextRace} onEditRace={onEditRace} />
   }
 
   if (!nextRace) {
@@ -4951,6 +4946,7 @@ export function Dashboard() {
   const [showAddRace,       setShowAddRace]       = useState(false)
   const [addRaceMode,       setAddRaceMode]       = useState<'past' | 'upcoming'>('past')
   const [showAllUpcoming,   setShowAllUpcoming]   = useState(false)
+  const [editRace,          setEditRace]          = useState<Race | null>(null)
   const nextRace        = useRaceStore(selectNextRace)   // always nearest upcoming (A-Race preferred)
   const upcomingRaces   = useRaceStore(selectUpcomingRaces)
   const focusRaceId     = useRaceStore(selectFocusRaceId)
@@ -4976,9 +4972,10 @@ export function Dashboard() {
       {showCustomize    && <DashCustomizeModal onClose={() => setShowCustomize(false)} />}
       {showAddRace      && <AddRaceModal defaultMode={addRaceMode} prefillDistance={riegelPrefillDist} onClose={() => { setShowAddRace(false); setRiegelPrefillDist(undefined) }} />}
       {showAllUpcoming  && <AllUpcomingModal onClose={() => setShowAllUpcoming(false)} onAddRace={openAddUpcomingRace} />}
+      {editRace         && <ViewEditRaceModal race={editRace} onClose={() => setEditRace(null)} />}
 
       <GreetingCard onCustomize={() => setShowCustomize(true)} />
-      <PreRaceBriefing onAddRace={openAddRace} />
+      <PreRaceBriefing onAddRace={openAddRace} onEditRace={(race) => setEditRace(race)} />
 
       {/* Expired upcoming race prompts */}
       <ExpiredRacePrompts onLogResult={() => { setAddRaceMode('past'); setShowAddRace(true) }} />
