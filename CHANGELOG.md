@@ -3,6 +3,13 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.6.1.0] - 2026-04-21
+
+### Fixed
+- **Profile links on staging now point to the right URL**: sharing your profile from `dev.breaktapes.com` used to copy an `app.breaktapes.com` link. Fixed — staging generates `dev.breaktapes.com/u/...`, production generates `app.breaktapes.com/u/...`.
+- **Race import error feedback**: when UltraSignup or MarathonView fails to respond, a red banner now names which source(s) failed with a RETRY button. Previously the failure was silent.
+- **Activity widget empty state**: the Recent Training widget now shows "No activities yet — sync your wearable to see recent training." instead of rendering nothing.
+
 ## [0.6.0.1] - 2026-04-20
 
 ### Added
