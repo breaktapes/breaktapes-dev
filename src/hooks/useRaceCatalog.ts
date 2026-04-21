@@ -17,6 +17,7 @@ export interface CatalogRace {
   surface?: string
   elevation_profile?: string
   course_summary?: string
+  priority?: string        // 'A' | 'B' | 'C'
 }
 
 const COLS = 'id, name, aliases, city, country, year, month, day, dist_km, dist, type, discipline, surface, elevation_profile, course_summary'

@@ -7,13 +7,13 @@ import type { Race } from '@/types'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const SPORTS: { value: string; label: string; icon: string }[] = [
-  { value: '', label: 'All', icon: '🏅' },
-  { value: 'run', label: 'Run', icon: '🏃' },
-  { value: 'tri', label: 'Tri', icon: '🏊' },
-  { value: 'cycle', label: 'Cycle', icon: '🚴' },
-  { value: 'swim', label: 'Swim', icon: '🌊' },
-  { value: 'hyrox', label: 'Hyrox', icon: '⚡' },
+const SPORTS: { value: string; label: string }[] = [
+  { value: '', label: 'All' },
+  { value: 'run', label: 'Run' },
+  { value: 'tri', label: 'Tri' },
+  { value: 'cycle', label: 'Cycle' },
+  { value: 'swim', label: 'Swim' },
+  { value: 'hyrox', label: 'Hyrox' },
 ]
 
 // Distance chips per sport type
@@ -141,10 +141,11 @@ function FilterChip({
   return (
     <button
       onClick={onClick}
+      aria-pressed={active}
       style={{
-        background: active ? 'var(--orange)' : 'var(--surface2)',
-        color: active ? 'var(--black)' : 'var(--white)',
-        border: active ? 'none' : '1px solid var(--border2)',
+        background: active ? 'rgba(232,78,27,0.12)' : 'var(--surface2)',
+        color: active ? 'var(--orange)' : 'var(--white)',
+        border: `1px solid ${active ? 'rgba(232,78,27,0.4)' : 'var(--border2)'}`,
         borderRadius: '20px',
         padding: '5px 12px',
         fontFamily: 'var(--headline)',
@@ -317,20 +318,30 @@ export function Discover() {
     [wishlistRaces],
   )
 
+  const PRIORITY_RANK: Record<string, number> = { A: 0, B: 1, C: 2 }
+
   const filtered = useMemo(() => {
     if (!catalog) return []
-    return catalog.filter(r => {
-      // Upcoming only
-      if (!isUpcoming(r)) return false
-      if (sportFilter && r.type !== sportFilter) return false
-      if (!distFilters[distFilterIdx]?.match(r)) return false
-      if (countryFilter) {
-        const q = countryFilter.toLowerCase()
-        if (!r.country?.toLowerCase().includes(q) && !r.city?.toLowerCase().includes(q)) return false
-      }
-      if (monthFilter && r.month !== monthFilter) return false
-      return true
-    })
+    return catalog
+      .filter(r => {
+        // Upcoming only
+        if (!isUpcoming(r)) return false
+        if (sportFilter && r.type !== sportFilter) return false
+        if (!distFilters[distFilterIdx]?.match(r)) return false
+        if (countryFilter) {
+          const q = countryFilter.toLowerCase()
+          if (!r.country?.toLowerCase().includes(q) && !r.city?.toLowerCase().includes(q)) return false
+        }
+        if (monthFilter && r.month !== monthFilter) return false
+        return true
+      })
+      .sort((a, b) => {
+        // A-priority first, then B, then C; within same priority sort by month
+        const pa = PRIORITY_RANK[a.priority ?? 'C'] ?? 2
+        const pb = PRIORITY_RANK[b.priority ?? 'C'] ?? 2
+        if (pa !== pb) return pa - pb
+        return (a.month ?? 99) - (b.month ?? 99)
+      })
   }, [catalog, sportFilter, distFilterIdx, distFilters, countryFilter, monthFilter])
 
   const visible = filtered.slice(0, 100)
@@ -379,7 +390,7 @@ export function Discover() {
               letterSpacing: 0,
               marginLeft: '0.75rem',
             }}>
-              {filtered.length.toLocaleString()} found
+              {filtered.length.toLocaleString()} upcoming {sportFilter === 'run' ? 'runs' : 'races'}
             </span>
           )}
         </div>
@@ -392,7 +403,7 @@ export function Discover() {
               active={sportFilter === s.value}
               onClick={() => handleSportChange(s.value)}
             >
-              {s.icon} {s.label}
+              {s.label}
             </FilterChip>
           ))}
         </div>

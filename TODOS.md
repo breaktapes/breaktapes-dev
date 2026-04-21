@@ -4,6 +4,27 @@ Items captured during eng reviews. Each entry includes context so future session
 
 ---
 
+## Achievement badge visual redesign (post-cutover)
+
+**What:** Replace emoji icons in all 19 achievement badges (`Profile.tsx` `ACHIEVEMENTS` array) with proper visual badge design — monochrome text cards or custom SVG badge art.
+
+**Why:** Current V2 implementation uses emoji (🏔 🔥 ⚡ etc) which is inconsistent with BREAKTAPES's "dark archival athletic" identity. V1 had CSS badge art per tier. Identified in `/plan-design-review` 2026-04-21.
+
+**Pros:** Removes AI slop pattern from the Profile page. Makes achievements feel earned rather than generated.
+
+**Cons:** Requires either SVG badge design work (1-2 days) or a design decision on whether to use text-only badges (simpler, ~1 hour).
+
+**Context:** Deferred pre-cutover because it's cosmetic, not functional. Ship achievements working first, polish the visual afterward.
+
+**Option A (fast):** Replace emoji with no icon — just uppercase badge name on dark card with orange border on unlock. Takes ~1hr.
+**Option B (proper):** Commission or design per-achievement SVG icons (19 total). Takes 1-2 days.
+
+**Depends on:** React V2 cutover completed.
+
+**Priority:** Low — after cutover confirmed stable.
+
+---
+
 ## Migrate legacy Jest tests to vitest
 
 **What:** Convert `tests/*.test.js` (Jest + jsdom SPA snapshot) to vitest format under `src/`.

@@ -307,3 +307,139 @@ After closing a gap:
 2. Add the PR number in parentheses: `(#123)`
 3. Update the **Progress Summary** table
 4. Re-calculate overall parity %: `done / (done + partial×0.5 + missing)`
+
+---
+
+## Design Review Decisions (2026-04-21)
+
+Added by `/plan-design-review`. These are design decisions + bugs identified in Discover, Compare, and Race Morning Brief. Each has an implementation note.
+
+### 1. Discover — Live count subheadline
+**Decision:** Add `{filtered.length.toLocaleString()} upcoming races` below the DISCOVER title. Updates as filters change.
+**File:** `src/pages/Discover.tsx` — below the page title `<h1>` in the header div.
+**Example:** `"247 upcoming runs"` when Run filter is active; `"8,284 upcoming races"` when no filters set.
+
+### 2. Discover — Sort order: A-priority first, then by date ascending
+**Decision:** Sort filtered results by `priority` (A → B → C → null) then by date ascending within each tier.
+**File:** `src/pages/Discover.tsx` — apply `.sort()` to the `filtered` array in `useMemo`.
+**Note:** The catalog `priority` field values are 'A', 'B', 'C'. Null/undefined priority = lowest.
+
+### 3. Discover — Sport filter chips: text-only, no emoji
+**Decision:** Remove emoji from `SPORTS` array. Chips read `ALL / RUN / TRI / CYCLE / SWIM / HYROX` in Barlow Condensed uppercase.
+**File:** `src/pages/Discover.tsx` — remove `icon` field from SPORTS array; update `FilterChip` render from `{s.icon} {s.label}` to `{s.label}`.
+
+### 4. Discover — Skeleton loading state
+**Decision:** Replace "Loading race catalog..." plain text with 3 shimmer placeholder cards.
+**File:** `src/pages/Discover.tsx` — replace the `{isLoading && <div>Loading...</div>}` block.
+**Spec:** Each skeleton card: `height: 72px`, `background: var(--surface2)`, `border-radius: 10px`, CSS `@keyframes shimmer` pulse animation on `var(--surface3)`.
+
+### 5. Discover — Empty state with clear action
+**Decision:** When `!isLoading && filtered.length === 0`, show: heading "No races found", subtext per active filter, and a "Clear filters" button that resets sportFilter + distFilterIdx + countryFilter + monthFilter.
+**File:** `src/pages/Discover.tsx` — replace the current empty state div.
+
+### 6. Discover — Filter chip active state: match Races page pattern
+**Decision:** `FilterChip` active state should use `background: rgba(var(--orange-ch), 0.12); border-color: rgba(var(--orange-ch), 0.35); color: var(--orange)` — same as `.races-year-tab.active` in `src/styles/index.css`.
+**Current bug:** Active chips use full `var(--orange)` background + `var(--black)` text, inconsistent with year tabs.
+**File:** `src/pages/Discover.tsx` — update `FilterChip` active style.
+
+### 7. Discover — `aria-pressed` on filter chips
+**Decision:** Add `aria-pressed={active}` to the `FilterChip` `<button>`. Add `aria-label="Filter by country or city"` to the country/city `<input>`.
+**File:** `src/pages/Discover.tsx`.
+
+### 8. Compare — Entry point from public profile page
+**Decision:** Add "Compare with @{username}" button to the public profile page (`/u/:username` Worker SSR AND `src/pages/PublicProfile.tsx`). Links to `/compare?b={username}`.
+**File:** `worker/index.js` (SSR HTML) + `src/pages/PublicProfile.tsx`.
+**Placement:** Below the athlete name/stats, above the race list.
+
+### 9. Compare — Empty-param instructional state
+**Decision:** When the page loads with no URL params, show: `"COMPARE TWO ATHLETES"` heading + `"Search for an athlete to compare"` subtext + a search input pre-focused. Currently shows two silent empty columns with dashed "Add" buttons.
+**File:** `src/pages/Compare.tsx` — add initial state check `if (!usernameA && !usernameB)`.
+
+### 10. Compare — No-shared-distances state
+**Decision:** When both profiles load successfully but share no comparable distances, show: `"No shared distances to compare"` centered message with the athletes' top distances listed separately.
+**File:** `src/pages/Compare.tsx` — check before rendering stat grid: if no stat rows would have values on both sides.
+
+### 11. Compare — Distance group headers in stat grid
+**Decision:** Group `StatRow` items by distance (MARATHON, HALF MARATHON, 70.3, etc). Each group gets a header row: `background: none; border-none; color: var(--orange); font-size: 9px; letter-spacing: 0.14em; uppercase`.
+**File:** `src/pages/Compare.tsx` — restructure the stats section to group by distance.
+
+### 12. Race Morning Brief — "Set a goal" dead link bug
+**Decision:** The `<span style={{ cursor: 'pointer' }}>set a goal</span>` has no onClick handler. Wire it to open `ViewEditRaceModal` for the race.
+**File:** `src/pages/Dashboard.tsx` — `RaceMorningBrief` component. The component needs an `onEditRace` prop or the modal state needs to be lifted.
+
+### 13. Race Morning Brief — Gear checklist UX inversion fix
+**Decision:** Replace the current "remove = packed" UX with a proper checked/strikethrough pattern.
+**Implementation:**
+- Add `packedGear?: string[]` field to `Race` type in `src/types/index.ts`
+- `DEFAULT_GEAR` stays as the gear list. It's always shown.
+- Tapping an item toggles `packedGear` (add/remove the item's name).
+- Packed items render with `text-decoration: line-through; color: var(--green)` + green checkmark.
+- `updateRace(race.id, { packedGear: next })` to persist.
+- Remove `toggleGear` / replace with `togglePacked`.
+**File:** `src/pages/Dashboard.tsx`, `src/types/index.ts`.
+
+### 14. Race Morning Brief — Touch targets
+**Decision:** Gear checklist items need minimum 44px touch targets. Increase button padding to `padding: '10px 12px'` (from `4px 10px`).
+**File:** `src/pages/Dashboard.tsx` — gear item `<button>` style.
+
+### 15. Map arcs — Visual spec
+**Decision:** Match V1 orange arcs.
+- Arc color: `rgba(232, 78, 27, 0.6)` (var(--orange) at 60% opacity)
+- Arc width: 1.5px
+- No animation (V1 had none)
+- Deck.gl `GreatCircleLayer` already handles great-circle interpolation — no changes needed to arc geometry.
+**File:** `src/components/RaceArcLayer.tsx` — update arc color and width props.
+
+### 16. Achievement section — Copy fix
+**Decision:** Change `"SUPABASE-BACKED ACHIEVEMENTS"` to `"YOUR ACHIEVEMENTS"`.
+**File:** `src/pages/Profile.tsx` — `AchievementsSection` hero card label.
+
+## GSTACK REVIEW REPORT
+
+| Review | Trigger | Why | Runs | Status | Findings |
+|--------|---------|-----|------|--------|----------|
+| CEO Review | `/plan-ceo-review` | Scope & strategy | 1 | CLEAR | Architecture, blocking bugs, localStorage migration, perf, security |
+| Codex Review | `/codex review` | Independent 2nd opinion | 1 | issues_found | 8 structural issues, cutover definition missing |
+| Eng Review | `/plan-eng-review` | Architecture & tests (required) | 1 | issues_open | 8 issues, 2 critical gaps (race write-back, dead goal link) |
+| Design Review | `/plan-design-review` | UI/UX gaps | 1 | issues_open | score: 3/10 → 7/10, 16 decisions (14 unimplemented) |
+| DX Review | `/plan-devex-review` | Developer experience gaps | 0 | — | — |
+
+**UNRESOLVED:** 0 — all questions resolved, implementation work pending  
+**VERDICT:** ENG REVIEW COMPLETE — 2 critical gaps require implementation before cutover: (1) race Supabase write-back missing, (2) dead "set a goal" link. 14/16 design decisions also unimplemented. Parallelizable across 6 worktree lanes.
+
+### Eng Review Critical Findings (2026-04-21)
+
+#### P1: No Supabase write-back for races
+`src/hooks/useSyncState.ts` reads race data from `user_state` on login but NEVER writes back when races are added/edited/deleted. Cross-device sync is broken. Data lives in localStorage only.  
+**Fix:** Add upsert in `useRaceStore` after `addRace`/`deleteRace`/`updateRace`, following the `EditProfileModal.tsx:66-76` read-then-patch-then-upsert pattern.
+
+#### P1 (UX): Dead "set a goal" link in RaceMorningBrief  
+`Dashboard.tsx:555` — `<span style={{ cursor: 'pointer' }}>set a goal</span>` has no onClick. Confirmed in design review, still unfixed.  
+**Fix:** Wire to `openViewEditRaceModal(race.id)` — requires lifting modal state or passing `onEditRace` prop.
+
+#### P2: 14/16 design decisions unimplemented
+See Design Review Decisions section above — decisions 1-14 and 16 need implementation. Decision 15 (map arcs) is the only one implemented.
+
+#### P2: No tests for Discover.tsx, Compare.tsx, RaceMorningBrief
+22 test gaps identified across new pages and the RaceMorningBrief component. Migration tests are ✅ (8 tests covering all 4 V1 keys).
+
+### Parallelization Plan (6 independent lanes)
+- **Lane A:** Fix Dashboard bugs + extract RaceMorningBrief to own file
+- **Lane B:** Fix Discover (sort, chips, aria, active state, live count subheadline)
+- **Lane C:** Fix Compare + PublicProfile entry point + Worker SSR compare link
+- **Lane D:** Fix Profile copy ("SUPABASE-BACKED ACHIEVEMENTS" → "YOUR ACHIEVEMENTS")
+- **Lane E:** Race Supabase write-back (simple upsert on addRace/deleteRace/updateRace)
+- **Lane F:** Tests for Discover, Compare, RaceMorningBrief (after Lane A merges)
+
+---
+
+### NOT in scope of this design review
+- Achievement badge art (emoji → proper badge design) — deferred to post-cutover visual polish sprint. Added to TODOS.md.
+- Pro modal / upgrade flow — explicitly deferred per PARITY_CHECKLIST.
+- Map performance overlay (percentile-colored arcs) — explicitly deferred.
+- Race attachment photo upload — explicitly deferred.
+
+### What already exists (reuse)
+- Filter chip style: follow `.races-year-tab` CSS in `src/styles/index.css`
+- Loading skeleton: use existing `Skeleton` component at `src/components/Skeleton.tsx`
+- Gear checklist toggle: follow existing `PreRaceBriefing` button style from Dashboard

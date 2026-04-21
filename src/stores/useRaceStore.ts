@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Race } from '@/types'
+import { supabase } from '@/lib/supabase'
+import { useAuthStore } from '@/stores/useAuthStore'
 
 export interface RaceState {
   races: Race[]
@@ -22,6 +24,25 @@ export interface RaceState {
   addToWishlist: (race: Race) => void
   removeFromWishlist: (id: string) => void
   moveToUpcoming: (id: string) => void
+}
+
+async function syncRacesToSupabase(races: Race[], upcomingRaces: Race[], nextRace: Race | null) {
+  const authUser = useAuthStore.getState().authUser
+  if (!authUser) return
+  try {
+    const { data: existing } = await supabase
+      .from('user_state')
+      .select('state_json')
+      .eq('user_id', authUser.id)
+      .single()
+    const current = (existing?.state_json as Record<string, unknown>) ?? {}
+    await supabase.from('user_state').upsert(
+      { user_id: authUser.id, state_json: { ...current, races, upcoming_races: upcomingRaces, next_race: nextRace } },
+      { onConflict: 'user_id' },
+    )
+  } catch {
+    // fire-and-forget — don't block UI on sync failure
+  }
 }
 
 /** Returns YYYY-MM-DD in local time (not UTC). */
@@ -52,11 +73,17 @@ export const useRaceStore = create<RaceState>()(
       nextRace: null,
       focusRaceId: null,
 
-      addRace: (race) => set(s => ({ races: [...s.races, race] })),
+      addRace: (race) => {
+        set(s => ({ races: [...s.races, race] }))
+        const { races, upcomingRaces, nextRace } = get()
+        void syncRacesToSupabase(races, upcomingRaces, nextRace)
+      },
 
       addUpcomingRace: (race) => {
         set(s => ({ upcomingRaces: [...s.upcomingRaces, race] }))
         get().promoteNextRace()
+        const { races, upcomingRaces, nextRace } = get()
+        void syncRacesToSupabase(races, upcomingRaces, nextRace)
       },
 
       autoMoveExpiredUpcoming: () => {
@@ -85,12 +112,16 @@ export const useRaceStore = create<RaceState>()(
         get().promoteNextRace()
       },
 
-      updateRace: (id, patch) => set(s => ({
-        races: s.races.map(r => r.id === id ? { ...r, ...patch } : r),
-        upcomingRaces: s.upcomingRaces.map(r => r.id === id ? { ...r, ...patch } : r),
-        // Keep nextRace in sync — otherwise goal time / priority edits don't surface in dashboard widgets
-        nextRace: s.nextRace?.id === id ? { ...s.nextRace, ...patch } : s.nextRace,
-      })),
+      updateRace: (id, patch) => {
+        set(s => ({
+          races: s.races.map(r => r.id === id ? { ...r, ...patch } : r),
+          upcomingRaces: s.upcomingRaces.map(r => r.id === id ? { ...r, ...patch } : r),
+          // Keep nextRace in sync — otherwise goal time / priority edits don't surface in dashboard widgets
+          nextRace: s.nextRace?.id === id ? { ...s.nextRace, ...patch } : s.nextRace,
+        }))
+        const { races, upcomingRaces, nextRace } = get()
+        void syncRacesToSupabase(races, upcomingRaces, nextRace)
+      },
 
       deleteRace: (id) => {
         set(s => {
@@ -103,6 +134,8 @@ export const useRaceStore = create<RaceState>()(
             focusRaceId: s.focusRaceId === id ? null : s.focusRaceId,
           }
         })
+        const { races, upcomingRaces, nextRace } = get()
+        void syncRacesToSupabase(races, upcomingRaces, nextRace)
       },
 
       setFocusRaceId: (id) => set({ focusRaceId: id }),

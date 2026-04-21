@@ -361,10 +361,21 @@ export function Compare() {
           background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: '12px',
           padding: '1rem',
         }}>
+          {/* Instructional state — no params yet */}
+          {!usernameA && !usernameB && (
+            <div style={{ textAlign: 'center', padding: '1rem 0 0.5rem' }}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--white)', marginBottom: '6px' }}>
+                Compare Two Athletes
+              </div>
+              <div style={{ fontFamily: 'var(--body)', fontSize: '12px', color: 'var(--muted)', lineHeight: 1.5 }}>
+                Search for two athletes below to compare personal bests, race counts, and countries raced.
+              </div>
+            </div>
+          )}
           {/* Same username guard */}
           {usernameA && usernameB && usernameA.toLowerCase() === usernameB.toLowerCase() && (
             <div style={{ textAlign: 'center', color: 'var(--muted)', fontFamily: 'var(--body)', fontSize: '13px', marginBottom: '1rem' }}>
-              You can't compare an athlete to themselves. (Nice try though.)
+              Can't compare an athlete to themselves.
             </div>
           )}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '0.5rem', alignItems: 'center' }}>
@@ -471,26 +482,43 @@ export function Compare() {
               better={null}
             />
 
-            {/* PB rows — only for distances both have run */}
-            {COMPARE_DISTS.map(d => {
-              const tA = bestTime(rA, d.norm)
-              const tB = bestTime(rB, d.norm)
-              if (!tA && !tB) return null
-              const sA = parseHMS(tA ?? undefined)
-              const sB = parseHMS(tB ?? undefined)
-              const better = sA != null && sB != null
-                ? (sA < sB ? 'a' : sB < sA ? 'b' : 'tie')
-                : null
+            {/* PB rows — grouped by distance, only for distances either athlete has run */}
+            {(() => {
+              const rows = COMPARE_DISTS.map(d => {
+                const tA = bestTime(rA, d.norm)
+                const tB = bestTime(rB, d.norm)
+                if (!tA && !tB) return null
+                const sA = parseHMS(tA ?? undefined)
+                const sB = parseHMS(tB ?? undefined)
+                const better = sA != null && sB != null
+                  ? (sA < sB ? 'a' : sB < sA ? 'b' : 'tie')
+                  : null
+                return (
+                  <StatRow
+                    key={d.norm}
+                    label={`${d.label} PB`}
+                    a={tA}
+                    b={tB}
+                    better={better as 'a' | 'b' | 'tie' | null}
+                  />
+                )
+              }).filter(Boolean)
+              if (rows.length === 0) {
+                return (
+                  <div style={{ textAlign: 'center', padding: '0.75rem 0', fontFamily: 'var(--body)', fontSize: '12px', color: 'var(--muted)' }}>
+                    No shared distances to compare yet.
+                  </div>
+                )
+              }
               return (
-                <StatRow
-                  key={d.norm}
-                  label={`${d.label} PB`}
-                  a={tA}
-                  b={tB}
-                  better={better as 'a' | 'b' | 'tie' | null}
-                />
+                <>
+                  <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '0.75rem', marginBottom: '0.25rem' }}>
+                    Personal Bests
+                  </div>
+                  {rows}
+                </>
               )
-            })}
+            })()}
           </div>
         )}
 
