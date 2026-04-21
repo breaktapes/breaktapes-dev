@@ -462,22 +462,14 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
       // Single row — auto-fill date immediately, no picker needed
       const row = years[0] ?? representative
       if (row?.month && row?.day) {
-        let yr = row.year ?? new Date().getFullYear()
-        let day = row.day
-        // In upcoming mode: if the resolved date is in the past, advance year.
-        // Use day=1 of the same month — race day shifts each year, user must confirm exact date.
-        if (mode === 'upcoming') {
-          const today = new Date().toISOString().split('T')[0]
-          let candidate = `${yr}-${pad2(row.month)}-${pad2(day)}`
-          if (candidate < today) {
-            while (candidate < today) {
-              yr += 1
-              candidate = `${yr}-${pad2(row.month)}-01`
-            }
-            day = 1
-          }
+        const yr = row.year ?? new Date().getFullYear()
+        const candidate = `${yr}-${pad2(row.month)}-${pad2(row.day)}`
+        const today = new Date().toISOString().split('T')[0]
+        // In upcoming mode: only prefill if the catalog date is in the future.
+        // If past (stale catalog, no future entry), leave date blank — user enters it.
+        if (mode !== 'upcoming' || candidate >= today) {
+          setDate(candidate)
         }
-        setDate(`${yr}-${pad2(row.month)}-${pad2(day)}`)
       }
       setShowYearPicker(false)
       setYearPills([])
@@ -595,6 +587,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
 
     if (mode === 'upcoming') {
       addUpcomingRace(race)
+      void contributeIfNew(race)
       setSaving(false)
       onClose()
     } else {
