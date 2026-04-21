@@ -463,16 +463,21 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
       const row = years[0] ?? representative
       if (row?.month && row?.day) {
         let yr = row.year ?? new Date().getFullYear()
-        // In upcoming mode: if the resolved date is in the past, advance to next occurrence
+        let day = row.day
+        // In upcoming mode: if the resolved date is in the past, advance year.
+        // Use day=1 of the same month — race day shifts each year, user must confirm exact date.
         if (mode === 'upcoming') {
           const today = new Date().toISOString().split('T')[0]
-          let candidate = `${yr}-${pad2(row.month)}-${pad2(row.day)}`
-          while (candidate < today) {
-            yr += 1
-            candidate = `${yr}-${pad2(row.month)}-${pad2(row.day)}`
+          let candidate = `${yr}-${pad2(row.month)}-${pad2(day)}`
+          if (candidate < today) {
+            while (candidate < today) {
+              yr += 1
+              candidate = `${yr}-${pad2(row.month)}-01`
+            }
+            day = 1
           }
         }
-        setDate(`${yr}-${pad2(row.month)}-${pad2(row.day)}`)
+        setDate(`${yr}-${pad2(row.month)}-${pad2(day)}`)
       }
       setShowYearPicker(false)
       setYearPills([])
