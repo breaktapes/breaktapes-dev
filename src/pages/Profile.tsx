@@ -308,6 +308,7 @@ function computePersonality(races: Race[]): Array<{ trait: string; score: number
 function AthleteHero({ onEdit }: { onEdit: () => void }) {
   const athlete = useAthleteStore(selectAthlete)
   const races   = useRaceStore(selectRaces)
+  const navigate = useNavigate()
   const units   = useUnits()
   const nextRace = useRaceStore(selectNextRace)
 
@@ -406,6 +407,31 @@ function AthleteHero({ onEdit }: { onEdit: () => void }) {
           Share Profile ↗
         </button>
       )}
+      {/* Compare button — always visible */}
+      <button
+        style={{
+          background: 'transparent',
+          border: '1px solid var(--border2)',
+          borderRadius: '6px',
+          color: 'var(--muted)',
+          padding: '8px 16px',
+          fontFamily: 'var(--headline)',
+          fontWeight: 700,
+          fontSize: '12px',
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase',
+          cursor: 'pointer',
+          alignSelf: 'flex-start',
+        }}
+        onClick={() => {
+          const params = athlete?.username && athlete?.isPublic
+            ? `?a=${encodeURIComponent(athlete.username)}`
+            : ''
+          navigate(`/compare${params}`)
+        }}
+      >
+        Compare ↔
+      </button>
     </div>
   )
 }

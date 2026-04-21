@@ -7,6 +7,7 @@
  */
 import { useRef, useState, useMemo, useEffect, Component } from 'react'
 import type { ReactNode, ErrorInfo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Map, { Marker } from 'react-map-gl/maplibre'
 import type { MapRef } from 'react-map-gl/maplibre'
 import 'maplibre-gl/dist/maplibre-gl.css'
@@ -349,7 +350,7 @@ function WishlistRow({ race, onPlan, onRemove }: {
 
 type ViewMode = 'compact' | 'detailed' | 'wishlist'
 
-function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport }: { races: Race[]; onAddRace: () => void; onImportRace: () => void; onOpenPassport: () => void }) {
+function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport, onDiscover }: { races: Race[]; onAddRace: () => void; onImportRace: () => void; onOpenPassport: () => void; onDiscover: () => void }) {
   const [expanded, setExpanded] = useState(false)
   const [yearFilter, setYearFilter] = useState('all')
   const [viewMode, setViewMode] = useState<ViewMode>('compact')
@@ -565,6 +566,18 @@ function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport }: { races:
           ↓ Import
         </button>
         <button
+          style={{
+            background: 'transparent', color: 'var(--muted)',
+            border: '1px solid var(--border2)', borderRadius: '8px', padding: '0.8rem',
+            fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '11px',
+            letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer',
+            whiteSpace: 'nowrap', flexShrink: 0,
+          }}
+          onClick={onDiscover}
+        >
+          🔍 Discover
+        </button>
+        <button
           className="passport-dossier-btn"
           onClick={onOpenPassport}
           title="Export Race Log Passport"
@@ -589,6 +602,7 @@ function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport }: { races:
 export function Races() {
   const races = useRaceStore(s => s.races)
   const athlete = useAthleteStore(s => s.athlete)
+  const navigate = useNavigate()
   const [viewState, setViewState] = useState(INITIAL_VIEW)
   const mapRef = useRef<MapRef>(null)
   const [addRaceOpen, setAddRaceOpen]     = useState(false)
@@ -648,7 +662,7 @@ export function Races() {
       </MapErrorBoundary>
 
       {/* Bottom sheet */}
-      <RacesSheet races={races} onAddRace={() => setAddRaceOpen(true)} onImportRace={() => setImportOpen(true)} onOpenPassport={() => setPassportOpen(true)} />
+      <RacesSheet races={races} onAddRace={() => setAddRaceOpen(true)} onImportRace={() => setImportOpen(true)} onOpenPassport={() => setPassportOpen(true)} onDiscover={() => navigate('/discover')} />
 
       {addRaceOpen  && <AddRaceModal     onClose={() => setAddRaceOpen(false)} />}
       {importOpen   && <RaceImportModal  onClose={() => setImportOpen(false)} />}

@@ -476,6 +476,163 @@ function GreetingCard({ onCustomize }: { onCustomize: () => void }) {
 
 // ─── Pre-Race Briefing ────────────────────────────────────────────────────────
 
+const DEFAULT_GEAR = ['Shoes', 'Watch', 'Race kit', 'Nutrition', 'Bib']
+
+function RaceMorningBrief({ race }: { race: Race }) {
+  const updateRace = useRaceStore(s => s.updateRace)
+  const units = useUnits()
+  const [newItem, setNewItem] = useState('')
+
+  const gear = race.gear ?? DEFAULT_GEAR
+
+  function toggleGear(item: string) {
+    // Remove if present, add if not — gear list acts as checklist
+    const next = gear.includes(item) ? gear.filter(g => g !== item) : [...gear, item]
+    updateRace(race.id, { gear: next })
+  }
+
+  function addGearItem() {
+    const trimmed = newItem.trim()
+    if (!trimmed || gear.includes(trimmed)) return
+    updateRace(race.id, { gear: [...gear, trimmed] })
+    setNewItem('')
+  }
+
+  const goalPace = useMemo(() => {
+    if (!race.goalTime) return null
+    const secs = parseHMS(race.goalTime)
+    if (!secs) return null
+    const km = distanceToKm(race.distance)
+    if (!km) return null
+    const paceSec = secs / km
+    if (units === 'imperial') {
+      const secPerMi = paceSec * 1.60934
+      const m = Math.floor(secPerMi / 60)
+      const s = Math.round(secPerMi % 60)
+      return { pace: `${m}:${String(s).padStart(2, '0')} /mi`, target: race.goalTime }
+    }
+    const m = Math.floor(paceSec / 60)
+    const s = Math.round(paceSec % 60)
+    return { pace: `${m}:${String(s).padStart(2, '0')} /km`, target: race.goalTime }
+  }, [race.goalTime, race.distance, units])
+
+  const days = daysUntil(race.date)
+  const isToday = days === 0
+
+  return (
+    <div style={{ ...st.briefingCard, border: '1px solid rgba(232,78,27,0.4)' }}>
+      <div style={st.briefingInner}>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+          <span style={{ fontSize: '16px' }}>🏁</span>
+          <span style={st.briefingTag}>{isToday ? 'RACE DAY!' : 'TOMORROW!'}</span>
+        </div>
+        <div style={st.briefingTitle}>{(race.name ?? '').toUpperCase()}</div>
+        <div style={st.briefingMeta}>
+          {fmtDateIntl(race.date)}
+          {race.distance ? ` · ${distBadge(race.distance) || race.distance + 'K'}` : ''}
+        </div>
+
+        {/* Weather */}
+        <div style={{ marginTop: '10px' }}>
+          <WeatherCard race={race} />
+        </div>
+
+        {/* Goal pace */}
+        {goalPace ? (
+          <div style={{ marginTop: '10px', background: 'var(--surface3)', borderRadius: '8px', padding: '10px 12px', display: 'flex', gap: '1.5rem' }}>
+            <div>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '10px', letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '2px' }}>Goal Pace</div>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '18px', color: 'var(--orange)', letterSpacing: '0.02em' }}>{goalPace.pace}</div>
+            </div>
+            <div>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '10px', letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '2px' }}>Target</div>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '18px', color: 'var(--white)', letterSpacing: '0.02em' }}>{goalPace.target}</div>
+            </div>
+          </div>
+        ) : (
+          <div style={{ marginTop: '10px', fontSize: '12px', color: 'var(--muted)', fontFamily: 'var(--body)' }}>
+            No goal time set — <span style={{ color: 'var(--orange)', cursor: 'pointer' }}>set a goal</span> to see pace
+          </div>
+        )}
+
+        {/* Gear checklist */}
+        <div style={{ marginTop: '10px' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '10px', letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '6px' }}>Gear Checklist</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+            {DEFAULT_GEAR.map(item => {
+              const checked = gear.includes(item)
+              return (
+                <button
+                  key={item}
+                  onClick={() => toggleGear(item)}
+                  style={{
+                    background: checked ? 'rgba(0,255,136,0.12)' : 'var(--surface3)',
+                    color: checked ? 'var(--green)' : 'var(--muted)',
+                    border: `1px solid ${checked ? 'rgba(0,255,136,0.3)' : 'var(--border2)'}`,
+                    borderRadius: '6px', padding: '4px 10px',
+                    fontFamily: 'var(--headline)', fontWeight: 700,
+                    fontSize: '10px', letterSpacing: '0.06em',
+                    textTransform: 'uppercase', cursor: 'pointer',
+                    textDecoration: checked ? 'none' : 'none',
+                  }}
+                >
+                  {checked ? '✓ ' : ''}{item}
+                </button>
+              )
+            })}
+            {/* Custom items not in DEFAULT_GEAR */}
+            {gear.filter(g => !DEFAULT_GEAR.includes(g)).map(item => (
+              <button
+                key={item}
+                onClick={() => toggleGear(item)}
+                style={{
+                  background: 'rgba(0,255,136,0.12)', color: 'var(--green)',
+                  border: '1px solid rgba(0,255,136,0.3)',
+                  borderRadius: '6px', padding: '4px 10px',
+                  fontFamily: 'var(--headline)', fontWeight: 700,
+                  fontSize: '10px', letterSpacing: '0.06em',
+                  textTransform: 'uppercase', cursor: 'pointer',
+                }}
+              >
+                ✓ {item}
+              </button>
+            ))}
+          </div>
+          {/* Add item */}
+          <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
+            <input
+              type="text"
+              placeholder="+ Add item"
+              value={newItem}
+              onChange={e => setNewItem(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && addGearItem()}
+              style={{
+                flex: 1, background: 'var(--surface3)', border: '1px solid var(--border)',
+                borderRadius: '6px', padding: '5px 8px',
+                fontFamily: 'var(--body)', fontSize: '12px', color: 'var(--white)',
+                outline: 'none',
+              }}
+            />
+            <button
+              onClick={addGearItem}
+              style={{
+                background: 'var(--surface3)', color: 'var(--orange)',
+                border: '1px solid var(--border2)', borderRadius: '6px',
+                padding: '5px 10px', fontFamily: 'var(--headline)',
+                fontWeight: 800, fontSize: '10px', letterSpacing: '0.08em',
+                textTransform: 'uppercase', cursor: 'pointer',
+              }}
+            >
+              Add
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function PreRaceBriefing({ onAddRace }: { onAddRace: () => void }) {
   const races    = useRaceStore(selectRaces)
   const nextRace = useRaceStore(selectNextRace)   // always nearest upcoming — never follows focus pin
@@ -492,6 +649,11 @@ function PreRaceBriefing({ onAddRace }: { onAddRace: () => void }) {
     const isPB = pbMap[lastRace.distance]?.id === lastRace.id
     return { text: `Last: ${lastRace.time} ${distBadge(lastRace.distance)}`, isPB }
   }, [lastRace, pbMap])
+
+  // RACE_MORNING state: show when next race is today or tomorrow
+  if (nextRace && daysUntil(nextRace.date) <= 1) {
+    return <RaceMorningBrief race={nextRace} />
+  }
 
   if (!nextRace) {
     if (lastRace && daysAgo(lastRace.date) <= 7) {
