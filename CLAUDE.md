@@ -796,6 +796,29 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 
 ---
 
+### Session 23 (2026-04-21) — Race Discovery, Athlete Compare, Race Morning Brief + distance label cleanup
+
+**Branch:** `claude/musing-tu-e954db` → main (PRs #164, #166)
+
+#### Changes shipped
+- **Discover page** (`src/pages/Discover.tsx`) — new route `/discover`. Upcoming-only filter: recurring races (month >= current month), dated races (full date comparison), no-date entries always shown. Sport-aware distance chips: Running (5KM/10KM/Half Marathon/Marathon/Ultra), Triathlon (Sprint/Olympic/70.3/IRONMAN), Cycle/Swim/Hyrox (no chips). Race date shown in orange on each card. Wishlist + Plan buttons per card. "+ Plan" opens `AddRaceModal` in upcoming mode pre-filled with catalog data.
+- **Compare page** (`src/pages/Compare.tsx`) — new route `/compare?a=alice&b=bob`. Fetches two public profiles from Supabase `user_state` (anon key, `is_public = true`). `StatRow` 3-column grid with winner highlighted orange. Username search bottom sheet. Shareable link copy. Guards: same username, private profile, not found.
+- **Race Morning Brief** (`src/pages/Dashboard.tsx`) — `RaceMorningBrief` component shown when next race is ≤ 1 day away. Shows weather card, goal pace (from goalTime + distance), gear checklist. Default gear: `['Shoes', 'Watch', 'Race kit', 'Nutrition', 'Bib']`. Gear persisted via `updateRace`.
+- **Triathlon distance label cleanup** — all files use `Sprint / Olympic / 70.3 / IRONMAN` with no km suffixes. Affected: `AddRaceModal`, `ViewEditRaceModal`, `RaceImportModal`, `RaceLogPassport`, `strava.ts`, `Races.tsx`, `Dashboard.tsx`, `Discover.tsx`, `PublicProfile.tsx`.
+- **Ultra definition** — `dist_km > 42.3` (excludes tri distances 113km+). Label is "Ultra" everywhere (was "Ultra Marathon" in some places).
+- **App.tsx** — lazy imports + routes for `/discover` and `/compare`.
+- **AddRaceModal prefill prop** — `prefill?: Partial<Race>` seeds form from catalog data when opened via "+ Plan".
+
+#### Cherry-pick strategy (avoidance)
+PR #164 was squash-merged to main; subsequent fixes commit `6b8debd` from worktree branch was cherry-picked onto fresh `promote-session23` branch from `origin/main` for PR #166. Distance label fixes committed directly to main (`9a34d95`).
+
+#### Key learnings
+- When a worktree PR is squash-merged, only cherry-pick the delta commits (not the entire branch) onto a fresh branch from `origin/main` — avoids add/add conflicts on files already in main
+- `git cherry-pick --abort` then re-pick only the new commits is cleaner than resolving conflicts on a diverged worktree branch
+- Distance label constants appear in ~9 files — always grep all `src/` after a rename, not just the pages directly modified
+
+---
+
 ## Known Issues / Watch Points
 
 - Beta invite codes: `BETA_INVITE_CODES` array is client-visible in source — intentional tradeoff for self-service beta; update the array and redeploy to staging to add/revoke codes
