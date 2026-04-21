@@ -91,7 +91,7 @@ function distLabel(d: string | undefined): string {
   if (km >= 51.4 && km <= 51.6) return 'Olympic'
   if (km >= 42.1 && km <= 42.3) return 'Marathon'
   if (km >= 21.0 && km <= 21.2) return 'Half Marathon'
-  if (km > 42.3) return 'Ultra Marathon'
+  if (km > 42.3) return 'Ultra'
   if (km === 10) return '10K'
   if (km === 5) return '5K'
   return `${km}K`

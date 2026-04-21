@@ -107,7 +107,7 @@ function distBadge(d: string | undefined): string {
   if (n >= 21 && n <= 21.2) return 'Half Marathon'
   if (n >= 10 && n <= 10.1) return '10K'
   if (n >= 5 && n <= 5.1) return '5K'
-  if (n > 42.3) return 'Ultra Marathon'
+  if (n > 42.3) return 'Ultra'
   return `${n}K`
 }
 
