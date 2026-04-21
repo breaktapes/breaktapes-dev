@@ -666,7 +666,7 @@ function AchievementsSection() {
       {/* Hero achievement card */}
       <div style={st.achievementHero}>
         <div style={{ fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.14em', color: 'rgba(var(--green-ch), 0.6)', textTransform: 'uppercase', marginBottom: '8px' }}>
-          SUPABASE-BACKED ACHIEVEMENTS
+          YOUR ACHIEVEMENTS
         </div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', marginBottom: '10px' }}>
           <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '56px', color: 'var(--white)', lineHeight: 1, letterSpacing: '-0.02em' }}>

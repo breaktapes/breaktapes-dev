@@ -209,6 +209,28 @@ export function PublicProfile({ profile }: PublicProfileProps) {
         </div>
       )}
 
+      {/* Compare CTA */}
+      <a
+        href={`/compare?b=${encodeURIComponent(username)}`}
+        style={{
+          display: 'block',
+          textAlign: 'center',
+          background: 'var(--surface2)',
+          border: '1px solid var(--border2)',
+          borderRadius: '10px',
+          padding: '12px',
+          fontFamily: 'var(--headline)',
+          fontWeight: 900,
+          fontSize: '12px',
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase',
+          color: 'var(--white)',
+          textDecoration: 'none',
+        }}
+      >
+        Compare with @{username} →
+      </a>
+
       {/* Join CTA */}
       <a
         href={`//?ref=u-${encodeURIComponent(username)}-profile&join_context=compare-with-${encodeURIComponent(fullName.replace(/\s+/g, '-'))}`}
