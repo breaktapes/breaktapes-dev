@@ -819,6 +819,29 @@ PR #164 was squash-merged to main; subsequent fixes commit `6b8debd` from worktr
 
 ---
 
+### Session 24 (2026-04-21) — Distance label cleanup + upcoming race catalog fix
+
+**Branch:** direct to `main` (commits `d92518d`, `d93d5f7`, `196b9f5`, `cee0663`)
+
+#### Changes shipped
+- **Distance label cleanup (everywhere)** — raw km values (`113`, `226`, `51.5`, `25.75`) no longer shown to users anywhere in the app. Affected: `ViewEditRaceModal.tsx` (distance stat box + `distFriendly()` helper), `RaceShareCard.tsx` (canvas pill via `_KM_LABELS` map), `Races.tsx` (upcoming race row subtitle via `distLabel()`).
+  - `_KM_FRIENDLY` map: `'226' → 'IRONMAN'`, `'113' → '70.3'`, `'51.5' → 'Olympic'`, `'25.75' → 'Sprint'`, `'42.195'/'42.2' → 'Marathon'`, `'21.1' → 'Half Marathon'`, `'10' → '10K'`, `'5' → '5K'`.
+  - "70.3 / Middle Distance" and "IRONMAN / Full Distance" deduplicated — one canonical label everywhere.
+- **Upcoming race mode — future-only catalog dates** — `AddRaceModal.tsx` `runSearch()` root-cause fix:
+  - `relevantYears` filter: in upcoming mode, only retain catalog entries where `year >= currentYear`. Reduces 70+ entries for recurring races (e.g. Comrades Marathon) to just the current/future year.
+  - When filtered down to a single year entry: auto-fills name, city, country, distance, sport, and date (if the catalog date is in the future). If the only matching entry has a past date, leaves date blank rather than prefilling stale data.
+  - Single-row auto-fill date guard: `if (mode !== 'upcoming' || candidate >= today)` — prevents 2025 dates appearing when user is in upcoming tab.
+  - Works for ALL recurring races in catalog, not just Comrades.
+- **Upcoming races contribute to catalog** — `contributeIfNew()` now called for both past AND upcoming saves (previously only past saves contributed). When a user saves an upcoming race with a confirmed date, the entry is contributed back via `upsert_catalog_contribution` RPC so future users see it.
+
+#### Key learnings
+- Comrades Marathon catalog has 70+ rows (one per year, all `name: "Comrades Marathon"`, `city: "Durban"`). `normalizeName()` groups all of them. `relevantYears` filter from `>= currentYear` collapses to a single row → auto-fill fires.
+- `year-advance` heuristic (take the same day, advance year by 1) was wrong for Comrades — 2025 was Jun 8, 2026 is Jun 14. Correct approach: use the actual 2026 catalog entry. Lesson: never derive future dates by year-advancing past entries; always filter to future catalog data first.
+- `todayStr` declared-but-not-read TS error: was `const todayStr = today` — removed the alias, use `today` directly.
+- `distFriendly()` in `ViewEditRaceModal` chains through `_DIST_KM_MAP` first (resolves label aliases like "Half Marathon" → "21.1") then `_KM_FRIENDLY` (humanizes numeric km). Both maps needed in sequence.
+
+---
+
 ## Known Issues / Watch Points
 
 - Beta invite codes: `BETA_INVITE_CODES` array is client-visible in source — intentional tradeoff for self-service beta; update the array and redeploy to staging to add/revoke codes
