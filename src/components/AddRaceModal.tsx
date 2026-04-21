@@ -5,6 +5,9 @@ import { useRaceCatalog, type CatalogRace } from '@/hooks/useRaceCatalog'
 import { DateInput } from '@/components/DateInput'
 import { TimePickerWheel, type HMS } from '@/components/TimePickerWheel'
 import { countryNameHaystack } from '@/lib/countries'
+import { normalizeName, resolveDistKm, isAlreadyInCatalog } from '@/lib/utils'
+import { supabase } from '@/lib/supabase'
+import { useAuthStore } from '@/stores/useAuthStore'
 import type { Race, Split } from '@/types'
 
 type Mode = 'past' | 'upcoming'
@@ -195,7 +198,9 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance }:
   const addUpcomingRace = useRaceStore(s => s.addUpcomingRace)
   const pastRaces       = useRaceStore(s => s.races)
   const upcomingRaces   = useRaceStore(s => s.upcomingRaces)
+  const authUser        = useAuthStore(s => s.authUser)
   const { data: catalog = [], isLoading: catalogLoading } = useRaceCatalog()
+  const [toastMsg, setToastMsg] = useState('')
 
   // When parent changes defaultMode (e.g. re-opens), sync
   useEffect(() => { setMode(defaultMode) }, [defaultMode])
@@ -220,7 +225,15 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance }:
   // Autocomplete
   const [query, setQuery]           = useState('')
   const [showSuggest, setShowSuggest] = useState(false)
-  const [suggestions, setSuggestions] = useState<{ label: string; source: 'past' | 'catalog'; data?: CatalogRace; myRace?: Race }[]>([])
+  const [suggestions, setSuggestions] = useState<{
+    label: string
+    source: 'past' | 'catalog'
+    data?: CatalogRace
+    allYears?: CatalogRace[]
+    myRace?: Race
+  }[]>([])
+  const [yearPills, setYearPills]         = useState<{ label: string; row: CatalogRace }[]>([])
+  const [showYearPicker, setShowYearPicker] = useState(false)
 
   // Core fields
   const [name, setName]             = useState('')
@@ -298,15 +311,14 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance }:
 
   function runSearch(q: string, cat: CatalogRace[]) {
     const tokens = q.toLowerCase().split(/\s+/).filter(Boolean)
+    const fullQ  = tokens.join(' ')
+
     const matchesCatalog = (r: CatalogRace) => {
-      // Include both the raw country code AND the resolved country name so that
-      // typing "oman" matches entries with country="OM", "France" matches "FR", etc.
       const countryName = countryNameHaystack(r.country ?? '')
       const haystack = [r.name, r.city ?? '', r.country ?? '', countryName, ...(r.aliases ?? [])].join(' ').toLowerCase()
       return tokens.every(t => haystack.includes(t))
     }
-    // For sort: prefer entries where name/alias directly contains the full query string
-    const fullQ = tokens.join(' ')
+
     const nameMatchScore = (r: CatalogRace) => {
       if (r.name.toLowerCase().includes(fullQ)) return 2
       if ((r.aliases ?? []).some(a => a.toLowerCase().includes(fullQ))) return 2
@@ -317,11 +329,27 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance }:
     const isCityQuery = tokens.length === 1 &&
       cat.some(r => r.city?.toLowerCase() === fullQ || r.city?.toLowerCase().startsWith(fullQ))
 
-    const catalogHits = cat
-      .filter(matchesCatalog)
-      .sort((a, b) => nameMatchScore(b) - nameMatchScore(a))
+    // Group by normalized name|city so sponsor variants + year rows collapse to one entry
+    const grouped = new Map<string, CatalogRace[]>()
+    cat.filter(matchesCatalog).forEach(r => {
+      const key = `${normalizeName(r.name)}|${(r.city ?? '').toLowerCase()}`
+      if (!grouped.has(key)) grouped.set(key, [])
+      grouped.get(key)!.push(r)
+    })
+
+    // Sort each group by year desc (rows[0] = most recent = canonical representative)
+    const catalogHits = Array.from(grouped.values())
+      .map(rows => {
+        const sorted = [...rows].sort((a, b) => (b.year ?? 0) - (a.year ?? 0))
+        return {
+          label:    sorted[0].name,
+          source:   'catalog' as const,
+          data:     sorted[0],
+          allYears: sorted,
+        }
+      })
+      .sort((a, b) => nameMatchScore(b.data) - nameMatchScore(a.data))
       .slice(0, isCityQuery ? 8 : 6)
-      .map(r => ({ label: r.name, source: 'catalog' as const, data: r }))
 
     const allMyRaces = [...pastRaces, ...upcomingRaces]
     const myHits = allMyRaces
@@ -334,7 +362,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance }:
 
     const all = [...myHits, ...catalogHits].slice(0, 10)
     setSuggestions(all)
-    setShowSuggest(all.length > 0)
+    setShowSuggest(all.length > 0 || (q.length >= 2 && !catalogLoading))
   }
 
   // Autocomplete debounce — multi-word tokenized match across name, aliases, city, country
@@ -379,24 +407,56 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance }:
       return
     }
 
-    const raceName = s.data?.name ?? s.label
+    const representative = s.data
+    const raceName = representative?.name ?? s.label
     setQuery(raceName); setName(raceName)
-    if (s.data) {
-      if (s.data.country) { setCountry(s.data.country); setCitySelect(''); setCityText('') }
-      if (s.data.city)    { setCitySelect(s.data.city); setCityText(s.data.city) }
-      const mappedSport = s.data.type ? (TYPE_MAP[s.data.type.toLowerCase()] ?? s.data.type) : null
+
+    if (representative) {
+      if (representative.country) { setCountry(representative.country); setCitySelect(''); setCityText('') }
+      if (representative.city)    { setCitySelect(representative.city); setCityText(representative.city) }
+      const mappedSport = representative.type ? (TYPE_MAP[representative.type.toLowerCase()] ?? representative.type) : null
       if (mappedSport) setSport(mappedSport)
-      if (s.data.dist_km) {
-        const distStr = String(s.data.dist_km)
+      if (representative.dist_km) {
+        const distStr = String(representative.dist_km)
         const presets = DISTANCES_BY_SPORT[mappedSport ?? 'Running'] ?? []
         const match = presets.find(p => p.value === distStr)
         if (match) { setDistance(distStr) } else { setDistance('__custom__'); setCustomDist(distStr) }
       }
-      if (s.data.month && s.data.day) {
-        const yr = s.data.year ?? new Date().getFullYear()
-        setDate(`${yr}-${pad2(s.data.month)}-${pad2(s.data.day)}`)
-      }
     }
+
+    // Year picker: build pills from allYears group
+    const years = s.allYears ?? (representative ? [representative] : [])
+    if (years.length <= 1) {
+      // Single row — auto-fill date immediately, no picker needed
+      const row = years[0] ?? representative
+      if (row?.month && row?.day) {
+        const yr = row.year ?? new Date().getFullYear()
+        setDate(`${yr}-${pad2(row.month)}-${pad2(row.day)}`)
+      }
+      setShowYearPicker(false)
+      setYearPills([])
+    } else {
+      // Multiple years — show pill strip, defer date fill to pill tap
+      const yearMap = new Map<number, CatalogRace[]>()
+      years.forEach(r => {
+        if (r.year == null) return
+        if (!yearMap.has(r.year)) yearMap.set(r.year, [])
+        yearMap.get(r.year)!.push(r)
+      })
+      const pills = years
+        .filter(r => r.year != null)
+        .map(r => {
+          const sameYear = yearMap.get(r.year!)!
+          const distLabel = r.dist ?? (r.dist_km ? `${r.dist_km}K` : '')
+          const label = sameYear.length > 1 ? `${r.year} ${distLabel}`.trim() : String(r.year)
+          return { label, row: r }
+        })
+        // dedupe by label (same year+dist can appear multiple times from aliases)
+        .filter((p, i, arr) => arr.findIndex(x => x.label === p.label) === i)
+      setYearPills(pills)
+      setShowYearPicker(true)
+    }
+
     setShowSuggest(false)
   }
 
@@ -418,6 +478,33 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance }:
       if (secs === 0) return null
       return { label: seg.label, split: secsToHMS(secs) }
     }).filter(Boolean) as Split[]
+  }
+
+  async function contributeIfNew(race: Race) {
+    if (!authUser) return
+    if (isAlreadyInCatalog(race, catalog)) return
+
+    const [year, month, day] = race.date.split('-').map(Number)
+    const distKm = race.distance ? resolveDistKm(race.distance) : null
+
+    void supabase.rpc('upsert_catalog_contribution', {
+      p_name:           race.name,
+      p_city:           race.city,
+      p_country:        race.country,
+      p_sport:          race.sport,
+      p_dist_label:     race.distance,
+      p_dist_km:        distKm,
+      p_year:           year || null,
+      p_event_date:     race.date || null,
+      p_month:          month || null,
+      p_day:            day || null,
+      p_contributor_id: authUser.id,
+    })
+  }
+
+  function showToast(msg: string) {
+    setToastMsg(msg)
+    setTimeout(() => setToastMsg(''), 3000)
   }
 
   function validate() {
@@ -462,11 +549,15 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance }:
 
     if (mode === 'upcoming') {
       addUpcomingRace(race)
+      setSaving(false)
+      onClose()
     } else {
       addRace(race)
+      void contributeIfNew(race)
+      setSaving(false)
+      showToast('Race added · Submitted to catalog for review')
+      setTimeout(onClose, 1200)
     }
-    setSaving(false)
-    onClose()
   }
 
   const distancePresets = DISTANCES_BY_SPORT[sport] ?? []
@@ -489,6 +580,11 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance }:
       >
         {/* Drag handle */}
         <div style={st.handle} />
+
+        {/* Toast */}
+        {toastMsg && (
+          <div style={st.toast}>{toastMsg}</div>
+        )}
 
         {/* Header */}
         <div style={st.header}>
@@ -541,7 +637,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance }:
           </div>
 
           {/* Dropdown rendered via portal so it escapes overflow:hidden on the sheet */}
-          {showSuggest && suggestions.length > 0 && dropRect && createPortal(
+          {showSuggest && dropRect && (suggestions.length > 0 || (query.length >= 2 && !catalogLoading)) && createPortal(
             <div style={{
               ...st.dropdown,
               position: 'fixed',
@@ -551,7 +647,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance }:
               zIndex: 1200,
             }}>
               {suggestions.map((s, i) => {
-                // Build meta line: city · country · distance · date
+                // Build meta line: city · country · distance
                 const metaParts: string[] = []
                 if (s.myRace) {
                   if (s.myRace.city)     metaParts.push(s.myRace.city)
@@ -559,10 +655,14 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance }:
                   if (s.myRace.distance) metaParts.push(`${s.myRace.distance} km`)
                   if (s.myRace.date)     metaParts.push(s.myRace.date)
                 } else if (s.data) {
-                  if (s.data.city)     metaParts.push(s.data.city)
-                  if (s.data.country)  metaParts.push(s.data.country)
-                  if (s.data.dist_km)  metaParts.push(`${s.data.dist_km} km`)
-                  if (s.data.month && s.data.day) {
+                  if (s.data.city)    metaParts.push(s.data.city)
+                  if (s.data.country) metaParts.push(s.data.country)
+                  const distLabel = s.data.dist ?? (s.data.dist_km ? `${s.data.dist_km} km` : '')
+                  if (distLabel) metaParts.push(distLabel)
+                  if (s.allYears && s.allYears.length > 1) {
+                    const yrs = [...new Set(s.allYears.map(r => r.year).filter(Boolean))].sort((a,b) => b! - a!).slice(0, 3)
+                    metaParts.push(yrs.join(', ') + (s.allYears.length > 3 ? '…' : ''))
+                  } else if (s.data.month && s.data.day) {
                     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
                     const yearSuffix = s.data.year ? ` ${s.data.year}` : ''
                     metaParts.push(`${months[s.data.month - 1]} ${s.data.day}${yearSuffix}`)
@@ -573,7 +673,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance }:
                     key={i}
                     style={{
                       ...st.dropdownItem,
-                      borderBottom: i < suggestions.length - 1 ? '1px solid var(--border)' : 'none',
+                      borderBottom: '1px solid var(--border)',
                       flexDirection: 'column',
                       alignItems: 'flex-start',
                       gap: '2px',
@@ -606,6 +706,26 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance }:
                   </button>
                 )
               })}
+              {/* "Not finding it?" escape hatch — always last */}
+              <button
+                style={{
+                  ...st.dropdownItem,
+                  color: 'var(--orange)',
+                  fontSize: '12px',
+                  justifyContent: 'center',
+                  fontStyle: 'italic',
+                  borderTop: suggestions.length > 0 ? '1px solid var(--border2)' : 'none',
+                }}
+                onMouseDown={e => {
+                  e.preventDefault()
+                  setName(query.trim())
+                  setShowSuggest(false)
+                  setShowYearPicker(false)
+                  setYearPills([])
+                }}
+              >
+                + Add &ldquo;{query}&rdquo; manually →
+              </button>
             </div>,
             document.body,
           )}
@@ -709,9 +829,45 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance }:
             </Field>
           </div>
 
-          {/* ── Date ── */}
+          {/* ── Date / Year picker ── */}
           <Field label="Date *">
-            <DateInput value={date} onChange={setDate} />
+            {showYearPicker ? (
+              <div>
+                <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
+                  {yearPills.map((pill, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      style={st.yearPill}
+                      onMouseDown={e => {
+                        e.preventDefault()
+                        const r = pill.row
+                        if (r.month && r.day) {
+                          const yr = r.year ?? new Date().getFullYear()
+                          setDate(`${yr}-${pad2(r.month)}-${pad2(r.day)}`)
+                        }
+                        setShowYearPicker(false)
+                        setYearPills([])
+                      }}
+                    >
+                      {pill.label}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    style={{ ...st.yearPill, color: 'var(--muted)', borderColor: 'var(--border2)' }}
+                    onMouseDown={e => { e.preventDefault(); setShowYearPicker(false); setYearPills([]) }}
+                  >
+                    Enter date manually
+                  </button>
+                </div>
+                <p style={{ margin: '4px 0 0', fontSize: '11px', color: 'var(--muted)' }}>
+                  Tap a year to auto-fill the race date
+                </p>
+              </div>
+            ) : (
+              <DateInput value={date} onChange={setDate} />
+            )}
           </Field>
 
           {/* ── Placing (past only) ── */}
@@ -829,6 +985,38 @@ const st = {
     padding: '4px 8px',
     lineHeight: 1,
     flexShrink: 0,
+  } as React.CSSProperties,
+
+  toast: {
+    position: 'absolute',
+    top: '60px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    background: 'var(--surface3)',
+    border: '1px solid var(--green)',
+    color: 'var(--green)',
+    borderRadius: '20px',
+    padding: '8px 18px',
+    fontSize: '13px',
+    fontFamily: 'var(--body)',
+    fontWeight: 600,
+    whiteSpace: 'nowrap',
+    zIndex: 10,
+    pointerEvents: 'none',
+  } as React.CSSProperties,
+
+  yearPill: {
+    flexShrink: 0,
+    padding: '6px 14px',
+    background: 'var(--surface3)',
+    border: '1px solid var(--orange)',
+    borderRadius: '20px',
+    color: 'var(--orange)',
+    fontFamily: 'var(--headline)',
+    fontWeight: 700,
+    fontSize: '13px',
+    cursor: 'pointer',
+    whiteSpace: 'nowrap',
   } as React.CSSProperties,
 
   manualBadge: {
