@@ -50,10 +50,10 @@ const DISTANCES_BY_SPORT: Record<string, { label: string; value: string }[]> = {
     { label: 'Custom...', value: '__custom__' },
   ],
   Triathlon: [
-    { label: 'Sprint (25.75km)',   value: '25.75' },
-    { label: 'Olympic (51.5km)',   value: '51.5' },
-    { label: 'Half Iron (113km)',  value: '113' },
-    { label: 'Full Iron (226km)',  value: '226' },
+    { label: 'Sprint',   value: '25.75' },
+    { label: 'Olympic',  value: '51.5' },
+    { label: '70.3',     value: '113' },
+    { label: 'IRONMAN',  value: '226' },
     { label: 'Custom...',          value: '__custom__' },
   ],
   HYROX: [

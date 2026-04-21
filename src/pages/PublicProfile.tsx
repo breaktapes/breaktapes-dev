@@ -142,7 +142,7 @@ export function PublicProfile({ profile }: PublicProfileProps) {
           ['Half Marathon', 'HALF'], ['Marathon', 'MARATHON'], ['Ultra', 'ULTRA'],
         ]
         const TRI_DISTS: [string, string][] = [
-          ['Olympic', 'OLYMPIC'], ['70.3 / Half Ironman', '70.3'], ['Ironman / Full', 'IRONMAN'],
+          ['Olympic', 'OLYMPIC'], ['70.3', '70.3'], ['IRONMAN', 'IRONMAN'],
         ]
         const cardStyle = (accent: string) => ({
           background: '#141414',

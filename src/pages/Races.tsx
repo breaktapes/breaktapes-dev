@@ -86,8 +86,8 @@ function distLabel(d: string | undefined): string {
   if (!d) return ''
   const km = distanceToKm(d)
   if (km === 0) return d
-  if (km >= 225.9 && km <= 226.1) return 'Ironman / Full Distance'
-  if (km >= 112.9 && km <= 113.1) return '70.3 / Middle Distance'
+  if (km >= 225.9 && km <= 226.1) return 'IRONMAN'
+  if (km >= 112.9 && km <= 113.1) return '70.3'
   if (km >= 51.4 && km <= 51.6) return 'Olympic'
   if (km >= 42.1 && km <= 42.3) return 'Marathon'
   if (km >= 21.0 && km <= 21.2) return 'Half Marathon'

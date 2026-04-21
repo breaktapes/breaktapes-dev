@@ -77,7 +77,7 @@ function getYears(races: Race[]): string[] {
 }
 
 function getBestPB(races: Race[]): { time: string; dist: string; race: string } | null {
-  const PRIO = ['Marathon', 'Half Marathon', '70.3 / Half Ironman', 'Ironman / Full', '10K', '5K']
+  const PRIO = ['Marathon', 'Half Marathon', '70.3', 'IRONMAN', '10K', '5K']
   for (const dist of PRIO) {
     const r = races
       .filter(r => r.distance === dist && r.time)

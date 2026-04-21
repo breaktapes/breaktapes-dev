@@ -74,7 +74,7 @@ const DIST_LABELS_CYCLE = ['Gran Fondo','Century','Randonneuring','Time Trial','
 const DIST_KM_CYCLE     = [120, 160.9, 200, 40, 50]
 const DIST_LABELS_SWIM  = ['1KM','3KM','5KM','10KM','15KM','25KM']
 const DIST_KM_SWIM      = [1, 3, 5, 10, 15, 25]
-const DIST_LABELS_TRI   = ['Sprint','Olympic','Middle Distance','Full Distance']
+const DIST_LABELS_TRI   = ['Sprint','Olympic','70.3','IRONMAN']
 const DIST_KM_TRI       = [20.4, 51.5, 113, 226]
 
 function closestDistLabel(type: string, km: number): string {
