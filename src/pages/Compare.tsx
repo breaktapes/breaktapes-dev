@@ -61,17 +61,6 @@ function distToKm(d: string | undefined): number {
   return DIST_KM[d.toLowerCase().trim()] ?? 0
 }
 
-function distLabel(d: string | undefined): string {
-  if (!d) return '—'
-  const km = distToKm(d)
-  if (km >= 42 && km <= 42.3) return 'Marathon'
-  if (km >= 21 && km <= 21.2) return 'Half'
-  if (km >= 113 && km <= 114) return '70.3'
-  if (km >= 225 && km <= 227) return 'IM'
-  if (km === 5) return '5K'
-  if (km === 10) return '10K'
-  return `${km}K`
-}
 
 function normDist(d: string | undefined): string {
   const km = distToKm(d)
@@ -335,10 +324,9 @@ export function Compare() {
   }
 
   // Derive stats for comparison
-  const pA = typeof profileA === 'object' && profileA !== null && !('isPublic' in profileA === false) ? (profileA as AthleteRow) : null
-  const pB = typeof profileB === 'object' && profileB !== null && !('isPublic' in profileB === false) ? (profileB as AthleteRow) : null
   const aIsAthleteRow = profileA !== null && profileA !== 'private' && profileA !== 'not_found'
   const bIsAthleteRow = profileB !== null && profileB !== 'private' && profileB !== 'not_found'
+
   const rA = aIsAthleteRow ? (profileA as AthleteRow).races : []
   const rB = bIsAthleteRow ? (profileB as AthleteRow).races : []
 
