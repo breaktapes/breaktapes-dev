@@ -5,7 +5,9 @@ import { useRaceCatalog, type CatalogRace } from '@/hooks/useRaceCatalog'
 import { DateInput } from '@/components/DateInput'
 import { TimePickerWheel, type HMS } from '@/components/TimePickerWheel'
 import { countryNameHaystack } from '@/lib/countries'
-import { normalizeName } from '@/lib/utils'
+import { normalizeName, resolveDistKm, isAlreadyInCatalog } from '@/lib/utils'
+import { supabase } from '@/lib/supabase'
+import { useAuthStore } from '@/stores/useAuthStore'
 import type { Race, Split } from '@/types'
 
 type Mode = 'past' | 'upcoming'
@@ -196,7 +198,9 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance }:
   const addUpcomingRace = useRaceStore(s => s.addUpcomingRace)
   const pastRaces       = useRaceStore(s => s.races)
   const upcomingRaces   = useRaceStore(s => s.upcomingRaces)
+  const authUser        = useAuthStore(s => s.authUser)
   const { data: catalog = [], isLoading: catalogLoading } = useRaceCatalog()
+  const [toastMsg, setToastMsg] = useState('')
 
   // When parent changes defaultMode (e.g. re-opens), sync
   useEffect(() => { setMode(defaultMode) }, [defaultMode])
@@ -476,6 +480,33 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance }:
     }).filter(Boolean) as Split[]
   }
 
+  async function contributeIfNew(race: Race) {
+    if (!authUser) return
+    if (isAlreadyInCatalog(race, catalog)) return
+
+    const [year, month, day] = race.date.split('-').map(Number)
+    const distKm = race.distance ? resolveDistKm(race.distance) : null
+
+    void supabase.rpc('upsert_catalog_contribution', {
+      p_name:           race.name,
+      p_city:           race.city,
+      p_country:        race.country,
+      p_sport:          race.sport,
+      p_dist_label:     race.distance,
+      p_dist_km:        distKm,
+      p_year:           year || null,
+      p_event_date:     race.date || null,
+      p_month:          month || null,
+      p_day:            day || null,
+      p_contributor_id: authUser.id,
+    })
+  }
+
+  function showToast(msg: string) {
+    setToastMsg(msg)
+    setTimeout(() => setToastMsg(''), 3000)
+  }
+
   function validate() {
     if (!name.trim())  { setError('Race name is required'); return false }
     if (!date)         { setError('Date is required'); return false }
@@ -518,11 +549,15 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance }:
 
     if (mode === 'upcoming') {
       addUpcomingRace(race)
+      setSaving(false)
+      onClose()
     } else {
       addRace(race)
+      void contributeIfNew(race)
+      setSaving(false)
+      showToast('Race added · Submitted to catalog for review')
+      setTimeout(onClose, 1200)
     }
-    setSaving(false)
-    onClose()
   }
 
   const distancePresets = DISTANCES_BY_SPORT[sport] ?? []
@@ -545,6 +580,11 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance }:
       >
         {/* Drag handle */}
         <div style={st.handle} />
+
+        {/* Toast */}
+        {toastMsg && (
+          <div style={st.toast}>{toastMsg}</div>
+        )}
 
         {/* Header */}
         <div style={st.header}>
@@ -945,6 +985,24 @@ const st = {
     padding: '4px 8px',
     lineHeight: 1,
     flexShrink: 0,
+  } as React.CSSProperties,
+
+  toast: {
+    position: 'absolute',
+    top: '60px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    background: 'var(--surface3)',
+    border: '1px solid var(--green)',
+    color: 'var(--green)',
+    borderRadius: '20px',
+    padding: '8px 18px',
+    fontSize: '13px',
+    fontFamily: 'var(--body)',
+    fontWeight: 600,
+    whiteSpace: 'nowrap',
+    zIndex: 10,
+    pointerEvents: 'none',
   } as React.CSSProperties,
 
   yearPill: {
