@@ -72,12 +72,18 @@ export const useRaceStore = create<RaceState>()(
         nextRace: s.nextRace?.id === id ? { ...s.nextRace, ...patch } : s.nextRace,
       })),
 
-      deleteRace: (id) => set(s => ({
-        races: s.races.filter(r => r.id !== id),
-        upcomingRaces: s.upcomingRaces.filter(r => r.id !== id),
-        // Clear focus if the focused race is deleted
-        focusRaceId: s.focusRaceId === id ? null : s.focusRaceId,
-      })),
+      deleteRace: (id) => {
+        set(s => {
+          const newUpcoming = s.upcomingRaces.filter(r => r.id !== id)
+          const newNextRace = s.nextRace?.id === id ? findNextRace(newUpcoming) : s.nextRace
+          return {
+            races: s.races.filter(r => r.id !== id),
+            upcomingRaces: newUpcoming,
+            nextRace: newNextRace,
+            focusRaceId: s.focusRaceId === id ? null : s.focusRaceId,
+          }
+        })
+      },
 
       setFocusRaceId: (id) => set({ focusRaceId: id }),
 

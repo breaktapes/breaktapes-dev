@@ -70,6 +70,22 @@ const DISTANCES_BY_SPORT: Record<string, { label: string; value: string }[]> = {
 
 const CUSTOM_DIST_VALUES = ['__custom__', '__tt__', '__track__']
 
+// Cities that don't appear in the race catalog but should always be available
+const CITY_SUPPLEMENTS: Record<string, string[]> = {
+  'United Arab Emirates': ['Abu Dhabi', 'Ajman', 'Dubai', 'Fujairah', 'Ras Al Khaimah', 'Sharjah', 'Umm Al Quwain'],
+  'United Kingdom': ['Bath', 'Birmingham', 'Bristol', 'Cambridge', 'Edinburgh', 'Glasgow', 'Leeds', 'Liverpool', 'London', 'Manchester', 'Newcastle', 'Oxford', 'Sheffield'],
+  'United States': ['Atlanta', 'Austin', 'Boston', 'Chicago', 'Dallas', 'Denver', 'Houston', 'Las Vegas', 'Los Angeles', 'Miami', 'New York', 'Philadelphia', 'Phoenix', 'Portland', 'San Francisco', 'Seattle', 'Washington'],
+  'Australia': ['Adelaide', 'Brisbane', 'Cairns', 'Canberra', 'Gold Coast', 'Hobart', 'Melbourne', 'Perth', 'Sydney'],
+  'Canada': ['Calgary', 'Montreal', 'Ottawa', 'Quebec City', 'Toronto', 'Vancouver', 'Victoria'],
+  'Germany': ['Berlin', 'Cologne', 'Frankfurt', 'Hamburg', 'Munich', 'Stuttgart'],
+  'France': ['Bordeaux', 'Cannes', 'Lyon', 'Marseille', 'Nice', 'Paris', 'Strasbourg'],
+  'Italy': ['Bologna', 'Florence', 'Milan', 'Naples', 'Rome', 'Turin', 'Venice'],
+  'Spain': ['Barcelona', 'Madrid', 'Malaga', 'Seville', 'Valencia'],
+  'Japan': ['Fukuoka', 'Kyoto', 'Nagoya', 'Osaka', 'Sapporo', 'Tokyo'],
+  'South Africa': ['Cape Town', 'Durban', 'Johannesburg', 'Pietermaritzburg', 'Port Elizabeth', 'Pretoria'],
+  'New Zealand': ['Auckland', 'Christchurch', 'Dunedin', 'Hamilton', 'Wellington'],
+}
+
 const RACE_OUTCOMES = [
   { value: 'Finished', label: 'Finished' },
   { value: 'DNF',      label: 'DNF — Did Not Finish' },
@@ -100,6 +116,31 @@ const TRI_SEGMENTS = [
   { label: 'T2',   emoji: '⚡', key: 't2' },
   { label: 'RUN',  emoji: '🏃', key: 'run' },
 ]
+
+// Match a catalog distance (dist_km number + dist text label) to a preset value.
+// Returns the preset value string if matched, null if it should be custom.
+function matchCatalogDist(
+  presets: { label: string; value: string }[],
+  dist_km?: number,
+  dist?: string,
+): string | null {
+  const validPresets = presets.filter(p => !CUSTOM_DIST_VALUES.includes(p.value))
+  // 1. Try exact text label match (e.g. catalog dist="Half Marathon" → preset label="Half Marathon")
+  if (dist) {
+    const norm = dist.trim().toLowerCase()
+    const byLabel = validPresets.find(p => p.label.toLowerCase() === norm)
+    if (byLabel) return byLabel.value
+  }
+  // 2. Try approximate numeric match on dist_km (within 1% tolerance)
+  if (dist_km) {
+    const byKm = validPresets.find(p => {
+      const pv = parseFloat(p.value)
+      return !isNaN(pv) && Math.abs(pv - dist_km) / dist_km < 0.01
+    })
+    if (byKm) return byKm.value
+  }
+  return null
+}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -285,7 +326,10 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
 
   const citiesForCountry = useMemo(
     () => country
-      ? ([...new Set(catalog.filter(r => r.country === country).map(r => r.city).filter(Boolean))].sort() as string[])
+      ? ([...new Set([
+          ...(CITY_SUPPLEMENTS[country] ?? []),
+          ...catalog.filter(r => r.country === country).map(r => r.city).filter(Boolean),
+        ])].sort() as string[])
       : [],
     [catalog, country]
   )
@@ -383,7 +427,8 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
       .sort((a, b) => nameMatchScore(b.data) - nameMatchScore(a.data))
       .slice(0, isCityQuery ? 8 : 6)
 
-    const allMyRaces = [...pastRaces, ...upcomingRaces]
+    // In upcoming mode, don't suggest completed past races — only upcoming ones
+    const allMyRaces = mode === 'upcoming' ? upcomingRaces : [...pastRaces, ...upcomingRaces]
     const myHits = allMyRaces
       .filter(r => {
         const h = [r.name, r.city ?? '', r.country ?? ''].join(' ').toLowerCase()
@@ -448,11 +493,15 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
       if (representative.city)    { setCitySelect(representative.city); setCityText(representative.city) }
       const mappedSport = representative.type ? (TYPE_MAP[representative.type.toLowerCase()] ?? representative.type) : null
       if (mappedSport) setSport(mappedSport)
-      if (representative.dist_km) {
-        const distStr = String(representative.dist_km)
+      if (representative.dist_km || representative.dist) {
         const presets = DISTANCES_BY_SPORT[mappedSport ?? 'Running'] ?? []
-        const match = presets.find(p => p.value === distStr)
-        if (match) { setDistance(distStr) } else { setDistance('__custom__'); setCustomDist(distStr) }
+        const matched = matchCatalogDist(presets, representative.dist_km, representative.dist)
+        if (matched) {
+          setDistance(matched); setCustomDist('')
+        } else {
+          setDistance('__custom__')
+          setCustomDist(representative.dist_km ? String(representative.dist_km) : (representative.dist ?? ''))
+        }
       }
     }
 

@@ -2237,9 +2237,9 @@ function RaceReadinessWidget() {
 
 // ─── Gap To Goal Widget ───────────────────────────────────────────────────────
 
-function GapToGoalWidget() {
+function GapToGoalWidget({ race }: { race: Race | null }) {
   const races   = useRaceStore(selectRaces)
-  const nextRace = useRaceStore(selectFocusRace)   // follows user's pinned focus race
+  const nextRace = race
   const today   = todayStr()
 
   const result = useMemo(() => {
@@ -2711,9 +2711,9 @@ function BestConditionsWidget() {
 
 // ─── Course Fit Score Widget ──────────────────────────────────────────────────
 
-function CourseFitWidget() {
+function CourseFitWidget({ race }: { race: Race | null }) {
   const races    = useRaceStore(selectRaces)
-  const nextRace = useRaceStore(selectNextRace)
+  const nextRace = race
   const today    = todayStr()
 
   const result = useMemo(() => {
@@ -2796,9 +2796,9 @@ function CourseFitWidget() {
 
 // ─── PB Probability Widget ────────────────────────────────────────────────────
 
-function PBProbabilityWidget() {
+function PBProbabilityWidget({ race }: { race: Race | null }) {
   const races    = useRaceStore(selectRaces)
-  const nextRace = useRaceStore(selectNextRace)
+  const nextRace = race
   const today    = todayStr()
 
   const result = useMemo(() => {
@@ -3048,9 +3048,9 @@ function AdvancedRaceDNAWidget() {
 
 // ─── Weather Fit Score Widget (Pro) ──────────────────────────────────────────
 
-function WeatherFitWidget() {
+function WeatherFitWidget({ race }: { race: Race | null }) {
   const races    = useRaceStore(selectRaces)
-  const nextRace = useRaceStore(selectNextRace)
+  const nextRace = race
   const today    = todayStr()
 
   const result = useMemo(() => {
@@ -3403,8 +3403,8 @@ function RaceComparerWidget() {
 
 // ─── Race Stack Planner Widget (Pro) ─────────────────────────────────────────
 
-function RaceStackWidget() {
-  const nextRace = useRaceStore(selectNextRace)
+function RaceStackWidget({ race }: { race: Race | null }) {
+  const nextRace = race
 
   const checklist = useMemo(() => {
     if (!nextRace) return null
@@ -4393,8 +4393,8 @@ function VDOTScoreWidget() {
   )
 }
 
-function GoalPaceWidget() {
-  const focusRace = useRaceStore(selectFocusRace)
+function GoalPaceWidget({ race }: { race: Race | null }) {
+  const focusRace = race
   const races     = useRaceStore(selectRaces)
   const units     = useUnits()
   const vdotPt    = useMemo(() => bestVDOT(races), [races])
@@ -4965,14 +4965,14 @@ export function Dashboard() {
               <CourseInfoCard race={countdownRace ?? nextRace!} /></>
           : <NoUpcomingRaceCTA onAddRace={openAddUpcomingRace} />
         }
-        {en('goal-pace')      && <GoalPaceWidget />}
+        {en('goal-pace')      && <GoalPaceWidget race={countdownRace ?? null} />}
         {en('on-this-day')    && <OnThisDayWidget />}
         {en('race-readiness') && <RaceReadinessWidget />}
-        {en('gap-to-goal')    && <GapToGoalWidget />}
-        {en('course-fit')     && <CourseFitWidget />}
-        {en('pb-probability') && <PBProbabilityWidget />}
-        {en('weather-fit')    && <WeatherFitWidget />}
-        {en('race-stack')     && <RaceStackWidget />}
+        {en('gap-to-goal')    && <GapToGoalWidget race={countdownRace ?? null} />}
+        {en('course-fit')     && <CourseFitWidget race={countdownRace ?? null} />}
+        {en('pb-probability') && <PBProbabilityWidget race={countdownRace ?? null} />}
+        {en('weather-fit')    && <WeatherFitWidget race={countdownRace ?? null} />}
+        {en('race-stack')     && <RaceStackWidget race={countdownRace ?? null} />}
       </DashZone>
 
       {/* RECENTLY — YOUR SEASON */}
