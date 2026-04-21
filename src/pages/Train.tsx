@@ -40,10 +40,17 @@ const sectionLabel: React.CSSProperties = {
 }
 
 const DISTANCES: { label: string; km: number }[] = [
-  { label: '5K',       km: 5 },
-  { label: '10K',      km: 10 },
+  { label: '5K',            km: 5 },
+  { label: '10K',           km: 10 },
+  { label: '10 Mile',       km: 16.09 },
   { label: 'Half Marathon', km: 21.0975 },
-  { label: 'Marathon', km: 42.195 },
+  { label: 'Marathon',      km: 42.195 },
+  { label: '50K',           km: 50 },
+  { label: '100K',          km: 100 },
+  { label: 'Sprint Tri',    km: 25.75 },
+  { label: 'Olympic Tri',   km: 51.5 },
+  { label: '70.3',          km: 113 },
+  { label: 'Ironman',       km: 226 },
 ]
 
 function secsToMMSS(secs: number): string {
@@ -393,23 +400,20 @@ export function Train() {
                   display: 'flex',
                   gap: '2rem',
                 }}>
+                  {/* Preferred unit shown in orange, other in white */}
                   <div>
-                    <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                      Per km
-                    </p>
-                    <p style={{ margin: '4px 0 0', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', color: 'var(--orange)', letterSpacing: '0.04em' }}>
+                    <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Per km</p>
+                    <p style={{ margin: '4px 0 0', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', color: units !== 'imperial' ? 'var(--orange)' : 'var(--white)', letterSpacing: '0.04em' }}>
                       {paceResult.km}
                     </p>
-                    <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>min/km</p>
+                    <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>min/km{units !== 'imperial' && ' ✓'}</p>
                   </div>
                   <div>
-                    <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                      Per mile
-                    </p>
-                    <p style={{ margin: '4px 0 0', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', color: 'var(--white)', letterSpacing: '0.04em' }}>
+                    <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Per mile</p>
+                    <p style={{ margin: '4px 0 0', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', color: units === 'imperial' ? 'var(--orange)' : 'var(--white)', letterSpacing: '0.04em' }}>
                       {paceResult.mi}
                     </p>
-                    <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>min/mi</p>
+                    <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>min/mi{units === 'imperial' && ' ✓'}</p>
                   </div>
                 </div>
               )}
