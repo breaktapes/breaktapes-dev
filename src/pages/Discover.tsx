@@ -16,15 +16,26 @@ const SPORTS: { value: string; label: string; icon: string }[] = [
   { value: 'hyrox', label: 'Hyrox', icon: '⚡' },
 ]
 
-const DIST_FILTERS: { label: string; match: (r: CatalogRace) => boolean }[] = [
-  { label: 'All', match: () => true },
-  { label: '5K', match: r => r.dist_km != null && r.dist_km >= 4.5 && r.dist_km <= 5.5 },
-  { label: '10K', match: r => r.dist_km != null && r.dist_km >= 9.5 && r.dist_km <= 10.5 },
-  { label: 'Half', match: r => r.dist_km != null && r.dist_km >= 20 && r.dist_km <= 22 },
-  { label: 'Marathon', match: r => r.dist_km != null && r.dist_km >= 42 && r.dist_km <= 43 },
-  { label: '70.3', match: r => r.dist_km != null && r.dist_km >= 113 && r.dist_km <= 114 },
-  { label: 'IM', match: r => r.dist_km != null && r.dist_km >= 225 && r.dist_km <= 227 },
-  { label: 'Ultra', match: r => r.dist_km != null && r.dist_km > 43 && !(r.dist_km >= 113 && r.dist_km <= 114) && !(r.dist_km >= 225 && r.dist_km <= 227) },
+// Distance chips per sport type
+const RUN_DIST_FILTERS: { label: string; match: (r: CatalogRace) => boolean }[] = [
+  { label: 'All Distances', match: () => true },
+  { label: '5KM',           match: r => r.dist_km != null && r.dist_km >= 4.5 && r.dist_km <= 5.5 },
+  { label: '10KM',          match: r => r.dist_km != null && r.dist_km >= 9.5 && r.dist_km <= 10.5 },
+  { label: 'Half Marathon', match: r => r.dist_km != null && r.dist_km >= 20.5 && r.dist_km <= 21.5 },
+  { label: 'Marathon',      match: r => r.dist_km != null && r.dist_km >= 42.1 && r.dist_km <= 42.3 },
+  { label: 'Ultra',         match: r => r.dist_km != null && r.dist_km > 42.3 && r.dist_km < 113 },
+]
+
+const TRI_DIST_FILTERS: { label: string; match: (r: CatalogRace) => boolean }[] = [
+  { label: 'All Distances',            match: () => true },
+  { label: 'Sprint',                   match: r => r.dist_km != null && r.dist_km >= 24 && r.dist_km <= 27 },
+  { label: 'Olympic',                  match: r => r.dist_km != null && r.dist_km >= 50 && r.dist_km <= 53 },
+  { label: '70.3 / Middle Distance',   match: r => r.dist_km != null && r.dist_km >= 112 && r.dist_km <= 114 },
+  { label: 'IRONMAN / Full Distance',  match: r => r.dist_km != null && r.dist_km >= 225 && r.dist_km <= 227 },
+]
+
+const GENERIC_DIST_FILTERS: { label: string; match: (r: CatalogRace) => boolean }[] = [
+  { label: 'All Distances', match: () => true },
 ]
 
 const MONTHS = [
@@ -33,6 +44,39 @@ const MONTHS = [
 ]
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+
+function currentYearMonth(): { year: number; month: number } {
+  const now = new Date()
+  return { year: now.getFullYear(), month: now.getMonth() + 1 }
+}
+
+/** Returns true if the catalog race is upcoming (future-dated or undated). */
+function isUpcoming(r: CatalogRace): boolean {
+  const { year: cy, month: cm } = currentYearMonth()
+  // No date info — include it (we don't know when it is)
+  if (!r.month) return true
+  // Specific year set — compare properly
+  if (r.year) {
+    if (r.year > cy) return true
+    if (r.year < cy) return false
+    // Same year — compare month (and day if available)
+    if (r.month > cm) return true
+    if (r.month < cm) return false
+    // Same month — check day
+    if (r.day) return r.day >= new Date().getDate()
+    return true
+  }
+  // Month-only (recurring annual) — upcoming if month >= current month
+  return r.month >= cm
+}
+
+/** Human-readable date for a catalog race */
+function raceDate(r: CatalogRace): string {
+  if (!r.month) return ''
+  const monthName = MONTHS[r.month - 1]
+  if (r.year) return r.day ? `${r.day} ${monthName} ${r.year}` : `${monthName} ${r.year}`
+  return monthName
+}
 
 function sportLabel(type?: string): string {
   const map: Record<string, string> = {
@@ -49,10 +93,21 @@ function sportColor(type?: string): string {
   return type ? (map[type] ?? 'var(--muted)') : 'var(--muted)'
 }
 
-function distLabel(r: CatalogRace): string {
-  if (r.dist) return r.dist
-  if (r.dist_km != null) return `${r.dist_km} km`
-  return '—'
+function distDisplay(r: CatalogRace): string {
+  if (!r.dist_km) return r.dist ?? '—'
+  const km = r.dist_km
+  // Running
+  if (km >= 42.1 && km <= 42.3) return 'Marathon'
+  if (km >= 20.5 && km <= 21.5) return 'Half Marathon'
+  if (km >= 9.5 && km <= 10.5) return '10KM'
+  if (km >= 4.5 && km <= 5.5) return '5KM'
+  if (km > 42.3 && km < 113) return `Ultra (${km}km)`
+  // Triathlon
+  if (km >= 225 && km <= 227) return 'IRONMAN / Full Distance'
+  if (km >= 112 && km <= 114) return '70.3 / Middle Distance'
+  if (km >= 50 && km <= 53) return 'Olympic'
+  if (km >= 24 && km <= 27) return 'Sprint'
+  return r.dist ?? `${km}km`
 }
 
 function catalogToRace(r: CatalogRace): Race {
@@ -119,6 +174,7 @@ function RaceCard({
   onWishlist: () => void
   onPlan: () => void
 }) {
+  const dateStr = raceDate(race)
   return (
     <div style={{
       background: 'var(--surface2)',
@@ -151,7 +207,7 @@ function RaceCard({
             marginTop: '2px',
           }}>
             {[race.city, race.country].filter(Boolean).join(' · ')}
-            {race.month != null && ` · ${MONTHS[race.month - 1]}`}
+            {dateStr && <span style={{ color: 'var(--orange)', marginLeft: '6px' }}>{dateStr}</span>}
           </div>
         </div>
         {/* Sport badge */}
@@ -181,7 +237,7 @@ function RaceCard({
           color: 'var(--muted)',
           flex: 1,
         }}>
-          {distLabel(race)}
+          {distDisplay(race)}
         </span>
         <button
           onClick={onWishlist}
@@ -239,10 +295,20 @@ export function Discover() {
   const [countryFilter, setCountryFilter] = useState('')
   const [monthFilter, setMonthFilter] = useState(0) // 0 = all, 1–12 = month
 
-  // For opening AddRaceModal in upcoming mode pre-filled
   const [planRace, setPlanRace] = useState<Race | null>(null)
 
-  // Wishlist lookup set for O(1) checks
+  // Distance chip set depends on selected sport
+  const distFilters = sportFilter === 'run' ? RUN_DIST_FILTERS
+    : sportFilter === 'tri' ? TRI_DIST_FILTERS
+    : GENERIC_DIST_FILTERS
+
+  // Reset dist filter when sport changes
+  function handleSportChange(value: string) {
+    setSportFilter(value)
+    setDistFilterIdx(0)
+  }
+
+  // Wishlist lookup set
   const wishlistNames = useMemo(
     () => new Set(wishlistRaces.map(r => r.name.toLowerCase())),
     [wishlistRaces],
@@ -251,8 +317,10 @@ export function Discover() {
   const filtered = useMemo(() => {
     if (!catalog) return []
     return catalog.filter(r => {
+      // Upcoming only
+      if (!isUpcoming(r)) return false
       if (sportFilter && r.type !== sportFilter) return false
-      if (!DIST_FILTERS[distFilterIdx].match(r)) return false
+      if (!distFilters[distFilterIdx]?.match(r)) return false
       if (countryFilter) {
         const q = countryFilter.toLowerCase()
         if (!r.country?.toLowerCase().includes(q) && !r.city?.toLowerCase().includes(q)) return false
@@ -260,9 +328,8 @@ export function Discover() {
       if (monthFilter && r.month !== monthFilter) return false
       return true
     })
-  }, [catalog, sportFilter, distFilterIdx, countryFilter, monthFilter])
+  }, [catalog, sportFilter, distFilterIdx, distFilters, countryFilter, monthFilter])
 
-  // Show top 100 — avoids rendering 8,000+ DOM nodes
   const visible = filtered.slice(0, 100)
 
   function handleWishlist(r: CatalogRace) {
@@ -298,7 +365,7 @@ export function Discover() {
           color: 'var(--white)',
           marginBottom: '0.75rem',
         }}>
-          Discover Races
+          Upcoming Races
           {!isLoading && catalog && (
             <span style={{
               fontFamily: 'var(--body)',
@@ -309,7 +376,7 @@ export function Discover() {
               letterSpacing: 0,
               marginLeft: '0.75rem',
             }}>
-              {filtered.length.toLocaleString()} races
+              {filtered.length.toLocaleString()} found
             </span>
           )}
         </div>
@@ -320,25 +387,27 @@ export function Discover() {
             <FilterChip
               key={s.value}
               active={sportFilter === s.value}
-              onClick={() => setSportFilter(s.value)}
+              onClick={() => handleSportChange(s.value)}
             >
               {s.icon} {s.label}
             </FilterChip>
           ))}
         </div>
 
-        {/* Distance filter */}
-        <div style={{ display: 'flex', gap: '0.4rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
-          {DIST_FILTERS.map((d, i) => (
-            <FilterChip
-              key={d.label}
-              active={distFilterIdx === i}
-              onClick={() => setDistFilterIdx(i)}
-            >
-              {d.label}
-            </FilterChip>
-          ))}
-        </div>
+        {/* Distance filter — sport-aware */}
+        {distFilters.length > 1 && (
+          <div style={{ display: 'flex', gap: '0.4rem', overflowX: 'auto', paddingBottom: '0.5rem' }}>
+            {distFilters.map((d, i) => (
+              <FilterChip
+                key={d.label}
+                active={distFilterIdx === i}
+                onClick={() => setDistFilterIdx(i)}
+              >
+                {d.label}
+              </FilterChip>
+            ))}
+          </div>
+        )}
 
         {/* Country search + month filter row */}
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
@@ -415,7 +484,7 @@ export function Discover() {
             fontSize: '13px',
             paddingTop: '3rem',
           }}>
-            No races found — try removing a filter.
+            No upcoming races found — try removing a filter.
           </div>
         )}
 
