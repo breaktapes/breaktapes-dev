@@ -119,6 +119,17 @@ const _DIST_KM_MAP: Record<string, string> = (() => {
   return m
 })()
 
+/** Maps numeric km strings to friendly display labels for known named distances. */
+const _KM_FRIENDLY: Record<string, string> = {
+  '226': 'IRONMAN', '226.0': 'IRONMAN',
+  '113': '70.3',    '113.0': '70.3',
+  '51.5': 'Olympic',
+  '25.75': 'Sprint',
+  '42.195': 'Marathon', '42.2': 'Marathon',
+  '21.1': 'Half Marathon', '21.0975': 'Half Marathon',
+  '10': '10K', '5': '5K',
+}
+
 /** Resolve a distance string to its km display value.
  *  "Half Marathon" → "21.1",  "21.1" → "21.1",  "Solo Open" → "Solo Open" (HYROX) */
 function resolveDistKm(dist: string): { km: string; isNumeric: boolean } {
@@ -133,6 +144,13 @@ function resolveDistKm(dist: string): { km: string; isNumeric: boolean } {
   if (!isNaN(n)) return { km: dist, isNumeric: true }
   // Non-numeric label (HYROX category, etc.)
   return { km: dist, isNumeric: false }
+}
+
+/** Returns a friendly display label for a distance — "113" → "70.3", "21.1" → "Half Marathon" */
+function distFriendly(dist: string): string {
+  if (!dist) return dist
+  const resolved = _DIST_KM_MAP[dist.toLowerCase()] ?? dist
+  return _KM_FRIENDLY[resolved] ?? resolved
 }
 
 // ─── PB detection ────────────────────────────────────────────────────────────
@@ -205,9 +223,11 @@ function ViewPanel({ race, isPB, onEdit, onDelete, onShare }: { race: Race; isPB
           </div>
         )}
         {race.distance && (() => {
+          const friendly = distFriendly(race.distance)
           const { km, isNumeric } = resolveDistKm(race.distance)
-          const distDisplay = isNumeric ? fmtDistKm(km, units) : km
-          const distLabel = isNumeric ? distUnit(units) : 'DISTANCE'
+          const isFriendlyLabel = friendly !== km
+          const distDisplay = isFriendlyLabel ? friendly : (isNumeric ? fmtDistKm(km, units) : km)
+          const distLabel = isFriendlyLabel ? 'DISTANCE' : (isNumeric ? distUnit(units) : 'DISTANCE')
           return (
             <div style={st.statBox}>
               <div style={st.statVal}>{distDisplay}</div>

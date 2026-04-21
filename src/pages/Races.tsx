@@ -319,7 +319,7 @@ function WishlistRow({ race, onPlan, onRemove }: {
           {race.name}
         </div>
         <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>
-          {[race.distance ? `${race.distance} km` : null, race.city, race.country].filter(Boolean).join(' · ')}
+          {[race.distance ? distLabel(race.distance) : null, race.city, race.country].filter(Boolean).join(' · ')}
         </div>
         {race.date && (
           <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '2px' }}>

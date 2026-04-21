@@ -124,8 +124,16 @@ function drawCard(canvas: HTMLCanvasElement, race: Race, athleteName: string) {
     ctx.fillText('FINISH TIME', 80, 460)
   }
 
-  // Distance + sport pill
-  const distLabel = race.distance ? `${race.distance} KM` : ''
+  // Distance + sport pill — use friendly labels for known distances
+  const _KM_LABELS: Record<string, string> = {
+    '226': 'IRONMAN', '113': '70.3', '51.5': 'Olympic', '25.75': 'Sprint',
+    '42.195': 'Marathon', '42.2': 'Marathon', '21.1': 'Half Marathon',
+    '10': '10K', '5': '5K',
+  }
+  const rawDist = race.distance ?? ''
+  const distLabel = rawDist
+    ? (_KM_LABELS[rawDist] ?? (isNaN(parseFloat(rawDist)) ? rawDist : `${rawDist} KM`))
+    : ''
   if (distLabel) {
     ctx.fillStyle = C.surface
     ctx.fillStyle = 'rgba(245,245,245,0.06)'
