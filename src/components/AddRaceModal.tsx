@@ -190,9 +190,10 @@ interface Props {
   onClose: () => void
   defaultMode?: Mode
   prefillDistance?: string
+  prefill?: Partial<Race>
 }
 
-export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance }: Props) {
+export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, prefill }: Props) {
   const [mode, setMode] = useState<Mode>(defaultMode)
   const addRace         = useRaceStore(s => s.addRace)
   const addUpcomingRace = useRaceStore(s => s.addUpcomingRace)
@@ -215,6 +216,21 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance }:
     const km = LABEL_TO_KM[prefillDistance]
     if (km) setDistance(km)
   }, [prefillDistance])
+
+  // Prefill from catalog race (e.g. from Discover page)
+  useEffect(() => {
+    if (!prefill) return
+    if (prefill.name) setName(prefill.name)
+    if (prefill.country) setCountry(prefill.country)
+    if (prefill.city) { setCitySelect('__other__'); setCityText(prefill.city) }
+    if (prefill.date) setDate(prefill.date)
+    if (prefill.distance) setDistance(prefill.distance)
+    const sportMap: Record<string, string> = {
+      running: 'Running', triathlon: 'Triathlon', cycling: 'Cycling',
+      swim: 'Swimming', hyrox: 'HYROX',
+    }
+    if (prefill.sport) setSport(sportMap[prefill.sport.toLowerCase()] ?? 'Running')
+  }, [prefill])
 
   // Lock body scroll while modal is open
   useEffect(() => {

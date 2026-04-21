@@ -53,7 +53,8 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
   const [importing, setImporting]     = useState(false)
   const [error, setError]             = useState('')
   const [skippedCount, setSkippedCount] = useState(0)
-  const [athlinksStatus, setAthlinksStatus] = useState<'ok' | 'pending_api_key' | ''>('')
+  const [sourceErrors, setSourceErrors] = useState<{ ultrasignup?: boolean; marathonview?: boolean }>({})
+
 
   useEffect(() => {
     document.body.style.overflow = 'hidden'
@@ -62,9 +63,9 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
 
   async function handleSearch() {
     if (!firstName.trim() && !lastName.trim()) { setError('Enter at least a first or last name'); return }
-    setSearching(true); setError(''); setResults([])
+    setSearching(true); setError(''); setResults([]); setSourceErrors({})
 
-    const [us, mv, ath] = await Promise.allSettled([
+    const [us, mv] = await Promise.allSettled([
       fetch(`${HEALTH_PROXY}/import/ultrasignup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -75,14 +76,11 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: `${firstName.trim()} ${lastName.trim()}`.trim() }),
       }).then(r => r.json()),
-      fetch(`${HEALTH_PROXY}/import/athlinks`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ firstName: firstName.trim(), lastName: lastName.trim() }),
-      }).then(r => r.json()),
     ])
 
     const all: ImportResult[] = []
+    const errs: { ultrasignup?: boolean; marathonview?: boolean } = {}
+
     if (us.status === 'fulfilled' && us.value.status === 'ok') {
       for (const r of (us.value.results ?? [])) {
         all.push({
@@ -93,17 +91,20 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
           raw:      Object.values(r).map(String),
         })
       }
+    } else if (us.status === 'rejected' || us.value?.status === 'error') {
+      errs.ultrasignup = true
     }
+
     if (mv.status === 'fulfilled' && mv.value.status === 'ok') {
       for (const r of (mv.value.results ?? [])) {
         if (!r.raceName || r.raceName.length < 3) continue
         all.push({ ...r, date: normalizeDateStr(r.date ?? ''), source: 'marathonview' })
       }
-    }
-    if (ath.status === 'fulfilled') {
-      setAthlinksStatus(ath.value.status)
+    } else if (mv.status === 'rejected' || mv.value?.status === 'error') {
+      errs.marathonview = true
     }
 
+    setSourceErrors(errs)
     setResults(all)
     setSearching(false)
     setStep('results')
@@ -207,6 +208,20 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
 
           {step === 'results' && (
             <>
+              {(sourceErrors.ultrasignup || sourceErrors.marathonview) && (
+                <div style={{ padding: '8px 12px', background: 'rgba(255,107,107,0.08)', border: '1px solid rgba(255,107,107,0.25)', borderRadius: '8px', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                  <p style={{ margin: 0, fontSize: '12px', color: '#ff6b6b' }}>
+                    {[sourceErrors.ultrasignup && 'UltraSignup', sourceErrors.marathonview && 'MarathonView'].filter(Boolean).join(' & ')} failed to respond.
+                  </p>
+                  <button
+                    style={{ background: 'none', border: '1px solid rgba(255,107,107,0.4)', color: '#ff6b6b', fontSize: '11px', padding: '3px 8px', borderRadius: '4px', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', flexShrink: 0 }}
+                    onClick={() => { setStep('search'); }}
+                    type="button"
+                  >
+                    RETRY
+                  </button>
+                </div>
+              )}
               {results.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '32px 0' }}>
                   <p style={{ color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 900, letterSpacing: '0.08em', fontSize: '14px' }}>
@@ -215,11 +230,6 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
                   <p style={{ color: 'var(--muted)', fontSize: '12px', marginTop: '8px' }}>
                     Try a different spelling or add your race manually.
                   </p>
-                  {athlinksStatus === 'pending_api_key' && (
-                    <p style={{ color: 'var(--orange)', fontSize: '11px', marginTop: '12px' }}>
-                      Athlinks integration coming soon — API access requested.
-                    </p>
-                  )}
                   <button style={{ ...st.cancelBtn, marginTop: '24px' }} onClick={() => setStep('search')}>← BACK</button>
                 </div>
               ) : (

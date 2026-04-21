@@ -16,6 +16,8 @@ const Train    = lazy(() => import('@/pages/Train').then(m => ({ default: m.Trai
 const Profile  = lazy(() => import('@/pages/Profile').then(m => ({ default: m.Profile })))
 // const Gear  = lazy(() => import('@/pages/Gear').then(m => ({ default: m.Gear })))  // removed from nav — kept for post-MVP
 const Settings = lazy(() => import('@/pages/Settings').then(m => ({ default: m.Settings })))
+const Discover = lazy(() => import('@/pages/Discover').then(m => ({ default: m.Discover })))
+const Compare  = lazy(() => import('@/pages/Compare').then(m => ({ default: m.Compare })))
 
 class RootErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
   state = { error: null }
@@ -83,6 +85,8 @@ function AnimatedRoutes() {
             <Route path="/you"      element={<Profile />} />
             {/* <Route path="/gear"  element={<Gear />} /> */}  {/* removed from nav — kept for post-MVP */}
             <Route path="/settings" element={<Settings />} />
+            <Route path="/discover" element={<Discover />} />
+            <Route path="/compare"  element={<Compare />} />
             {/* Backwards compat aliases */}
             <Route path="/pace"    element={<Navigate to="/train" replace />} />
             <Route path="/history" element={<Navigate to="/races" replace />} />
