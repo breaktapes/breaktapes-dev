@@ -1942,7 +1942,16 @@ function ActivityPreviewWidget() {
     return merged.sort((a, b) => b.sortKey.localeCompare(a.sortKey)).slice(0, 5)
   }, [stravaActs, whoopActs])
 
-  if (!items.length) return null
+  if (!items.length) {
+    return (
+      <div style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: '12px', padding: '14px' }}>
+        <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '8px' }}>
+          Recent Training
+        </div>
+        <div style={{ fontSize: '12px', color: 'var(--muted)' }}>No activities yet — sync your wearable to see recent training.</div>
+      </div>
+    )
+  }
 
   return (
     <div style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: '12px', padding: '14px' }}>

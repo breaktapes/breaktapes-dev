@@ -8,6 +8,7 @@ import { startStravaOAuth } from '@/lib/strava'
 import { removeWearableToken } from '@/lib/wearableUtils'
 import { THEMES } from '@/types'
 import type { ThemeId } from '@/types'
+import { APP_URL } from '@/env'
 
 const btnMain: React.CSSProperties = {
   background: 'var(--orange)',
@@ -391,7 +392,7 @@ export function Settings() {
             <div>
               <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--white)', fontWeight: 600 }}>Public Profile</p>
               <p style={{ margin: '2px 0 0', fontSize: '11px', color: 'var(--muted)' }}>
-                {athlete?.username ? `app.breaktapes.com/u/${athlete.username}` : 'Set a username first'}
+                {athlete?.username ? `${APP_URL}/u/${athlete.username}` : 'Set a username first'}
               </p>
             </div>
             <button
@@ -425,7 +426,7 @@ export function Settings() {
             <button
               style={{ ...btnGhost, fontSize: '12px', padding: '0.6rem 1rem' }}
               onClick={() => {
-                navigator.clipboard.writeText(`https://app.breaktapes.com/u/${athlete.username}`)
+                navigator.clipboard.writeText(`${APP_URL}/u/${athlete.username}`)
               }}
             >
               Copy Profile Link

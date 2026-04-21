@@ -7,6 +7,7 @@ import { selectRaces, selectNextRace, selectAthlete, selectAuthUser } from '@/st
 import { EditProfileModal } from '@/components/EditProfileModal'
 import type { Race } from '@/types'
 import { useUnits, distUnit } from '@/lib/units'
+import { APP_URL } from '@/env'
 import { supabase } from '@/lib/supabase'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -398,7 +399,7 @@ function AthleteHero({ onEdit }: { onEdit: () => void }) {
             alignSelf: 'flex-start',
           }}
           onClick={() => {
-            const url = `https://app.breaktapes.com/u/${athlete.username}`
+            const url = `${APP_URL}/u/${athlete.username}`
             navigator.clipboard.writeText(url).catch(() => {})
           }}
         >
