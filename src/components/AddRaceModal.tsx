@@ -351,14 +351,30 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sport])
 
-  // Update dropdown portal position whenever suggestions open
-  useEffect(() => {
+  // Update dropdown portal position — account for iOS visual viewport offset
+  // (keyboard open shifts visual viewport; position:fixed uses visual coords but
+  // getBoundingClientRect uses layout coords — subtract offsetTop to align them)
+  function recalcDropRect() {
     if (showSuggest && suggestions.length > 0 && nameWrapRef.current) {
-      const r = nameWrapRef.current.getBoundingClientRect()
-      setDropRect({ top: r.bottom + 4, left: r.left, width: r.width })
+      const r   = nameWrapRef.current.getBoundingClientRect()
+      const vv  = typeof window !== 'undefined' ? window.visualViewport : null
+      const off = vv?.offsetTop ?? 0
+      setDropRect({ top: r.bottom + 4 - off, left: r.left, width: r.width })
     } else {
       setDropRect(null)
     }
+  }
+  useEffect(() => {
+    recalcDropRect()
+    const vv = typeof window !== 'undefined' ? window.visualViewport : null
+    if (!vv) return
+    vv.addEventListener('resize', recalcDropRect)
+    vv.addEventListener('scroll', recalcDropRect)
+    return () => {
+      vv.removeEventListener('resize', recalcDropRect)
+      vv.removeEventListener('scroll', recalcDropRect)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showSuggest, suggestions])
 
   // Run search immediately (no debounce) whenever catalog arrives after user already typed
@@ -713,6 +729,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
                 placeholder="Search a race or type your own..."
                 value={query}
                 onChange={e => { setQuery(e.target.value); setName(e.target.value); setShowSuggest(true) }}
+                onFocus={() => { if (query.length >= 2 && !catalogLoading) { setShowSuggest(true); runSearch(query, catalog) } }}
                 onBlur={() => setTimeout(() => setShowSuggest(false), 180)}
                 autoFocus
               />
@@ -778,6 +795,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
                       gap: '2px',
                     }}
                     onMouseDown={e => { e.preventDefault(); selectSuggestion(s) }}
+                    onTouchEnd={e => { e.preventDefault(); selectSuggestion(s) }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '8px' }}>
                       <span style={{
@@ -815,13 +833,8 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
                   fontStyle: 'italic',
                   borderTop: suggestions.length > 0 ? '1px solid var(--border2)' : 'none',
                 }}
-                onMouseDown={e => {
-                  e.preventDefault()
-                  setName(query.trim())
-                  setShowSuggest(false)
-                  setShowYearPicker(false)
-                  setYearPills([])
-                }}
+                onMouseDown={e => { e.preventDefault(); setName(query.trim()); setShowSuggest(false); setShowYearPicker(false); setYearPills([]) }}
+                onTouchEnd={e => { e.preventDefault(); setName(query.trim()); setShowSuggest(false); setShowYearPicker(false); setYearPills([]) }}
               >
                 + Add &ldquo;{query}&rdquo; manually →
               </button>

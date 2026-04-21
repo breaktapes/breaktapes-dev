@@ -39,7 +39,12 @@ export function useRaceCatalog() {
       ])
       if (p1.error) throw p1.error
       if (p2.error) throw p2.error
-      return [...(p1.data ?? []), ...(p2.data ?? [])] as CatalogRace[]
+      // Supabase REST serializes PostgreSQL `numeric` columns as strings.
+      // Normalize dist_km to a JS number so comparisons work without coercion surprises.
+      return [...(p1.data ?? []), ...(p2.data ?? [])].map(r => ({
+        ...r,
+        dist_km: r.dist_km != null ? Number(r.dist_km) : undefined,
+      })) as CatalogRace[]
     },
     staleTime: 60 * 60 * 1000,
     retry: 1,
