@@ -57,6 +57,7 @@ const DISTANCES_BY_SPORT: Record<string, { label: string; value: string }[]> = {
     { label: 'Olympic',  value: '51.5' },
     { label: '70.3',     value: '113' },
     { label: 'IRONMAN',  value: '226' },
+    { label: 'PTO T100', value: '112' },
     { label: 'Custom...',                       value: '__custom__' },
   ],
   HYROX: [
@@ -591,7 +592,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
 
   function showToast(msg: string) {
     setToastMsg(msg)
-    setTimeout(() => setToastMsg(''), 3000)
+    setTimeout(() => setToastMsg(''), 5000)
   }
 
   function validate() {
@@ -965,6 +966,11 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
               </div>
             ) : (
               <DateInput value={date} onChange={setDate} />
+            )}
+            {mode === 'upcoming' && date && date < new Date().toISOString().split('T')[0] && (
+              <p style={{ margin: '4px 0 0', fontSize: '11px', color: 'var(--orange)', fontWeight: 600 }}>
+                ⚠️ This date is in the past — use "Log a Race" tab for completed races
+              </p>
             )}
           </Field>
 

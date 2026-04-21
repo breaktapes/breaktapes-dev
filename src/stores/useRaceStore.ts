@@ -11,6 +11,7 @@ export interface RaceState {
   addRace: (race: Race) => void
   addUpcomingRace: (race: Race) => void
   autoMoveExpiredUpcoming: () => void
+  dismissExpiredRace: (id: string) => void
   updateRace: (id: string, patch: Partial<Race>) => void
   deleteRace: (id: string) => void
   setRaces: (races: Race[]) => void
@@ -34,7 +35,12 @@ function findNextRace(upcoming: Race[]): Race | null {
   const future = upcoming
     .filter(r => r.date >= today)
     .sort((a, b) => a.date.localeCompare(b.date))
-  return future[0] ?? null
+  if (future.length === 0) return null
+  // Prefer A-Race within 90 days; otherwise fall back to nearest future race
+  const d90 = new Date(); d90.setDate(d90.getDate() + 90)
+  const d90Str = `${d90.getFullYear()}-${String(d90.getMonth() + 1).padStart(2, '0')}-${String(d90.getDate()).padStart(2, '0')}`
+  const aRace = future.find(r => r.priority === 'A' && r.date <= d90Str)
+  return aRace ?? future[0]
 }
 
 export const useRaceStore = create<RaceState>()(
@@ -61,6 +67,20 @@ export const useRaceStore = create<RaceState>()(
         set({
           races: [...races, ...expired],
           upcomingRaces: upcomingRaces.filter(r => r.date >= today),
+        })
+        get().promoteNextRace()
+      },
+
+      // Move a single expired upcoming race to past without requiring a result
+      dismissExpiredRace: (id) => {
+        const { upcomingRaces, races } = get()
+        const race = upcomingRaces.find(r => r.id === id)
+        if (!race) return
+        const newUpcoming = upcomingRaces.filter(r => r.id !== id)
+        set({
+          races: [...races, race],
+          upcomingRaces: newUpcoming,
+          focusRaceId: get().focusRaceId === id ? null : get().focusRaceId,
         })
         get().promoteNextRace()
       },
@@ -176,8 +196,8 @@ export const useRaceStore = create<RaceState>()(
           } catch {}
         }
 
-        // Auto-move any expired upcoming races to past on app load
-        state.autoMoveExpiredUpcoming()
+        // Promote nextRace on load (expired races stay in upcoming until user logs result)
+        state.promoteNextRace()
       },
     }
   ),

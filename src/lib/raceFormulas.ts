@@ -176,11 +176,16 @@ export interface VDOTPoint {
 
 export function vdotHistory(races: Race[]): VDOTPoint[] {
   return races
-    .filter(r => r.time && r.distance && r.outcome !== 'DNF' && r.outcome !== 'DNS' && r.outcome !== 'DSQ')
+    .filter(r =>
+      isRunningRace(r) &&
+      r.time && r.distance &&
+      r.outcome !== 'DNF' && r.outcome !== 'DNS' && r.outcome !== 'DSQ'
+    )
     .map(r => {
       const timeSecs = parseTimeSecs(r.time)
       const distKm   = parseDistKm(r.distance)
-      if (!timeSecs || !distKm) return null
+      // Exclude ultra distances — Daniels formula is only valid up to marathon
+      if (!timeSecs || !distKm || distKm > 42.3) return null
       const vdot = computeVDOT(timeSecs, distKm)
       if (!vdot) return null
       return { date: r.date, vdot, raceName: r.name }
@@ -189,10 +194,19 @@ export function vdotHistory(races: Race[]): VDOTPoint[] {
     .sort((a, b) => a!.date.localeCompare(b!.date)) as VDOTPoint[]
 }
 
+/** Peak all-time VDOT (best score ever). */
 export function bestVDOT(races: Race[]): VDOTPoint | null {
   const history = vdotHistory(races)
   if (!history.length) return null
   return history.reduce((best, cur) => cur.vdot > best.vdot ? cur : best)
+}
+
+/** Current fitness VDOT — most recent running PB (last 90 days if available, else all-time most recent). */
+export function recentVDOT(races: Race[]): VDOTPoint | null {
+  const history = vdotHistory(races)
+  if (!history.length) return null
+  // Return the most recently dated entry (history is sorted asc by date)
+  return history[history.length - 1]
 }
 
 export interface EquivPerf {
@@ -202,8 +216,14 @@ export interface EquivPerf {
   timeStr: string
 }
 
+const EQUIV_PERF_DISTANCES = [
+  { label: '800m',          km: 0.8 },
+  { label: '1 Mile',        km: 1.60934 },
+  ...RIEGEL_DISTANCES,
+]
+
 export function equivalentPerformances(vdot: number): EquivPerf[] {
-  return RIEGEL_DISTANCES.map(d => {
+  return EQUIV_PERF_DISTANCES.map(d => {
     const timeSecs = vdotEquivTime(vdot, d.km)
     return { distance: d.label, distKm: d.km, timeSecs, timeStr: secsToHMS(timeSecs) }
   })

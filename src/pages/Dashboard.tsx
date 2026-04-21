@@ -4,7 +4,7 @@ import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { useDashStore } from '@/stores/useDashStore'
 import { useWearableStore } from '@/stores/useWearableStore'
-import { selectRaces, selectNextRace, selectAthlete, selectDashZoneCollapse, selectUpcomingRaces, selectFocusRace, selectFocusRaceId } from '@/stores/selectors'
+import { selectRaces, selectNextRace, selectAthlete, selectDashZoneCollapse, selectUpcomingRaces, selectFocusRaceId } from '@/stores/selectors'
 import { AddRaceModal } from '@/components/AddRaceModal'
 import { ViewEditRaceModal } from '@/components/ViewEditRaceModal'
 import { TimePickerWheel } from '@/components/TimePickerWheel'
@@ -13,7 +13,7 @@ import type { Race } from '@/types'
 import { useUnits, distUnit } from '@/lib/units'
 import {
   bestRiegelTable,
-  bestVDOT, equivalentPerformances, paceZones, vdotHistory,
+  bestVDOT, recentVDOT, equivalentPerformances, paceZones, vdotHistory,
   goalPaceCalc, parseTimeSecs as fParseTimeSecs, parseDistKm as fParseDistKm,
   bestWeatherImpact, distanceMilestones, secsToHMS as fSecsToHMS,
   raceDensityWarnings, findCourseRepeats,
@@ -726,8 +726,6 @@ function PreRaceBriefing({ onAddRace }: { onAddRace: () => void }) {
 function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; onClose: () => void; zIndex?: number }) {
   const updateRace    = useRaceStore(s => s.updateRace)
   const deleteRace    = useRaceStore(s => s.deleteRace)
-  const setFocusRaceId = useRaceStore(s => s.setFocusRaceId)
-  const focusRaceId   = useRaceStore(selectFocusRaceId)
 
   const [priority, setPriority] = useState<string>(race.priority ?? 'A')
   const [confirmDelete, setConfirmDelete] = useState(false)
@@ -737,8 +735,6 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
     const parts = (race.goalTime ?? '').split(':').map(Number)
     return { h: parts[0] || 0, m: parts[1] || 0, s: parts[2] || 0 }
   })
-
-  const isFocused = focusRaceId === race.id
 
   useEffect(() => {
     document.body.style.overflow = 'hidden'
@@ -834,31 +830,6 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
               Scroll to set · Used by Gap To Goal widget
             </div>
           </div>
-
-          {/* Focus race toggle */}
-          <button
-            onClick={() => { setFocusRaceId(isFocused ? null : race.id); onClose() }}
-            style={{
-              width: '100%',
-              background: isFocused ? 'rgba(var(--orange-ch),0.12)' : 'var(--surface3)',
-              border: isFocused ? '1.5px solid rgba(var(--orange-ch),0.5)' : '1.5px solid var(--border2)',
-              borderRadius: '10px',
-              color: isFocused ? 'var(--orange)' : 'var(--white)',
-              fontFamily: 'var(--headline)',
-              fontWeight: 700,
-              fontSize: '13px',
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-              padding: '12px',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-            }}
-          >
-            {isFocused ? '📌 Focused Race (tap to unpin)' : '📌 Set as Focus Race'}
-          </button>
 
           {/* Delete */}
           {!confirmDelete ? (
@@ -4128,6 +4099,57 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
   )
 }
 
+// ─── Expired Race Prompts ─────────────────────────────────────────────────────
+
+function ExpiredRacePrompts({ onLogResult }: { onLogResult: () => void }) {
+  const upcomingRaces    = useRaceStore(selectUpcomingRaces)
+  const dismissExpired   = useRaceStore(s => s.dismissExpiredRace)
+  const today            = todayStr()
+  const expired          = upcomingRaces.filter(r => r.date < today)
+
+  if (expired.length === 0) return null
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      {expired.map(race => (
+        <div key={race.id} style={{
+          background: 'linear-gradient(135deg, rgba(var(--orange-ch),0.08) 0%, var(--surface2) 100%)',
+          border: '1px solid rgba(var(--orange-ch),0.3)',
+          borderRadius: '12px',
+          padding: '14px 16px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '12px',
+        }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '13px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--orange)', marginBottom: '2px' }}>
+              🏁 Race passed — log your result?
+            </div>
+            <div style={{ fontSize: '13px', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {race.name ?? 'Unnamed Race'} · {fmtDateIntl(race.date)}
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+            <button
+              onClick={() => onLogResult()}
+              style={{ background: 'var(--orange)', color: '#000', border: 'none', borderRadius: '8px', padding: '8px 14px', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '12px', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer' }}
+            >
+              LOG
+            </button>
+            <button
+              onClick={() => dismissExpired(race.id)}
+              style={{ background: 'transparent', color: 'var(--muted)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '8px 10px', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '12px', letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer' }}
+            >
+              SKIP
+            </button>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 // ─── No Upcoming Race CTA ─────────────────────────────────────────────────────
 
 function NoUpcomingRaceCTA({ onAddRace }: { onAddRace: () => void }) {
@@ -4180,70 +4202,17 @@ function NoUpcomingRaceCTA({ onAddRace }: { onAddRace: () => void }) {
   )
 }
 
-// ─── Pace Calculator ─────────────────────────────────────────────────────────
-
-const PACE_DISTS = [
-  { label: '5K',            km: 5 },
-  { label: '10K',           km: 10 },
-  { label: 'Half Marathon', km: 21.0975 },
-  { label: 'Marathon',      km: 42.195 },
-]
-
-function secsToMMSS(s: number) {
-  const m = Math.floor(s / 60)
-  return `${m}:${Math.round(s % 60).toString().padStart(2, '0')}`
-}
-
-function PaceCalculator() {
-  const [distIdx, setDistIdx] = useState(2)
-  const [goalTime, setGoalTime] = useState('')
-  const [result, setResult] = useState<{ km: string; mi: string } | null>(null)
-
-  return (
-    <div style={st.sectionCard}>
-      <div style={st.sectionHeader}>PACE CALCULATOR</div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', minWidth: 0 }}>
-          <div>
-            <label style={st.inputLabel}>Distance</label>
-            <select value={distIdx} onChange={e => { setDistIdx(+e.target.value); setResult(null) }} style={st.select}>
-              {PACE_DISTS.map((d, i) => <option key={d.label} value={i}>{d.label}</option>)}
-            </select>
-          </div>
-          <div>
-            <label style={st.inputLabel}>Goal Time</label>
-            <input type="text" placeholder="1:45:00" value={goalTime}
-              onChange={e => { setGoalTime(e.target.value); setResult(null) }} style={st.input} />
-          </div>
-        </div>
-        <button style={st.ctaPrimary} onClick={() => {
-          const secs = parseHMS(goalTime)
-          if (!secs) return
-          const d = PACE_DISTS[distIdx]
-          setResult({ km: secsToMMSS(secs / d.km), mi: secsToMMSS(secs / (d.km / 1.60934)) })
-        }}>Calculate</button>
-        {result && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', minWidth: 0 }}>
-            <div style={st.paceResult}>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '24px', color: 'var(--orange)', letterSpacing: '0.02em', lineHeight: 1.1 }}>{result.km}</div>
-              <div style={{ fontSize: '11px', color: 'var(--muted)' }}>min/km</div>
-            </div>
-            <div style={st.paceResult}>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '24px', color: 'var(--white)', letterSpacing: '0.02em', lineHeight: 1.1 }}>{result.mi}</div>
-              <div style={{ fontSize: '11px', color: 'var(--muted)' }}>min/mi</div>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
 
 // ─── Formula Widgets (Day 2) ──────────────────────────────────────────────────
 
-function RiegelPredictorWidget({ onAddGoal }: { onAddGoal?: (distance: string) => void }) {
-  const races = useRaceStore(selectRaces)
+function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distance: string) => void }) {
+  const races        = useRaceStore(selectRaces)
+  const upcomingRaces = useRaceStore(selectUpcomingRaces)
+  const updateRace   = useRaceStore(s => s.updateRace)
+  const [selectedRow, setSelectedRow] = useState<string | null>(null)
+  const [showLinkSheet, setShowLinkSheet] = useState(false)
   const result = useMemo(() => bestRiegelTable(races), [races])
+
   if (!result) return (
     <div className="card-v3" style={st.glowCard}>
       <div style={st.widgetLabel}>🔮 RACE PREDICTOR</div>
@@ -4252,6 +4221,16 @@ function RiegelPredictorWidget({ onAddGoal }: { onAddGoal?: (distance: string) =
     </div>
   )
   const { race, table } = result
+
+  function linkGoalPace(upcomingId: string) {
+    if (!selectedRow) return
+    const row = table.find(r => r.distance === selectedRow)
+    if (!row) return
+    updateRace(upcomingId, { goalTime: row.predictedTime })
+    setShowLinkSheet(false)
+    setSelectedRow(null)
+  }
+
   return (
     <div className="card-v3" style={st.glowCard}>
       <div style={st.widgetLabel}>🔮 RACE PREDICTOR</div>
@@ -4263,30 +4242,59 @@ function RiegelPredictorWidget({ onAddGoal }: { onAddGoal?: (distance: string) =
         {table.map(row => (
           <div
             key={row.distance}
-            onClick={() => !row.isSameAsInput && onAddGoal?.(row.distance)}
             style={{
               display: 'flex', justifyContent: 'space-between', alignItems: 'center',
               padding: '8px 10px', borderRadius: '6px',
               background: row.isSameAsInput ? 'rgba(var(--orange-ch),0.1)' : 'var(--surface3)',
               border: `1px solid ${row.isSameAsInput ? 'rgba(var(--orange-ch),0.3)' : 'var(--border)'}`,
-              cursor: row.isSameAsInput ? 'default' : 'pointer',
-              transition: 'background 0.15s',
             }}
           >
             <span style={{ fontSize: '13px', color: row.isSameAsInput ? 'var(--orange)' : 'var(--white)', fontWeight: row.isSameAsInput ? 700 : 400 }}>
               {row.distance}
               {row.isSameAsInput && <span style={{ fontSize: '10px', marginLeft: '6px', color: 'var(--muted)', textTransform: 'uppercase', fontFamily: 'var(--headline)' }}>actual</span>}
-              {!row.isSameAsInput && onAddGoal && <span style={{ fontSize: '10px', marginLeft: '6px', color: 'var(--muted2)', fontFamily: 'var(--headline)' }}>+ GOAL</span>}
             </span>
-            <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', color: row.isSameAsInput ? 'var(--orange)' : 'var(--white)' }}>
-              {row.predictedTime}
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', color: row.isSameAsInput ? 'var(--orange)' : 'var(--white)' }}>
+                {row.predictedTime}
+              </span>
+              {!row.isSameAsInput && upcomingRaces.length > 0 && (
+                <button
+                  onClick={() => { setSelectedRow(row.distance); setShowLinkSheet(true) }}
+                  style={{ background: 'rgba(var(--orange-ch),0.15)', color: 'var(--orange)', border: '1px solid rgba(var(--orange-ch),0.4)', borderRadius: '5px', padding: '3px 8px', fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', cursor: 'pointer' }}
+                >
+                  SET GOAL
+                </button>
+              )}
+            </div>
           </div>
         ))}
       </div>
       <div style={{ fontSize: '11px', color: 'var(--muted2)', lineHeight: 1.5 }}>
-        T₂ = T₁ × (D₂/D₁)^1.06 · tap a row to add as upcoming goal
+        T₂ = T₁ × (D₂/D₁)^1.06
       </div>
+
+      {/* Link to upcoming race sheet */}
+      {showLinkSheet && (
+        <div style={{ ...st.modalOverlay, zIndex: 1100 }} onClick={() => setShowLinkSheet(false)}>
+          <div style={{ ...st.customizeSheet, maxHeight: '60vh' }} onClick={e => e.stopPropagation()}>
+            <div style={{ width: '40px', height: '4px', background: 'var(--border2)', borderRadius: '2px', margin: '0 auto 16px' }} />
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '15px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)', marginBottom: '4px' }}>
+              Set Goal Pace On Race
+            </div>
+            <div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '14px' }}>
+              Sets {selectedRow} target ({table.find(r => r.distance === selectedRow)?.predictedTime}) as the goal time.
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto' }}>
+              {upcomingRaces.map(r => (
+                <button key={r.id} onClick={() => linkGoalPace(r.id)} style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '12px', textAlign: 'left', cursor: 'pointer', color: 'var(--white)' }}>
+                  <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '13px' }}>{r.name ?? 'Unnamed Race'}</div>
+                  <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>{r.date} · {r.distance}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -4313,44 +4321,58 @@ function VdotSparkline({ history }: { history: { vdot: number }[] }) {
 }
 
 function VDOTScoreWidget() {
-  const races = useRaceStore(selectRaces)
-  const units = useUnits()
-  const history = useMemo(() => vdotHistory(races), [races])
-  const vdotPt  = useMemo(() => bestVDOT(races), [races])
-  const equivs  = useMemo(() => vdotPt ? equivalentPerformances(vdotPt.vdot) : [], [vdotPt])
-  const zones   = useMemo(() => vdotPt ? paceZones(vdotPt.vdot, units) : [], [vdotPt, units])
+  const races      = useRaceStore(selectRaces)
+  const units      = useUnits()
+  const history    = useMemo(() => vdotHistory(races), [races])
+  const peakVDOT   = useMemo(() => bestVDOT(races), [races])
+  const currentVDOT = useMemo(() => recentVDOT(races), [races])
+  // Display current fitness for zones/equiv; show peak as secondary if different
+  const displayPt  = currentVDOT ?? peakVDOT
+  const equivs     = useMemo(() => displayPt ? equivalentPerformances(displayPt.vdot) : [], [displayPt])
+  const zones      = useMemo(() => displayPt ? paceZones(displayPt.vdot, units) : [], [displayPt, units])
+  const showPeak   = peakVDOT && currentVDOT && peakVDOT.vdot > currentVDOT.vdot
 
-  if (!vdotPt) return (
+  if (!displayPt) return (
     <div className="card-v3" style={st.glowCard}>
       <div style={st.widgetLabel}>⚡ VDOT SCORE</div>
       <div style={st.widgetTitle}>VDOT FITNESS</div>
-      <p style={{ fontSize: '13px', color: 'var(--muted)', margin: 0 }}>Log a race with a finish time to compute your VDOT.</p>
+      <p style={{ fontSize: '13px', color: 'var(--muted)', margin: 0 }}>Log a running race with a finish time to compute your VDOT.</p>
     </div>
   )
 
-  const vdotColor = vdotPt.vdot >= 55 ? '#00FF88' : vdotPt.vdot >= 45 ? 'var(--orange)' : 'var(--white)'
+  const vdotColor = displayPt.vdot >= 55 ? '#00FF88' : displayPt.vdot >= 45 ? 'var(--orange)' : 'var(--white)'
 
   return (
     <div className="card-v3" style={st.glowCard}>
       <div style={st.widgetLabel}>⚡ VDOT SCORE</div>
+
+      {/* Current + Peak row */}
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '10px' }}>
         <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px' }}>
-        <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '52px', lineHeight: 1, color: vdotColor }}>
-          {vdotPt.vdot}
-        </span>
-        <div style={{ paddingBottom: '6px' }}>
-          <div style={{ fontSize: '11px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em' }}>VDOT</div>
-          <div style={{ fontSize: '11px', color: 'var(--muted)' }}>{vdotPt.raceName}</div>
-        </div>
-        </div>
-        {history.length >= 2 && (
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
-            <VdotSparkline history={history} />
-            <div style={{ fontSize: '9px', color: 'var(--muted2)', fontFamily: 'var(--headline)', letterSpacing: '0.06em' }}>
-              {history.length} RACES
-            </div>
+          <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '52px', lineHeight: 1, color: vdotColor }}>
+            {displayPt.vdot}
+          </span>
+          <div style={{ paddingBottom: '6px' }}>
+            <div style={{ fontSize: '11px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em' }}>CURRENT</div>
+            <div style={{ fontSize: '11px', color: 'var(--muted)' }}>{displayPt.raceName}</div>
           </div>
-        )}
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+          {showPeak && (
+            <div style={{ background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: '6px', padding: '4px 8px', textAlign: 'right' }}>
+              <div style={{ fontSize: '9px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em' }}>PEAK</div>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '18px', color: 'var(--muted)', lineHeight: 1 }}>{peakVDOT!.vdot}</div>
+            </div>
+          )}
+          {history.length >= 2 && (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+              <VdotSparkline history={history} />
+              <div style={{ fontSize: '9px', color: 'var(--muted2)', fontFamily: 'var(--headline)', letterSpacing: '0.06em' }}>
+                {history.length} RACES
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Equivalent performances */}
@@ -4359,10 +4381,10 @@ function VDOTScoreWidget() {
           EQUIVALENT PERFORMANCES
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px' }}>
-          {equivs.slice(0, 6).map(e => (
+          {equivs.map(e => (
             <div key={e.distance} style={{ background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: '6px', padding: '8px 6px', textAlign: 'center' }}>
               <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '2px' }}>
-                {e.distance.replace(' Marathon', 'M').replace('Marathon', 'MAR')}
+                {e.distance.replace(' Marathon', 'M').replace('Marathon', 'MAR').replace(' Mile', 'mi')}
               </div>
               <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', color: 'var(--white)' }}>
                 {e.timeStr}
@@ -4929,15 +4951,16 @@ export function Dashboard() {
   const [showAddRace,       setShowAddRace]       = useState(false)
   const [addRaceMode,       setAddRaceMode]       = useState<'past' | 'upcoming'>('past')
   const [showAllUpcoming,   setShowAllUpcoming]   = useState(false)
-  const nextRace      = useRaceStore(selectNextRace)   // always nearest upcoming
-  const upcomingRaces = useRaceStore(selectUpcomingRaces)
-  const [countdownRaceId, setCountdownRaceId] = useState<string | null>(null)
-  const countdownRace = useMemo(() => {
-    if (countdownRaceId) {
-      return upcomingRaces.find(r => r.id === countdownRaceId) ?? nextRace
+  const nextRace        = useRaceStore(selectNextRace)   // always nearest upcoming (A-Race preferred)
+  const upcomingRaces   = useRaceStore(selectUpcomingRaces)
+  const focusRaceId     = useRaceStore(selectFocusRaceId)
+  const setFocusRaceId  = useRaceStore(s => s.setFocusRaceId)
+  const countdownRace   = useMemo(() => {
+    if (focusRaceId) {
+      return upcomingRaces.find(r => r.id === focusRaceId) ?? nextRace
     }
     return nextRace
-  }, [countdownRaceId, upcomingRaces, nextRace])
+  }, [focusRaceId, upcomingRaces, nextRace])
   const storeWidgets  = useDashStore(s => s.widgets)
   const getDashLayout = useDashStore(s => s.getDashLayout)
   const widgets       = useMemo(() => getDashLayout(), [storeWidgets, getDashLayout])
@@ -4957,22 +4980,25 @@ export function Dashboard() {
       <GreetingCard onCustomize={() => setShowCustomize(true)} />
       <PreRaceBriefing onAddRace={openAddRace} />
 
+      {/* Expired upcoming race prompts */}
+      <ExpiredRacePrompts onLogResult={() => { setAddRaceMode('past'); setShowAddRace(true) }} />
+
       {/* NOW — RACE DAY */}
       <DashZone id="now" tag="NOW" label="RACE DAY">
         {(countdownRace ?? nextRace)
-          ? <>{en('countdown')       && countdownRace && <CountdownCard race={countdownRace} onShowAll={() => setShowAllUpcoming(true)} upcomingRaces={upcomingRaces} onSelectRace={setCountdownRaceId} />}
+          ? <>{en('countdown')       && countdownRace && <CountdownCard race={countdownRace} onShowAll={() => setShowAllUpcoming(true)} upcomingRaces={upcomingRaces} onSelectRace={setFocusRaceId} />}
               {en('race-forecast')   && countdownRace && <WeatherCard race={countdownRace} />}
               <CourseInfoCard race={countdownRace ?? nextRace!} /></>
           : <NoUpcomingRaceCTA onAddRace={openAddUpcomingRace} />
         }
-        {en('goal-pace')      && <GoalPaceWidget race={countdownRace ?? null} />}
+        {en('goal-pace')      && countdownRace && <GoalPaceWidget race={countdownRace} />}
         {en('on-this-day')    && <OnThisDayWidget />}
         {en('race-readiness') && <RaceReadinessWidget />}
-        {en('gap-to-goal')    && <GapToGoalWidget race={countdownRace ?? null} />}
-        {en('course-fit')     && <CourseFitWidget race={countdownRace ?? null} />}
-        {en('pb-probability') && <PBProbabilityWidget race={countdownRace ?? null} />}
-        {en('weather-fit')    && <WeatherFitWidget race={countdownRace ?? null} />}
-        {en('race-stack')     && <RaceStackWidget race={countdownRace ?? null} />}
+        {en('gap-to-goal')    && countdownRace && <GapToGoalWidget race={countdownRace} />}
+        {en('course-fit')     && countdownRace && <CourseFitWidget race={countdownRace} />}
+        {en('pb-probability') && countdownRace && <PBProbabilityWidget race={countdownRace} />}
+        {en('weather-fit')    && countdownRace && <WeatherFitWidget race={countdownRace} />}
+        {en('race-stack')     && countdownRace && <RaceStackWidget race={countdownRace} />}
       </DashZone>
 
       {/* RECENTLY — YOUR SEASON */}
@@ -5024,7 +5050,6 @@ export function Dashboard() {
         {en('coach-activity')    && <CoachActivityWidget />}
       </DashZone>
 
-      <PaceCalculator />
     </div>
   )
 }

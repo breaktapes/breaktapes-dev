@@ -207,7 +207,10 @@ function RaceCard({
             marginTop: '2px',
           }}>
             {[race.city, race.country].filter(Boolean).join(' · ')}
-            {dateStr && <span style={{ color: 'var(--orange)', marginLeft: '6px' }}>{dateStr}</span>}
+            {dateStr
+              ? <span style={{ color: 'var(--orange)', marginLeft: '6px' }}>{dateStr}</span>
+              : <span style={{ background: 'var(--surface3)', color: 'var(--muted)', fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', borderRadius: '4px', padding: '2px 6px', marginLeft: '6px' }}>Date TBD</span>
+            }
           </div>
         </div>
         {/* Sport badge */}
