@@ -42,6 +42,12 @@ function normalizeDateStr(d: string): string {
   return d
 }
 
+function fmtDateDDMMYYYY(d: string): string {
+  // Display helper — input YYYY-MM-DD, output DD-MM-YYYY
+  const m = d.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+  return m ? `${m[3]}-${m[2]}-${m[1]}` : d
+}
+
 export function RaceImportModal({ onClose }: { onClose: () => void }) {
   const addRace    = useRaceStore(s => s.addRace)
   const existingRaces = useRaceStore(s => s.races)
@@ -280,33 +286,43 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
                       aria-disabled={dupe}
                       title={dupe ? 'Already in your race history' : undefined}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', alignItems: 'center', gap: '10px' }}>
                         <span style={{ fontSize: '16px', flexShrink: 0 }}>
                           {dupe ? '✕' : selected.has(i) ? '✓' : '○'}
                         </span>
-                        <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ minWidth: 0 }}>
                           <p style={{ margin: 0, fontWeight: 600, fontSize: '14px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {r.raceName}
-                          </p>
-                          <p style={{ margin: '2px 0 0', fontSize: '12px', color: 'var(--muted)' }}>
-                            {[r.date, r.time].filter(Boolean).join(' · ')}
-                            <span style={{ marginLeft: '6px', fontSize: '10px', color: 'var(--muted2)', textTransform: 'uppercase', fontFamily: 'var(--headline)', fontWeight: 700 }}>
-                              {r.source}
-                            </span>
                           </p>
                           {(() => {
                             const km = r.distance_m && r.distance_m > 0 ? r.distance_m / 1000 : parseDistKm(r.raceName)
                             const lbl = kmToDistLabel(km)
                             return lbl ? (
-                            <p style={{ margin: '2px 0 0', fontSize: '10px', color: 'var(--muted2)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                              {lbl}
-                            </p>
-                          ) : null })()}
+                              <p style={{ margin: '2px 0 0', fontSize: '10px', color: 'var(--muted2)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                                {lbl}
+                              </p>
+                            ) : null
+                          })()}
                           {dupe && (
                             <p style={{ margin: '4px 0 0', fontSize: '10px', color: 'var(--green)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                               ✓ Already in your race history
                             </p>
                           )}
+                        </div>
+                        <div style={{ textAlign: 'right', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                          {r.time && (
+                            <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '15px', color: 'var(--orange)', letterSpacing: '0.02em', lineHeight: 1 }}>
+                              {r.time}
+                            </div>
+                          )}
+                          {r.date && (
+                            <div style={{ fontSize: '11px', color: 'var(--muted)', fontFamily: 'var(--body)' }}>
+                              {fmtDateDDMMYYYY(r.date)}
+                            </div>
+                          )}
+                          <div style={{ fontSize: '9px', color: 'var(--muted2)', textTransform: 'uppercase', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em' }}>
+                            {r.source}
+                          </div>
                         </div>
                       </div>
                     </button>

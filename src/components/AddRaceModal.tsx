@@ -218,7 +218,7 @@ function TriathlonSplits({ splits, onChange }: {
 
 // ─── Field wrapper ────────────────────────────────────────────────────────────
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
       <label style={st.fieldLabel}>{label}</label>
