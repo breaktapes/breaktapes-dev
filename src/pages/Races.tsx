@@ -211,6 +211,9 @@ function CompactRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onClic
   const day = d.getDate()
   const city = [race.city, race.country].filter(Boolean).join(', ')
   const label = distLabel(race.distance)
+  const nonFinish = race.outcome && race.outcome !== 'Finished'
+    ? race.outcome.toUpperCase()
+    : null
 
   return (
     <div
@@ -232,7 +235,12 @@ function CompactRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onClic
         {city && <div className="rrc-meta">{city}</div>}
       </div>
       <div style={{ textAlign: 'right', flexShrink: 0 }}>
-        <div className="rrc-time">{race.time ?? '—'}</div>
+        <div
+          className="rrc-time"
+          style={nonFinish ? { color: 'var(--muted)' } : undefined}
+        >
+          {nonFinish ?? (race.time ?? '—')}
+        </div>
         {label && <div className="rrc-dist">{label}</div>}
       </div>
     </div>
@@ -248,6 +256,9 @@ function DetailedRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onCli
   const flag = countryFlag(race.country)
   const placing = parsePlacing(race.placing)
   const label = distLabel(race.distance)
+  const nonFinish = race.outcome && race.outcome !== 'Finished'
+    ? race.outcome.toUpperCase()
+    : null
 
   return (
     <div
@@ -271,8 +282,8 @@ function DetailedRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onCli
           </div>
         </div>
         <div style={{ textAlign: 'right', flexShrink: 0 }}>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '15px', color: isPB ? 'var(--green)' : 'var(--orange)', letterSpacing: '0.02em' }}>
-            {race.time ?? '—'}
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '15px', color: nonFinish ? 'var(--muted)' : (isPB ? 'var(--green)' : 'var(--orange)'), letterSpacing: '0.02em' }}>
+            {nonFinish ?? (race.time ?? '—')}
           </div>
           {label && <div style={{ fontSize: '10px', color: 'var(--muted)', textAlign: 'right', marginTop: '1px' }}>{label}</div>}
         </div>
@@ -473,8 +484,8 @@ function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport, onDiscover
         </div>
       </div>
 
-      {/* Stats strip — only for race history */}
-      {!showWishlist && <StatsStrip races={races} />}
+      {/* Stats strip — scoped to the active year filter */}
+      {!showWishlist && <StatsStrip races={filtered} />}
 
       {/* Content */}
       <div className="races-sheet-list">
