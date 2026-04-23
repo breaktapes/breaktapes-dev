@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useClerk } from '@clerk/clerk-react'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
+import { useRaceStore } from '@/stores/useRaceStore'
 import { useWearableStore } from '@/stores/useWearableStore'
 import { supabase } from '@/lib/supabase'
 import { startStravaOAuth } from '@/lib/strava'
@@ -77,6 +78,9 @@ export function Settings() {
 
   const stravaToken = useWearableStore(s => s.stravaToken)
   const clearToken  = useWearableStore(s => s.clearToken)
+  const races = useRaceStore(s => s.races)
+  const upcomingRaces = useRaceStore(s => s.upcomingRaces)
+  const nextRace = useRaceStore(s => s.nextRace)
 
   const [accountExpanded, setAccountExpanded] = useState(false)
 
@@ -97,10 +101,25 @@ export function Settings() {
     setIsPublic(val)
     if (!authUser) return
     updateAthlete({ isPublic: val })
+    // Read existing state_json, merge in current athlete/race data, then upsert.
+    // This ensures the Worker can render the full profile on first enable.
+    const { data: existing } = await supabase
+      .from('user_state')
+      .select('state_json')
+      .eq('user_id', authUser.id)
+      .single()
+    const current = (existing?.state_json as Record<string, unknown>) ?? {}
     await supabase.from('user_state').upsert({
       user_id: authUser.id,
-      username: athlete?.username ?? null,
+      username: athlete.username,
       is_public: val,
+      state_json: {
+        ...current,
+        races,
+        upcoming_races: upcomingRaces,
+        next_race: nextRace,
+        athlete: { ...(current.athlete as Record<string, unknown> ?? {}), ...athlete, isPublic: val },
+      },
     }, { onConflict: 'user_id' })
   }
 

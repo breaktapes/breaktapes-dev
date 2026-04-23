@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useUser, useAuth, SignIn, SignUp } from '@clerk/clerk-react'
 import { useAuthStore } from '@/stores/useAuthStore'
+import { useAthleteStore } from '@/stores/useAthleteStore'
 import { setClerkToken } from '@/lib/supabase'
 import { IS_STAGING } from '@/env'
 
@@ -17,6 +18,7 @@ function useClerkSync() {
   const { getToken } = useAuth()
   const setAuthUser = useAuthStore(s => s.setAuthUser)
   const setProAccess = useAuthStore(s => s.setProAccess)
+  const updateAthlete = useAthleteStore(s => s.updateAthlete)
 
   useEffect(() => {
     if (!isLoaded) return
@@ -33,13 +35,19 @@ function useClerkSync() {
     })
     setProAccess(IS_STAGING)
 
+    // Sync Clerk username → athlete.username so public profile toggle works.
+    // Clerk is the source of truth for username; athlete store follows.
+    if (user.username) {
+      updateAthlete({ username: user.username })
+    }
+
     const refresh = () =>
       getToken({ template: JWT_TEMPLATE }).then(t => setClerkToken(t))
 
     refresh()
     const interval = setInterval(refresh, 50_000)
     return () => clearInterval(interval)
-  }, [isLoaded, isSignedIn, user, getToken, setAuthUser, setProAccess])
+  }, [isLoaded, isSignedIn, user, getToken, setAuthUser, setProAccess, updateAthlete])
 }
 
 // On dev.breaktapes.com, only users with publicMetadata.staging_access = true
