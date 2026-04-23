@@ -218,7 +218,7 @@ function TriathlonSplits({ splits, onChange }: {
 
 // ─── Field wrapper ────────────────────────────────────────────────────────────
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
       <label style={st.fieldLabel}>{label}</label>
@@ -1209,7 +1209,7 @@ const st = {
     display: 'flex',
     flexDirection: 'column',
     gap: '14px',
-    paddingBottom: '32px',
+    paddingBottom: 'calc(var(--bottom-nav-base-height) + var(--safe-bottom) + 32px)',
     overflowY: 'auto',
     WebkitOverflowScrolling: 'touch',
     overscrollBehavior: 'contain',

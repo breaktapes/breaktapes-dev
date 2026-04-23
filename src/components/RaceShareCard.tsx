@@ -6,6 +6,7 @@
  */
 import { useRef, useState, useEffect } from 'react'
 import type { Race } from '@/types'
+import { fmtDateDDMM } from '@/lib/utils'
 
 // ── Design tokens (canvas-safe, no CSS vars) ──────────────────────────────────
 const C = {
@@ -100,7 +101,7 @@ function drawCard(canvas: HTMLCanvasElement, race: Race, athleteName: string) {
   ctx.fillStyle = C.muted
   ctx.font = '500 24px "Barlow", Arial, sans-serif'
   ctx.letterSpacing = '0'
-  ctx.fillText(locationParts + (race.date ? '  ·  ' + race.date : ''), 80, 282)
+  ctx.fillText(locationParts + (race.date ? '  ·  ' + fmtDateDDMM(race.date) : ''), 80, 282)
 
   // Divider
   ctx.strokeStyle = C.border

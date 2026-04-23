@@ -13,6 +13,7 @@ import type { HMS } from '@/components/TimePickerWheel'
 import { CustomDistInput } from '@/components/CustomDistInput'
 import type { Race } from '@/types'
 import { useUnits, distUnit } from '@/lib/units'
+import { fmtDateDDMM } from '@/lib/utils'
 import {
   bestRiegelTable,
   bestVDOT, recentVDOT, equivalentPerformances, paceZones, vdotHistory,
@@ -1785,7 +1786,7 @@ function BostonQualWidget() {
                       <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {r.name || distBadge(r.distance)}
                       </div>
-                      <div style={{ fontSize: '10px', color: 'var(--muted2)', marginTop: '1px' }}>{r.date}</div>
+                      <div style={{ fontSize: '10px', color: 'var(--muted2)', marginTop: '1px' }}>{fmtDateDDMM(r.date)}</div>
                     </div>
                     <div style={{ textAlign: 'right', flexShrink: 0 }}>
                       <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--white)', fontFamily: 'var(--headline)', lineHeight: 1 }}>{r.time}</div>
@@ -3757,7 +3758,7 @@ function WhatToRaceNextWidget() {
           <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
             <div style={{ minWidth: 0, flex: 1 }}>
               <div style={{ fontSize: '12px', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name ?? 'Unnamed Race'}</div>
-              <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '1px' }}>{r.date} · {distBadge(r.distance) || r.distance}</div>
+              <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '1px' }}>{fmtDateDDMM(r.date)} · {distBadge(r.distance) || r.distance}</div>
             </div>
             {r.priority && (
               <span style={{ fontSize: '10px', color: r.priority === 'A' ? 'var(--orange)' : 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, flexShrink: 0, marginLeft: '8px' }}>
@@ -4307,7 +4308,7 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
         <div style={st.widgetLabel}>🔮 RACE PREDICTOR</div>
         <div style={st.widgetTitle}>RIEGEL PREDICTOR</div>
         <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '-4px' }}>
-          Based on {race.name} · {race.date}
+          Based on {race.name} · {fmtDateDDMM(race.date)}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           {table.map(row => (
@@ -4360,7 +4361,7 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
               {upcomingRaces.map(r => (
                 <button key={r.id} onClick={() => linkGoalPace(r.id)} style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '12px', textAlign: 'left', cursor: 'pointer', color: 'var(--white)' }}>
                   <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '13px' }}>{r.name ?? 'Unnamed Race'}</div>
-                  <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>{r.date} · {r.distance}</div>
+                  <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>{fmtDateDDMM(r.date)} · {r.distance}</div>
                 </button>
               ))}
             </div>
@@ -4663,7 +4664,7 @@ function WeatherImpactWidget() {
     <div className="card-v3" style={st.glowCard}>
       <div style={st.widgetLabel}>🌡 WEATHER IMPACT</div>
       <div style={st.widgetTitle}>WEATHER IMPACT</div>
-      <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '-4px' }}>{race.name} · {race.date}</div>
+      <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '-4px' }}>{race.name} · {fmtDateDDMM(race.date)}</div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
         <div style={{ background: 'var(--surface3)', borderRadius: '8px', padding: '12px', border: '1px solid var(--border2)' }}>
