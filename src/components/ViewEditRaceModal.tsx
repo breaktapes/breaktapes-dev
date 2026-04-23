@@ -3,6 +3,7 @@ import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { RaceShareCard } from '@/components/RaceShareCard'
 import { DateInput } from '@/components/DateInput'
+import { CustomDistInput } from '@/components/CustomDistInput'
 import { TimePickerWheel, type HMS } from '@/components/TimePickerWheel'
 import type { Race, Split } from '@/types'
 import { useUnits, fmtDistKm, distUnit, fmtPaceSecPerKm, computePaceSecPerKm } from '@/lib/units'
@@ -592,12 +593,7 @@ function EditPanel({ race, onSave, onCancel }: { race: Race; onSave: (patch: Par
           {sportDists.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
         </select>
         {isCustomDist && (
-          <input
-            style={{ ...st.input, marginTop: '6px' }}
-            value={customDist}
-            onChange={e => setCustomDist(e.target.value)}
-            placeholder="e.g. 42.2"
-          />
+          <CustomDistInput value={customDist} onChange={setCustomDist} />
         )}
       </Field>
 

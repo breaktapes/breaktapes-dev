@@ -4,6 +4,7 @@ import { useRaceStore } from '@/stores/useRaceStore'
 import { useRaceCatalog, type CatalogRace } from '@/hooks/useRaceCatalog'
 import { DateInput } from '@/components/DateInput'
 import { TimePickerWheel, type HMS } from '@/components/TimePickerWheel'
+import { CustomDistInput } from '@/components/CustomDistInput'
 import { countryNameHaystack } from '@/lib/countries'
 import { normalizeName, resolveDistKm, isAlreadyInCatalog } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
@@ -994,14 +995,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
             </Field>
           </div>
           {needsCustomDist && (
-            <input
-              style={st.input}
-              placeholder="Enter distance in km"
-              type="text"
-              inputMode="decimal"
-              value={customDist}
-              onChange={e => setCustomDist(e.target.value)}
-            />
+            <CustomDistInput value={customDist} onChange={setCustomDist} />
           )}
 
           {/* ── Race Outcome (past only) ── */}

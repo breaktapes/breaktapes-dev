@@ -9,6 +9,7 @@ import { AddRaceModal } from '@/components/AddRaceModal'
 import { ViewEditRaceModal } from '@/components/ViewEditRaceModal'
 import { TimePickerWheel } from '@/components/TimePickerWheel'
 import type { HMS } from '@/components/TimePickerWheel'
+import { CustomDistInput } from '@/components/CustomDistInput'
 import type { Race } from '@/types'
 import { useUnits, distUnit } from '@/lib/units'
 import {
@@ -745,7 +746,14 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
   const deleteRace    = useRaceStore(s => s.deleteRace)
 
   const [priority, setPriority] = useState<string>(race.priority ?? 'A')
-  const [distance, setDistance] = useState<string>(race.distance ?? '')
+  const [distance, setDistance] = useState<string>(() => {
+    const opts = UPCOMING_DISTANCES[race.sport ?? 'Running'] ?? UPCOMING_DISTANCES['Running']
+    return opts.some(o => o.value === race.distance) ? (race.distance ?? '') : (race.distance ? '__custom__' : '')
+  })
+  const [customDist, setCustomDist] = useState<string>(() => {
+    const opts = UPCOMING_DISTANCES[race.sport ?? 'Running'] ?? UPCOMING_DISTANCES['Running']
+    return opts.some(o => o.value === race.distance) ? '' : (race.distance ?? '')
+  })
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   // Parse existing goalTime string (H:MM:SS) into HMS for the wheel
@@ -767,7 +775,8 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
     const goalTime = hasGoal
       ? `${goalHMS.h}:${String(goalHMS.m).padStart(2,'0')}:${String(goalHMS.s).padStart(2,'0')}`
       : undefined
-    updateRace(race.id, { priority: priority as Race['priority'], goalTime, distance: distance || undefined })
+    const effectiveDist = distance === '__custom__' ? customDist : distance
+    updateRace(race.id, { priority: priority as Race['priority'], goalTime, distance: effectiveDist || undefined })
     onClose()
   }
 
@@ -846,28 +855,20 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
             <div style={{ fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '10px' }}>
               DISTANCE
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+            <select
+              value={distance}
+              onChange={e => { setDistance(e.target.value); setCustomDist('') }}
+              style={{ width: '100%', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px', color: 'var(--white)', fontSize: '14px', padding: '0.6rem 0.75rem', fontFamily: 'var(--body)', boxSizing: 'border-box' as const }}
+            >
+              <option value="">— Select distance —</option>
               {distOptions.map(opt => (
-                <button
-                  key={opt.value}
-                  onClick={() => setDistance(opt.value)}
-                  style={{
-                    padding: '8px 14px',
-                    borderRadius: '8px',
-                    border: distance === opt.value ? '2px solid var(--orange)' : '1.5px solid var(--border2)',
-                    background: distance === opt.value ? 'rgba(var(--orange-ch),0.12)' : 'var(--surface3)',
-                    cursor: 'pointer',
-                    fontFamily: 'var(--headline)',
-                    fontWeight: 700,
-                    fontSize: '13px',
-                    letterSpacing: '0.04em',
-                    color: distance === opt.value ? 'var(--orange)' : 'var(--white)',
-                  }}
-                >
-                  {opt.label}
-                </button>
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
               ))}
-            </div>
+              <option value="__custom__">Custom...</option>
+            </select>
+            {distance === '__custom__' && (
+              <CustomDistInput value={customDist} onChange={setCustomDist} />
+            )}
           </div>
 
           {/* Goal time — scroll wheel, 0–99h */}
