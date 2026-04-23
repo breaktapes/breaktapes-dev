@@ -1042,6 +1042,36 @@ Direct DB access (psql/psycopg2) is blocked from localhost — Supabase only exp
 
 ---
 
+### Session 25 (2026-04-23) — Settings refactor, public profile fix, widget polish, sport/distance UX
+
+**Branch:** direct to `main` (all commits pushed directly)
+
+#### Changes shipped
+
+- **Settings account card tap-to-expand** — Card tap reveals "Manage account" (opens Clerk's `openUserProfile()`) and "Sign out". Delete Account removed from Settings UI entirely — only accessible via Clerk's modal.
+- **Public Profile section** — Renamed "Profile" → "Public Profile". Added 6 visibility toggles (races, PBs, medals, stats, upcoming, wearables); shown only when profile is public. `profileVisibility` field added to `Athlete` type.
+- **Username removed from Settings** — Username now managed exclusively in Clerk's UserProfile modal via "Manage Account".
+- **`CustomDistInput` component** — New `src/components/CustomDistInput.tsx`: km/mi toggle, stores internally as km, converts on display. Applied app-wide to all custom-distance fields (`AddRaceModal`, `ViewEditRaceModal`, `EditUpcomingRaceSheet`).
+- **`EditUpcomingRaceSheet` — distance picker** — Added sport-keyed distance dropdown + Custom option with `CustomDistInput`.
+- **`EditUpcomingRaceSheet` — sport selector** — Sport and distance now side-by-side under "SPORT & DISTANCE" label. Changing sport resets distance options. Sport saved on "Save Changes".
+- **`AddRaceModal` upcoming tab UX** — Goal time HMS wheel added; date display enlarged; Country + City moved below date; Race type + distance stacked side-by-side.
+- **`GoalPaceWidget` — running only** — Returns `null` for non-running sports (Triathlon, Cycling, Swimming, HYROX). Per-km pace and running splits are meaningless for those sports.
+- **Riegel Predictor Set Goal — `createPortal`** — Sheet was rendered inside the widget card (clipped by stacking context). Moved to `createPortal(…, document.body)` so overlay covers full viewport.
+- **Public profile "Profile not found" fix** — Two root causes:
+  1. `useClerkSync` never synced `user.username` → `athlete.username`; `togglePublic` guard always bailed early. Fixed: `AuthGate.tsx` syncs Clerk username on every session.
+  2. `togglePublic` only upserted `username + is_public`, not `state_json`. Worker selects `state_json`. Fixed: `togglePublic` does read-merge-write of full state (athlete + races + upcoming) on upsert.
+- **`CustomDistInput.tsx` crash fix** — `React.CSSProperties` used without importing React → "Importing a module script failed". Fixed with `import React, { useState } from 'react'`.
+- **React error #300 crash fix** — `GoalPaceWidget` had `if (sport !== 'Running') return null` between two `useMemo` calls. Rules of Hooks violated. Fixed by hoisting `result` useMemo above the early return.
+
+#### Key learnings
+- Rules of Hooks: ALL hook calls must run on every render. No conditional returns before hooks. No hooks inside `if` blocks. Put all hooks at the top, conditional logic after — no exceptions.
+- `React.CSSProperties` type annotation requires React in scope even with the new JSX transform in Vite. Use `import React, { useState } from 'react'`.
+- `createPortal(content, document.body)` is the correct fix when `position: fixed` inside a stacking context gets clipped — it mounts the element at the document root, outside any ancestor stacking context.
+- After Clerk migration, `user.username` lives in Clerk — not in Supabase. Any feature that depends on username must sync it from `user.username` in `useClerkSync`, not rely on a separate app-side save flow.
+- `togglePublic` must include `state_json` in its upsert (full athlete + race data), not just `username + is_public`. If it only writes the public columns, the Worker gets `null` for `state_json` and renders an empty profile.
+
+---
+
 ## Skill routing
 
 When the user's request matches an available skill, ALWAYS invoke it using the Skill
