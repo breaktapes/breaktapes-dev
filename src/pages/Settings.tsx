@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useClerk } from '@clerk/clerk-react'
 import { useAuthStore } from '@/stores/useAuthStore'
@@ -70,7 +70,7 @@ const inputStyle: React.CSSProperties = {
 
 export function Settings() {
   const navigate = useNavigate()
-  const { signOut, openUserProfile, user: clerkUser } = useClerk()
+  const { signOut, openUserProfile } = useClerk()
   const authUser = useAuthStore(s => s.authUser)
   const athlete = useAthleteStore(s => s.athlete)
   const updateAthlete = useAthleteStore(s => s.updateAthlete)
@@ -78,129 +78,19 @@ export function Settings() {
   const stravaToken = useWearableStore(s => s.stravaToken)
   const clearToken  = useWearableStore(s => s.clearToken)
 
+  const [accountExpanded, setAccountExpanded] = useState(false)
+
   const [activeTheme, setActiveTheme] = useState<ThemeId>(
     () => (localStorage.getItem('bt_theme') as ThemeId) || 'carbon'
   )
 
-  // Delete account state
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
-  const [deleteInput, setDeleteInput] = useState('')
-  const [deleting, setDeleting] = useState(false)
-  const [deleteError, setDeleteError] = useState('')
-
-  async function handleDeleteAccount() {
-    if (deleteInput.trim().toUpperCase() !== 'DELETE') {
-      setDeleteError('Type DELETE to confirm.')
-      return
-    }
-    setDeleting(true)
-    setDeleteError('')
-    try {
-      const { error } = await supabase.rpc('delete_my_account', { confirm_text: 'DELETE' })
-      if (error) throw error
-      const keysToRemove = ['bt_new_user', 'bt_modal_shown', 'fl2_races', 'fl2_ath',
-        'fl2_upcoming', 'fl2_wishlist', 'fl2_season_plans', 'fl2_focus_race_id',
-        'fl2_apikey', 'bt_theme', 'fl2_dash_layout', 'fl2_dash_zone_collapse']
-      keysToRemove.forEach(k => localStorage.removeItem(k))
-      await clerkUser?.delete()
-    } catch (err) {
-      setDeleteError(err instanceof Error ? err.message : 'Could not delete account. Try again.')
-      setDeleting(false)
-    }
-  }
-
-  // Username + public profile state
-  const [username, setUsername] = useState(athlete?.username ?? '')
+  // Public profile state
   const [isPublic, setIsPublic] = useState(athlete?.isPublic ?? false)
-  const [usernameStatus, setUsernameStatus] = useState<'idle' | 'checking' | 'available' | 'taken' | 'invalid'>('idle')
-  const [usernameSaving, setUsernameSaving] = useState(false)
-  const [usernameSaved, setUsernameSaved] = useState(false)
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-
-  // Username lock: locked for 1 year after first set
-  const isUsernameLocked = useMemo(() => {
-    if (!athlete?.username || !athlete?.usernameSetAt) return false
-    const setAt = new Date(athlete.usernameSetAt).getTime()
-    return Date.now() - setAt < 365 * 24 * 60 * 60 * 1000
-  }, [athlete?.username, athlete?.usernameSetAt])
-
-  const usernameUnlockDate = useMemo(() => {
-    if (!athlete?.usernameSetAt) return null
-    const d = new Date(new Date(athlete.usernameSetAt).getTime() + 365 * 24 * 60 * 60 * 1000)
-    return d.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
-  }, [athlete?.usernameSetAt])
 
   // Keep local state in sync if athlete loads after mount
   useEffect(() => {
-    setUsername(athlete?.username ?? '')
     setIsPublic(athlete?.isPublic ?? false)
-  }, [athlete?.username, athlete?.isPublic])
-
-  const RESERVED_USERNAMES = ['admin','api','u','health','og','support','help','breaktapes','www','app','dev','staging','blog','mail','static','assets','worker']
-
-  function validateUsername(v: string): boolean {
-    return /^[a-z0-9_]{3,20}$/.test(v)
-  }
-
-  function onUsernameChange(v: string) {
-    const lower = v.toLowerCase().replace(/[^a-z0-9_]/g, '')
-    setUsername(lower)
-    setUsernameSaved(false)
-    if (!lower) { setUsernameStatus('idle'); return }
-    if (!validateUsername(lower)) { setUsernameStatus('invalid'); return }
-    if (RESERVED_USERNAMES.includes(lower)) { setUsernameStatus('taken'); return }
-    setUsernameStatus('checking')
-    clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(async () => {
-      const { data } = await supabase
-        .from('user_state')
-        .select('username')
-        .eq('username', lower)
-        .single()
-      // If it matches the current saved username, it's "available" for the user to keep
-      if (data && data.username !== athlete?.username) {
-        setUsernameStatus('taken')
-      } else {
-        setUsernameStatus('available')
-      }
-    }, 400)
-  }
-
-  async function saveUsername() {
-    if (!authUser || usernameSaving) return
-    if (isUsernameLocked) return  // blocked for 1 year
-    if (username && !validateUsername(username)) return
-    if (usernameStatus === 'checking') return  // async availability check still in flight
-    setUsernameSaving(true)
-    try {
-      const isNewUsername = username && username !== athlete?.username
-      const now = new Date().toISOString()
-      const patch = {
-        username: username || undefined,
-        isPublic,
-        ...(isNewUsername ? { usernameSetAt: now } : {}),
-      }
-      updateAthlete(patch)
-      const { data: existing } = await supabase
-        .from('user_state')
-        .select('state_json')
-        .eq('user_id', authUser.id)
-        .single()
-      const current = existing?.state_json ?? {}
-      await supabase.from('user_state').upsert({
-        user_id: authUser.id,
-        username: username || null,
-        is_public: isPublic,
-        state_json: { ...current, athlete: { ...(current.athlete ?? {}), ...patch } },
-      }, { onConflict: 'user_id' })
-      setUsernameSaved(true)
-      setUsernameStatus('idle')
-    } catch {
-      // silent — local store is updated
-    } finally {
-      setUsernameSaving(false)
-    }
-  }
+  }, [athlete?.isPublic])
 
   async function togglePublic(val: boolean) {
     if (!athlete?.username && val) return // must have username first
@@ -243,23 +133,23 @@ export function Settings() {
       {/* ── Auth section ── */}
       <section>
         <p style={sectionLabel}>Account</p>
-        <div style={{ ...card, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          {/* Profile card row */}
+        <div style={{ ...card, padding: 0, overflow: 'hidden' }}>
+          {/* Profile card row — tap to expand */}
           <button
-            onClick={() => openUserProfile()}
+            onClick={() => setAccountExpanded(v => !v)}
             style={{
-              display: 'flex', alignItems: 'center', gap: '12px',
+              display: 'flex', alignItems: 'center', gap: '14px',
               width: '100%', background: 'transparent', border: 'none',
-              cursor: 'pointer', padding: '4px 0', textAlign: 'left',
+              cursor: 'pointer', padding: '14px 16px', textAlign: 'left',
             }}
           >
             <div style={{
-              width: '44px', height: '44px', borderRadius: '50%',
+              width: '42px', height: '42px', borderRadius: '50%',
               background: 'var(--orange)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontFamily: 'var(--headline)', fontWeight: 900,
-              fontSize: '16px', color: 'var(--black)',
-              flexShrink: 0,
+              fontSize: '15px', color: 'var(--black)',
+              flexShrink: 0, letterSpacing: '0.04em',
             }}>
               {[athlete?.firstName?.[0], athlete?.lastName?.[0]].filter(Boolean).join('').toUpperCase() ||
                authUser?.email?.[0]?.toUpperCase() || '?'}
@@ -267,176 +157,73 @@ export function Settings() {
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{
                 color: 'var(--white)', fontSize: '15px',
-                fontWeight: 600, lineHeight: 1.2,
+                fontWeight: 600, lineHeight: 1.25,
                 overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
               }}>
                 {[athlete?.firstName, athlete?.lastName].filter(Boolean).join(' ') ||
                  authUser?.email || '—'}
               </div>
-              <div style={{ color: 'var(--muted)', fontSize: '13px', marginTop: '2px' }}>
-                Manage account
+              <div style={{ color: 'var(--muted)', fontSize: '12px', marginTop: '2px' }}>
+                {authUser?.email}
               </div>
             </div>
-            <svg width="7" height="12" viewBox="0 0 7 12" fill="none" style={{ flexShrink: 0, opacity: 0.4 }}>
-              <path d="M1 1l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <svg
+              width="12" height="12" viewBox="0 0 12 12" fill="none"
+              style={{ flexShrink: 0, opacity: 0.35, transition: 'transform 0.2s', transform: accountExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
+            >
+              <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </button>
 
-          <div style={{ height: '1px', background: 'var(--border)', margin: '4px 0' }} />
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <button
-              style={{ ...btnGhost, width: '100%', color: 'var(--orange)', borderColor: 'var(--orange)' }}
-              onClick={handleSignOut}
-            >
-              Sign Out
-            </button>
-            {/* Delete account — inline confirmation */}
-            {!showDeleteConfirm ? (
+          {accountExpanded && (
+            <div style={{ borderTop: '1px solid var(--border)', padding: '8px 12px 12px' }}>
               <button
-                style={{ ...btnGhost, width: '100%', color: '#ff6b6b', borderColor: 'rgba(255,107,107,0.3)', fontSize: '12px', padding: '0.55rem 1rem' }}
-                onClick={() => setShowDeleteConfirm(true)}
+                onClick={() => { setAccountExpanded(false); openUserProfile() }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '10px',
+                  width: '100%', background: 'transparent', border: 'none',
+                  cursor: 'pointer', padding: '10px 4px', textAlign: 'left',
+                  color: 'var(--white)',
+                }}
               >
-                Delete Account
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ opacity: 0.6, flexShrink: 0 }}>
+                  <circle cx="8" cy="5" r="3" stroke="currentColor" strokeWidth="1.4"/>
+                  <path d="M2 14c0-3.314 2.686-6 6-6s6 2.686 6 6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+                </svg>
+                <span style={{ fontSize: '14px', fontWeight: 500 }}>Manage account</span>
               </button>
-            ) : (
-              <div style={{ border: '1px solid rgba(255,107,107,0.3)', borderRadius: '6px', padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <p style={{ margin: 0, fontSize: '13px', fontFamily: 'var(--headline)', fontWeight: 900, letterSpacing: '0.05em', textTransform: 'uppercase', color: '#ff8e8e' }}>
-                  This cannot be undone
-                </p>
-                <p style={{ margin: 0, fontSize: '12px', color: 'var(--muted)', lineHeight: 1.6 }}>
-                  Permanently deletes:
-                </p>
-                <ul style={{ margin: 0, paddingLeft: '1.25rem', fontSize: '12px', color: '#ff8e8e', lineHeight: 1.8 }}>
-                  <li>Your account and login</li>
-                  <li>All races, finish times, and personal bests</li>
-                  <li>Medals, photos, and achievements</li>
-                  <li>Upcoming races and season plans</li>
-                  <li>Wearable connections and health data</li>
-                </ul>
-                <p style={{ margin: 0, fontSize: '12px', color: 'var(--muted)', lineHeight: 1.5 }}>
-                  Type <strong style={{ color: 'var(--white)' }}>DELETE</strong> to confirm.
-                </p>
-                <input
-                  style={{ ...inputStyle, borderColor: 'rgba(255,107,107,0.4)' }}
-                  value={deleteInput}
-                  onChange={e => { setDeleteInput(e.target.value); setDeleteError('') }}
-                  placeholder="DELETE"
-                  autoCapitalize="characters"
-                  autoComplete="off"
-                  spellCheck={false}
-                />
-                {deleteError && (
-                  <p style={{ margin: 0, fontSize: '11px', color: '#ff6b6b' }}>{deleteError}</p>
-                )}
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <button
-                    style={{ ...btnGhost, flex: 1, fontSize: '12px', padding: '0.55rem' }}
-                    onClick={() => { setShowDeleteConfirm(false); setDeleteInput(''); setDeleteError('') }}
-                    disabled={deleting}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    style={{ ...btnGhost, flex: 1, fontSize: '12px', padding: '0.55rem', color: '#ff6b6b', borderColor: 'rgba(255,107,107,0.4)', background: 'rgba(255,107,107,0.08)' }}
-                    onClick={handleDeleteAccount}
-                    disabled={deleting}
-                  >
-                    {deleting ? 'Deleting…' : 'Delete Permanently'}
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
+              <div style={{ height: '1px', background: 'var(--border)', margin: '0 4px' }} />
+              <button
+                onClick={() => { setAccountExpanded(false); handleSignOut() }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '10px',
+                  width: '100%', background: 'transparent', border: 'none',
+                  cursor: 'pointer', padding: '10px 4px', textAlign: 'left',
+                  color: 'var(--orange)',
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+                  <path d="M6 14H3a1 1 0 01-1-1V3a1 1 0 011-1h3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+                  <path d="M10 11l3-3-3-3M13 8H6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <span style={{ fontSize: '14px', fontWeight: 500 }}>Sign out</span>
+              </button>
+            </div>
+          )}
         </div>
       </section>
 
-      {/* ── Profile section ── */}
+      {/* ── Public Profile section ── */}
       <section>
-        <p style={sectionLabel}>Profile</p>
-        <div style={{ ...card, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        <p style={sectionLabel}>Public Profile</p>
+        <div style={{ ...card, display: 'flex', flexDirection: 'column', gap: '0' }}>
 
-          {/* Username field */}
-          <div>
-            <label style={{ display: 'block', fontSize: 'var(--text-xs)', color: 'var(--muted)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '6px', fontFamily: 'var(--headline)', fontWeight: 700 }}>
-              Username
-            </label>
-            {isUsernameLocked ? (
-              /* Locked state — username set, within 1-year window */
-              <div>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  background: 'var(--surface3)',
-                  border: '1px solid var(--border2)',
-                  borderRadius: '8px',
-                  padding: '0.6rem 0.75rem',
-                }}>
-                  <span style={{ color: 'var(--muted)', fontSize: '14px' }}>@</span>
-                  <span style={{ flex: 1, color: 'var(--white)', fontSize: 'var(--text-sm)', fontWeight: 600 }}>{username}</span>
-                  <span style={{ fontSize: '14px' }}>🔒</span>
-                </div>
-                <p style={{ margin: '5px 0 0', fontSize: '11px', color: 'var(--muted)', lineHeight: 1.5 }}>
-                  Username is locked until <span style={{ color: 'var(--white)' }}>{usernameUnlockDate}</span>.
-                </p>
-              </div>
-            ) : (
-              /* Editable state */
-              <div>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <div style={{ flex: 1, position: 'relative' }}>
-                    <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--muted)', fontSize: '14px', pointerEvents: 'none' }}>@</span>
-                    <input
-                      style={{ ...inputStyle, paddingLeft: '24px' }}
-                      value={username}
-                      onChange={e => onUsernameChange(e.target.value)}
-                      placeholder="yourname"
-                      maxLength={20}
-                      autoCapitalize="none"
-                      autoCorrect="off"
-                    />
-                  </div>
-                  <button
-                    style={{
-                      ...btnMain,
-                      padding: '0 16px',
-                      opacity: (usernameStatus === 'taken' || usernameStatus === 'invalid' || usernameSaving) ? 0.5 : 1,
-                      flexShrink: 0,
-                    }}
-                    onClick={saveUsername}
-                    disabled={usernameStatus === 'taken' || usernameStatus === 'invalid' || usernameSaving}
-                  >
-                    {usernameSaving ? '…' : usernameSaved ? '✓' : 'Save'}
-                  </button>
-                </div>
-                {usernameStatus === 'checking' && (
-                  <p style={{ margin: '4px 0 0', fontSize: '11px', color: 'var(--muted)' }}>Checking availability…</p>
-                )}
-                {usernameStatus === 'available' && (
-                  <p style={{ margin: '4px 0 0', fontSize: '11px', color: 'var(--green)' }}>✓ Available</p>
-                )}
-                {usernameStatus === 'taken' && (
-                  <p style={{ margin: '4px 0 0', fontSize: '11px', color: '#ff6b6b' }}>Already taken</p>
-                )}
-                {usernameStatus === 'invalid' && (
-                  <p style={{ margin: '4px 0 0', fontSize: '11px', color: '#ff6b6b' }}>3–20 chars, lowercase letters, numbers, underscores only</p>
-                )}
-                {athlete?.username && !isUsernameLocked && (
-                  <p style={{ margin: '4px 0 0', fontSize: '11px', color: 'var(--muted)' }}>
-                    Once saved, your username will be locked for 1 year.
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Public profile toggle */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          {/* Public toggle row */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '2px 0 14px' }}>
             <div>
-              <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--white)', fontWeight: 600 }}>Public Profile</p>
+              <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--white)', fontWeight: 600 }}>Make profile public</p>
               <p style={{ margin: '2px 0 0', fontSize: '11px', color: 'var(--muted)' }}>
-                {athlete?.username ? `${APP_URL}/u/${athlete.username}` : 'Set a username first'}
+                {athlete?.username ? `${APP_URL}/u/${athlete.username}` : 'Set a username in account settings first'}
               </p>
             </div>
             <button
@@ -465,21 +252,67 @@ export function Settings() {
             </button>
           </div>
 
-          {/* Profile link + copy if public */}
+          {/* Copy link */}
           {athlete?.isPublic && athlete?.username && (
             <button
-              style={{ ...btnGhost, fontSize: '12px', padding: '0.6rem 1rem' }}
-              onClick={() => {
-                navigator.clipboard.writeText(`${APP_URL}/u/${athlete.username}`)
-              }}
+              style={{ ...btnGhost, fontSize: '12px', padding: '0.6rem 1rem', marginBottom: '14px' }}
+              onClick={() => navigator.clipboard.writeText(`${APP_URL}/u/${athlete.username}`)}
             >
               Copy Profile Link
             </button>
           )}
 
-          <button style={{ ...btnMain, alignSelf: 'flex-start' }} onClick={() => navigate('/you')}>
-            Edit Profile
-          </button>
+          {/* Visibility controls — only shown when public */}
+          {isPublic && (
+            <>
+              <div style={{ height: '1px', background: 'var(--border)', marginBottom: '14px' }} />
+              <p style={{ margin: '0 0 10px', fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--headline)', fontWeight: 700 }}>
+                What to show on your profile
+              </p>
+              {([
+                { key: 'races',     label: 'Race history & finish times', desc: 'All logged races and results' },
+                { key: 'pbs',       label: 'Personal bests',              desc: 'Your PR grid per distance' },
+                { key: 'medals',    label: 'Medal wall',                  desc: 'Photos and medal collection' },
+                { key: 'stats',     label: 'Stats & countries',           desc: 'Race count, distance, countries' },
+                { key: 'upcoming',  label: 'Upcoming races',              desc: 'Your race calendar' },
+                { key: 'wearables', label: 'Activity feed',               desc: 'Strava & wearable workouts' },
+              ] as const).map(({ key, label, desc }, i, arr) => {
+                const vis = athlete?.profileVisibility ?? {}
+                const defaultOn = key !== 'upcoming' && key !== 'wearables'
+                const enabled = vis[key] ?? defaultOn
+                return (
+                  <div key={key}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0' }}>
+                      <div style={{ minWidth: 0, flex: 1, paddingRight: '12px' }}>
+                        <p style={{ margin: 0, fontSize: '14px', color: 'var(--white)', fontWeight: 500 }}>{label}</p>
+                        <p style={{ margin: '2px 0 0', fontSize: '11px', color: 'var(--muted)' }}>{desc}</p>
+                      </div>
+                      <button
+                        onClick={() => updateAthlete({ profileVisibility: { ...vis, [key]: !enabled } })}
+                        style={{
+                          width: '42px', height: '24px',
+                          borderRadius: '12px', border: 'none',
+                          cursor: 'pointer',
+                          background: enabled ? 'var(--orange)' : 'var(--surface3)',
+                          position: 'relative', transition: 'background 0.2s',
+                          flexShrink: 0,
+                        }}
+                      >
+                        <span style={{
+                          position: 'absolute', top: '3px',
+                          left: enabled ? '20px' : '3px',
+                          width: '18px', height: '18px',
+                          borderRadius: '50%', background: 'var(--black)',
+                          transition: 'left 0.2s',
+                        }} />
+                      </button>
+                    </div>
+                    {i < arr.length - 1 && <div style={{ height: '1px', background: 'var(--border)' }} />}
+                  </div>
+                )
+              })}
+            </>
+          )}
         </div>
       </section>
 

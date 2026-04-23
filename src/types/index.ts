@@ -63,6 +63,14 @@ export interface Athlete {
   usernameSetAt?: string  // ISO timestamp — username locked for 1 year after this
   isPublic?: boolean
   units?: 'metric' | 'imperial'  // distance + pace display preference (default: metric)
+  profileVisibility?: {
+    races?: boolean       // race history & finish times (default true)
+    pbs?: boolean         // personal bests (default true)
+    medals?: boolean      // medal wall (default true)
+    upcoming?: boolean    // upcoming races (default false)
+    stats?: boolean       // overall stats & countries (default true)
+    wearables?: boolean   // wearable activity feed (default false)
+  }
 }
 
 export interface WearableToken {
