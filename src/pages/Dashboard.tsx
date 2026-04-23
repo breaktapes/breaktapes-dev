@@ -4494,10 +4494,6 @@ function GoalPaceWidget({ race }: { race: Race | null }) {
   const units     = useUnits()
   const vdotPt    = useMemo(() => bestVDOT(races), [races])
 
-  // Pace-per-km splits only make sense for running. Hide for tri/cycle/swim/HYROX.
-  const sport = focusRace?.sport ?? 'Running'
-  if (sport !== 'Running') return null
-
   const result = useMemo(() => {
     if (!focusRace?.goalTime) return null
     const goalSecs = fParseTimeSecs(focusRace.goalTime)
@@ -4505,6 +4501,10 @@ function GoalPaceWidget({ race }: { race: Race | null }) {
     if (!goalSecs || !distKm) return null
     return goalPaceCalc(goalSecs, distKm, units, vdotPt?.vdot)
   }, [focusRace, units, vdotPt])
+
+  // Pace-per-km splits only make sense for running — all hooks must come first.
+  const sport = focusRace?.sport ?? 'Running'
+  if (sport !== 'Running') return null
 
   if (!focusRace) return null  // no focus race — hide widget entirely
 
