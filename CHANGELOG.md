@@ -2,6 +2,11 @@
 
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+## [0.6.4.2] - 2026-04-23
+
+### Changed
+- Settings: account section replaced with profile card (avatar initials, display name, "Manage account" subtitle) — tapping opens Clerk's native account management modal
+
 ## [0.6.4.1] - 2026-04-23
 
 ### Changed
