@@ -305,6 +305,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
     bike: { h: 0, m: 0, s: 0 }, t2: { h: 0, m: 0, s: 0 }, run: { h: 0, m: 0, s: 0 },
   })
   const [priority, setPriority]     = useState('')
+  const [goalHMS, setGoalHMS]       = useState<HMS>({ h: 0, m: 0, s: 0 })
   const [country, setCountry]       = useState('')
   const [citySelect, setCitySelect] = useState('')  // dropdown value
   const [cityText, setCityText]     = useState('')  // free-text (when "other" or no catalog)
@@ -639,6 +640,9 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
       priority: (priority as 'A' | 'B' | 'C') || undefined,
       outcome: outcome !== 'Finished' ? outcome : undefined,
       splits: buildSplits(),
+      ...(mode === 'upcoming' && (goalHMS.h > 0 || goalHMS.m > 0 || goalHMS.s > 0) ? {
+        goalTime: `${goalHMS.h}:${String(goalHMS.m).padStart(2,'0')}:${String(goalHMS.s).padStart(2,'0')}`,
+      } : {}),
     }
 
     if (mode === 'upcoming') {
@@ -925,7 +929,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
                       <DateInput value={date} onChange={setDate} />
                     )}
                     {date && (
-                      <p style={{ margin: '4px 0 0', fontSize: '11px', color: 'var(--muted)' }}>
+                      <p style={{ margin: '6px 0 0', fontSize: '15px', fontWeight: 600, color: 'var(--white)' }}>
                         {new Date(date + 'T00:00:00').toLocaleDateString('en', { year: 'numeric', month: 'short', day: 'numeric' })}
                       </p>
                     )}
@@ -940,29 +944,65 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
             )
           })()}
 
-          {/* ── Race Type ── */}
-          <Field label="Race Type">
-            <select style={st.input} value={sport} onChange={e => setSport(e.target.value)}>
-              {SPORTS.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
-            </select>
-          </Field>
+          {/* ── Country + City — right under date ── */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+            <Field label="Country">
+              <select style={st.input} value={country} onChange={e => handleCountryChange(e.target.value)}>
+                <option value="">Country...</option>
+                {allCountries.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+            </Field>
+            <Field label="City">
+              {hasCatalogCities ? (
+                <>
+                  <select style={st.input} value={citySelect} onChange={e => setCitySelect(e.target.value)}>
+                    <option value="">City...</option>
+                    {citiesForCountry.map(c => <option key={c} value={c}>{c}</option>)}
+                    <option value="__other__">Other...</option>
+                  </select>
+                  {cityIsOther && (
+                    <input
+                      style={{ ...st.input, marginTop: '6px' }}
+                      placeholder="Enter city"
+                      value={cityText}
+                      onChange={e => setCityText(e.target.value)}
+                    />
+                  )}
+                </>
+              ) : (
+                <input
+                  style={st.input}
+                  placeholder="e.g. Berlin"
+                  value={cityText}
+                  onChange={e => setCityText(e.target.value)}
+                />
+              )}
+            </Field>
+          </div>
 
-          {/* ── Distance ── */}
-          <Field label="Distance *">
-            <select style={st.input} value={distance} onChange={e => { setDistance(e.target.value); setCustomDist('') }}>
-              {distancePresets.map(p => <option key={p.label} value={p.value}>{p.label}</option>)}
-            </select>
-            {needsCustomDist && (
-              <input
-                style={{ ...st.input, marginTop: '6px' }}
-                placeholder="Enter distance in km"
-                type="text"
-                inputMode="decimal"
-                value={customDist}
-                onChange={e => setCustomDist(e.target.value)}
-              />
-            )}
-          </Field>
+          {/* ── Race Type + Distance side by side ── */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+            <Field label="Race Type">
+              <select style={st.input} value={sport} onChange={e => setSport(e.target.value)}>
+                {SPORTS.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
+              </select>
+            </Field>
+            <Field label="Distance *">
+              <select style={st.input} value={distance} onChange={e => { setDistance(e.target.value); setCustomDist('') }}>
+                {distancePresets.map(p => <option key={p.label} value={p.value}>{p.label}</option>)}
+              </select>
+            </Field>
+          </div>
+          {needsCustomDist && (
+            <input
+              style={st.input}
+              placeholder="Enter distance in km"
+              type="text"
+              inputMode="decimal"
+              value={customDist}
+              onChange={e => setCustomDist(e.target.value)}
+            />
+          )}
 
           {/* ── Race Outcome (past only) ── */}
           {mode === 'past' && (
@@ -997,47 +1037,15 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
             </select>
           </Field>
 
-          {/* ── Country + City side by side ── */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-            <Field label="Country">
-              <select style={st.input} value={country} onChange={e => handleCountryChange(e.target.value)}>
-                <option value="">Country...</option>
-                {allCountries.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
+          {/* ── Goal Time (upcoming only) ── */}
+          {mode === 'upcoming' && (
+            <Field label={<>Goal Time <span style={{ opacity: 0.5, fontWeight: 400, fontSize: '11px', textTransform: 'lowercase', letterSpacing: 0 }}>(optional)</span></>}>
+              <TimePickerWheel value={goalHMS} onChange={setGoalHMS} maxHours={99} />
+              <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '6px' }}>
+                Scroll to set · Used by Gap To Goal widget
+              </div>
             </Field>
-
-            <Field label="City">
-              {hasCatalogCities ? (
-                <>
-                  <select
-                    style={st.input}
-                    value={citySelect}
-                    onChange={e => setCitySelect(e.target.value)}
-                  >
-                    <option value="">City...</option>
-                    {citiesForCountry.map(c => <option key={c} value={c}>{c}</option>)}
-                    <option value="__other__">Other...</option>
-                  </select>
-                  {cityIsOther && (
-                    <input
-                      style={{ ...st.input, marginTop: '6px' }}
-                      placeholder="Enter city"
-                      value={cityText}
-                      onChange={e => setCityText(e.target.value)}
-                      autoFocus
-                    />
-                  )}
-                </>
-              ) : (
-                <input
-                  style={st.input}
-                  placeholder="e.g. Berlin"
-                  value={cityText}
-                  onChange={e => setCityText(e.target.value)}
-                />
-              )}
-            </Field>
-          </div>
+          )}
 
           {/* ── Placing (past only) ── */}
           {mode === 'past' && (
