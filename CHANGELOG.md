@@ -2,6 +2,13 @@
 
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+## [0.6.4.1] - 2026-04-23
+
+### Changed
+- Account settings: "Change Password" replaced with "Manage Account" — opens Clerk's built-in account management modal (password change, security settings)
+- Delete account confirmation now lists every category of data that will be permanently removed (races, medals, wearable data, season plans)
+- Account deletion now removes the Clerk login in addition to all Supabase data, completing the full account teardown
+
 ## [0.6.4.0] - 2026-04-23
 
 ### Added
