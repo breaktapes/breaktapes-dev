@@ -404,6 +404,34 @@ export function Train() {
     setRunZones(null)
   }
 
+  function applyTriPB(pb: Race, dist: typeof TRI_DISTANCES[number]) {
+    const totalSec = parseTimeSecs(pb.time ?? '')
+    if (!totalSec) return
+    // Approximate split percentages per distance
+    const splits: Record<TriDistId, { swim: number; t1: number; bike: number; t2: number; run: number }> = {
+      sprint:  { swim: 0.11, t1: 0.03, bike: 0.48, t2: 0.02, run: 0.36 },
+      olympic: { swim: 0.12, t1: 0.03, bike: 0.46, t2: 0.02, run: 0.37 },
+      '703':   { swim: 0.11, t1: 0.03, bike: 0.50, t2: 0.02, run: 0.34 },
+      ironman: { swim: 0.10, t1: 0.02, bike: 0.51, t2: 0.01, run: 0.36 },
+    }
+    const pct = splits[dist.id]
+    const swimSec  = totalSec * pct.swim
+    const bikeSec  = totalSec * pct.bike
+    const runSec   = totalSec * pct.run
+    const t1Sec    = totalSec * pct.t1
+    const t2Sec    = totalSec * pct.t2
+    const swimPace = swimSec / (dist.swimM / 100)
+    const bikeKph  = dist.bikeKm / (bikeSec / 3600)
+    const runPace  = runSec / dist.runKm
+    setSwimM(Math.max(0, Math.floor(swimPace / 60)))
+    setSwimS(Math.min(59, Math.round(swimPace % 60)))
+    setBikeKmh(Math.min(60, Math.max(15, Math.round(bikeKph))))
+    setRunM(Math.max(3, Math.floor(runPace / 60)))
+    setRunS(Math.min(59, Math.round(runPace % 60)))
+    setT1M(Math.floor(t1Sec / 60)); setT1S(Math.min(59, Math.round(t1Sec % 60)))
+    setT2M(Math.floor(t2Sec / 60)); setT2S(Math.min(59, Math.round(t2Sec % 60)))
+  }
+
   // ── Triathlon calculation (live) ───────────────────────────────────────────
 
   useEffect(() => {
@@ -529,56 +557,40 @@ export function Train() {
                 <p style={sectionLabel}>Pace Calculator</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
 
-                  {/* Distance chips */}
+                  {/* Distance dropdown */}
                   <div>
                     <label style={fieldLabel}>Distance</label>
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                      {RUN_DISTANCES.map(d => {
-                        const pb = d.id !== 'custom' ? findRunPB(races, d.km) : null
-                        const isActive = runDistId === d.id
-                        return (
-                          <div key={d.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px' }}>
-                            <button
-                              onClick={() => { setRunDistId(d.id); setRunResult(null); setRunZones(null) }}
-                              style={{
-                                padding: '7px 14px',
-                                borderRadius: '20px',
-                                border: `1px solid ${isActive ? 'var(--orange)' : 'var(--border2)'}`,
-                                background: isActive ? 'rgba(var(--orange-ch),0.15)' : 'var(--surface3)',
-                                color: isActive ? 'var(--orange)' : 'var(--white)',
-                                fontFamily: 'var(--headline)',
-                                fontWeight: 700,
-                                fontSize: '12px',
-                                letterSpacing: '0.06em',
-                                cursor: 'pointer',
-                                transition: 'all 0.12s',
-                                whiteSpace: 'nowrap',
-                              }}
-                            >
-                              {d.label}
-                            </button>
-                            {pb && (
-                              <button
-                                onClick={() => { setRunDistId(d.id); applyRunPB(pb) }}
-                                title={`Use your PB: ${pb.time}`}
-                                style={{
-                                  background: 'none',
-                                  border: 'none',
-                                  color: 'var(--orange)',
-                                  fontSize: '10px',
-                                  fontFamily: 'var(--body)',
-                                  cursor: 'pointer',
-                                  padding: '0',
-                                  opacity: 0.8,
-                                  whiteSpace: 'nowrap',
-                                }}
-                              >
-                                PB {pb.time}
-                              </button>
-                            )}
-                          </div>
-                        )
-                      })}
+                    <div style={{ position: 'relative' }}>
+                      <select
+                        value={runDistId}
+                        onChange={e => { setRunDistId(e.target.value as RunDistId); setRunResult(null); setRunZones(null) }}
+                        style={{
+                          width: '100%',
+                          background: 'var(--surface3)',
+                          border: '1px solid var(--border2)',
+                          borderRadius: '8px',
+                          color: 'var(--white)',
+                          fontFamily: 'var(--headline)',
+                          fontWeight: 700,
+                          fontSize: '14px',
+                          letterSpacing: '0.05em',
+                          padding: '0.75rem 2.5rem 0.75rem 0.85rem',
+                          cursor: 'pointer',
+                          appearance: 'none',
+                          WebkitAppearance: 'none' as any,
+                          boxSizing: 'border-box',
+                        } as React.CSSProperties}
+                      >
+                        {RUN_DISTANCES.map(d => {
+                          const pb = d.id !== 'custom' ? findRunPB(races, d.km) : null
+                          return (
+                            <option key={d.id} value={d.id}>
+                              {d.label}{pb ? `  —  PB ${pb.time}` : ''}
+                            </option>
+                          )
+                        })}
+                      </select>
+                      <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--muted)', fontSize: '14px' }}>▾</span>
                     </div>
                   </div>
 
@@ -731,40 +743,73 @@ export function Train() {
               <p style={sectionLabel}>Triathlon Calculator</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
 
-                {/* Tri distance chips */}
-                <div>
-                  <label style={fieldLabel}>Distance</label>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    {TRI_DISTANCES.map(d => {
-                      const pb = findTriPB(races, d.totalKm)
-                      const isActive = triDistId === d.id
-                      return (
-                        <button
-                          key={d.id}
-                          onClick={() => setTriDistId(d.id)}
+                {/* Tri distance dropdown */}
+                {(() => {
+                  const activeDist = TRI_DISTANCES.find(d => d.id === triDistId)!
+                  const triDistPB = findTriPB(races, activeDist.totalKm)
+                  return (
+                    <div>
+                      <label style={fieldLabel}>Distance</label>
+                      <div style={{ position: 'relative' }}>
+                        <select
+                          value={triDistId}
+                          onChange={e => setTriDistId(e.target.value as TriDistId)}
                           style={{
-                            padding: '10px 14px',
+                            width: '100%',
+                            background: 'var(--surface3)',
+                            border: '1px solid var(--border2)',
                             borderRadius: '8px',
-                            border: `1px solid ${isActive ? 'var(--orange)' : 'var(--border2)'}`,
-                            background: isActive ? 'rgba(var(--orange-ch),0.12)' : 'var(--surface3)',
-                            color: isActive ? 'var(--orange)' : 'var(--white)',
-                            textAlign: 'left',
+                            color: 'var(--white)',
+                            fontFamily: 'var(--headline)',
+                            fontWeight: 700,
+                            fontSize: '14px',
+                            letterSpacing: '0.05em',
+                            padding: '0.75rem 2.5rem 0.75rem 0.85rem',
                             cursor: 'pointer',
-                            transition: 'all 0.12s',
+                            appearance: 'none',
+                            WebkitAppearance: 'none' as any,
+                            boxSizing: 'border-box',
+                          } as React.CSSProperties}
+                        >
+                          {TRI_DISTANCES.map(d => {
+                            const pb = findTriPB(races, d.totalKm)
+                            return (
+                              <option key={d.id} value={d.id}>
+                                {d.label}{pb ? `  —  PB ${pb.time}` : ''}
+                              </option>
+                            )
+                          })}
+                        </select>
+                        <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--muted)', fontSize: '14px' }}>▾</span>
+                      </div>
+                      <p style={{ margin: '4px 0 0', fontSize: '11px', color: 'var(--muted)' }}>
+                        Swim {activeDist.swimM >= 1000 ? `${activeDist.swimM / 1000}km` : `${activeDist.swimM}m`} · Bike {activeDist.bikeKm}km · Run {activeDist.runKm}km
+                      </p>
+                      {triDistPB && (
+                        <button
+                          onClick={() => applyTriPB(triDistPB, activeDist)}
+                          style={{
+                            marginTop: '8px',
+                            width: '100%',
+                            background: 'rgba(var(--orange-ch),0.1)',
+                            border: '1px solid rgba(var(--orange-ch),0.3)',
+                            borderRadius: '6px',
+                            padding: '0.6rem 1rem',
+                            color: 'var(--orange)',
+                            fontFamily: 'var(--headline)',
+                            fontWeight: 700,
+                            fontSize: '12px',
+                            letterSpacing: '0.08em',
+                            textTransform: 'uppercase',
+                            cursor: 'pointer',
                           }}
                         >
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{d.label}</span>
-                            {pb && <span style={{ fontSize: '11px', color: 'var(--orange)', opacity: 0.8 }}>PB {pb.time}</span>}
-                          </div>
-                          <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '3px' }}>
-                            Swim {d.swimM >= 1000 ? `${d.swimM / 1000}km` : `${d.swimM}m`} · Bike {d.bikeKm}km · Run {d.runKm}km
-                          </div>
+                          Use My PB — {triDistPB.time}
                         </button>
-                      )
-                    })}
-                  </div>
-                </div>
+                      )}
+                    </div>
+                  )
+                })()}
 
                 {/* Segment inputs — wheel pickers */}
                 {(() => {
