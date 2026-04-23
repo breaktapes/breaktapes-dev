@@ -718,11 +718,34 @@ function PreRaceBriefing({ onAddRace, onEditRace }: { onAddRace: () => void; onE
 
 // ─── Edit Upcoming Race Sheet ────────────────────────────────────────────────
 
+const UPCOMING_DISTANCES: Record<string, { label: string; value: string }[]> = {
+  Running:    [
+    { label: '5KM', value: '5' }, { label: '10KM', value: '10' }, { label: '10 Mile', value: '16.09' },
+    { label: 'Half Marathon', value: '21.1' }, { label: 'Marathon', value: '42.2' },
+    { label: '50KM', value: '50' }, { label: '100KM', value: '100' }, { label: '100 Mile', value: '160.93' },
+  ],
+  Triathlon:  [
+    { label: 'Sprint', value: '25.75' }, { label: 'Olympic', value: '51.5' },
+    { label: '70.3', value: '113' }, { label: 'IRONMAN', value: '226' },
+  ],
+  Cycling:    [
+    { label: 'Gran Fondo (100km)', value: '100' }, { label: 'Century (161km)', value: '161' },
+  ],
+  Swimming:   [
+    { label: '1KM', value: '1' }, { label: '3KM', value: '3' }, { label: '5KM', value: '5' }, { label: '10KM', value: '10' },
+  ],
+  HYROX:      [
+    { label: 'Solo Open', value: 'Solo Open' }, { label: 'Solo Pro', value: 'Solo Pro' },
+    { label: 'Doubles Open', value: 'Doubles Open' }, { label: 'Doubles Pro', value: 'Doubles Pro' },
+  ],
+}
+
 function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; onClose: () => void; zIndex?: number }) {
   const updateRace    = useRaceStore(s => s.updateRace)
   const deleteRace    = useRaceStore(s => s.deleteRace)
 
   const [priority, setPriority] = useState<string>(race.priority ?? 'A')
+  const [distance, setDistance] = useState<string>(race.distance ?? '')
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   // Parse existing goalTime string (H:MM:SS) into HMS for the wheel
@@ -730,6 +753,9 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
     const parts = (race.goalTime ?? '').split(':').map(Number)
     return { h: parts[0] || 0, m: parts[1] || 0, s: parts[2] || 0 }
   })
+
+  const sportKey = race.sport ?? 'Running'
+  const distOptions = UPCOMING_DISTANCES[sportKey] ?? UPCOMING_DISTANCES['Running']
 
   useEffect(() => {
     document.body.style.overflow = 'hidden'
@@ -741,7 +767,7 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
     const goalTime = hasGoal
       ? `${goalHMS.h}:${String(goalHMS.m).padStart(2,'0')}:${String(goalHMS.s).padStart(2,'0')}`
       : undefined
-    updateRace(race.id, { priority: priority as Race['priority'], goalTime })
+    updateRace(race.id, { priority: priority as Race['priority'], goalTime, distance: distance || undefined })
     onClose()
   }
 
@@ -810,6 +836,35 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
                   }}>{p.key}</span>
                   <span style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', color: priority === p.key ? 'var(--orange)' : 'var(--muted)', textTransform: 'uppercase' }}>{p.label}</span>
                   <span style={{ fontSize: '10px', color: 'var(--muted)', lineHeight: 1.3 }}>{p.desc}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Distance */}
+          <div>
+            <div style={{ fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '10px' }}>
+              DISTANCE
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              {distOptions.map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => setDistance(opt.value)}
+                  style={{
+                    padding: '8px 14px',
+                    borderRadius: '8px',
+                    border: distance === opt.value ? '2px solid var(--orange)' : '1.5px solid var(--border2)',
+                    background: distance === opt.value ? 'rgba(var(--orange-ch),0.12)' : 'var(--surface3)',
+                    cursor: 'pointer',
+                    fontFamily: 'var(--headline)',
+                    fontWeight: 700,
+                    fontSize: '13px',
+                    letterSpacing: '0.04em',
+                    color: distance === opt.value ? 'var(--orange)' : 'var(--white)',
+                  }}
+                >
+                  {opt.label}
                 </button>
               ))}
             </div>
