@@ -15,9 +15,8 @@ export const useThemeStore = create<ThemeState>()(
       theme: 'carbon',
       setTheme: (id: ThemeId) => {
         const themeDef = THEMES.find(t => t.id === id)
-        if (themeDef?.pro && !useAuthStore.getState().proAccessGranted) {
-          return false
-        }
+        if (themeDef?.comingSoon) return false
+        if (themeDef?.pro && !useAuthStore.getState().proAccessGranted) return false
         set({ theme: id })
         return true
       },
