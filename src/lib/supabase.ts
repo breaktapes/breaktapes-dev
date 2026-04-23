@@ -1,17 +1,32 @@
 import { createClient } from '@supabase/supabase-js'
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@/env'
 
-// Fallback to placeholders so the app mounts without credentials configured.
-// AuthGate's 4-second timeout handles the "no real credentials" case gracefully
-// by falling through to the landing screen.
+// Clerk JWT token — updated by AuthGate whenever Clerk auth state changes.
+// Injected into every Supabase request so RLS policies read the Clerk user ID
+// from the JWT `sub` claim via auth.jwt() ->> 'sub'.
+let _clerkToken: string | null = null
+
+export function setClerkToken(token: string | null) {
+  _clerkToken = token
+}
+
 export const supabase = createClient(
   SUPABASE_URL || 'http://localhost:54321',
   SUPABASE_ANON_KEY || 'placeholder-key',
   {
+    global: {
+      fetch: async (url: RequestInfo | URL, opts: RequestInit = {}) => {
+        const headers = new Headers(opts.headers)
+        if (_clerkToken) {
+          headers.set('Authorization', `Bearer ${_clerkToken}`)
+        }
+        return fetch(url, { ...opts, headers })
+      },
+    },
     auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
     },
   },
 )

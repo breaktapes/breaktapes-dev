@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useClerk } from '@clerk/clerk-react'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { useWearableStore } from '@/stores/useWearableStore'
@@ -69,6 +70,7 @@ const inputStyle: React.CSSProperties = {
 
 export function Settings() {
   const navigate = useNavigate()
+  const { signOut } = useClerk()
   const authUser = useAuthStore(s => s.authUser)
   const athlete = useAthleteStore(s => s.athlete)
   const updateAthlete = useAthleteStore(s => s.updateAthlete)
@@ -218,7 +220,9 @@ export function Settings() {
   }
 
   async function handleSignOut() {
-    await supabase.auth.signOut()
+    localStorage.removeItem('bt_new_user')
+    localStorage.removeItem('bt_modal_shown')
+    await signOut()
   }
 
   return (

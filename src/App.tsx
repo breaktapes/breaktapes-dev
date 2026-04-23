@@ -3,10 +3,12 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Component, lazy, Suspense } from 'react'
 import type { ReactNode } from 'react'
+import { ClerkProvider } from '@clerk/clerk-react'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import { AuthGate } from '@/components/AuthGate'
 import { Layout } from '@/components/Layout'
 import { transitions } from '@/lib/motion'
+import { CLERK_PUBLISHABLE_KEY } from '@/env'
 
 // Lazy-loaded pages — each is a separate JS chunk.
 // Dashboard loads eagerly (it's the default route, always shown first).
@@ -103,17 +105,19 @@ function AnimatedRoutes() {
 export function App() {
   return (
     <RootErrorBoundary>
-      <BrowserRouter>
-        <ThemeProvider>
-          <QueryClientProvider client={queryClient}>
-            <AuthGate>
-              <Layout>
-                <AnimatedRoutes />
-              </Layout>
-            </AuthGate>
-          </QueryClientProvider>
-        </ThemeProvider>
-      </BrowserRouter>
+      <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
+        <BrowserRouter>
+          <ThemeProvider>
+            <QueryClientProvider client={queryClient}>
+              <AuthGate>
+                <Layout>
+                  <AnimatedRoutes />
+                </Layout>
+              </AuthGate>
+            </QueryClientProvider>
+          </ThemeProvider>
+        </BrowserRouter>
+      </ClerkProvider>
     </RootErrorBoundary>
   )
 }

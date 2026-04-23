@@ -24,3 +24,6 @@ coverage/
 .swarm/
 dist/
 vitest.workspace.ts
+
+# Stray Clerk Next.js scaffold — not used (we're on Vite)
+clerk-nextjs/

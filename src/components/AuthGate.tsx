@@ -1,74 +1,57 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '@/lib/supabase'
+import { useUser, useAuth, SignIn, SignUp } from '@clerk/clerk-react'
 import { useAuthStore } from '@/stores/useAuthStore'
+import { setClerkToken } from '@/lib/supabase'
+import { IS_STAGING } from '@/env'
 
-type AuthState = 'loading' | 'authenticated' | 'unauthenticated'
-type AuthMode = 'signin' | 'signup'
+type AuthView = 'signin' | 'signup'
 
-export function AuthGate({ children }: { children: React.ReactNode }) {
-  const [authState, setAuthState] = useState<AuthState>('loading')
+// Keeps Zustand authUser + Supabase JWT in sync with Clerk session.
+function useClerkSync() {
+  const { isLoaded, isSignedIn, user } = useUser()
+  const { getToken } = useAuth()
   const setAuthUser = useAuthStore(s => s.setAuthUser)
-  const setAuthSession = useAuthStore(s => s.setAuthSession)
-  const navigate = useNavigate()
-  const resolved = useRef(false)
+  const setProAccess = useAuthStore(s => s.setProAccess)
 
   useEffect(() => {
-    // 4-second timeout — show landing on slow Supabase cold-start
-    const timeout = setTimeout(() => {
-      if (!resolved.current) {
-        resolved.current = true
-        setAuthState('unauthenticated')
-      }
-    }, 4000)
+    if (!isLoaded) return
 
-    const init = async () => {
-      try {
-        const { data } = await supabase.auth.getSession()
-        if (resolved.current) return
-        resolved.current = true
-        clearTimeout(timeout)
-        if (data.session) {
-          setAuthUser(data.session.user)
-          setAuthSession(data.session)
-          setAuthState('authenticated')
-          if (localStorage.getItem('bt_new_user')) navigate('/you', { replace: true })
-        } else {
-          setAuthState('unauthenticated')
-        }
-      } catch {
-        if (!resolved.current) {
-          resolved.current = true
-          clearTimeout(timeout)
-          setAuthState('unauthenticated')
-        }
-      }
+    if (!isSignedIn || !user) {
+      setAuthUser(null)
+      setClerkToken(null)
+      return
     }
-    init()
 
-    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session) {
-        setAuthUser(session.user)
-        setAuthSession(session)
-        setAuthState('authenticated')
-        if (localStorage.getItem('bt_new_user')) navigate('/you', { replace: true })
-      } else if (event === 'SIGNED_OUT') {
-        setAuthUser(null)
-        setAuthSession(null)
-        setAuthState('unauthenticated')
-        localStorage.removeItem('bt_new_user')
-        localStorage.removeItem('bt_modal_shown')
-      }
+    setAuthUser({
+      id: user.id,
+      email: user.primaryEmailAddress?.emailAddress ?? null,
     })
+    setProAccess(IS_STAGING)
 
-    return () => {
-      clearTimeout(timeout)
-      listener.subscription.unsubscribe()
+    const refresh = () =>
+      getToken({ template: 'supabase' }).then(t => setClerkToken(t))
+
+    refresh()
+    const interval = setInterval(refresh, 50_000)
+    return () => clearInterval(interval)
+  }, [isLoaded, isSignedIn, user, getToken, setAuthUser, setProAccess])
+}
+
+export function AuthGate({ children }: { children: React.ReactNode }) {
+  const { isLoaded, isSignedIn } = useUser()
+  const navigate = useNavigate()
+
+  useClerkSync()
+
+  useEffect(() => {
+    if (isSignedIn && localStorage.getItem('bt_new_user')) {
+      navigate('/you', { replace: true })
     }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [isSignedIn, navigate])
 
-  if (authState === 'loading') return <AuthLoadingScreen />
-  if (authState === 'unauthenticated') return <LandingScreen />
+  if (!isLoaded) return <AuthLoadingScreen />
+  if (!isSignedIn) return <LandingScreen />
   return <>{children}</>
 }
 
@@ -101,9 +84,44 @@ function AuthLoadingScreen() {
   )
 }
 
+const clerkAppearance = {
+  variables: {
+    colorPrimary: '#E84E1B',
+    colorBackground: '#141414',
+    colorInputBackground: '#1A1A1A',
+    colorInputText: '#F5F5F5',
+    colorText: '#F5F5F5',
+    colorTextSecondary: 'rgba(245,245,245,0.55)',
+    colorNeutral: '#F5F5F5',
+    borderRadius: '6px',
+    fontFamily: 'Barlow, sans-serif',
+  },
+  elements: {
+    card: {
+      background: '#141414',
+      border: '1px solid rgba(245,245,245,0.08)',
+      boxShadow: '0 24px 48px rgba(0,0,0,0.6)',
+    },
+    headerTitle: {
+      fontFamily: 'Barlow Condensed, sans-serif',
+      fontWeight: 900,
+      textTransform: 'uppercase',
+      letterSpacing: '0.1em',
+    },
+    formButtonPrimary: {
+      background: '#E84E1B',
+      fontFamily: 'Barlow Condensed, sans-serif',
+      fontWeight: 900,
+      letterSpacing: '0.1em',
+      textTransform: 'uppercase',
+    },
+    footerActionLink: { color: '#E84E1B' },
+    identityPreviewEditButton: { color: '#E84E1B' },
+  },
+}
+
 function LandingScreen() {
-  const [modalOpen, setModalOpen] = useState(false)
-  const [authMode, setAuthMode] = useState<AuthMode>('signin')
+  const [view, setView] = useState<AuthView | null>(null)
 
   return (
     <>
@@ -114,10 +132,10 @@ function LandingScreen() {
         </div>
         <p className="landing-sub">Log every finish line. Track PRs, medals, and race history in one place.</p>
         <div className="landing-actions">
-          <button className="btn-main" onClick={() => { setAuthMode('signup'); setModalOpen(true) }}>
+          <button className="btn-main" onClick={() => setView('signup')}>
             Get Started — It's Free
           </button>
-          <button className="landing-sign-in-link" onClick={() => { setAuthMode('signin'); setModalOpen(true) }}>
+          <button className="landing-sign-in-link" onClick={() => setView('signin')}>
             Already have an account? Sign in
           </button>
         </div>
@@ -140,175 +158,50 @@ function LandingScreen() {
         </div>
       </div>
 
-      {modalOpen && (
-        <AuthModal
-          open={true}
-          mode={authMode}
-          onModeChange={setAuthMode}
-          onClose={() => setModalOpen(false)}
-        />
-      )}
-    </>
-  )
-}
-
-interface AuthModalProps {
-  open: boolean
-  mode: AuthMode
-  onModeChange: (mode: AuthMode) => void
-  onClose: () => void
-}
-
-function AuthModal({ open, mode, onModeChange, onClose }: AuthModalProps) {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [resetSent, setResetSent] = useState(false)
-
-  const handleSubmit = async () => {
-    setError('')
-    if (!email.trim()) { setError('Drop an email to get started.'); return }
-    if (!password) { setError('Need a password to race in.'); return }
-
-    setLoading(true)
-    try {
-      if (mode === 'signin') {
-        const { error: err } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
-        if (err) { setError(err.message); return }
-      } else {
-        const { data, error: err } = await supabase.auth.signUp({
-          email: email.trim(),
-          password,
-          options: {
-            data: { first_name: firstName, last_name: lastName },
-          },
-        })
-        if (err) { setError(err.message); return }
-        if (data.user && !data.session) {
-          setError('Check your email to confirm your account.')
-          return
-        }
-        if (data.user) localStorage.setItem('bt_new_user', '1')
-      }
-      onClose()
-    } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Something went wrong.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleForgotPassword = async () => {
-    if (!email.trim()) { setError('Enter your email first.'); return }
-    setLoading(true)
-    try {
-      await supabase.auth.resetPasswordForEmail(email.trim())
-      setResetSent(true)
-      setError('')
-    } catch {
-      setError('Could not send reset email.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') handleSubmit()
-    if (e.key === 'Escape') onClose()
-  }
-
-  return (
-    <div
-      className={`auth-modal-overlay${open ? ' open' : ''}`}
-      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
-    >
-      <div className="auth-modal" role="dialog" aria-modal="true">
-        <div className="auth-modal-drag" />
-        <div className="auth-modal-head">
-          <h2>{mode === 'signin' ? 'Sign In' : 'Create Account'}</h2>
-        </div>
-        <div className="auth-modal-body" onKeyDown={handleKeyDown}>
-          <div className="auth-switch">
-            <button
-              className={mode === 'signin' ? 'btn-main' : 'btn-ghost'}
-              onClick={() => { onModeChange('signin'); setError(''); setResetSent(false) }}
-            >Sign In</button>
-            <button
-              className={mode === 'signup' ? 'btn-main' : 'btn-ghost'}
-              onClick={() => { onModeChange('signup'); setError(''); setResetSent(false) }}
-            >Create Account</button>
-          </div>
-
-          {mode === 'signup' && (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem' }}>
-              <div className="fg">
-                <label className="fl">First Name</label>
-                <input className="fi" placeholder="Alex" value={firstName} onChange={e => setFirstName(e.target.value)} />
-              </div>
-              <div className="fg">
-                <label className="fl">Last Name</label>
-                <input className="fi" placeholder="Finisher" value={lastName} onChange={e => setLastName(e.target.value)} />
-              </div>
-            </div>
-          )}
-
-          <div className="fg" style={{ marginBottom: '0.75rem' }}>
-            <label className="fl" htmlFor="auth-email">Email</label>
-            <input
-              id="auth-email"
-              className={`fi${error && !email.trim() ? ' fi-error' : ''}`}
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              autoComplete="email"
+      {view && (
+        <div
+          style={{
+            position: 'fixed', inset: 0,
+            background: 'rgba(0,0,0,0.75)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 1000,
+            padding: '1rem',
+          }}
+          onClick={e => { if (e.target === e.currentTarget) setView(null) }}
+        >
+          {view === 'signin' ? (
+            <SignIn
+              appearance={clerkAppearance}
+              signUpUrl="#"
+              afterSignInUrl="/"
+              signUpForceRedirectUrl="/"
             />
-          </div>
-
-          <div className="fg" style={{ marginBottom: '0.5rem' }}>
-            <label className="fl" htmlFor="auth-password">Password</label>
-            <input
-              id="auth-password"
-              className={`fi${error && !password ? ' fi-error' : ''}`}
-              type="password"
-              placeholder="At least 6 characters"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+          ) : (
+            <SignUp
+              appearance={clerkAppearance}
+              signInUrl="#"
+              afterSignUpUrl="/"
+              signInForceRedirectUrl="/"
             />
-          </div>
-
-          {error && (
-            <div className="fg-err-msg show" style={{ marginBottom: '0.5rem' }}>{error}</div>
           )}
-          {resetSent && (
-            <div style={{ fontSize: '12px', color: 'var(--green)', marginBottom: '0.5rem' }}>
-              Password reset email sent. Check your inbox.
-            </div>
-          )}
-
-          {mode === 'signin' && !resetSent && (
-            <button className="auth-forgot" onClick={handleForgotPassword} disabled={loading}>
-              Forgot password?
-            </button>
-          )}
-
-          <p className="auth-note">
-            {mode === 'signup'
-              ? 'Your races stay safe and sync across all your devices.'
-              : 'Welcome back. Your race history is waiting.'}
-          </p>
-        </div>
-        <div className="auth-modal-foot">
-          <button className="btn-ghost" onClick={onClose}>Cancel</button>
-          <button className="btn-main" onClick={handleSubmit} disabled={loading}>
-            {loading ? (mode === 'signin' ? 'Signing In…' : 'Creating…') : (mode === 'signin' ? 'Sign In' : 'Create Account')}
+          <button
+            onClick={() => setView(null)}
+            style={{
+              position: 'fixed', top: '1rem', right: '1rem',
+              background: 'transparent',
+              border: '1px solid rgba(245,245,245,0.15)',
+              color: 'rgba(245,245,245,0.6)',
+              borderRadius: '50%',
+              width: '36px', height: '36px',
+              cursor: 'pointer', fontSize: '18px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+          >
+            ×
           </button>
         </div>
-      </div>
-    </div>
+      )}
+    </>
   )
 }

@@ -8,3 +8,4 @@ export const APP_URL = IS_STAGING ? 'https://dev.breaktapes.com' : 'https://app.
 export const WHOOP_CLIENT_ID = import.meta.env.VITE_WHOOP_CLIENT_ID as string ?? ''
 export const GARMIN_CLIENT_ID = import.meta.env.VITE_GARMIN_CLIENT_ID as string ?? ''
 export const STRAVA_CLIENT_ID = import.meta.env.VITE_STRAVA_CLIENT_ID as string ?? ''
+export const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string

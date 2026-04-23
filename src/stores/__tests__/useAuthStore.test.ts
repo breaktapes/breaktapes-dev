@@ -4,21 +4,19 @@ import { useAuthStore } from '../useAuthStore'
 beforeEach(() => {
   useAuthStore.setState({
     authUser: null,
-    authSession: null,
+    proAccessGranted: false,
   })
   window.localStorage.clear()
 })
 
 describe('useAuthStore — setAuthUser', () => {
   it('stores a user', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    useAuthStore.getState().setAuthUser({ id: 'u1', email: 'a@b.com' } as any)
-    expect(useAuthStore.getState().authUser?.id).toBe('u1')
+    useAuthStore.getState().setAuthUser({ id: 'user_abc', email: 'a@b.com' })
+    expect(useAuthStore.getState().authUser?.id).toBe('user_abc')
   })
 
   it('clears user to null', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    useAuthStore.getState().setAuthUser({ id: 'u1' } as any)
+    useAuthStore.getState().setAuthUser({ id: 'user_abc' })
     useAuthStore.getState().setAuthUser(null)
     expect(useAuthStore.getState().authUser).toBeNull()
   })
@@ -27,9 +25,7 @@ describe('useAuthStore — setAuthUser', () => {
 describe('useAuthStore — sign-out localStorage cleanup', () => {
   it('bt_new_user removed when authUser is cleared', () => {
     window.localStorage.setItem('bt_new_user', 'true')
-    // Simulate what AuthGate does on SIGNED_OUT event
     useAuthStore.getState().setAuthUser(null)
-    useAuthStore.getState().setAuthSession(null)
     window.localStorage.removeItem('bt_new_user')
     window.localStorage.removeItem('bt_modal_shown')
     expect(window.localStorage.getItem('bt_new_user')).toBeNull()
@@ -38,7 +34,6 @@ describe('useAuthStore — sign-out localStorage cleanup', () => {
   it('bt_modal_shown removed on sign-out', () => {
     window.localStorage.setItem('bt_modal_shown', 'true')
     useAuthStore.getState().setAuthUser(null)
-    useAuthStore.getState().setAuthSession(null)
     window.localStorage.removeItem('bt_new_user')
     window.localStorage.removeItem('bt_modal_shown')
     expect(window.localStorage.getItem('bt_modal_shown')).toBeNull()
@@ -54,9 +49,13 @@ describe('useAuthStore — sign-out localStorage cleanup', () => {
   })
 })
 
-describe('useAuthStore — no pro gating', () => {
-  it('authUser and authSession are the only state fields', () => {
-    const state = useAuthStore.getState()
-    expect('proAccessGranted' in state).toBe(false)
+describe('useAuthStore — pro access', () => {
+  it('proAccessGranted defaults to false', () => {
+    expect(useAuthStore.getState().proAccessGranted).toBe(false)
+  })
+
+  it('setProAccess updates correctly', () => {
+    useAuthStore.getState().setProAccess(true)
+    expect(useAuthStore.getState().proAccessGranted).toBe(true)
   })
 })
