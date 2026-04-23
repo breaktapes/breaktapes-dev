@@ -110,7 +110,7 @@ async function fetchProfile(username, env) {
   const url = new URL(`${env.SUPABASE_URL}/rest/v1/user_state`);
   url.searchParams.set('username', `eq.${username}`);
   url.searchParams.set('is_public', 'eq.true');
-  url.searchParams.set('select', 'races,athlete,next_race,upcoming_races');
+  url.searchParams.set('select', 'state_json');
   url.searchParams.set('limit', '1');
 
   const res = await fetch(url.toString(), {
@@ -123,7 +123,15 @@ async function fetchProfile(username, env) {
 
   if (!res.ok) return null;
   const rows = await res.json();
-  return rows && rows.length > 0 ? rows[0] : null;
+  if (!rows || rows.length === 0) return null;
+  // Data is stored in state_json JSONB — flatten for renderProfile
+  const sj = rows[0].state_json ?? {};
+  return {
+    races:          sj.races          ?? [],
+    athlete:        sj.athlete        ?? {},
+    next_race:      sj.next_race      ?? null,
+    upcoming_races: sj.upcoming_races ?? [],
+  };
 }
 
 // ── View count (fire-and-forget) ─────────────────────────────────────────────
@@ -170,9 +178,14 @@ function renderProfile(row, username) {
   const races = Array.isArray(row.races) ? row.races : [];
   const nextRace = row.next_race || null;
 
-  const displayName = escapeHtml(athlete.name || username);
+  // React app stores firstName/lastName separately; old index.html stored athlete.name
+  const displayName = escapeHtml(
+    athlete.name ||
+    [athlete.firstName, athlete.lastName].filter(Boolean).join(' ') ||
+    username
+  );
   const location = [athlete.city, athlete.country].filter(Boolean).map(escapeHtml).join(', ');
-  const sport = escapeHtml(athlete.primary || '');
+  const sport = escapeHtml(athlete.mainSport || athlete.primary || '');
 
   // Stats
   const totalRaces = races.length;
@@ -255,7 +268,7 @@ function renderProfile(row, username) {
 
   const bodyContent = `
     <div class="profile-header">
-      <div class="avatar-placeholder">${escapeHtml((athlete.name || username).slice(0, 2).toUpperCase())}</div>
+      <div class="avatar-placeholder">${escapeHtml((athlete.name || [athlete.firstName, athlete.lastName].filter(Boolean).join(' ') || username).slice(0, 2).toUpperCase())}</div>
       <div class="profile-identity">
         <h1 class="athlete-name">${displayName}</h1>
         ${location ? `<div class="athlete-location">📍 ${location}</div>` : ''}
@@ -296,16 +309,16 @@ function renderProfile(row, username) {
   `;
 
   const body = pageShell({
-    title: `${athlete.name || username}'s Race Profile | BREAKTAPES`,
-    description: ogDescription || `${athlete.name || username} on BREAKTAPES`,
-    ogTitle: `${athlete.name || username}'s Race Profile | BREAKTAPES`,
+    title: `${athlete.name || [athlete.firstName, athlete.lastName].filter(Boolean).join(' ') || username}'s Race Profile | BREAKTAPES`,
+    description: ogDescription || `${athlete.name || [athlete.firstName, athlete.lastName].filter(Boolean).join(' ') || username} on BREAKTAPES`,
+    ogTitle: `${athlete.name || [athlete.firstName, athlete.lastName].filter(Boolean).join(' ') || username}'s Race Profile | BREAKTAPES`,
     ogDescription: ogDescription,
     ogImage: `https://health.breaktapes.com/og/u/${encodeURIComponent(username)}`,
     canonical: `https://app.breaktapes.com/u/${encodeURIComponent(username)}`,
     bodyContent,
     username,
     showJoinCta: true,
-    athleteName: athlete.name || '',
+    athleteName: athlete.name || [athlete.firstName, athlete.lastName].filter(Boolean).join(' ') || '',
   });
 
   return html(200, body, {
@@ -321,7 +334,7 @@ function renderRaceCard(row, username, raceId) {
   const race = races.find(r => r.id === raceId || String(r.id) === raceId);
   if (!race) return notFoundPage(username);
 
-  const athleteName = escapeHtml(athlete.name || username);
+  const athleteName = escapeHtml(athlete.name || [athlete.firstName, athlete.lastName].filter(Boolean).join(' ') || username);
   const raceName = escapeHtml(race.name || 'Race');
 
   const bodyContent = `
@@ -352,9 +365,9 @@ function renderRaceCard(row, username, raceId) {
   ].filter(Boolean).join(' · ');
 
   const body = pageShell({
-    title: `${race.name || 'Race'} — ${athlete.name || username} | BREAKTAPES`,
+    title: `${race.name || 'Race'} — ${athlete.name || [athlete.firstName, athlete.lastName].filter(Boolean).join(' ') || username} | BREAKTAPES`,
     description: ogDesc,
-    ogTitle: `${athlete.name || username}: ${race.name || 'Race'} | BREAKTAPES`,
+    ogTitle: `${athlete.name || [athlete.firstName, athlete.lastName].filter(Boolean).join(' ') || username}: ${race.name || 'Race'} | BREAKTAPES`,
     ogDescription: ogDesc,
     ogImage: `https://health.breaktapes.com/og/u/${encodeURIComponent(username)}`,
     canonical: `https://app.breaktapes.com/u/${encodeURIComponent(username)}/race/${encodeURIComponent(raceId)}`,

@@ -99,6 +99,7 @@ export function Settings() {
     updateAthlete({ isPublic: val })
     await supabase.from('user_state').upsert({
       user_id: authUser.id,
+      username: athlete?.username ?? null,
       is_public: val,
     }, { onConflict: 'user_id' })
   }
