@@ -97,7 +97,7 @@ export function Settings() {
   }, [athlete?.isPublic])
 
   async function togglePublic(val: boolean) {
-    if (!athlete?.username && val) return // must have username first
+    if (!athlete || (!athlete.username && val)) return // must have username first
     setIsPublic(val)
     if (!authUser) return
     updateAthlete({ isPublic: val })
