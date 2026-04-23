@@ -5,6 +5,11 @@
  * Each column (HRS / MIN / SEC) is a fixed-height scroll container with
  * scroll-snap-type: y mandatory so items lock to the centre slot.
  *
+ * Infinite scroll: values are repeated REPS times. Scroll initialises at the
+ * centre repetition. When the user approaches either edge the container is
+ * silently repositioned to the equivalent centre position — giving a seamless
+ * wrap-around in both directions.
+ *
  * Usage:
  *   <TimePickerWheel value={{ h, m, s }} onChange={v => setTime(v)} />
  */
@@ -13,8 +18,9 @@ import { useRef, useEffect, useCallback } from 'react'
 
 export interface HMS { h: number; m: number; s: number }
 
-const ITEM_H  = 44   // px — height of each option row
-const VISIBLE = 3    // how many rows are visible (centre = selected)
+const ITEM_H  = 44    // px — height of each option row
+const VISIBLE = 3     // how many rows are visible (centre = selected)
+const REPS    = 7     // times the values array is repeated for infinite scroll
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -36,23 +42,29 @@ function Wheel({
   label: string
   format?: (v: number) => string
 }) {
-  const ref = useRef<HTMLDivElement>(null)
-  const settingRef = useRef(false)   // guards against scroll-event → setState loop
-  const raf = useRef<number>(0)
+  const ref           = useRef<HTMLDivElement>(null)
+  const settingRef    = useRef(false)   // guards against scroll-event → setState loop
+  const raf           = useRef<number>(0)
+  const lastEmitted   = useRef<number>(-999) // last value we called onChange with
 
-  // Scroll to the right position whenever `selected` changes externally
+  const n         = values.length
+  const halfReps  = Math.floor(REPS / 2)
+  const midOffset = n * halfReps          // index of value[0] in the centre repetition
+
+  // Inflated array: values repeated REPS times
+  const inflated = Array.from({ length: n * REPS }, (_, i) => values[i % n])
+
+  // Scroll to `selected` whenever it changes — but skip if we triggered the change
   useEffect(() => {
     const el = ref.current
     if (!el) return
+    if (lastEmitted.current === selected) return   // our own onChange, already there
     const idx = values.indexOf(selected)
     if (idx < 0) return
     settingRef.current = true
-    el.scrollTop = idx * ITEM_H
-    // Release the guard after the scroll settles
-    raf.current = requestAnimationFrame(() => {
-      settingRef.current = false
-    })
-  }, [selected, values])
+    el.scrollTop = (midOffset + idx) * ITEM_H
+    raf.current = requestAnimationFrame(() => { settingRef.current = false })
+  }, [selected, values, midOffset])
 
   // Cleanup on unmount
   useEffect(() => () => cancelAnimationFrame(raf.current), [])
@@ -61,12 +73,35 @@ function Wheel({
     if (settingRef.current) return
     const el = ref.current
     if (!el) return
-    const idx = Math.round(el.scrollTop / ITEM_H)
-    const clamped = Math.max(0, Math.min(values.length - 1, idx))
-    if (values[clamped] !== selected) onChange(values[clamped])
-  }, [values, selected, onChange])
 
-  const WHEEL_H = ITEM_H * VISIBLE   // total visible height
+    const rawIdx  = Math.round(el.scrollTop / ITEM_H)
+    const total   = n * REPS
+    const buffer  = n * 2   // stay at least 2 full repetitions from each edge
+
+    // Near the top edge → jump to the equivalent position in the middle
+    if (rawIdx < buffer) {
+      settingRef.current = true
+      el.scrollTop = (rawIdx + n * halfReps) * ITEM_H
+      requestAnimationFrame(() => { settingRef.current = false })
+      return
+    }
+
+    // Near the bottom edge → jump back towards the middle
+    if (rawIdx >= total - buffer) {
+      settingRef.current = true
+      el.scrollTop = (rawIdx - n * halfReps) * ITEM_H
+      requestAnimationFrame(() => { settingRef.current = false })
+      return
+    }
+
+    const realValue = values[rawIdx % n]
+    if (realValue !== selected) {
+      lastEmitted.current = realValue
+      onChange(realValue)
+    }
+  }, [values, selected, onChange, n, halfReps])
+
+  const WHEEL_H = ITEM_H * VISIBLE
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, minWidth: 0 }}>
@@ -89,9 +124,9 @@ function Wheel({
           width:               '100%',
         } as React.CSSProperties}
       >
-        {values.map(v => (
+        {inflated.map((v, i) => (
           <div
-            key={v}
+            key={i}
             style={{
               height:          ITEM_H,
               scrollSnapAlign: 'center',
@@ -111,8 +146,7 @@ function Wheel({
             onMouseDown={() => {
               const el = ref.current
               if (!el) return
-              const idx = values.indexOf(v)
-              el.scrollTo({ top: idx * ITEM_H, behavior: 'smooth' })
+              el.scrollTo({ top: i * ITEM_H, behavior: 'smooth' })
             }}
           >
             {format(v)}

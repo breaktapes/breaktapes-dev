@@ -309,6 +309,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
   const [citySelect, setCitySelect] = useState('')  // dropdown value
   const [cityText, setCityText]     = useState('')  // free-text (when "other" or no catalog)
   const [date, setDate]             = useState(() => new Date().toISOString().split('T')[0])
+  const [showManualDate, setShowManualDate] = useState(false)
   const [placing, setPlacing]       = useState('')
   const [medal, setMedal]           = useState('')
   const [customMedal, setCustomMedal] = useState('')
@@ -559,6 +560,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
         .filter((p, i, arr) => arr.findIndex(x => x.label === p.label) === i)
       setYearPills(pills)
       setShowYearPicker(true)
+      setShowManualDate(false)
     }
 
     setShowSuggest(false)
@@ -842,6 +844,79 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
             document.body,
           )}
 
+          {/* ── Date / Year picker — right under race name ── */}
+          {(() => {
+            const currentYear = new Date().getFullYear()
+            const recentYears = Array.from({ length: 10 }, (_, i) => currentYear - i)
+            const pills = showYearPicker
+              ? yearPills.map(p => ({ label: p.label, year: p.row.year ?? currentYear, row: p.row as typeof yearPills[0]['row'] | null }))
+              : recentYears.map(y => ({ label: String(y), year: y, row: null as typeof yearPills[0]['row'] | null }))
+
+            return (
+              <Field label="Date *">
+                {showManualDate ? (
+                  <div>
+                    <DateInput value={date} onChange={setDate} />
+                    <button
+                      type="button"
+                      style={{ fontSize: '11px', color: 'var(--muted)', background: 'none', border: 'none', padding: '4px 0', cursor: 'pointer', fontFamily: 'var(--body)' }}
+                      onClick={() => setShowManualDate(false)}
+                    >
+                      ← pick year
+                    </button>
+                  </div>
+                ) : (
+                  <div>
+                    <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
+                      {pills.map((pill, i) => {
+                        const isSelected = date?.startsWith(String(pill.year))
+                        return (
+                          <button
+                            key={i}
+                            type="button"
+                            style={{
+                              ...st.yearPill,
+                              ...(isSelected ? { background: 'var(--orange)', color: 'var(--black)', borderColor: 'var(--orange)' } : {}),
+                            }}
+                            onMouseDown={e => {
+                              e.preventDefault()
+                              if (pill.row && pill.row.month && pill.row.day) {
+                                setDate(`${pill.year}-${pad2(pill.row.month)}-${pad2(pill.row.day)}`)
+                              } else {
+                                const monthDay = date && date.length >= 10 ? date.slice(5) : `${pad2(new Date().getMonth() + 1)}-${pad2(new Date().getDate())}`
+                                setDate(`${pill.year}-${monthDay}`)
+                              }
+                              if (showYearPicker) { setShowYearPicker(false); setYearPills([]) }
+                            }}
+                          >
+                            {pill.label}
+                          </button>
+                        )
+                      })}
+                      <button
+                        type="button"
+                        style={{ ...st.yearPill, color: 'var(--muted)', borderColor: 'var(--border2)', fontSize: '11px', whiteSpace: 'nowrap' }}
+                        onMouseDown={e => { e.preventDefault(); setShowManualDate(true); setShowYearPicker(false); setYearPills([]) }}
+                      >
+                        Add manually →
+                      </button>
+                    </div>
+                    {date && (
+                      <p style={{ margin: '4px 0 0', fontSize: '11px', color: 'var(--muted)' }}>
+                        {new Date(date + 'T00:00:00').toLocaleDateString('en', { year: 'numeric', month: 'short', day: 'numeric' })}
+                      </p>
+                    )}
+                  </div>
+                )}
+                {mode === 'upcoming' && date && date < new Date().toISOString().split('T')[0] && (
+                  <p style={{ margin: '4px 0 0', fontSize: '11px', color: 'var(--orange)', fontWeight: 600 }}>
+                    ⚠️ This date is in the past — use "Log a Race" tab for completed races
+                  </p>
+                )}
+              </Field>
+            )
+          })()}
+
           {/* ── Race Type ── */}
           <Field label="Race Type">
             <select style={st.input} value={sport} onChange={e => setSport(e.target.value)}>
@@ -940,52 +1015,6 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
               )}
             </Field>
           </div>
-
-          {/* ── Date / Year picker ── */}
-          <Field label="Date *">
-            {showYearPicker ? (
-              <div>
-                <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
-                  {yearPills.map((pill, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      style={st.yearPill}
-                      onMouseDown={e => {
-                        e.preventDefault()
-                        const r = pill.row
-                        if (r.month && r.day) {
-                          const yr = r.year ?? new Date().getFullYear()
-                          setDate(`${yr}-${pad2(r.month)}-${pad2(r.day)}`)
-                        }
-                        setShowYearPicker(false)
-                        setYearPills([])
-                      }}
-                    >
-                      {pill.label}
-                    </button>
-                  ))}
-                  <button
-                    type="button"
-                    style={{ ...st.yearPill, color: 'var(--muted)', borderColor: 'var(--border2)' }}
-                    onMouseDown={e => { e.preventDefault(); setShowYearPicker(false); setYearPills([]) }}
-                  >
-                    Enter date manually
-                  </button>
-                </div>
-                <p style={{ margin: '4px 0 0', fontSize: '11px', color: 'var(--muted)' }}>
-                  Tap a year to auto-fill the race date
-                </p>
-              </div>
-            ) : (
-              <DateInput value={date} onChange={setDate} />
-            )}
-            {mode === 'upcoming' && date && date < new Date().toISOString().split('T')[0] && (
-              <p style={{ margin: '4px 0 0', fontSize: '11px', color: 'var(--orange)', fontWeight: 600 }}>
-                ⚠️ This date is in the past — use "Log a Race" tab for completed races
-              </p>
-            )}
-          </Field>
 
           {/* ── Placing (past only) ── */}
           {mode === 'past' && (
