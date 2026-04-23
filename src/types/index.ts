@@ -129,8 +129,8 @@ export const THEMES: Theme[] = [
   { id: 'deep-space',    label: 'Deep Space',      pro: false },
   { id: 'race-night',    label: 'Race Night',      pro: false },
   { id: 'obsidian',      label: 'Obsidian',        pro: false },
-  { id: 'acid-track',    label: 'Acid Track',      pro: false },
-  { id: 'titanium',      label: 'Titanium',        pro: false, comingSoon: true },
+  { id: 'acid-track',    label: 'Acid Track',      pro: false, comingSoon: true },
+  { id: 'titanium',      label: 'Titanium',        pro: false },
   { id: 'ember',         label: 'Ember',           pro: false, comingSoon: true },
   { id: 'polar-circuit', label: 'Polar Circuit',   pro: false, comingSoon: true },
 ]
