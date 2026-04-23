@@ -510,7 +510,7 @@ function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport, onDiscover
         ) : viewMode === 'compact' ? (
           <>
             {sorted.slice(0, visibleCount).map(r => (
-              <CompactRow key={r.id} race={r} isPB={pbMap[normKey(r.distance)]?.id === r.id} onClick={() => setSelectedRace(r)} />
+              <CompactRow key={r.id} race={r} isPB={pbMap[normKey(r.distance)]?.id === r.id} onClick={() => { setSelectedRace(r); setExpanded(true) }} />
             ))}
             {sorted.length > visibleCount && (
               <button
@@ -524,7 +524,7 @@ function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport, onDiscover
         ) : (
           <>
             {sorted.slice(0, visibleCount).map(r => (
-              <DetailedRow key={r.id} race={r} isPB={pbMap[normKey(r.distance)]?.id === r.id} onClick={() => setSelectedRace(r)} />
+              <DetailedRow key={r.id} race={r} isPB={pbMap[normKey(r.distance)]?.id === r.id} onClick={() => { setSelectedRace(r); setExpanded(true) }} />
             ))}
             {sorted.length > visibleCount && (
               <button
