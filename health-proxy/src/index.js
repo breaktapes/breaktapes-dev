@@ -227,14 +227,38 @@ export default {
     if (path === '/import/ultrasignup' && request.method === 'POST') {
       try {
         const { firstName, lastName } = await request.json();
-        const q = encodeURIComponent(`${firstName} ${lastName}`);
-        const url = `https://ultrasignup.com/service/events.svc/GetParticipantSearch/p=1/q=${q}`;
+        const f = encodeURIComponent((firstName || '').trim());
+        const l = encodeURIComponent((lastName  || '').trim());
+        if (!f || !l) return json({ results: [], status: 'ok' }, 200, origin);
+        const url = `https://ultrasignup.com/service/events.svc/historybyname/${f}/${l}/`;
         const resp = await fetch(url, {
           headers: { 'Accept': 'application/json', 'User-Agent': 'Mozilla/5.0' },
         });
         if (!resp.ok) throw new Error(`UltraSignup ${resp.status}`);
-        const data = await resp.json();
-        return json({ results: data, status: 'ok' }, 200, origin);
+        const persons = await resp.json();
+
+        // Convert "M/D/YYYY HH:MM:SS AM/PM" → "YYYY-MM-DD"
+        const normDate = (s) => {
+          if (!s) return '';
+          const m = String(s).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+          return m ? `${m[3]}-${m[1].padStart(2,'0')}-${m[2].padStart(2,'0')}` : '';
+        };
+
+        const results = [];
+        for (const p of (Array.isArray(persons) ? persons : [])) {
+          for (const r of (p.Results || [])) {
+            results.push({
+              raceName: r.eventname || 'Unknown Race',
+              date:     normDate(r.eventdate),
+              time:     r.formattime || r.time || '',
+              city:     r.city || '',
+              state:    r.state || '',
+              place:    r.place || null,
+              gender_place: r.gender_place || null,
+            });
+          }
+        }
+        return json({ results, status: 'ok' }, 200, origin);
       } catch (e) {
         return json({ results: [], status: 'error', message: e.message }, 502, origin);
       }

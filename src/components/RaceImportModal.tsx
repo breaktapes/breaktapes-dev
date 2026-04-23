@@ -86,12 +86,12 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
 
     if (us.status === 'fulfilled' && us.value.status === 'ok') {
       for (const r of (us.value.results ?? [])) {
+        if (!r.raceName || r.raceName.length < 3) continue
         all.push({
-          raceName: r.EventName ?? r.event_name ?? r.name ?? 'Unknown Race',
-          date:     r.EventDate ?? r.date ?? '',
-          time:     r.ChipTime ?? r.time ?? undefined,
+          raceName: r.raceName,
+          date:     r.date ?? '',
+          time:     r.time || undefined,
           source:   'ultrasignup',
-          raw:      Object.values(r).map(String),
         })
       }
     } else if (us.status === 'rejected' || us.value?.status === 'error') {
