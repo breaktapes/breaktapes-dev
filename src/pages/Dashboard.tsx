@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
@@ -4283,49 +4284,51 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
   }
 
   return (
-    <div className="card-v3" style={st.glowCard}>
-      <div style={st.widgetLabel}>🔮 RACE PREDICTOR</div>
-      <div style={st.widgetTitle}>RIEGEL PREDICTOR</div>
-      <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '-4px' }}>
-        Based on {race.name} · {race.date}
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-        {table.map(row => (
-          <div
-            key={row.distance}
-            style={{
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              padding: '8px 10px', borderRadius: '6px',
-              background: row.isSameAsInput ? 'rgba(var(--orange-ch),0.1)' : 'var(--surface3)',
-              border: `1px solid ${row.isSameAsInput ? 'rgba(var(--orange-ch),0.3)' : 'var(--border)'}`,
-            }}
-          >
-            <span style={{ fontSize: '13px', color: row.isSameAsInput ? 'var(--orange)' : 'var(--white)', fontWeight: row.isSameAsInput ? 700 : 400 }}>
-              {row.distance}
-              {row.isSameAsInput && <span style={{ fontSize: '10px', marginLeft: '6px', color: 'var(--muted)', textTransform: 'uppercase', fontFamily: 'var(--headline)' }}>actual</span>}
-            </span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', color: row.isSameAsInput ? 'var(--orange)' : 'var(--white)' }}>
-                {row.predictedTime}
+    <>
+      <div className="card-v3" style={st.glowCard}>
+        <div style={st.widgetLabel}>🔮 RACE PREDICTOR</div>
+        <div style={st.widgetTitle}>RIEGEL PREDICTOR</div>
+        <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '-4px' }}>
+          Based on {race.name} · {race.date}
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          {table.map(row => (
+            <div
+              key={row.distance}
+              style={{
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                padding: '8px 10px', borderRadius: '6px',
+                background: row.isSameAsInput ? 'rgba(var(--orange-ch),0.1)' : 'var(--surface3)',
+                border: `1px solid ${row.isSameAsInput ? 'rgba(var(--orange-ch),0.3)' : 'var(--border)'}`,
+              }}
+            >
+              <span style={{ fontSize: '13px', color: row.isSameAsInput ? 'var(--orange)' : 'var(--white)', fontWeight: row.isSameAsInput ? 700 : 400 }}>
+                {row.distance}
+                {row.isSameAsInput && <span style={{ fontSize: '10px', marginLeft: '6px', color: 'var(--muted)', textTransform: 'uppercase', fontFamily: 'var(--headline)' }}>actual</span>}
               </span>
-              {!row.isSameAsInput && upcomingRaces.length > 0 && (
-                <button
-                  onClick={() => { setSelectedRow(row.distance); setShowLinkSheet(true) }}
-                  style={{ background: 'rgba(var(--orange-ch),0.15)', color: 'var(--orange)', border: '1px solid rgba(var(--orange-ch),0.4)', borderRadius: '5px', padding: '3px 8px', fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', cursor: 'pointer' }}
-                >
-                  SET GOAL
-                </button>
-              )}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', color: row.isSameAsInput ? 'var(--orange)' : 'var(--white)' }}>
+                  {row.predictedTime}
+                </span>
+                {!row.isSameAsInput && upcomingRaces.length > 0 && (
+                  <button
+                    onClick={() => { setSelectedRow(row.distance); setShowLinkSheet(true) }}
+                    style={{ background: 'rgba(var(--orange-ch),0.15)', color: 'var(--orange)', border: '1px solid rgba(var(--orange-ch),0.4)', borderRadius: '5px', padding: '3px 8px', fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', cursor: 'pointer' }}
+                  >
+                    SET GOAL
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
-      <div style={{ fontSize: '11px', color: 'var(--muted2)', lineHeight: 1.5 }}>
-        T₂ = T₁ × (D₂/D₁)^1.06
+          ))}
+        </div>
+        <div style={{ fontSize: '11px', color: 'var(--muted2)', lineHeight: 1.5 }}>
+          T₂ = T₁ × (D₂/D₁)^1.06
+        </div>
       </div>
 
-      {/* Link to upcoming race sheet */}
-      {showLinkSheet && (
+      {/* Link sheet rendered via portal so it overlays the full page, not just the widget */}
+      {showLinkSheet && createPortal(
         <div style={{ ...st.modalOverlay, zIndex: 1100 }} onClick={() => setShowLinkSheet(false)}>
           <div style={{ ...st.customizeSheet, maxHeight: '60vh' }} onClick={e => e.stopPropagation()}>
             <div style={{ width: '40px', height: '4px', background: 'var(--border2)', borderRadius: '2px', margin: '0 auto 16px' }} />
@@ -4344,9 +4347,10 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
               ))}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
-    </div>
+    </>
   )
 }
 
