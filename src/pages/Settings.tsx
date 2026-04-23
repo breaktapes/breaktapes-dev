@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useClerk } from '@clerk/clerk-react'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
@@ -57,20 +56,7 @@ const sectionLabel: React.CSSProperties = {
   marginBottom: '0.75rem',
 }
 
-const inputStyle: React.CSSProperties = {
-  width: '100%',
-  background: 'var(--surface3)',
-  border: '1px solid var(--border2)',
-  borderRadius: '6px',
-  color: 'var(--white)',
-  fontSize: 'var(--text-sm)',
-  padding: '0.6rem 0.75rem',
-  fontFamily: 'var(--body)',
-  boxSizing: 'border-box',
-}
-
 export function Settings() {
-  const navigate = useNavigate()
   const { signOut, openUserProfile } = useClerk()
   const authUser = useAuthStore(s => s.authUser)
   const athlete = useAthleteStore(s => s.athlete)

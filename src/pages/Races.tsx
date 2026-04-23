@@ -179,10 +179,19 @@ function YearTabs({
 
 function StatsStrip({ races }: { races: Race[] }) {
   const units = useUnits()
-  const km = races.reduce((s, r) => s + distanceToKm(r.distance), 0)
+  // KM and medals exclude DNF / DSQ / DNS — distance only counts when the
+  // user actually finished, and you can't be awarded a medal you didn't earn.
+  const finished = races.filter(r => !r.outcome || r.outcome === 'Finished')
+  const km = finished.reduce((s, r) => s + distanceToKm(r.distance), 0)
   const totalDist = Math.round(units === 'imperial' ? km * 0.621371 : km)
   const countries = new Set(races.map(r => r.country).filter(Boolean)).size
-  const medals = races.filter(r => r.medal).length
+  // 1 medal per finished race that has any medal logged, +1 extra for a
+  // podium (gold/silver/bronze) — podium racers receive a separate medal.
+  const finisherMedals = finished.filter(r => r.medal).length
+  const podiumMedals = finished.filter(r =>
+    ['gold', 'silver', 'bronze'].includes((r.medal || '').toLowerCase())
+  ).length
+  const medals = finisherMedals + podiumMedals
 
   const stats = [
     { val: races.length, label: 'RACES' },
@@ -211,6 +220,9 @@ function CompactRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onClic
   const day = d.getDate()
   const city = [race.city, race.country].filter(Boolean).join(', ')
   const label = distLabel(race.distance)
+  const nonFinish = race.outcome && race.outcome !== 'Finished'
+    ? race.outcome.toUpperCase()
+    : null
 
   return (
     <div
@@ -232,7 +244,12 @@ function CompactRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onClic
         {city && <div className="rrc-meta">{city}</div>}
       </div>
       <div style={{ textAlign: 'right', flexShrink: 0 }}>
-        <div className="rrc-time">{race.time ?? '—'}</div>
+        <div
+          className="rrc-time"
+          style={nonFinish ? { color: 'var(--muted)' } : undefined}
+        >
+          {nonFinish ?? (race.time ?? '—')}
+        </div>
         {label && <div className="rrc-dist">{label}</div>}
       </div>
     </div>
@@ -248,6 +265,9 @@ function DetailedRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onCli
   const flag = countryFlag(race.country)
   const placing = parsePlacing(race.placing)
   const label = distLabel(race.distance)
+  const nonFinish = race.outcome && race.outcome !== 'Finished'
+    ? race.outcome.toUpperCase()
+    : null
 
   return (
     <div
@@ -271,8 +291,8 @@ function DetailedRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onCli
           </div>
         </div>
         <div style={{ textAlign: 'right', flexShrink: 0 }}>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '15px', color: isPB ? 'var(--green)' : 'var(--orange)', letterSpacing: '0.02em' }}>
-            {race.time ?? '—'}
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '15px', color: nonFinish ? 'var(--muted)' : (isPB ? 'var(--green)' : 'var(--orange)'), letterSpacing: '0.02em' }}>
+            {nonFinish ?? (race.time ?? '—')}
           </div>
           {label && <div style={{ fontSize: '10px', color: 'var(--muted)', textAlign: 'right', marginTop: '1px' }}>{label}</div>}
         </div>
@@ -473,8 +493,8 @@ function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport, onDiscover
         </div>
       </div>
 
-      {/* Stats strip — only for race history */}
-      {!showWishlist && <StatsStrip races={races} />}
+      {/* Stats strip — scoped to the active year filter */}
+      {!showWishlist && <StatsStrip races={filtered} />}
 
       {/* Content */}
       <div className="races-sheet-list">

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { parseDistKm } from '@/lib/raceFormulas'
+import { fmtDateDDMM } from '@/lib/utils'
 import type { Race } from '@/types'
 
 const HEALTH_PROXY = 'https://health.breaktapes.com'
@@ -13,6 +14,8 @@ interface ImportResult {
   date: string
   time?: string
   source: 'ultrasignup' | 'marathonview'
+  distance_m?: number
+  country?: string
   raw?: string[]
 }
 
@@ -43,6 +46,7 @@ function normalizeDateStr(d: string): string {
 export function RaceImportModal({ onClose }: { onClose: () => void }) {
   const addRace    = useRaceStore(s => s.addRace)
   const existingRaces = useRaceStore(s => s.races)
+  const upcomingRaces = useRaceStore(s => s.upcomingRaces)
 
   const [step, setStep]               = useState<Step>('search')
   const [firstName, setFirstName]     = useState('')
@@ -83,12 +87,12 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
 
     if (us.status === 'fulfilled' && us.value.status === 'ok') {
       for (const r of (us.value.results ?? [])) {
+        if (!r.raceName || r.raceName.length < 3) continue
         all.push({
-          raceName: r.EventName ?? r.event_name ?? r.name ?? 'Unknown Race',
-          date:     r.EventDate ?? r.date ?? '',
-          time:     r.ChipTime ?? r.time ?? undefined,
+          raceName: r.raceName,
+          date:     r.date ?? '',
+          time:     r.time || undefined,
           source:   'ultrasignup',
-          raw:      Object.values(r).map(String),
         })
       }
     } else if (us.status === 'rejected' || us.value?.status === 'error') {
@@ -110,7 +114,15 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
     setStep('results')
   }
 
+  function isDuplicate(r: ImportResult): boolean {
+    const date = r.date || ''
+    if (!date) return false
+    return existingRaces.some(ex => ex.date === date)
+        || upcomingRaces.some(ex => ex.date === date)
+  }
+
   function toggleSelect(i: number) {
+    if (isDuplicate(results[i])) return
     setSelected(prev => {
       const next = new Set(prev)
       next.has(i) ? next.delete(i) : next.add(i)
@@ -128,8 +140,12 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
       const isDupe = existingRaces.some(
         ex => ex.name?.toLowerCase() === r.raceName.toLowerCase() && ex.date === date
       )
-      if (isDupe) { skipped++; continue }
-      const distKm = parseDistKm(r.raceName)
+      const dateMatch = existingRaces.some(ex => ex.date === date)
+                     || upcomingRaces.some(ex => ex.date === date)
+      if (isDupe || dateMatch) { skipped++; continue }
+      const distKm = r.distance_m && r.distance_m > 0
+        ? r.distance_m / 1000
+        : parseDistKm(r.raceName)
       const distance = kmToDistLabel(distKm)
       const race: Race = {
         id:       crypto.randomUUID(),
@@ -139,7 +155,7 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
         distance,
         sport:    'Running',
         city:     '',
-        country:  '',
+        country:  r.country ? r.country.toUpperCase() : '',
       }
       addRace(race)
     }
@@ -234,41 +250,78 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
                 </div>
               ) : (
                 <>
-                  <p style={st.hint}>
-                    Tap races to select them. Found {results.length} result{results.length !== 1 ? 's' : ''}.
-                  </p>
-                  {results.map((r, i) => (
+                  {(() => {
+                    const dupeCount = results.filter(isDuplicate).length
+                    return (
+                      <p style={st.hint}>
+                        Tap races to select them. Found {results.length} result{results.length !== 1 ? 's' : ''}
+                        {dupeCount > 0 ? ` — ${dupeCount} already in your history.` : '.'}
+                      </p>
+                    )
+                  })()}
+                  {results.map((r, i) => {
+                    const dupe = isDuplicate(r)
+                    return (
                     <button
                       key={i}
                       style={{
                         ...st.resultRow,
-                        background: selected.has(i) ? 'rgba(var(--orange-ch),0.1)' : 'var(--surface3)',
-                        border: `1px solid ${selected.has(i) ? 'rgba(var(--orange-ch),0.4)' : 'var(--border2)'}`,
+                        background: dupe
+                          ? 'var(--surface2)'
+                          : selected.has(i) ? 'rgba(var(--orange-ch),0.1)' : 'var(--surface3)',
+                        border: `1px solid ${dupe
+                          ? 'var(--border)'
+                          : selected.has(i) ? 'rgba(var(--orange-ch),0.4)' : 'var(--border2)'}`,
+                        opacity: dupe ? 0.55 : 1,
+                        cursor: dupe ? 'not-allowed' : 'pointer',
                       }}
                       onClick={() => toggleSelect(i)}
                       type="button"
+                      disabled={dupe}
+                      aria-disabled={dupe}
+                      title={dupe ? 'Already in your race history' : undefined}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{ fontSize: '16px', flexShrink: 0 }}>{selected.has(i) ? '✓' : '○'}</span>
-                        <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', alignItems: 'center', gap: '10px' }}>
+                        <span style={{ fontSize: '16px', flexShrink: 0 }}>
+                          {dupe ? '✕' : selected.has(i) ? '✓' : '○'}
+                        </span>
+                        <div style={{ minWidth: 0 }}>
                           <p style={{ margin: 0, fontWeight: 600, fontSize: '14px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {r.raceName}
                           </p>
-                          <p style={{ margin: '2px 0 0', fontSize: '12px', color: 'var(--muted)' }}>
-                            {[r.date, r.time].filter(Boolean).join(' · ')}
-                            <span style={{ marginLeft: '6px', fontSize: '10px', color: 'var(--muted2)', textTransform: 'uppercase', fontFamily: 'var(--headline)', fontWeight: 700 }}>
-                              {r.source}
-                            </span>
-                          </p>
-                          {(() => { const lbl = kmToDistLabel(parseDistKm(r.raceName)); return lbl ? (
-                            <p style={{ margin: '2px 0 0', fontSize: '10px', color: 'var(--muted2)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                              {lbl}
+                          {(() => {
+                            const km = r.distance_m && r.distance_m > 0 ? r.distance_m / 1000 : parseDistKm(r.raceName)
+                            const lbl = kmToDistLabel(km)
+                            return lbl ? (
+                              <p style={{ margin: '2px 0 0', fontSize: '10px', color: 'var(--muted2)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                                {lbl}
+                              </p>
+                            ) : null
+                          })()}
+                          {dupe && (
+                            <p style={{ margin: '4px 0 0', fontSize: '10px', color: 'var(--green)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                              ✓ Already in your race history
                             </p>
-                          ) : null })()}
+                          )}
+                        </div>
+                        <div style={{ textAlign: 'right', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
+                          {r.time && (
+                            <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '15px', color: 'var(--orange)', letterSpacing: '0.02em', lineHeight: 1 }}>
+                              {r.time}
+                            </div>
+                          )}
+                          {r.date && (
+                            <div style={{ fontSize: '11px', color: 'var(--muted)', fontFamily: 'var(--body)' }}>
+                              {fmtDateDDMM(r.date)}
+                            </div>
+                          )}
+                          <div style={{ fontSize: '9px', color: 'var(--muted2)', textTransform: 'uppercase', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em' }}>
+                            {r.source}
+                          </div>
                         </div>
                       </div>
                     </button>
-                  ))}
+                  )})}
                   {skippedCount > 0 && (
                     <p style={{ margin: 0, fontSize: '12px', color: 'var(--muted)', textAlign: 'center' }}>
                       {skippedCount} already logged — skipped.
@@ -306,7 +359,7 @@ const st = {
   header:     { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 0', flexShrink: 0 } as React.CSSProperties,
   title:      { fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '20px', letterSpacing: '0.06em', textTransform: 'uppercase' as const, color: 'var(--white)' } as React.CSSProperties,
   closeBtn:   { background: 'transparent', border: 'none', color: 'var(--muted)', fontSize: '18px', cursor: 'pointer', padding: '4px 8px', lineHeight: 1 } as React.CSSProperties,
-  body:       { padding: '16px', display: 'flex', flexDirection: 'column', gap: '14px', overflowY: 'auto', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain', flex: 1, paddingBottom: '32px' } as React.CSSProperties,
+  body:       { padding: '16px', display: 'flex', flexDirection: 'column', gap: '14px', overflowY: 'auto', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain', flex: 1, paddingBottom: 'calc(var(--bottom-nav-base-height) + var(--safe-bottom) + 32px)' } as React.CSSProperties,
   fieldLabel: { fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: 'var(--muted)' } as React.CSSProperties,
   input:      { width: '100%', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px', color: 'var(--white)', fontSize: '14px', padding: '0.6rem 0.75rem', fontFamily: 'var(--body)', boxSizing: 'border-box' as const, minWidth: 0 } as React.CSSProperties,
   hint:       { margin: 0, fontSize: '13px', color: 'var(--muted)', fontFamily: 'var(--body)' } as React.CSSProperties,

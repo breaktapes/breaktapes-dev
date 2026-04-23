@@ -227,14 +227,38 @@ export default {
     if (path === '/import/ultrasignup' && request.method === 'POST') {
       try {
         const { firstName, lastName } = await request.json();
-        const q = encodeURIComponent(`${firstName} ${lastName}`);
-        const url = `https://ultrasignup.com/service/events.svc/GetParticipantSearch/p=1/q=${q}`;
+        const f = encodeURIComponent((firstName || '').trim());
+        const l = encodeURIComponent((lastName  || '').trim());
+        if (!f || !l) return json({ results: [], status: 'ok' }, 200, origin);
+        const url = `https://ultrasignup.com/service/events.svc/historybyname/${f}/${l}/`;
         const resp = await fetch(url, {
           headers: { 'Accept': 'application/json', 'User-Agent': 'Mozilla/5.0' },
         });
         if (!resp.ok) throw new Error(`UltraSignup ${resp.status}`);
-        const data = await resp.json();
-        return json({ results: data, status: 'ok' }, 200, origin);
+        const persons = await resp.json();
+
+        // Convert "M/D/YYYY HH:MM:SS AM/PM" → "YYYY-MM-DD"
+        const normDate = (s) => {
+          if (!s) return '';
+          const m = String(s).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+          return m ? `${m[3]}-${m[1].padStart(2,'0')}-${m[2].padStart(2,'0')}` : '';
+        };
+
+        const results = [];
+        for (const p of (Array.isArray(persons) ? persons : [])) {
+          for (const r of (p.Results || [])) {
+            results.push({
+              raceName: r.eventname || 'Unknown Race',
+              date:     normDate(r.eventdate),
+              time:     r.formattime || r.time || '',
+              city:     r.city || '',
+              state:    r.state || '',
+              place:    r.place || null,
+              gender_place: r.gender_place || null,
+            });
+          }
+        }
+        return json({ results, status: 'ok' }, 200, origin);
       } catch (e) {
         return json({ results: [], status: 'error', message: e.message }, 502, origin);
       }
@@ -253,25 +277,66 @@ export default {
     if (path === '/import/marathonview' && request.method === 'POST') {
       try {
         const { name } = await request.json();
-        const url = `https://marathonview.net/search/runners?query=${encodeURIComponent(name)}`;
+        const trimmed = (name || '').trim();
+        if (!trimmed) return json({ results: [], status: 'ok' }, 200, origin);
+        const url = `https://marathonview.net/query/${encodeURIComponent(trimmed)}`;
         const resp = await fetch(url, {
           headers: { 'Accept': 'text/html', 'User-Agent': 'Mozilla/5.0' },
         });
         if (!resp.ok) throw new Error(`MarathonView ${resp.status}`);
         const html = await resp.text();
-        const rows = [];
-        const rowRe = /<tr[^>]*>[\s\S]*?<\/tr>/gi;
-        const cellRe = /<td[^>]*>([\s\S]*?)<\/td>/gi;
-        let rowMatch;
-        while ((rowMatch = rowRe.exec(html)) !== null) {
-          const cells = [];
-          let cellMatch;
-          while ((cellMatch = cellRe.exec(rowMatch[0])) !== null) {
-            cells.push(cellMatch[1].replace(/<[^>]+>/g, '').trim());
+
+        // MarathonView server-renders results as `const json = {...};` inside a <script> tag.
+        // Brace-balanced extractor (must respect string literals).
+        const startIdx = html.indexOf('const json=');
+        if (startIdx === -1) return json({ results: [], status: 'ok' }, 200, origin);
+        const braceStart = html.indexOf('{', startIdx);
+        if (braceStart === -1) return json({ results: [], status: 'ok' }, 200, origin);
+        let depth = 0, inStr = false, esc = false, end = -1;
+        for (let i = braceStart; i < html.length; i++) {
+          const ch = html[i];
+          if (esc) { esc = false; continue; }
+          if (inStr) {
+            if (ch === '\\') { esc = true; continue; }
+            if (ch === '"') inStr = false;
+            continue;
           }
-          if (cells.length >= 3) rows.push({ raceName: cells[0], date: cells[1], time: cells[2], raw: cells });
+          if (ch === '"') { inStr = true; continue; }
+          if (ch === '{') depth++;
+          else if (ch === '}') {
+            depth--;
+            if (depth === 0) { end = i; break; }
+          }
         }
-        return json({ results: rows, status: 'ok' }, 200, origin);
+        if (end === -1) return json({ results: [], status: 'ok' }, 200, origin);
+        let payload;
+        try { payload = JSON.parse(html.slice(braceStart, end + 1)); }
+        catch (_) { return json({ results: [], status: 'ok' }, 200, origin); }
+
+        const raceList = (payload && payload.data && Array.isArray(payload.data.results))
+          ? payload.data.results
+          : [];
+
+        const fmtTime = (secs) => {
+          if (!secs || !Number.isFinite(secs)) return '';
+          const h = Math.floor(secs / 3600);
+          const m = Math.floor((secs % 3600) / 60);
+          const s = Math.floor(secs % 60);
+          return h > 0
+            ? `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+            : `${m}:${String(s).padStart(2, '0')}`;
+        };
+
+        const results = raceList.map(r => ({
+          raceName:   r.event_name || r.race_name || 'Unknown Race',
+          date:       r.date || '',
+          time:       fmtTime(Number(r.result)),
+          distance_m: r.distance,
+          country:    r.event_country || '',
+          raw:        [r.event_name, r.date, fmtTime(Number(r.result))],
+        }));
+
+        return json({ results, status: 'ok' }, 200, origin);
       } catch (e) {
         return json({ results: [], status: 'error', message: e.message }, 502, origin);
       }
