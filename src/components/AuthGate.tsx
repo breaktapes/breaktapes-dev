@@ -7,6 +7,10 @@ import { IS_STAGING } from '@/env'
 
 type AuthView = 'signin' | 'signup'
 
+// Clerk JWT template name per environment. Production Clerk instance
+// holds both templates — one per Supabase project (prod vs staging).
+const JWT_TEMPLATE = IS_STAGING ? 'supabase-staging' : 'supabase'
+
 // Keeps Zustand authUser + Supabase JWT in sync with Clerk session.
 function useClerkSync() {
   const { isLoaded, isSignedIn, user } = useUser()
@@ -30,12 +34,20 @@ function useClerkSync() {
     setProAccess(IS_STAGING)
 
     const refresh = () =>
-      getToken({ template: 'supabase' }).then(t => setClerkToken(t))
+      getToken({ template: JWT_TEMPLATE }).then(t => setClerkToken(t))
 
     refresh()
     const interval = setInterval(refresh, 50_000)
     return () => clearInterval(interval)
   }, [isLoaded, isSignedIn, user, getToken, setAuthUser, setProAccess])
+}
+
+// On dev.breaktapes.com, only users with publicMetadata.staging_access = true
+// are allowed in. Grant access from Clerk dashboard → Users → select user →
+// Metadata → Public → { "staging_access": true }.
+function hasStagingAccess(user: { publicMetadata?: Record<string, unknown> } | null | undefined): boolean {
+  if (!IS_STAGING) return true
+  return user?.publicMetadata?.staging_access === true
 }
 
 export function AuthGate({ children }: { children: React.ReactNode }) {
@@ -64,7 +76,49 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
 
   if (!isLoaded) return <AuthLoadingScreen />
   if (!isSignedIn) return <LandingScreen />
+  if (!hasStagingAccess(user)) return <StagingAccessDenied />
   return <>{children}</>
+}
+
+function StagingAccessDenied() {
+  const { signOut } = useAuth()
+  return (
+    <div style={{
+      position: 'fixed', inset: 0,
+      background: 'var(--black)',
+      display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+      gap: '24px', padding: '2rem', textAlign: 'center',
+    }}>
+      <span style={{
+        fontFamily: 'var(--headline)',
+        fontSize: '22px', fontWeight: 900,
+        letterSpacing: '0.18em', textTransform: 'uppercase',
+        color: 'var(--muted)',
+      }}>BREAKTAPES</span>
+      <h1 style={{
+        fontFamily: 'var(--headline)',
+        fontSize: 'clamp(28px, 6vw, 48px)', fontWeight: 900,
+        textTransform: 'uppercase', letterSpacing: '0.04em',
+        color: 'var(--white)', margin: 0,
+      }}>Invite Only</h1>
+      <p style={{ color: 'var(--muted)', fontSize: '15px', maxWidth: '420px', lineHeight: 1.5 }}>
+        dev.breaktapes.com is restricted to beta testers. Use{' '}
+        <a href="https://app.breaktapes.com" style={{ color: 'var(--orange)' }}>app.breaktapes.com</a>{' '}
+        instead, or request access from the team.
+      </p>
+      <button
+        onClick={() => signOut()}
+        style={{
+          background: 'transparent', color: 'var(--white)',
+          border: '1px solid var(--border2)', borderRadius: '4px',
+          padding: '0.8rem 1.25rem', fontFamily: 'var(--headline)',
+          fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase',
+          cursor: 'pointer', fontSize: '13px',
+        }}
+      >Sign Out</button>
+    </div>
+  )
 }
 
 function AuthLoadingScreen() {
