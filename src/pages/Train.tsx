@@ -5,8 +5,11 @@ import { useWearableStore } from '@/stores/useWearableStore'
 import { handleWhoopCallback, fetchWhoopActivities, fetchWhoopRecovery } from '@/lib/whoop'
 import { handleGarminCallback, fetchGarminActivities } from '@/lib/garmin'
 import { handleStravaCallback, fetchStravaActivities, stravaActivitiesToRaces } from '@/lib/strava'
-import { computeVDOT, paceZones } from '@/lib/raceFormulas'
+import { computeVDOT, paceZones, parseDistKm, parseTimeSecs, secsToHMS } from '@/lib/raceFormulas'
 import { useUnits } from '@/lib/units'
+import { TimePickerWheel } from '@/components/TimePickerWheel'
+import type { HMS } from '@/components/TimePickerWheel'
+import type { Race } from '@/types'
 
 const btnMain: React.CSSProperties = {
   background: 'var(--orange)',
@@ -39,19 +42,60 @@ const sectionLabel: React.CSSProperties = {
   marginBottom: '0.75rem',
 }
 
-const DISTANCES: { label: string; km: number }[] = [
-  { label: '5K',            km: 5 },
-  { label: '10K',           km: 10 },
-  { label: '10 Mile',       km: 16.09 },
-  { label: 'Half Marathon', km: 21.0975 },
-  { label: 'Marathon',      km: 42.195 },
-  { label: '50K',           km: 50 },
-  { label: '100K',          km: 100 },
-  { label: 'Sprint Tri',    km: 25.75 },
-  { label: 'Olympic Tri',   km: 51.5 },
-  { label: '70.3',          km: 113 },
-  { label: 'Ironman',       km: 226 },
+const fieldLabel: React.CSSProperties = {
+  display: 'block',
+  fontSize: 'var(--text-xs)',
+  color: 'var(--muted)',
+  marginBottom: '6px',
+  letterSpacing: '0.08em',
+  textTransform: 'uppercase',
+  fontFamily: 'var(--headline)',
+  fontWeight: 700,
+}
+
+const textInput: React.CSSProperties = {
+  width: '100%',
+  background: 'var(--surface3)',
+  border: '1px solid var(--border2)',
+  borderRadius: '6px',
+  color: 'var(--white)',
+  fontSize: '15px',
+  padding: '0.65rem 0.85rem',
+  fontFamily: 'var(--body)',
+  boxSizing: 'border-box' as const,
+}
+
+// ─── Running distances ────────────────────────────────────────────────────────
+
+type RunDistId = '5k' | '10k' | '10mi' | 'hm' | 'm' | '50k' | '100k' | 'custom'
+
+interface RunDist { id: RunDistId; label: string; km: number }
+
+const RUN_DISTANCES: RunDist[] = [
+  { id: '5k',    label: '5K',           km: 5 },
+  { id: '10k',   label: '10K',          km: 10 },
+  { id: '10mi',  label: '10 Mile',      km: 16.09 },
+  { id: 'hm',    label: 'Half Marathon',km: 21.0975 },
+  { id: 'm',     label: 'Marathon',     km: 42.195 },
+  { id: '50k',   label: '50K',          km: 50 },
+  { id: '100k',  label: '100K',         km: 100 },
+  { id: 'custom',label: 'Custom',       km: 0 },
 ]
+
+// ─── Triathlon distances ──────────────────────────────────────────────────────
+
+type TriDistId = 'sprint' | 'olympic' | '703' | 'ironman'
+
+interface TriDist { id: TriDistId; label: string; swimM: number; bikeKm: number; runKm: number; totalKm: number }
+
+const TRI_DISTANCES: TriDist[] = [
+  { id: 'sprint',  label: 'Sprint Triathlon',       swimM: 750,  bikeKm: 20,  runKm: 5,    totalKm: 25.75 },
+  { id: 'olympic', label: 'Olympic Triathlon',      swimM: 1500, bikeKm: 40,  runKm: 10,   totalKm: 51.5  },
+  { id: '703',     label: '70.3 / Middle Distance', swimM: 1900, bikeKm: 90,  runKm: 21.1, totalKm: 113   },
+  { id: 'ironman', label: 'IRONMAN / Full Distance', swimM: 3800, bikeKm: 180, runKm: 42.2, totalKm: 226  },
+]
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function secsToMMSS(secs: number): string {
   const m = Math.floor(secs / 60)
@@ -59,12 +103,62 @@ function secsToMMSS(secs: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`
 }
 
-function parseHMS(str: string): number | null {
-  const parts = str.trim().split(':').map(Number)
-  if (parts.some(isNaN)) return null
-  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2]
-  if (parts.length === 2) return parts[0] * 60 + parts[1]
-  return null
+function hmsToSecs(hms: HMS): number {
+  return hms.h * 3600 + hms.m * 60 + hms.s
+}
+
+function secsToHMS_obj(secs: number): HMS {
+  const s = Math.max(0, Math.round(secs))
+  return { h: Math.floor(s / 3600), m: Math.floor((s % 3600) / 60), s: s % 60 }
+}
+
+// Parse "1:30" or "90" as total seconds
+function parseMinSec(str: string): number | null {
+  const s = str.trim()
+  if (!s) return null
+  if (s.includes(':')) {
+    const parts = s.split(':').map(Number)
+    if (parts.length === 2 && !parts.some(isNaN)) return parts[0] * 60 + parts[1]
+    if (parts.length === 3 && !parts.some(isNaN)) return parts[0] * 3600 + parts[1] * 60 + parts[2]
+    return null
+  }
+  const n = parseFloat(s)
+  return isNaN(n) ? null : n
+}
+
+// Find fastest race at a given distance (with tolerance ±tolerance km)
+function findRunPB(races: Race[], targetKm: number, tolerance = 0.5): Race | null {
+  const matching = races.filter(r =>
+    r.time &&
+    r.outcome !== 'DNF' && r.outcome !== 'DNS' && r.outcome !== 'DSQ' &&
+    (() => { const km = parseDistKm(r.distance); return km > 0 && Math.abs(km - targetKm) <= tolerance })()
+  )
+  if (!matching.length) return null
+  return matching.reduce((best, r) => {
+    const ta = parseTimeSecs(r.time ?? '') ?? Infinity
+    const tb = parseTimeSecs(best.time ?? '') ?? Infinity
+    return ta < tb ? r : best
+  })
+}
+
+// Find triathlon PB for a given total km
+function findTriPB(races: Race[], targetKm: number, tolerance = 5): Race | null {
+  const tri = races.filter(r =>
+    r.time &&
+    r.outcome !== 'DNF' && r.outcome !== 'DNS' &&
+    (r.sport?.toLowerCase().includes('tri') || r.distance?.toLowerCase().includes('ironman'))
+  )
+  if (!tri.length) return null
+  const matching = tri.filter(r => {
+    const km = parseDistKm(r.distance)
+    return km > 0 && Math.abs(km - targetKm) <= tolerance
+  })
+  if (!matching.length) return null
+  return matching.reduce((best, r) => {
+    const ta = parseTimeSecs(r.time ?? '') ?? Infinity
+    const tb = parseTimeSecs(best.time ?? '') ?? Infinity
+    return ta < tb ? r : best
+  })
 }
 
 type Tab = 'pace' | 'activities' | 'readiness'
@@ -98,16 +192,43 @@ function whoopSportName(id: number): string {
   return names[id] ?? 'Activity'
 }
 
+// ─── Triathlon result type ────────────────────────────────────────────────────
+
+interface TriResult {
+  swimSec: number
+  t1Sec: number
+  bikeSec: number
+  t2Sec: number
+  runSec: number
+  totalSec: number
+}
+
 export function Train() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [activeTab, setActiveTab] = useState<Tab>('pace')
-  const [distanceIdx, setDistanceIdx] = useState(2) // HM default
-  const [goalTime, setGoalTime] = useState('')
-  const [paceResult, setPaceResult] = useState<{ km: string; mi: string } | null>(null)
-  const [paceZoneResult, setPaceZoneResult] = useState<ReturnType<typeof paceZones> | null>(null)
   const units = useUnits()
   const [oauthStatus, setOauthStatus] = useState<string | null>(null)
+
+  // ── Pace tab: sport selector ───────────────────────────────────────────────
+  const [sport, setSport] = useState<'running' | 'triathlon'>('running')
+
+  // ── Running calculator state ───────────────────────────────────────────────
+  const [runDistId, setRunDistId]     = useState<RunDistId>('hm')
+  const [customVal, setCustomVal]     = useState('')
+  const [customUnit, setCustomUnit]   = useState<'km' | 'mi'>('km')
+  const [goalHMS, setGoalHMS]         = useState<HMS>({ h: 1, m: 45, s: 0 })
+  const [runResult, setRunResult]     = useState<{ km: string; mi: string } | null>(null)
+  const [runZones, setRunZones]       = useState<ReturnType<typeof paceZones> | null>(null)
+
+  // ── Triathlon calculator state ─────────────────────────────────────────────
+  const [triDistId, setTriDistId]     = useState<TriDistId>('olympic')
+  const [swimPace, setSwimPace]       = useState('2:00')   // min:sec per 100m
+  const [t1Time, setT1Time]           = useState('2:00')   // MM:SS
+  const [bikeSpeed, setBikeSpeed]     = useState('30')     // km/h
+  const [t2Time, setT2Time]           = useState('1:30')   // MM:SS
+  const [runPace, setRunPace]         = useState('5:30')   // min:sec per km
+  const [triResult, setTriResult]     = useState<TriResult | null>(null)
 
   // Activity feed state
   const [activities, setActivities] = useState<ActivityItem[]>([])
@@ -125,8 +246,7 @@ export function Train() {
   const stravaToken = useWearableStore(s => s.stravaToken)
   const hasAnyWearable = !!(whoopToken || garminToken || stravaToken)
 
-  // Handle OAuth callbacks — detect ?state=whoop|garmin|strava&code=
-  // Also handles ?error=... returned by providers on denied/failed auth
+  // Handle OAuth callbacks
   useEffect(() => {
     const state    = searchParams.get('state')
     const code     = searchParams.get('code')
@@ -134,10 +254,8 @@ export function Train() {
 
     if (!state) return
 
-    // Strip query params from URL without reload
     window.history.replaceState({}, '', window.location.pathname)
 
-    // Provider rejected the OAuth — e.g. user denied or invalid client_id
     if (oauthErr) {
       const provider = state.split(':')[0]
       const desc = searchParams.get('error_description') ?? oauthErr
@@ -166,7 +284,7 @@ export function Train() {
     finish()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Load activity feed when activities tab is active and a wearable is connected
+  // Load activity feed
   useEffect(() => {
     if (activeTab !== 'activities' || !hasAnyWearable) return
     let cancelled = false
@@ -180,7 +298,6 @@ export function Train() {
         ])
         if (cancelled) return
 
-        // Count Strava race activities not yet imported
         const newRaces = stravaActivitiesToRaces(stravaActs, races)
         setStravaRaceCount(newRaces.length)
 
@@ -243,7 +360,6 @@ export function Train() {
     }
   }
 
-  // Load WHOOP recovery data for Readiness tab
   useEffect(() => {
     if (activeTab !== 'readiness' || !whoopToken) return
     let cancelled = false
@@ -270,23 +386,94 @@ export function Train() {
     return () => { cancelled = true }
   }, [activeTab, whoopToken]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  function calcPace() {
-    const totalSecs = parseHMS(goalTime)
-    if (!totalSecs) return
-    const dist = DISTANCES[distanceIdx]
-    const paceKm = totalSecs / dist.km
-    const paceMi = totalSecs / (dist.km / 1.60934)
-    setPaceResult({ km: secsToMMSS(paceKm), mi: secsToMMSS(paceMi) })
-    const vdot = computeVDOT(totalSecs, dist.km)
-    setPaceZoneResult(vdot ? paceZones(vdot, units) : null)
+  // ── Running calculation ────────────────────────────────────────────────────
+
+  function getRunKm(): number {
+    if (runDistId === 'custom') {
+      const n = parseFloat(customVal)
+      if (isNaN(n) || n <= 0) return 0
+      return customUnit === 'mi' ? n * 1.60934 : n
+    }
+    return RUN_DISTANCES.find(d => d.id === runDistId)!.km
   }
 
-  // Last 3 races with a time (fastest first per group, simplified)
-  const recentTimed = races
-    .filter(r => r.time)
-    .slice()
-    .sort((a, b) => b.date.localeCompare(a.date))
-    .slice(0, 3)
+  function calcRun() {
+    const totalSecs = hmsToSecs(goalHMS)
+    if (!totalSecs) return
+    const km = getRunKm()
+    if (!km) return
+    const paceKm = totalSecs / km
+    const paceMi = totalSecs / (km / 1.60934)
+    setRunResult({ km: secsToMMSS(paceKm), mi: secsToMMSS(paceMi) })
+    const vdot = computeVDOT(totalSecs, km)
+    setRunZones(vdot ? paceZones(vdot, units) : null)
+  }
+
+  function applyRunPB(pb: Race) {
+    const secs = parseTimeSecs(pb.time ?? '')
+    if (!secs) return
+    setGoalHMS(secsToHMS_obj(secs))
+    setRunResult(null)
+    setRunZones(null)
+  }
+
+  // ── Triathlon calculation (live) ───────────────────────────────────────────
+
+  useEffect(() => {
+    calcTri()
+  }, [swimPace, t1Time, bikeSpeed, t2Time, runPace, triDistId]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  function calcTri() {
+    const dist = TRI_DISTANCES.find(d => d.id === triDistId)!
+    const swimSec = (() => {
+      const paceSecPer100m = parseMinSec(swimPace)
+      if (!paceSecPer100m || paceSecPer100m <= 0) return null
+      return (dist.swimM / 100) * paceSecPer100m
+    })()
+    const t1Sec = parseMinSec(t1Time) ?? 0
+    const bikeSec = (() => {
+      const speedKmh = parseFloat(bikeSpeed)
+      if (isNaN(speedKmh) || speedKmh <= 0) return null
+      return (dist.bikeKm / speedKmh) * 3600
+    })()
+    const t2Sec = parseMinSec(t2Time) ?? 0
+    const runSec = (() => {
+      const paceSecPerKm = parseMinSec(runPace)
+      if (!paceSecPerKm || paceSecPerKm <= 0) return null
+      return dist.runKm * paceSecPerKm
+    })()
+
+    if (swimSec == null || bikeSec == null || runSec == null) {
+      setTriResult(null)
+      return
+    }
+
+    setTriResult({
+      swimSec,
+      t1Sec,
+      bikeSec,
+      t2Sec,
+      runSec,
+      totalSec: swimSec + t1Sec + bikeSec + t2Sec + runSec,
+    })
+  }
+
+  // Set default paces when tri distance changes
+  useEffect(() => {
+    const defaults: Record<TriDistId, { swim: string; bike: string; run: string }> = {
+      sprint:  { swim: '2:00', bike: '28', run: '5:30' },
+      olympic: { swim: '2:00', bike: '30', run: '5:15' },
+      '703':   { swim: '1:55', bike: '32', run: '5:00' },
+      ironman: { swim: '1:50', bike: '33', run: '5:30' },
+    }
+    const d = defaults[triDistId]
+    setSwimPace(d.swim)
+    setBikeSpeed(d.bike)
+    setRunPace(d.run)
+    setT1Time(triDistId === 'sprint' ? '1:30' : triDistId === 'olympic' ? '2:00' : '4:00')
+    setT2Time(triDistId === 'sprint' ? '1:00' : triDistId === 'olympic' ? '1:30' : '3:00')
+    setTriResult(null)
+  }, [triDistId])
 
   const tabStyle = (id: Tab): React.CSSProperties => ({
     background: 'none',
@@ -305,7 +492,6 @@ export function Train() {
 
   return (
     <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-      {/* Page heading */}
       <h1 style={{
         fontFamily: 'var(--headline)',
         fontSize: '22px',
@@ -319,12 +505,7 @@ export function Train() {
       </h1>
 
       {/* Tab bar */}
-      <div style={{
-        display: 'flex',
-        borderBottom: '1px solid var(--border)',
-        marginBottom: '0.25rem',
-        gap: '0.25rem',
-      }}>
+      <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', marginBottom: '0.25rem', gap: '0.25rem' }}>
         {TAB_LABELS.map(t => (
           <button key={t.id} style={tabStyle(t.id)} onClick={() => setActiveTab(t.id)}>
             {t.label}
@@ -332,164 +513,451 @@ export function Train() {
         ))}
       </div>
 
-      {/* ── Pace tab ── */}
+      {/* ══════════════════════ PACE TAB ══════════════════════════════════════ */}
       {activeTab === 'pace' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <div style={card}>
-            <p style={sectionLabel}>Pace Calculator</p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {/* Distance select */}
-              <div>
-                <label style={{ display: 'block', fontSize: 'var(--text-xs)', color: 'var(--muted)', marginBottom: '4px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-                  Distance
-                </label>
-                <select
-                  value={distanceIdx}
-                  onChange={e => { setDistanceIdx(Number(e.target.value)); setPaceResult(null) }}
-                  style={{
-                    width: '100%',
-                    background: 'var(--surface3)',
-                    border: '1px solid var(--border2)',
-                    borderRadius: '4px',
-                    color: 'var(--white)',
-                    fontSize: 'var(--text-sm)',
-                    padding: '0.6rem 0.75rem',
-                    fontFamily: 'var(--body)',
-                  }}
-                >
-                  {DISTANCES.map((d, i) => (
-                    <option key={d.label} value={i}>{d.label}</option>
-                  ))}
-                </select>
-              </div>
 
-              {/* Goal time input */}
-              <div>
-                <label style={{ display: 'block', fontSize: 'var(--text-xs)', color: 'var(--muted)', marginBottom: '4px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-                  Goal Time (HH:MM:SS)
-                </label>
-                <input
-                  type="text"
-                  placeholder="1:45:00"
-                  value={goalTime}
-                  onChange={e => { setGoalTime(e.target.value); setPaceResult(null) }}
-                  style={{
-                    width: '100%',
-                    background: 'var(--surface3)',
-                    border: '1px solid var(--border2)',
-                    borderRadius: '4px',
-                    color: 'var(--white)',
-                    fontSize: 'var(--text-sm)',
-                    padding: '0.6rem 0.75rem',
-                    fontFamily: 'var(--body)',
-                    boxSizing: 'border-box',
-                  }}
-                />
-              </div>
-
-              <button style={btnMain} onClick={calcPace}>
-                Calculate
-              </button>
-
-              {paceResult && (
-                <div style={{
-                  background: 'var(--surface3)',
-                  border: '1px solid var(--border2)',
+          {/* Sport selector */}
+          <div style={{ display: 'flex', gap: '8px' }}>
+            {(['running', 'triathlon'] as const).map(s => (
+              <button
+                key={s}
+                onClick={() => setSport(s)}
+                style={{
+                  flex: 1,
+                  padding: '0.6rem',
+                  border: `1px solid ${sport === s ? 'var(--orange)' : 'var(--border2)'}`,
                   borderRadius: '6px',
-                  padding: '0.75rem 1rem',
-                  display: 'flex',
-                  gap: '2rem',
-                }}>
-                  {/* Preferred unit shown in orange, other in white */}
+                  background: sport === s ? 'rgba(var(--orange-ch),0.12)' : 'var(--surface2)',
+                  color: sport === s ? 'var(--orange)' : 'var(--muted)',
+                  fontFamily: 'var(--headline)',
+                  fontWeight: 900,
+                  fontSize: '13px',
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s',
+                }}
+              >
+                {s === 'running' ? '🏃 Running' : '🏊 Triathlon'}
+              </button>
+            ))}
+          </div>
+
+          {/* ─── RUNNING CALCULATOR ─── */}
+          {sport === 'running' && (
+            <>
+              <div style={card}>
+                <p style={sectionLabel}>Pace Calculator</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+
+                  {/* Distance chips */}
                   <div>
-                    <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Per km</p>
-                    <p style={{ margin: '4px 0 0', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', color: units !== 'imperial' ? 'var(--orange)' : 'var(--white)', letterSpacing: '0.04em' }}>
-                      {paceResult.km}
-                    </p>
-                    <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>min/km{units !== 'imperial' && ' ✓'}</p>
+                    <label style={fieldLabel}>Distance</label>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                      {RUN_DISTANCES.map(d => {
+                        const pb = d.id !== 'custom' ? findRunPB(races, d.km) : null
+                        const isActive = runDistId === d.id
+                        return (
+                          <div key={d.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px' }}>
+                            <button
+                              onClick={() => { setRunDistId(d.id); setRunResult(null); setRunZones(null) }}
+                              style={{
+                                padding: '7px 14px',
+                                borderRadius: '20px',
+                                border: `1px solid ${isActive ? 'var(--orange)' : 'var(--border2)'}`,
+                                background: isActive ? 'rgba(var(--orange-ch),0.15)' : 'var(--surface3)',
+                                color: isActive ? 'var(--orange)' : 'var(--white)',
+                                fontFamily: 'var(--headline)',
+                                fontWeight: 700,
+                                fontSize: '12px',
+                                letterSpacing: '0.06em',
+                                cursor: 'pointer',
+                                transition: 'all 0.12s',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              {d.label}
+                            </button>
+                            {pb && (
+                              <button
+                                onClick={() => { setRunDistId(d.id); applyRunPB(pb) }}
+                                title={`Use your PB: ${pb.time}`}
+                                style={{
+                                  background: 'none',
+                                  border: 'none',
+                                  color: 'var(--orange)',
+                                  fontSize: '10px',
+                                  fontFamily: 'var(--body)',
+                                  cursor: 'pointer',
+                                  padding: '0',
+                                  opacity: 0.8,
+                                  whiteSpace: 'nowrap',
+                                }}
+                              >
+                                PB {pb.time}
+                              </button>
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
                   </div>
+
+                  {/* Custom distance input */}
+                  {runDistId === 'custom' && (
+                    <div>
+                      <label style={fieldLabel}>Custom Distance</label>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <input
+                          type="number"
+                          placeholder="e.g. 15"
+                          value={customVal}
+                          onChange={e => { setCustomVal(e.target.value); setRunResult(null) }}
+                          style={{ ...textInput, flex: 1 }}
+                        />
+                        <div style={{ display: 'flex', borderRadius: '6px', overflow: 'hidden', border: '1px solid var(--border2)', flexShrink: 0 }}>
+                          {(['km', 'mi'] as const).map(u => (
+                            <button
+                              key={u}
+                              onClick={() => setCustomUnit(u)}
+                              style={{
+                                padding: '0.65rem 0.9rem',
+                                background: customUnit === u ? 'var(--orange)' : 'var(--surface3)',
+                                color: customUnit === u ? 'var(--black)' : 'var(--muted)',
+                                border: 'none',
+                                fontFamily: 'var(--headline)',
+                                fontWeight: 900,
+                                fontSize: '12px',
+                                letterSpacing: '0.08em',
+                                textTransform: 'uppercase',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              {u}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Goal time wheel */}
                   <div>
-                    <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Per mile</p>
-                    <p style={{ margin: '4px 0 0', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', color: units === 'imperial' ? 'var(--orange)' : 'var(--white)', letterSpacing: '0.04em' }}>
-                      {paceResult.mi}
+                    <label style={fieldLabel}>Goal Time</label>
+                    <TimePickerWheel value={goalHMS} onChange={setGoalHMS} maxHours={99} />
+                    <p style={{ margin: '6px 0 0', fontSize: '13px', color: 'var(--muted)', textAlign: 'center' }}>
+                      {secsToHMS(hmsToSecs(goalHMS))}
                     </p>
-                    <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>min/mi{units === 'imperial' && ' ✓'}</p>
+                  </div>
+
+                  {/* Use PB button (for selected distance) */}
+                  {(() => {
+                    if (runDistId === 'custom') return null
+                    const dist = RUN_DISTANCES.find(d => d.id === runDistId)!
+                    const pb = findRunPB(races, dist.km)
+                    if (!pb) return null
+                    return (
+                      <button
+                        onClick={() => applyRunPB(pb)}
+                        style={{
+                          background: 'rgba(var(--orange-ch),0.1)',
+                          border: '1px solid rgba(var(--orange-ch),0.3)',
+                          borderRadius: '6px',
+                          padding: '0.6rem 1rem',
+                          color: 'var(--orange)',
+                          fontFamily: 'var(--headline)',
+                          fontWeight: 700,
+                          fontSize: '12px',
+                          letterSpacing: '0.08em',
+                          textTransform: 'uppercase',
+                          cursor: 'pointer',
+                          width: '100%',
+                        }}
+                      >
+                        Use My PB — {pb.time}
+                      </button>
+                    )
+                  })()}
+
+                  <button style={{ ...btnMain, width: '100%' }} onClick={calcRun}>
+                    Calculate
+                  </button>
+
+                  {/* Result */}
+                  {runResult && (
+                    <div style={{
+                      background: 'var(--surface3)',
+                      border: '1px solid var(--border2)',
+                      borderRadius: '8px',
+                      padding: '1rem',
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      gap: '1rem',
+                    }}>
+                      <div>
+                        <p style={{ margin: 0, fontSize: '10px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Per km</p>
+                        <p style={{ margin: '4px 0 0', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '24px', color: units !== 'imperial' ? 'var(--orange)' : 'var(--white)' }}>
+                          {runResult.km}
+                        </p>
+                        <p style={{ margin: '2px 0 0', fontSize: '11px', color: 'var(--muted)' }}>min/km{units !== 'imperial' && ' ✓'}</p>
+                      </div>
+                      <div>
+                        <p style={{ margin: 0, fontSize: '10px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Per mile</p>
+                        <p style={{ margin: '4px 0 0', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '24px', color: units === 'imperial' ? 'var(--orange)' : 'var(--white)' }}>
+                          {runResult.mi}
+                        </p>
+                        <p style={{ margin: '2px 0 0', fontSize: '11px', color: 'var(--muted)' }}>min/mi{units === 'imperial' && ' ✓'}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Training zones */}
+              {runZones && (
+                <div style={card}>
+                  <p style={sectionLabel}>Training Zones</p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {runZones.map(z => {
+                      const zoneColors = ['#4ade80','#60a5fa','#facc15','#f97316','#ef4444']
+                      const color = zoneColors[z.zone - 1] ?? 'var(--orange)'
+                      return (
+                        <div key={z.zone} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: color + '22', border: `1px solid ${color}55`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                            <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', color }}>{z.abbr}</span>
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                              <span style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{z.description}</span>
+                              <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '13px', color: 'var(--white)', flexShrink: 0, marginLeft: '6px' }}>
+                                {z.minPaceStr} – {z.maxPaceStr}
+                              </span>
+                            </div>
+                            <div style={{ height: '4px', background: 'var(--surface3)', borderRadius: '2px', marginTop: '4px', overflow: 'hidden' }}>
+                              <div style={{ height: '100%', width: `${(z.zone / 5) * 100}%`, background: color, borderRadius: '2px' }} />
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
                   </div>
                 </div>
               )}
-            </div>
-          </div>
+            </>
+          )}
 
-          {/* Pace zones */}
-          {paceZoneResult && (
+          {/* ─── TRIATHLON CALCULATOR ─── */}
+          {sport === 'triathlon' && (
             <div style={card}>
-              <p style={sectionLabel}>Training Zones</p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                {paceZoneResult.map(z => {
-                  const zoneColors = ['#4ade80','#60a5fa','#facc15','#f97316','#ef4444']
-                  const color = zoneColors[z.zone - 1] ?? 'var(--orange)'
-                  return (
-                    <div key={z.zone} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: color + '22', border: `1px solid ${color}55`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', color }}>{z.abbr}</span>
+              <p style={sectionLabel}>Triathlon Calculator</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+
+                {/* Tri distance chips */}
+                <div>
+                  <label style={fieldLabel}>Distance</label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {TRI_DISTANCES.map(d => {
+                      const pb = findTriPB(races, d.totalKm)
+                      const isActive = triDistId === d.id
+                      return (
+                        <button
+                          key={d.id}
+                          onClick={() => setTriDistId(d.id)}
+                          style={{
+                            padding: '10px 14px',
+                            borderRadius: '8px',
+                            border: `1px solid ${isActive ? 'var(--orange)' : 'var(--border2)'}`,
+                            background: isActive ? 'rgba(var(--orange-ch),0.12)' : 'var(--surface3)',
+                            color: isActive ? 'var(--orange)' : 'var(--white)',
+                            textAlign: 'left',
+                            cursor: 'pointer',
+                            transition: 'all 0.12s',
+                          }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{d.label}</span>
+                            {pb && <span style={{ fontSize: '11px', color: 'var(--orange)', opacity: 0.8 }}>PB {pb.time}</span>}
+                          </div>
+                          <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '3px' }}>
+                            Swim {d.swimM >= 1000 ? `${d.swimM / 1000}km` : `${d.swimM}m`} · Bike {d.bikeKm}km · Run {d.runKm}km
+                          </div>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                {/* Segment inputs */}
+                {(() => {
+                  const dist = TRI_DISTANCES.find(d => d.id === triDistId)!
+                  const triPB = findTriPB(races, dist.totalKm)
+
+                  const segRow = (
+                    label: string,
+                    distLabel: string,
+                    unitLabel: string,
+                    value: string,
+                    onChange: (v: string) => void,
+                    placeholder: string,
+                    estimatedSec: number | null,
+                    hint: string,
+                  ) => (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '8px', alignItems: 'end', borderBottom: '1px solid var(--border)', paddingBottom: '10px' }}>
+                      <div>
+                        <label style={{ ...fieldLabel, marginBottom: '4px' }}>
+                          {label}
+                          {distLabel && <span style={{ fontWeight: 400, marginLeft: '6px', opacity: 0.7 }}>({distLabel})</span>}
+                        </label>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          <input
+                            type="text"
+                            placeholder={placeholder}
+                            value={value}
+                            onChange={e => onChange(e.target.value)}
+                            style={{ ...textInput, flex: 1 }}
+                          />
+                          <span style={{ fontSize: '11px', color: 'var(--muted)', whiteSpace: 'nowrap', flexShrink: 0 }}>{unitLabel}</span>
+                        </div>
+                        <p style={{ margin: '3px 0 0', fontSize: '10px', color: 'var(--muted)' }}>{hint}</p>
                       </div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{z.description}</span>
-                          <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '13px', color: 'var(--white)' }}>
-                            {z.minPaceStr} – {z.maxPaceStr}
-                          </span>
-                        </div>
-                        <div style={{ height: '4px', background: 'var(--surface3)', borderRadius: '2px', marginTop: '4px', overflow: 'hidden' }}>
-                          <div style={{ height: '100%', width: `${(z.zone / 5) * 100}%`, background: color, borderRadius: '2px' }} />
-                        </div>
+                      <div style={{ textAlign: 'right', paddingBottom: '18px' }}>
+                        {estimatedSec != null && estimatedSec > 0
+                          ? <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', color: 'var(--orange)' }}>{secsToHMS(estimatedSec)}</span>
+                          : <span style={{ fontSize: '12px', color: 'var(--muted)' }}>—</span>
+                        }
                       </div>
                     </div>
                   )
-                })}
-              </div>
-            </div>
-          )}
 
-          {/* Recent PBs */}
-          {recentTimed.length > 0 && (
-            <div style={card}>
-              <p style={sectionLabel}>Recent Results</p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                {recentTimed.map(r => (
-                  <div
-                    key={r.id}
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      padding: '0.5rem 0',
-                      borderBottom: '1px solid var(--border)',
-                    }}
-                  >
-                    <div>
-                      <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--white)', fontWeight: 600 }}>
-                        {r.name || r.distance + 'km'}
-                      </p>
-                      <p style={{ margin: '2px 0 0', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
-                        {r.date}
-                      </p>
+                  return (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+                      {/* Header */}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '8px', paddingBottom: '6px', borderBottom: '1px solid var(--border)' }}>
+                        <span style={{ fontSize: '10px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--headline)', fontWeight: 700 }}>Segment</span>
+                        <span style={{ fontSize: '10px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--headline)', fontWeight: 700 }}>Est. Time</span>
+                      </div>
+
+                      <div style={{ paddingTop: '10px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        {segRow(
+                          '🏊 Swim', dist.swimM >= 1000 ? `${dist.swimM / 1000}km` : `${dist.swimM}m`,
+                          'min/100m', swimPace, setSwimPace, '1:45',
+                          triResult ? triResult.swimSec : null,
+                          'e.g. 1:45 for 1 min 45 sec per 100m',
+                        )}
+                        {segRow(
+                          'T1 Transition', '', 'mm:ss',
+                          t1Time, setT1Time, '2:00',
+                          triResult ? triResult.t1Sec : null, '',
+                        )}
+                        {segRow(
+                          '🚴 Bike', `${dist.bikeKm}km`,
+                          'km/h', bikeSpeed, setBikeSpeed, '30',
+                          triResult ? triResult.bikeSec : null,
+                          'Average speed in km/h',
+                        )}
+                        {segRow(
+                          'T2 Transition', '', 'mm:ss',
+                          t2Time, setT2Time, '1:30',
+                          triResult ? triResult.t2Sec : null, '',
+                        )}
+                        {segRow(
+                          '🏃 Run', `${dist.runKm}km`,
+                          'min/km', runPace, setRunPace, '5:30',
+                          triResult ? triResult.runSec : null,
+                          'e.g. 5:30 for 5 min 30 sec per km',
+                        )}
+
+                        {/* Total row */}
+                        <div style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          padding: '10px 0 0',
+                          borderTop: '2px solid var(--border2)',
+                          marginTop: '4px',
+                        }}>
+                          <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--white)' }}>
+                            Total Finish Time
+                          </span>
+                          {triResult
+                            ? <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', color: 'var(--orange)' }}>{secsToHMS(triResult.totalSec)}</span>
+                            : <span style={{ fontSize: '13px', color: 'var(--muted)' }}>Fill in paces above</span>
+                          }
+                        </div>
+
+                        {/* PB reference */}
+                        {triPB && (
+                          <div style={{
+                            background: 'rgba(var(--orange-ch),0.06)',
+                            border: '1px solid rgba(var(--orange-ch),0.2)',
+                            borderRadius: '6px',
+                            padding: '8px 12px',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                          }}>
+                            <span style={{ fontSize: '11px', color: 'var(--muted)' }}>Your best at this distance</span>
+                            <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', color: 'var(--orange)' }}>{triPB.time}</span>
+                          </div>
+                        )}
+
+                        {/* Segment breakdown bar */}
+                        {triResult && triResult.totalSec > 0 && (
+                          <div>
+                            <p style={{ margin: '0 0 6px', fontSize: '10px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--headline)', fontWeight: 700 }}>
+                              Time Split
+                            </p>
+                            <div style={{ display: 'flex', height: '10px', borderRadius: '5px', overflow: 'hidden', gap: '1px' }}>
+                              {[
+                                { sec: triResult.swimSec,  color: '#60a5fa', label: 'Swim' },
+                                { sec: triResult.t1Sec,    color: '#94a3b8', label: 'T1' },
+                                { sec: triResult.bikeSec,  color: '#f97316', label: 'Bike' },
+                                { sec: triResult.t2Sec,    color: '#94a3b8', label: 'T2' },
+                                { sec: triResult.runSec,   color: '#4ade80', label: 'Run' },
+                              ].map(seg => (
+                                <div
+                                  key={seg.label}
+                                  title={`${seg.label}: ${secsToHMS(seg.sec)}`}
+                                  style={{
+                                    height: '100%',
+                                    width: `${(seg.sec / triResult.totalSec) * 100}%`,
+                                    background: seg.color,
+                                    minWidth: seg.sec > 0 ? '2px' : '0',
+                                  }}
+                                />
+                              ))}
+                            </div>
+                            <div style={{ display: 'flex', gap: '10px', marginTop: '6px', flexWrap: 'wrap' }}>
+                              {[
+                                { label: 'Swim', sec: triResult.swimSec,  color: '#60a5fa' },
+                                { label: 'T1',   sec: triResult.t1Sec,    color: '#94a3b8' },
+                                { label: 'Bike', sec: triResult.bikeSec,  color: '#f97316' },
+                                { label: 'T2',   sec: triResult.t2Sec,    color: '#94a3b8' },
+                                { label: 'Run',  sec: triResult.runSec,   color: '#4ade80' },
+                              ].map(seg => (
+                                <div key={seg.label} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  <div style={{ width: '8px', height: '8px', borderRadius: '2px', background: seg.color, flexShrink: 0 }} />
+                                  <span style={{ fontSize: '11px', color: 'var(--muted)' }}>{seg.label}</span>
+                                  <span style={{ fontSize: '11px', color: 'var(--white)', fontFamily: 'var(--headline)', fontWeight: 700 }}>{secsToHMS(seg.sec)}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <p style={{ margin: 0, fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '15px', color: 'var(--orange)' }}>
-                      {r.time}
-                    </p>
-                  </div>
-                ))}
+                  )
+                })()}
               </div>
             </div>
           )}
         </div>
       )}
 
-      {/* ── Activities tab ── */}
+      {/* ══════════════════════ ACTIVITIES TAB ════════════════════════════════ */}
       {activeTab === 'activities' && (
         <>
-          {/* OAuth status toast */}
           {oauthStatus && (
             <div style={{
               background: oauthStatus.includes('Failed') ? 'rgba(255,80,80,0.12)' : 'rgba(var(--green-ch),0.12)',
@@ -504,7 +972,6 @@ export function Train() {
             </div>
           )}
 
-          {/* Strava race import banner */}
           {stravaToken && stravaRaceCount > 0 && (
             <div style={{
               background: 'rgba(252,76,2,0.08)',
@@ -605,6 +1072,7 @@ export function Train() {
         </>
       )}
 
+      {/* ══════════════════════ READINESS TAB ═════════════════════════════════ */}
       {activeTab === 'readiness' && (
         <>
           {!whoopToken ? (
@@ -628,7 +1096,6 @@ export function Train() {
             </div>
           ) : (
             <>
-              {/* Today's readiness hero */}
               {(() => {
                 const today = recoveryData[0]
                 const score = today.score
@@ -636,7 +1103,6 @@ export function Train() {
                 const label = score >= 67 ? 'READY' : score >= 34 ? 'MODERATE' : 'RECOVER'
                 return (
                   <div style={{ ...card, display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                    {/* Score ring */}
                     <div style={{ position: 'relative', flexShrink: 0 }}>
                       <svg width="80" height="80" viewBox="0 0 80 80">
                         <circle cx="40" cy="40" r="33" fill="none" stroke="var(--surface3)" strokeWidth="8" />
@@ -666,10 +1132,8 @@ export function Train() {
                 )
               })()}
 
-              {/* Rolling 30-day history */}
               <div style={card}>
                 <p style={sectionLabel}>Recovery History (30 days)</p>
-                {/* Mini bar chart */}
                 <div style={{ display: 'flex', alignItems: 'flex-end', gap: '3px', height: '56px', marginBottom: '8px' }}>
                   {recoveryData.slice(0, 30).reverse().map((r, i) => {
                     const h = Math.max(4, Math.round(r.score * 0.54))
