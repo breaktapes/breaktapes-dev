@@ -747,6 +747,7 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
   const deleteRace    = useRaceStore(s => s.deleteRace)
 
   const [priority, setPriority] = useState<string>(race.priority ?? 'A')
+  const [sport, setSport] = useState<string>(race.sport ?? 'Running')
   const [distance, setDistance] = useState<string>(() => {
     const opts = UPCOMING_DISTANCES[race.sport ?? 'Running'] ?? UPCOMING_DISTANCES['Running']
     return opts.some(o => o.value === race.distance) ? (race.distance ?? '') : (race.distance ? '__custom__' : '')
@@ -763,8 +764,14 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
     return { h: parts[0] || 0, m: parts[1] || 0, s: parts[2] || 0 }
   })
 
-  const sportKey = race.sport ?? 'Running'
-  const distOptions = UPCOMING_DISTANCES[sportKey] ?? UPCOMING_DISTANCES['Running']
+  const distOptions = UPCOMING_DISTANCES[sport] ?? UPCOMING_DISTANCES['Running']
+
+  function handleSportChange(s: string) {
+    setSport(s)
+    // Reset distance when switching sports — old value likely invalid for new sport
+    setDistance('')
+    setCustomDist('')
+  }
 
   useEffect(() => {
     document.body.style.overflow = 'hidden'
@@ -777,7 +784,7 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
       ? `${goalHMS.h}:${String(goalHMS.m).padStart(2,'0')}:${String(goalHMS.s).padStart(2,'0')}`
       : undefined
     const effectiveDist = distance === '__custom__' ? customDist : distance
-    updateRace(race.id, { priority: priority as Race['priority'], goalTime, distance: effectiveDist || undefined })
+    updateRace(race.id, { priority: priority as Race['priority'], sport, goalTime, distance: effectiveDist || undefined })
     onClose()
   }
 
@@ -851,22 +858,33 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
             </div>
           </div>
 
-          {/* Distance */}
+          {/* Sport + Distance side by side */}
           <div>
             <div style={{ fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '10px' }}>
-              DISTANCE
+              SPORT &amp; DISTANCE
             </div>
-            <select
-              value={distance}
-              onChange={e => { setDistance(e.target.value); setCustomDist('') }}
-              style={{ width: '100%', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px', color: 'var(--white)', fontSize: '14px', padding: '0.6rem 0.75rem', fontFamily: 'var(--body)', boxSizing: 'border-box' as const }}
-            >
-              <option value="">— Select distance —</option>
-              {distOptions.map(opt => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-              <option value="__custom__">Custom...</option>
-            </select>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              <select
+                value={sport}
+                onChange={e => handleSportChange(e.target.value)}
+                style={{ width: '100%', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px', color: 'var(--white)', fontSize: '14px', padding: '0.6rem 0.75rem', fontFamily: 'var(--body)', boxSizing: 'border-box' as const }}
+              >
+                {Object.keys(UPCOMING_DISTANCES).map(s => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+              <select
+                value={distance}
+                onChange={e => { setDistance(e.target.value); setCustomDist('') }}
+                style={{ width: '100%', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px', color: 'var(--white)', fontSize: '14px', padding: '0.6rem 0.75rem', fontFamily: 'var(--body)', boxSizing: 'border-box' as const }}
+              >
+                <option value="">— Distance —</option>
+                {distOptions.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+                <option value="__custom__">Custom...</option>
+              </select>
+            </div>
             {distance === '__custom__' && (
               <CustomDistInput value={customDist} onChange={setCustomDist} />
             )}
