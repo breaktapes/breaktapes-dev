@@ -7,7 +7,7 @@ import { handleGarminCallback, fetchGarminActivities } from '@/lib/garmin'
 import { handleStravaCallback, fetchStravaActivities, stravaActivitiesToRaces } from '@/lib/strava'
 import { computeVDOT, paceZones, parseDistKm, parseTimeSecs, secsToHMS } from '@/lib/raceFormulas'
 import { useUnits } from '@/lib/units'
-import { TimePickerWheel } from '@/components/TimePickerWheel'
+import { TimePickerWheel, Wheel } from '@/components/TimePickerWheel'
 import type { HMS } from '@/components/TimePickerWheel'
 import type { Race } from '@/types'
 
@@ -112,19 +112,6 @@ function secsToHMS_obj(secs: number): HMS {
   return { h: Math.floor(s / 3600), m: Math.floor((s % 3600) / 60), s: s % 60 }
 }
 
-// Parse "1:30" or "90" as total seconds
-function parseMinSec(str: string): number | null {
-  const s = str.trim()
-  if (!s) return null
-  if (s.includes(':')) {
-    const parts = s.split(':').map(Number)
-    if (parts.length === 2 && !parts.some(isNaN)) return parts[0] * 60 + parts[1]
-    if (parts.length === 3 && !parts.some(isNaN)) return parts[0] * 3600 + parts[1] * 60 + parts[2]
-    return null
-  }
-  const n = parseFloat(s)
-  return isNaN(n) ? null : n
-}
 
 // Find fastest race at a given distance (with tolerance ±tolerance km)
 function findRunPB(races: Race[], targetKm: number, tolerance = 0.5): Race | null {
@@ -223,11 +210,11 @@ export function Train() {
 
   // ── Triathlon calculator state ─────────────────────────────────────────────
   const [triDistId, setTriDistId]     = useState<TriDistId>('olympic')
-  const [swimPace, setSwimPace]       = useState('2:00')   // min:sec per 100m
-  const [t1Time, setT1Time]           = useState('2:00')   // MM:SS
-  const [bikeSpeed, setBikeSpeed]     = useState('30')     // km/h
-  const [t2Time, setT2Time]           = useState('1:30')   // MM:SS
-  const [runPace, setRunPace]         = useState('5:30')   // min:sec per km
+  const [swimM, setSwimM]   = useState(2);   const [swimS, setSwimS]   = useState(0)
+  const [t1M,   setT1M]     = useState(2);   const [t1S,   setT1S]     = useState(0)
+  const [bikeKmh, setBikeKmh] = useState(30)
+  const [t2M,   setT2M]     = useState(1);   const [t2S,   setT2S]     = useState(30)
+  const [runM,  setRunM]    = useState(5);   const [runS,  setRunS]    = useState(15)
   const [triResult, setTriResult]     = useState<TriResult | null>(null)
 
   // Activity feed state
@@ -421,27 +408,17 @@ export function Train() {
 
   useEffect(() => {
     calcTri()
-  }, [swimPace, t1Time, bikeSpeed, t2Time, runPace, triDistId]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [swimM, swimS, t1M, t1S, bikeKmh, t2M, t2S, runM, runS, triDistId]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function calcTri() {
     const dist = TRI_DISTANCES.find(d => d.id === triDistId)!
-    const swimSec = (() => {
-      const paceSecPer100m = parseMinSec(swimPace)
-      if (!paceSecPer100m || paceSecPer100m <= 0) return null
-      return (dist.swimM / 100) * paceSecPer100m
-    })()
-    const t1Sec = parseMinSec(t1Time) ?? 0
-    const bikeSec = (() => {
-      const speedKmh = parseFloat(bikeSpeed)
-      if (isNaN(speedKmh) || speedKmh <= 0) return null
-      return (dist.bikeKm / speedKmh) * 3600
-    })()
-    const t2Sec = parseMinSec(t2Time) ?? 0
-    const runSec = (() => {
-      const paceSecPerKm = parseMinSec(runPace)
-      if (!paceSecPerKm || paceSecPerKm <= 0) return null
-      return dist.runKm * paceSecPerKm
-    })()
+    const paceSecPer100m = swimM * 60 + swimS
+    const swimSec = paceSecPer100m > 0 ? (dist.swimM / 100) * paceSecPer100m : null
+    const t1Sec = t1M * 60 + t1S
+    const bikeSec = bikeKmh > 0 ? (dist.bikeKm / bikeKmh) * 3600 : null
+    const t2Sec = t2M * 60 + t2S
+    const paceSecPerKm = runM * 60 + runS
+    const runSec = paceSecPerKm > 0 ? dist.runKm * paceSecPerKm : null
 
     if (swimSec == null || bikeSec == null || runSec == null) {
       setTriResult(null)
@@ -460,18 +437,19 @@ export function Train() {
 
   // Set default paces when tri distance changes
   useEffect(() => {
-    const defaults: Record<TriDistId, { swim: string; bike: string; run: string }> = {
-      sprint:  { swim: '2:00', bike: '28', run: '5:30' },
-      olympic: { swim: '2:00', bike: '30', run: '5:15' },
-      '703':   { swim: '1:55', bike: '32', run: '5:00' },
-      ironman: { swim: '1:50', bike: '33', run: '5:30' },
+    type Def = { swimM: number; swimS: number; bike: number; runM: number; runS: number; t1M: number; t1S: number; t2M: number; t2S: number }
+    const defaults: Record<TriDistId, Def> = {
+      sprint:  { swimM: 2,   swimS: 0,  bike: 28, runM: 5, runS: 30, t1M: 1, t1S: 30, t2M: 1, t2S: 0  },
+      olympic: { swimM: 2,   swimS: 0,  bike: 30, runM: 5, runS: 15, t1M: 2, t1S: 0,  t2M: 1, t2S: 30 },
+      '703':   { swimM: 1,   swimS: 55, bike: 32, runM: 5, runS: 0,  t1M: 4, t1S: 0,  t2M: 3, t2S: 0  },
+      ironman: { swimM: 1,   swimS: 50, bike: 33, runM: 5, runS: 30, t1M: 6, t1S: 0,  t2M: 4, t2S: 0  },
     }
     const d = defaults[triDistId]
-    setSwimPace(d.swim)
-    setBikeSpeed(d.bike)
-    setRunPace(d.run)
-    setT1Time(triDistId === 'sprint' ? '1:30' : triDistId === 'olympic' ? '2:00' : '4:00')
-    setT2Time(triDistId === 'sprint' ? '1:00' : triDistId === 'olympic' ? '1:30' : '3:00')
+    setSwimM(d.swimM); setSwimS(d.swimS)
+    setBikeKmh(d.bike)
+    setRunM(d.runM); setRunS(d.runS)
+    setT1M(d.t1M); setT1S(d.t1S)
+    setT2M(d.t2M); setT2S(d.t2S)
     setTriResult(null)
   }, [triDistId])
 
@@ -788,84 +766,76 @@ export function Train() {
                   </div>
                 </div>
 
-                {/* Segment inputs */}
+                {/* Segment inputs — wheel pickers */}
                 {(() => {
                   const dist = TRI_DISTANCES.find(d => d.id === triDistId)!
                   const triPB = findTriPB(races, dist.totalKm)
 
+                  const IH = 36  // compact wheel item height
+                  const minVals60 = Array.from({ length: 60 }, (_, i) => i)
+                  const secVals60 = minVals60
+
+                  // Row: label+dist on left, wheels center-left, big time right
                   const segRow = (
-                    label: string,
+                    emoji: string,
+                    segLabel: string,
                     distLabel: string,
                     unitLabel: string,
-                    value: string,
-                    onChange: (v: string) => void,
-                    placeholder: string,
+                    wheels: React.ReactNode,
                     estimatedSec: number | null,
-                    hint: string,
                   ) => (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '8px', alignItems: 'end', borderBottom: '1px solid var(--border)', paddingBottom: '10px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '12px', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: '12px' }}>
                       <div>
-                        <label style={{ ...fieldLabel, marginBottom: '4px' }}>
-                          {label}
-                          {distLabel && <span style={{ fontWeight: 400, marginLeft: '6px', opacity: 0.7 }}>({distLabel})</span>}
+                        <label style={{ ...fieldLabel, marginBottom: '6px', display: 'block' }}>
+                          {emoji} {segLabel}
+                          {distLabel && <span style={{ fontWeight: 400, marginLeft: '6px', opacity: 0.6, fontSize: '11px' }}>({distLabel})</span>}
                         </label>
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                          <input
-                            type="text"
-                            placeholder={placeholder}
-                            value={value}
-                            onChange={e => onChange(e.target.value)}
-                            style={{ ...textInput, flex: 1 }}
-                          />
-                          <span style={{ fontSize: '11px', color: 'var(--muted)', whiteSpace: 'nowrap', flexShrink: 0 }}>{unitLabel}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0' }}>
+                          {wheels}
                         </div>
-                        <p style={{ margin: '3px 0 0', fontSize: '10px', color: 'var(--muted)' }}>{hint}</p>
+                        <p style={{ margin: '2px 0 0', fontSize: '10px', color: 'var(--muted)', letterSpacing: '0.04em' }}>{unitLabel}</p>
                       </div>
-                      <div style={{ textAlign: 'right', paddingBottom: '18px' }}>
+                      <div style={{ textAlign: 'right', minWidth: '68px' }}>
                         {estimatedSec != null && estimatedSec > 0
-                          ? <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', color: 'var(--orange)' }}>{secsToHMS(estimatedSec)}</span>
+                          ? <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '20px', color: 'var(--orange)', letterSpacing: '0.02em' }}>{secsToHMS(estimatedSec)}</span>
                           : <span style={{ fontSize: '12px', color: 'var(--muted)' }}>—</span>
                         }
                       </div>
                     </div>
                   )
 
+                  const colon = <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '20px', color: 'var(--muted)', padding: '0 2px', alignSelf: 'center', marginBottom: '18px' }}>:</span>
+
+                  const swimDistLabel = dist.swimM >= 1000 ? `${dist.swimM / 1000}km` : `${dist.swimM}m`
+                  const bikeVals = Array.from({ length: 46 }, (_, i) => i + 15)  // 15–60 km/h
+
                   return (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
-                      {/* Header */}
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '8px', paddingBottom: '6px', borderBottom: '1px solid var(--border)' }}>
                         <span style={{ fontSize: '10px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--headline)', fontWeight: 700 }}>Segment</span>
                         <span style={{ fontSize: '10px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--headline)', fontWeight: 700 }}>Est. Time</span>
                       </div>
 
-                      <div style={{ paddingTop: '10px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                        {segRow(
-                          '🏊 Swim', dist.swimM >= 1000 ? `${dist.swimM / 1000}km` : `${dist.swimM}m`,
-                          'min/100m', swimPace, setSwimPace, '1:45',
+                      <div style={{ paddingTop: '12px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        {segRow('🏊', 'Swim', swimDistLabel, 'min / 100m',
+                          <><Wheel values={Array.from({length:5},(_,i)=>i+1)} selected={swimM} onChange={setSwimM} label="" itemH={IH} fontSize="20px" format={v=>String(v)} />{colon}<Wheel values={secVals60} selected={swimS} onChange={setSwimS} label="" itemH={IH} fontSize="20px" /></>,
                           triResult ? triResult.swimSec : null,
-                          'e.g. 1:45 for 1 min 45 sec per 100m',
                         )}
-                        {segRow(
-                          'T1 Transition', '', 'mm:ss',
-                          t1Time, setT1Time, '2:00',
-                          triResult ? triResult.t1Sec : null, '',
+                        {segRow('⟳', 'T1 Transition', '', 'mm : ss',
+                          <><Wheel values={Array.from({length:10},(_,i)=>i)} selected={t1M} onChange={setT1M} label="" itemH={IH} fontSize="20px" format={v=>String(v)} />{colon}<Wheel values={secVals60} selected={t1S} onChange={setT1S} label="" itemH={IH} fontSize="20px" /></>,
+                          triResult ? triResult.t1Sec : null,
                         )}
-                        {segRow(
-                          '🚴 Bike', `${dist.bikeKm}km`,
-                          'km/h', bikeSpeed, setBikeSpeed, '30',
+                        {segRow('🚴', 'Bike', `${dist.bikeKm}km`, 'km / h',
+                          <Wheel values={bikeVals} selected={bikeKmh} onChange={setBikeKmh} label="" itemH={IH} fontSize="20px" format={v=>String(v)} />,
                           triResult ? triResult.bikeSec : null,
-                          'Average speed in km/h',
                         )}
-                        {segRow(
-                          'T2 Transition', '', 'mm:ss',
-                          t2Time, setT2Time, '1:30',
-                          triResult ? triResult.t2Sec : null, '',
+                        {segRow('⟳', 'T2 Transition', '', 'mm : ss',
+                          <><Wheel values={Array.from({length:10},(_,i)=>i)} selected={t2M} onChange={setT2M} label="" itemH={IH} fontSize="20px" format={v=>String(v)} />{colon}<Wheel values={secVals60} selected={t2S} onChange={setT2S} label="" itemH={IH} fontSize="20px" /></>,
+                          triResult ? triResult.t2Sec : null,
                         )}
-                        {segRow(
-                          '🏃 Run', `${dist.runKm}km`,
-                          'min/km', runPace, setRunPace, '5:30',
+                        {segRow('🏃', 'Run', `${dist.runKm}km`, 'min / km',
+                          <><Wheel values={Array.from({length:10},(_,i)=>i+3)} selected={runM} onChange={setRunM} label="" itemH={IH} fontSize="20px" format={v=>String(v)} />{colon}<Wheel values={secVals60} selected={runS} onChange={setRunS} label="" itemH={IH} fontSize="20px" /></>,
                           triResult ? triResult.runSec : null,
-                          'e.g. 5:30 for 5 min 30 sec per km',
                         )}
 
                         {/* Total row */}
@@ -873,7 +843,7 @@ export function Train() {
                           display: 'flex',
                           justifyContent: 'space-between',
                           alignItems: 'center',
-                          padding: '10px 0 0',
+                          padding: '12px 0 0',
                           borderTop: '2px solid var(--border2)',
                           marginTop: '4px',
                         }}>
@@ -881,7 +851,7 @@ export function Train() {
                             Total Finish Time
                           </span>
                           {triResult
-                            ? <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', color: 'var(--orange)' }}>{secsToHMS(triResult.totalSec)}</span>
+                            ? <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '28px', color: 'var(--orange)' }}>{secsToHMS(triResult.totalSec)}</span>
                             : <span style={{ fontSize: '13px', color: 'var(--muted)' }}>Fill in paces above</span>
                           }
                         </div>
@@ -902,49 +872,45 @@ export function Train() {
                           </div>
                         )}
 
-                        {/* Segment breakdown bar */}
-                        {triResult && triResult.totalSec > 0 && (
-                          <div>
-                            <p style={{ margin: '0 0 6px', fontSize: '10px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--headline)', fontWeight: 700 }}>
-                              Time Split
-                            </p>
-                            <div style={{ display: 'flex', height: '10px', borderRadius: '5px', overflow: 'hidden', gap: '1px' }}>
-                              {[
-                                { sec: triResult.swimSec,  color: '#60a5fa', label: 'Swim' },
-                                { sec: triResult.t1Sec,    color: '#94a3b8', label: 'T1' },
-                                { sec: triResult.bikeSec,  color: '#f97316', label: 'Bike' },
-                                { sec: triResult.t2Sec,    color: '#94a3b8', label: 'T2' },
-                                { sec: triResult.runSec,   color: '#4ade80', label: 'Run' },
-                              ].map(seg => (
-                                <div
-                                  key={seg.label}
-                                  title={`${seg.label}: ${secsToHMS(seg.sec)}`}
-                                  style={{
-                                    height: '100%',
-                                    width: `${(seg.sec / triResult.totalSec) * 100}%`,
-                                    background: seg.color,
-                                    minWidth: seg.sec > 0 ? '2px' : '0',
-                                  }}
-                                />
-                              ))}
+                        {/* Segment breakdown bar + proportional labels */}
+                        {triResult && triResult.totalSec > 0 && (() => {
+                          const segs = [
+                            { label: 'Swim', sec: triResult.swimSec,  color: '#60a5fa' },
+                            { label: 'T1',   sec: triResult.t1Sec,    color: '#94a3b8' },
+                            { label: 'Bike', sec: triResult.bikeSec,  color: '#f97316' },
+                            { label: 'T2',   sec: triResult.t2Sec,    color: '#94a3b8' },
+                            { label: 'Run',  sec: triResult.runSec,   color: '#4ade80' },
+                          ]
+                          return (
+                            <div>
+                              <p style={{ margin: '0 0 8px', fontSize: '10px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--headline)', fontWeight: 700 }}>
+                                Time Split
+                              </p>
+                              {/* Bar */}
+                              <div style={{ display: 'flex', height: '12px', borderRadius: '6px', overflow: 'hidden', gap: '1px' }}>
+                                {segs.map(seg => (
+                                  <div key={seg.label} style={{ width: `${(seg.sec / triResult.totalSec) * 100}%`, background: seg.color, minWidth: seg.sec > 0 ? '2px' : '0' }} />
+                                ))}
+                              </div>
+                              {/* Proportional labels — same widths as bar */}
+                              <div style={{ display: 'flex', marginTop: '8px' }}>
+                                {segs.map(seg => {
+                                  const pct = (seg.sec / triResult.totalSec) * 100
+                                  return (
+                                    <div key={seg.label} style={{ width: `${pct}%`, minWidth: seg.sec > 0 ? '2px' : '0', overflow: 'hidden' }}>
+                                      <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, color: seg.color, letterSpacing: '0.04em', textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                        {seg.label}
+                                      </div>
+                                      <div style={{ fontSize: '13px', fontFamily: 'var(--headline)', fontWeight: 900, color: 'var(--white)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                        {secsToHMS(seg.sec)}
+                                      </div>
+                                    </div>
+                                  )
+                                })}
+                              </div>
                             </div>
-                            <div style={{ display: 'flex', gap: '10px', marginTop: '6px', flexWrap: 'wrap' }}>
-                              {[
-                                { label: 'Swim', sec: triResult.swimSec,  color: '#60a5fa' },
-                                { label: 'T1',   sec: triResult.t1Sec,    color: '#94a3b8' },
-                                { label: 'Bike', sec: triResult.bikeSec,  color: '#f97316' },
-                                { label: 'T2',   sec: triResult.t2Sec,    color: '#94a3b8' },
-                                { label: 'Run',  sec: triResult.runSec,   color: '#4ade80' },
-                              ].map(seg => (
-                                <div key={seg.label} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                  <div style={{ width: '8px', height: '8px', borderRadius: '2px', background: seg.color, flexShrink: 0 }} />
-                                  <span style={{ fontSize: '11px', color: 'var(--muted)' }}>{seg.label}</span>
-                                  <span style={{ fontSize: '11px', color: 'var(--white)', fontFamily: 'var(--headline)', fontWeight: 700 }}>{secsToHMS(seg.sec)}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        )}
+                          )
+                        })()}
                       </div>
                     </div>
                   )

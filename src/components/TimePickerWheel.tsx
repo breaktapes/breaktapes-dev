@@ -29,44 +29,47 @@ function pad2(n: number)  { return n.toString().padStart(2, '0') }
 
 // ─── Single wheel column ─────────────────────────────────────────────────────
 
-function Wheel({
+export function Wheel({
   values,
   selected,
   onChange,
   label,
   format = (v: number) => pad2(v),
+  itemH = ITEM_H,
+  visible = VISIBLE,
+  fontSize = '24px',
 }: {
   values: number[]
   selected: number
   onChange: (v: number) => void
   label: string
   format?: (v: number) => string
+  itemH?: number
+  visible?: number
+  fontSize?: string
 }) {
   const ref           = useRef<HTMLDivElement>(null)
-  const settingRef    = useRef(false)   // guards against scroll-event → setState loop
+  const settingRef    = useRef(false)
   const raf           = useRef<number>(0)
-  const lastEmitted   = useRef<number>(-999) // last value we called onChange with
+  const lastEmitted   = useRef<number>(-999)
 
   const n         = values.length
   const halfReps  = Math.floor(REPS / 2)
-  const midOffset = n * halfReps          // index of value[0] in the centre repetition
+  const midOffset = n * halfReps
 
-  // Inflated array: values repeated REPS times
   const inflated = Array.from({ length: n * REPS }, (_, i) => values[i % n])
 
-  // Scroll to `selected` whenever it changes — but skip if we triggered the change
   useEffect(() => {
     const el = ref.current
     if (!el) return
-    if (lastEmitted.current === selected) return   // our own onChange, already there
+    if (lastEmitted.current === selected) return
     const idx = values.indexOf(selected)
     if (idx < 0) return
     settingRef.current = true
-    el.scrollTop = (midOffset + idx) * ITEM_H
+    el.scrollTop = (midOffset + idx) * itemH
     raf.current = requestAnimationFrame(() => { settingRef.current = false })
-  }, [selected, values, midOffset])
+  }, [selected, values, midOffset, itemH])
 
-  // Cleanup on unmount
   useEffect(() => () => cancelAnimationFrame(raf.current), [])
 
   const onScroll = useCallback(() => {
@@ -74,22 +77,20 @@ function Wheel({
     const el = ref.current
     if (!el) return
 
-    const rawIdx  = Math.round(el.scrollTop / ITEM_H)
+    const rawIdx  = Math.round(el.scrollTop / itemH)
     const total   = n * REPS
-    const buffer  = n * 2   // stay at least 2 full repetitions from each edge
+    const buffer  = n * 2
 
-    // Near the top edge → jump to the equivalent position in the middle
     if (rawIdx < buffer) {
       settingRef.current = true
-      el.scrollTop = (rawIdx + n * halfReps) * ITEM_H
+      el.scrollTop = (rawIdx + n * halfReps) * itemH
       requestAnimationFrame(() => { settingRef.current = false })
       return
     }
 
-    // Near the bottom edge → jump back towards the middle
     if (rawIdx >= total - buffer) {
       settingRef.current = true
-      el.scrollTop = (rawIdx - n * halfReps) * ITEM_H
+      el.scrollTop = (rawIdx - n * halfReps) * itemH
       requestAnimationFrame(() => { settingRef.current = false })
       return
     }
@@ -99,9 +100,9 @@ function Wheel({
       lastEmitted.current = realValue
       onChange(realValue)
     }
-  }, [values, selected, onChange, n, halfReps])
+  }, [values, selected, onChange, n, halfReps, itemH])
 
-  const WHEEL_H = ITEM_H * VISIBLE
+  const WHEEL_H = itemH * visible
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, minWidth: 0 }}>
@@ -114,12 +115,11 @@ function Wheel({
           scrollSnapType:      'y mandatory',
           WebkitOverflowScrolling: 'touch' as any,
           overscrollBehavior: 'contain',
-          // Padding top/bottom = 1 item height so the first/last item can centre
-          paddingTop:          ITEM_H,
-          paddingBottom:       ITEM_H,
+          paddingTop:          itemH,
+          paddingBottom:       itemH,
           boxSizing:           'border-box',
-          scrollbarWidth:      'none',    // Firefox
-          msOverflowStyle:     'none',    // IE
+          scrollbarWidth:      'none',
+          msOverflowStyle:     'none',
           position:            'relative',
           width:               '100%',
         } as React.CSSProperties}
@@ -128,14 +128,14 @@ function Wheel({
           <div
             key={i}
             style={{
-              height:          ITEM_H,
+              height:          itemH,
               scrollSnapAlign: 'center',
               display:         'flex',
               alignItems:      'center',
               justifyContent:  'center',
               fontFamily:      'var(--headline)',
               fontWeight:      900,
-              fontSize:        '24px',
+              fontSize,
               letterSpacing:   '0.02em',
               color:           v === selected ? 'var(--white)' : 'rgba(245,245,245,0.25)',
               transition:      'color 0.15s',
@@ -146,7 +146,7 @@ function Wheel({
             onMouseDown={() => {
               const el = ref.current
               if (!el) return
-              el.scrollTo({ top: i * ITEM_H, behavior: 'smooth' })
+              el.scrollTo({ top: i * itemH, behavior: 'smooth' })
             }}
           >
             {format(v)}
