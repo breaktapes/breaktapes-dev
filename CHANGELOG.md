@@ -3,6 +3,21 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.6.3.0] - 2026-04-23
+
+### Added
+- **Pace calculator — Running/Triathlon split**: the Train page now has a sport selector. Running shows 8 distance chips (5K, 10K, 10 Mile, Half Marathon, Marathon, 50K, 100K, Custom) with per-distance PB auto-fill. Triathlon shows Sprint Triathlon, Olympic Triathlon, 70.3/Middle Distance, and IRONMAN/Full Distance cards — full names, not abbreviations.
+- **Goal time wheel**: the pace calculator uses a drum-roll scroll wheel for hours (0–99), minutes (0–59), and seconds (0–59). Scrolls infinitely in both directions. All three columns are independent — no boundaries between min and max values.
+- **"Use My PB" auto-fill**: each running distance shows a button with the user's personal best time. Tapping it fills the goal time wheel so users can plan paces relative to their best result.
+- **Custom distance field**: running mode adds a Custom chip that reveals a number input with a KM/MI toggle. The pace calculator derives pace from any user-supplied distance.
+- **Triathlon segment calculator**: modelled on tricalculator.com. Inputs for swim pace (min/100m), T1 (mm:ss), bike speed (km/h), T2 (mm:ss), and run pace (min/km). Results update live — no Calculate button. Shows each segment's split time, total finish time, and a proportional colour-coded segment bar.
+
+### Changed
+- **Date picker in Add Race moved under Race Name**: year chips (last 10 years) appear directly below the race name field. Tap a year to set the date. "Add manually →" reveals the full date input; "← pick year" returns to chip mode.
+
+### Fixed
+- **Tapping a race row in compact or detailed view now opens the detail sheet**: both CompactRow and DetailedRow onClick handlers now also expand the bottom sheet, so the race card is visible after tap.
+
 ## [0.6.1.0] - 2026-04-21
 
 ### Fixed
