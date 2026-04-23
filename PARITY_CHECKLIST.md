@@ -19,7 +19,7 @@
 |---------|------|---------|---------|----------|
 | Authentication | 5 | 0 | 0 | 1 |
 | Pages / Navigation | 5 | 2 | 0 | 0 |
-| Race CRUD | 6 | 2 | 1 | 0 |
+| Race CRUD | 7 | 2 | 0 | 0 |
 | Dashboard | 14 | 1 | 0 | 4 |
 | Profile / Athlete | 10 | 0 | 0 | 2 |
 | Medals | 4 | 0 | 0 | 0 |
@@ -29,9 +29,9 @@
 | Settings | 6 | 0 | 1 | 1 |
 | Data / localStorage | 5 | 0 | 0 | 0 |
 | Infrastructure | 9 | 0 | 0 | 0 |
-| **TOTAL** | **78** | **6** | **4** | **8** |
+| **TOTAL** | **79** | **6** | **3** | **8** |
 
-**Overall parity: ~90%** (78 done out of 96 items, partials counted as 0.5)
+**Overall parity: ~93%** (79 done out of 96 items, partials counted as 0.5)
 
 ### Sprint 2 changes (2026-04-19)
 - ✅ Claude API key field in Settings (`fl2_apikey`, V1-compatible key)
@@ -109,7 +109,7 @@
 - [x] ✅ AI text parsing of race description → populate form — `parseRaceText()` in `src/lib/claude.ts` wired into AddRaceModal. Matches V1 `parseAI()` flow.
 
 ### Other
-- [ ] ❌ Race attachments (photo upload per race) — V1: `renderRaceAttachmentEditor()`, `handleRaceAttachmentFiles()`. V2: none.
+- [x] ✅ Race attachments (photo upload per race) — `photos?: string[]` on Race type; multi-upload with canvas JPEG compression (max 1200px); grid view in ViewPanel; shipped 2026-04-23.
 - [ ] 🔒 Advanced import (multi-image batch parse) — V1: `openAdvancedImportModal()`. Low priority, deferred.
 
 ---
@@ -285,7 +285,6 @@ All of the following must be ✅ before merging staging → main:
 - [x] ✅ `fl2_goals` migrated; `fl2_gear_lists` and `fl2_stacks` are Supabase-stored (not localStorage) — no migration needed, Gear Lists/Stacks UI deferred to post-cutover
 
 ### Can ship post-cutover
-- Race attachments
 - Advanced import
 - AI Insights modal
 - Season Report / PDF
