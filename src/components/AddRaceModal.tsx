@@ -1209,7 +1209,7 @@ const st = {
     display: 'flex',
     flexDirection: 'column',
     gap: '14px',
-    paddingBottom: '32px',
+    paddingBottom: 'calc(var(--bottom-nav-base-height) + var(--safe-bottom) + 32px)',
     overflowY: 'auto',
     WebkitOverflowScrolling: 'touch',
     overscrollBehavior: 'contain',
