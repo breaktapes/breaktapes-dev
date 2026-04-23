@@ -328,6 +328,18 @@ function ViewPanel({ race, isPB, onEdit, onDelete, onShare }: { race: Race; isPB
         </div>
       )}
 
+      {/* Race photos */}
+      {race.photos && race.photos.length > 0 && (
+        <div>
+          <p style={st.sectionLabel}>PHOTOS</p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: '6px' }}>
+            {race.photos.map((src, i) => (
+              <img key={i} src={src} alt={`Photo ${i + 1}`} style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)' }} />
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Action buttons */}
       <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
         <button style={st.editBtn} onClick={onEdit}>Edit Race</button>
@@ -419,6 +431,9 @@ function EditPanel({ race, onSave, onCancel }: { race: Race; onSave: (patch: Par
   const [medalPhoto, setMedalPhoto]   = useState<string | undefined>(race.medalPhoto)
   const [bgRemoving, setBgRemoving]   = useState(false)
   const medalInputRef = useRef<HTMLInputElement>(null)
+  const [photos, setPhotos]           = useState<string[]>(race.photos ?? [])
+  const [photosUploading, setPhotosUploading] = useState(false)
+  const photosInputRef = useRef<HTMLInputElement>(null)
 
   // Screenshot import state
   const [screenshotParsing, setScreenshotParsing] = useState(false)
@@ -446,6 +461,44 @@ function EditPanel({ race, onSave, onCancel }: { race: Race; onSave: (patch: Par
     } finally {
       setBgRemoving(false)
       URL.revokeObjectURL(originalUrl)
+    }
+  }
+
+  async function compressPhoto(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const img = new Image()
+      const url = URL.createObjectURL(file)
+      img.onload = () => {
+        const MAX = 1200
+        let { width, height } = img
+        if (width > MAX || height > MAX) {
+          if (width > height) { height = Math.round(height * MAX / width); width = MAX }
+          else { width = Math.round(width * MAX / height); height = MAX }
+        }
+        const canvas = document.createElement('canvas')
+        canvas.width = width; canvas.height = height
+        const ctx = canvas.getContext('2d')!
+        ctx.drawImage(img, 0, 0, width, height)
+        URL.revokeObjectURL(url)
+        resolve(canvas.toDataURL('image/jpeg', 0.82))
+      }
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('load failed')) }
+      img.src = url
+    })
+  }
+
+  async function handlePhotosSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? [])
+    if (!files.length) return
+    e.target.value = ''
+    setPhotosUploading(true)
+    try {
+      const compressed = await Promise.all(files.map(compressPhoto))
+      setPhotos(prev => [...prev, ...compressed])
+    } catch {
+      // silently skip failed compressions
+    } finally {
+      setPhotosUploading(false)
     }
   }
 
@@ -512,6 +565,7 @@ function EditPanel({ race, onSave, onCancel }: { race: Race; onSave: (patch: Par
       surface: surface || undefined,
       splits: splits.length > 0 ? splits : undefined,
       medalPhoto: medalPhoto ?? undefined,
+      photos: photos.length > 0 ? photos : undefined,
     }
     onSave(patch)
   }
@@ -664,6 +718,31 @@ function EditPanel({ race, onSave, onCancel }: { race: Race; onSave: (patch: Par
             <input ref={medalInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleMedalPhotoSelect} />
           </div>
         </div>
+      </Field>
+
+      <Field label="Race Photos">
+        {photos.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
+            {photos.map((src, i) => (
+              <div key={i} style={{ position: 'relative', flexShrink: 0 }}>
+                <img src={src} alt={`Photo ${i + 1}`} style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)' }} />
+                <button
+                  type="button"
+                  onClick={() => setPhotos(prev => prev.filter((_, idx) => idx !== i))}
+                  style={{ position: 'absolute', top: -6, right: -6, width: 18, height: 18, borderRadius: '50%', background: 'var(--surface3)', border: '1px solid var(--border2)', color: 'var(--muted)', fontSize: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+                >×</button>
+              </div>
+            ))}
+          </div>
+        )}
+        <button
+          type="button"
+          onClick={() => photosInputRef.current?.click()}
+          style={{ ...st.input, cursor: 'pointer', textAlign: 'left', color: 'var(--muted)', fontSize: 13 }}
+        >
+          {photosUploading ? '⏳ Compressing…' : '📷 Add photos'}
+        </button>
+        <input ref={photosInputRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={handlePhotosSelect} />
       </Field>
 
       <Field label="Priority">

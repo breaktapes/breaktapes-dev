@@ -31,6 +31,7 @@ export interface Race {
   strava_id?: number    // Strava activity ID — used to de-duplicate imports
   gear?: string[]       // race day gear checklist items (custom items only)
   packedGear?: string[] // items checked off as packed
+  photos?: string[]     // race day / finish line photos (compressed base64 data URLs)
 }
 
 export interface Split {

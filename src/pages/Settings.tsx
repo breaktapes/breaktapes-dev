@@ -135,6 +135,8 @@ export function Settings() {
     setIsPublic(athlete?.isPublic ?? false)
   }, [athlete?.username, athlete?.isPublic])
 
+  const RESERVED_USERNAMES = ['admin','api','u','health','og','support','help','breaktapes','www','app','dev','staging','blog','mail','static','assets','worker']
+
   function validateUsername(v: string): boolean {
     return /^[a-z0-9_]{3,20}$/.test(v)
   }
@@ -145,6 +147,7 @@ export function Settings() {
     setUsernameSaved(false)
     if (!lower) { setUsernameStatus('idle'); return }
     if (!validateUsername(lower)) { setUsernameStatus('invalid'); return }
+    if (RESERVED_USERNAMES.includes(lower)) { setUsernameStatus('taken'); return }
     setUsernameStatus('checking')
     clearTimeout(debounceRef.current)
     debounceRef.current = setTimeout(async () => {
@@ -166,6 +169,7 @@ export function Settings() {
     if (!authUser || usernameSaving) return
     if (isUsernameLocked) return  // blocked for 1 year
     if (username && !validateUsername(username)) return
+    if (usernameStatus === 'checking') return  // async availability check still in flight
     setUsernameSaving(true)
     try {
       const isNewUsername = username && username !== athlete?.username
