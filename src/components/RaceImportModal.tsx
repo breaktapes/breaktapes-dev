@@ -13,6 +13,8 @@ interface ImportResult {
   date: string
   time?: string
   source: 'ultrasignup' | 'marathonview'
+  distance_m?: number
+  country?: string
   raw?: string[]
 }
 
@@ -129,7 +131,9 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
         ex => ex.name?.toLowerCase() === r.raceName.toLowerCase() && ex.date === date
       )
       if (isDupe) { skipped++; continue }
-      const distKm = parseDistKm(r.raceName)
+      const distKm = r.distance_m && r.distance_m > 0
+        ? r.distance_m / 1000
+        : parseDistKm(r.raceName)
       const distance = kmToDistLabel(distKm)
       const race: Race = {
         id:       crypto.randomUUID(),
@@ -139,7 +143,7 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
         distance,
         sport:    'Running',
         city:     '',
-        country:  '',
+        country:  r.country ? r.country.toUpperCase() : '',
       }
       addRace(race)
     }
@@ -260,7 +264,10 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
                               {r.source}
                             </span>
                           </p>
-                          {(() => { const lbl = kmToDistLabel(parseDistKm(r.raceName)); return lbl ? (
+                          {(() => {
+                            const km = r.distance_m && r.distance_m > 0 ? r.distance_m / 1000 : parseDistKm(r.raceName)
+                            const lbl = kmToDistLabel(km)
+                            return lbl ? (
                             <p style={{ margin: '2px 0 0', fontSize: '10px', color: 'var(--muted2)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                               {lbl}
                             </p>
