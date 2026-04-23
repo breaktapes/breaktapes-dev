@@ -24,14 +24,14 @@
 
 import satori from 'satori';
 import { Resvg, initWasm } from '@resvg/resvg-wasm';
+// Static WASM import — wrangler bundles this as a module binding (required by CF Workers)
+import resvgWasm from '@resvg/resvg-wasm/index_bg.wasm';
 
 // Load Resvg WASM once per worker process
 let wasmInitialized = false;
 async function ensureWasm() {
   if (wasmInitialized) return;
-  // @resvg/resvg-wasm bundles the WASM file — fetch it from the package
-  const wasmUrl = new URL('./node_modules/@resvg/resvg-wasm/index_bg.wasm', import.meta.url);
-  await initWasm(fetch(wasmUrl));
+  await initWasm(resvgWasm);
   wasmInitialized = true;
 }
 
@@ -110,8 +110,8 @@ async function loadFonts() {
 
   // Google Fonts: Barlow Condensed Bold
   const [boldRes, regularRes] = await Promise.all([
-    fetch('https://fonts.gstatic.com/s/barlowcondensed/v12/HTxxL3I-JCGChYJ8VI-L6OO_au7B4771.woff2'),
-    fetch('https://fonts.gstatic.com/s/barlow/v12/7cHqv4kjgoGqM7E3.woff2'),
+    fetch('https://fonts.gstatic.com/s/barlowcondensed/v13/HTxwL3I-JCGChYJ8VI-L6OO_au7B46r2_3E.ttf'),
+    fetch('https://fonts.gstatic.com/s/barlow/v13/7cHpv4kjgoGqM7EPCw.ttf'),
   ]);
 
   const [bold, regular] = await Promise.all([
