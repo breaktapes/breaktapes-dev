@@ -1,10 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { useThemeStore } from '../useThemeStore'
-import { useAuthStore } from '../useAuthStore'
 
 beforeEach(() => {
   useThemeStore.setState({ theme: 'carbon' })
-  useAuthStore.setState({ authUser: null, authSession: null, proAccessGranted: false })
   // Reset data-theme attribute
   if (document?.documentElement?.dataset) {
     delete document.documentElement.dataset['theme']
@@ -25,33 +23,39 @@ describe('useThemeStore — free themes', () => {
   })
 })
 
-describe('useThemeStore — pro gate', () => {
-  it('deep-space is blocked for non-pro user', () => {
-    const ok = useThemeStore.getState().setTheme('deep-space')
-    expect(ok).toBe(false)
-    expect(useThemeStore.getState().theme).toBe('carbon')  // unchanged
-  })
-
-  it('race-night is blocked for non-pro user', () => {
-    const ok = useThemeStore.getState().setTheme('race-night')
-    expect(ok).toBe(false)
-  })
-
-  it('deep-space is allowed for pro user', () => {
-    useAuthStore.setState({ proAccessGranted: true })
+describe('useThemeStore — comingSoon gate', () => {
+  it('deep-space is free', () => {
     const ok = useThemeStore.getState().setTheme('deep-space')
     expect(ok).toBe(true)
     expect(useThemeStore.getState().theme).toBe('deep-space')
   })
 
-  it('all 7 pro themes are blocked without access', () => {
-    const proThemes = ['deep-space', 'race-night', 'obsidian', 'acid-track', 'titanium', 'ember', 'polar-circuit'] as const
-    for (const id of proThemes) {
-      useThemeStore.setState({ theme: 'carbon' })
-      const ok = useThemeStore.getState().setTheme(id)
-      expect(ok).toBe(false)
-      expect(useThemeStore.getState().theme).toBe('carbon')
-    }
+  it('race-night is free', () => {
+    const ok = useThemeStore.getState().setTheme('race-night')
+    expect(ok).toBe(true)
+    expect(useThemeStore.getState().theme).toBe('race-night')
+  })
+
+  it('obsidian is free', () => {
+    const ok = useThemeStore.getState().setTheme('obsidian')
+    expect(ok).toBe(true)
+    expect(useThemeStore.getState().theme).toBe('obsidian')
+  })
+
+  it('acid-track is blocked (comingSoon)', () => {
+    const ok = useThemeStore.getState().setTheme('acid-track')
+    expect(ok).toBe(false)
+    expect(useThemeStore.getState().theme).toBe('carbon')
+  })
+
+  it('ember is blocked (comingSoon)', () => {
+    const ok = useThemeStore.getState().setTheme('ember')
+    expect(ok).toBe(false)
+  })
+
+  it('polar-circuit is blocked (comingSoon)', () => {
+    const ok = useThemeStore.getState().setTheme('polar-circuit')
+    expect(ok).toBe(false)
   })
 })
 
