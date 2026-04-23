@@ -499,7 +499,8 @@ export function Settings() {
             return (
               <button
                 key={theme.id}
-                onClick={() => applyTheme(theme.id, theme.pro)}
+                onClick={() => theme.comingSoon ? undefined : applyTheme(theme.id, theme.pro)}
+                disabled={theme.comingSoon}
                 style={{
                   height: '80px',
                   background: 'var(--surface2)',
@@ -507,27 +508,17 @@ export function Settings() {
                     ? '2px solid var(--orange)'
                     : '1px solid var(--border)',
                   borderRadius: '8px',
-                  cursor: 'pointer',
+                  cursor: theme.comingSoon ? 'default' : 'pointer',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '6px',
                   padding: '0.5rem',
-                  opacity: isLocked ? 0.5 : 1,
+                  opacity: (isLocked || theme.comingSoon) ? 0.45 : 1,
                   position: 'relative',
                 }}
               >
-                {isLocked && (
-                  <span style={{
-                    position: 'absolute',
-                    top: '6px',
-                    right: '6px',
-                    fontSize: '10px',
-                  }}>
-                    🔒
-                  </span>
-                )}
                 <span style={{
                   fontFamily: 'var(--headline)',
                   fontWeight: 900,
@@ -540,7 +531,21 @@ export function Settings() {
                 }}>
                   {theme.label}
                 </span>
-                {theme.pro && (
+                {theme.comingSoon ? (
+                  <span style={{
+                    fontSize: '9px',
+                    fontFamily: 'var(--headline)',
+                    fontWeight: 700,
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                    color: 'var(--muted)',
+                    background: 'rgba(245,245,245,0.06)',
+                    padding: '1px 5px',
+                    borderRadius: '3px',
+                  }}>
+                    SOON
+                  </span>
+                ) : theme.pro && (
                   <span style={{
                     fontSize: '9px',
                     fontFamily: 'var(--headline)',
