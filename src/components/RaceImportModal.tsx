@@ -45,6 +45,7 @@ function normalizeDateStr(d: string): string {
 export function RaceImportModal({ onClose }: { onClose: () => void }) {
   const addRace    = useRaceStore(s => s.addRace)
   const existingRaces = useRaceStore(s => s.races)
+  const upcomingRaces = useRaceStore(s => s.upcomingRaces)
 
   const [step, setStep]               = useState<Step>('search')
   const [firstName, setFirstName]     = useState('')
@@ -112,7 +113,15 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
     setStep('results')
   }
 
+  function isDuplicate(r: ImportResult): boolean {
+    const date = r.date || ''
+    if (!date) return false
+    return existingRaces.some(ex => ex.date === date)
+        || upcomingRaces.some(ex => ex.date === date)
+  }
+
   function toggleSelect(i: number) {
+    if (isDuplicate(results[i])) return
     setSelected(prev => {
       const next = new Set(prev)
       next.has(i) ? next.delete(i) : next.add(i)
@@ -130,7 +139,9 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
       const isDupe = existingRaces.some(
         ex => ex.name?.toLowerCase() === r.raceName.toLowerCase() && ex.date === date
       )
-      if (isDupe) { skipped++; continue }
+      const dateMatch = existingRaces.some(ex => ex.date === date)
+                     || upcomingRaces.some(ex => ex.date === date)
+      if (isDupe || dateMatch) { skipped++; continue }
       const distKm = r.distance_m && r.distance_m > 0
         ? r.distance_m / 1000
         : parseDistKm(r.raceName)
@@ -238,22 +249,41 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
                 </div>
               ) : (
                 <>
-                  <p style={st.hint}>
-                    Tap races to select them. Found {results.length} result{results.length !== 1 ? 's' : ''}.
-                  </p>
-                  {results.map((r, i) => (
+                  {(() => {
+                    const dupeCount = results.filter(isDuplicate).length
+                    return (
+                      <p style={st.hint}>
+                        Tap races to select them. Found {results.length} result{results.length !== 1 ? 's' : ''}
+                        {dupeCount > 0 ? ` — ${dupeCount} already in your history.` : '.'}
+                      </p>
+                    )
+                  })()}
+                  {results.map((r, i) => {
+                    const dupe = isDuplicate(r)
+                    return (
                     <button
                       key={i}
                       style={{
                         ...st.resultRow,
-                        background: selected.has(i) ? 'rgba(var(--orange-ch),0.1)' : 'var(--surface3)',
-                        border: `1px solid ${selected.has(i) ? 'rgba(var(--orange-ch),0.4)' : 'var(--border2)'}`,
+                        background: dupe
+                          ? 'var(--surface2)'
+                          : selected.has(i) ? 'rgba(var(--orange-ch),0.1)' : 'var(--surface3)',
+                        border: `1px solid ${dupe
+                          ? 'var(--border)'
+                          : selected.has(i) ? 'rgba(var(--orange-ch),0.4)' : 'var(--border2)'}`,
+                        opacity: dupe ? 0.55 : 1,
+                        cursor: dupe ? 'not-allowed' : 'pointer',
                       }}
                       onClick={() => toggleSelect(i)}
                       type="button"
+                      disabled={dupe}
+                      aria-disabled={dupe}
+                      title={dupe ? 'Already in your race history' : undefined}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{ fontSize: '16px', flexShrink: 0 }}>{selected.has(i) ? '✓' : '○'}</span>
+                        <span style={{ fontSize: '16px', flexShrink: 0 }}>
+                          {dupe ? '✕' : selected.has(i) ? '✓' : '○'}
+                        </span>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <p style={{ margin: 0, fontWeight: 600, fontSize: '14px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {r.raceName}
@@ -272,10 +302,15 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
                               {lbl}
                             </p>
                           ) : null })()}
+                          {dupe && (
+                            <p style={{ margin: '4px 0 0', fontSize: '10px', color: 'var(--green)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                              ✓ Already in your race history
+                            </p>
+                          )}
                         </div>
                       </div>
                     </button>
-                  ))}
+                  )})}
                   {skippedCount > 0 && (
                     <p style={{ margin: 0, fontSize: '12px', color: 'var(--muted)', textAlign: 'center' }}>
                       {skippedCount} already logged — skipped.
