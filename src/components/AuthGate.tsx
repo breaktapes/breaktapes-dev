@@ -39,16 +39,28 @@ function useClerkSync() {
 }
 
 export function AuthGate({ children }: { children: React.ReactNode }) {
-  const { isLoaded, isSignedIn } = useUser()
+  const { isLoaded, isSignedIn, user } = useUser()
   const navigate = useNavigate()
 
   useClerkSync()
 
+  // Detect brand-new signups (Clerk user created < 2 min ago) and route
+  // them to the profile onboarding page once. bt_new_user persists so
+  // subsequent renders don't keep redirecting.
   useEffect(() => {
-    if (isSignedIn && localStorage.getItem('bt_new_user')) {
+    if (!isSignedIn || !user) return
+
+    const createdMs = user.createdAt ? new Date(user.createdAt).getTime() : 0
+    const isFreshSignup = createdMs > 0 && Date.now() - createdMs < 120_000
+    const hasFlag = localStorage.getItem('bt_new_user')
+
+    if (isFreshSignup && !hasFlag) {
+      localStorage.setItem('bt_new_user', '1')
+      navigate('/you', { replace: true })
+    } else if (hasFlag) {
       navigate('/you', { replace: true })
     }
-  }, [isSignedIn, navigate])
+  }, [isSignedIn, user, navigate])
 
   if (!isLoaded) return <AuthLoadingScreen />
   if (!isSignedIn) return <LandingScreen />
