@@ -243,20 +243,48 @@ export function Settings() {
       {/* ── Auth section ── */}
       <section>
         <p style={sectionLabel}>Account</p>
-        <div style={{ ...card, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-          <p style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)', margin: 0 }}>
-            Signed in as{' '}
-            <span style={{ color: 'var(--white)', fontWeight: 600 }}>
-              {authUser?.email ?? '—'}
-            </span>
-          </p>
+        <div style={{ ...card, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          {/* Profile card row */}
+          <button
+            onClick={() => openUserProfile()}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '12px',
+              width: '100%', background: 'transparent', border: 'none',
+              cursor: 'pointer', padding: '4px 0', textAlign: 'left',
+            }}
+          >
+            <div style={{
+              width: '44px', height: '44px', borderRadius: '50%',
+              background: 'var(--orange)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontFamily: 'var(--headline)', fontWeight: 900,
+              fontSize: '16px', color: 'var(--black)',
+              flexShrink: 0,
+            }}>
+              {[athlete?.firstName?.[0], athlete?.lastName?.[0]].filter(Boolean).join('').toUpperCase() ||
+               authUser?.email?.[0]?.toUpperCase() || '?'}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{
+                color: 'var(--white)', fontSize: '15px',
+                fontWeight: 600, lineHeight: 1.2,
+                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+              }}>
+                {[athlete?.firstName, athlete?.lastName].filter(Boolean).join(' ') ||
+                 authUser?.email || '—'}
+              </div>
+              <div style={{ color: 'var(--muted)', fontSize: '13px', marginTop: '2px' }}>
+                Manage account
+              </div>
+            </div>
+            <svg width="7" height="12" viewBox="0 0 7 12" fill="none" style={{ flexShrink: 0, opacity: 0.4 }}>
+              <path d="M1 1l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+
+          <div style={{ height: '1px', background: 'var(--border)', margin: '4px 0' }} />
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <button
-              style={{ ...btnGhost, width: '100%' }}
-              onClick={() => openUserProfile()}
-            >
-              Manage Account
-            </button>
             <button
               style={{ ...btnGhost, width: '100%', color: 'var(--orange)', borderColor: 'var(--orange)' }}
               onClick={handleSignOut}
