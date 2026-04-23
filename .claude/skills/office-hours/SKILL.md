@@ -1,1 +1,1 @@
-/Users/akrish/DEV/.claude/worktrees/admiring-mendeleev-85074c/.claude/skills/gstack/office-hours/SKILL.md
+/Users/akrish/DEV/.claude/worktrees/distracted-franklin-5dc719/.claude/skills/gstack/office-hours/SKILL.md

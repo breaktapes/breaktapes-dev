@@ -1,1 +1,1 @@
-/Users/akrish/DEV/.claude/worktrees/admiring-mendeleev-85074c/.claude/skills/gstack/ship/SKILL.md
+/Users/akrish/DEV/.claude/worktrees/distracted-franklin-5dc719/.claude/skills/gstack/ship/SKILL.md

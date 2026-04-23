@@ -1,0 +1,1 @@
+/Users/akrish/DEV/.claude/worktrees/distracted-franklin-5dc719/.claude/skills/gstack/make-pdf/SKILL.md
