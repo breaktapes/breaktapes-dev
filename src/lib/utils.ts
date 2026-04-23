@@ -1,3 +1,16 @@
+/**
+ * Convert any date string the app stores ("YYYY-MM-DD") into the canonical
+ * display format DD-MM-YYYY. Pass-through for empty / unparseable input.
+ *
+ * Use this anywhere the user sees a date as plain text. Date inputs and
+ * internal comparisons MUST stay in YYYY-MM-DD.
+ */
+export function fmtDateDDMM(d: string | undefined | null): string {
+  if (!d) return ''
+  const m = String(d).match(/^(\d{4})-(\d{2})-(\d{2})/)
+  return m ? `${m[3]}-${m[2]}-${m[1]}` : String(d)
+}
+
 const SPONSOR_RE = /\b(tcs|bmo|bmw|virgin money|adnoc|asics|zurich|bank of america)\b/g
 
 export function normalizeName(name: string): string {

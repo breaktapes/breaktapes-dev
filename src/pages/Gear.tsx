@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback } from 'react'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useRaceStore } from '@/stores/useRaceStore'
+import { fmtDateDDMM } from '@/lib/utils'
 
 // ─── Custom gear local storage helpers ────────────────────────────────────────
 
@@ -868,7 +869,7 @@ export function Gear() {
                         <label style={{ fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)' }}>Link to Race (optional)</label>
                         <select value={stackForm.raceId} onChange={e => setStackForm(f => ({ ...f, raceId: e.target.value }))} style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '10px 12px', color: 'var(--white)', fontFamily: 'var(--body)', fontSize: '14px' }}>
                           <option value="">— No race linked —</option>
-                          {allRaces.map(r => <option key={r.id} value={r.id}>{r.name ?? r.distance} · {r.date}</option>)}
+                          {allRaces.map(r => <option key={r.id} value={r.id}>{r.name ?? r.distance} · {fmtDateDDMM(r.date)}</option>)}
                         </select>
                       </div>
                     )}

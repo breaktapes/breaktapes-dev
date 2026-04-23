@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { parseDistKm } from '@/lib/raceFormulas'
+import { fmtDateDDMM } from '@/lib/utils'
 import type { Race } from '@/types'
 
 const HEALTH_PROXY = 'https://health.breaktapes.com'
@@ -40,12 +41,6 @@ function normalizeDateStr(d: string): string {
   const mmddyyyy = d.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
   if (mmddyyyy) return `${mmddyyyy[3]}-${mmddyyyy[1].padStart(2,'0')}-${mmddyyyy[2].padStart(2,'0')}`
   return d
-}
-
-function fmtDateDDMMYYYY(d: string): string {
-  // Display helper — input YYYY-MM-DD, output DD-MM-YYYY
-  const m = d.match(/^(\d{4})-(\d{2})-(\d{2})$/)
-  return m ? `${m[3]}-${m[2]}-${m[1]}` : d
 }
 
 export function RaceImportModal({ onClose }: { onClose: () => void }) {
@@ -317,7 +312,7 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
                           )}
                           {r.date && (
                             <div style={{ fontSize: '11px', color: 'var(--muted)', fontFamily: 'var(--body)' }}>
-                              {fmtDateDDMMYYYY(r.date)}
+                              {fmtDateDDMM(r.date)}
                             </div>
                           )}
                           <div style={{ fontSize: '9px', color: 'var(--muted2)', textTransform: 'uppercase', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em' }}>
