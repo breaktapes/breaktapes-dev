@@ -70,7 +70,6 @@ const inputStyle: React.CSSProperties = {
 export function Settings() {
   const navigate = useNavigate()
   const authUser = useAuthStore(s => s.authUser)
-  const proAccessGranted = useAuthStore(s => s.proAccessGranted)
   const athlete = useAthleteStore(s => s.athlete)
   const updateAthlete = useAthleteStore(s => s.updateAthlete)
 
@@ -212,11 +211,7 @@ export function Settings() {
     }, { onConflict: 'user_id' })
   }
 
-  function applyTheme(themeId: ThemeId, isPro: boolean) {
-    if (isPro && !proAccessGranted) {
-      alert('Pro feature — upgrade to unlock this theme.')
-      return
-    }
+  function applyTheme(themeId: ThemeId) {
     document.documentElement.dataset.theme = themeId
     localStorage.setItem('bt_theme', themeId)
     setActiveTheme(themeId)
@@ -495,18 +490,15 @@ export function Settings() {
         }}>
           {THEMES.map(theme => {
             const isActive = activeTheme === theme.id
-            const isLocked = theme.pro && !proAccessGranted
             return (
               <button
                 key={theme.id}
-                onClick={() => theme.comingSoon ? undefined : applyTheme(theme.id, theme.pro)}
+                onClick={() => theme.comingSoon ? undefined : applyTheme(theme.id)}
                 disabled={theme.comingSoon}
                 style={{
                   height: '80px',
                   background: 'var(--surface2)',
-                  border: isActive
-                    ? '2px solid var(--orange)'
-                    : '1px solid var(--border)',
+                  border: isActive ? '2px solid var(--orange)' : '1px solid var(--border)',
                   borderRadius: '8px',
                   cursor: theme.comingSoon ? 'default' : 'pointer',
                   display: 'flex',
@@ -515,7 +507,7 @@ export function Settings() {
                   justifyContent: 'center',
                   gap: '6px',
                   padding: '0.5rem',
-                  opacity: (isLocked || theme.comingSoon) ? 0.45 : 1,
+                  opacity: theme.comingSoon ? 0.45 : 1,
                   position: 'relative',
                 }}
               >
@@ -531,7 +523,7 @@ export function Settings() {
                 }}>
                   {theme.label}
                 </span>
-                {theme.comingSoon ? (
+                {theme.comingSoon && (
                   <span style={{
                     fontSize: '9px',
                     fontFamily: 'var(--headline)',
@@ -544,20 +536,6 @@ export function Settings() {
                     borderRadius: '3px',
                   }}>
                     SOON
-                  </span>
-                ) : theme.pro && (
-                  <span style={{
-                    fontSize: '9px',
-                    fontFamily: 'var(--headline)',
-                    fontWeight: 700,
-                    letterSpacing: '0.1em',
-                    textTransform: 'uppercase',
-                    color: 'var(--orange)',
-                    background: 'rgba(var(--orange-ch),0.12)',
-                    padding: '1px 5px',
-                    borderRadius: '3px',
-                  }}>
-                    PRO
                   </span>
                 )}
               </button>

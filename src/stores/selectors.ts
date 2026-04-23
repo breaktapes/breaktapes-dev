@@ -30,7 +30,6 @@ export const selectSeasonPlans = (s: AthleteState) => s.seasonPlans
 // Auth store selectors
 export const selectAuthUser = (s: AuthState) => s.authUser
 export const selectAuthSession = (s: AuthState) => s.authSession
-export const selectProAccess = (s: AuthState) => s.proAccessGranted
 
 // Dash store selectors — return raw state (stable references, no new objects)
 export const selectDashLayout = (s: DashState) => s.widgets

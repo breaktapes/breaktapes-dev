@@ -683,7 +683,6 @@ function AchievementsSection() {
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             {recentPills.map(a => (
               <div key={a.id} style={st.achievementPill}>
-                <span style={{ fontSize: '16px' }}>{a.icon}</span>
                 <span>{a.name}</span>
               </div>
             ))}
@@ -714,10 +713,7 @@ function AchievementsSection() {
             {ACHIEVEMENTS.filter(a => a.group === 'special').map(a => {
               const isUnlocked = unlockedIds.has(a.id)
               return (
-                <div key={a.id} style={{ ...st.achievementTile, opacity: isUnlocked ? 1 : 0.7 }}>
-                  <div style={{ ...st.achievementIconBox, background: isUnlocked ? 'rgba(var(--green-ch), 0.12)' : 'var(--surface)' }}>
-                    <span style={{ fontSize: '24px' }}>{a.icon}</span>
-                  </div>
+                <div key={a.id} style={{ ...st.achievementTile, opacity: isUnlocked ? 1 : 0.55, borderColor: isUnlocked ? 'rgba(var(--green-ch),0.35)' : 'var(--border)', borderTopWidth: isUnlocked ? '2px' : '1px' }}>
                   <div style={st.achievementName}>{a.name}</div>
                   <div style={{ ...st.achievementStatus, background: isUnlocked ? 'rgba(var(--green-ch), 0.1)' : 'var(--surface)', color: isUnlocked ? 'var(--green)' : 'var(--muted)' }}>
                     {isUnlocked ? 'UNLOCKED' : 'LOCKED'}
@@ -742,10 +738,7 @@ function AchievementsSection() {
             {ACHIEVEMENTS.filter(a => a.group === 'milestone' || a.group === 'event').map(a => {
               const isUnlocked = unlockedIds.has(a.id)
               return (
-                <div key={a.id} style={{ ...st.achievementTile, opacity: isUnlocked ? 1 : 0.7 }}>
-                  <div style={{ ...st.achievementIconBox, background: isUnlocked ? 'rgba(var(--orange-ch), 0.1)' : 'var(--surface)' }}>
-                    <span style={{ fontSize: '24px' }}>{a.icon}</span>
-                  </div>
+                <div key={a.id} style={{ ...st.achievementTile, opacity: isUnlocked ? 1 : 0.55, borderColor: isUnlocked ? 'rgba(var(--orange-ch),0.35)' : 'var(--border)', borderTopWidth: isUnlocked ? '2px' : '1px' }}>
                   <div style={st.achievementName}>{a.name}</div>
                   <div style={{ ...st.achievementStatus, background: isUnlocked ? 'rgba(var(--orange-ch), 0.08)' : 'var(--surface)', color: isUnlocked ? 'var(--orange)' : 'var(--muted)' }}>
                     {isUnlocked ? 'UNLOCKED' : 'LOCKED'}
