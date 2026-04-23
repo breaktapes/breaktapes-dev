@@ -5,7 +5,6 @@ beforeEach(() => {
   useAuthStore.setState({
     authUser: null,
     authSession: null,
-    proAccessGranted: false,
   })
   window.localStorage.clear()
 })
@@ -55,15 +54,9 @@ describe('useAuthStore — sign-out localStorage cleanup', () => {
   })
 })
 
-describe('useAuthStore — proAccess', () => {
-  it('grants pro access', () => {
-    useAuthStore.getState().setProAccess(true)
-    expect(useAuthStore.getState().proAccessGranted).toBe(true)
-  })
-
-  it('revokes pro access', () => {
-    useAuthStore.getState().setProAccess(true)
-    useAuthStore.getState().setProAccess(false)
-    expect(useAuthStore.getState().proAccessGranted).toBe(false)
+describe('useAuthStore — no pro gating', () => {
+  it('authUser and authSession are the only state fields', () => {
+    const state = useAuthStore.getState()
+    expect('proAccessGranted' in state).toBe(false)
   })
 })
