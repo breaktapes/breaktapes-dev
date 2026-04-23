@@ -844,6 +844,7 @@ PR #164 was squash-merged to main; subsequent fixes commit `6b8debd` from worktr
 
 ## Known Issues / Watch Points
 
+- Clerk custom domain DNS: `clerk.breaktapes.com` and `accounts.breaktapes.com` require CNAME records in Cloudflare pointing to `frontend-api.clerk.services` and `accounts.clerk.services` respectively. Proxy status MUST be **DNS only** (grey cloud) — Cloudflare proxy breaks Clerk's SSL. Missing CNAMEs cause `isLoaded` to never resolve → infinite loading screen on app.breaktapes.com.
 - Beta invite codes: `BETA_INVITE_CODES` array is client-visible in source — intentional tradeoff for self-service beta; update the array and redeploy to staging to add/revoke codes
 - Safari autofill: fixed with `autocomplete="off"` + `readonly` trick on inputs; do not revert
 - Geolocation caching: coords cached 1hr in localStorage under key `geo_cache` to avoid repeated browser permission prompts
