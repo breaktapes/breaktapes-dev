@@ -70,7 +70,7 @@ const inputStyle: React.CSSProperties = {
 
 export function Settings() {
   const navigate = useNavigate()
-  const { signOut } = useClerk()
+  const { signOut, openUserProfile, user: clerkUser } = useClerk()
   const authUser = useAuthStore(s => s.authUser)
   const athlete = useAthleteStore(s => s.athlete)
   const updateAthlete = useAthleteStore(s => s.updateAthlete)
@@ -90,7 +90,7 @@ export function Settings() {
 
   async function handleDeleteAccount() {
     if (deleteInput.trim().toUpperCase() !== 'DELETE') {
-      setDeleteError('Type DELETE (all caps) to confirm.')
+      setDeleteError('Type DELETE to confirm.')
       return
     }
     setDeleting(true)
@@ -102,7 +102,7 @@ export function Settings() {
         'fl2_upcoming', 'fl2_wishlist', 'fl2_season_plans', 'fl2_focus_race_id',
         'fl2_apikey', 'bt_theme', 'fl2_dash_layout', 'fl2_dash_zone_collapse']
       keysToRemove.forEach(k => localStorage.removeItem(k))
-      setTimeout(() => window.location.reload(), 500)
+      await clerkUser?.delete()
     } catch (err) {
       setDeleteError(err instanceof Error ? err.message : 'Could not delete account. Try again.')
       setDeleting(false)
@@ -253,9 +253,9 @@ export function Settings() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
             <button
               style={{ ...btnGhost, width: '100%' }}
-              onClick={() => console.log('Change password')}
+              onClick={() => openUserProfile()}
             >
-              Change Password
+              Manage Account
             </button>
             <button
               style={{ ...btnGhost, width: '100%', color: 'var(--orange)', borderColor: 'var(--orange)' }}
@@ -273,8 +273,21 @@ export function Settings() {
               </button>
             ) : (
               <div style={{ border: '1px solid rgba(255,107,107,0.3)', borderRadius: '6px', padding: '0.75rem', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <p style={{ margin: 0, fontSize: '12px', color: '#ff8e8e', lineHeight: 1.5 }}>
-                  This permanently removes your account, races, and all synced data. Type <strong>DELETE</strong> to confirm.
+                <p style={{ margin: 0, fontSize: '13px', fontFamily: 'var(--headline)', fontWeight: 900, letterSpacing: '0.05em', textTransform: 'uppercase', color: '#ff8e8e' }}>
+                  This cannot be undone
+                </p>
+                <p style={{ margin: 0, fontSize: '12px', color: 'var(--muted)', lineHeight: 1.6 }}>
+                  Permanently deletes:
+                </p>
+                <ul style={{ margin: 0, paddingLeft: '1.25rem', fontSize: '12px', color: '#ff8e8e', lineHeight: 1.8 }}>
+                  <li>Your account and login</li>
+                  <li>All races, finish times, and personal bests</li>
+                  <li>Medals, photos, and achievements</li>
+                  <li>Upcoming races and season plans</li>
+                  <li>Wearable connections and health data</li>
+                </ul>
+                <p style={{ margin: 0, fontSize: '12px', color: 'var(--muted)', lineHeight: 1.5 }}>
+                  Type <strong style={{ color: 'var(--white)' }}>DELETE</strong> to confirm.
                 </p>
                 <input
                   style={{ ...inputStyle, borderColor: 'rgba(255,107,107,0.4)' }}
