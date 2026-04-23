@@ -21,31 +21,39 @@ export interface CatalogRace {
 }
 
 const COLS = 'id, name, aliases, city, country, year, month, day, dist_km, dist, type, discipline, surface, elevation_profile, course_summary'
-const PAGE = 5000
+// Supabase PostgREST max-rows is 1,000 per request regardless of range size.
+// Fetch 10 pages of 1,000 in parallel to cover the full ~8,284-row catalog.
+const PAGE = 1000
+const TOTAL_PAGES = 10
 
 /**
  * Loads the global race catalog (~8,284 rows) from Supabase.
- * Supabase REST default limit is 1,000 rows — we must paginate to get all rows.
- * Fetches in parallel pages of 5,000 rows each.
- * staleTime: 1hr — catalog changes infrequently, refetching on every nav costs ~200ms.
+ * Supabase REST hard-limits each request to 1,000 rows.
+ * Fetches 10 pages of 1,000 in parallel so no race is missed.
+ * staleTime: 1hr — catalog changes infrequently.
  */
 export function useRaceCatalog() {
   return useQuery({
     queryKey: ['race-catalog'],
     queryFn: async () => {
-      // Fetch two pages in parallel to cover 10,000 rows (catalog is ~8,284)
-      const [p1, p2] = await Promise.all([
-        supabase.from('race_catalog').select(COLS).order('name').range(0, PAGE - 1),
-        supabase.from('race_catalog').select(COLS).order('name').range(PAGE, PAGE * 2 - 1),
-      ])
-      if (p1.error) throw p1.error
-      if (p2.error) throw p2.error
-      // Supabase REST serializes PostgreSQL `numeric` columns as strings.
-      // Normalize dist_km to a JS number so comparisons work without coercion surprises.
-      return [...(p1.data ?? []), ...(p2.data ?? [])].map(r => ({
-        ...r,
-        dist_km: r.dist_km != null ? Number(r.dist_km) : undefined,
-      })) as CatalogRace[]
+      const pages = await Promise.all(
+        Array.from({ length: TOTAL_PAGES }, (_, i) =>
+          supabase
+            .from('race_catalog')
+            .select(COLS)
+            .order('name')
+            .range(i * PAGE, (i + 1) * PAGE - 1)
+        )
+      )
+      for (const p of pages) {
+        if (p.error) throw p.error
+      }
+      return pages
+        .flatMap(p => p.data ?? [])
+        .map(r => ({
+          ...r,
+          dist_km: r.dist_km != null ? Number(r.dist_km) : undefined,
+        })) as CatalogRace[]
     },
     staleTime: 60 * 60 * 1000,
     retry: 1,

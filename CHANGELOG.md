@@ -2,6 +2,22 @@
 
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+## [0.6.4.0] - 2026-04-23
+
+### Added
+- Pace calculator: splits table (Race/KM/Mile tabs) appears after calculating
+- Triathlon calculator: dual-mode toggle — enter pace to see time, or enter time to see pace
+- Race catalog: 10-page parallel fetch covers all 8,284 catalog races (was capped at 1,000)
+- AddRaceModal: year pills now derived from actual catalog entries (no generic year fallback)
+- AddRaceModal: selecting a year auto-fills date, distance, sport, city, country
+
+### Changed
+- Pace calculator: distance dropdown no longer shows PB suffix; goal time defaults to 0:00:00
+- Triathlon calculator: pace input and time display now same font size (16px)
+- Triathlon segment bar: fixed 5-column grid so T1/T2 labels are always visible
+- AddRaceModal: warns when logging a future-dated race in 'Log a Race' tab with 'Move to Upcoming' CTA
+
+
 
 ## [0.6.3.0] - 2026-04-23
 
