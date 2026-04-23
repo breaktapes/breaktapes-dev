@@ -5,6 +5,11 @@
  * Each column (HRS / MIN / SEC) is a fixed-height scroll container with
  * scroll-snap-type: y mandatory so items lock to the centre slot.
  *
+ * Infinite scroll: values are repeated REPS times. Scroll initialises at the
+ * centre repetition. When the user approaches either edge the container is
+ * silently repositioned to the equivalent centre position — giving a seamless
+ * wrap-around in both directions.
+ *
  * Usage:
  *   <TimePickerWheel value={{ h, m, s }} onChange={v => setTime(v)} />
  */
@@ -13,8 +18,9 @@ import { useRef, useEffect, useCallback } from 'react'
 
 export interface HMS { h: number; m: number; s: number }
 
-const ITEM_H  = 44   // px — height of each option row
-const VISIBLE = 3    // how many rows are visible (centre = selected)
+const ITEM_H  = 44    // px — height of each option row
+const VISIBLE = 3     // how many rows are visible (centre = selected)
+const REPS    = 7     // times the values array is repeated for infinite scroll
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -23,50 +29,80 @@ function pad2(n: number)  { return n.toString().padStart(2, '0') }
 
 // ─── Single wheel column ─────────────────────────────────────────────────────
 
-function Wheel({
+export function Wheel({
   values,
   selected,
   onChange,
   label,
   format = (v: number) => pad2(v),
+  itemH = ITEM_H,
+  visible = VISIBLE,
+  fontSize = '24px',
 }: {
   values: number[]
   selected: number
   onChange: (v: number) => void
   label: string
   format?: (v: number) => string
+  itemH?: number
+  visible?: number
+  fontSize?: string
 }) {
-  const ref = useRef<HTMLDivElement>(null)
-  const settingRef = useRef(false)   // guards against scroll-event → setState loop
-  const raf = useRef<number>(0)
+  const ref           = useRef<HTMLDivElement>(null)
+  const settingRef    = useRef(false)
+  const raf           = useRef<number>(0)
+  const lastEmitted   = useRef<number>(-999)
 
-  // Scroll to the right position whenever `selected` changes externally
+  const n         = values.length
+  const halfReps  = Math.floor(REPS / 2)
+  const midOffset = n * halfReps
+
+  const inflated = Array.from({ length: n * REPS }, (_, i) => values[i % n])
+
   useEffect(() => {
     const el = ref.current
     if (!el) return
+    if (lastEmitted.current === selected) return
     const idx = values.indexOf(selected)
     if (idx < 0) return
     settingRef.current = true
-    el.scrollTop = idx * ITEM_H
-    // Release the guard after the scroll settles
-    raf.current = requestAnimationFrame(() => {
-      settingRef.current = false
-    })
-  }, [selected, values])
+    el.scrollTop = (midOffset + idx) * itemH
+    raf.current = requestAnimationFrame(() => { settingRef.current = false })
+  }, [selected, values, midOffset, itemH])
 
-  // Cleanup on unmount
   useEffect(() => () => cancelAnimationFrame(raf.current), [])
 
   const onScroll = useCallback(() => {
     if (settingRef.current) return
     const el = ref.current
     if (!el) return
-    const idx = Math.round(el.scrollTop / ITEM_H)
-    const clamped = Math.max(0, Math.min(values.length - 1, idx))
-    if (values[clamped] !== selected) onChange(values[clamped])
-  }, [values, selected, onChange])
 
-  const WHEEL_H = ITEM_H * VISIBLE   // total visible height
+    const rawIdx  = Math.round(el.scrollTop / itemH)
+    const total   = n * REPS
+    const buffer  = n * 2
+
+    if (rawIdx < buffer) {
+      settingRef.current = true
+      el.scrollTop = (rawIdx + n * halfReps) * itemH
+      requestAnimationFrame(() => { settingRef.current = false })
+      return
+    }
+
+    if (rawIdx >= total - buffer) {
+      settingRef.current = true
+      el.scrollTop = (rawIdx - n * halfReps) * itemH
+      requestAnimationFrame(() => { settingRef.current = false })
+      return
+    }
+
+    const realValue = values[rawIdx % n]
+    if (realValue !== selected) {
+      lastEmitted.current = realValue
+      onChange(realValue)
+    }
+  }, [values, selected, onChange, n, halfReps, itemH])
+
+  const WHEEL_H = itemH * visible
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, minWidth: 0 }}>
@@ -79,28 +115,27 @@ function Wheel({
           scrollSnapType:      'y mandatory',
           WebkitOverflowScrolling: 'touch' as any,
           overscrollBehavior: 'contain',
-          // Padding top/bottom = 1 item height so the first/last item can centre
-          paddingTop:          ITEM_H,
-          paddingBottom:       ITEM_H,
+          paddingTop:          itemH,
+          paddingBottom:       itemH,
           boxSizing:           'border-box',
-          scrollbarWidth:      'none',    // Firefox
-          msOverflowStyle:     'none',    // IE
+          scrollbarWidth:      'none',
+          msOverflowStyle:     'none',
           position:            'relative',
           width:               '100%',
         } as React.CSSProperties}
       >
-        {values.map(v => (
+        {inflated.map((v, i) => (
           <div
-            key={v}
+            key={i}
             style={{
-              height:          ITEM_H,
+              height:          itemH,
               scrollSnapAlign: 'center',
               display:         'flex',
               alignItems:      'center',
               justifyContent:  'center',
               fontFamily:      'var(--headline)',
               fontWeight:      900,
-              fontSize:        '24px',
+              fontSize,
               letterSpacing:   '0.02em',
               color:           v === selected ? 'var(--white)' : 'rgba(245,245,245,0.25)',
               transition:      'color 0.15s',
@@ -111,8 +146,7 @@ function Wheel({
             onMouseDown={() => {
               const el = ref.current
               if (!el) return
-              const idx = values.indexOf(v)
-              el.scrollTo({ top: idx * ITEM_H, behavior: 'smooth' })
+              el.scrollTo({ top: i * itemH, behavior: 'smooth' })
             }}
           >
             {format(v)}
