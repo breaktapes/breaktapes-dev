@@ -179,10 +179,19 @@ function YearTabs({
 
 function StatsStrip({ races }: { races: Race[] }) {
   const units = useUnits()
-  const km = races.reduce((s, r) => s + distanceToKm(r.distance), 0)
+  // KM and medals exclude DNF / DSQ / DNS — distance only counts when the
+  // user actually finished, and you can't be awarded a medal you didn't earn.
+  const finished = races.filter(r => !r.outcome || r.outcome === 'Finished')
+  const km = finished.reduce((s, r) => s + distanceToKm(r.distance), 0)
   const totalDist = Math.round(units === 'imperial' ? km * 0.621371 : km)
   const countries = new Set(races.map(r => r.country).filter(Boolean)).size
-  const medals = races.filter(r => r.medal).length
+  // 1 medal per finished race that has any medal logged, +1 extra for a
+  // podium (gold/silver/bronze) — podium racers receive a separate medal.
+  const finisherMedals = finished.filter(r => r.medal).length
+  const podiumMedals = finished.filter(r =>
+    ['gold', 'silver', 'bronze'].includes((r.medal || '').toLowerCase())
+  ).length
+  const medals = finisherMedals + podiumMedals
 
   const stats = [
     { val: races.length, label: 'RACES' },
