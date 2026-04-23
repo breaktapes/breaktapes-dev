@@ -290,8 +290,8 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
     allYears?: CatalogRace[]
     myRace?: Race
   }[]>([])
-  const [yearPills, setYearPills]         = useState<{ label: string; row: CatalogRace }[]>([])
-  const [showYearPicker, setShowYearPicker] = useState(false)
+  const [catalogYearRows, setCatalogYearRows] = useState<CatalogRace[]>([])
+  const [showOlderYears, setShowOlderYears]   = useState(false)
 
   // Core fields
   const [name, setName]             = useState('')
@@ -356,8 +356,11 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
   // (keyboard open shifts visual viewport; position:fixed uses visual coords but
   // getBoundingClientRect uses layout coords — subtract offsetTop to align them)
   function recalcDropRect() {
-    if (showSuggest && suggestions.length > 0 && nameWrapRef.current) {
-      const r   = nameWrapRef.current.getBoundingClientRect()
+    // Show dropdown whenever query is active — even with 0 results, so the
+    // "Add manually" escape hatch is always reachable.
+    const shouldShow = showSuggest && query.length >= 2 && !catalogLoading && nameWrapRef.current
+    if (shouldShow) {
+      const r   = nameWrapRef.current!.getBoundingClientRect()
       const vv  = typeof window !== 'undefined' ? window.visualViewport : null
       const off = vv?.offsetTop ?? 0
       setDropRect({ top: r.bottom + 4 - off, left: r.left, width: r.width })
@@ -376,12 +379,14 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
       vv.removeEventListener('scroll', recalcDropRect)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showSuggest, suggestions])
+  }, [showSuggest, suggestions, query, catalogLoading])
 
-  // Run search immediately (no debounce) whenever catalog arrives after user already typed
+  // Run search immediately (no debounce) whenever catalog arrives after user already typed.
+  // Also re-open the dropdown so results appear even if the user blurred while catalog was loading.
   useEffect(() => {
     if (catalog.length > 0 && query.length >= 2) {
       clearTimeout(debounceRef.current)
+      setShowSuggest(true)
       runSearch(query, catalog)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -523,44 +528,27 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
       }
     }
 
-    // Year picker: build pills from allYears group
+    // Build catalog year rows — sorted by year descending (most recent first).
+    // Only include rows that have a known year so pills are meaningful.
     const years = s.allYears ?? (representative ? [representative] : [])
-    if (years.length <= 1) {
-      // Single row — auto-fill date immediately, no picker needed
-      const row = years[0] ?? representative
-      if (row?.month && row?.day) {
-        const yr = row.year ?? new Date().getFullYear()
-        const candidate = `${yr}-${pad2(row.month)}-${pad2(row.day)}`
-        const today = new Date().toISOString().split('T')[0]
-        // In upcoming mode: only prefill if the catalog date is in the future.
-        // If past (stale catalog, no future entry), leave date blank — user enters it.
-        if (mode !== 'upcoming' || candidate >= today) {
-          setDate(candidate)
-        }
+    const sortedYears = [...years]
+      .filter(r => r.year != null)
+      .sort((a, b) => (b.year ?? 0) - (a.year ?? 0))
+      // dedupe by year (same year may appear for aliases)
+      .filter((r, i, arr) => arr.findIndex(x => x.year === r.year) === i)
+    setCatalogYearRows(sortedYears)
+    setShowOlderYears(false)
+    setShowManualDate(false)
+
+    // Auto-fill date from the most-recent catalog row.
+    const firstRow = sortedYears[0] ?? representative
+    if (firstRow?.month && firstRow?.day) {
+      const yr = firstRow.year ?? new Date().getFullYear()
+      const candidate = `${yr}-${pad2(firstRow.month)}-${pad2(firstRow.day)}`
+      const today = new Date().toISOString().split('T')[0]
+      if (mode !== 'upcoming' || candidate >= today) {
+        setDate(candidate)
       }
-      setShowYearPicker(false)
-      setYearPills([])
-    } else {
-      // Multiple years — show pill strip, defer date fill to pill tap
-      const yearMap = new Map<number, CatalogRace[]>()
-      years.forEach(r => {
-        if (r.year == null) return
-        if (!yearMap.has(r.year)) yearMap.set(r.year, [])
-        yearMap.get(r.year)!.push(r)
-      })
-      const pills = years
-        .filter(r => r.year != null)
-        .map(r => {
-          const sameYear = yearMap.get(r.year!)!
-          const distLabel = r.dist ?? (r.dist_km ? `${r.dist_km}K` : '')
-          const label = sameYear.length > 1 ? `${r.year} ${distLabel}`.trim() : String(r.year)
-          return { label, row: r }
-        })
-        // dedupe by label (same year+dist can appear multiple times from aliases)
-        .filter((p, i, arr) => arr.findIndex(x => x.label === p.label) === i)
-      setYearPills(pills)
-      setShowYearPicker(true)
-      setShowManualDate(false)
     }
 
     setShowSuggest(false)
@@ -730,9 +718,9 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
                 style={st.input}
                 placeholder="Search a race or type your own..."
                 value={query}
-                onChange={e => { setQuery(e.target.value); setName(e.target.value); setShowSuggest(true) }}
-                onFocus={() => { if (query.length >= 2 && !catalogLoading) { setShowSuggest(true); runSearch(query, catalog) } }}
-                onBlur={() => setTimeout(() => setShowSuggest(false), 180)}
+                onChange={e => { setQuery(e.target.value); setName(e.target.value); setShowSuggest(true); if (catalogYearRows.length > 0) setCatalogYearRows([]) }}
+                onFocus={() => { if (query.length >= 2) { setShowSuggest(true); if (!catalogLoading) runSearch(query, catalog) } }}
+                onBlur={() => setTimeout(() => setShowSuggest(false), 300)}
                 autoFocus
               />
             </Field>
@@ -745,7 +733,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
           </div>
 
           {/* Dropdown rendered via portal so it escapes overflow:hidden on the sheet */}
-          {showSuggest && dropRect && (suggestions.length > 0 || (query.length >= 2 && !catalogLoading)) && createPortal(
+          {showSuggest && dropRect && createPortal(
             <div style={{
               ...st.dropdown,
               position: 'fixed',
@@ -754,6 +742,11 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
               width: dropRect.width,
               zIndex: 1200,
             }}>
+              {suggestions.length === 0 && !catalogLoading && (
+                <div style={{ padding: '12px', fontSize: '12px', color: 'var(--muted)', textAlign: 'center', fontFamily: 'var(--body)' }}>
+                  No matches in catalog for &ldquo;{query}&rdquo;
+                </div>
+              )}
               {suggestions.map((s, i) => {
                 // Build meta line: city · country · distance
                 const metaParts: string[] = []
@@ -835,8 +828,8 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
                   fontStyle: 'italic',
                   borderTop: suggestions.length > 0 ? '1px solid var(--border2)' : 'none',
                 }}
-                onMouseDown={e => { e.preventDefault(); setName(query.trim()); setShowSuggest(false); setShowYearPicker(false); setYearPills([]) }}
-                onTouchEnd={e => { e.preventDefault(); setName(query.trim()); setShowSuggest(false); setShowYearPicker(false); setYearPills([]) }}
+                onMouseDown={e => { e.preventDefault(); setName(query.trim()); setShowSuggest(false); setCatalogYearRows([]); setShowManualDate(true) }}
+                onTouchEnd={e => { e.preventDefault(); setName(query.trim()); setShowSuggest(false); setCatalogYearRows([]); setShowManualDate(true) }}
               >
                 + Add &ldquo;{query}&rdquo; manually →
               </button>
@@ -846,61 +839,91 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
 
           {/* ── Date / Year picker — right under race name ── */}
           {(() => {
-            const currentYear = new Date().getFullYear()
-            const recentYears = Array.from({ length: 10 }, (_, i) => currentYear - i)
-            const pills = showYearPicker
-              ? yearPills.map(p => ({ label: p.label, year: p.row.year ?? currentYear, row: p.row as typeof yearPills[0]['row'] | null }))
-              : recentYears.map(y => ({ label: String(y), year: y, row: null as typeof yearPills[0]['row'] | null }))
+            const today = new Date().toISOString().split('T')[0]
+            // Catalog-based pills: show up to 10 most-recent years that exist in catalog.
+            // If race wasn't selected from catalog, no pills — just manual date input.
+            const visibleRows = showOlderYears
+              ? catalogYearRows
+              : catalogYearRows.slice(0, 10)
+            const hasMoreInCatalog = !showOlderYears && catalogYearRows.length > 10
 
             return (
               <Field label="Date *">
+                {/* Future-race warning in "Log a Race" mode */}
+                {mode === 'past' && date && date > today && (
+                  <div style={{ marginBottom: '8px', padding: '10px 12px', background: 'rgba(var(--orange-ch),0.1)', border: '1px solid rgba(var(--orange-ch),0.35)', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '12px', color: 'var(--orange)', fontFamily: 'var(--body)', flex: 1 }}>
+                      ⚠️ This race is in the future — log it as an upcoming race instead.
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setMode('upcoming')}
+                      style={{ fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 900, letterSpacing: '0.06em', background: 'var(--orange)', color: 'var(--black)', border: 'none', borderRadius: '6px', padding: '5px 10px', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                    >
+                      MOVE TO UPCOMING →
+                    </button>
+                  </div>
+                )}
                 {showManualDate ? (
                   <div>
                     <DateInput value={date} onChange={setDate} />
-                    <button
-                      type="button"
-                      style={{ fontSize: '11px', color: 'var(--muted)', background: 'none', border: 'none', padding: '4px 0', cursor: 'pointer', fontFamily: 'var(--body)' }}
-                      onClick={() => setShowManualDate(false)}
-                    >
-                      ← pick year
-                    </button>
+                    {catalogYearRows.length > 0 && (
+                      <button
+                        type="button"
+                        style={{ fontSize: '11px', color: 'var(--muted)', background: 'none', border: 'none', padding: '4px 0', cursor: 'pointer', fontFamily: 'var(--body)' }}
+                        onClick={() => setShowManualDate(false)}
+                      >
+                        ← pick year
+                      </button>
+                    )}
                   </div>
                 ) : (
                   <div>
-                    <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
-                      {pills.map((pill, i) => {
-                        const isSelected = date?.startsWith(String(pill.year))
-                        return (
+                    {catalogYearRows.length > 0 ? (
+                      /* Catalog-only year pills */
+                      <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px', WebkitOverflowScrolling: 'touch', flexWrap: 'wrap' } as React.CSSProperties}>
+                        {visibleRows.map((row, i) => {
+                          const isSelected = row.year != null && date?.startsWith(String(row.year))
+                          return (
+                            <button
+                              key={i}
+                              type="button"
+                              style={{
+                                ...st.yearPill,
+                                ...(isSelected ? { background: 'var(--orange)', color: 'var(--black)', borderColor: 'var(--orange)' } : {}),
+                              }}
+                              onMouseDown={e => {
+                                e.preventDefault()
+                                if (row.month && row.day && row.year != null) {
+                                  setDate(`${row.year}-${pad2(row.month)}-${pad2(row.day)}`)
+                                }
+                              }}
+                            >
+                              {row.year}
+                            </button>
+                          )
+                        })}
+                        {hasMoreInCatalog && (
                           <button
-                            key={i}
                             type="button"
-                            style={{
-                              ...st.yearPill,
-                              ...(isSelected ? { background: 'var(--orange)', color: 'var(--black)', borderColor: 'var(--orange)' } : {}),
-                            }}
-                            onMouseDown={e => {
-                              e.preventDefault()
-                              if (pill.row && pill.row.month && pill.row.day) {
-                                setDate(`${pill.year}-${pad2(pill.row.month)}-${pad2(pill.row.day)}`)
-                              } else {
-                                const monthDay = date && date.length >= 10 ? date.slice(5) : `${pad2(new Date().getMonth() + 1)}-${pad2(new Date().getDate())}`
-                                setDate(`${pill.year}-${monthDay}`)
-                              }
-                              if (showYearPicker) { setShowYearPicker(false); setYearPills([]) }
-                            }}
+                            style={{ ...st.yearPill, color: 'var(--muted)', borderColor: 'var(--border2)', fontSize: '11px', whiteSpace: 'nowrap' }}
+                            onMouseDown={e => { e.preventDefault(); setShowOlderYears(true) }}
                           >
-                            {pill.label}
+                            Older →
                           </button>
-                        )
-                      })}
-                      <button
-                        type="button"
-                        style={{ ...st.yearPill, color: 'var(--muted)', borderColor: 'var(--border2)', fontSize: '11px', whiteSpace: 'nowrap' }}
-                        onMouseDown={e => { e.preventDefault(); setShowManualDate(true); setShowYearPicker(false); setYearPills([]) }}
-                      >
-                        Add manually →
-                      </button>
-                    </div>
+                        )}
+                        <button
+                          type="button"
+                          style={{ ...st.yearPill, color: 'var(--muted)', borderColor: 'var(--border2)', fontSize: '11px', whiteSpace: 'nowrap' }}
+                          onMouseDown={e => { e.preventDefault(); setShowManualDate(true) }}
+                        >
+                          Other →
+                        </button>
+                      </div>
+                    ) : (
+                      /* No catalog match — manual date only */
+                      <DateInput value={date} onChange={setDate} />
+                    )}
                     {date && (
                       <p style={{ margin: '4px 0 0', fontSize: '11px', color: 'var(--muted)' }}>
                         {new Date(date + 'T00:00:00').toLocaleDateString('en', { year: 'numeric', month: 'short', day: 'numeric' })}
@@ -908,7 +931,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
                     )}
                   </div>
                 )}
-                {mode === 'upcoming' && date && date < new Date().toISOString().split('T')[0] && (
+                {mode === 'upcoming' && date && date < today && (
                   <p style={{ margin: '4px 0 0', fontSize: '11px', color: 'var(--orange)', fontWeight: 600 }}>
                     ⚠️ This date is in the past — use "Log a Race" tab for completed races
                   </p>
