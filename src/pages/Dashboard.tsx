@@ -5038,6 +5038,7 @@ export function Dashboard() {
   const [showAllUpcoming,   setShowAllUpcoming]   = useState(false)
   const [editRace,          setEditRace]          = useState<Race | null>(null)
   const [detailWidget,      setDetailWidget]      = useState<DashWidget | null>(null)
+  const [detailPreview,     setDetailPreview]     = useState<React.ReactNode>(null)
   const [detailCtx,         setDetailCtx]         = useState<WidgetDynamicContext | undefined>(undefined)
   const nextRace        = useRaceStore(selectNextRace)   // always nearest upcoming (A-Race preferred)
   const upcomingRaces   = useRaceStore(selectUpcomingRaces)
@@ -5070,12 +5071,19 @@ export function Dashboard() {
     },
   }), [countdownRace, nextRace])
 
-  const openDetail = useCallback((id: string, ctx?: WidgetDynamicContext) => {
+  const openDetail = useCallback((id: string, preview?: React.ReactNode, ctx?: WidgetDynamicContext) => {
     const w = widgets.find(x => x.id === id)
     if (!w) return
+    setDetailPreview(preview ?? null)
     setDetailCtx(ctx)
     setDetailWidget(w)
   }, [widgets])
+
+  const closeDetail = useCallback(() => {
+    setDetailWidget(null)
+    setDetailPreview(null)
+    setDetailCtx(undefined)
+  }, [])
 
   const widgetCtxValue = useMemo(() => ({ openDetail, actions: widgetActions }), [openDetail, widgetActions])
 
@@ -5086,7 +5094,7 @@ export function Dashboard() {
       {showAddRace      && <AddRaceModal defaultMode={addRaceMode} prefillDistance={riegelPrefillDist} onClose={() => { setShowAddRace(false); setRiegelPrefillDist(undefined) }} />}
       {showAllUpcoming  && <AllUpcomingModal onClose={() => setShowAllUpcoming(false)} onAddRace={openAddUpcomingRace} />}
       {editRace         && <ViewEditRaceModal race={editRace} onClose={() => setEditRace(null)} />}
-      {detailWidget     && <WidgetDetailModal widget={detailWidget} dynamicContext={detailCtx} actions={widgetActions} onClose={() => { setDetailWidget(null); setDetailCtx(undefined) }} />}
+      {detailWidget     && <WidgetDetailModal widget={detailWidget} preview={detailPreview} dynamicContext={detailCtx} actions={widgetActions} onClose={closeDetail} />}
 
       <GreetingCard onCustomize={() => setShowCustomize(true)} />
       <PreRaceBriefing onAddRace={openAddRace} onEditRace={(race) => setEditRace(race)} />

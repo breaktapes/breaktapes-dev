@@ -18,21 +18,28 @@ function renderWithCtx(ui: React.ReactNode, openDetail = vi.fn()) {
 describe('WidgetCard', () => {
   beforeEach(() => { localStorage.clear() })
 
-  it('fires openDetail on card click', () => {
+  it('fires openDetail on card click with id + preview (children)', () => {
     const { openDetail } = renderWithCtx(
       <WidgetCard id="boston-qual"><span>body</span></WidgetCard>
     )
     fireEvent.click(screen.getByRole('button', { name: /boston qual/i }))
-    expect(openDetail).toHaveBeenCalledWith('boston-qual', undefined)
+    expect(openDetail).toHaveBeenCalled()
+    const call = openDetail.mock.calls[0]
+    expect(call[0]).toBe('boston-qual')
+    // 2nd arg is preview (React children); 3rd is undefined (no dynamicContext)
+    expect(call[1]).toBeTruthy()
+    expect(call[2]).toBeUndefined()
   })
 
-  it('passes dynamicContext to openDetail', () => {
+  it('passes dynamicContext as 3rd arg to openDetail', () => {
     const ctx = { primaryMetric: { label: 'Gap', value: '4:22' } }
     const { openDetail } = renderWithCtx(
       <WidgetCard id="boston-qual" dynamicContext={ctx}><span>body</span></WidgetCard>
     )
     fireEvent.click(screen.getByRole('button'))
-    expect(openDetail).toHaveBeenCalledWith('boston-qual', ctx)
+    const call = openDetail.mock.calls[0]
+    expect(call[0]).toBe('boston-qual')
+    expect(call[2]).toBe(ctx)
   })
 
   it('does NOT fire openDetail when a nested button is clicked', () => {
