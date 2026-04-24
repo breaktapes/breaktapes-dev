@@ -185,6 +185,11 @@ function StatsStrip({ races }: { races: Race[] }) {
   const km = finished.reduce((s, r) => s + distanceToKm(r.distance), 0)
   const totalDist = Math.round(units === 'imperial' ? km * 0.621371 : km)
   const countries = new Set(races.map(r => r.country).filter(Boolean)).size
+  const cities = new Set(
+    races
+      .filter(r => r.city && r.city.trim())
+      .map(r => `${r.city!.trim().toLowerCase()}|${(r.country || '').trim().toLowerCase()}`)
+  ).size
   // 1 medal per finished race that has any medal logged, +1 extra for a
   // podium (gold/silver/bronze) — podium racers receive a separate medal.
   const finisherMedals = finished.filter(r => r.medal).length
@@ -195,6 +200,7 @@ function StatsStrip({ races }: { races: Race[] }) {
 
   const stats = [
     { val: races.length, label: 'RACES' },
+    { val: cities,       label: 'CITIES' },
     { val: countries,    label: 'COUNTRIES' },
     { val: totalDist,    label: distUnit(units) },
     { val: medals,       label: 'MEDALS' },
