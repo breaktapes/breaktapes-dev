@@ -10,7 +10,7 @@ export interface WidgetCardActions {
 }
 
 export interface WidgetCardContextValue {
-  openDetail: (id: string, ctx?: WidgetDynamicContext) => void
+  openDetail: (id: string, preview?: React.ReactNode, ctx?: WidgetDynamicContext) => void
   actions: WidgetCardActions
 }
 
@@ -70,8 +70,8 @@ export function WidgetCard({
 
   const trigger = useCallback(() => {
     if (!ctx) return
-    ctx.openDetail(id, dynamicContext)
-  }, [ctx, id, dynamicContext])
+    ctx.openDetail(id, children, dynamicContext)
+  }, [ctx, id, children, dynamicContext])
 
   const handleClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement
