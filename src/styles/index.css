@@ -375,7 +375,7 @@ body::after {
 }
 .races-view-btn.active { background: var(--surface3); color: var(--white); border-color: var(--border2); }
 .races-sheet-stats {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: .5rem;
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: .5rem;
   padding: .4rem 1rem .6rem; flex-shrink: 0;
 }
 .races-sheet-list {
