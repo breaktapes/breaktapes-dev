@@ -52,16 +52,16 @@ function localToday(): string {
 }
 
 function findNextRace(upcoming: Race[]): Race | null {
+  // INVARIANT: `nextRace` is ALWAYS the soonest future race by date.
+  // Priority (A/B/C) is a planning tag, not a scheduling override — a
+  // distant A-Race must never take precedence over an imminent B/C race.
+  // Any code that wants the user's manually-pinned race should read
+  // `focusRaceId` via `selectFocusRace`, not `nextRace`.
   const today = localToday()
   const future = upcoming
     .filter(r => r.date >= today)
     .sort((a, b) => a.date.localeCompare(b.date))
-  if (future.length === 0) return null
-  // Prefer A-Race within 90 days; otherwise fall back to nearest future race
-  const d90 = new Date(); d90.setDate(d90.getDate() + 90)
-  const d90Str = `${d90.getFullYear()}-${String(d90.getMonth() + 1).padStart(2, '0')}-${String(d90.getDate()).padStart(2, '0')}`
-  const aRace = future.find(r => r.priority === 'A' && r.date <= d90Str)
-  return aRace ?? future[0]
+  return future[0] ?? null
 }
 
 export const useRaceStore = create<RaceState>()(
@@ -151,11 +151,13 @@ export const useRaceStore = create<RaceState>()(
       },
 
       promoteNextRace: () => {
-        const { nextRace, upcomingRaces } = get()
-        const today = localToday()
-        if (!nextRace || nextRace.date < today) {
-          set({ nextRace: findNextRace(upcomingRaces) })
-        }
+        // Always recompute against the current upcomingRaces list. Earlier
+        // versions short-circuited when `nextRace` already pointed at any
+        // future date, which meant a newly-added nearer race (or a change
+        // to an existing race's date) never bumped the pointer and the
+        // Dashboard "NEXT RACE" briefing drifted out of sync.
+        const { upcomingRaces } = get()
+        set({ nextRace: findNextRace(upcomingRaces) })
       },
 
       addToWishlist: (race) => set(s => ({
