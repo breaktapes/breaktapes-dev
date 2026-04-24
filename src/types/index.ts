@@ -13,7 +13,10 @@ export interface Race {
   distanceUnit?: string  // "km" | "mi"
   sport: string          // "running" | "triathlon" | "cycling" | "swim" | "hyrox"
   time?: string          // "HH:MM:SS"
-  placing?: string       // "342/5000" or "3rd AG"
+  placing?: string       // overall placing — "342/5000"
+  genderPlacing?: string // gender placing — "47/2400"
+  agPlacing?: string     // age-group placing value — "3/120"
+  agLabel?: string       // age-group label — "M30-34"
   medal?: string         // "gold" | "silver" | "bronze" | "finisher"
   medalPhoto?: string    // URL
   splits?: Split[]
