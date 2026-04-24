@@ -341,6 +341,18 @@ function AthleteHero({ onEdit }: { onEdit: () => void }) {
   const ag = ageGroup(athlete?.dob, athlete?.gender)
   const age = computeAge(athlete?.dob)
 
+  // Detail rows that used to live in the standalone DETAILS section. They now
+  // sit inside the hero card so the user sees city / country / age / sport /
+  // club without scrolling.
+  const detailFields: Array<{ label: string; value: string | null | undefined }> = [
+    { label: 'City',       value: athlete?.city },
+    { label: 'Country',    value: athlete?.country },
+    { label: 'Age',        value: age !== null ? `${age}${ag ? ` · ${ag}` : ''}` : null },
+    { label: 'Main Sport', value: athlete?.mainSport },
+    { label: 'Club',       value: athlete?.club },
+  ]
+  const visibleDetails = detailFields.filter(f => f.value)
+
   return (
     <div style={st.heroCard}>
       {/* Avatar row */}
@@ -368,6 +380,19 @@ function AthleteHero({ onEdit }: { onEdit: () => void }) {
           </div>
         ))}
       </div>
+
+      {/* Inline details (formerly the standalone DETAILS section) */}
+      {visibleDetails.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingTop: '4px', borderTop: '1px solid var(--border)' }}>
+          {visibleDetails.map(f => (
+            <div key={f.label} style={st.detailRow}>
+              <div style={st.detailLabel}>{f.label}</div>
+              <div style={st.detailValue}>{f.value}</div>
+            </div>
+          ))}
+          {athlete?.bio && <div style={st.bio}>{athlete.bio}</div>}
+        </div>
+      )}
 
       {/* Focus race */}
       {nextRace && (() => {
@@ -513,11 +538,13 @@ function medalTier(medal: string): MedalTier {
 
 function MedalWall() {
   const races  = useRaceStore(selectRaces)
+  const [showAll, setShowAll] = useState(false)
 
   const medalRaces = useMemo(
     () => races.filter(r => r.medal && r.medal !== '').sort((a, b) => b.date.localeCompare(a.date)),
     [races],
   )
+  const visibleMedalRaces = showAll ? medalRaces : medalRaces.slice(0, 6)
 
   // PB map so we can show shimmer on PB races
   const pbMap = useMemo(() => {
@@ -571,9 +598,9 @@ function MedalWall() {
             })}
           </div>
 
-          {/* Medal grid */}
+          {/* Medal grid — 6 most recent by default, expand for the rest */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
-            {medalRaces.map(r => {
+            {visibleMedalRaces.map(r => {
               const tier  = medalTier(r.medal!)
               const col   = MEDAL_COLORS[tier]
               const isPB  = r.time && r.distance && pbMap[r.distance] === r.time
@@ -638,6 +665,30 @@ function MedalWall() {
               )
             })}
           </div>
+
+          {/* View more / less toggle */}
+          {medalRaces.length > 6 && (
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '12px' }}>
+              <button
+                onClick={() => setShowAll(v => !v)}
+                style={{
+                  background: 'transparent',
+                  border: '1px solid var(--border2)',
+                  borderRadius: '8px',
+                  color: 'var(--muted)',
+                  padding: '8px 18px',
+                  fontFamily: 'var(--headline)',
+                  fontWeight: 700,
+                  fontSize: '11px',
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  cursor: 'pointer',
+                }}
+              >
+                {showAll ? 'View Less' : `View More (${medalRaces.length - 6})`}
+              </button>
+            </div>
+          )}
         </>
       )}
     </div>
@@ -802,13 +853,39 @@ function PersonalBests() {
     <div style={st.section}>
       <div style={st.sectionTitle}>PERSONAL BESTS</div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', minWidth: 0, marginTop: '4px' }}>
-        {pbs.slice(0, 8).map(({ key, label, race }) => (
-          <div key={key} style={st.pbCard}>
-            <div style={st.pbDist}>{label}</div>
-            <div style={st.pbTime}>{race.time}</div>
-            <div style={st.pbRaceName} title={race.name}>{race.name}</div>
-          </div>
-        ))}
+        {pbs.slice(0, 8).map(({ key, label, race }) => {
+          // Sport-coded card to match Dashboard PersonalBestsWidget:
+          // running → green, triathlon/ironman → purple, anything else → orange.
+          const sport = (race.sport ?? 'Running').toLowerCase()
+          const isTri = sport.includes('tri') || sport.includes('iron')
+          const accentColor = isTri ? '#7C3AED' : '#00FF88'
+          const accentBg    = isTri ? 'rgba(124,58,237,0.08)' : 'rgba(0,255,136,0.06)'
+          const accentGlow  = isTri ? 'rgba(124,58,237,0.10)' : 'rgba(0,255,136,0.10)'
+          return (
+            <div
+              key={key}
+              style={{
+                background: `linear-gradient(145deg, #141414 0%, ${accentBg} 100%)`,
+                border: '1px solid var(--border2)',
+                borderLeft: `3px solid ${accentColor}`,
+                borderRadius: '14px',
+                padding: '14px 14px 12px',
+                boxShadow: `inset 0 1px 0 ${accentGlow}, 0 4px 20px rgba(0,0,0,0.4)`,
+                minWidth: 0,
+              }}
+            >
+              <div style={{ fontFamily: 'var(--headline)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '6px' }}>
+                {label}
+              </div>
+              <div style={{ fontFamily: 'var(--headline)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.01em', lineHeight: 1, marginBottom: '8px', color: accentColor }}>
+                {race.time}
+              </div>
+              <div style={{ fontSize: '11px', color: 'var(--muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={race.name}>
+                {race.name}
+              </div>
+            </div>
+          )
+        })}
       </div>
     </div>
   )
@@ -1016,8 +1093,8 @@ function computeTimeline(races: Race[]): TimelineYear[] {
     byYear[y].push(r)
   }
   return Object.entries(byYear)
-    .sort(([a], [b]) => a.localeCompare(b))
-    .slice(-5)
+    .sort(([a], [b]) => b.localeCompare(a))
+    .slice(0, 5)
     .map(([year, yr]) => {
       const timed = yr.filter(r => r.time && r.distance)
       const speeds = timed.map(r => {
@@ -1105,8 +1182,6 @@ function RaceActivityHeatmap() {
   const races = useRaceStore(selectRaces)
   const [selectedCell, setSelectedCell] = useState<{ year: number; month: number } | null>(null)
 
-  const currentYear = new Date().getFullYear()
-  const years = [currentYear, currentYear - 1]
   const months = [0,1,2,3,4,5,6,7,8,9,10,11]
   const MONTH_LABELS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC']
 
@@ -1120,6 +1195,19 @@ function RaceActivityHeatmap() {
       m[key].push(r)
     }
     return m
+  }, [races])
+
+  // Show every year the user has logged a race in, descending (most recent on top).
+  // Always include the current year so an empty current year still renders a row.
+  const years = useMemo(() => {
+    const currentYear = new Date().getFullYear()
+    const set = new Set<number>([currentYear])
+    for (const r of races) {
+      if (!r.date) continue
+      const y = parseInt(r.date.slice(0, 4), 10)
+      if (Number.isFinite(y)) set.add(y)
+    }
+    return [...set].sort((a, b) => b - a)
   }, [races])
 
   const selectedKey = selectedCell ? `${selectedCell.year}-${String(selectedCell.month + 1).padStart(2, '0')}` : null
@@ -1369,47 +1457,6 @@ function RacePersonality() {
 
 // ─── Bio / Details Section ────────────────────────────────────────────────────
 
-function BioDetails({ onEdit }: { onEdit: () => void }) {
-  const athlete = useAthleteStore(selectAthlete)
-  const ag  = ageGroup(athlete?.dob, athlete?.gender)
-  const age = computeAge(athlete?.dob)
-
-  const fields: Array<{ label: string; value: string | null | undefined }> = [
-    { label: 'City',       value: athlete?.city },
-    { label: 'Country',    value: athlete?.country },
-    { label: 'Age',        value: age !== null ? `${age}${ag ? ` · ${ag}` : ''}` : null },
-    { label: 'Main Sport', value: athlete?.mainSport },
-    { label: 'Club',       value: athlete?.club },
-  ]
-  const visibleFields = fields.filter(f => f.value)
-
-  return (
-    <div style={st.section}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={st.sectionTitle}>DETAILS</div>
-        <button style={st.editBtnSmall} onClick={onEdit}>Edit</button>
-      </div>
-
-      {visibleFields.length === 0 ? (
-        <div style={st.emptyState}>
-          <div style={st.emptyText}>Add your details to complete your profile.</div>
-          <button style={st.ctaOutline} onClick={onEdit}>Set Up Profile</button>
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '4px' }}>
-          {visibleFields.map(f => (
-            <div key={f.label} style={st.detailRow}>
-              <div style={st.detailLabel}>{f.label}</div>
-              <div style={st.detailValue}>{f.value}</div>
-            </div>
-          ))}
-          {athlete?.bio && <div style={st.bio}>{athlete.bio}</div>}
-        </div>
-      )}
-    </div>
-  )
-}
-
 // ─── Goals Section ────────────────────────────────────────────────────────────
 
 function secsToHMS(secs: number): string {
@@ -1454,7 +1501,36 @@ function GoalsSection() {
   const [annualVal, setAnnualVal] = useState('')
   const [distTarget, setDistTarget] = useState({ dist: '', h: '', m: '', s: '', deadline: '' })
 
-  const distOptions = [...new Set(races.map(r => r.distance).filter(Boolean))].sort()
+  // Distance picker grouped by sport — running first, then triathlon, etc.
+  // Within each group, distances are sorted numerically when possible so a
+  // user sees 5K → 10K → Half → Marathon, not "10K, 16.09, 160.93, 42.2".
+  const distGroups = useMemo(() => {
+    const buckets = new Map<string, Set<string>>()
+    for (const r of races) {
+      if (!r.distance) continue
+      const sport = (r.sport ?? 'Running').trim() || 'Running'
+      if (!buckets.has(sport)) buckets.set(sport, new Set())
+      buckets.get(sport)!.add(r.distance)
+    }
+    const SPORT_ORDER = ['Running', 'Triathlon', 'Cycling', 'Swimming', 'HYROX']
+    const sortDist = (a: string, b: string) => {
+      const an = parseFloat(a), bn = parseFloat(b)
+      const aNum = !Number.isNaN(an), bNum = !Number.isNaN(bn)
+      if (aNum && bNum) return an - bn
+      if (aNum) return -1
+      if (bNum) return 1
+      return a.localeCompare(b)
+    }
+    return [...buckets.entries()]
+      .sort(([a], [b]) => {
+        const ai = SPORT_ORDER.indexOf(a), bi = SPORT_ORDER.indexOf(b)
+        if (ai === -1 && bi === -1) return a.localeCompare(b)
+        if (ai === -1) return 1
+        if (bi === -1) return -1
+        return ai - bi
+      })
+      .map(([sport, set]) => ({ sport, distances: [...set].sort(sortDist) }))
+  }, [races])
 
   function saveAnnual() {
     const v = parseInt(annualVal)
@@ -1582,7 +1658,11 @@ function GoalsSection() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '12px' }}>
           <select value={distTarget.dist} onChange={e => setDistTarget(d => ({ ...d, dist: e.target.value }))} style={{ ...inputSt, width: '100%' }}>
             <option value="">Select distance…</option>
-            {distOptions.map(d => <option key={d} value={d}>{d}</option>)}
+            {distGroups.map(g => (
+              <optgroup key={g.sport} label={g.sport}>
+                {g.distances.map(d => <option key={d} value={d}>{d}</option>)}
+              </optgroup>
+            ))}
           </select>
           <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
             <span style={{ fontSize: '11px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700 }}>TARGET</span>
@@ -1721,7 +1801,6 @@ export function Profile() {
       <MajorsQualifiers />
       <RacePersonality />
       <GoalsSection />
-      <BioDetails onEdit={() => setShowEdit(true)} />
     </div>
   )
 }

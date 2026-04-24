@@ -83,7 +83,7 @@ export function BottomNav() {
               color: isActive ? 'var(--orange)' : 'var(--muted)',
               minHeight: '44px',
               background: isActive
-                ? 'linear-gradient(180deg, rgba(232,78,27,0.10) 0%, rgba(232,78,27,0.04) 100%)'
+                ? 'linear-gradient(180deg, rgba(var(--orange-ch), 0.10) 0%, rgba(var(--orange-ch), 0.04) 100%)'
                 : 'transparent',
               transition: 'background 0.18s ease',
             }}
@@ -107,9 +107,9 @@ export function BottomNav() {
                   position: 'absolute',
                   top: 0, left: '20%', right: '20%',
                   height: '2px',
-                  background: 'linear-gradient(135deg, #E84E1B 0%, #C03A10 100%)',
+                  background: 'linear-gradient(135deg, var(--orange) 0%, color-mix(in srgb, var(--orange) 70%, black) 100%)',
                   borderRadius: '0 0 3px 3px',
-                  boxShadow: '0 0 10px rgba(232,78,27,0.6)',
+                  boxShadow: '0 0 10px rgba(var(--orange-ch), 0.6)',
                 }}
                 transition={{ type: 'spring', stiffness: 400, damping: 30 }}
               />
