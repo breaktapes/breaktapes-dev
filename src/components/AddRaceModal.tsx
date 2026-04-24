@@ -104,28 +104,95 @@ const TRI_SEGMENTS = [
   { label: 'RUN',  emoji: '🏃', key: 'run' },
 ]
 
-// Match a catalog distance (dist_km number + dist text label) to a preset value.
-// Returns the preset value string if matched, null if it should be custom.
+// Aliases by preset value — every synonym / common variant catalog rows
+// (and race names) actually use in the wild. Matched case-insensitive,
+// whole-word / substring-aware depending on context.
+const DIST_ALIASES: Record<string, string[]> = {
+  // Running
+  '5':      ['5k', '5km', '5 k', '5-k', '5 kilometer', '5000m'],
+  '10':     ['10k', '10km', '10 k', '10-k', '10 kilometer', '10000m'],
+  '16.09':  ['10 mile', '10mile', '10mi', '10 miles', '10-mile'],
+  '21.1':   ['half marathon', 'half-marathon', 'half mara', 'half', 'hm', '21.0975', '21.097', '21.1', '13.1 mi', '13.1'],
+  '42.2':   ['marathon', 'full marathon', 'full-marathon', 'mara', '42.195', '42.2', '42km', '26.2', '26.2 mi'],
+  '50':     ['50k', '50km', '50 k', '50-k'],
+  '80.47':  ['50 mile', '50mi', '50 miles', '50-mile'],
+  '100':    ['100k', '100km', '100 k', '100-k', 'century'],
+  '160.93': ['100 mile', '100mi', '100 miles', '100-mile', 'centurion'],
+  // Swimming
+  '1':      ['1k swim', '1km swim', '1k', '1km'],
+  '3':      ['3k swim', '3km swim', '3k', '3km'],
+  '15':     ['15k swim', '15km swim', '15k', '15km'],
+  '25':     ['25k swim', '25km swim', '25k', '25km'],
+  // Triathlon
+  '25.75':  ['sprint', 'sprint tri', 'sprint triathlon', 'sprint distance', 'super sprint'],
+  '51.5':   ['olympic', 'olympic tri', 'olympic triathlon', 'olympic distance', 'standard', 'standard distance', 'standard tri'],
+  '113':    ['70.3', 'half ironman', 'half-ironman', 'half iron', 'middle distance', 'middle', 'ironman 70.3', 'im 70.3', 'half distance'],
+  '226':    ['ironman', 'full ironman', 'full-ironman', 'full iron', 'full distance', 'full ironman distance', 'im full', 'iron distance', '140.6', '140.6mi'],
+  '112':    ['t100', 'pto t100', 'pto', 'professional triathletes organisation'],
+  // Cycling
+  '161':    ['century', 'century ride'],
+  '200':    ['randonneur 200', 'brm 200', '200k brevet'],
+  // HYROX string values
+  'Solo Open':    ['solo open', 'open solo', 'solo'],
+  'Solo Pro':     ['solo pro', 'pro solo'],
+  'Doubles Open': ['doubles open', 'open doubles', 'doubles'],
+  'Doubles Pro':  ['doubles pro', 'pro doubles'],
+}
+
+function normalizeTxt(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9. ]/g, ' ').replace(/\s+/g, ' ').trim()
+}
+
+// Match a catalog distance to a preset value. Tries in order:
+//   1. Exact normalized label OR alias match on the catalog `dist` string
+//   2. Numeric match on `dist_km` within 3 % tolerance (catalog values drift)
+//   3. Alias / label substring scan on the race `name` (e.g. "T100 Dubai Olympic")
+// Returns the preset's value string if matched, otherwise null.
 function matchCatalogDist(
   presets: { label: string; value: string }[],
   dist_km?: number,
   dist?: string,
+  raceName?: string,
 ): string | null {
   const validPresets = presets.filter(p => !CUSTOM_DIST_VALUES.includes(p.value))
-  // 1. Try exact text label match (e.g. catalog dist="Half Marathon" → preset label="Half Marathon")
+
+  // 1. Exact / alias match on the catalog distance text
   if (dist) {
-    const norm = dist.trim().toLowerCase()
-    const byLabel = validPresets.find(p => p.label.toLowerCase() === norm)
+    const norm = normalizeTxt(dist)
+    const byLabel = validPresets.find(p => normalizeTxt(p.label) === norm)
     if (byLabel) return byLabel.value
+    const byAlias = validPresets.find(p => (DIST_ALIASES[p.value] ?? []).some(a => normalizeTxt(a) === norm))
+    if (byAlias) return byAlias.value
   }
-  // 2. Try approximate numeric match on dist_km (within 1% tolerance)
-  if (dist_km) {
+
+  // 2. Numeric proximity on dist_km — 3 % tolerance is wide enough for
+  // real-world catalog drift (42.195 vs 42.2, 21.0975 vs 21.1, etc.)
+  if (typeof dist_km === 'number' && dist_km > 0) {
     const byKm = validPresets.find(p => {
       const pv = parseFloat(p.value)
-      return !isNaN(pv) && Math.abs(pv - dist_km) / dist_km < 0.01
+      return !isNaN(pv) && Math.abs(pv - dist_km) / dist_km < 0.03
     })
     if (byKm) return byKm.value
   }
+
+  // 3. Substring scan on race name — longest alias / label first so
+  // "half marathon" wins over "half", "70.3" wins over "3", etc.
+  if (raceName) {
+    const hay = normalizeTxt(raceName)
+    const candidates: { value: string; token: string }[] = []
+    validPresets.forEach(p => {
+      const tokens = [p.label, ...(DIST_ALIASES[p.value] ?? [])]
+      tokens.forEach(t => {
+        const tn = normalizeTxt(t)
+        if (tn.length >= 2 && hay.includes(tn)) candidates.push({ value: p.value, token: tn })
+      })
+    })
+    if (candidates.length > 0) {
+      candidates.sort((a, b) => b.token.length - a.token.length)
+      return candidates[0].value
+    }
+  }
+
   return null
 }
 
@@ -498,12 +565,15 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
       if ((representative as any).lng != null) setLng(Number((representative as any).lng))
       const mappedSport = representative.type ? (TYPE_MAP[representative.type.toLowerCase()] ?? representative.type) : null
       if (mappedSport) setSport(mappedSport)
-      if (representative.dist_km || representative.dist) {
+      // Always try to resolve a distance preset — even when the catalog row
+      // has no dist_km / dist, we can often infer it from the race name
+      // (e.g. "T100 Dubai Olympic" → Olympic).
+      {
         const presets = DISTANCES_BY_SPORT[mappedSport ?? 'Running'] ?? []
-        const matched = matchCatalogDist(presets, representative.dist_km, representative.dist)
+        const matched = matchCatalogDist(presets, representative.dist_km, representative.dist, raceName)
         if (matched) {
           setDistance(matched); setCustomDist('')
-        } else {
+        } else if (representative.dist_km || representative.dist) {
           setDistance('__custom__')
           setCustomDist(representative.dist_km ? String(representative.dist_km) : (representative.dist ?? ''))
         }
