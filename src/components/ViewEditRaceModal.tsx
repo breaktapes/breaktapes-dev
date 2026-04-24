@@ -5,6 +5,7 @@ import { useAthleteStore } from '@/stores/useAthleteStore'
 import { RaceShareCard } from '@/components/RaceShareCard'
 import { DateInput } from '@/components/DateInput'
 import { CustomDistInput } from '@/components/CustomDistInput'
+import { CityPicker } from '@/components/CityPicker'
 import { TimePickerWheel, type HMS } from '@/components/TimePickerWheel'
 import type { Race, Split } from '@/types'
 import { useUnits, fmtDistKm, distUnit, fmtPaceSecPerKm, computePaceSecPerKm } from '@/lib/units'
@@ -410,6 +411,8 @@ function EditPanel({ race, onSave, onCancel }: { race: Race; onSave: (patch: Par
   const [date, setDate]         = useState(race.date ?? '')
   const [city, setCity]         = useState(race.city ?? '')
   const [country, setCountry]   = useState(race.country ?? '')
+  const [lat, setLat]           = useState<number | undefined>(race.lat)
+  const [lng, setLng]           = useState<number | undefined>(race.lng)
   const [distance, setDistance] = useState(() => {
     const sportDists = DISTANCES_BY_SPORT[race.sport ?? 'Running'] ?? []
     const match = sportDists.find(d => d.value === race.distance)
@@ -567,6 +570,8 @@ function EditPanel({ race, onSave, onCancel }: { race: Race; onSave: (patch: Par
       date,
       city: city.trim() || undefined,
       country: country.trim() || undefined,
+      lat,
+      lng,
       distance: effectiveDist || undefined,
       outcome: outcome || undefined,
       time: (showTime && (time.h || time.m || time.s))
@@ -675,11 +680,21 @@ function EditPanel({ race, onSave, onCancel }: { race: Race; onSave: (patch: Par
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-        <Field label="Country">
-          <input style={st.input} value={country} onChange={e => setCountry(e.target.value)} placeholder="UK" />
-        </Field>
         <Field label="City">
-          <input style={st.input} value={city} onChange={e => setCity(e.target.value)} placeholder="London" />
+          <CityPicker
+            city={city}
+            country={country}
+            placeholder="Type to search…"
+            onSelect={({ city: c, country: co, lat: la, lng: ln }) => {
+              setCity(c)
+              if (co) setCountry(co)
+              setLat(la)
+              setLng(ln)
+            }}
+          />
+        </Field>
+        <Field label="Country">
+          <input style={st.input} value={country} onChange={e => setCountry(e.target.value)} placeholder="Auto-filled" />
         </Field>
       </div>
 

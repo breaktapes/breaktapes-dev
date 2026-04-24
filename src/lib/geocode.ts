@@ -4,6 +4,17 @@
  * city is never looked up twice across sessions.
  */
 
+export type CitySuggestion = {
+  name: string          // city name, e.g. "Leh"
+  country: string       // full name, e.g. "India"
+  countryCode?: string  // ISO-2, e.g. "IN"
+  admin1?: string       // state / region, e.g. "Ladakh"
+  admin2?: string       // district, e.g. "Leh"
+  lat: number
+  lng: number
+  population?: number
+}
+
 type GeocodeResult = { lat: number; lng: number } | null
 
 const CACHE_KEY = 'bt_geocode_cache'
@@ -31,6 +42,39 @@ function writeCache(cache: Cache) {
 
 function key(city: string, country?: string) {
   return `${city.trim().toLowerCase()}|${(country || '').trim().toLowerCase()}`
+}
+
+/**
+ * Typeahead city search — returns up to `limit` matches ordered by population
+ * descending (Open-Meteo's default). Useful for letting users disambiguate
+ * e.g. "Leh, Ladakh, India" vs any other match.
+ *
+ * Results are NOT cached per-query (queries change with every keystroke) but
+ * the top result for each final selected city gets warmed into the
+ * `bt_geocode_cache` used by `geocodeCity` as a side-effect of rendering.
+ */
+export async function searchCities(query: string, limit = 8): Promise<CitySuggestion[]> {
+  const trimmed = query.trim()
+  if (trimmed.length < 2) return []
+  try {
+    const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(trimmed)}&count=${limit}&language=en&format=json`
+    const res = await fetch(url)
+    if (!res.ok) return []
+    const data = await res.json()
+    const results = Array.isArray(data?.results) ? data.results : []
+    return results.map((r: any): CitySuggestion => ({
+      name: String(r.name ?? ''),
+      country: String(r.country ?? ''),
+      countryCode: r.country_code ? String(r.country_code) : undefined,
+      admin1: r.admin1 ? String(r.admin1) : undefined,
+      admin2: r.admin2 ? String(r.admin2) : undefined,
+      lat: Number(r.latitude),
+      lng: Number(r.longitude),
+      population: r.population ? Number(r.population) : undefined,
+    }))
+  } catch {
+    return []
+  }
 }
 
 export async function geocodeCity(city: string, country?: string): Promise<GeocodeResult> {
