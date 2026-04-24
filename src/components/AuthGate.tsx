@@ -29,24 +29,40 @@ function useClerkSync() {
       return
     }
 
-    setAuthUser({
-      id: user.id,
-      email: user.primaryEmailAddress?.emailAddress ?? null,
-    })
-    setProAccess(IS_STAGING)
-
     // Sync Clerk username → athlete.username so public profile toggle works.
     // Clerk is the source of truth for username; athlete store follows.
     if (user.username) {
       updateAthlete({ username: user.username })
     }
 
-    const refresh = () =>
-      getToken({ template: JWT_TEMPLATE }).then(t => setClerkToken(t))
+    let cancelled = false
+
+    // Install Clerk JWT BEFORE flipping `authUser`. This is load-bearing:
+    // `useSyncState` and every race-store write gate on `authUser`, and
+    // Supabase RLS needs the token to authorize the request. If we set
+    // authUser first, the race-condition window lets the initial pull hit
+    // Supabase unauthenticated — it returns no rows, the query resolves
+    // empty, and the second device shows stale/empty state forever until
+    // the user manually triggers a write.
+    const refresh = async () => {
+      try {
+        const t = await getToken({ template: JWT_TEMPLATE })
+        if (cancelled) return
+        setClerkToken(t)
+        setAuthUser({
+          id: user.id,
+          email: user.primaryEmailAddress?.emailAddress ?? null,
+        })
+        setProAccess(IS_STAGING)
+      } catch {
+        // Leave authUser null on token failure — better to show landing
+        // than to fire unauthenticated queries that pollute caches.
+      }
+    }
 
     refresh()
     const interval = setInterval(refresh, 50_000)
-    return () => clearInterval(interval)
+    return () => { cancelled = true; clearInterval(interval) }
   }, [isLoaded, isSignedIn, user, getToken, setAuthUser, setProAccess, updateAthlete])
 }
 

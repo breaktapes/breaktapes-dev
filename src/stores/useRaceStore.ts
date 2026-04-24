@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Race } from '@/types'
-import { supabase } from '@/lib/supabase'
+import { supabase, hasClerkToken } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/useAuthStore'
 
 export interface RaceState {
@@ -29,6 +29,11 @@ export interface RaceState {
 async function syncRacesToSupabase(races: Race[], upcomingRaces: Race[], nextRace: Race | null) {
   const authUser = useAuthStore.getState().authUser
   if (!authUser) return
+  // Don't fire an unauthenticated write — RLS would reject it silently and
+  // we'd lose the intended update. If the token isn't installed yet, a
+  // subsequent action will retry with a fresh snapshot (or the next
+  // auto-move / promote cycle will push it through).
+  if (!hasClerkToken()) return
   try {
     const { data: existing } = await supabase
       .from('user_state')
