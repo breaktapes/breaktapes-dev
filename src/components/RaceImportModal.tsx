@@ -359,7 +359,7 @@ const st = {
   header:     { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 0', flexShrink: 0 } as React.CSSProperties,
   title:      { fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '20px', letterSpacing: '0.06em', textTransform: 'uppercase' as const, color: 'var(--white)' } as React.CSSProperties,
   closeBtn:   { background: 'transparent', border: 'none', color: 'var(--muted)', fontSize: '18px', cursor: 'pointer', padding: '4px 8px', lineHeight: 1 } as React.CSSProperties,
-  body:       { padding: '16px', display: 'flex', flexDirection: 'column', gap: '14px', overflowY: 'auto', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain', flex: 1, paddingBottom: 'calc(var(--bottom-nav-base-height) + var(--safe-bottom) + 32px)' } as React.CSSProperties,
+  body:       { padding: '16px', display: 'flex', flexDirection: 'column', gap: '14px', overflowY: 'auto', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain', flex: 1, paddingBottom: 'calc(var(--safe-bottom) + 32px)' } as React.CSSProperties,
   fieldLabel: { fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: 'var(--muted)' } as React.CSSProperties,
   input:      { width: '100%', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px', color: 'var(--white)', fontSize: '14px', padding: '0.6rem 0.75rem', fontFamily: 'var(--body)', boxSizing: 'border-box' as const, minWidth: 0 } as React.CSSProperties,
   hint:       { margin: 0, fontSize: '13px', color: 'var(--muted)', fontFamily: 'var(--body)' } as React.CSSProperties,
