@@ -312,7 +312,10 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
   const [cityText, setCityText]     = useState('')  // free-text (when "other" or no catalog)
   const [date, setDate]             = useState(() => new Date().toISOString().split('T')[0])
   const [showManualDate, setShowManualDate] = useState(false)
-  const [placing, setPlacing]       = useState('')
+  const [placing, setPlacing]            = useState('')
+  const [genderPlacing, setGenderPlacing] = useState('')
+  const [agPlacing, setAgPlacing]         = useState('')
+  const [agLabel, setAgLabel]             = useState('')
   const [medal, setMedal]           = useState('')
   const [customMedal, setCustomMedal] = useState('')
   const [error, setError]           = useState('')
@@ -637,6 +640,9 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
       sport,
       time: finalTime,
       placing: placing.trim() || undefined,
+      genderPlacing: genderPlacing.trim() || undefined,
+      agPlacing: agPlacing.trim() || undefined,
+      agLabel: agLabel.trim() || undefined,
       medal: finalMedal || undefined,
       priority: (priority as 'A' | 'B' | 'C') || undefined,
       outcome: outcome !== 'Finished' ? outcome : undefined,
@@ -1041,16 +1047,28 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
             </Field>
           )}
 
-          {/* ── Placing (past only) ── */}
+          {/* ── Placing (past only) — Overall · Gender · Age Group ── */}
           {mode === 'past' && (
-            <Field label="Placing (Optional)">
-              <input
-                style={st.input}
-                placeholder="e.g. 342/5000"
-                value={placing}
-                onChange={e => setPlacing(e.target.value)}
-              />
-            </Field>
+            <div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
+                  <label style={st.fieldLabel}>OVERALL</label>
+                  <input style={st.input} placeholder="342/5000" value={placing} onChange={e => setPlacing(e.target.value)} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
+                  <label style={st.fieldLabel}>GENDER</label>
+                  <input style={st.input} placeholder="47/2400" value={genderPlacing} onChange={e => setGenderPlacing(e.target.value)} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
+                  <label style={st.fieldLabel}>AGE GROUP</label>
+                  <input style={st.input} placeholder="3/120" value={agPlacing} onChange={e => setAgPlacing(e.target.value)} />
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '8px' }}>
+                <label style={st.fieldLabel}>AGE GROUP LABEL</label>
+                <input style={st.input} placeholder="e.g. M30-34, F35-39, M Open" value={agLabel} onChange={e => setAgLabel(e.target.value)} />
+              </div>
+            </div>
           )}
 
           {/* ── Medal (past only) ── */}

@@ -255,7 +255,19 @@ function ViewPanel({ race, isPB, onEdit, onDelete, onShare }: { race: Race; isPB
         {race.placing && (
           <div style={st.statBox}>
             <div style={st.statVal}>{race.placing}</div>
-            <div style={st.statLabel}>PLACING</div>
+            <div style={st.statLabel}>OVERALL</div>
+          </div>
+        )}
+        {race.genderPlacing && (
+          <div style={st.statBox}>
+            <div style={st.statVal}>{race.genderPlacing}</div>
+            <div style={st.statLabel}>GENDER</div>
+          </div>
+        )}
+        {race.agPlacing && (
+          <div style={st.statBox}>
+            <div style={st.statVal}>{race.agPlacing}</div>
+            <div style={st.statLabel}>{race.agLabel || 'AGE GROUP'}</div>
           </div>
         )}
       </div>
@@ -413,7 +425,10 @@ function EditPanel({ race, onSave, onCancel }: { race: Race; onSave: (patch: Par
     const parts = (race.time ?? '').split(':').map(Number)
     return { h: parts[0] ?? 0, m: parts[1] ?? 0, s: parts[2] ?? 0 }
   })
-  const [placing, setPlacing]   = useState(race.placing ?? '')
+  const [placing, setPlacing]            = useState(race.placing ?? '')
+  const [genderPlacing, setGenderPlacing] = useState(race.genderPlacing ?? '')
+  const [agPlacing, setAgPlacing]         = useState(race.agPlacing ?? '')
+  const [agLabel, setAgLabel]             = useState(race.agLabel ?? '')
   const [medal, setMedal]       = useState(() => {
     if (!race.medal) return ''
     const known = MEDALS.find(m => m.value === race.medal)
@@ -558,6 +573,9 @@ function EditPanel({ race, onSave, onCancel }: { race: Race; onSave: (patch: Par
         ? `${time.h}:${String(time.m).padStart(2,'0')}:${String(time.s).padStart(2,'0')}`
         : undefined,
       placing: placing.trim() || undefined,
+      genderPlacing: genderPlacing.trim() || undefined,
+      agPlacing: agPlacing.trim() || undefined,
+      agLabel: agLabel.trim() || undefined,
       medal: effectiveMedal || undefined,
       priority: priority || undefined,
       bibNumber: bibNumber.trim() || undefined,
@@ -661,9 +679,27 @@ function EditPanel({ race, onSave, onCancel }: { race: Race; onSave: (patch: Par
         </Field>
       </div>
 
-      <Field label="Placing">
-        <input style={st.input} value={placing} onChange={e => setPlacing(e.target.value)} placeholder="342/5000 or 3rd AG" />
-      </Field>
+      {/* Placing — Overall · Gender · Age Group, three inputs in one row */}
+      <div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
+            <label style={st.fieldLabel}>OVERALL</label>
+            <input style={st.input} value={placing} onChange={e => setPlacing(e.target.value)} placeholder="342/5000" />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
+            <label style={st.fieldLabel}>GENDER</label>
+            <input style={st.input} value={genderPlacing} onChange={e => setGenderPlacing(e.target.value)} placeholder="47/2400" />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
+            <label style={st.fieldLabel}>AGE GROUP</label>
+            <input style={st.input} value={agPlacing} onChange={e => setAgPlacing(e.target.value)} placeholder="3/120" />
+          </div>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '8px' }}>
+          <label style={st.fieldLabel}>AGE GROUP LABEL</label>
+          <input style={st.input} value={agLabel} onChange={e => setAgLabel(e.target.value)} placeholder="e.g. M30-34, F35-39, M Open" />
+        </div>
+      </div>
 
       <Field label="Medal">
         <select style={st.input} value={medal} onChange={e => setMedal(e.target.value)}>
