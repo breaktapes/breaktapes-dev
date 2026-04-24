@@ -19,6 +19,7 @@ import { RaceImportModal } from '@/components/RaceImportModal'
 import { RaceLogPassport } from '@/components/RaceLogPassport'
 import type { Race } from '@/types'
 import { useUnits, distUnit } from '@/lib/units'
+import { geocodeCity } from '@/lib/geocode'
 
 // Error boundary for MapLibre — catches WebGL init failures, style errors, CSP blocks
 class MapErrorBoundary extends Component<
@@ -705,6 +706,7 @@ function MapCitiesPill({
 
 export function Races() {
   const races = useRaceStore(s => s.races)
+  const updateRace = useRaceStore(s => s.updateRace)
   const athlete = useAthleteStore(s => s.athlete)
   const navigate = useNavigate()
   const [viewState, setViewState] = useState(INITIAL_VIEW)
@@ -712,6 +714,27 @@ export function Races() {
   const [addRaceOpen, setAddRaceOpen]     = useState(false)
   const [importOpen, setImportOpen]       = useState(false)
   const [passportOpen, setPassportOpen]   = useState(false)
+
+  // Backfill missing lat/lng for races with a city — geocodes via Open-Meteo,
+  // caches to localStorage, and persists the coord on the race so the pin
+  // shows up immediately next visit. Rate-limited (500 ms between calls).
+  useEffect(() => {
+    const missing = races.filter(
+      r => r.city?.trim() && (r.lat == null || r.lng == null)
+    )
+    if (missing.length === 0) return
+    let cancelled = false
+    ;(async () => {
+      for (const r of missing) {
+        if (cancelled) return
+        const res = await geocodeCity(r.city!, r.country || undefined)
+        if (cancelled) return
+        if (res) updateRace(r.id, { lat: res.lat, lng: res.lng })
+        await new Promise(resolve => setTimeout(resolve, 500))
+      }
+    })()
+    return () => { cancelled = true }
+  }, [races, updateRace])
 
   // Fly-to bounds when races load
   useEffect(() => {
