@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/useAuthStore'
@@ -84,7 +85,7 @@ export function EditProfileModal({ onClose }: Props) {
     onClose()
   }
 
-  return (
+  return createPortal((
     <div style={st.overlay} onClick={onClose}>
       <div
         role="dialog"
@@ -168,7 +169,7 @@ export function EditProfileModal({ onClose }: Props) {
         </div>
       </div>
     </div>
-  )
+  ), document.body)
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {

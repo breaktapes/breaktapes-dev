@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { RaceShareCard } from '@/components/RaceShareCard'
@@ -824,7 +825,7 @@ export function ViewEditRaceModal({ race, onClose }: Props) {
     onClose()
   }
 
-  return (
+  return createPortal((
     <>
     <div style={st.overlay} onClick={onClose}>
       <div
@@ -874,7 +875,7 @@ export function ViewEditRaceModal({ race, onClose }: Props) {
       />
     )}
     </>
-  )
+  ), document.body)
 }
 
 // ─── Styles ───────────────────────────────────────────────────────────────────

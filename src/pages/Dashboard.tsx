@@ -800,7 +800,7 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
     { key: 'C', label: 'C RACE', desc: 'Training run' },
   ]
 
-  return (
+  return createPortal((
     <div style={{ ...st.modalOverlay, zIndex }} onClick={onClose}>
       <div style={{ ...st.customizeSheet, maxHeight: '85vh', paddingBottom: '0', overflowY: 'hidden' }} onClick={e => e.stopPropagation()}>
         {/* Handle */}
@@ -952,7 +952,7 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
         </div>
       </div>
     </div>
-  )
+  ), document.body)
 }
 
 function CountdownCard({ race, onShowAll, upcomingRaces, onSelectRace }: { race: Race; onShowAll: () => void; upcomingRaces: Race[]; onSelectRace: (id: string) => void }) {
@@ -4046,7 +4046,7 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
     return () => { document.body.style.overflow = '' }
   }, [])
 
-  return (
+  return createPortal((
     <>
       {editing && (
         <EditUpcomingRaceSheet
@@ -4167,7 +4167,7 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
         </div>
       </div>
     </>
-  )
+  ), document.body)
 }
 
 // ─── Expired Race Prompts ─────────────────────────────────────────────────────
@@ -4927,20 +4927,23 @@ function DashCustomizeModal({ onClose }: { onClose: () => void }) {
     [widgets],
   )
 
-  return (
+  return createPortal((
     <div style={st.modalOverlay} onClick={onClose}>
       <div style={st.customizeSheet} onClick={e => e.stopPropagation()}>
         {/* Handle pill */}
         <div style={{ width: '40px', height: '4px', background: 'var(--border2)', borderRadius: '2px', margin: '0 auto 20px' }} />
 
         {/* Header */}
-        <div style={{ marginBottom: '6px' }}>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)', lineHeight: 1.1 }}>
-            CUSTOMIZE DASHBOARD
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '6px' }}>
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)', lineHeight: 1.1 }}>
+              CUSTOMIZE DASHBOARD
+            </div>
+            <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '6px', lineHeight: 1.5 }}>
+              Turn widgets on or off, reorder them within a section.
+            </div>
           </div>
-          <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '6px', lineHeight: 1.5 }}>
-            Turn widgets on or off, reorder them within a section.
-          </div>
+          <button onClick={onClose} aria-label="Close" style={{ background: 'transparent', border: 'none', color: 'var(--muted)', fontSize: '20px', cursor: 'pointer', padding: '4px 8px', lineHeight: 1, flexShrink: 0 }}>✕</button>
         </div>
 
         <div style={{ fontSize: '12px', color: 'var(--muted2)', lineHeight: 1.5, padding: '10px 12px', background: 'var(--surface3)', borderRadius: '8px', marginBottom: '4px' }}>
@@ -5015,7 +5018,7 @@ function DashCustomizeModal({ onClose }: { onClose: () => void }) {
         </div>
       </div>
     </div>
-  )
+  ), document.body)
 }
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────

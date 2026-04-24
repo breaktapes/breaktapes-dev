@@ -664,7 +664,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
   const hasCatalogCities = citiesForCountry.length > 0
   const cityIsOther = citySelect === '__other__'
 
-  return (
+  return createPortal((
     <div
       style={st.overlay}
       onClick={onClose}
@@ -1086,7 +1086,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
         </div>
       </div>
     </div>
-  )
+  ), document.body)
 }
 
 const st = {
