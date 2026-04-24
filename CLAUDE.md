@@ -1072,6 +1072,82 @@ Direct DB access (psql/psycopg2) is blocked from localhost — Supabase only exp
 
 ---
 
+### Session 26 (2026-04-24) — Race import overhaul, profile polish, modal portal pass
+
+**Branches:** `claude/vigorous-lumiere-331a3c`, `claude/modal-fullscreen`, `claude/profile-polish`, `claude/three-placing`, `claude/edit-race-layout`, `claude/swap-themes` → staging → main (PRs #183, #185, #187, #189, #191, #193, #195 + promote PRs #184, #186, #188, #190, #192, #194, #196)
+
+#### Race import (server-side, `health.breaktapes.com` Worker)
+- **MarathonView scraper rewritten** — Endpoint moved from `/search/runners?query=` (404) to `/query/{name}`. Brace-balanced JSON extractor with string-literal awareness pulls inline `const json={...};` script and maps results to canonical `{raceName, date, time, distance_m, country}`.
+- **UltraSignup scraper rewritten** — Endpoint moved to `/service/events.svc/historybyname/{first}/{last}/`. Worker flattens person→Results array and normalizes M/D/YYYY → YYYY-MM-DD.
+- **Athlinks** — Search API behind Keycloak auth, no public endpoint. Pill kept as visible roadmap (`pending API access`).
+
+#### Race import modal (`RaceImportModal.tsx`)
+- Date-only dedupe (vs strict name+date). Same date in `races` or `upcomingRaces` blocks import.
+- Visual flag on dupe rows: dimmed, `cursor: not-allowed`, ✕ icon, green pill "✓ Already in your race history". Header counter shows "M already in your history".
+- Result row redesigned: 3-column grid (icon | name+dist | time+date+source). Time styled as orange headline matching race row.
+- Date displayed DD-MM-YYYY everywhere via `fmtDateDDMM` helper in `src/lib/utils.ts`.
+- Frontend prefers worker `distance_m` over name-parsing fallback.
+
+#### Races page (`Races.tsx`)
+- StatsStrip scoped to active year tab (was always full list).
+- KM excludes DNF/DSQ/DNS races.
+- MEDALS = finisher medals + extra podium medal per gold/silver/bronze.
+- DNF/DSQ/DNS rendered in time slot, muted color, both compact + detailed rows.
+
+#### App-wide DD-MM-YYYY date format
+- New `fmtDateDDMM(d)` helper in `src/lib/utils.ts`.
+- Applied to RaceShareCard canvas subtitle, Dashboard (focus race chip, recent race rows, RIEGEL widget, goal-pace upcoming list, weather impact card), Gear race-link select, RaceImportModal.
+- Internal date strings (`toISOString` comparisons, `<input type="date">` values, month-only labels) intentionally left as-is.
+
+#### Modal layout — full-viewport overlay + createPortal
+- Overlay switched from clipped (`top: header, bottom: nav`) to `inset: 0` on AddRaceModal, ViewEditRaceModal, EditProfileModal. Bottom nav now hidden when any modal is open.
+- Body `paddingBottom` reduced to `calc(var(--safe-bottom) + 32px)` since nav no longer needs clearance.
+- Every popup wrapped in `createPortal(..., document.body)` so it escapes parent stacking. Touched: AddRaceModal, ViewEditRaceModal, EditProfileModal, EditUpcomingRaceSheet, AllUpcomingModal, DashCustomizeModal, BetaFeedback, Compare SearchSheet. RaceImportModal already used createPortal — unchanged. Gear modals deferred (Gear hidden from nav post-MVP).
+- Close ✕ added to DashCustomizeModal + Compare SearchSheet (others already had one).
+
+#### Bottom nav theme awareness (`BottomNav.tsx`)
+- Active-tab gradient background + indicator gradient + glow now use `var(--orange)` / `rgba(var(--orange-ch), …)` / `color-mix(in srgb, var(--orange) 70%, black)` instead of hardcoded `#E84E1B` / `#C03A10`.
+- Theme switch retints the active-tab highlight.
+
+#### Profile page polish (`Profile.tsx`)
+- **Race Activity heatmap** — Shows every year the user has logged a race in (was hardcoded to currentYear + currentYear-1).
+- **Performance Timeline** — Most recent year first (was ascending).
+- **Medals grid** — 6 most recent by default, "View More (N)" toggle expands.
+- **Personal Bests cards** — Sport-coded matching Dashboard PersonalBestsWidget (running/cycling/swim → green `#00FF88`, triathlon/ironman → purple `#7C3AED`, fallback orange).
+- **Goals distance picker** — Grouped by sport via `<optgroup>`, distances sorted numerically when possible (5K → 10K → 21.1 → 42.2, not "10, 16.09, 160.93, 42.2").
+- **Details inlined** — City / country / age / sport / club / bio moved into top hero card. Standalone `BioDetails` section removed.
+
+#### Race detail — three-field placing
+- `Race` type extended: `genderPlacing?: string`, `agPlacing?: string`, `agLabel?: string` (free-text label like "M30-34", "F35-39", "M Open").
+- AddRaceModal + ViewEditRaceModal: 3-column row for Overall · Gender · Age Group, AG label on row below.
+- View-mode header: separate stat boxes for OVERALL, GENDER, and the AG label as the stat title (falls back to "AGE GROUP").
+
+#### Edit Race form layout polish (`ViewEditRaceModal.tsx`)
+- Medal Photo + Race Photos paired in 1fr 1fr grid (preview tiles shrunk 72→56px).
+- Sport + Distance side-by-side (CustomDistInput drops below grid when "Custom..." picked).
+- Date + Outcome side-by-side.
+- `st.input` gets explicit `height: 40px` and `lineHeight: 1.4` so `<input>`, `<select>`, `<textarea>` all render to the same box (Surface select used to render narrower than sibling inputs).
+
+#### Theme picker order (`types/index.ts`)
+- Titanium swapped ahead of Acid Track in `THEMES` array.
+
+#### Other UX fixes
+- AddRaceModal `Field` component: `label` prop typed `React.ReactNode` to allow JSX label "Goal Time (optional)".
+- Settings.tsx: dropped unused `useNavigate` import + `inputStyle` const (cleared pre-existing TS errors blocking CI).
+- `package-lock.json` synced to `0.6.4.2`.
+
+#### Key learnings
+- Cloudflare Worker scraping must brace-balance JSON extraction with string-literal awareness (`"` toggle + `\\` escape) — `JSON.parse` on a raw regex slice will silently fail on payloads containing braces inside strings.
+- MarathonView and UltraSignup both serve the live data via JSON, not HTML tables. Future scrape changes should look for inline `<script>const json=...;</script>` first before regex-walking `<tr>/<td>`.
+- `position: fixed` is broken when an ancestor establishes a CSS containing block (`transform`, `filter`, `will-change`). Always wrap a popup in `createPortal(..., document.body)` so it renders as a direct child of `<body>` regardless of where it's instantiated.
+- Heatmap/timeline year ranges that hardcode `currentYear - N` silently hide older data when a user races less frequently. Always derive years from the data set itself.
+- Native `<select>` chrome makes its rendered height differ from sibling `<input>` even with identical CSS — fix by setting an explicit `height` and `lineHeight` on the shared style. `appearance: none` is not enough on its own.
+- DNF/DSQ/DNS races inflate aggregated metrics (KM totals, medal counts) when not filtered out — always check `outcome` before summing distance or counting medals.
+- `<select>` "Select distance…" stays usable with `<optgroup>` — group by sport gives users a much shorter visual scan than a flat alphabetical list.
+- Strict name+date dedupe is too narrow for race import: catalog names often include the year ("Dubai Marathon 2026" vs the user's logged "Dubai Marathon"). Date-only match is safer because no athlete runs two races on the same day.
+
+---
+
 ## Skill routing
 
 When the user's request matches an available skill, ALWAYS invoke it using the Skill
