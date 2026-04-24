@@ -10,6 +10,11 @@ export function setClerkToken(token: string | null) {
   _clerkToken = token
 }
 
+/** Returns true once a Clerk JWT has been installed into the Supabase client. */
+export function hasClerkToken(): boolean {
+  return _clerkToken !== null
+}
+
 export const supabase = createClient(
   SUPABASE_URL || 'http://localhost:54321',
   SUPABASE_ANON_KEY || 'placeholder-key',
