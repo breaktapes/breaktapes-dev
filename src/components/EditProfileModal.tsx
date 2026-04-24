@@ -183,10 +183,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 const st = {
   overlay: {
     position: 'fixed',
-    top: 'calc(var(--header-base-height) + var(--safe-top))',
-    left: 0,
-    right: 0,
-    bottom: 'calc(var(--bottom-nav-base-height) + var(--safe-bottom))',
+    inset: 0,
     background: 'rgba(0,0,0,0.7)',
     zIndex: 950,
     display: 'flex',
@@ -247,7 +244,7 @@ const st = {
     display: 'flex',
     flexDirection: 'column',
     gap: '14px',
-    paddingBottom: 'calc(var(--bottom-nav-base-height) + var(--safe-bottom) + 32px)',
+    paddingBottom: 'calc(var(--safe-bottom) + 32px)',
   } as React.CSSProperties,
 
   fieldLabel: {

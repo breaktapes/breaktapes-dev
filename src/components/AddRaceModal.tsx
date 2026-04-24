@@ -1090,12 +1090,12 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
 }
 
 const st = {
+  // Full-viewport overlay (covers bottom nav). The sheet itself is bounded
+  // by maxHeight: 100% and can scroll internally, so the form is reachable
+  // without the bottom nav showing through.
   overlay: {
     position: 'fixed',
-    top: 'calc(var(--header-base-height) + var(--safe-top))',
-    left: 0,
-    right: 0,
-    bottom: 'calc(var(--bottom-nav-base-height) + var(--safe-bottom))',
+    inset: 0,
     background: 'rgba(0,0,0,0.75)',
     zIndex: 950,
     display: 'flex',
@@ -1209,7 +1209,7 @@ const st = {
     display: 'flex',
     flexDirection: 'column',
     gap: '14px',
-    paddingBottom: 'calc(var(--bottom-nav-base-height) + var(--safe-bottom) + 32px)',
+    paddingBottom: 'calc(var(--safe-bottom) + 32px)',
     overflowY: 'auto',
     WebkitOverflowScrolling: 'touch',
     overscrollBehavior: 'contain',
