@@ -71,17 +71,18 @@ describe('WidgetDetailModal', () => {
     expect(onClose).toHaveBeenCalled()
   })
 
-  it('backdrop click fires onClose', () => {
-    const { onClose } = renderModal(bostonQual)
-    const overlay = document.querySelector('[role="presentation"]')!
-    fireEvent.click(overlay)
-    expect(onClose).toHaveBeenCalled()
+  it('renders fullscreen (no backdrop overlay pattern)', () => {
+    renderModal(bostonQual)
+    // Fullscreen shell is role=dialog
+    expect(document.querySelector('[role="dialog"]')).toBeTruthy()
+    // No role=presentation backdrop
+    expect(document.querySelector('[role="presentation"]')).toBeNull()
   })
 
-  it('sheet click does NOT fire onClose', () => {
+  it('clicking inside dialog does NOT fire onClose', () => {
     const { onClose } = renderModal(bostonQual)
-    const sheet = document.querySelector('[role="dialog"]')!
-    fireEvent.click(sheet)
+    const dialog = document.querySelector('[role="dialog"]')!
+    fireEvent.click(dialog)
     expect(onClose).not.toHaveBeenCalled()
   })
 
@@ -126,6 +127,20 @@ describe('WidgetDetailModal', () => {
     renderModal(bostonQual)
     // boston-qual has 'View all marathons' and 'Find next qualifier' as related actions
     expect(screen.getByText(/View all marathons/i)).toBeInTheDocument()
+  })
+
+  it('renders live preview hero when preview prop supplied', () => {
+    renderModal(bostonQual, {
+      preview: <div data-testid="preview-host">LIVE WIDGET BODY</div>,
+    })
+    expect(screen.getByTestId('preview-host')).toBeInTheDocument()
+    expect(screen.getByText('LIVE WIDGET BODY')).toBeInTheDocument()
+    expect(screen.getByText('YOUR DATA')).toBeInTheDocument()
+  })
+
+  it('omits preview hero when no preview supplied', () => {
+    renderModal(bostonQual)
+    expect(screen.queryByText('YOUR DATA')).not.toBeInTheDocument()
   })
 
   it('invokes symbolic action on related button click', () => {
