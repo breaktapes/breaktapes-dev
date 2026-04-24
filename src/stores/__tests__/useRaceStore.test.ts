@@ -119,6 +119,64 @@ describe('useRaceStore — nextRace auto-promote (Session 13 regression)', () =>
   })
 })
 
+// INVARIANT: nextRace is ALWAYS the soonest future race by date.
+// Priority (A/B/C) is a planning tag — NOT a scheduling override.
+// A prior implementation preferred any A-Race within 90 days, which caused
+// a distant A-Race (e.g. Comrades in 51 days) to hide an imminent B-Race
+// (e.g. Skechers in 1 day) in the Dashboard's NEXT RACE card.
+// These tests exist specifically to prevent that regression.
+describe('useRaceStore — nextRace is always soonest by date (priority never wins)', () => {
+  function daysFromToday(n: number): string {
+    const d = new Date()
+    d.setDate(d.getDate() + n)
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  }
+
+  it('imminent B-Race beats distant A-Race (regression: Comrades vs Skechers)', () => {
+    const imminent = makeRace({ id: 'b-soon', date: daysFromToday(1),  priority: 'B', name: 'Skechers Performance Run' })
+    const distantA = makeRace({ id: 'a-far',  date: daysFromToday(51), priority: 'A', name: 'Comrades Marathon' })
+    useRaceStore.setState({ nextRace: null, upcomingRaces: [distantA, imminent] })
+    useRaceStore.getState().promoteNextRace()
+    expect(useRaceStore.getState().nextRace?.id).toBe('b-soon')
+  })
+
+  it('imminent C-Race beats distant A-Race', () => {
+    const imminent = makeRace({ id: 'c-soon', date: daysFromToday(3),  priority: 'C' })
+    const distantA = makeRace({ id: 'a-far',  date: daysFromToday(60), priority: 'A' })
+    useRaceStore.setState({ nextRace: null, upcomingRaces: [distantA, imminent] })
+    useRaceStore.getState().promoteNextRace()
+    expect(useRaceStore.getState().nextRace?.id).toBe('c-soon')
+  })
+
+  it('imminent untagged race beats distant A-Race', () => {
+    const imminent = makeRace({ id: 'untagged', date: daysFromToday(2) })
+    const distantA = makeRace({ id: 'a-far',    date: daysFromToday(45), priority: 'A' })
+    useRaceStore.setState({ nextRace: null, upcomingRaces: [distantA, imminent] })
+    useRaceStore.getState().promoteNextRace()
+    expect(useRaceStore.getState().nextRace?.id).toBe('untagged')
+  })
+
+  it('multiple A-Races picks the soonest one', () => {
+    const a1 = makeRace({ id: 'a1', date: daysFromToday(10),  priority: 'A' })
+    const a2 = makeRace({ id: 'a2', date: daysFromToday(100), priority: 'A' })
+    useRaceStore.setState({ nextRace: null, upcomingRaces: [a2, a1] })
+    useRaceStore.getState().promoteNextRace()
+    expect(useRaceStore.getState().nextRace?.id).toBe('a1')
+  })
+
+  it('addUpcomingRace with a nearer race promotes it over a pinned distant A-Race', () => {
+    const distantA = makeRace({ id: 'a-far', date: daysFromToday(51), priority: 'A' })
+    useRaceStore.setState({
+      nextRace: distantA,
+      upcomingRaces: [distantA],
+      focusRaceId: null,
+    })
+    const imminent = makeRace({ id: 'soon', date: daysFromToday(1), priority: 'B' })
+    useRaceStore.getState().addUpcomingRace(imminent)
+    expect(useRaceStore.getState().nextRace?.id).toBe('soon')
+  })
+})
+
 // ── V1 → V2 localStorage migration (cutover safety) ──────────────────────────
 // Uses persist.rehydrate() to trigger the real onRehydrateStorage path.
 // Setup: write empty Zustand wrapper to fl2_races so rehydrate has a valid base.
