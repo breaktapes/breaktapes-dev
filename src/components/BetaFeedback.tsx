@@ -2,6 +2,7 @@
 // Matches V1 feedbackPill + feedbackModal → beta_feedback Supabase table.
 
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { IS_STAGING } from '@/env'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { supabase } from '@/lib/supabase'
@@ -77,7 +78,7 @@ export function BetaFeedback() {
       </button>
 
       {/* Modal */}
-      {open && (
+      {open && createPortal((
         <div
           onClick={e => { if (e.target === e.currentTarget) setOpen(false) }}
           style={{
@@ -191,7 +192,7 @@ export function BetaFeedback() {
             </button>
           </div>
         </div>
-      )}
+      ), document.body)}
     </>
   )
 }

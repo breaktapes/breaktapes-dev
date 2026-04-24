@@ -5,6 +5,7 @@
  * Both profiles must be public (is_public = true).
  */
 import { useState, useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { APP_URL } from '@/env'
@@ -227,7 +228,7 @@ function SearchSheet({
 }: { placeholder: string; onSelect: (username: string) => void; onClose: () => void }) {
   const [q, setQ] = useState('')
 
-  return (
+  return createPortal((
     <div style={{
       position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)',
       zIndex: 1000, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
@@ -236,8 +237,11 @@ function SearchSheet({
         style={{ background: 'var(--surface2)', borderRadius: '16px 16px 0 0', padding: '1.25rem 1rem 2rem' }}
         onClick={e => e.stopPropagation()}
       >
-        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '0.75rem' }}>
-          {placeholder}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '0.75rem' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)' }}>
+            {placeholder}
+          </div>
+          <button onClick={onClose} aria-label="Close" style={{ background: 'transparent', border: 'none', color: 'var(--muted)', fontSize: '18px', cursor: 'pointer', padding: '4px 8px', lineHeight: 1 }}>✕</button>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <input
@@ -272,7 +276,7 @@ function SearchSheet({
         </div>
       </div>
     </div>
-  )
+  ), document.body)
 }
 
 // ── Main page ─────────────────────────────────────────────────────────────────
