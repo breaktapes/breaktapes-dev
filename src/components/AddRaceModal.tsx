@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { useRaceCatalog, type CatalogRace } from '@/hooks/useRaceCatalog'
 import { DateInput } from '@/components/DateInput'
 import { TimePickerWheel, type HMS } from '@/components/TimePickerWheel'
 import { CustomDistInput } from '@/components/CustomDistInput'
+import { CityPicker } from '@/components/CityPicker'
 import { countryNameHaystack } from '@/lib/countries'
 import { normalizeName, resolveDistKm, isAlreadyInCatalog } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
@@ -71,22 +72,6 @@ const DISTANCES_BY_SPORT: Record<string, { label: string; value: string }[]> = {
 }
 
 const CUSTOM_DIST_VALUES = ['__custom__', '__tt__', '__track__']
-
-// Cities that don't appear in the race catalog but should always be available
-const CITY_SUPPLEMENTS: Record<string, string[]> = {
-  'United Arab Emirates': ['Abu Dhabi', 'Ajman', 'Dubai', 'Fujairah', 'Ras Al Khaimah', 'Sharjah', 'Umm Al Quwain'],
-  'United Kingdom': ['Bath', 'Birmingham', 'Bristol', 'Cambridge', 'Edinburgh', 'Glasgow', 'Leeds', 'Liverpool', 'London', 'Manchester', 'Newcastle', 'Oxford', 'Sheffield'],
-  'United States': ['Atlanta', 'Austin', 'Boston', 'Chicago', 'Dallas', 'Denver', 'Houston', 'Las Vegas', 'Los Angeles', 'Miami', 'New York', 'Philadelphia', 'Phoenix', 'Portland', 'San Francisco', 'Seattle', 'Washington'],
-  'Australia': ['Adelaide', 'Brisbane', 'Cairns', 'Canberra', 'Gold Coast', 'Hobart', 'Melbourne', 'Perth', 'Sydney'],
-  'Canada': ['Calgary', 'Montreal', 'Ottawa', 'Quebec City', 'Toronto', 'Vancouver', 'Victoria'],
-  'Germany': ['Berlin', 'Cologne', 'Frankfurt', 'Hamburg', 'Munich', 'Stuttgart'],
-  'France': ['Bordeaux', 'Cannes', 'Lyon', 'Marseille', 'Nice', 'Paris', 'Strasbourg'],
-  'Italy': ['Bologna', 'Florence', 'Milan', 'Naples', 'Rome', 'Turin', 'Venice'],
-  'Spain': ['Barcelona', 'Madrid', 'Malaga', 'Seville', 'Valencia'],
-  'Japan': ['Fukuoka', 'Kyoto', 'Nagoya', 'Osaka', 'Sapporo', 'Tokyo'],
-  'South Africa': ['Cape Town', 'Durban', 'Johannesburg', 'Pietermaritzburg', 'Port Elizabeth', 'Pretoria'],
-  'New Zealand': ['Auckland', 'Christchurch', 'Dunedin', 'Hamilton', 'Wellington'],
-}
 
 const RACE_OUTCOMES = [
   { value: 'Finished', label: 'Finished' },
@@ -266,6 +251,8 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
     if (prefill.name) setName(prefill.name)
     if (prefill.country) setCountry(prefill.country)
     if (prefill.city) { setCitySelect('__other__'); setCityText(prefill.city) }
+    if (prefill.lat != null) setLat(prefill.lat)
+    if (prefill.lng != null) setLng(prefill.lng)
     if (prefill.date) setDate(prefill.date)
     if (prefill.distance) setDistance(prefill.distance)
     const sportMap: Record<string, string> = {
@@ -308,8 +295,10 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
   const [priority, setPriority]     = useState('')
   const [goalHMS, setGoalHMS]       = useState<HMS>({ h: 0, m: 0, s: 0 })
   const [country, setCountry]       = useState('')
-  const [citySelect, setCitySelect] = useState('')  // dropdown value
-  const [cityText, setCityText]     = useState('')  // free-text (when "other" or no catalog)
+  const [citySelect, setCitySelect] = useState('')  // catalog-path preselect (now rarely used)
+  const [cityText, setCityText]     = useState('')  // canonical city text, set by CityPicker
+  const [lat, setLat]               = useState<number | undefined>(undefined)
+  const [lng, setLng]               = useState<number | undefined>(undefined)
   const [date, setDate]             = useState(() => new Date().toISOString().split('T')[0])
   const [showManualDate, setShowManualDate] = useState(false)
   const [placing, setPlacing]            = useState('')
@@ -325,23 +314,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
   const nameWrapRef  = useRef<HTMLDivElement>(null)
   const [dropRect, setDropRect] = useState<{ top: number; left: number; width: number } | null>(null)
 
-  // Derived: unique countries & cities from catalog
-  const allCountries = useMemo(
-    () => [...new Set(catalog.map(r => r.country).filter(Boolean))].sort() as string[],
-    [catalog]
-  )
-
-  const citiesForCountry = useMemo(
-    () => country
-      ? ([...new Set([
-          ...(CITY_SUPPLEMENTS[country] ?? []),
-          ...catalog.filter(r => r.country === country).map(r => r.city).filter(Boolean),
-        ])].sort() as string[])
-      : [],
-    [catalog, country]
-  )
-
-  // Final city value
+  // Final city value — kept for save payload + catalog contribution logic
   const finalCity = citySelect === '__other__' ? cityText : (citySelect || cityText)
 
   // Reset distance preset when sport changes — but only if current distance
@@ -502,6 +475,8 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
       setQuery(r.name); setName(r.name)
       if (r.country) { setCountry(r.country); setCitySelect(''); setCityText('') }
       if (r.city)    { setCitySelect(r.city); setCityText(r.city) }
+      if (r.lat != null) setLat(r.lat)
+      if (r.lng != null) setLng(r.lng)
       if (r.sport)   setSport(r.sport)
       if (r.distance) {
         const presets = DISTANCES_BY_SPORT[r.sport ?? 'Running'] ?? []
@@ -519,6 +494,8 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
     if (representative) {
       if (representative.country) { setCountry(representative.country); setCitySelect(''); setCityText('') }
       if (representative.city)    { setCitySelect(representative.city); setCityText(representative.city) }
+      if ((representative as any).lat != null) setLat(Number((representative as any).lat))
+      if ((representative as any).lng != null) setLng(Number((representative as any).lng))
       const mappedSport = representative.type ? (TYPE_MAP[representative.type.toLowerCase()] ?? representative.type) : null
       if (mappedSport) setSport(mappedSport)
       if (representative.dist_km || representative.dist) {
@@ -557,12 +534,6 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
     }
 
     setShowSuggest(false)
-  }
-
-  function handleCountryChange(c: string) {
-    setCountry(c)
-    setCitySelect('')
-    setCityText('')
   }
 
   const needsCustomDist = CUSTOM_DIST_VALUES.includes(distance)
@@ -636,6 +607,8 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
       date,
       city: finalCity.trim() || '',
       country: country.trim() || '',
+      lat,
+      lng,
       distance: finalDist,
       sport,
       time: finalTime,
@@ -667,8 +640,6 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
   }
 
   const distancePresets = DISTANCES_BY_SPORT[sport] ?? []
-  const hasCatalogCities = citiesForCountry.length > 0
-  const cityIsOther = citySelect === '__other__'
 
   return createPortal((
     <div
@@ -951,39 +922,29 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
             )
           })()}
 
-          {/* ── Country + City — right under date ── */}
+          {/* ── City + Country — typeahead search (fills country + coords on pick) ── */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-            <Field label="Country">
-              <select style={st.input} value={country} onChange={e => handleCountryChange(e.target.value)}>
-                <option value="">Country...</option>
-                {allCountries.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </Field>
             <Field label="City">
-              {hasCatalogCities ? (
-                <>
-                  <select style={st.input} value={citySelect} onChange={e => setCitySelect(e.target.value)}>
-                    <option value="">City...</option>
-                    {citiesForCountry.map(c => <option key={c} value={c}>{c}</option>)}
-                    <option value="__other__">Other...</option>
-                  </select>
-                  {cityIsOther && (
-                    <input
-                      style={{ ...st.input, marginTop: '6px' }}
-                      placeholder="Enter city"
-                      value={cityText}
-                      onChange={e => setCityText(e.target.value)}
-                    />
-                  )}
-                </>
-              ) : (
-                <input
-                  style={st.input}
-                  placeholder="e.g. Berlin"
-                  value={cityText}
-                  onChange={e => setCityText(e.target.value)}
-                />
-              )}
+              <CityPicker
+                city={finalCity}
+                country={country}
+                placeholder="Type to search…"
+                onSelect={({ city: c, country: co, lat, lng }) => {
+                  setCityText(c)
+                  setCitySelect('')
+                  if (co) setCountry(co)
+                  setLat(lat)
+                  setLng(lng)
+                }}
+              />
+            </Field>
+            <Field label="Country">
+              <input
+                style={st.input}
+                placeholder="Auto-filled"
+                value={country}
+                onChange={e => setCountry(e.target.value)}
+              />
             </Field>
           </div>
 
