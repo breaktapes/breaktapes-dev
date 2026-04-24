@@ -600,31 +600,35 @@ function EditPanel({ race, onSave, onCancel }: { race: Race; onSave: (patch: Par
         <input style={st.input} value={name} onChange={e => setName(e.target.value)} placeholder="e.g. London Marathon" />
       </Field>
 
-      <Field label="Sport">
-        <select style={st.input} value={sport} onChange={e => { setSport(e.target.value); setDistance('') }}>
-          {SPORTS.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
-        </select>
-      </Field>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+        <Field label="Sport">
+          <select style={st.input} value={sport} onChange={e => { setSport(e.target.value); setDistance('') }}>
+            {SPORTS.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
+          </select>
+        </Field>
 
-      <Field label="Distance">
-        <select style={st.input} value={distance} onChange={e => setDistance(e.target.value)}>
-          <option value="">— Select —</option>
-          {sportDists.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
-        </select>
-        {isCustomDist && (
-          <CustomDistInput value={customDist} onChange={setCustomDist} />
-        )}
-      </Field>
+        <Field label="Distance">
+          <select style={st.input} value={distance} onChange={e => setDistance(e.target.value)}>
+            <option value="">— Select —</option>
+            {sportDists.map(d => <option key={d.value} value={d.value}>{d.label}</option>)}
+          </select>
+        </Field>
+      </div>
+      {isCustomDist && (
+        <CustomDistInput value={customDist} onChange={setCustomDist} />
+      )}
 
-      <Field label="Date">
-        <DateInput value={date} onChange={setDate} />
-      </Field>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+        <Field label="Date">
+          <DateInput value={date} onChange={setDate} />
+        </Field>
 
-      <Field label="Outcome">
-        <select style={st.input} value={outcome} onChange={e => setOutcome(e.target.value)}>
-          {RACE_OUTCOMES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-        </select>
-      </Field>
+        <Field label="Outcome">
+          <select style={st.input} value={outcome} onChange={e => setOutcome(e.target.value)}>
+            {RACE_OUTCOMES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+        </Field>
+      </div>
 
       {showTime && (
         <Field label="Finish Time">
@@ -715,68 +719,71 @@ function EditPanel({ race, onSave, onCancel }: { race: Race; onSave: (patch: Par
         )}
       </Field>
 
-      <Field label="Medal Photo">
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-          {/* Preview tile */}
-          {medalPhoto && (
-            <div style={{ position: 'relative', flexShrink: 0 }}>
-              <img
-                src={medalPhoto}
-                alt="Medal"
-                style={{ width: 72, height: 72, objectFit: 'contain', borderRadius: 6, background: 'var(--surface3)', border: '1px solid var(--border)' }}
-              />
-              {bgRemoving && (
-                <div style={{ position: 'absolute', inset: 0, background: 'rgba(13,13,13,0.7)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ fontSize: 18 }}>✨</span>
-                </div>
-              )}
-              <button
-                type="button"
-                onClick={() => setMedalPhoto(undefined)}
-                style={{ position: 'absolute', top: -6, right: -6, width: 18, height: 18, borderRadius: '50%', background: 'var(--surface3)', border: '1px solid var(--border2)', color: 'var(--muted)', fontSize: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
-              >×</button>
-            </div>
-          )}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
-            <button
-              type="button"
-              onClick={() => medalInputRef.current?.click()}
-              style={{ ...st.input, cursor: 'pointer', textAlign: 'left', color: 'var(--muted)', fontSize: 13 }}
-            >
-              {bgRemoving ? '✨ Removing background…' : medalPhoto ? '↺ Replace photo' : '📷 Upload medal photo'}
-            </button>
-            <span style={{ fontSize: 11, color: 'var(--muted)', lineHeight: 1.4 }}>
-              Background removed automatically
-            </span>
-            <input ref={medalInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleMedalPhotoSelect} />
-          </div>
-        </div>
-      </Field>
-
-      <Field label="Race Photos">
-        {photos.length > 0 && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }}>
-            {photos.map((src, i) => (
-              <div key={i} style={{ position: 'relative', flexShrink: 0 }}>
-                <img src={src} alt={`Photo ${i + 1}`} style={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)' }} />
+      {/* Medal Photo + Race Photos — side by side on >360px, stack on tiny screens */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+        <Field label="Medal Photo">
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+            {/* Preview tile */}
+            {medalPhoto && (
+              <div style={{ position: 'relative', flexShrink: 0 }}>
+                <img
+                  src={medalPhoto}
+                  alt="Medal"
+                  style={{ width: 56, height: 56, objectFit: 'contain', borderRadius: 6, background: 'var(--surface3)', border: '1px solid var(--border)' }}
+                />
+                {bgRemoving && (
+                  <div style={{ position: 'absolute', inset: 0, background: 'rgba(13,13,13,0.7)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <span style={{ fontSize: 18 }}>✨</span>
+                  </div>
+                )}
                 <button
                   type="button"
-                  onClick={() => setPhotos(prev => prev.filter((_, idx) => idx !== i))}
+                  onClick={() => setMedalPhoto(undefined)}
                   style={{ position: 'absolute', top: -6, right: -6, width: 18, height: 18, borderRadius: '50%', background: 'var(--surface3)', border: '1px solid var(--border2)', color: 'var(--muted)', fontSize: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
                 >×</button>
               </div>
-            ))}
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1, minWidth: 0 }}>
+              <button
+                type="button"
+                onClick={() => medalInputRef.current?.click()}
+                style={{ ...st.input, cursor: 'pointer', textAlign: 'left', color: 'var(--muted)', fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+              >
+                {bgRemoving ? '✨ Removing…' : medalPhoto ? '↺ Replace' : '📷 Upload medal'}
+              </button>
+              <span style={{ fontSize: 11, color: 'var(--muted)', lineHeight: 1.4 }}>
+                BG removed auto
+              </span>
+              <input ref={medalInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleMedalPhotoSelect} />
+            </div>
           </div>
-        )}
-        <button
-          type="button"
-          onClick={() => photosInputRef.current?.click()}
-          style={{ ...st.input, cursor: 'pointer', textAlign: 'left', color: 'var(--muted)', fontSize: 13 }}
-        >
-          {photosUploading ? '⏳ Compressing…' : '📷 Add photos'}
-        </button>
-        <input ref={photosInputRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={handlePhotosSelect} />
-      </Field>
+        </Field>
+
+        <Field label="Race Photos">
+          {photos.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
+              {photos.map((src, i) => (
+                <div key={i} style={{ position: 'relative', flexShrink: 0 }}>
+                  <img src={src} alt={`Photo ${i + 1}`} style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)' }} />
+                  <button
+                    type="button"
+                    onClick={() => setPhotos(prev => prev.filter((_, idx) => idx !== i))}
+                    style={{ position: 'absolute', top: -6, right: -6, width: 18, height: 18, borderRadius: '50%', background: 'var(--surface3)', border: '1px solid var(--border2)', color: 'var(--muted)', fontSize: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+                  >×</button>
+                </div>
+              ))}
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={() => photosInputRef.current?.click()}
+            style={{ ...st.input, cursor: 'pointer', textAlign: 'left', color: 'var(--muted)', fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+          >
+            {photosUploading ? '⏳ Compressing…' : '📷 Add photos'}
+          </button>
+          <input ref={photosInputRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={handlePhotosSelect} />
+        </Field>
+      </div>
 
       <Field label="Priority">
         <select style={st.input} value={priority} onChange={e => setPriority(e.target.value as '' | 'A' | 'B' | 'C')}>
@@ -1149,7 +1156,11 @@ const st = {
     borderRadius: '6px',
     color: 'var(--white)',
     fontSize: 'var(--text-sm)',
+    // Explicit line-height + padding gives both <input> and <select>
+    // the same rendered height regardless of native chrome.
+    lineHeight: '1.4',
     padding: '0.6rem 0.75rem',
+    height: '40px',
     fontFamily: 'var(--body)',
     boxSizing: 'border-box' as const,
     minWidth: 0,
