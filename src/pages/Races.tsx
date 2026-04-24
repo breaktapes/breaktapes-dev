@@ -623,6 +623,84 @@ function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport, onDiscover
   )
 }
 
+// ── Map cities pill ───────────────────────────────────────────────────────────
+// Floating overlay on the Races map — shows distinct-city count and expands
+// to a scrollable list. Tap a city row to fly the map to its first race.
+
+type CityEntry = { city: string; country: string; count: number; lat?: number; lng?: number }
+
+function MapCitiesPill({
+  races,
+  onFlyTo,
+}: {
+  races: Race[]
+  onFlyTo: (lng: number, lat: number) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const cities = useMemo<CityEntry[]>(() => {
+    // Local alias avoids shadowing react-map-gl/maplibre `Map` import
+    const CityMap = globalThis.Map as MapConstructor
+    const m: Map<string, CityEntry> = new CityMap()
+    races.forEach(r => {
+      if (!r.city?.trim()) return
+      const key = `${r.city.trim().toLowerCase()}|${(r.country || '').trim().toLowerCase()}`
+      const cur = m.get(key)
+      if (!cur) {
+        m.set(key, {
+          city: r.city.trim(),
+          country: r.country || '',
+          count: 1,
+          lat: r.lat ?? undefined,
+          lng: r.lng ?? undefined,
+        })
+      } else {
+        cur.count += 1
+        if (cur.lat == null && r.lat != null) cur.lat = r.lat
+        if (cur.lng == null && r.lng != null) cur.lng = r.lng
+      }
+    })
+    return [...m.values()].sort((a, b) => b.count - a.count || a.city.localeCompare(b.city))
+  }, [races])
+
+  if (cities.length === 0) return null
+
+  return (
+    <div className={`map-cities-pill${open ? ' open' : ''}`} role="region" aria-label="Cities raced">
+      <button
+        type="button"
+        className="map-cities-pill-btn"
+        onClick={() => setOpen(o => !o)}
+        aria-expanded={open}
+      >
+        <span className="map-cities-pill-val">{cities.length}</span>
+        <span className="map-cities-pill-label">{cities.length === 1 ? 'CITY' : 'CITIES'}</span>
+        <span className="map-cities-pill-caret" aria-hidden>{open ? '▾' : '▸'}</span>
+      </button>
+      {open && (
+        <ul className="map-cities-pill-list">
+          {cities.map(c => {
+            const hasGeo = c.lat != null && c.lng != null
+            return (
+              <li key={`${c.city}|${c.country}`}>
+                <button
+                  type="button"
+                  className="map-cities-pill-row"
+                  disabled={!hasGeo}
+                  onClick={() => hasGeo && onFlyTo(c.lng!, c.lat!)}
+                >
+                  <span className="map-cities-pill-city">{c.city}</span>
+                  {c.country && <span className="map-cities-pill-country">{c.country}</span>}
+                  <span className="map-cities-pill-count">{c.count}</span>
+                </button>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+    </div>
+  )
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export function Races() {
@@ -686,6 +764,12 @@ export function Races() {
         ))}
       </Map>
       </MapErrorBoundary>
+
+      {/* Floating city count + list overlay */}
+      <MapCitiesPill
+        races={races}
+        onFlyTo={(lng, lat) => mapRef.current?.flyTo({ center: [lng, lat], zoom: 8, duration: 900 })}
+      />
 
       {/* Bottom sheet */}
       <RacesSheet races={races} onAddRace={() => setAddRaceOpen(true)} onImportRace={() => setImportOpen(true)} onOpenPassport={() => setPassportOpen(true)} onDiscover={() => navigate('/discover')} />
