@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react'
+import React, { useMemo, useState, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { useRaceStore } from '@/stores/useRaceStore'
@@ -11,7 +11,10 @@ import { ViewEditRaceModal } from '@/components/ViewEditRaceModal'
 import { TimePickerWheel } from '@/components/TimePickerWheel'
 import type { HMS } from '@/components/TimePickerWheel'
 import { CustomDistInput } from '@/components/CustomDistInput'
-import type { Race } from '@/types'
+import { WidgetCard, WidgetCardContext, type WidgetCardActions } from '@/components/WidgetCard'
+import { WidgetDetailModal } from '@/components/WidgetDetailModal'
+import type { WidgetDynamicContext } from '@/lib/widgetContent'
+import type { Race, DashWidget } from '@/types'
 import { useUnits, distUnit } from '@/lib/units'
 import { fmtDateDDMM } from '@/lib/utils'
 import {
@@ -1268,30 +1271,30 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
 
   if (races.length === 0) {
     return (
-      <div className="card-v3 card-orange" style={st.glowCard}>
+      <WidgetCard id="recent-races" style={st.glowCard}>
         <div style={st.widgetLabel}>RECENT RACES</div>
         <div style={st.emptyState}>
           <div style={{ fontSize: '28px' }}>🏁</div>
           <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', maxWidth: '240px', lineHeight: 1.5, textAlign: 'center' }}>No races logged yet.</div>
           <button style={st.ctaOutline} onClick={onAddRace}>+ Log a Race</button>
         </div>
-      </div>
+      </WidgetCard>
     )
   }
 
   if (recent.length === 0) {
     return (
-      <div className="card-v3 card-orange" style={st.glowCard}>
+      <WidgetCard id="recent-races" style={st.glowCard}>
         <div style={st.widgetLabel}>RECENT RACES</div>
         <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5, marginTop: '8px' }}>
           No races in the last 3 months.
         </div>
-      </div>
+      </WidgetCard>
     )
   }
 
   return (
-    <div className="card-v3 card-orange" style={st.glowCard}>
+    <WidgetCard id="recent-races" style={st.glowCard}>
       <div style={st.widgetLabel}>RECENT RACES</div>
       <div style={{ display: 'flex', flexDirection: 'column', marginTop: '10px' }}>
         {recent.map((r, i) => {
@@ -1330,7 +1333,7 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
           )
         })}
       </div>
-    </div>
+    </WidgetCard>
   )
 }
 
@@ -1406,7 +1409,7 @@ function SeasonPlannerWidget({ onAddRace }: { onAddRace: () => void }) {
   const bc = badgeColors[badge]
 
   return (
-    <div className="card-v3 card-orange" style={st.glowCard}>
+    <WidgetCard id="season-planner" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>SEASON PLANNER</div>
@@ -1439,7 +1442,7 @@ function SeasonPlannerWidget({ onAddRace }: { onAddRace: () => void }) {
           <button style={st.ghostOutlineBtn} onClick={() => navigate('/races')}>OPEN PLANNER</button>
         </>
       )}
-    </div>
+    </WidgetCard>
   )
 }
 
@@ -1487,10 +1490,10 @@ function RecoveryIntelWidget() {
 
   if (!lastRace && !stravaRecovery) {
     return (
-      <div className="card-v3 card-orange" style={st.glowCard}>
+      <WidgetCard id="recovery-intel" style={st.glowCard}>
         <div style={st.widgetLabel}>RECOVERY INTELLIGENCE</div>
         <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '6px' }}>Log your first race or connect Strava to track recovery.</div>
-      </div>
+      </WidgetCard>
     )
   }
 
@@ -1500,7 +1503,7 @@ function RecoveryIntelWidget() {
     const badge = daysSinceAct >= 2 ? 'RESTED' : 'ACTIVE'
     const bc = badge === 'RESTED' ? 'var(--green)' : 'var(--orange)'
     return (
-      <div className="card-v3 card-orange" style={st.glowCard}>
+      <WidgetCard id="recovery-intel" style={st.glowCard}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
           <div style={st.widgetLabel}>RECOVERY INTELLIGENCE</div>
           <span style={{ ...st.badgePill, background: `${bc}22`, color: bc, border: `1px solid ${bc}55`, flexShrink: 0 }}>{badge}</span>
@@ -1521,7 +1524,7 @@ function RecoveryIntelWidget() {
             </div>
           </>
         )}
-      </div>
+      </WidgetCard>
     )
   }
 
@@ -1534,7 +1537,7 @@ function RecoveryIntelWidget() {
   const bc = badge === 'HIGH' ? 'var(--orange)' : badge === 'MEDIUM' ? 'var(--gold)' : 'var(--green)'
 
   return (
-    <div className="card-v3 card-orange" style={st.glowCard}>
+    <WidgetCard id="recovery-intel" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>RECOVERY INTELLIGENCE</div>
@@ -1561,7 +1564,7 @@ function RecoveryIntelWidget() {
           <>Recent race load score: {loadScore}. Use this to avoid stacking hard events too closely.</>
         )}
       </div>
-    </div>
+    </WidgetCard>
   )
 }
 
@@ -1618,12 +1621,12 @@ function TrainingCorrelWidget() {
   if (dataPoints.length < 3) {
     const need = 3 - dataPoints.length
     return (
-      <div className="card-v3 card-orange" style={st.glowCard}>
+      <WidgetCard id="training-correl" style={st.glowCard}>
         <div style={st.widgetLabel}>TRAINING CORRELATION</div>
         <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.6, marginTop: '6px' }}>
           Need more data — log {need} more race{need !== 1 ? 's' : ''} with times to see your training correlation.
         </div>
-      </div>
+      </WidgetCard>
     )
   }
 
@@ -1655,7 +1658,7 @@ function TrainingCorrelWidget() {
   }
 
   return (
-    <div className="card-v3 card-orange" style={st.glowCard}>
+    <WidgetCard id="training-correl" style={st.glowCard}>
       <div style={st.widgetLabel}>TRAINING CORRELATION</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '10px' }}>
         <Row label="Best result" point={best} />
@@ -1664,7 +1667,7 @@ function TrainingCorrelWidget() {
         <div style={st.widgetDivider} />
         <Row label="Most recent" point={recent} />
       </div>
-    </div>
+    </WidgetCard>
   )
 }
 
@@ -1706,7 +1709,7 @@ function BostonQualWidget() {
   }
 
   return (
-    <div className="card-v3 card-orange" style={st.glowCard}>
+    <WidgetCard id="boston-qual" style={st.glowCard}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
@@ -1805,7 +1808,7 @@ function BostonQualWidget() {
           )}
         </div>
       )}
-    </div>
+    </WidgetCard>
   )
 }
 
@@ -1835,7 +1838,7 @@ function PacingIQWidget() {
   }, [races])
 
   return (
-    <div className="card-v3 card-orange" style={st.glowCard}>
+    <WidgetCard id="pacing-iq" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>PACING IQ</div>
@@ -1861,7 +1864,7 @@ function PacingIQWidget() {
           </div>
         </div>
       )}
-    </div>
+    </WidgetCard>
   )
 }
 
@@ -1875,7 +1878,7 @@ function CareerMomentumWidget() {
     badge === 'NEUTRAL' ? 'var(--muted)' : 'rgba(var(--orange-ch), 0.4)'
 
   return (
-    <div className="card-v3 card-orange" style={st.glowCard}>
+    <WidgetCard id="career-momentum" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>CAREER MOMENTUM</div>
@@ -1901,7 +1904,7 @@ function CareerMomentumWidget() {
       <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.55 }}>
         Weighted against your recent personal-best equivalents, this shows whether your results are trending stronger or softer over time.
       </div>
-    </div>
+    </WidgetCard>
   )
 }
 
@@ -1912,7 +1915,7 @@ function AgeGradeWidget() {
   const hasProfile = !!(athlete?.dob && athlete?.gender)
 
   return (
-    <div className="card-v3 card-orange" style={st.glowCard}>
+    <WidgetCard id="age-grade" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>AGE-GRADE SCORE</div>
@@ -1929,7 +1932,7 @@ function AgeGradeWidget() {
       ) : (
         <div style={{ fontSize: '13px', color: 'var(--muted)' }}>Age-grade analysis requires race times. Keep logging!</div>
       )}
-    </div>
+    </WidgetCard>
   )
 }
 
@@ -1956,7 +1959,7 @@ function RaceDNAWidget() {
   }, [past])
 
   return (
-    <div className="card-v3 card-orange" style={st.glowCard}>
+    <WidgetCard id="race-dna" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>RACE DNA</div>
@@ -1985,7 +1988,7 @@ function RaceDNAWidget() {
           <button style={st.ghostOutlineBtn}>EXPLAIN WITH AI</button>
         </div>
       )}
-    </div>
+    </WidgetCard>
   )
 }
 
@@ -2010,7 +2013,7 @@ function PatternScanWidget() {
   }, [past])
 
   return (
-    <div className="card-v3 card-orange" style={st.glowCard}>
+    <WidgetCard id="pattern-scan" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>DEEP TRENDS</div>
@@ -2032,7 +2035,7 @@ function PatternScanWidget() {
         {past.length < 3 ? 'Log more races to see deep pattern analysis.' : 'No comeback tags yet.'}
       </div>
       <button style={st.ghostOutlineBtn}>EXPLAIN WITH AI</button>
-    </div>
+    </WidgetCard>
   )
 }
 
@@ -2049,15 +2052,15 @@ function WhyResultWidget() {
 
   if (!lastRace) {
     return (
-      <div className="card-v3 card-orange" style={st.glowCard}>
+      <WidgetCard id="why-result" style={st.glowCard}>
         <div style={st.widgetLabel}>WHY RESULT</div>
         <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '6px' }}>Log a timed race to unlock result analysis.</div>
-      </div>
+      </WidgetCard>
     )
   }
 
   return (
-    <div className="card-v3 card-orange" style={st.glowCard}>
+    <WidgetCard id="why-result" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>WHY RESULT</div>
@@ -2073,7 +2076,7 @@ function WhyResultWidget() {
 
       <div style={st.widgetDivider} />
       <button style={st.ghostOutlineBtn}>COACH BRIEF</button>
-    </div>
+    </WidgetCard>
   )
 }
 
@@ -2111,12 +2114,12 @@ function ActivityPreviewWidget() {
 
   if (!stravaToken && !garminToken && !whoopToken) {
     return (
-      <div style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: '12px', padding: '14px' }}>
+      <WidgetCard id="activity-preview" className="" style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: '12px', padding: '14px' }}>
         <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '8px' }}>
           Activity Feed
         </div>
         <div style={{ fontSize: '12px', color: 'var(--muted)' }}>Connect Strava, Garmin, or WHOOP to see recent training.</div>
-      </div>
+      </WidgetCard>
     )
   }
 
@@ -2148,17 +2151,17 @@ function ActivityPreviewWidget() {
 
   if (!items.length) {
     return (
-      <div style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: '12px', padding: '14px' }}>
+      <WidgetCard id="activity-preview" className="" style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: '12px', padding: '14px' }}>
         <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '8px' }}>
           Recent Training
         </div>
         <div style={{ fontSize: '12px', color: 'var(--muted)' }}>No activities yet — sync your wearable to see recent training.</div>
-      </div>
+      </WidgetCard>
     )
   }
 
   return (
-    <div style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: '12px', padding: '14px' }}>
+    <WidgetCard id="activity-preview" className="" style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: '12px', padding: '14px' }}>
       <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '8px' }}>
         Recent Training
       </div>
@@ -2173,7 +2176,7 @@ function ActivityPreviewWidget() {
           </div>
         ))}
       </div>
-    </div>
+    </WidgetCard>
   )
 }
 
@@ -2197,7 +2200,7 @@ function OnThisDayWidget() {
   const yearStr = years === 1 ? '1 year ago' : `${years} years ago`
 
   return (
-    <div style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: '12px', padding: '14px', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+    <WidgetCard id="on-this-day" className="" style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: '12px', padding: '14px', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
       <span style={{ fontSize: '22px', lineHeight: 1, flexShrink: 0 }}>📅</span>
       <div style={{ minWidth: 0 }}>
         <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '4px' }}>
@@ -2215,7 +2218,7 @@ function OnThisDayWidget() {
           </div>
         )}
       </div>
-    </div>
+    </WidgetCard>
   )
 }
 
@@ -2250,7 +2253,7 @@ function RaceReadinessWidget() {
   const sigColor = signal === 'READY' ? 'var(--green)' : signal === 'BUILDING' ? 'var(--gold)' : 'var(--orange)'
 
   return (
-    <div className="card-v3 card-orange" style={st.glowCard}>
+    <WidgetCard id="race-readiness" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>READINESS</div>
@@ -2273,7 +2276,7 @@ function RaceReadinessWidget() {
 
       <div style={st.widgetDivider} />
       <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.55 }}>{detail}</div>
-    </div>
+    </WidgetCard>
   )
 }
 
@@ -2300,23 +2303,23 @@ function GapToGoalWidget({ race }: { race: Race | null }) {
 
   if (!nextRace) {
     return (
-      <div className="card-v3 card-orange" style={st.glowCard}>
+      <WidgetCard id="gap-to-goal" style={st.glowCard}>
         <div style={st.widgetLabel}>GAP TO GOAL</div>
         <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '6px' }}>Add an upcoming race to track your gap to goal.</div>
-      </div>
+      </WidgetCard>
     )
   }
 
   if (!result?.goal) {
     return (
-      <div className="card-v3 card-orange" style={st.glowCard}>
+      <WidgetCard id="gap-to-goal" style={st.glowCard}>
         <div style={st.widgetLabel}>GAP TO GOAL</div>
         <div style={st.widgetTitle}>{(nextRace.name ?? '').toUpperCase()}</div>
         <div style={st.lockedBox}>
           <div style={st.lockedTitle}>NO GOAL SET</div>
           <div style={st.lockedText}>Set a goal time on your next race to track your gap.</div>
         </div>
-      </div>
+      </WidgetCard>
     )
   }
 
@@ -2328,7 +2331,7 @@ function GapToGoalWidget({ race }: { race: Race | null }) {
       : `${secsToHMS(result.gap)} BEHIND GOAL`
 
   return (
-    <div className="card-v3 card-orange" style={st.glowCard}>
+    <WidgetCard id="gap-to-goal" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>GAP TO GOAL</div>
@@ -2358,7 +2361,7 @@ function GapToGoalWidget({ race }: { race: Race | null }) {
       </div>
 
       <div style={{ fontSize: 'var(--text-sm)', color: gapColor, fontWeight: 600 }}>{gapLabel}</div>
-    </div>
+    </WidgetCard>
   )
 }
 
@@ -2389,7 +2392,7 @@ function SurfaceProfileWidget() {
   }, [races, today])
 
   return (
-    <div className="card-v3 card-orange" style={st.glowCard}>
+    <WidgetCard id="surface-profile" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>SURFACE PROFILE</div>
@@ -2428,7 +2431,7 @@ function SurfaceProfileWidget() {
           })}
         </div>
       )}
-    </div>
+    </WidgetCard>
   )
 }
 
@@ -2469,7 +2472,7 @@ function PressurePerformerWidget() {
   const labelColor = result?.label === 'CLUTCH' ? 'var(--green)' : result?.label === 'RELAXED RACER' ? 'var(--gold)' : 'var(--orange)'
 
   return (
-    <div className="card-v3 card-orange" style={st.glowCard}>
+    <WidgetCard id="pressure-performer" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>PRESSURE PERFORMER</div>
@@ -2503,7 +2506,7 @@ function PressurePerformerWidget() {
           )}
         </div>
       )}
-    </div>
+    </WidgetCard>
   )
 }
 
@@ -2537,7 +2540,7 @@ function TravelLoadWidget() {
   }, [races, athlete, today])
 
   return (
-    <div className="card-v3 card-orange" style={st.glowCard}>
+    <WidgetCard id="travel-load" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>TRAVEL LOAD</div>
@@ -2587,7 +2590,7 @@ function TravelLoadWidget() {
           )}
         </div>
       )}
-    </div>
+    </WidgetCard>
   )
 }
 
@@ -2617,7 +2620,7 @@ function RaceDensityWidget() {
   }, [races, today])
 
   return (
-    <div className="card-v3 card-orange" style={st.glowCard}>
+    <WidgetCard id="race-density" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>RACE DENSITY</div>
@@ -2654,7 +2657,7 @@ function RaceDensityWidget() {
           )}
         </div>
       )}
-    </div>
+    </WidgetCard>
   )
 }
 
@@ -2710,7 +2713,7 @@ function BestConditionsWidget() {
   }, [races, today])
 
   return (
-    <div className="card-v3 card-orange" style={st.glowCard}>
+    <WidgetCard id="best-conditions" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>BEST CONDITIONS</div>
@@ -2747,7 +2750,7 @@ function BestConditionsWidget() {
           <div style={{ fontSize: '12px', color: 'var(--muted)' }}>Based on {result.totalWithWeather} races with weather data</div>
         </div>
       )}
-    </div>
+    </WidgetCard>
   )
 }
 
@@ -2793,15 +2796,15 @@ function CourseFitWidget({ race }: { race: Race | null }) {
 
   if (!nextRace) {
     return (
-      <div className="card-v3 card-orange" style={st.glowCard}>
+      <WidgetCard id="course-fit" style={st.glowCard}>
         <div style={st.widgetLabel}>COURSE FIT</div>
         <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '6px' }}>Add an upcoming race to calculate your course fit score.</div>
-      </div>
+      </WidgetCard>
     )
   }
 
   return (
-    <div className="card-v3 card-orange" style={st.glowCard}>
+    <WidgetCard id="course-fit" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>COURSE FIT</div>
@@ -2832,7 +2835,7 @@ function CourseFitWidget({ race }: { race: Race | null }) {
           </div>
         </>
       )}
-    </div>
+    </WidgetCard>
   )
 }
 
@@ -2889,15 +2892,15 @@ function PBProbabilityWidget({ race }: { race: Race | null }) {
 
   if (!nextRace) {
     return (
-      <div className="card-v3 card-orange" style={st.glowCard}>
+      <WidgetCard id="pb-probability" style={st.glowCard}>
         <div style={st.widgetLabel}>PB PROBABILITY</div>
         <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '6px' }}>Add an upcoming race to estimate your PB chance.</div>
-      </div>
+      </WidgetCard>
     )
   }
 
   return (
-    <div className="card-v3 card-orange" style={st.glowCard}>
+    <WidgetCard id="pb-probability" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>PB PROBABILITY</div>
@@ -2929,7 +2932,7 @@ function PBProbabilityWidget({ race }: { race: Race | null }) {
           </div>
         </>
       )}
-    </div>
+    </WidgetCard>
   )
 }
 
@@ -2979,7 +2982,7 @@ function StreakRiskWidget() {
   }, [garminActivities, whoopActivities, races, today])
 
   return (
-    <div className="card-v3 card-orange" style={st.glowCard}>
+    <WidgetCard id="streak-risk" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>STREAK RISK</div>
@@ -3007,7 +3010,7 @@ function StreakRiskWidget() {
           <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.55 }}>{result.note}</div>
         </>
       )}
-    </div>
+    </WidgetCard>
   )
 }
 
@@ -3048,7 +3051,7 @@ function AdvancedRaceDNAWidget() {
   }, [past])
 
   return (
-    <div className="card-v3 card-orange" style={st.glowCard}>
+    <WidgetCard id="advanced-race-dna" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>ADVANCED RACE DNA</div>
@@ -3084,7 +3087,7 @@ function AdvancedRaceDNAWidget() {
           </div>
         </div>
       )}
-    </div>
+    </WidgetCard>
   )
 }
 
@@ -3145,7 +3148,7 @@ function WeatherFitWidget({ race }: { race: Race | null }) {
   }, [races, nextRace, today])
 
   return (
-    <div className="card-v3 card-orange" style={st.glowCard}>
+    <WidgetCard id="weather-fit" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>WEATHER FIT SCORE</div>
@@ -3188,7 +3191,7 @@ function WeatherFitWidget({ race }: { race: Race | null }) {
           </div>
         </div>
       )}
-    </div>
+    </WidgetCard>
   )
 }
 
@@ -3219,7 +3222,7 @@ function RaceGapAnalysisWidget() {
   }, [past, tightStacks])
 
   return (
-    <div className="card-v3 card-orange" style={st.glowCard}>
+    <WidgetCard id="race-gap-analysis" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>RACE GAP / RECOVERY</div>
@@ -3251,7 +3254,7 @@ function RaceGapAnalysisWidget() {
           ))}
         </div>
       )}
-    </div>
+    </WidgetCard>
   )
 }
 
@@ -3282,16 +3285,16 @@ function WhyPRdWidget() {
 
   if (!pbRaces.length) {
     return (
-      <div className="card-v3 card-orange" style={st.glowCard}>
+      <WidgetCard id="why-prd" style={st.glowCard}>
         <div style={st.widgetLabel}>WHY YOU PR'D</div>
         <div style={st.widgetTitle}>NO PBs YET</div>
         <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>Log races to discover the conditions behind your best performances.</div>
-      </div>
+      </WidgetCard>
     )
   }
 
   return (
-    <div className="card-v3 card-orange" style={st.glowCard}>
+    <WidgetCard id="why-prd" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>WHY YOU PR'D</div>
@@ -3326,7 +3329,7 @@ function WhyPRdWidget() {
           </div>
         ))}
       </div>
-    </div>
+    </WidgetCard>
   )
 }
 
@@ -3353,7 +3356,7 @@ function WhyFadedWidget() {
   }, [races, today])
 
   return (
-    <div className="card-v3 card-orange" style={st.glowCard}>
+    <WidgetCard id="why-faded" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>WHY YOU FADED</div>
@@ -3376,7 +3379,7 @@ function WhyFadedWidget() {
           <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '6px' }}>Detected from split-time data</div>
         </div>
       )}
-    </div>
+    </WidgetCard>
   )
 }
 
@@ -3401,18 +3404,18 @@ function RaceComparerWidget() {
 
   if (past.length < 2) {
     return (
-      <div className="card-v3 card-orange" style={st.glowCard}>
+      <WidgetCard id="race-comparer" style={st.glowCard}>
         <div style={st.widgetLabel}>RACE COMPARER</div>
         <div style={st.widgetTitle}>LOG 2+ RACES</div>
         <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>Need at least 2 timed races to compare.</div>
-      </div>
+      </WidgetCard>
     )
   }
 
   const selStyle: React.CSSProperties = { width: '100%', background: 'transparent', border: 'none', outline: 'none', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '10px', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '4px', color: 'inherit' }
 
   return (
-    <div className="card-v3 card-orange" style={st.glowCard}>
+    <WidgetCard id="race-comparer" style={st.glowCard}>
       <div>
         <div style={st.widgetLabel}>RACE COMPARER</div>
         <div style={st.widgetTitle}>SIDE BY SIDE</div>
@@ -3439,7 +3442,7 @@ function RaceComparerWidget() {
           <span style={{ fontSize: '11px', color: 'var(--muted)', marginLeft: '6px' }}>faster in Race {diff.faster}</span>
         </div>
       )}
-    </div>
+    </WidgetCard>
   )
 }
 
@@ -3509,7 +3512,7 @@ function RaceStackWidget({ race }: { race: Race | null }) {
   const [openCat, setOpenCat] = useState<string | null>('RACE KIT')
 
   return (
-    <div className="card-v3 card-orange" style={st.glowCard}>
+    <WidgetCard id="race-stack" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>RACE STACK PLANNER</div>
@@ -3555,7 +3558,7 @@ function RaceStackWidget({ race }: { race: Race | null }) {
           </div>
         </div>
       )}
-    </div>
+    </WidgetCard>
   )
 }
 
@@ -3584,18 +3587,18 @@ function AdaptiveGoalsWidget() {
 
   if (!data.length) {
     return (
-      <div className="card-v3 card-orange" style={st.glowCard}>
+      <WidgetCard id="adaptive-goals" style={st.glowCard}>
         <div style={st.widgetLabel}>ADAPTIVE GOALS</div>
         <div style={st.widgetTitle}>NO GOALS SET</div>
         <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>
           Set goal times on upcoming races to track your gap.
         </div>
-      </div>
+      </WidgetCard>
     )
   }
 
   return (
-    <div className="card-v3 card-orange" style={st.glowCard}>
+    <WidgetCard id="adaptive-goals" style={st.glowCard}>
       <div>
         <div style={st.widgetLabel}>ADAPTIVE GOALS</div>
         <div style={st.widgetTitle}>GOAL TRACKER</div>
@@ -3622,7 +3625,7 @@ function AdaptiveGoalsWidget() {
           )
         })}
       </div>
-    </div>
+    </WidgetCard>
   )
 }
 
@@ -3676,18 +3679,18 @@ function BreakTapeWidget() {
 
   if (!milestones.length) {
     return (
-      <div className="card-v3 card-orange" style={st.glowCard}>
+      <WidgetCard id="break-tape" style={st.glowCard}>
         <div style={st.widgetLabel}>BREAK TAPE MOMENTS</div>
         <div style={st.widgetTitle}>LOG YOUR FIRST RACE</div>
         <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>
           Your iconic milestones will appear here as you race.
         </div>
-      </div>
+      </WidgetCard>
     )
   }
 
   return (
-    <div className="card-v3 card-orange" style={st.glowCard}>
+    <WidgetCard id="break-tape" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>BREAK TAPE MOMENTS</div>
@@ -3706,7 +3709,7 @@ function BreakTapeWidget() {
           </div>
         ))}
       </div>
-    </div>
+    </WidgetCard>
   )
 }
 
@@ -3728,18 +3731,18 @@ function WhatToRaceNextWidget() {
 
   if (!upcoming.length) {
     return (
-      <div className="card-v3 card-orange" style={st.glowCard}>
+      <WidgetCard id="what-to-race-next" style={st.glowCard}>
         <div style={st.widgetLabel}>WHAT TO RACE NEXT</div>
         <div style={st.widgetTitle}>NO UPCOMING RACES</div>
         <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>
           Add upcoming races to get recommendations based on your performance trends.
         </div>
-      </div>
+      </WidgetCard>
     )
   }
 
   return (
-    <div className="card-v3 card-orange" style={st.glowCard}>
+    <WidgetCard id="what-to-race-next" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>WHAT TO RACE NEXT</div>
@@ -3768,7 +3771,7 @@ function WhatToRaceNextWidget() {
           </div>
         ))}
       </div>
-    </div>
+    </WidgetCard>
   )
 }
 
@@ -3794,18 +3797,18 @@ function StoryModeWidget() {
 
   if (!story) {
     return (
-      <div className="card-v3 card-orange">
+      <WidgetCard id="story-mode">
         <div style={st.widgetLabel}>STORY MODE</div>
         <div style={st.widgetTitle}>{year} RECAP</div>
         <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5, marginTop: 4 }}>
           Log races through the year to unlock annual recaps and season highlights.
         </div>
-      </div>
+      </WidgetCard>
     )
   }
 
   return (
-    <div className="card-v3 card-orange">
+    <WidgetCard id="story-mode">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
           <div style={st.widgetLabel}>STORY MODE</div>
@@ -3829,7 +3832,7 @@ function StoryModeWidget() {
       <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 8 }}>
         Annual recap and season cards build on this data.
       </div>
-    </div>
+    </WidgetCard>
   )
 }
 
@@ -3847,7 +3850,7 @@ function CoachActivityWidget() {
   const comCount = coachComments.length
 
   return (
-    <div className="card-v3 card-orange">
+    <WidgetCard id="coach-activity">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
           <div style={st.widgetLabel}>COACH ACTIVITY</div>
@@ -3868,7 +3871,7 @@ function CoachActivityWidget() {
       <div style={{ marginTop: 10, fontSize: 11, color: 'var(--muted)', background: 'var(--surface3)', borderRadius: 6, padding: '8px 10px' }}>
         Coach mode coming soon — shared views, annotations, and training comments.
       </div>
-    </div>
+    </WidgetCard>
   )
 }
 
@@ -3942,17 +3945,17 @@ function PersonalBestsWidget() {
 
   if (!groups.length) {
     return (
-      <div className="card-v3 card-orange" style={st.glowCard}>
+      <WidgetCard id="personal-bests" style={st.glowCard}>
         <div style={st.widgetLabel}>PERSONAL BESTS</div>
         <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5, marginTop: '8px' }}>
           Log timed races to build your PB board.
         </div>
-      </div>
+      </WidgetCard>
     )
   }
 
   return (
-    <div className="card-v3 card-orange" style={st.glowCard}>
+    <WidgetCard id="personal-bests" style={st.glowCard}>
       <div style={st.widgetLabel}>PERSONAL BESTS</div>
       {groups.map(g => (
         <div key={g.sport} style={{ marginTop: '14px' }}>
@@ -3974,6 +3977,7 @@ function PersonalBestsWidget() {
                 <div
                   key={key}
                   onClick={() => setSelectedRace(r)}
+                  data-no-widget-detail
                   style={{
                     position: 'relative',
                     minWidth: '160px', maxWidth: '160px',
@@ -4017,7 +4021,7 @@ function PersonalBestsWidget() {
           onClose={() => setSelectedRace(null)}
         />
       )}
-    </div>
+    </WidgetCard>
   )
 }
 
@@ -4285,11 +4289,11 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
   const result = useMemo(() => bestRiegelTable(races), [races])
 
   if (!result) return (
-    <div className="card-v3" style={st.glowCard}>
+    <WidgetCard id="riegel-predictor" style={st.glowCard}>
       <div style={st.widgetLabel}>🔮 RACE PREDICTOR</div>
       <div style={st.widgetTitle}>RIEGEL PREDICTOR</div>
       <p style={{ fontSize: '13px', color: 'var(--muted)', margin: 0 }}>Log a race with a finish time to see predictions.</p>
-    </div>
+    </WidgetCard>
   )
   const { race, table } = result
 
@@ -4304,7 +4308,7 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
 
   return (
     <>
-      <div className="card-v3" style={st.glowCard}>
+      <WidgetCard id="riegel-predictor" style={st.glowCard}>
         <div style={st.widgetLabel}>🔮 RACE PREDICTOR</div>
         <div style={st.widgetTitle}>RIEGEL PREDICTOR</div>
         <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '-4px' }}>
@@ -4344,7 +4348,7 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
         <div style={{ fontSize: '11px', color: 'var(--muted2)', lineHeight: 1.5 }}>
           T₂ = T₁ × (D₂/D₁)^1.06
         </div>
-      </div>
+      </WidgetCard>
 
       {/* Link sheet rendered via portal so it overlays the full page, not just the widget */}
       {showLinkSheet && createPortal(
@@ -4407,17 +4411,17 @@ function VDOTScoreWidget() {
   const showPeak   = peakVDOT && currentVDOT && peakVDOT.vdot > currentVDOT.vdot
 
   if (!displayPt) return (
-    <div className="card-v3" style={st.glowCard}>
+    <WidgetCard id="vdot-score" style={st.glowCard}>
       <div style={st.widgetLabel}>⚡ VDOT SCORE</div>
       <div style={st.widgetTitle}>VDOT FITNESS</div>
       <p style={{ fontSize: '13px', color: 'var(--muted)', margin: 0 }}>Log a running race with a finish time to compute your VDOT.</p>
-    </div>
+    </WidgetCard>
   )
 
   const vdotColor = displayPt.vdot >= 55 ? '#00FF88' : displayPt.vdot >= 45 ? 'var(--orange)' : 'var(--white)'
 
   return (
-    <div className="card-v3" style={st.glowCard}>
+    <WidgetCard id="vdot-score" style={st.glowCard}>
       <div style={st.widgetLabel}>⚡ VDOT SCORE</div>
 
       {/* Current + Peak row */}
@@ -4485,7 +4489,7 @@ function VDOTScoreWidget() {
           ))}
         </div>
       </div>
-    </div>
+    </WidgetCard>
   )
 }
 
@@ -4510,13 +4514,13 @@ function GoalPaceWidget({ race }: { race: Race | null }) {
   if (!focusRace) return null  // no focus race — hide widget entirely
 
   if (!result) return (
-    <div className="card-v3" style={st.glowCard}>
+    <WidgetCard id="goal-pace" style={st.glowCard}>
       <div style={st.widgetLabel}>🎯 GOAL PACE</div>
       <div style={st.widgetTitle}>GOAL PACE</div>
       <p style={{ fontSize: '13px', color: 'var(--muted)', margin: 0 }}>
         Set a goal time on {focusRace.name} to see your pace breakdown.
       </p>
-    </div>
+    </WidgetCard>
   )
 
   const gapLabel = result.vsCurrentVDOT !== null
@@ -4528,7 +4532,7 @@ function GoalPaceWidget({ race }: { race: Race | null }) {
   const gapColor = result.vsCurrentVDOT !== null && result.vsCurrentVDOT > 0 ? '#ff6b6b' : 'var(--green)'
 
   return (
-    <div className="card-v3" style={st.glowCard}>
+    <WidgetCard id="goal-pace" style={st.glowCard}>
       <div style={st.widgetLabel}>🎯 GOAL PACE</div>
       <div style={st.widgetTitle}>GOAL PACE</div>
       <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '-4px' }}>{focusRace.name}</div>
@@ -4565,7 +4569,7 @@ function GoalPaceWidget({ race }: { race: Race | null }) {
           ))}
         </div>
       </div>
-    </div>
+    </WidgetCard>
   )
 }
 
@@ -4648,11 +4652,11 @@ function WeatherImpactWidget() {
   const result = useMemo(() => bestWeatherImpact(racesWithWeather), [racesWithWeather])
 
   if (!result) return (
-    <div className="card-v3" style={st.glowCard}>
+    <WidgetCard id="weather-impact" style={st.glowCard}>
       <div style={st.widgetLabel}>🌡 WEATHER IMPACT</div>
       <div style={st.widgetTitle}>WEATHER IMPACT</div>
       <p style={{ fontSize: '13px', color: 'var(--muted)', margin: 0 }}>Races with weather data will show adjusted performance.</p>
-    </div>
+    </WidgetCard>
   )
 
   const { race, impact } = result
@@ -4661,7 +4665,7 @@ function WeatherImpactWidget() {
     : 'var(--green)'
 
   return (
-    <div className="card-v3" style={st.glowCard}>
+    <WidgetCard id="weather-impact" style={st.glowCard}>
       <div style={st.widgetLabel}>🌡 WEATHER IMPACT</div>
       <div style={st.widgetTitle}>WEATHER IMPACT</div>
       <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '-4px' }}>{race.name} · {fmtDateDDMM(race.date)}</div>
@@ -4692,7 +4696,7 @@ function WeatherImpactWidget() {
           )}
         </div>
       </div>
-    </div>
+    </WidgetCard>
   )
 }
 
@@ -4701,7 +4705,7 @@ function DistanceMilestonesWidget() {
   const result = useMemo(() => distanceMilestones(races), [races])
 
   return (
-    <div className="card-v3" style={st.glowCard}>
+    <WidgetCard id="distance-milestones" style={st.glowCard}>
       <div style={st.widgetLabel}>🏅 MILESTONES</div>
       <div style={st.widgetTitle}>DISTANCE TOTAL</div>
 
@@ -4737,7 +4741,7 @@ function DistanceMilestonesWidget() {
       <div style={{ fontSize: '12px', color: 'var(--muted)', fontStyle: 'italic', padding: '8px 10px', background: 'var(--surface3)', borderRadius: '6px', borderLeft: '2px solid var(--orange)' }}>
         {result.funFact}
       </div>
-    </div>
+    </WidgetCard>
   )
 }
 
@@ -4749,17 +4753,17 @@ function EquivPerfWidget() {
   const equivs  = useMemo(() => vdotPt ? equivalentPerformances(vdotPt.vdot) : [], [vdotPt])
 
   if (!vdotPt) return (
-    <div className="card-v3" style={st.glowCard}>
+    <WidgetCard id="equiv-perf" style={st.glowCard}>
       <div style={st.widgetLabel}>🎯 EQUIVALENTS</div>
       <div style={st.widgetTitle}>EQUIV PERFORMANCES</div>
       <p style={{ fontSize: '13px', color: 'var(--muted)', margin: 0 }}>Log a race to see equivalent performances across distances.</p>
-    </div>
+    </WidgetCard>
   )
 
   const mainDistances = equivs.filter(e => ['5K','10K','Half Marathon','Marathon'].includes(e.distance))
 
   return (
-    <div className="card-v3" style={st.glowCard}>
+    <WidgetCard id="equiv-perf" style={st.glowCard}>
       <div style={st.widgetLabel}>🎯 EQUIVALENTS</div>
       <div style={st.widgetTitle}>EQUIV PERFORMANCES</div>
       <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '-4px' }}>VDOT {vdotPt.vdot} · {vdotPt.raceName}</div>
@@ -4790,7 +4794,7 @@ function EquivPerfWidget() {
           </div>
         ))}
       </div>
-    </div>
+    </WidgetCard>
   )
 }
 
@@ -4801,7 +4805,7 @@ function UpcomingDensityWidget() {
   const warnings = useMemo(() => raceDensityWarnings(upcoming), [upcoming])
 
   return (
-    <div className="card-v3" style={st.glowCard}>
+    <WidgetCard id="upcoming-density" style={st.glowCard}>
       <div style={st.widgetLabel}>📆 SCHEDULING</div>
       <div style={st.widgetTitle}>RACE CONFLICTS</div>
 
@@ -4831,7 +4835,7 @@ function UpcomingDensityWidget() {
           ))}
         </div>
       )}
-    </div>
+    </WidgetCard>
   )
 }
 
@@ -4866,15 +4870,15 @@ function CourseRepeatsWidget() {
   }, [races])
 
   if (!courses.length) return (
-    <div className="card-v3" style={st.glowCard}>
+    <WidgetCard id="course-repeats" style={st.glowCard}>
       <div style={st.widgetLabel}>🔄 REPEATS</div>
       <div style={st.widgetTitle}>COURSE REPEATS</div>
       <p style={{ fontSize: '13px', color: 'var(--muted)', margin: 0 }}>Run the same race 3+ times to see your course repeat history.</p>
-    </div>
+    </WidgetCard>
   )
 
   return (
-    <div className="card-v3" style={st.glowCard}>
+    <WidgetCard id="course-repeats" style={st.glowCard}>
       <div style={st.widgetLabel}>🔄 REPEATS</div>
       <div style={st.widgetTitle}>COURSE REPEATS</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -4897,7 +4901,7 @@ function CourseRepeatsWidget() {
           </div>
         ))}
       </div>
-    </div>
+    </WidgetCard>
   )
 }
 
@@ -5033,6 +5037,8 @@ export function Dashboard() {
   const [addRaceMode,       setAddRaceMode]       = useState<'past' | 'upcoming'>('past')
   const [showAllUpcoming,   setShowAllUpcoming]   = useState(false)
   const [editRace,          setEditRace]          = useState<Race | null>(null)
+  const [detailWidget,      setDetailWidget]      = useState<DashWidget | null>(null)
+  const [detailCtx,         setDetailCtx]         = useState<WidgetDynamicContext | undefined>(undefined)
   const nextRace        = useRaceStore(selectNextRace)   // always nearest upcoming (A-Race preferred)
   const upcomingRaces   = useRaceStore(selectUpcomingRaces)
   const focusRaceId     = useRaceStore(selectFocusRaceId)
@@ -5053,12 +5059,34 @@ export function Dashboard() {
   const openRiegelGoal = (dist: string) => { setAddRaceMode('upcoming'); setRiegelPrefillDist(dist); setShowAddRace(true) }
   const en = (id: string) => isEnabled(widgets, id)
 
+  const widgetActions: WidgetCardActions = useMemo(() => ({
+    openAddRace,
+    openAddUpcomingRace,
+    openCustomize:   () => setShowCustomize(true),
+    openAllUpcoming: () => setShowAllUpcoming(true),
+    openFocusRaceEdit: () => {
+      const race = countdownRace ?? nextRace ?? null
+      if (race) setEditRace(race)
+    },
+  }), [countdownRace, nextRace])
+
+  const openDetail = useCallback((id: string, ctx?: WidgetDynamicContext) => {
+    const w = widgets.find(x => x.id === id)
+    if (!w) return
+    setDetailCtx(ctx)
+    setDetailWidget(w)
+  }, [widgets])
+
+  const widgetCtxValue = useMemo(() => ({ openDetail, actions: widgetActions }), [openDetail, widgetActions])
+
   return (
+    <WidgetCardContext.Provider value={widgetCtxValue}>
     <div style={st.page}>
       {showCustomize    && <DashCustomizeModal onClose={() => setShowCustomize(false)} />}
       {showAddRace      && <AddRaceModal defaultMode={addRaceMode} prefillDistance={riegelPrefillDist} onClose={() => { setShowAddRace(false); setRiegelPrefillDist(undefined) }} />}
       {showAllUpcoming  && <AllUpcomingModal onClose={() => setShowAllUpcoming(false)} onAddRace={openAddUpcomingRace} />}
       {editRace         && <ViewEditRaceModal race={editRace} onClose={() => setEditRace(null)} />}
+      {detailWidget     && <WidgetDetailModal widget={detailWidget} dynamicContext={detailCtx} actions={widgetActions} onClose={() => { setDetailWidget(null); setDetailCtx(undefined) }} />}
 
       <GreetingCard onCustomize={() => setShowCustomize(true)} />
       <PreRaceBriefing onAddRace={openAddRace} onEditRace={(race) => setEditRace(race)} />
@@ -5134,6 +5162,7 @@ export function Dashboard() {
       </DashZone>
 
     </div>
+    </WidgetCardContext.Provider>
   )
 }
 
