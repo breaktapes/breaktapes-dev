@@ -18,9 +18,10 @@ export interface CatalogRace {
   elevation_profile?: string
   course_summary?: string
   priority?: string        // 'A' | 'B' | 'C'
+  start_time?: string | null  // 'HH:MM:SS' local race-city time; null when source published no time
 }
 
-const COLS = 'id, name, aliases, city, country, year, month, day, dist_km, dist, type, discipline, surface, elevation_profile, course_summary'
+const COLS = 'id, name, aliases, city, country, year, month, day, dist_km, dist, type, discipline, surface, elevation_profile, course_summary, start_time'
 // Supabase PostgREST max-rows is 1,000 per request regardless of range size.
 // Fetch 10 pages of 1,000 in parallel to cover the full ~8,284-row catalog.
 const PAGE = 1000

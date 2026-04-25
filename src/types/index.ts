@@ -28,6 +28,7 @@ export interface Race {
   priority?: 'A' | 'B' | 'C'
   outcome?: string          // "Finished" | "DNF" | "DSQ" | "DNS"
   goalTime?: string
+  startTime?: string        // race-day wall-clock start time "HH:MM" or "HH:MM:SS" (local race-city time)
   bibNumber?: string
   lat?: number
   lng?: number

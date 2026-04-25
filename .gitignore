@@ -27,3 +27,6 @@ vitest.workspace.ts
 
 # Stray Clerk Next.js scaffold — not used (we're on Vite)
 clerk-nextjs/
+
+# Scrape outputs (transient — large JSON dumps)
+scripts/out/
