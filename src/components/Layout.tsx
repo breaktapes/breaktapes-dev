@@ -1,9 +1,10 @@
 import { useNavigate, useLocation } from 'react-router-dom'
 import { BottomNav } from './BottomNav'
-import { useSyncState } from '@/hooks/useSyncState'
+import { useSyncState, useUserStateRealtime } from '@/hooks/useSyncState'
 
 function DataSync() {
   useSyncState()
+  useUserStateRealtime()
   return null
 }
 
