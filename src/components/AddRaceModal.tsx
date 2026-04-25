@@ -361,6 +361,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
   })
   const [priority, setPriority]     = useState('')
   const [goalHMS, setGoalHMS]       = useState<HMS>({ h: 0, m: 0, s: 0 })
+  const [startTime, setStartTime]   = useState('')   // upcoming only — race-day wall clock "HH:MM"
   const [country, setCountry]       = useState('')
   const [citySelect, setCitySelect] = useState('')  // catalog-path preselect (now rarely used)
   const [cityText, setCityText]     = useState('')  // canonical city text, set by CityPicker
@@ -603,6 +604,12 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
       }
     }
 
+    // Autofill start time from catalog (HH:MM:SS → HH:MM for <input type="time">).
+    const startTimeSrc = (firstRow as any)?.start_time ?? (representative as any)?.start_time
+    if (mode === 'upcoming' && typeof startTimeSrc === 'string' && /^\d{2}:\d{2}/.test(startTimeSrc)) {
+      setStartTime(startTimeSrc.slice(0, 5))
+    }
+
     setShowSuggest(false)
   }
 
@@ -693,6 +700,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
       ...(mode === 'upcoming' && (goalHMS.h > 0 || goalHMS.m > 0 || goalHMS.s > 0) ? {
         goalTime: `${goalHMS.h}:${String(goalHMS.m).padStart(2,'0')}:${String(goalHMS.s).padStart(2,'0')}`,
       } : {}),
+      ...(mode === 'upcoming' && startTime ? { startTime } : {}),
     }
 
     if (mode === 'upcoming') {
@@ -1074,6 +1082,20 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
               <TimePickerWheel value={goalHMS} onChange={setGoalHMS} maxHours={99} />
               <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '6px' }}>
                 Scroll to set · Used by Gap To Goal widget
+              </div>
+            </Field>
+          )}
+
+          {mode === 'upcoming' && (
+            <Field label={<>Start Time <span style={{ opacity: 0.5, fontWeight: 400, fontSize: '11px', textTransform: 'lowercase', letterSpacing: 0 }}>(local, optional)</span></>}>
+              <input
+                type="time"
+                style={st.input}
+                value={startTime}
+                onChange={e => setStartTime(e.target.value)}
+              />
+              <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '6px' }}>
+                Race-day wall clock · Auto-filled from catalog when known
               </div>
             </Field>
           )}
