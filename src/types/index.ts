@@ -81,6 +81,7 @@ export interface WearableToken {
   access_token: string
   refresh_token?: string
   expires_at?: number   // unix timestamp
+  profile?: Record<string, any>
 }
 
 export interface DashWidget {
