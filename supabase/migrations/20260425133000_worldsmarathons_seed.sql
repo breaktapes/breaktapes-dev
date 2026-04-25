@@ -1,4 +1,4 @@
--- World's Marathons catalog seed — generated 2026-04-25T16:11:49.670Z
+-- World's Marathons catalog seed — generated 2026-04-25T17:24:11.342Z
 -- Source: scripts/out/new_rows.json (after dedupe vs live race_catalog)
 -- Rows: 5463
 -- Idempotent: WHERE NOT EXISTS guard on (lower(name), lower(city), year, dist_km)
@@ -9,7 +9,12 @@ INSERT INTO race_catalog (
   name, aliases, city, country, year, month, day, event_date, start_time,
   dist, dist_km, type, discipline, source_site, source_url
 )
-SELECT * FROM (VALUES
+SELECT
+  v.name::text, v.aliases::text[], v.city::text, v.country::text,
+  v.year::int, v.month::int, v.day::int, v.event_date::date, v.start_time::time,
+  v.dist::text, v.dist_km::numeric, v.type::text, v.discipline::text,
+  v.source_site::text, v.source_url::text
+FROM (VALUES
   ('Toronto Waterfront Marathon',ARRAY['TCS Toronto Waterfront Marathon','Toronto Waterfront Marathon']::text[],'Toronto','Canada',2026,10,18,'2026-10-18',NULL,'Half Marathon',21.1,'Half Marathon','running','worldsmarathons.com','https://worldsmarathons.com/marathon/toronto-waterfront-marathon'),
   ('Lodz Marathon',ARRAY['Lodz Marathon']::text[],'Lódz','Poland',2026,4,12,'2026-04-12',NULL,'10K',10,'10K','running','worldsmarathons.com','https://worldsmarathons.com/marathon/lodz-marathon'),
   ('Nagoya Women''s Marathon',ARRAY['Nagoya Women''s Marathon']::text[],'Nagoya','Japan',2024,3,10,'2024-03-10',NULL,'Marathon',42.195,'Marathon','running','worldsmarathons.com','https://worldsmarathons.com/marathon/nagoya-womens-marathon'),
@@ -516,9 +521,9 @@ SELECT * FROM (VALUES
 )
 WHERE NOT EXISTS (
   SELECT 1 FROM race_catalog c
-  WHERE lower(c.name) = lower(v.name)
-    AND lower(c.city) = lower(v.city)
-    AND c.year = v.year
+  WHERE lower(c.name) = lower(v.name::text)
+    AND lower(c.city) = lower(v.city::text)
+    AND c.year = v.year::int
     AND ROUND(c.dist_km::numeric, 1) = ROUND(v.dist_km::numeric, 1)
 );
 
@@ -526,7 +531,12 @@ INSERT INTO race_catalog (
   name, aliases, city, country, year, month, day, event_date, start_time,
   dist, dist_km, type, discipline, source_site, source_url
 )
-SELECT * FROM (VALUES
+SELECT
+  v.name::text, v.aliases::text[], v.city::text, v.country::text,
+  v.year::int, v.month::int, v.day::int, v.event_date::date, v.start_time::time,
+  v.dist::text, v.dist_km::numeric, v.type::text, v.discipline::text,
+  v.source_site::text, v.source_url::text
+FROM (VALUES
   ('Kyoto Marathon',ARRAY['Kyoto Marathon']::text[],'Kyoto','Japan',2026,2,15,'2026-02-15',NULL,'Marathon',42.195,'Marathon','running','worldsmarathons.com','https://worldsmarathons.com/marathon/kyoto-marathon'),
   ('Tel Aviv Marathon',ARRAY['Tel Aviv Marathon']::text[],'Tel Aviv','Israel',2027,2,26,'2027-02-26',NULL,'10K',10,'10K','running','worldsmarathons.com','https://worldsmarathons.com/marathon/tel-aviv-marathon'),
   ('Tel Aviv Marathon',ARRAY['Tel Aviv Marathon']::text[],'Tel Aviv','Israel',2027,2,26,'2027-02-26',NULL,'Half Marathon',21.1,'Half Marathon','running','worldsmarathons.com','https://worldsmarathons.com/marathon/tel-aviv-marathon'),
@@ -1033,9 +1043,9 @@ SELECT * FROM (VALUES
 )
 WHERE NOT EXISTS (
   SELECT 1 FROM race_catalog c
-  WHERE lower(c.name) = lower(v.name)
-    AND lower(c.city) = lower(v.city)
-    AND c.year = v.year
+  WHERE lower(c.name) = lower(v.name::text)
+    AND lower(c.city) = lower(v.city::text)
+    AND c.year = v.year::int
     AND ROUND(c.dist_km::numeric, 1) = ROUND(v.dist_km::numeric, 1)
 );
 
@@ -1043,7 +1053,12 @@ INSERT INTO race_catalog (
   name, aliases, city, country, year, month, day, event_date, start_time,
   dist, dist_km, type, discipline, source_site, source_url
 )
-SELECT * FROM (VALUES
+SELECT
+  v.name::text, v.aliases::text[], v.city::text, v.country::text,
+  v.year::int, v.month::int, v.day::int, v.event_date::date, v.start_time::time,
+  v.dist::text, v.dist_km::numeric, v.type::text, v.discipline::text,
+  v.source_site::text, v.source_url::text
+FROM (VALUES
   ('Athletic Brewing Company Fairfield Road Races',ARRAY['Athletic Brewing Company Fairfield Road Races']::text[],'Fairfield','United States',2026,6,6,'2026-06-06',NULL,'Half Marathon',21.1,'Half Marathon','running','worldsmarathons.com','https://worldsmarathons.com/marathon/fairfield-half-marathon'),
   ('Oslo Marathon',ARRAY['Oslo Marathon']::text[],'Oslo','Norway',2026,9,12,'2026-09-12',NULL,'Half Marathon',21.1,'Half Marathon','running','worldsmarathons.com','https://worldsmarathons.com/marathon/danske-bank-oslo-maraton'),
   ('Oslo Marathon',ARRAY['Oslo Marathon']::text[],'Oslo','Norway',2026,9,12,'2026-09-12',NULL,'10K',10,'10K','running','worldsmarathons.com','https://worldsmarathons.com/marathon/danske-bank-oslo-maraton'),
@@ -1550,9 +1565,9 @@ SELECT * FROM (VALUES
 )
 WHERE NOT EXISTS (
   SELECT 1 FROM race_catalog c
-  WHERE lower(c.name) = lower(v.name)
-    AND lower(c.city) = lower(v.city)
-    AND c.year = v.year
+  WHERE lower(c.name) = lower(v.name::text)
+    AND lower(c.city) = lower(v.city::text)
+    AND c.year = v.year::int
     AND ROUND(c.dist_km::numeric, 1) = ROUND(v.dist_km::numeric, 1)
 );
 
@@ -1560,7 +1575,12 @@ INSERT INTO race_catalog (
   name, aliases, city, country, year, month, day, event_date, start_time,
   dist, dist_km, type, discipline, source_site, source_url
 )
-SELECT * FROM (VALUES
+SELECT
+  v.name::text, v.aliases::text[], v.city::text, v.country::text,
+  v.year::int, v.month::int, v.day::int, v.event_date::date, v.start_time::time,
+  v.dist::text, v.dist_km::numeric, v.type::text, v.discipline::text,
+  v.source_site::text, v.source_url::text
+FROM (VALUES
   ('White Mountain Milers Half Marathon & 5K',ARRAY['White Mountain Milers Half Marathon & 5K']::text[],'North Conway','United States',2021,9,25,'2021-09-25',NULL,'Half Marathon',21.1,'Half Marathon','running','worldsmarathons.com','https://worldsmarathons.com/marathon/white-mountain-milers-half-marathon'),
   ('Rocky 50 Trail Run',ARRAY['Rocky 50 Trail Run']::text[],'Huntsville','United States',2027,2,13,'2027-02-13',NULL,'Half Marathon',21.1,'Half Marathon','running','worldsmarathons.com','https://worldsmarathons.com/marathon/rocky-50'),
   ('Habanero Hundred',ARRAY['Habanero Hundred']::text[],'Cat Spring','United States',2026,8,22,'2026-08-22',NULL,'Half Marathon',21.1,'Half Marathon','running','worldsmarathons.com','https://worldsmarathons.com/marathon/habanero-hundred'),
@@ -2067,9 +2087,9 @@ SELECT * FROM (VALUES
 )
 WHERE NOT EXISTS (
   SELECT 1 FROM race_catalog c
-  WHERE lower(c.name) = lower(v.name)
-    AND lower(c.city) = lower(v.city)
-    AND c.year = v.year
+  WHERE lower(c.name) = lower(v.name::text)
+    AND lower(c.city) = lower(v.city::text)
+    AND c.year = v.year::int
     AND ROUND(c.dist_km::numeric, 1) = ROUND(v.dist_km::numeric, 1)
 );
 
@@ -2077,7 +2097,12 @@ INSERT INTO race_catalog (
   name, aliases, city, country, year, month, day, event_date, start_time,
   dist, dist_km, type, discipline, source_site, source_url
 )
-SELECT * FROM (VALUES
+SELECT
+  v.name::text, v.aliases::text[], v.city::text, v.country::text,
+  v.year::int, v.month::int, v.day::int, v.event_date::date, v.start_time::time,
+  v.dist::text, v.dist_km::numeric, v.type::text, v.discipline::text,
+  v.source_site::text, v.source_url::text
+FROM (VALUES
   ('Stadtwerke Lübeck Marathon',ARRAY['Stadtwerke Lübeck Marathon']::text[],'Lübeck','Germany',2026,10,18,'2026-10-18',NULL,'Marathon',42.195,'Marathon','running','worldsmarathons.com','https://worldsmarathons.com/marathon/stadtwerke-l-beck-marathon'),
   ('Stadtwerke Lübeck Marathon',ARRAY['Stadtwerke Lübeck Marathon']::text[],'Lübeck','Germany',2026,10,18,'2026-10-18',NULL,'Half Marathon',21.1,'Half Marathon','running','worldsmarathons.com','https://worldsmarathons.com/marathon/stadtwerke-l-beck-marathon'),
   ('Stadtwerke Lübeck Marathon',ARRAY['Stadtwerke Lübeck Marathon']::text[],'Lübeck','Germany',2026,10,18,'2026-10-18',NULL,'10K',10,'10K','running','worldsmarathons.com','https://worldsmarathons.com/marathon/stadtwerke-l-beck-marathon'),
@@ -2584,9 +2609,9 @@ SELECT * FROM (VALUES
 )
 WHERE NOT EXISTS (
   SELECT 1 FROM race_catalog c
-  WHERE lower(c.name) = lower(v.name)
-    AND lower(c.city) = lower(v.city)
-    AND c.year = v.year
+  WHERE lower(c.name) = lower(v.name::text)
+    AND lower(c.city) = lower(v.city::text)
+    AND c.year = v.year::int
     AND ROUND(c.dist_km::numeric, 1) = ROUND(v.dist_km::numeric, 1)
 );
 
@@ -2594,7 +2619,12 @@ INSERT INTO race_catalog (
   name, aliases, city, country, year, month, day, event_date, start_time,
   dist, dist_km, type, discipline, source_site, source_url
 )
-SELECT * FROM (VALUES
+SELECT
+  v.name::text, v.aliases::text[], v.city::text, v.country::text,
+  v.year::int, v.month::int, v.day::int, v.event_date::date, v.start_time::time,
+  v.dist::text, v.dist_km::numeric, v.type::text, v.discipline::text,
+  v.source_site::text, v.source_url::text
+FROM (VALUES
   ('VO2 Trail 0rientation',ARRAY['VO2 Trail 0rientation']::text[],'St Leu La Forêt','France',2018,9,9,'2018-09-09',NULL,'Half Marathon',21.1,'Half Marathon','running','worldsmarathons.com','https://worldsmarathons.com/marathon/vo2-trail-orientation'),
   ('VO2 Trail 0rientation',ARRAY['VO2 Trail 0rientation']::text[],'St Leu La Forêt','France',2018,9,9,'2018-09-09',NULL,'10K',10,'10K','running','worldsmarathons.com','https://worldsmarathons.com/marathon/vo2-trail-orientation'),
   ('Skyrhune',ARRAY['Skyrhune']::text[],'Ascain','France',2024,9,21,'2024-09-21',NULL,'Half Marathon',21.1,'Half Marathon','running','worldsmarathons.com','https://worldsmarathons.com/marathon/skyrhune'),
@@ -3101,9 +3131,9 @@ SELECT * FROM (VALUES
 )
 WHERE NOT EXISTS (
   SELECT 1 FROM race_catalog c
-  WHERE lower(c.name) = lower(v.name)
-    AND lower(c.city) = lower(v.city)
-    AND c.year = v.year
+  WHERE lower(c.name) = lower(v.name::text)
+    AND lower(c.city) = lower(v.city::text)
+    AND c.year = v.year::int
     AND ROUND(c.dist_km::numeric, 1) = ROUND(v.dist_km::numeric, 1)
 );
 
@@ -3111,7 +3141,12 @@ INSERT INTO race_catalog (
   name, aliases, city, country, year, month, day, event_date, start_time,
   dist, dist_km, type, discipline, source_site, source_url
 )
-SELECT * FROM (VALUES
+SELECT
+  v.name::text, v.aliases::text[], v.city::text, v.country::text,
+  v.year::int, v.month::int, v.day::int, v.event_date::date, v.start_time::time,
+  v.dist::text, v.dist_km::numeric, v.type::text, v.discipline::text,
+  v.source_site::text, v.source_url::text
+FROM (VALUES
   ('Mobility Service Airport Night Run',ARRAY['Mobility Service Airport Night Run']::text[],'Velsen-Zuid','Netherlands',2019,11,16,'2019-11-16',NULL,'10K',10,'10K','running','worldsmarathons.com','https://worldsmarathons.com/marathon/mobility-service-airport-night-run'),
   ('Mons Urban Trail',ARRAY['Mons Urban Trail']::text[],'Mons','Belgium',2019,10,20,'2019-10-20',NULL,'10K',10,'10K','running','worldsmarathons.com','https://worldsmarathons.com/marathon/mons-urban-trail'),
   ('Eindhoven Urban Trail',ARRAY['Eindhoven Urban Trail']::text[],'Eindhoven','Netherlands',2026,11,29,'2026-11-29',NULL,'10K',10,'10K','running','worldsmarathons.com','https://worldsmarathons.com/marathon/eindhoven-urban-trail'),
@@ -3618,9 +3653,9 @@ SELECT * FROM (VALUES
 )
 WHERE NOT EXISTS (
   SELECT 1 FROM race_catalog c
-  WHERE lower(c.name) = lower(v.name)
-    AND lower(c.city) = lower(v.city)
-    AND c.year = v.year
+  WHERE lower(c.name) = lower(v.name::text)
+    AND lower(c.city) = lower(v.city::text)
+    AND c.year = v.year::int
     AND ROUND(c.dist_km::numeric, 1) = ROUND(v.dist_km::numeric, 1)
 );
 
@@ -3628,7 +3663,12 @@ INSERT INTO race_catalog (
   name, aliases, city, country, year, month, day, event_date, start_time,
   dist, dist_km, type, discipline, source_site, source_url
 )
-SELECT * FROM (VALUES
+SELECT
+  v.name::text, v.aliases::text[], v.city::text, v.country::text,
+  v.year::int, v.month::int, v.day::int, v.event_date::date, v.start_time::time,
+  v.dist::text, v.dist_km::numeric, v.type::text, v.discipline::text,
+  v.source_site::text, v.source_url::text
+FROM (VALUES
   ('RMC Banja Luka Halfmarathon',ARRAY['RMC Banja Luka Halfmarathon 2020']::text[],'Banja Luka','Bosnia and Herzegovina',2020,4,11,'2020-04-11',NULL,'Half Marathon',21.1,'Half Marathon','running','worldsmarathons.com','https://worldsmarathons.com/marathon/vivia-runmore-weekend-2020'),
   ('Awaken Bangkok Midnight Marathon',ARRAY['Awaken Bangkok Midnight Marathon']::text[],'Bangkok','Thailand',2025,12,21,'2025-12-21',NULL,'Half Marathon',21.1,'Half Marathon','running','worldsmarathons.com','https://worldsmarathons.com/marathon/bangkok-midnight-marathon'),
   ('Awaken Bangkok Midnight Marathon',ARRAY['Awaken Bangkok Midnight Marathon']::text[],'Bangkok','Thailand',2025,12,21,'2025-12-21',NULL,'10K',10,'10K','running','worldsmarathons.com','https://worldsmarathons.com/marathon/bangkok-midnight-marathon'),
@@ -4135,9 +4175,9 @@ SELECT * FROM (VALUES
 )
 WHERE NOT EXISTS (
   SELECT 1 FROM race_catalog c
-  WHERE lower(c.name) = lower(v.name)
-    AND lower(c.city) = lower(v.city)
-    AND c.year = v.year
+  WHERE lower(c.name) = lower(v.name::text)
+    AND lower(c.city) = lower(v.city::text)
+    AND c.year = v.year::int
     AND ROUND(c.dist_km::numeric, 1) = ROUND(v.dist_km::numeric, 1)
 );
 
@@ -4145,7 +4185,12 @@ INSERT INTO race_catalog (
   name, aliases, city, country, year, month, day, event_date, start_time,
   dist, dist_km, type, discipline, source_site, source_url
 )
-SELECT * FROM (VALUES
+SELECT
+  v.name::text, v.aliases::text[], v.city::text, v.country::text,
+  v.year::int, v.month::int, v.day::int, v.event_date::date, v.start_time::time,
+  v.dist::text, v.dist_km::numeric, v.type::text, v.discipline::text,
+  v.source_site::text, v.source_url::text
+FROM (VALUES
   ('Caixabank Palma City Half Marathon & XIV 10K Port de Palma',ARRAY['Caixabank Palma City Half Marathon & XIV 10K Port de Palma']::text[],'Palma','Spain',2026,3,22,'2026-03-22',NULL,'Half Marathon',21.1,'Half Marathon','running','worldsmarathons.com','https://worldsmarathons.com/marathon/half-marathon-city-of-palma'),
   ('Caixabank Palma City Half Marathon & XIV 10K Port de Palma',ARRAY['Caixabank Palma City Half Marathon & XIV 10K Port de Palma']::text[],'Palma','Spain',2026,3,22,'2026-03-22',NULL,'10K',10,'10K','running','worldsmarathons.com','https://worldsmarathons.com/marathon/half-marathon-city-of-palma'),
   ('Maratón Puerto Vallarta',ARRAY['Maratón Puerto Vallarta']::text[],'Puerto Vallarta','Mexico',2026,4,19,'2026-04-19',NULL,'Marathon',42.195,'Marathon','running','worldsmarathons.com','https://worldsmarathons.com/marathon/maraton-puerto-vallarta'),
@@ -4652,9 +4697,9 @@ SELECT * FROM (VALUES
 )
 WHERE NOT EXISTS (
   SELECT 1 FROM race_catalog c
-  WHERE lower(c.name) = lower(v.name)
-    AND lower(c.city) = lower(v.city)
-    AND c.year = v.year
+  WHERE lower(c.name) = lower(v.name::text)
+    AND lower(c.city) = lower(v.city::text)
+    AND c.year = v.year::int
     AND ROUND(c.dist_km::numeric, 1) = ROUND(v.dist_km::numeric, 1)
 );
 
@@ -4662,7 +4707,12 @@ INSERT INTO race_catalog (
   name, aliases, city, country, year, month, day, event_date, start_time,
   dist, dist_km, type, discipline, source_site, source_url
 )
-SELECT * FROM (VALUES
+SELECT
+  v.name::text, v.aliases::text[], v.city::text, v.country::text,
+  v.year::int, v.month::int, v.day::int, v.event_date::date, v.start_time::time,
+  v.dist::text, v.dist_km::numeric, v.type::text, v.discipline::text,
+  v.source_site::text, v.source_url::text
+FROM (VALUES
   ('Bedgebury Forest Half Marathon & 10K',ARRAY['Bedgebury Forest Half Marathon & 10K']::text[],'Tunbridge Wells','United Kingdom',2026,10,18,'2026-10-18',NULL,'Half Marathon',21.1,'Half Marathon','running','worldsmarathons.com','https://worldsmarathons.com/marathon/bedgebury-forest-half-marathon-10k'),
   ('Bedgebury Forest Half Marathon & 10K',ARRAY['Bedgebury Forest Half Marathon & 10K']::text[],'Tunbridge Wells','United Kingdom',2026,10,18,'2026-10-18',NULL,'10K',10,'10K','running','worldsmarathons.com','https://worldsmarathons.com/marathon/bedgebury-forest-half-marathon-10k'),
   ('Bushy Christmas 10K & 5K',ARRAY['Bushy Christmas 10K & 5K']::text[],'Teddington','United Kingdom',2025,11,23,'2025-11-23',NULL,'10K',10,'10K','running','worldsmarathons.com','https://worldsmarathons.com/marathon/bushy-christmas-10k-5k'),
@@ -5169,9 +5219,9 @@ SELECT * FROM (VALUES
 )
 WHERE NOT EXISTS (
   SELECT 1 FROM race_catalog c
-  WHERE lower(c.name) = lower(v.name)
-    AND lower(c.city) = lower(v.city)
-    AND c.year = v.year
+  WHERE lower(c.name) = lower(v.name::text)
+    AND lower(c.city) = lower(v.city::text)
+    AND c.year = v.year::int
     AND ROUND(c.dist_km::numeric, 1) = ROUND(v.dist_km::numeric, 1)
 );
 
@@ -5179,7 +5229,12 @@ INSERT INTO race_catalog (
   name, aliases, city, country, year, month, day, event_date, start_time,
   dist, dist_km, type, discipline, source_site, source_url
 )
-SELECT * FROM (VALUES
+SELECT
+  v.name::text, v.aliases::text[], v.city::text, v.country::text,
+  v.year::int, v.month::int, v.day::int, v.event_date::date, v.start_time::time,
+  v.dist::text, v.dist_km::numeric, v.type::text, v.discipline::text,
+  v.source_site::text, v.source_url::text
+FROM (VALUES
   ('Mesa Falls Marathon',ARRAY['Mesa Falls Marathon']::text[],'Ashton','United States',2025,7,19,'2025-07-19',NULL,'Half Marathon',21.1,'Half Marathon','running','worldsmarathons.com','https://worldsmarathons.com/marathon/mesa-falls-marathon-24'),
   ('Mesa Falls Marathon',ARRAY['Mesa Falls Marathon']::text[],'Ashton','United States',2025,7,19,'2025-07-19',NULL,'10K',10,'10K','running','worldsmarathons.com','https://worldsmarathons.com/marathon/mesa-falls-marathon-24'),
   ('Mesa Falls Marathon',ARRAY['Mesa Falls Marathon']::text[],'Ashton','United States',2025,7,19,'2025-07-19',NULL,'Marathon',42.195,'Marathon','running','worldsmarathons.com','https://worldsmarathons.com/marathon/mesa-falls-marathon-24'),
@@ -5649,9 +5704,9 @@ SELECT * FROM (VALUES
 )
 WHERE NOT EXISTS (
   SELECT 1 FROM race_catalog c
-  WHERE lower(c.name) = lower(v.name)
-    AND lower(c.city) = lower(v.city)
-    AND c.year = v.year
+  WHERE lower(c.name) = lower(v.name::text)
+    AND lower(c.city) = lower(v.city::text)
+    AND c.year = v.year::int
     AND ROUND(c.dist_km::numeric, 1) = ROUND(v.dist_km::numeric, 1)
 );
 
