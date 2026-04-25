@@ -14,6 +14,7 @@ export async function saveWearableToken(token: WearableToken): Promise<void> {
     access_token: token.access_token,
     refresh_token: token.refresh_token ?? null,
     expires_at: token.expires_at ?? null,
+    profile: token.profile ?? null,
   }, { onConflict: 'user_id,provider' })
 }
 
