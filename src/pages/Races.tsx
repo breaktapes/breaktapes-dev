@@ -20,6 +20,7 @@ import { RaceLogPassport } from '@/components/RaceLogPassport'
 import type { Race } from '@/types'
 import { useUnits, distUnit } from '@/lib/units'
 import { geocodeCity } from '@/lib/geocode'
+import { normalizeCityName } from '@/lib/cityNormalize'
 
 // Error boundary for MapLibre — catches WebGL init failures, style errors, CSP blocks
 class MapErrorBoundary extends Component<
@@ -714,6 +715,21 @@ export function Races() {
   const [addRaceOpen, setAddRaceOpen]     = useState(false)
   const [importOpen, setImportOpen]       = useState(false)
   const [passportOpen, setPassportOpen]   = useState(false)
+
+  // One-time normalization pass — collapse admin labels into canonical
+  // city names ("Dubai Emirate" → "Dubai", "Mumbai Suburban" → "Mumbai").
+  // Clearing lat/lng forces the geocode backfill to re-resolve under the
+  // new key, replacing any stale coord. Runs whenever races change so
+  // imports / future legacy data also get normalized.
+  useEffect(() => {
+    races.forEach(r => {
+      if (!r.city) return
+      const norm = normalizeCityName(r.city)
+      if (norm && norm !== r.city) {
+        updateRace(r.id, { city: norm, lat: undefined, lng: undefined })
+      }
+    })
+  }, [races, updateRace])
 
   // Backfill missing lat/lng for races with a city — geocodes via Open-Meteo,
   // caches to localStorage, and persists the coord on the race so the pin
