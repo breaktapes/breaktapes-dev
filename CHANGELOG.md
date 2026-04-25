@@ -2,6 +2,15 @@
 
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+## [0.6.4.3] - 2026-04-25
+
+### Changed
+- Strava: `fetchStravaActivities` paginates the Strava API (was capped at 100 activities, now walks pages until limit/empty)
+- Strava: token refresh threshold widened from 60s to 300s — fewer race conditions under burst calls
+- Strava: token exchange now captures the athlete profile (firstname, lastname, profile_medium) returned by Strava and persists it on `wearable_tokens.profile`
+- Strava: failed activity fetches and refreshes now log to console with status + body; 401 responses clear the stale token
+- Strava: surfaces a clear "app pending approval — beta users may not be able to connect yet" toast when Strava returns a `limit:reached` athlete-cap error during token exchange
+
 ## [0.6.4.2] - 2026-04-23
 
 ### Changed

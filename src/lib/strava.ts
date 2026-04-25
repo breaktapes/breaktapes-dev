@@ -23,47 +23,86 @@ export interface StravaActivity {
 
 // ─── Strava API fetch helper ──────────────────────────────────────────────────
 
+const REFRESH_THRESHOLD_SEC = 300
+const PAGE_SIZE = 100
+
 /** Refresh strava token if needed, then fetch activities. Returns [] on error. */
 export async function fetchStravaActivities(limit = 100): Promise<StravaActivity[]> {
   const token = useWearableStore.getState().stravaToken
   if (!token?.access_token) return []
 
-  // Refresh if within 60s of expiry
   let accessToken = token.access_token
-  if (token.expires_at && Date.now() / 1000 > token.expires_at - 60) {
-    if (!token.refresh_token) return []
+  if (token.expires_at && Date.now() / 1000 > token.expires_at - REFRESH_THRESHOLD_SEC) {
+    if (!token.refresh_token) {
+      console.error('[strava] no refresh_token; clearing stale token')
+      useWearableStore.getState().clearToken('strava')
+      return []
+    }
     try {
       const res = await fetch(`${HEALTH_PROXY}/strava/refresh`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refresh_token: token.refresh_token }),
       })
-      if (!res.ok) return []
+      if (!res.ok) {
+        console.error('[strava] refresh failed', res.status, await res.text().catch(() => ''))
+        if (res.status === 400 || res.status === 401) {
+          useWearableStore.getState().clearToken('strava')
+        }
+        return []
+      }
       const data = await res.json()
       const refreshed: WearableToken = {
         provider: 'strava',
         access_token: data.access_token,
         refresh_token: data.refresh_token ?? token.refresh_token,
         expires_at: data.expires_at,
+        profile: token.profile,
       }
       await saveWearableToken(refreshed)
       useWearableStore.getState().setToken('strava', refreshed)
       accessToken = refreshed.access_token
-    } catch {
+    } catch (err) {
+      console.error('[strava] refresh threw', err)
       return []
     }
   }
 
-  try {
-    const res = await fetch(
-      `https://www.strava.com/api/v3/athlete/activities?per_page=${limit}&page=1`,
-      { headers: { Authorization: `Bearer ${accessToken}` } },
-    )
-    if (!res.ok) return []
-    return await res.json()
-  } catch {
-    return []
+  const accumulated: StravaActivity[] = []
+  let page = 1
+  while (accumulated.length < limit) {
+    const remaining = limit - accumulated.length
+    const perPage = Math.min(PAGE_SIZE, remaining)
+    let res: Response
+    try {
+      res = await fetch(
+        `https://www.strava.com/api/v3/athlete/activities?per_page=${perPage}&page=${page}`,
+        { headers: { Authorization: `Bearer ${accessToken}` } },
+      )
+    } catch (err) {
+      console.error('[strava] activities fetch threw', err)
+      break
+    }
+    if (!res.ok) {
+      console.error('[strava] activities fetch failed', res.status, await res.text().catch(() => ''))
+      if (res.status === 401) {
+        useWearableStore.getState().clearToken('strava')
+      }
+      break
+    }
+    let batch: StravaActivity[]
+    try {
+      batch = await res.json()
+    } catch (err) {
+      console.error('[strava] activities JSON parse failed', err)
+      break
+    }
+    if (!Array.isArray(batch) || batch.length === 0) break
+    accumulated.push(...batch)
+    if (batch.length < perPage) break
+    page++
   }
+  return accumulated.slice(0, limit)
 }
 
 // ─── Race import helpers ──────────────────────────────────────────────────────
@@ -167,13 +206,24 @@ export async function handleStravaCallback(code: string, returnedState: string):
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ code }),
   })
-  if (!res.ok) throw new Error('Strava token exchange failed')
-  const tokenData = await res.json()
+  const tokenData = await res.json().catch(() => ({} as any))
+  if (!res.ok) {
+    console.error('[strava] token exchange failed', res.status, tokenData)
+    const errCodes = Array.isArray(tokenData?.errors)
+      ? tokenData.errors.map((e: any) => `${e.field ?? ''}:${e.code ?? ''}`).join(',')
+      : ''
+    if (errCodes.includes('limit:reached') || /max athletes/i.test(JSON.stringify(tokenData))) {
+      throw new Error('Strava app pending approval — beta users may not be able to connect yet.')
+    }
+    const msg = tokenData?.message || `Strava token exchange failed (${res.status})`
+    throw new Error(msg)
+  }
   const token: WearableToken = {
     provider: 'strava',
     access_token: tokenData.access_token,
     refresh_token: tokenData.refresh_token,
     expires_at: tokenData.expires_at,
+    profile: tokenData.athlete,
   }
   await saveWearableToken(token)
   useWearableStore.getState().setToken('strava', token)
