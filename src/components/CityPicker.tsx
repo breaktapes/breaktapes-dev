@@ -9,6 +9,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { searchCities } from '@/lib/geocode'
 import type { CitySuggestion } from '@/lib/geocode'
+import { normalizeCityName } from '@/lib/cityNormalize'
 
 type Props = {
   city: string
@@ -67,18 +68,22 @@ export function CityPicker({ city, country, onSelect, placeholder = 'e.g. Leh', 
   }, [])
 
   function commitSuggestion(s: CitySuggestion) {
-    setQuery(s.name)
+    // Open-Meteo sometimes returns admin labels like "Dubai Emirate" or
+    // "Mumbai Suburban" instead of the city itself — normalize before
+    // storing so the CITIES pill doesn't fragment by alias.
+    const normalized = normalizeCityName(s.name)
+    setQuery(normalized)
     setOpen(false)
     setResults([])
-    onSelect({ city: s.name, country: s.country, lat: s.lat, lng: s.lng })
+    onSelect({ city: normalized, country: s.country, lat: s.lat, lng: s.lng })
   }
 
   function commitFreeText(value: string) {
-    const trimmed = value.trim()
-    if (trimmed && trimmed !== city) {
+    const normalized = normalizeCityName(value)
+    if (normalized && normalized !== city) {
       // Preserve existing country if user is only editing city; clear
       // lat/lng because the old coord may not match the new text.
-      onSelect({ city: trimmed, country, lat: undefined, lng: undefined })
+      onSelect({ city: normalized, country, lat: undefined, lng: undefined })
     }
   }
 
