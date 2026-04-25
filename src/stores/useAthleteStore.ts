@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Athlete, SeasonPlan } from '@/types'
+import { syncStateToSupabase } from '@/lib/syncState'
 
 export interface DistGoal {
   id: string
@@ -59,10 +60,15 @@ export const useAthleteStore = create<AthleteState>()(
 
       setSeasonPlans: (seasonPlans) => set({ seasonPlans }),
 
-      addSeasonPlan: (plan) => set(s => ({ seasonPlans: [...s.seasonPlans, plan] })),
+      addSeasonPlan: (plan) => {
+        set(s => ({ seasonPlans: [...s.seasonPlans, plan] }))
+        void syncStateToSupabase()
+      },
 
-      deleteSeasonPlan: (id) =>
-        set(s => ({ seasonPlans: s.seasonPlans.filter(p => p.id !== id) })),
+      deleteSeasonPlan: (id) => {
+        set(s => ({ seasonPlans: s.seasonPlans.filter(p => p.id !== id) }))
+        void syncStateToSupabase()
+      },
 
       setGoals: (goals) => set({ goals }),
 
