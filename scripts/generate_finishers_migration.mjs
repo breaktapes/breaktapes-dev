@@ -114,7 +114,12 @@ function buildValueRow(r) {
     lines.push(`  name, aliases, city, country, year, month, day, event_date, start_time,`);
     lines.push(`  dist, dist_km, type, discipline, source_site, source_url`);
     lines.push(`)`);
-    lines.push(`SELECT * FROM (VALUES`);
+    lines.push(`SELECT`);
+    lines.push(`  v.name::text, v.aliases::text[], v.city::text, v.country::text,`);
+    lines.push(`  v.year::int, v.month::int, v.day::int, v.event_date::date, v.start_time::time,`);
+    lines.push(`  v.dist::text, v.dist_km::numeric, v.type::text, v.discipline::text,`);
+    lines.push(`  v.source_site::text, v.source_url::text`);
+    lines.push(`FROM (VALUES`);
     const valueLines = batch.map((r, idx) => `  ${buildValueRow(r)}${idx === batch.length - 1 ? '' : ','}`);
     lines.push(...valueLines);
     lines.push(`) AS v (`);
@@ -123,9 +128,9 @@ function buildValueRow(r) {
     lines.push(`)`);
     lines.push(`WHERE NOT EXISTS (`);
     lines.push(`  SELECT 1 FROM race_catalog c`);
-    lines.push(`  WHERE lower(c.name) = lower(v.name)`);
-    lines.push(`    AND lower(c.city) = lower(v.city)`);
-    lines.push(`    AND c.year = v.year`);
+    lines.push(`  WHERE lower(c.name) = lower(v.name::text)`);
+    lines.push(`    AND lower(c.city) = lower(v.city::text)`);
+    lines.push(`    AND c.year = v.year::int`);
     lines.push(`    AND ROUND(c.dist_km::numeric, 1) = ROUND(v.dist_km::numeric, 1)`);
     lines.push(`);`);
     lines.push('');

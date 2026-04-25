@@ -1,4 +1,4 @@
--- World's Marathons catalog seed — generated 2026-04-25T16:44:09.189Z
+-- World's Marathons catalog seed — generated 2026-04-25T17:24:19.165Z
 -- Source: scripts/out/finishers_new_rows.json (after dedupe vs live race_catalog)
 -- Rows: 3720
 -- Idempotent: WHERE NOT EXISTS guard on (lower(name), lower(city), year, dist_km)
@@ -9,7 +9,12 @@ INSERT INTO race_catalog (
   name, aliases, city, country, year, month, day, event_date, start_time,
   dist, dist_km, type, discipline, source_site, source_url
 )
-SELECT * FROM (VALUES
+SELECT
+  v.name::text, v.aliases::text[], v.city::text, v.country::text,
+  v.year::int, v.month::int, v.day::int, v.event_date::date, v.start_time::time,
+  v.dist::text, v.dist_km::numeric, v.type::text, v.discipline::text,
+  v.source_site::text, v.source_url::text
+FROM (VALUES
   ('Trail des Vendanges',ARRAY['Trail des Vendanges']::text[],'Teyran','France',2026,9,20,'2026-09-20',NULL,'Half Marathon',21.1,'Half Marathon','running','finishers.com','https://www.finishers.com/en/event/trail-des-vendanges-2'),
   ('Les Foulées de La Cathédrale',ARRAY['Les Foulées de La Cathédrale']::text[],'Chartres','France',2026,6,27,'2026-06-27',NULL,'10K',10,'10K','running','finishers.com','https://www.finishers.com/en/event/les-foulees-de-la-cathedrale'),
   ('Santa Pola International Half Marathon',ARRAY['Santa Pola International Half Marathon']::text[],'Santa Pola','Spain',2027,1,24,'2027-01-24','10:30:00','Half Marathon',21.1,'Half Marathon','running','finishers.com','https://www.finishers.com/en/event/international-half-marathon-of-santa-pola'),
@@ -516,9 +521,9 @@ SELECT * FROM (VALUES
 )
 WHERE NOT EXISTS (
   SELECT 1 FROM race_catalog c
-  WHERE lower(c.name) = lower(v.name)
-    AND lower(c.city) = lower(v.city)
-    AND c.year = v.year
+  WHERE lower(c.name) = lower(v.name::text)
+    AND lower(c.city) = lower(v.city::text)
+    AND c.year = v.year::int
     AND ROUND(c.dist_km::numeric, 1) = ROUND(v.dist_km::numeric, 1)
 );
 
@@ -526,7 +531,12 @@ INSERT INTO race_catalog (
   name, aliases, city, country, year, month, day, event_date, start_time,
   dist, dist_km, type, discipline, source_site, source_url
 )
-SELECT * FROM (VALUES
+SELECT
+  v.name::text, v.aliases::text[], v.city::text, v.country::text,
+  v.year::int, v.month::int, v.day::int, v.event_date::date, v.start_time::time,
+  v.dist::text, v.dist_km::numeric, v.type::text, v.discipline::text,
+  v.source_site::text, v.source_url::text
+FROM (VALUES
   ('Alsace Vineyard Marathon',ARRAY['Alsace Vineyard Marathon']::text[],'Molsheim','France',2026,6,21,'2026-06-21',NULL,'Half Marathon',21.1,'Half Marathon','running','finishers.com','https://www.finishers.com/en/event/alsace-vineyard-marathon'),
   ('Alsace Vineyard Marathon',ARRAY['Alsace Vineyard Marathon']::text[],'Molsheim','France',2026,6,21,'2026-06-21',NULL,'10K',10,'10K','running','finishers.com','https://www.finishers.com/en/event/alsace-vineyard-marathon'),
   ('Les Foulées du Ter',ARRAY['Les Foulées du Ter']::text[],'Ploemeur','France',2026,6,23,'2026-06-23',NULL,'10K',10,'10K','running','finishers.com','https://www.finishers.com/en/event/les-foulees-du-ter'),
@@ -1033,9 +1043,9 @@ SELECT * FROM (VALUES
 )
 WHERE NOT EXISTS (
   SELECT 1 FROM race_catalog c
-  WHERE lower(c.name) = lower(v.name)
-    AND lower(c.city) = lower(v.city)
-    AND c.year = v.year
+  WHERE lower(c.name) = lower(v.name::text)
+    AND lower(c.city) = lower(v.city::text)
+    AND c.year = v.year::int
     AND ROUND(c.dist_km::numeric, 1) = ROUND(v.dist_km::numeric, 1)
 );
 
@@ -1043,7 +1053,12 @@ INSERT INTO race_catalog (
   name, aliases, city, country, year, month, day, event_date, start_time,
   dist, dist_km, type, discipline, source_site, source_url
 )
-SELECT * FROM (VALUES
+SELECT
+  v.name::text, v.aliases::text[], v.city::text, v.country::text,
+  v.year::int, v.month::int, v.day::int, v.event_date::date, v.start_time::time,
+  v.dist::text, v.dist_km::numeric, v.type::text, v.discipline::text,
+  v.source_site::text, v.source_url::text
+FROM (VALUES
   ('Kaunas Marathon',ARRAY['Kaunas Marathon']::text[],'Kaunas','Lithuania',2026,4,26,'2026-04-26',NULL,'Marathon',42.195,'Marathon','running','finishers.com','https://www.finishers.com/en/event/kaunas-marathon'),
   ('Kaunas Marathon',ARRAY['Kaunas Marathon']::text[],'Kaunas','Lithuania',2026,4,26,'2026-04-26',NULL,'Half Marathon',21.1,'Half Marathon','running','finishers.com','https://www.finishers.com/en/event/kaunas-marathon'),
   ('Kaunas Marathon',ARRAY['Kaunas Marathon']::text[],'Kaunas','Lithuania',2026,4,26,'2026-04-26',NULL,'10K',10,'10K','running','finishers.com','https://www.finishers.com/en/event/kaunas-marathon'),
@@ -1550,9 +1565,9 @@ SELECT * FROM (VALUES
 )
 WHERE NOT EXISTS (
   SELECT 1 FROM race_catalog c
-  WHERE lower(c.name) = lower(v.name)
-    AND lower(c.city) = lower(v.city)
-    AND c.year = v.year
+  WHERE lower(c.name) = lower(v.name::text)
+    AND lower(c.city) = lower(v.city::text)
+    AND c.year = v.year::int
     AND ROUND(c.dist_km::numeric, 1) = ROUND(v.dist_km::numeric, 1)
 );
 
@@ -1560,7 +1575,12 @@ INSERT INTO race_catalog (
   name, aliases, city, country, year, month, day, event_date, start_time,
   dist, dist_km, type, discipline, source_site, source_url
 )
-SELECT * FROM (VALUES
+SELECT
+  v.name::text, v.aliases::text[], v.city::text, v.country::text,
+  v.year::int, v.month::int, v.day::int, v.event_date::date, v.start_time::time,
+  v.dist::text, v.dist_km::numeric, v.type::text, v.discipline::text,
+  v.source_site::text, v.source_url::text
+FROM (VALUES
   ('Turin Marathon',ARRAY['Turin Marathon']::text[],'Turin','Italy',2026,11,29,'2026-11-29',NULL,'Half Marathon',21.1,'Half Marathon','running','finishers.com','https://www.finishers.com/en/event/turin-marathon'),
   ('Montargis Half-Marathon',ARRAY['Montargis Half-Marathon']::text[],'Montargis','France',2027,3,8,'2027-03-08',NULL,'Half Marathon',21.1,'Half Marathon','running','finishers.com','https://www.finishers.com/en/event/montargis-half-marathon'),
   ('Bourg-en-Bresse Half Marathon',ARRAY['Bourg-en-Bresse Half Marathon']::text[],'Bourg-en-Bresse','France',2027,2,28,'2027-02-28',NULL,'Half Marathon',21.1,'Half Marathon','running','finishers.com','https://www.finishers.com/en/event/bourg-en-bresse-half-marathon'),
@@ -2067,9 +2087,9 @@ SELECT * FROM (VALUES
 )
 WHERE NOT EXISTS (
   SELECT 1 FROM race_catalog c
-  WHERE lower(c.name) = lower(v.name)
-    AND lower(c.city) = lower(v.city)
-    AND c.year = v.year
+  WHERE lower(c.name) = lower(v.name::text)
+    AND lower(c.city) = lower(v.city::text)
+    AND c.year = v.year::int
     AND ROUND(c.dist_km::numeric, 1) = ROUND(v.dist_km::numeric, 1)
 );
 
@@ -2077,7 +2097,12 @@ INSERT INTO race_catalog (
   name, aliases, city, country, year, month, day, event_date, start_time,
   dist, dist_km, type, discipline, source_site, source_url
 )
-SELECT * FROM (VALUES
+SELECT
+  v.name::text, v.aliases::text[], v.city::text, v.country::text,
+  v.year::int, v.month::int, v.day::int, v.event_date::date, v.start_time::time,
+  v.dist::text, v.dist_km::numeric, v.type::text, v.discipline::text,
+  v.source_site::text, v.source_url::text
+FROM (VALUES
   ('Canterbury Half Marathon',ARRAY['Canterbury Half Marathon']::text[],'Pegasus','New Zealand',2026,12,6,'2026-12-06',NULL,'10K',10,'10K','running','finishers.com','https://www.finishers.com/en/event/canterbury-half-marathon'),
   ('Lancaster Half Marathon',ARRAY['Lancaster Half Marathon']::text[],'Lancaster','United Kingdom',2026,11,1,'2026-11-01',NULL,'Half Marathon',21.1,'Half Marathon','running','finishers.com','https://www.finishers.com/en/event/lancaster-half-marathon'),
   ('Rovigo Half Marathon',ARRAY['Rovigo Half Marathon']::text[],'Rovigo','Italy',2027,2,14,'2027-02-14',NULL,'Half Marathon',21.1,'Half Marathon','running','finishers.com','https://www.finishers.com/en/event/rovigo-half-marathon'),
@@ -2584,9 +2609,9 @@ SELECT * FROM (VALUES
 )
 WHERE NOT EXISTS (
   SELECT 1 FROM race_catalog c
-  WHERE lower(c.name) = lower(v.name)
-    AND lower(c.city) = lower(v.city)
-    AND c.year = v.year
+  WHERE lower(c.name) = lower(v.name::text)
+    AND lower(c.city) = lower(v.city::text)
+    AND c.year = v.year::int
     AND ROUND(c.dist_km::numeric, 1) = ROUND(v.dist_km::numeric, 1)
 );
 
@@ -2594,7 +2619,12 @@ INSERT INTO race_catalog (
   name, aliases, city, country, year, month, day, event_date, start_time,
   dist, dist_km, type, discipline, source_site, source_url
 )
-SELECT * FROM (VALUES
+SELECT
+  v.name::text, v.aliases::text[], v.city::text, v.country::text,
+  v.year::int, v.month::int, v.day::int, v.event_date::date, v.start_time::time,
+  v.dist::text, v.dist_km::numeric, v.type::text, v.discipline::text,
+  v.source_site::text, v.source_url::text
+FROM (VALUES
   ('Ekiden Chatelaillon - Plage',ARRAY['Ekiden Chatelaillon - Plage']::text[],'La Rochelle','France',2027,4,11,'2027-04-11',NULL,'Marathon',42.195,'Marathon','running','finishers.com','https://www.finishers.com/en/event/ekiden-chatelaillon-plage'),
   ('Ekiden Chatelaillon - Plage',ARRAY['Ekiden Chatelaillon - Plage']::text[],'La Rochelle','France',2027,4,11,'2027-04-11',NULL,'Half Marathon',21.1,'Half Marathon','running','finishers.com','https://www.finishers.com/en/event/ekiden-chatelaillon-plage'),
   ('Semi-Marathon de Brno',ARRAY['Semi-Marathon de Brno']::text[],'Brno','Czech Republic',2027,4,11,'2027-04-11',NULL,'Half Marathon',21.1,'Half Marathon','running','finishers.com','https://www.finishers.com/en/event/semi-marathon-de-brno'),
@@ -3101,9 +3131,9 @@ SELECT * FROM (VALUES
 )
 WHERE NOT EXISTS (
   SELECT 1 FROM race_catalog c
-  WHERE lower(c.name) = lower(v.name)
-    AND lower(c.city) = lower(v.city)
-    AND c.year = v.year
+  WHERE lower(c.name) = lower(v.name::text)
+    AND lower(c.city) = lower(v.city::text)
+    AND c.year = v.year::int
     AND ROUND(c.dist_km::numeric, 1) = ROUND(v.dist_km::numeric, 1)
 );
 
@@ -3111,7 +3141,12 @@ INSERT INTO race_catalog (
   name, aliases, city, country, year, month, day, event_date, start_time,
   dist, dist_km, type, discipline, source_site, source_url
 )
-SELECT * FROM (VALUES
+SELECT
+  v.name::text, v.aliases::text[], v.city::text, v.country::text,
+  v.year::int, v.month::int, v.day::int, v.event_date::date, v.start_time::time,
+  v.dist::text, v.dist_km::numeric, v.type::text, v.discipline::text,
+  v.source_site::text, v.source_url::text
+FROM (VALUES
   ('CORRIDA SÃO SILVESTRE – GUARDA',ARRAY['CORRIDA SÃO SILVESTRE – GUARDA']::text[],'Guarda','Portugal',2026,12,13,'2026-12-13',NULL,'10K',10,'10K','running','finishers.com','https://www.finishers.com/en/event/corrida-sao-silvestre-guarda'),
   ('Balexert 20 km of Geneva',ARRAY['Balexert 20 km of Geneva']::text[],'Geneva','Switzerland',2026,11,1,'2026-11-01',NULL,'10K',10,'10K','running','finishers.com','https://www.finishers.com/en/event/20-km-of-geneva'),
   ('10 km de Saint-André',ARRAY['10 km de Saint-André']::text[],'Saint-André','Réunion',2027,3,29,'2027-03-29',NULL,'10K',10,'10K','running','finishers.com','https://www.finishers.com/en/event/10-km-de-saint-andre'),
@@ -3618,9 +3653,9 @@ SELECT * FROM (VALUES
 )
 WHERE NOT EXISTS (
   SELECT 1 FROM race_catalog c
-  WHERE lower(c.name) = lower(v.name)
-    AND lower(c.city) = lower(v.city)
-    AND c.year = v.year
+  WHERE lower(c.name) = lower(v.name::text)
+    AND lower(c.city) = lower(v.city::text)
+    AND c.year = v.year::int
     AND ROUND(c.dist_km::numeric, 1) = ROUND(v.dist_km::numeric, 1)
 );
 
@@ -3628,7 +3663,12 @@ INSERT INTO race_catalog (
   name, aliases, city, country, year, month, day, event_date, start_time,
   dist, dist_km, type, discipline, source_site, source_url
 )
-SELECT * FROM (VALUES
+SELECT
+  v.name::text, v.aliases::text[], v.city::text, v.country::text,
+  v.year::int, v.month::int, v.day::int, v.event_date::date, v.start_time::time,
+  v.dist::text, v.dist_km::numeric, v.type::text, v.discipline::text,
+  v.source_site::text, v.source_url::text
+FROM (VALUES
   ('The St Nicolas Run for the Wounded Armed Forces',ARRAY['The St Nicolas Run for the Wounded Armed Forces']::text[],'Metz','France',2026,12,6,'2026-12-06',NULL,'10K',10,'10K','running','finishers.com','https://www.finishers.com/en/event/the-st-nicolas-run-for-the-wounded-armed-forces'),
   ('Bouger pour Elles',ARRAY['Bouger pour Elles']::text[],'Lyon','France',2026,9,30,'2026-09-30',NULL,'10K',10,'10K','running','finishers.com','https://www.finishers.com/en/event/bouger-pour-elles'),
   ('Beer Runners',ARRAY['Beer Runners']::text[],'Barcelona','Spain',2026,10,25,'2026-10-25',NULL,'10K',10,'10K','running','finishers.com','https://www.finishers.com/en/event/beer-runners'),
@@ -3855,9 +3895,9 @@ SELECT * FROM (VALUES
 )
 WHERE NOT EXISTS (
   SELECT 1 FROM race_catalog c
-  WHERE lower(c.name) = lower(v.name)
-    AND lower(c.city) = lower(v.city)
-    AND c.year = v.year
+  WHERE lower(c.name) = lower(v.name::text)
+    AND lower(c.city) = lower(v.city::text)
+    AND c.year = v.year::int
     AND ROUND(c.dist_km::numeric, 1) = ROUND(v.dist_km::numeric, 1)
 );
 
