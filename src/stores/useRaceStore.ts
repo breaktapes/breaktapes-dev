@@ -1,8 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Race } from '@/types'
-import { supabase, hasClerkToken } from '@/lib/supabase'
-import { useAuthStore } from '@/stores/useAuthStore'
+import { syncStateToSupabase } from '@/lib/syncState'
 
 export interface RaceState {
   races: Race[]
@@ -26,29 +25,10 @@ export interface RaceState {
   moveToUpcoming: (id: string) => void
 }
 
-async function syncRacesToSupabase(races: Race[], upcomingRaces: Race[], nextRace: Race | null) {
-  const authUser = useAuthStore.getState().authUser
-  if (!authUser) return
-  // Don't fire an unauthenticated write — RLS would reject it silently and
-  // we'd lose the intended update. If the token isn't installed yet, a
-  // subsequent action will retry with a fresh snapshot (or the next
-  // auto-move / promote cycle will push it through).
-  if (!hasClerkToken()) return
-  try {
-    const { data: existing } = await supabase
-      .from('user_state')
-      .select('state_json')
-      .eq('user_id', authUser.id)
-      .single()
-    const current = (existing?.state_json as Record<string, unknown>) ?? {}
-    await supabase.from('user_state').upsert(
-      { user_id: authUser.id, state_json: { ...current, races, upcoming_races: upcomingRaces, next_race: nextRace } },
-      { onConflict: 'user_id' },
-    )
-  } catch {
-    // fire-and-forget — don't block UI on sync failure
-  }
-}
+// All mutation actions push the FULL state via syncStateToSupabase.
+// Setters used by remote-pull paths (setRaces, setUpcomingRaces,
+// setWishlistRaces) intentionally do NOT call sync — that would echo
+// remote state back to the server and overwrite concurrent edits.
 
 /** Returns YYYY-MM-DD in local time (not UTC). */
 function localToday(): string {
@@ -80,15 +60,13 @@ export const useRaceStore = create<RaceState>()(
 
       addRace: (race) => {
         set(s => ({ races: [...s.races, race] }))
-        const { races, upcomingRaces, nextRace } = get()
-        void syncRacesToSupabase(races, upcomingRaces, nextRace)
+        void syncStateToSupabase()
       },
 
       addUpcomingRace: (race) => {
         set(s => ({ upcomingRaces: [...s.upcomingRaces, race] }))
         get().promoteNextRace()
-        const { races, upcomingRaces, nextRace } = get()
-        void syncRacesToSupabase(races, upcomingRaces, nextRace)
+        void syncStateToSupabase()
       },
 
       autoMoveExpiredUpcoming: () => {
@@ -101,6 +79,7 @@ export const useRaceStore = create<RaceState>()(
           upcomingRaces: upcomingRaces.filter(r => r.date >= today),
         })
         get().promoteNextRace()
+        void syncStateToSupabase()
       },
 
       // Move a single expired upcoming race to past without requiring a result
@@ -115,6 +94,7 @@ export const useRaceStore = create<RaceState>()(
           focusRaceId: get().focusRaceId === id ? null : get().focusRaceId,
         })
         get().promoteNextRace()
+        void syncStateToSupabase()
       },
 
       updateRace: (id, patch) => {
@@ -124,8 +104,7 @@ export const useRaceStore = create<RaceState>()(
           // Keep nextRace in sync — otherwise goal time / priority edits don't surface in dashboard widgets
           nextRace: s.nextRace?.id === id ? { ...s.nextRace, ...patch } : s.nextRace,
         }))
-        const { races, upcomingRaces, nextRace } = get()
-        void syncRacesToSupabase(races, upcomingRaces, nextRace)
+        void syncStateToSupabase()
       },
 
       deleteRace: (id) => {
@@ -139,8 +118,7 @@ export const useRaceStore = create<RaceState>()(
             focusRaceId: s.focusRaceId === id ? null : s.focusRaceId,
           }
         })
-        const { races, upcomingRaces, nextRace } = get()
-        void syncRacesToSupabase(races, upcomingRaces, nextRace)
+        void syncStateToSupabase()
       },
 
       setFocusRaceId: (id) => set({ focusRaceId: id }),
@@ -165,21 +143,26 @@ export const useRaceStore = create<RaceState>()(
         set({ nextRace: findNextRace(upcomingRaces) })
       },
 
-      addToWishlist: (race) => set(s => ({
-        wishlistRaces: s.wishlistRaces.some(r => r.id === race.id)
-          ? s.wishlistRaces
-          : [...s.wishlistRaces, race],
-      })),
+      addToWishlist: (race) => {
+        set(s => ({
+          wishlistRaces: s.wishlistRaces.some(r => r.id === race.id)
+            ? s.wishlistRaces
+            : [...s.wishlistRaces, race],
+        }))
+        void syncStateToSupabase()
+      },
 
-      removeFromWishlist: (id) => set(s => ({
-        wishlistRaces: s.wishlistRaces.filter(r => r.id !== id),
-      })),
+      removeFromWishlist: (id) => {
+        set(s => ({ wishlistRaces: s.wishlistRaces.filter(r => r.id !== id) }))
+        void syncStateToSupabase()
+      },
 
       moveToUpcoming: (id) => {
         const { wishlistRaces } = get()
         const race = wishlistRaces.find(r => r.id === id)
         if (!race) return
         set(s => ({ wishlistRaces: s.wishlistRaces.filter(r => r.id !== id) }))
+        // addUpcomingRace already triggers sync — covers both slices in one upsert.
         get().addUpcomingRace(race)
       },
     }),
