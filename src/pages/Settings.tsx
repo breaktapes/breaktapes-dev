@@ -9,6 +9,7 @@ import { startStravaOAuth } from '@/lib/strava'
 import { removeWearableToken } from '@/lib/wearableUtils'
 import { THEMES } from '@/types'
 import type { ThemeId } from '@/types'
+import { useThemeStore } from '@/stores/useThemeStore'
 import { APP_URL } from '@/env'
 
 const btnMain: React.CSSProperties = {
@@ -70,9 +71,8 @@ export function Settings() {
 
   const [accountExpanded, setAccountExpanded] = useState(false)
 
-  const [activeTheme, setActiveTheme] = useState<ThemeId>(
-    () => (localStorage.getItem('bt_theme') as ThemeId) || 'carbon'
-  )
+  const activeTheme = useThemeStore(s => s.theme)
+  const storeSetTheme = useThemeStore(s => s.setTheme)
 
   // Public profile state
   const [isPublic, setIsPublic] = useState(athlete?.isPublic ?? false)
@@ -112,9 +112,7 @@ export function Settings() {
   }
 
   function applyTheme(themeId: ThemeId) {
-    document.documentElement.dataset.theme = themeId
-    localStorage.setItem('bt_theme', themeId)
-    setActiveTheme(themeId)
+    storeSetTheme(themeId)
   }
 
   async function handleSignOut() {
