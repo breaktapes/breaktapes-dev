@@ -117,9 +117,23 @@ const DIST_LABELS: Record<string, string> = {
 
 const PB_PRIORITY = ['marathon', 'half', '10k', '5k', 'ironman', '70.3', 'olympic', 'sprint']
 
-function buildPBList(races: Race[]): { key: string; label: string; time: string; race: string }[] {
+/**
+ * Build the per-distance PB list shown in "BEST RECORDED TIMES".
+ *
+ * `allRaces`  — every race the user has logged (used to compute lifetime
+ *               PB for each distance).
+ * `yearFilter` — 'all' or a YYYY string. When a specific year is chosen
+ *               we only return distances whose lifetime PB was set in
+ *               THAT year — i.e. the dossier celebrates lifetime PBs the
+ *               user broke during the chosen year, not just the best
+ *               in-year time at each distance.
+ */
+function buildPBList(
+  allRaces: Race[],
+  yearFilter: string,
+): { key: string; label: string; time: string; race: string }[] {
   const pb: Record<string, Race> = {}
-  for (const r of races) {
+  for (const r of allRaces) {
     if (!r.time || !r.distance) continue
     if (r.outcome && r.outcome !== 'Finished') continue
     const secs = timeToSecs(r.time)
@@ -128,16 +142,23 @@ function buildPBList(races: Race[]): { key: string; label: string; time: string;
     if (!key) continue
     if (!pb[key] || timeToSecs(pb[key].time!) > secs) pb[key] = r
   }
+  // Filter to PBs broken in the chosen year (when not 'all').
+  const filtered: Record<string, Race> =
+    yearFilter === 'all'
+      ? pb
+      : Object.fromEntries(
+          Object.entries(pb).filter(([, r]) => r.date?.startsWith(yearFilter)),
+        )
   // Sort by priority then by remaining keys
   const ordered = [
-    ...PB_PRIORITY.filter(k => pb[k]),
-    ...Object.keys(pb).filter(k => !PB_PRIORITY.includes(k)),
+    ...PB_PRIORITY.filter(k => filtered[k]),
+    ...Object.keys(filtered).filter(k => !PB_PRIORITY.includes(k)),
   ]
   return ordered.map(key => ({
     key,
     label: DIST_LABELS[key] || key.toUpperCase(),
-    time: pb[key].time!,
-    race: pb[key].name,
+    time: filtered[key].time!,
+    race: filtered[key].name,
   }))
 }
 
@@ -165,6 +186,14 @@ function distanceSubtitle(r: Race): string {
   return r.distance.toUpperCase()
 }
 
+// Split YYYY-MM-DD into ["DD-MM", "YYYY"] for the two-line date column
+// in the mission log. Mirrors fmtDateDDMM in src/lib/utils.ts.
+function dateParts(d: string | undefined): [string, string] {
+  if (!d) return ['', '']
+  const m = String(d).match(/^(\d{4})-(\d{2})-(\d{2})/)
+  return m ? [`${m[3]}-${m[2]}`, m[1]] : [String(d), '']
+}
+
 function getSports(races: Race[]): string[] {
   const s = new Set(races.map(r => r.sport).filter(Boolean))
   const out = []
@@ -185,7 +214,8 @@ function truncateText(ctx: CanvasRenderingContext2D, text: string, maxW: number)
 
 // ── Canvas drawing ────────────────────────────────────────────────────────────
 interface DrawOpts {
-  races: Race[]
+  races: Race[]          // year-filtered (or full when year='all')
+  allRaces: Race[]       // unfiltered — needed to compute lifetime PBs
   athlete?: Athlete
   year: string
   W: number
@@ -194,7 +224,7 @@ interface DrawOpts {
 }
 
 function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
-  const { races, athlete, year, W, H, avatarImg } = opts
+  const { races, allRaces, athlete, year, W, H, avatarImg } = opts
   canvas.width = W
   canvas.height = H
   const ctx = canvas.getContext('2d')!
@@ -211,12 +241,18 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
     const n = parseFloat(r.distance) || 0
     return s + n
   }, 0))
-  const pbList = buildPBList(races)
-  const pbIds = buildPBIdSet(races)
+  // Lifetime PBs computed across ALL races; filter to year when chosen.
+  // Same set of race IDs used to highlight gold rows in the Mission Log
+  // — a row is only "PB" if it set the lifetime record at its distance.
+  const pbList = buildPBList(allRaces, year)
+  const pbIds = buildPBIdSet(allRaces)
   const sports = getSports(races)
   const flags = [...new Set(races.map(r => r.country).filter(Boolean))]
     .map(countryToFlag).filter(Boolean).slice(0, 16)
-  const recentRaces = [...races].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 10)
+  // No source-side cap — downstream `maxRows` (computed from canvas
+  // height ÷ row height) is what limits visible rows. Capping at 10
+  // here was hiding races on All Time for users with deeper histories.
+  const recentRaces = [...races].sort((a, b) => b.date.localeCompare(a.date))
   const yearLabel = year === 'all' ? 'All Time' : year
 
   const isVertical = H > W
@@ -516,33 +552,36 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
       }
 
       const flag = countryToFlag(r.country)
-      const yr = r.date?.slice(0, 4) ?? ''
+      const [dDM, dY] = dateParts(r.date)
       const raceName = r.name.replace(/\s+\d{4}$/, '').substring(0, 36)
 
-      // Year (left, mono)
+      // Date column (left, mono, 2-line stack: "DD-MM" / "YYYY")
       ctx.fillStyle = `rgba(${orangeCh},0.55)`
       ctx.font = `500 ${Math.round(13 * s)}px "Geist Mono", monospace`
       ctx.letterSpacing = '0px'
       ctx.textAlign = 'left'
-      ctx.fillText(yr, rx, nameY)
+      ctx.fillText(dDM, rx, nameY)
+      ctx.fillStyle = `rgba(${orangeCh},0.40)`
+      ctx.font = `500 ${Math.round(11 * s)}px "Geist Mono", monospace`
+      ctx.fillText(dY, rx, subY)
 
-      // Flag (left of race name)
+      // Flag (left of race name) — column shifted right to clear DD-MM-YYYY
       ctx.fillStyle = D.muted
       ctx.font = `600 ${Math.round(18 * s)}px "Barlow", Arial, sans-serif`
-      ctx.fillText(`${flag} `, rx + 56 * s, nameY)
+      ctx.fillText(`${flag} `, rx + 86 * s, nameY)
 
-      // Race name — line 1
+      // Race name — line 1 (column shifted right to clear date stack)
       ctx.fillStyle = D.white
       ctx.font = `700 ${Math.round(18 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
       ctx.letterSpacing = `${Math.round(0.5 * s)}px`
-      ctx.fillText(truncateText(ctx, raceName, rw - 220 * s), rx + 86 * s, nameY)
+      ctx.fillText(truncateText(ctx, raceName, rw - 250 * s), rx + 116 * s, nameY)
 
       // Distance subtitle — line 2 (with PB badge tag if applicable)
       const distLabel = distanceSubtitle(r)
       ctx.fillStyle = isPB ? D.gold : D.muted2
       ctx.font = `600 ${Math.round(11 * s)}px "Geist Mono", monospace`
       ctx.letterSpacing = `${Math.round(1.5 * s)}px`
-      ctx.fillText(isPB ? `${distLabel}  ·  PB` : distLabel, rx + 86 * s, subY)
+      ctx.fillText(isPB ? `${distLabel}  ·  PB` : distLabel, rx + 116 * s, subY)
 
       if (r.time) {
         ctx.fillStyle = isPB ? D.gold : D.orange
@@ -671,7 +710,7 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
     const rowH = Math.round(46 * s)
     const flagsReserve = flags.length > 0 ? 44 * s : 0
     const maxRows = Math.floor((H - vy - pad * 2 - flagsReserve) / rowH)
-    recentRaces.slice(0, Math.min(maxRows, 12)).forEach((r, i) => {
+    recentRaces.slice(0, maxRows).forEach((r, i) => {
       const ryRow = vy + i * rowH
       const isPB = pbIds.has(r.id)
       const nameY = ryRow + rowH * 0.42
@@ -684,25 +723,29 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
         ctx.fillRect(pad, ryRow, W - pad * 2, rowH)
       }
       const flag = countryToFlag(r.country)
-      const yr = r.date?.slice(0, 4) ?? ''
+      const [dDM, dY] = dateParts(r.date)
+      // Date column (left, 2-line stack DD-MM / YYYY)
       ctx.fillStyle = `rgba(${orangeCh},0.55)`
       ctx.font = `500 ${Math.round(13 * s)}px "Geist Mono", monospace`
       ctx.letterSpacing = '0px'; ctx.textAlign = 'left'
-      ctx.fillText(yr, pad, nameY)
+      ctx.fillText(dDM, pad, nameY)
+      ctx.fillStyle = `rgba(${orangeCh},0.40)`
+      ctx.font = `500 ${Math.round(11 * s)}px "Geist Mono", monospace`
+      ctx.fillText(dY, pad, subY)
       ctx.fillStyle = D.muted
       ctx.font = `600 ${Math.round(17 * s)}px "Barlow", Arial, sans-serif`
-      ctx.fillText(`${flag} `, pad + 56 * s, nameY)
+      ctx.fillText(`${flag} `, pad + 86 * s, nameY)
       ctx.fillStyle = D.white
       ctx.font = `700 ${Math.round(17 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
       ctx.letterSpacing = `${Math.round(0.3 * s)}px`
       const raceName = r.name.replace(/\s+\d{4}$/, '').substring(0, 36)
-      ctx.fillText(truncateText(ctx, raceName, W - pad * 2 - 220 * s), pad + 86 * s, nameY)
+      ctx.fillText(truncateText(ctx, raceName, W - pad * 2 - 250 * s), pad + 116 * s, nameY)
       // Distance subtitle / PB tag
       const distLabel = distanceSubtitle(r)
       ctx.fillStyle = isPB ? D.gold : D.muted2
       ctx.font = `600 ${Math.round(11 * s)}px "Geist Mono", monospace`
       ctx.letterSpacing = `${Math.round(1.5 * s)}px`
-      ctx.fillText(isPB ? `${distLabel}  ·  PB` : distLabel, pad + 86 * s, subY)
+      ctx.fillText(isPB ? `${distLabel}  ·  PB` : distLabel, pad + 116 * s, subY)
       if (r.time) {
         ctx.fillStyle = isPB ? D.gold : D.orange
         ctx.font = `800 ${Math.round(17 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
@@ -788,6 +831,7 @@ export function RaceLogPassport({ races, athlete, onClose, initialYear = 'all', 
     if (!canvasRef.current) return
     drawDossier(canvasRef.current, {
       races: filteredRaces,
+      allRaces: races,
       athlete,
       year,
       W: currentRatio.W,
@@ -795,7 +839,7 @@ export function RaceLogPassport({ races, athlete, onClose, initialYear = 'all', 
       avatarImg,
     })
     setDrawn(true)
-  }, [filteredRaces, athlete, year, currentRatio, avatarImg])
+  }, [filteredRaces, races, athlete, year, currentRatio, avatarImg])
 
   // Auto-draw when year/ratio changes if already drawn
   const handleYearChange = (y: string) => {
