@@ -198,6 +198,7 @@ function _checkIsPB(race: Race, allRaces: Race[]): boolean {
 interface Props {
   race: Race
   onClose: () => void
+  initialMode?: 'view' | 'edit'
 }
 
 // ─── View panel (read mode) ───────────────────────────────────────────────────
@@ -857,12 +858,12 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 // ─── Modal shell ──────────────────────────────────────────────────────────────
 
-export function ViewEditRaceModal({ race, onClose }: Props) {
+export function ViewEditRaceModal({ race, onClose, initialMode = 'view' }: Props) {
   const updateRace  = useRaceStore(s => s.updateRace)
   const deleteRace  = useRaceStore(s => s.deleteRace)
   const allRaces    = useRaceStore(s => s.races)
   const athlete     = useAthleteStore(s => s.athlete)
-  const [mode, setMode]       = useState<'view' | 'edit'>('view')
+  const [mode, setMode]       = useState<'view' | 'edit'>(initialMode)
   const [showShare, setShowShare] = useState(false)
 
   const isPB = useMemo(() => _checkIsPB(race, allRaces), [race, allRaces])
