@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-04-26
+
+### Cross-device sync silently broken since Clerk migration
+- **Symptom:** Edits made on laptop (goal time, gear checklist, focus race priority) never appeared on phone for the same Clerk-authenticated user. Each device kept its own state forever.
+- **Root cause:** `syncStateToSupabase()` writes to a `state_json` JSONB column on `public.user_state`, but no migration ever created that column. Every upsert returned PostgREST `42703 column does not exist`. The catch block in `src/lib/syncState.ts` swallowed the error. After the Clerk migration's `TRUNCATE` on 2026-04-23, all writes silently failed and each device ran off its own Zustand `localStorage` persist.
+- **Verification:** Direct query confirmed schema columns + `count(*) = 0` on both prod and staging.
+- **Fix:** New migration `supabase/migrations/20260426000000_user_state_state_json.sql` adds `state_json jsonb` and idempotently backfills from the legacy per-slice columns. Added `focusRaceId` to the synced payload via the `pinFocusRace` action so focus pin crosses devices too.
+- **Commits:** `5a1b7c5` (PR #230)
+
+### Pre-existing local mods regressed `pinFocusRace` → `setFocusRaceId`
+- **Symptom:** Caught during ship of race-day completion feature (next session) — local Dashboard had renamed all `pinFocusRace` call sites to `setFocusRaceId`, which would have stripped sync from focus-pin user actions.
+- **Root cause:** Two store setters share the same backing field but different semantics — `setFocusRaceId` is silent (used by remote-pull path so applying remote state never echoes back) and `pinFocusRace` syncs (user actions). A local edit collapsed the distinction.
+- **Fix:** Reverted the renames in Dashboard.tsx before commit. Only the intentional 2-file diff (Dashboard + ViewEditRaceModal) shipped.
+- **Commit:** `a80d7e3` (PR #231)
+
+---
+
 ## 2026-03-24
 
 ### OW test connection hitting missing `/test` endpoint

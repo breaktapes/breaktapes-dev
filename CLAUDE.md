@@ -1148,6 +1148,33 @@ Direct DB access (psql/psycopg2) is blocked from localhost — Supabase only exp
 
 ---
 
+### Session 27 (2026-04-26) — Cross-device sync schema fix + race-day completion flow
+
+**Branches:** `claude/agitated-banzai-6e8923` → main (PR #230, commit `5a1b7c5`); `claude/race-day-completion` → main (PR #231, commit `a80d7e3`). Both squash-merged direct to `main`, then staging force-resynced from main via `git push origin origin/main:staging --force`.
+
+#### Bugfix shipped — sync was a no-op since Clerk migration (2026-04-23)
+- **Root cause:** Frontend `syncStateToSupabase()` (introduced in PR #221) writes to a `state_json` JSONB column on `public.user_state`, but no migration ever created that column. Every sync write returned PostgREST `42703 column does not exist` and the catch block in [src/lib/syncState.ts](src/lib/syncState.ts) swallowed it silently. Each device ran entirely off its own Zustand `persist` (`localStorage`) — no shared truth, so changes on one device never surfaced on another. Same broken read on the public profile SSR Worker ([worker/index.js:113](worker/index.js:113)).
+- **Verification before fix:** direct query confirmed `user_state` had columns `user_id, races, athlete, next_race, upcoming_races, updated_at, pro_access, username, is_public` — **no `state_json`** — and `SELECT count(*) FROM user_state` returned `0` on **both** prod (`kmdpufauamadwavqsinj`) and staging (`yqzycwuyhvzkbofwkazr`).
+- **Fix:** `supabase/migrations/20260426000000_user_state_state_json.sql` adds `state_json jsonb` plus a defensive backfill from the legacy per-slice columns (`jsonb_strip_nulls(jsonb_build_object('races', races, 'athlete', athlete, 'next_race', next_race, 'upcoming_races', upcoming_races))`). Idempotent.
+- **`focusRaceId` sync gap (also closed):** [src/stores/useRaceStore.ts](src/stores/useRaceStore.ts) split `setFocusRaceId` (silent setter — used by remote-pull path so applying remote state never echoes back to the server) from `pinFocusRace` (user-action variant — `set({ focusRaceId: id }); void syncStateToSupabase()`). All Dashboard call sites that represent a user action (CountdownCard, AllUpcomingModal, focus-race chip) call `pinFocusRace`. The pull-side `setFocusRaceId` was added to the `RemoteState` interface in [src/hooks/useSyncState.ts](src/hooks/useSyncState.ts) and `focus_race_id` is now in the synced payload built by [src/lib/syncState.ts](src/lib/syncState.ts).
+- **Recovery procedure:** the laptop's localStorage held the freshest copy. Sequenced the first cross-device interaction so the laptop wrote first (`syncStateToSupabase()` now succeeds → row created in `user_state` with full payload), then phone hard-reload pulled the laptop's state and the realtime channel took over. Without this sequencing, a phone with stale localStorage that wrote first would have seeded the canonical row with old data.
+
+#### Feature shipped — "Mark Completed · Log Result" on race-day pill
+- New optional `onComplete?: (race: Race) => void` prop on `RaceMorningBrief` / `PreRaceBriefing`. When `daysUntil(race.date) === 0`, the pill renders a green full-width button below the gear checklist: `✓ Mark Completed · Log Result`.
+- Click handler (in [src/pages/Dashboard.tsx](src/pages/Dashboard.tsx)) calls `dismissExpiredRace(race.id)` (which moves the race from `upcomingRaces` → `races` and clears `focusRaceId` if it pointed there) **then** opens `ViewEditRaceModal` in **edit** mode pre-populated with the race object — so the user lands directly in the result-entry form (finish time, placing, medal, splits) without an extra Edit click.
+- `ViewEditRaceModal` gets a new optional `initialMode?: 'view' | 'edit'` prop (default `'view'`) — `useState<'view' | 'edit'>(initialMode)`.
+- Reused existing `dismissExpiredRace` instead of adding a new store action. Its name is misleading for the race-day case (race is "today", not technically expired) but its behaviour — move from upcoming to past with no result — is exactly right. Renaming was avoided per "don't refactor beyond what the task requires."
+- **Pre-existing local-mod regression caught during ship:** `pinFocusRace` had been renamed → `setFocusRaceId` in three Dashboard call sites by an uncommitted local edit. That would have stripped the cross-device sync for focus-race changes. Reverted before commit; the commit landed only the intentional 2-file diff (Dashboard + ViewEditRaceModal, +43/-7).
+
+#### Key learnings
+- When a sync rewrite changes the on-disk shape (per-slice columns → single JSONB blob), the schema migration must ship in the **same PR** as the code change. A code-only PR makes the catch block hide a permanent regression that no error surface can detect — every device just looks "fine" using its local cache.
+- "Pull from staging" (memory feedback) is more than a convenience — when local is far behind origin and you start branching from local instead of `origin/main`, the resulting branch carries stale reverts that look like in-progress work. Always `git fetch && git checkout -b new origin/main` for fresh branches; never branch off a stale local ref.
+- Two store setters with the same backing field but different sync semantics (`setFocusRaceId` silent for remote-pull, `pinFocusRace` syncs for user actions) is a deliberate pattern — call sites must match intent, not just signature. Eyeball every call when refactoring.
+- `dismissExpiredRace` already moves an upcoming race to past without requiring a result. The race-day completion flow reuses it instead of inventing `completeUpcomingRace` — same behaviour, narrower API surface.
+- `git reset --hard onto origin/main` from a stale feature branch is correctly blocked by sandbox policy when there are uncommitted edits — the safer recovery is to copy the intended file edits to `/tmp`, branch from `origin/main`, and re-apply (not stash + reset).
+
+---
+
 ## Skill routing
 
 When the user's request matches an available skill, ALWAYS invoke it using the Skill

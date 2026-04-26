@@ -5,6 +5,27 @@
 
 ---
 
+## 2026-04-26 (session 27)
+
+### Single `state_json` JSONB blob on `user_state` (not per-slice columns)
+**Decision:** Cross-device app state is stored as one JSONB column `state_json` on `public.user_state`. Read-merge-write upsert from `src/lib/syncState.ts`. Realtime subscription in `src/hooks/useSyncState.ts` invalidates the React Query cache on any `postgres_changes` event for the user's row.
+**Rationale:** Adding new persisted slices (wishlist, season plans, focus race id) requires only a payload change — no schema migration. Single source of truth simplifies the public-profile SSR Worker too.
+**Trade-off:** Loses Postgres-level field validation. Acceptable because client owns the type contract anyway.
+**Migration:** `supabase/migrations/20260426000000_user_state_state_json.sql`
+**Commit:** `5a1b7c5` (PR #230)
+
+### Two focus-race setters with different sync semantics
+**Decision:** `useRaceStore` exposes both `setFocusRaceId` (silent, no sync) and `pinFocusRace` (sets + `syncStateToSupabase()`).
+**Rationale:** The remote-pull path applies server state via `setFocusRaceId` so it does not echo back as a write — preventing infinite sync loops. User-initiated focus-pin actions call `pinFocusRace` so the change crosses devices.
+**Implication:** Future call sites must match intent, not just signature. Renaming one to the other will silently regress cross-device sync (caught and reverted in PR #231 ship).
+
+### Race-day completion via `dismissExpiredRace` + `ViewEditRaceModal` edit-mode
+**Decision:** Race-day pill renders "✓ Mark Completed · Log Result" when `daysUntil(race.date) === 0`. Click moves the race upcoming → past via existing `dismissExpiredRace(race.id)`, then opens `ViewEditRaceModal` with new `initialMode='edit'` prop so the user lands directly in the result-entry form.
+**Rationale:** Reuses existing store action and modal — no new abstractions. Preserves the race's identity (name, date, distance, location, gear, goalTime) instead of forcing the user to re-enter via `AddRaceModal` (which is the older `ExpiredRacePrompts` flow). Different audience: race-day completion vs days-after expiry.
+**Commit:** `a80d7e3` (PR #231)
+
+---
+
 ## 2026-03-24 (session 4)
 
 ### gstack skills bundled in repo
