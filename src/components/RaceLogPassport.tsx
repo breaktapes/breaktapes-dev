@@ -160,23 +160,23 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
 
   // ── CLASSIFIED stamp (top-right, diagonal) ──
   ctx.save()
-  const stampX = isVertical ? W * 0.75 : W * 0.82
-  const stampY = isVertical ? H * 0.06 : H * 0.12
+  const stampX = isVertical ? W * 0.72 : W * 0.80
+  const stampY = isVertical ? H * 0.06 : H * 0.13
   ctx.translate(stampX, stampY)
   ctx.rotate(0.26) // ~15deg
-  ctx.font = `900 ${Math.round(13 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
+  ctx.font = `900 ${Math.round(16 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
   ctx.letterSpacing = `${Math.round(4 * s)}px`
   ctx.fillStyle = `rgba(${orangeCh},0.16)`
   ctx.strokeStyle = `rgba(${orangeCh},0.16)`
   ctx.lineWidth = 2 * s
   const stampW = ctx.measureText('CLASSIFIED').width + 20 * s
-  const stampH = 24 * s
+  const stampH = 28 * s
   ctx.strokeRect(-10 * s, -stampH * 0.75, stampW, stampH)
   ctx.fillText('CLASSIFIED', 0, 0)
   ctx.restore()
 
   // ── Header band ──
-  const headerH = Math.round(isVertical ? 70 * s : 60 * s)
+  const headerH = Math.round(isVertical ? 84 * s : 76 * s)
   const hg = ctx.createLinearGradient(0, 0, W * 0.6, 0)
   hg.addColorStop(0, D.headerGrad0)
   hg.addColorStop(1, `rgba(${orangeCh},0)`)
@@ -195,22 +195,22 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
 
   // Header text
   ctx.fillStyle = `rgba(${orangeCh},0.7)`
-  ctx.font = `600 ${Math.round(7 * s)}px "Geist Mono", "Courier New", monospace`
+  ctx.font = `600 ${Math.round(11 * s)}px "Geist Mono", "Courier New", monospace`
   ctx.letterSpacing = `${Math.round(3 * s)}px`
   ctx.textAlign = 'left'
-  ctx.fillText('BREAKTAPES ATHLETIC INTELLIGENCE', 16 * s, 22 * s)
+  ctx.fillText('BREAKTAPES ATHLETIC INTELLIGENCE', 16 * s, 26 * s)
 
   ctx.fillStyle = D.white
-  ctx.font = `900 ${Math.round(20 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
+  ctx.font = `900 ${Math.round(28 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
   ctx.letterSpacing = `${Math.round(2 * s)}px`
-  ctx.fillText('ATHLETE DOSSIER', 16 * s, headerH - 14 * s)
+  ctx.fillText('ATHLETE DOSSIER', 16 * s, headerH - 16 * s)
 
   // Year label top-right
-  ctx.fillStyle = `rgba(${orangeCh},0.5)`
-  ctx.font = `700 ${Math.round(8 * s)}px "Geist Mono", "Courier New", monospace`
+  ctx.fillStyle = `rgba(${orangeCh},0.65)`
+  ctx.font = `700 ${Math.round(12 * s)}px "Geist Mono", "Courier New", monospace`
   ctx.letterSpacing = `${Math.round(2 * s)}px`
   ctx.textAlign = 'right'
-  ctx.fillText(yearLabel.toUpperCase(), W - 16 * s, 28 * s)
+  ctx.fillText(yearLabel.toUpperCase(), W - 16 * s, 32 * s)
 
   const pad = 16 * s
   const bodyY = headerH + pad
@@ -226,63 +226,62 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
     let ly = bodyY
 
     // ID block
-    const avatarSize = Math.round(48 * s)
+    const avatarSize = Math.round(64 * s)
     const ag2 = ctx.createLinearGradient(pad, ly, pad + avatarSize, ly + avatarSize)
     ag2.addColorStop(0, D.orange); ag2.addColorStop(1, D.orangeDark)
     ctx.fillStyle = ag2
-    roundRect(ctx, pad, ly, avatarSize, avatarSize, 8 * s)
+    roundRect(ctx, pad, ly, avatarSize, avatarSize, 10 * s)
     ctx.fill()
 
     // Avatar glow
     ctx.shadowColor = `rgba(${orangeCh},0.4)`
-    ctx.shadowBlur = 16 * s
+    ctx.shadowBlur = 18 * s
     ctx.fillStyle = ag2
-    roundRect(ctx, pad, ly, avatarSize, avatarSize, 8 * s)
+    roundRect(ctx, pad, ly, avatarSize, avatarSize, 10 * s)
     ctx.fill()
     ctx.shadowBlur = 0
 
     ctx.fillStyle = '#FFFFFF'
-    ctx.font = `900 ${Math.round(18 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
+    ctx.font = `900 ${Math.round(26 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
     ctx.letterSpacing = '0px'
     ctx.textAlign = 'center'
     ctx.fillText(initials, pad + avatarSize / 2, ly + avatarSize * 0.68)
 
-    const nameX = pad + avatarSize + 10 * s
+    const nameX = pad + avatarSize + 14 * s
     ctx.textAlign = 'left'
     ctx.fillStyle = D.white
-    ctx.font = `900 ${Math.round(15 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
+    ctx.font = `900 ${Math.round(22 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
     ctx.letterSpacing = `${Math.round(1.5 * s)}px`
-    ctx.fillText(truncateText(ctx, name.toUpperCase(), leftW - nameX - pad), nameX, ly + 16 * s)
+    ctx.fillText(truncateText(ctx, name.toUpperCase(), leftW - nameX - pad), nameX, ly + 22 * s)
 
     ctx.fillStyle = `rgba(${orangeCh},0.7)`
-    ctx.font = `500 ${Math.round(7.5 * s)}px "Geist Mono", "Courier New", monospace`
+    ctx.font = `500 ${Math.round(12 * s)}px "Geist Mono", "Courier New", monospace`
     ctx.letterSpacing = '0px'
     const idCode = `ID: BT-${raceCount}-${initials}${location ? ' · ' + location : ''}`
-    ctx.fillText(truncateText(ctx, idCode, leftW - nameX - pad), nameX, ly + 30 * s)
+    ctx.fillText(truncateText(ctx, idCode, leftW - nameX - pad), nameX, ly + 40 * s)
 
     // Sport tags
     let tagX = nameX
-    const tagY = ly + 44 * s
+    const tagY = ly + 60 * s
     for (const sport of sports) {
-      ctx.font = `800 ${Math.round(7 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
+      ctx.font = `800 ${Math.round(11 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
       ctx.letterSpacing = `${Math.round(1.5 * s)}px`
-      const tw = ctx.measureText(sport.toUpperCase()).width + 10 * s
+      const tw = ctx.measureText(sport.toUpperCase()).width + 14 * s
       const tagColor = sport === 'Triathlete' ? D.purple : D.orange
-      ctx.strokeStyle = tagColor.replace(')', ', 0.35)').replace('rgb', 'rgba')
       if (tagColor === D.orange) {
         ctx.strokeStyle = `rgba(${orangeCh},0.35)`
       } else {
         ctx.strokeStyle = 'rgba(124,58,237,0.35)'
       }
       ctx.lineWidth = 1
-      roundRect(ctx, tagX, tagY - 10 * s, tw, 14 * s, 2 * s)
+      roundRect(ctx, tagX, tagY - 14 * s, tw, 20 * s, 3 * s)
       ctx.stroke()
       ctx.fillStyle = tagColor
-      ctx.fillText(sport.toUpperCase(), tagX + 5 * s, tagY)
-      tagX += tw + 5 * s
+      ctx.fillText(sport.toUpperCase(), tagX + 7 * s, tagY)
+      tagX += tw + 6 * s
     }
 
-    ly += avatarSize + 14 * s
+    ly += avatarSize + 18 * s
 
     // Divider
     ctx.strokeStyle = D.divider
@@ -292,8 +291,8 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
 
     // Intel grid (2×2)
     const gridW = leftW - pad * 1.5
-    const cellW = (gridW - 6 * s) / 2
-    const cellH = Math.round(Math.min(56 * s, bodyH * 0.17))
+    const cellW = (gridW - 8 * s) / 2
+    const cellH = Math.round(Math.min(76 * s, bodyH * 0.20))
     const intelCells = [
       { label: 'Missions complete', val: String(raceCount), color: D.orange },
       { label: 'Territories entered', val: String(countryCount), color: D.gold },
@@ -301,144 +300,147 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
       { label: `Distance covered`, val: `${kmTotal.toLocaleString()} km`, color: D.white },
     ]
     intelCells.forEach((c, i) => {
-      const cx = pad + (i % 2) * (cellW + 6 * s)
-      const cy = ly + Math.floor(i / 2) * (cellH + 6 * s)
+      const cx = pad + (i % 2) * (cellW + 8 * s)
+      const cy = ly + Math.floor(i / 2) * (cellH + 8 * s)
       ctx.fillStyle = D.cell
-      roundRect(ctx, cx, cy, cellW, cellH, 6 * s); ctx.fill()
+      roundRect(ctx, cx, cy, cellW, cellH, 8 * s); ctx.fill()
       ctx.strokeStyle = D.cellBorder; ctx.lineWidth = 1
-      roundRect(ctx, cx, cy, cellW, cellH, 6 * s); ctx.stroke()
+      roundRect(ctx, cx, cy, cellW, cellH, 8 * s); ctx.stroke()
 
       ctx.fillStyle = D.muted2
-      ctx.font = `500 ${Math.round(6.5 * s)}px "Geist Mono", "Courier New", monospace`
+      ctx.font = `500 ${Math.round(11 * s)}px "Geist Mono", "Courier New", monospace`
       ctx.letterSpacing = `${Math.round(1.5 * s)}px`
       ctx.textAlign = 'left'
-      ctx.fillText(c.label.toUpperCase(), cx + 8 * s, cy + 14 * s)
+      ctx.fillText(c.label.toUpperCase(), cx + 12 * s, cy + 22 * s)
 
       ctx.fillStyle = c.color
-      const valFontSize = c.val.length > 6 ? Math.round(16 * s) : Math.round(22 * s)
+      const valFontSize = c.val.length > 6 ? Math.round(24 * s) : Math.round(34 * s)
       ctx.font = `900 ${valFontSize}px "Barlow Condensed", "Arial Narrow", sans-serif`
       ctx.letterSpacing = '-1px'
-      ctx.fillText(truncateText(ctx, c.val, cellW - 12 * s), cx + 8 * s, cy + cellH - 10 * s)
+      ctx.fillText(truncateText(ctx, c.val, cellW - 16 * s), cx + 12 * s, cy + cellH - 14 * s)
     })
-    ly += cellH * 2 + 6 * s * 3 + 4 * s
+    ly += cellH * 2 + 8 * s * 2 + 8 * s
 
     // Best recorded time panel (striped)
     if (pb) {
-      const pbH = Math.round(52 * s)
+      const pbH = Math.round(72 * s)
       // Striped bg
       for (let x = pad; x < leftW - pad * 0.5; x += 8 * s) {
         ctx.fillStyle = `rgba(${orangeCh},0.04)`
         ctx.fillRect(x, ly, 2 * s, pbH)
       }
       ctx.strokeStyle = `rgba(${orangeCh},0.18)`; ctx.lineWidth = 1
-      roundRect(ctx, pad, ly, leftW - pad * 1.5, pbH, 6 * s); ctx.stroke()
+      roundRect(ctx, pad, ly, leftW - pad * 1.5, pbH, 8 * s); ctx.stroke()
 
-      ctx.fillStyle = `rgba(${orangeCh},0.5)`
-      ctx.font = `600 ${Math.round(6.5 * s)}px "Geist Mono", "Courier New", monospace`
+      ctx.fillStyle = `rgba(${orangeCh},0.6)`
+      ctx.font = `600 ${Math.round(11 * s)}px "Geist Mono", "Courier New", monospace`
       ctx.letterSpacing = `${Math.round(2 * s)}px`
       ctx.textAlign = 'left'
-      ctx.fillText('BEST RECORDED TIME', pad + 8 * s, ly + 14 * s)
+      ctx.fillText('BEST RECORDED TIME', pad + 12 * s, ly + 22 * s)
 
       ctx.fillStyle = D.gold
-      ctx.font = `900 ${Math.round(24 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
+      ctx.font = `900 ${Math.round(34 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
       ctx.letterSpacing = '-1px'
-      ctx.fillText(pb.time, pad + 8 * s, ly + pbH - 10 * s)
+      ctx.fillText(pb.time, pad + 12 * s, ly + pbH - 14 * s)
+      const pbTimeWidth = ctx.measureText(pb.time).width
 
       ctx.fillStyle = D.muted
-      ctx.font = `500 ${Math.round(9 * s)}px "Barlow", Arial, sans-serif`
+      ctx.font = `500 ${Math.round(13 * s)}px "Barlow", Arial, sans-serif`
       ctx.letterSpacing = '0px'
       const pbLabel = `${pb.dist} · ${pb.race.replace(/\s+\d{4}$/, '').substring(0, 22)}`
-      ctx.fillText(truncateText(ctx, pbLabel, leftW - pad * 1.5 - 100 * s), pad + 120 * s, ly + pbH - 10 * s)
-      ly += pbH + 10 * s
+      ctx.fillText(truncateText(ctx, pbLabel, leftW - pad * 1.5 - pbTimeWidth - 32 * s), pad + 12 * s + pbTimeWidth + 14 * s, ly + pbH - 18 * s)
+      ly += pbH + 12 * s
     }
 
     // Field operations (flags)
     if (flags.length > 0) {
       ctx.fillStyle = D.muted2
-      ctx.font = `500 ${Math.round(6.5 * s)}px "Geist Mono", "Courier New", monospace`
+      ctx.font = `500 ${Math.round(11 * s)}px "Geist Mono", "Courier New", monospace`
       ctx.letterSpacing = `${Math.round(2 * s)}px`
       ctx.textAlign = 'left'
-      ctx.fillText('FIELD OPERATIONS', pad, ly + 10 * s)
-      ly += 16 * s
+      ctx.fillText('FIELD OPERATIONS', pad, ly + 14 * s)
+      ly += 24 * s
 
-      ctx.font = `${Math.round(14 * s)}px serif`
+      ctx.font = `${Math.round(20 * s)}px serif`
       ctx.letterSpacing = `${Math.round(3 * s)}px`
       const maxFlagsW = leftW - pad * 2
       let fx = pad
       const fExtra = flags.length > 8 ? flags.length - 8 : 0
       flags.slice(0, 8).forEach(f => {
-        if (fx + 18 * s > pad + maxFlagsW) return
-        ctx.fillText(f, fx, ly + 14 * s)
-        fx += 18 * s
+        if (fx + 26 * s > pad + maxFlagsW) return
+        ctx.fillText(f, fx, ly + 20 * s)
+        fx += 26 * s
       })
       if (fExtra > 0) {
         ctx.fillStyle = D.muted
-        ctx.font = `500 ${Math.round(8 * s)}px "Geist Mono", monospace`
+        ctx.font = `500 ${Math.round(12 * s)}px "Geist Mono", monospace`
         ctx.letterSpacing = '0px'
-        ctx.fillText(`+${fExtra}`, fx, ly + 12 * s)
+        ctx.fillText(`+${fExtra}`, fx, ly + 18 * s)
       }
     }
 
     // ── Right column: Mission Log ──
     let ry = bodyY
 
-    ctx.fillStyle = `rgba(${orangeCh},0.5)`
-    ctx.font = `600 ${Math.round(7 * s)}px "Geist Mono", "Courier New", monospace`
+    ctx.fillStyle = `rgba(${orangeCh},0.65)`
+    ctx.font = `600 ${Math.round(12 * s)}px "Geist Mono", "Courier New", monospace`
     ctx.letterSpacing = `${Math.round(3 * s)}px`
     ctx.textAlign = 'left'
-    ctx.fillText('MISSION LOG', rightX, ry + 10 * s)
-    ry += 20 * s
+    ctx.fillText('MISSION LOG', rightX, ry + 14 * s)
+    ry += 28 * s
 
     ctx.strokeStyle = D.divider; ctx.lineWidth = 1
     ctx.beginPath(); ctx.moveTo(rightX, ry); ctx.lineTo(W - pad, ry); ctx.stroke()
-    ry += 8 * s
+    ry += 10 * s
 
-    const rowH = Math.round((bodyH - 32 * s) / Math.min(recentRaces.length, 10))
-    const maxRows = Math.floor((H - ry - pad * 2) / Math.max(rowH, 22 * s))
+    const minRowH = 32 * s
+    const rowH = Math.round(Math.max((bodyH - 48 * s) / Math.max(recentRaces.length, 1), minRowH))
+    const maxRows = Math.floor((H - ry - pad * 2) / rowH)
 
     recentRaces.slice(0, maxRows).forEach((r, i) => {
       const rx = rightX
       const rw = rightW
-      const ryRow = ry + i * Math.max(rowH, 22 * s)
+      const ryRow = ry + i * rowH
+      const textY = ryRow + rowH * 0.62
 
       // Alternating subtle bg
       if (i % 2 === 0) {
         ctx.fillStyle = 'rgba(255,255,255,0.015)'
-        ctx.fillRect(rx, ryRow, rw, Math.max(rowH, 22 * s))
+        ctx.fillRect(rx, ryRow, rw, rowH)
       }
 
       const flag = countryToFlag(r.country)
       const yr = r.date?.slice(0, 4) ?? ''
       const raceName = r.name.replace(/\s+\d{4}$/, '').substring(0, 32)
 
-      ctx.fillStyle = `rgba(${orangeCh},0.4)`
-      ctx.font = `500 ${Math.round(7 * s)}px "Geist Mono", monospace`
+      ctx.fillStyle = `rgba(${orangeCh},0.55)`
+      ctx.font = `500 ${Math.round(11 * s)}px "Geist Mono", monospace`
       ctx.letterSpacing = '0px'
       ctx.textAlign = 'left'
-      ctx.fillText(yr, rx, ryRow + 14 * s)
+      ctx.fillText(yr, rx, textY)
 
       ctx.fillStyle = D.muted
-      ctx.font = `600 ${Math.round(9 * s)}px "Barlow", Arial, sans-serif`
-      ctx.fillText(`${flag} `, rx + 28 * s, ryRow + 14 * s)
+      ctx.font = `600 ${Math.round(14 * s)}px "Barlow", Arial, sans-serif`
+      ctx.fillText(`${flag} `, rx + 44 * s, textY)
 
       ctx.fillStyle = D.white
-      ctx.font = `700 ${Math.round(10 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
+      ctx.font = `700 ${Math.round(14 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
       ctx.letterSpacing = `${Math.round(0.5 * s)}px`
-      ctx.fillText(truncateText(ctx, raceName, rw - 150 * s), rx + 44 * s, ryRow + 14 * s)
+      ctx.fillText(truncateText(ctx, raceName, rw - 180 * s), rx + 70 * s, textY)
 
       if (r.time) {
         ctx.fillStyle = D.orange
-        ctx.font = `800 ${Math.round(10 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
+        ctx.font = `800 ${Math.round(14 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
         ctx.letterSpacing = '0px'
         ctx.textAlign = 'right'
-        ctx.fillText(r.time, W - pad, ryRow + 14 * s)
+        ctx.fillText(r.time, W - pad, textY)
       }
 
       // Bottom divider
       ctx.strokeStyle = 'rgba(255,255,255,0.04)'; ctx.lineWidth = 1
       ctx.beginPath()
-      ctx.moveTo(rx, ryRow + Math.max(rowH, 22 * s) - 1)
-      ctx.lineTo(W - pad, ryRow + Math.max(rowH, 22 * s) - 1)
+      ctx.moveTo(rx, ryRow + rowH - 1)
+      ctx.lineTo(W - pad, ryRow + rowH - 1)
       ctx.stroke()
     })
 
@@ -447,29 +449,29 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
     let vy = bodyY
 
     // ID block (horizontal)
-    const avatarSize = Math.round(44 * s)
+    const avatarSize = Math.round(60 * s)
     const ag2 = ctx.createLinearGradient(pad, vy, pad + avatarSize, vy + avatarSize)
     ag2.addColorStop(0, D.orange); ag2.addColorStop(1, D.orangeDark)
     ctx.fillStyle = ag2
-    roundRect(ctx, pad, vy, avatarSize, avatarSize, 7 * s); ctx.fill()
+    roundRect(ctx, pad, vy, avatarSize, avatarSize, 9 * s); ctx.fill()
     ctx.fillStyle = '#FFF'
-    ctx.font = `900 ${Math.round(16 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
+    ctx.font = `900 ${Math.round(24 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
     ctx.letterSpacing = '0px'; ctx.textAlign = 'center'
     ctx.fillText(initials, pad + avatarSize / 2, vy + avatarSize * 0.68)
 
-    const nameX = pad + avatarSize + 10 * s
+    const nameX = pad + avatarSize + 14 * s
     ctx.textAlign = 'left'
     ctx.fillStyle = D.white
-    ctx.font = `900 ${Math.round(16 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
+    ctx.font = `900 ${Math.round(24 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
     ctx.letterSpacing = `${Math.round(1 * s)}px`
-    ctx.fillText(truncateText(ctx, name.toUpperCase(), W - nameX - pad), nameX, vy + 16 * s)
+    ctx.fillText(truncateText(ctx, name.toUpperCase(), W - nameX - pad), nameX, vy + 26 * s)
 
     ctx.fillStyle = `rgba(${orangeCh},0.7)`
-    ctx.font = `500 ${Math.round(7 * s)}px "Geist Mono", monospace`
+    ctx.font = `500 ${Math.round(12 * s)}px "Geist Mono", monospace`
     ctx.letterSpacing = '0px'
-    ctx.fillText(truncateText(ctx, `ID: BT-${raceCount}-${initials}${location ? ' · ' + location : ''}`, W - nameX - pad), nameX, vy + 30 * s)
+    ctx.fillText(truncateText(ctx, `ID: BT-${raceCount}-${initials}${location ? ' · ' + location : ''}`, W - nameX - pad), nameX, vy + 46 * s)
 
-    vy += avatarSize + 14 * s
+    vy += avatarSize + 18 * s
 
     // Intel strip (4-across)
     const intelCells = [
@@ -478,108 +480,111 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
       { label: 'Citations', val: String(medalCount), color: D.green },
       { label: 'KM', val: kmTotal >= 1000 ? `${(kmTotal/1000).toFixed(1)}K` : String(kmTotal), color: D.white },
     ]
-    const stripCellW = (W - pad * 2 - 6 * s * 3) / 4
-    const stripCellH = Math.round(52 * s)
+    const stripCellW = (W - pad * 2 - 8 * s * 3) / 4
+    const stripCellH = Math.round(72 * s)
     intelCells.forEach((c, i) => {
-      const cx = pad + i * (stripCellW + 6 * s)
+      const cx = pad + i * (stripCellW + 8 * s)
       ctx.fillStyle = D.cell
-      roundRect(ctx, cx, vy, stripCellW, stripCellH, 5 * s); ctx.fill()
+      roundRect(ctx, cx, vy, stripCellW, stripCellH, 7 * s); ctx.fill()
       ctx.strokeStyle = D.cellBorder; ctx.lineWidth = 1
-      roundRect(ctx, cx, vy, stripCellW, stripCellH, 5 * s); ctx.stroke()
+      roundRect(ctx, cx, vy, stripCellW, stripCellH, 7 * s); ctx.stroke()
       ctx.fillStyle = D.muted2
-      ctx.font = `500 ${Math.round(5.5 * s)}px "Geist Mono", monospace`
+      ctx.font = `500 ${Math.round(11 * s)}px "Geist Mono", monospace`
       ctx.letterSpacing = `${Math.round(1 * s)}px`; ctx.textAlign = 'left'
-      ctx.fillText(c.label.toUpperCase(), cx + 6 * s, vy + 12 * s)
+      ctx.fillText(c.label.toUpperCase(), cx + 10 * s, vy + 22 * s)
       ctx.fillStyle = c.color
-      ctx.font = `900 ${Math.round(18 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
+      ctx.font = `900 ${Math.round(28 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
       ctx.letterSpacing = '-1px'
-      ctx.fillText(truncateText(ctx, c.val, stripCellW - 8 * s), cx + 6 * s, vy + stripCellH - 10 * s)
+      ctx.fillText(truncateText(ctx, c.val, stripCellW - 14 * s), cx + 10 * s, vy + stripCellH - 14 * s)
     })
-    vy += stripCellH + 10 * s
+    vy += stripCellH + 14 * s
 
     // Best time panel
     if (pb) {
-      const pbH = Math.round(44 * s)
+      const pbH = Math.round(64 * s)
       for (let x = pad; x < W - pad; x += 8 * s) {
         ctx.fillStyle = `rgba(${orangeCh},0.04)`; ctx.fillRect(x, vy, 2 * s, pbH)
       }
       ctx.strokeStyle = `rgba(${orangeCh},0.18)`; ctx.lineWidth = 1
-      roundRect(ctx, pad, vy, W - pad * 2, pbH, 5 * s); ctx.stroke()
-      ctx.fillStyle = `rgba(${orangeCh},0.5)`
-      ctx.font = `600 ${Math.round(6 * s)}px "Geist Mono", monospace`
+      roundRect(ctx, pad, vy, W - pad * 2, pbH, 7 * s); ctx.stroke()
+      ctx.fillStyle = `rgba(${orangeCh},0.6)`
+      ctx.font = `600 ${Math.round(11 * s)}px "Geist Mono", monospace`
       ctx.letterSpacing = `${Math.round(2 * s)}px`; ctx.textAlign = 'left'
-      ctx.fillText('BEST RECORDED TIME', pad + 8 * s, vy + 13 * s)
+      ctx.fillText('BEST RECORDED TIME', pad + 12 * s, vy + 22 * s)
       ctx.fillStyle = D.gold
-      ctx.font = `900 ${Math.round(20 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
+      ctx.font = `900 ${Math.round(30 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
       ctx.letterSpacing = '-1px'
-      ctx.fillText(pb.time, pad + 8 * s, vy + pbH - 9 * s)
+      ctx.fillText(pb.time, pad + 12 * s, vy + pbH - 14 * s)
+      const pbTimeWidth = ctx.measureText(pb.time).width
       ctx.fillStyle = D.muted
-      ctx.font = `500 ${Math.round(8 * s)}px "Barlow", Arial, sans-serif`
+      ctx.font = `500 ${Math.round(12 * s)}px "Barlow", Arial, sans-serif`
       ctx.letterSpacing = '0px'
       const pbLabel = `${pb.dist} · ${pb.race.replace(/\s+\d{4}$/, '').substring(0, 28)}`
-      ctx.fillText(truncateText(ctx, pbLabel, W - pad * 2 - 120 * s), pad + 105 * s, vy + pbH - 9 * s)
-      vy += pbH + 10 * s
+      ctx.fillText(truncateText(ctx, pbLabel, W - pad * 2 - pbTimeWidth - 32 * s), pad + 12 * s + pbTimeWidth + 14 * s, vy + pbH - 18 * s)
+      vy += pbH + 14 * s
     }
 
     // Mission log
-    ctx.fillStyle = `rgba(${orangeCh},0.5)`
-    ctx.font = `600 ${Math.round(6.5 * s)}px "Geist Mono", monospace`
+    ctx.fillStyle = `rgba(${orangeCh},0.65)`
+    ctx.font = `600 ${Math.round(12 * s)}px "Geist Mono", monospace`
     ctx.letterSpacing = `${Math.round(2.5 * s)}px`; ctx.textAlign = 'left'
-    ctx.fillText('MISSION LOG', pad, vy + 10 * s)
-    vy += 18 * s
+    ctx.fillText('MISSION LOG', pad, vy + 14 * s)
+    vy += 26 * s
 
     ctx.strokeStyle = D.divider; ctx.lineWidth = 1
     ctx.beginPath(); ctx.moveTo(pad, vy); ctx.lineTo(W - pad, vy); ctx.stroke()
-    vy += 6 * s
+    vy += 8 * s
 
-    const rowH = Math.round(20 * s)
-    const maxRows = Math.floor((H - vy - pad * 2) / rowH)
+    const rowH = Math.round(30 * s)
+    const flagsReserve = flags.length > 0 ? 44 * s : 0
+    const maxRows = Math.floor((H - vy - pad * 2 - flagsReserve) / rowH)
     recentRaces.slice(0, Math.min(maxRows, 12)).forEach((r, i) => {
       const ryRow = vy + i * rowH
+      const textY = ryRow + rowH * 0.62
       if (i % 2 === 0) {
         ctx.fillStyle = 'rgba(255,255,255,0.015)'
         ctx.fillRect(pad, ryRow, W - pad * 2, rowH)
       }
       const flag = countryToFlag(r.country)
       const yr = r.date?.slice(0, 4) ?? ''
-      ctx.fillStyle = `rgba(${orangeCh},0.4)`
-      ctx.font = `500 ${Math.round(6.5 * s)}px "Geist Mono", monospace`
+      ctx.fillStyle = `rgba(${orangeCh},0.55)`
+      ctx.font = `500 ${Math.round(11 * s)}px "Geist Mono", monospace`
       ctx.letterSpacing = '0px'; ctx.textAlign = 'left'
-      ctx.fillText(yr, pad, ryRow + 13 * s)
+      ctx.fillText(yr, pad, textY)
       ctx.fillStyle = D.muted
-      ctx.font = `600 ${Math.round(8 * s)}px "Barlow", Arial, sans-serif`
-      ctx.fillText(`${flag} `, pad + 26 * s, ryRow + 13 * s)
+      ctx.font = `600 ${Math.round(13 * s)}px "Barlow", Arial, sans-serif`
+      ctx.fillText(`${flag} `, pad + 42 * s, textY)
       ctx.fillStyle = D.white
-      ctx.font = `700 ${Math.round(9 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
+      ctx.font = `700 ${Math.round(13 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
       ctx.letterSpacing = `${Math.round(0.3 * s)}px`
       const raceName = r.name.replace(/\s+\d{4}$/, '').substring(0, 36)
-      ctx.fillText(truncateText(ctx, raceName, W - pad * 2 - 140 * s), pad + 42 * s, ryRow + 13 * s)
+      ctx.fillText(truncateText(ctx, raceName, W - pad * 2 - 180 * s), pad + 66 * s, textY)
       if (r.time) {
         ctx.fillStyle = D.orange
-        ctx.font = `800 ${Math.round(9 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
+        ctx.font = `800 ${Math.round(13 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
         ctx.letterSpacing = '0px'; ctx.textAlign = 'right'
-        ctx.fillText(r.time, W - pad, ryRow + 13 * s)
+        ctx.fillText(r.time, W - pad, textY)
       }
       ctx.strokeStyle = 'rgba(255,255,255,0.04)'; ctx.lineWidth = 1
       ctx.beginPath(); ctx.moveTo(pad, ryRow + rowH - 1); ctx.lineTo(W - pad, ryRow + rowH - 1); ctx.stroke()
     })
 
     // Flags at bottom
-    const fY = H - 28 * s
+    const fY = H - 32 * s
     if (flags.length > 0) {
-      ctx.font = `${Math.round(12 * s)}px serif`
+      ctx.font = `${Math.round(18 * s)}px serif`
       ctx.letterSpacing = `${Math.round(3 * s)}px`; ctx.textAlign = 'left'
       let fx = pad
-      flags.slice(0, 14).forEach(f => { ctx.fillText(f, fx, fY); fx += 16 * s })
+      flags.slice(0, 14).forEach(f => { ctx.fillText(f, fx, fY); fx += 24 * s })
     }
   }
 
   // ── Footer watermark ──
-  ctx.fillStyle = `rgba(${orangeCh},0.25)`
-  ctx.font = `600 ${Math.round(9 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
+  ctx.fillStyle = `rgba(${orangeCh},0.32)`
+  ctx.font = `600 ${Math.round(12 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
   ctx.letterSpacing = `${Math.round(1.5 * s)}px`
   ctx.textAlign = 'right'
-  ctx.fillText('APP.BREAKTAPES.COM', W - pad, H - 10 * s)
+  ctx.fillText('APP.BREAKTAPES.COM', W - pad, H - 14 * s)
 }
 
 // roundRect polyfill
@@ -602,11 +607,12 @@ interface Props {
   races: Race[]
   athlete?: Athlete
   onClose: () => void
+  initialYear?: string
 }
 
-export function RaceLogPassport({ races, athlete, onClose }: Props) {
+export function RaceLogPassport({ races, athlete, onClose, initialYear = 'all' }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const [year, setYear] = useState<string>('all')
+  const [year, setYear] = useState<string>(initialYear)
   const [ratio, setRatio] = useState<string>('16:9')
   const [drawn, setDrawn] = useState(false)
   const [exporting, setExporting] = useState(false)
