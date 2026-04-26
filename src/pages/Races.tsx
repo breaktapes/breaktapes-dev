@@ -8,6 +8,7 @@
 import { useRef, useState, useMemo, useEffect, Component } from 'react'
 import type { ReactNode, ErrorInfo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useUser } from '@clerk/clerk-react'
 import Map, { Marker } from 'react-map-gl/maplibre'
 import type { MapRef } from 'react-map-gl/maplibre'
 import 'maplibre-gl/dist/maplibre-gl.css'
@@ -709,6 +710,7 @@ export function Races() {
   const races = useRaceStore(s => s.races)
   const updateRace = useRaceStore(s => s.updateRace)
   const athlete = useAthleteStore(s => s.athlete)
+  const { user } = useUser()
   const navigate = useNavigate()
   const [viewState, setViewState] = useState(INITIAL_VIEW)
   const mapRef = useRef<MapRef>(null)
@@ -822,6 +824,7 @@ export function Races() {
           races={races}
           athlete={athlete ?? undefined}
           initialYear={passportYear}
+          avatarUrl={user?.imageUrl ?? null}
           onClose={() => setPassportOpen(false)}
         />
 
