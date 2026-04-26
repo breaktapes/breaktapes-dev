@@ -7,7 +7,7 @@ import { TimePickerWheel, type HMS } from '@/components/TimePickerWheel'
 import { CustomDistInput } from '@/components/CustomDistInput'
 import { CityPicker } from '@/components/CityPicker'
 import { countryNameHaystack } from '@/lib/countries'
-import { normalizeName, resolveDistKm, isAlreadyInCatalog, findSportDistMatch } from '@/lib/utils'
+import { normalizeName, resolveDistKm, isAlreadyInCatalog, findSportDistMatch, distLabel as distLabelUtil } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/useAuthStore'
 import type { Race, Split } from '@/types'
@@ -814,13 +814,13 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
                 if (s.myRace) {
                   if (s.myRace.city)     metaParts.push(s.myRace.city)
                   if (s.myRace.country)  metaParts.push(s.myRace.country)
-                  if (s.myRace.distance) metaParts.push(`${s.myRace.distance} km`)
+                  if (s.myRace.distance) metaParts.push(distLabelUtil(s.myRace.distance))
                   if (s.myRace.date)     metaParts.push(s.myRace.date)
                 } else if (s.data) {
                   if (s.data.city)    metaParts.push(s.data.city)
                   if (s.data.country) metaParts.push(s.data.country)
-                  const distLabel = s.data.dist ?? (s.data.dist_km ? `${s.data.dist_km} km` : '')
-                  if (distLabel) metaParts.push(distLabel)
+                  const dl = s.data.dist ? distLabelUtil(s.data.dist) : (s.data.dist_km ? distLabelUtil(String(s.data.dist_km)) : '')
+                  if (dl) metaParts.push(dl)
                   if (s.allYears && s.allYears.length > 1) {
                     const _cy = new Date().getFullYear()
                     const yrs = [...new Set(s.allYears.map(r => r.year).filter(Boolean))]
