@@ -274,7 +274,7 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
   // Vertical formats (9:16, 3:4) have narrow width — use a smaller divisor so fonts
   // stay readable. Horizontal base stays at 1200px.
   const s = isVertical ? W / 700 : W / 1200
-  const pad = Math.round(32 * s)
+  const pad = Math.round(64 * s)
 
   // ── Background ──
   ctx.fillStyle = D.bg
