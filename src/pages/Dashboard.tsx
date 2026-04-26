@@ -1290,7 +1290,7 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
   if (races.length === 0) {
     return (
       <WidgetCard id="recent-races" style={st.glowCard}>
-        <div style={st.widgetLabel}>RECENT RACES</div>
+        <div style={st.widgetTitle}>RECENT RACES</div>
         <div style={st.emptyState}>
           <div style={{ fontSize: '28px' }}>🏁</div>
           <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', maxWidth: '240px', lineHeight: 1.5, textAlign: 'center' }}>No races logged yet.</div>
@@ -1303,7 +1303,7 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
   if (recent.length === 0) {
     return (
       <WidgetCard id="recent-races" style={st.glowCard}>
-        <div style={st.widgetLabel}>RECENT RACES</div>
+        <div style={st.widgetTitle}>RECENT RACES</div>
         <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5, marginTop: '8px' }}>
           No races in the last 3 months.
         </div>
@@ -1313,7 +1313,7 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
 
   return (
     <WidgetCard id="recent-races" style={st.glowCard}>
-      <div style={st.widgetLabel}>RECENT RACES</div>
+      <div style={st.widgetTitle}>RECENT RACES</div>
       <div style={{ display: 'flex', flexDirection: 'column', marginTop: '10px' }}>
         {recent.map((r, i) => {
           const isPB = !!r.time && pbMap[normalizeDistKey(r.distance)]?.id === r.id
@@ -3969,7 +3969,7 @@ function PersonalBestsWidget() {
   if (!groups.length) {
     return (
       <WidgetCard id="personal-bests" style={st.glowCard}>
-        <div style={st.widgetLabel}>PERSONAL BESTS</div>
+        <div style={st.widgetTitle}>PERSONAL BESTS</div>
         <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5, marginTop: '8px' }}>
           Log timed races to build your PB board.
         </div>
@@ -3979,7 +3979,7 @@ function PersonalBestsWidget() {
 
   return (
     <WidgetCard id="personal-bests" style={st.glowCard}>
-      <div style={st.widgetLabel}>PERSONAL BESTS</div>
+      <div style={st.widgetTitle}>PERSONAL BESTS</div>
       {groups.map(g => (
         <div key={g.sport} style={{ marginTop: '14px' }}>
           {/* Sport header */}
