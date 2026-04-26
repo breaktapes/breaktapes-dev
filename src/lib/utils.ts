@@ -36,6 +36,41 @@ export function similarity(a: string, b: string): number {
   return (2 * shared) / (ba.size + bb.size) || 0
 }
 
+// ── Distance display label ────────────────────────────────────────────────────
+
+/**
+ * Convert any stored race.distance value (text label OR numeric km string)
+ * to a human-readable display label.  Single source of truth used app-wide.
+ */
+export function distLabel(d: string | undefined): string {
+  if (!d) return ''
+  const lower = d.toLowerCase().trim()
+  if (lower === 'marathon' || lower === 'full marathon') return 'Marathon'
+  if (lower === 'half marathon' || lower === 'half') return 'Half Marathon'
+  if (lower === 'ironman' || lower === 'full ironman' || lower === 'full distance') return 'IRONMAN'
+  if (lower === '70.3' || lower === 'half ironman' || lower === 'ironman 70.3' || lower === 'middle distance') return '70.3'
+  if (lower === 'olympic' || lower === 'olympic triathlon') return 'Olympic'
+  if (lower === 'sprint' || lower === 'sprint triathlon') return 'Sprint'
+  if (lower === '5k' || lower === '5km') return '5K'
+  if (lower === '10k' || lower === '10km') return '10K'
+  if (lower === '10 mile' || lower === '10 miles' || lower === '10mi') return '10 Mile'
+  if (lower === 'ultra' || lower === 'ultramarathon') return 'Ultra'
+  if (lower === 'hyrox') return 'HYROX'
+  const n = parseFloat(d)
+  if (isNaN(n)) return d
+  if (n >= 225.9 && n <= 226.1) return 'IRONMAN'
+  if (n >= 112.9 && n <= 113.1) return '70.3'
+  if (n >= 51.4 && n <= 51.6) return 'Olympic'
+  if (n >= 25.7 && n <= 25.8) return 'Sprint'
+  if (n >= 42.0 && n <= 42.3) return 'Marathon'
+  if (n >= 21.0 && n <= 21.2) return 'Half Marathon'
+  if (n >= 16.0 && n <= 16.2) return '10 Mile'
+  if (n >= 10 && n <= 10.1) return '10K'
+  if (n >= 5 && n <= 5.1) return '5K'
+  if (n > 42.3) return 'Ultra'
+  return `${n} km`
+}
+
 // ── Distance resolution ───────────────────────────────────────────────────────
 
 const DIST_KM: Record<string, number> = {
