@@ -274,6 +274,7 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
   // Vertical formats (9:16, 3:4) have narrow width — use a smaller divisor so fonts
   // stay readable. Horizontal base stays at 1200px.
   const s = isVertical ? W / 700 : W / 1200
+  const pad = Math.round(32 * s)
 
   // ── Background ──
   ctx.fillStyle = D.bg
@@ -326,21 +327,20 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
   ctx.font = `600 ${Math.round(11 * s)}px "Geist Mono", "Courier New", monospace`
   ctx.letterSpacing = `${Math.round(3 * s)}px`
   ctx.textAlign = 'left'
-  ctx.fillText('BREAKTAPES ATHLETIC INTELLIGENCE', 16 * s, 26 * s)
+  ctx.fillText('BREAKTAPES ATHLETIC INTELLIGENCE', pad, 26 * s)
 
   ctx.fillStyle = D.white
   ctx.font = `900 ${Math.round(28 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
   ctx.letterSpacing = `${Math.round(2 * s)}px`
-  ctx.fillText('ATHLETE DOSSIER', 16 * s, headerH - 16 * s)
+  ctx.fillText('ATHLETE DOSSIER', pad, headerH - 16 * s)
 
   // Year label top-right
   ctx.fillStyle = `rgba(${orangeCh},0.65)`
   ctx.font = `700 ${Math.round(12 * s)}px "Geist Mono", "Courier New", monospace`
   ctx.letterSpacing = `${Math.round(2 * s)}px`
   ctx.textAlign = 'right'
-  ctx.fillText(yearLabel.toUpperCase(), W - 16 * s, 32 * s)
+  ctx.fillText(yearLabel.toUpperCase(), W - pad, 32 * s)
 
-  const pad = 16 * s
   const bodyY = headerH + pad
   const bodyH = H - headerH - pad * 2.5
 
@@ -840,7 +840,7 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
     })
 
     // Flags at bottom
-    const fY = H - 32 * s
+    const fY = H - pad - 10 * s
     if (flags.length > 0) {
       ctx.font = `${Math.round(18 * s)}px serif`
       ctx.letterSpacing = `${Math.round(3 * s)}px`; ctx.textAlign = 'left'
@@ -854,7 +854,7 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
   ctx.font = `600 ${Math.round(12 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
   ctx.letterSpacing = `${Math.round(1.5 * s)}px`
   ctx.textAlign = 'right'
-  ctx.fillText('APP.BREAKTAPES.COM', W - pad, H - 14 * s)
+  ctx.fillText('APP.BREAKTAPES.COM', W - pad, H - pad + 12 * s)
 }
 
 // roundRect polyfill

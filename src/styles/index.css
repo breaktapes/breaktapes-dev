@@ -226,7 +226,7 @@ body::after {
   border-top: 2px solid var(--orange);
   border-radius: 8px 8px 0 0;
   width: 100%; max-width: 500px;
-  max-height: calc(92vh - env(safe-area-inset-bottom, 0px));
+  max-height: calc(92dvh - env(safe-area-inset-bottom, 0px));
   overflow: hidden; display: flex; flex-direction: column;
   transform: translateY(30px);
   transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);

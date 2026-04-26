@@ -184,6 +184,7 @@ interface Props {
   race: Race
   onClose: () => void
   initialMode?: 'view' | 'edit'
+  isUpcoming?: boolean
 }
 
 // ─── View panel (read mode) ───────────────────────────────────────────────────
@@ -391,7 +392,7 @@ function InfoChip({ label, value }: { label: string; value: string }) {
 
 // ─── Edit panel ───────────────────────────────────────────────────────────────
 
-function EditPanel({ race, onSave, onCancel }: { race: Race; onSave: (patch: Partial<Race>) => void; onCancel: () => void }) {
+function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race; onSave: (patch: Partial<Race>) => void; onCancel: () => void; isUpcoming?: boolean }) {
   const [name, setName]         = useState(race.name ?? '')
   const [sport, setSport]       = useState(race.sport ?? 'Running')
   const [date, setDate]         = useState(race.date ?? '')
@@ -430,6 +431,10 @@ function EditPanel({ race, onSave, onCancel }: { race: Race; onSave: (patch: Par
   const [priority, setPriority] = useState<'' | 'A' | 'B' | 'C'>(race.priority ?? '')
   const [bibNumber, setBibNumber] = useState(race.bibNumber ?? '')
   const [goalTime, setGoalTime] = useState(race.goalTime ?? '')
+  const [goalHMS, setGoalHMS] = useState<HMS>(() => {
+    const parts = (race.goalTime ?? '').split(':').map(Number)
+    return { h: parts[0] || 0, m: parts[1] || 0, s: parts[2] || 0 }
+  })
   const [notes, setNotes]       = useState(race.notes ?? '')
   const [elevation, setElevation] = useState(race.elevation != null ? String(race.elevation) : '')
   const [surface, setSurface]   = useState(race.surface ?? '')
@@ -550,6 +555,7 @@ function EditPanel({ race, onSave, onCancel }: { race: Race; onSave: (patch: Par
   function handleSave() {
     const effectiveDist = isCustomDist ? customDist : distance
     const effectiveMedal = medal === '__custom__' ? customMedal : medal
+    const hasGoalHMS = goalHMS.h > 0 || goalHMS.m > 0 || goalHMS.s > 0
     const patch: Partial<Race> = {
       name: name.trim() || undefined,
       sport,
@@ -559,24 +565,26 @@ function EditPanel({ race, onSave, onCancel }: { race: Race; onSave: (patch: Par
       lat,
       lng,
       distance: effectiveDist || undefined,
-      outcome: outcome || undefined,
-      time: (showTime && (time.h || time.m || time.s))
+      outcome: isUpcoming ? undefined : (outcome || undefined),
+      time: isUpcoming ? undefined : (showTime && (time.h || time.m || time.s))
         ? `${time.h}:${String(time.m).padStart(2,'0')}:${String(time.s).padStart(2,'0')}`
         : undefined,
-      placing: placing.trim() || undefined,
-      genderPlacing: genderPlacing.trim() || undefined,
-      agPlacing: agPlacing.trim() || undefined,
-      agLabel: agLabel.trim() || undefined,
-      medal: effectiveMedal || undefined,
+      placing: isUpcoming ? undefined : placing.trim() || undefined,
+      genderPlacing: isUpcoming ? undefined : genderPlacing.trim() || undefined,
+      agPlacing: isUpcoming ? undefined : agPlacing.trim() || undefined,
+      agLabel: isUpcoming ? undefined : agLabel.trim() || undefined,
+      medal: isUpcoming ? undefined : effectiveMedal || undefined,
       priority: priority || undefined,
-      bibNumber: bibNumber.trim() || undefined,
-      goalTime: goalTime.trim() || undefined,
+      bibNumber: isUpcoming ? undefined : bibNumber.trim() || undefined,
+      goalTime: isUpcoming
+        ? (hasGoalHMS ? `${goalHMS.h}:${String(goalHMS.m).padStart(2,'0')}:${String(goalHMS.s).padStart(2,'0')}` : undefined)
+        : goalTime.trim() || undefined,
       notes: notes.trim() || undefined,
-      elevation: elevation ? Number(elevation) : undefined,
-      surface: surface || undefined,
-      splits: splits.length > 0 ? splits : undefined,
-      medalPhoto: medalPhoto ?? undefined,
-      photos: photos.length > 0 ? photos : undefined,
+      elevation: isUpcoming ? undefined : elevation ? Number(elevation) : undefined,
+      surface: isUpcoming ? undefined : surface || undefined,
+      splits: isUpcoming ? undefined : splits.length > 0 ? splits : undefined,
+      medalPhoto: isUpcoming ? undefined : medalPhoto ?? undefined,
+      photos: isUpcoming ? undefined : photos.length > 0 ? photos : undefined,
     }
     onSave(patch)
   }
@@ -614,14 +622,16 @@ function EditPanel({ race, onSave, onCancel }: { race: Race; onSave: (patch: Par
           <DateInput value={date} onChange={setDate} />
         </Field>
 
-        <Field label="Outcome">
-          <select style={st.input} value={outcome} onChange={e => setOutcome(e.target.value)}>
-            {RACE_OUTCOMES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
-        </Field>
+        {!isUpcoming && (
+          <Field label="Outcome">
+            <select style={st.input} value={outcome} onChange={e => setOutcome(e.target.value)}>
+              {RACE_OUTCOMES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+          </Field>
+        )}
       </div>
 
-      {showTime && (
+      {!isUpcoming && showTime && (
         <Field label="Finish Time">
           <TimePickerWheel value={time} onChange={setTime} />
         </Field>
@@ -792,14 +802,21 @@ function EditPanel({ race, onSave, onCancel }: { race: Race; onSave: (patch: Par
         </select>
       </Field>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-        <Field label="Bib Number">
-          <input style={st.input} value={bibNumber} onChange={e => setBibNumber(e.target.value)} placeholder="1234" />
+      {isUpcoming ? (
+        <Field label={<>Goal Time <span style={{ opacity: 0.5, fontWeight: 400, fontSize: '11px', textTransform: 'lowercase', letterSpacing: 0 }}>(optional)</span></>}>
+          <TimePickerWheel value={goalHMS} onChange={setGoalHMS} maxHours={99} />
+          <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '6px' }}>Scroll to set · Used by Gap To Goal widget</div>
         </Field>
-        <Field label="Goal Time">
-          <input style={st.input} value={goalTime} onChange={e => setGoalTime(e.target.value)} placeholder="3:30:00" />
-        </Field>
-      </div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+          <Field label="Bib Number">
+            <input style={st.input} value={bibNumber} onChange={e => setBibNumber(e.target.value)} placeholder="1234" />
+          </Field>
+          <Field label="Goal Time">
+            <input style={st.input} value={goalTime} onChange={e => setGoalTime(e.target.value)} placeholder="3:30:00" />
+          </Field>
+        </div>
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
         <Field label="Elevation (m)">
@@ -832,7 +849,7 @@ function EditPanel({ race, onSave, onCancel }: { race: Race; onSave: (patch: Par
   )
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
       <label style={st.fieldLabel}>{label}</label>
@@ -843,7 +860,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 // ─── Modal shell ──────────────────────────────────────────────────────────────
 
-export function ViewEditRaceModal({ race, onClose, initialMode = 'view' }: Props) {
+export function ViewEditRaceModal({ race, onClose, initialMode = 'view', isUpcoming = false }: Props) {
   const updateRace  = useRaceStore(s => s.updateRace)
   const deleteRace  = useRaceStore(s => s.deleteRace)
   const allRaces    = useRaceStore(s => s.races)
@@ -904,6 +921,7 @@ export function ViewEditRaceModal({ race, onClose, initialMode = 'view' }: Props
               race={race}
               onSave={handleSave}
               onCancel={() => setMode('view')}
+              isUpcoming={isUpcoming}
             />
           )}
         </div>
@@ -936,7 +954,7 @@ const st = {
 
   sheet: {
     width: '100%',
-    maxHeight: '92vh',
+    maxHeight: '92dvh',
     background: 'var(--surface2)',
     borderTop: '2px solid var(--orange)',
     borderRadius: '16px 16px 0 0',

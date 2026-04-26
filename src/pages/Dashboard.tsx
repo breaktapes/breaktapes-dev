@@ -5118,7 +5118,7 @@ export function Dashboard() {
       {showCustomize    && <DashCustomizeModal onClose={() => setShowCustomize(false)} />}
       {showAddRace      && <AddRaceModal defaultMode={addRaceMode} prefillDistance={riegelPrefillDist} onClose={() => { setShowAddRace(false); setRiegelPrefillDist(undefined) }} />}
       {showAllUpcoming  && <AllUpcomingModal onClose={() => setShowAllUpcoming(false)} onAddRace={openAddUpcomingRace} />}
-      {editRace         && <ViewEditRaceModal race={editRace} initialMode={editRaceMode} onClose={() => { setEditRace(null); setEditRaceMode('view') }} />}
+      {editRace         && <ViewEditRaceModal race={editRace} initialMode={editRaceMode} isUpcoming={upcomingRaces.some(r => r.id === editRace.id)} onClose={() => { setEditRace(null); setEditRaceMode('view') }} />}
       {detailWidget     && <WidgetDetailModal widget={detailWidget} preview={detailPreview} dynamicContext={detailCtx} actions={widgetActions} onClose={closeDetail} />}
 
       <GreetingCard onCustomize={() => setShowCustomize(true)} />

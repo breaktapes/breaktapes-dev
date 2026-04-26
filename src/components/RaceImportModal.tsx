@@ -354,7 +354,7 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
 
 const st = {
   overlay:    { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 960, display: 'flex', alignItems: 'flex-end' } as React.CSSProperties,
-  sheet:      { width: '100%', maxHeight: '85vh', background: 'var(--surface2)', borderTop: '2px solid var(--orange)', borderRadius: '16px 16px 0 0', display: 'flex', flexDirection: 'column', overflow: 'hidden' } as React.CSSProperties,
+  sheet:      { width: '100%', maxHeight: '85dvh', background: 'var(--surface2)', borderTop: '2px solid var(--orange)', borderRadius: '16px 16px 0 0', display: 'flex', flexDirection: 'column', overflow: 'hidden' } as React.CSSProperties,
   handle:     { width: '36px', height: '4px', background: 'var(--border2)', borderRadius: '2px', margin: '12px auto 0', flexShrink: 0 } as React.CSSProperties,
   header:     { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 0', flexShrink: 0 } as React.CSSProperties,
   title:      { fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '20px', letterSpacing: '0.06em', textTransform: 'uppercase' as const, color: 'var(--white)' } as React.CSSProperties,

@@ -1,6 +1,9 @@
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+
 /**
  * Convert any date string the app stores ("YYYY-MM-DD") into the canonical
- * display format DD-MM-YYYY. Pass-through for empty / unparseable input.
+ * display format "DD Mon YYYY" (e.g. "26 Apr 2026"). Pass-through for empty
+ * or unparseable input.
  *
  * Use this anywhere the user sees a date as plain text. Date inputs and
  * internal comparisons MUST stay in YYYY-MM-DD.
@@ -8,7 +11,9 @@
 export function fmtDateDDMM(d: string | undefined | null): string {
   if (!d) return ''
   const m = String(d).match(/^(\d{4})-(\d{2})-(\d{2})/)
-  return m ? `${m[3]}-${m[2]}-${m[1]}` : String(d)
+  if (!m) return String(d)
+  const mon = MONTHS[parseInt(m[2], 10) - 1] ?? m[2]
+  return `${m[3]} ${mon} ${m[1]}`
 }
 
 const SPONSOR_RE = /\b(tcs|bmo|bmw|virgin money|adnoc|asics|zurich|bank of america)\b/g
