@@ -4030,12 +4030,12 @@ function PersonalBestsWidget() {
 function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRace: () => void }) {
   const upcoming        = useRaceStore(selectUpcomingRaces)
   const focusRaceId     = useRaceStore(selectFocusRaceId)
-  const setFocusRaceId  = useRaceStore(s => s.setFocusRaceId)
+  const pinFocusRace    = useRaceStore(s => s.pinFocusRace)
   const today           = todayStr()
   const [editingId, setEditingId] = useState<string | null>(null)
 
   function selectFocus(id: string) {
-    setFocusRaceId(focusRaceId === id ? null : id)  // tap again to deselect
+    pinFocusRace(focusRaceId === id ? null : id)  // tap again to deselect
     onClose()
   }
 
@@ -5043,7 +5043,7 @@ export function Dashboard() {
   const nextRace        = useRaceStore(selectNextRace)   // always nearest upcoming (A-Race preferred)
   const upcomingRaces   = useRaceStore(selectUpcomingRaces)
   const focusRaceId     = useRaceStore(selectFocusRaceId)
-  const setFocusRaceId  = useRaceStore(s => s.setFocusRaceId)
+  const pinFocusRace    = useRaceStore(s => s.pinFocusRace)
   const countdownRace   = useMemo(() => {
     if (focusRaceId) {
       return upcomingRaces.find(r => r.id === focusRaceId) ?? nextRace
@@ -5105,7 +5105,7 @@ export function Dashboard() {
       {/* NOW — RACE DAY */}
       <DashZone id="now" tag="NOW" label="RACE DAY">
         {(countdownRace ?? nextRace)
-          ? <>{en('countdown')       && countdownRace && <CountdownCard race={countdownRace} onShowAll={() => setShowAllUpcoming(true)} upcomingRaces={upcomingRaces} onSelectRace={setFocusRaceId} />}
+          ? <>{en('countdown')       && countdownRace && <CountdownCard race={countdownRace} onShowAll={() => setShowAllUpcoming(true)} upcomingRaces={upcomingRaces} onSelectRace={pinFocusRace} />}
               {en('race-forecast')   && countdownRace && <WeatherCard race={countdownRace} />}
               <CourseInfoCard race={countdownRace ?? nextRace!} /></>
           : <NoUpcomingRaceCTA onAddRace={openAddUpcomingRace} />
