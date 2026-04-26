@@ -3340,7 +3340,7 @@ function WhyPRdWidget() {
           </div>
         )}
         <div style={st.widgetDivider} />
-        {pbRaces.slice(0, 3).map(r => (
+        {[...pbRaces].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3).map(r => (
           <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
             <span style={{ color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '60%' }}>{r.name ?? r.date}</span>
             <span style={{ color: '#C8963C', fontFamily: 'var(--mono)', flexShrink: 0 }}>{r.time}</span>
