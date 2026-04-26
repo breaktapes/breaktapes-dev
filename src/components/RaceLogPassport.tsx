@@ -89,6 +89,7 @@ function normDistKey(d: string): string {
   if (lower === 'sprint') return 'sprint'
   if (lower === '5k') return '5k'
   if (lower === '10k') return '10k'
+  if (lower === '10 mile' || lower === '10 miles' || lower === '10mi') return '10mile'
   const km = parseFloat(d)
   if (!isNaN(km)) {
     if (km >= 42.0 && km <= 42.3) return 'marathon'
@@ -97,6 +98,7 @@ function normDistKey(d: string): string {
     if (km >= 225.9 && km <= 226.1) return 'ironman'
     if (km === 51.5) return 'olympic'
     if (km === 25.75) return 'sprint'
+    if (km >= 16.0 && km <= 16.2) return '10mile'
     if (km === 5) return '5k'
     if (km === 10) return '10k'
     return `${km}`
@@ -113,9 +115,10 @@ const DIST_LABELS: Record<string, string> = {
   sprint: 'SPRINT',
   '5k': '5K',
   '10k': '10K',
+  '10mile': '10 MILE',
 }
 
-const PB_PRIORITY = ['marathon', 'half', '10k', '5k', 'ironman', '70.3', 'olympic', 'sprint']
+const PB_PRIORITY = ['5k', '10k', '10mile', 'half', 'marathon', 'sprint', 'olympic', '70.3', 'ironman']
 
 /**
  * Build the per-distance PB list shown in "BEST RECORDED TIMES".
@@ -131,7 +134,7 @@ const PB_PRIORITY = ['marathon', 'half', '10k', '5k', 'ironman', '70.3', 'olympi
 function buildPBList(
   allRaces: Race[],
   yearFilter: string,
-): { key: string; label: string; time: string; race: string }[] {
+): { key: string; label: string; time: string; race: string; priority?: string }[] {
   const pb: Record<string, Race> = {}
   for (const r of allRaces) {
     if (!r.time || !r.distance) continue
@@ -159,6 +162,7 @@ function buildPBList(
     label: DIST_LABELS[key] || key.toUpperCase(),
     time: filtered[key].time!,
     race: filtered[key].name,
+    priority: filtered[key].priority,
   }))
 }
 
@@ -186,12 +190,23 @@ function distanceSubtitle(r: Race): string {
   return r.distance.toUpperCase()
 }
 
-// Split YYYY-MM-DD into ["DD-MM", "YYYY"] for the two-line date column
-// in the mission log. Mirrors fmtDateDDMM in src/lib/utils.ts.
+const MONTH_ABBR = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC']
+
+// Split YYYY-MM-DD into ["DD MMM", "YYYY"] for the two-line date column.
 function dateParts(d: string | undefined): [string, string] {
   if (!d) return ['', '']
   const m = String(d).match(/^(\d{4})-(\d{2})-(\d{2})/)
-  return m ? [`${m[3]}-${m[2]}`, m[1]] : [String(d), '']
+  if (!m) return [String(d), '']
+  const mon = MONTH_ABBR[parseInt(m[2], 10) - 1] ?? m[2]
+  return [`${m[3]} ${mon}`, m[1]]
+}
+
+// Normalize any time string to HH:MM:SS with leading zeros.
+function fmtHHMMSS(t: string): string {
+  if (!t) return t
+  const parts = t.split(':')
+  if (parts.length === 2) parts.unshift('0')
+  return parts.slice(0, 3).map(p => String(parseInt(p, 10) || 0).padStart(2, '0')).join(':')
 }
 
 function getSports(races: Race[]): string[] {
@@ -386,6 +401,13 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
     const idCode = `ID: BT-${raceCount}-${initials}${location ? ' · ' + location : ''}`
     ctx.fillText(truncateText(ctx, idCode, leftW - nameX - pad), nameX, ly + 40 * s)
 
+    if (athlete?.username) {
+      ctx.fillStyle = `rgba(${orangeCh},0.65)`
+      ctx.font = `600 ${Math.round(11 * s)}px "Geist Mono", "Courier New", monospace`
+      ctx.letterSpacing = '0px'
+      ctx.fillText(`@${athlete.username}`, nameX, ly + 56 * s)
+    }
+
     // Sport tags
     let tagX = nameX
     const tagY = ly + 60 * s
@@ -433,7 +455,7 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
       ctx.strokeStyle = D.cellBorder; ctx.lineWidth = 1
       roundRect(ctx, cx, cy, cellW, cellH, 8 * s); ctx.stroke()
 
-      ctx.fillStyle = D.muted2
+      ctx.fillStyle = D.muted
       ctx.font = `500 ${Math.round(11 * s)}px "Geist Mono", "Courier New", monospace`
       ctx.letterSpacing = `${Math.round(1.5 * s)}px`
       ctx.textAlign = 'left'
@@ -468,20 +490,33 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
       ctx.textAlign = 'left'
       ctx.fillText('BEST RECORDED TIMES', pad + 14 * s, ly + 22 * s)
 
+      const pbRightEdge = pad + leftW - pad * 1.5 - 10 * s
+      const priBadgeW = 22 * s
       pbList.slice(0, rowsToShow).forEach((p, i) => {
         const rowY = ly + headerRow + rowOuter * i + 8 * s
         // Distance label (left)
-        ctx.fillStyle = D.muted
+        ctx.fillStyle = D.white
+        ctx.globalAlpha = 0.78
         ctx.font = `700 ${Math.round(15 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
         ctx.letterSpacing = `${Math.round(1.5 * s)}px`
         ctx.textAlign = 'left'
         ctx.fillText(p.label, pad + 14 * s, rowY + 18 * s)
-        // Time (right, gold)
+        ctx.globalAlpha = 1
+        // Priority badge (far right, fixed column)
+        if (p.priority) {
+          const priColor = p.priority === 'A' ? D.orange : p.priority === 'B' ? D.green : D.muted
+          ctx.fillStyle = priColor
+          ctx.font = `800 ${Math.round(13 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
+          ctx.letterSpacing = '0px'
+          ctx.textAlign = 'right'
+          ctx.fillText(p.priority, pbRightEdge, rowY + 18 * s)
+        }
+        // Time (right-aligned, gold, consistent column)
         ctx.fillStyle = D.gold
         ctx.font = `900 ${Math.round(22 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
         ctx.letterSpacing = '-0.5px'
         ctx.textAlign = 'right'
-        ctx.fillText(p.time, pad + leftW - pad * 1.5 - 14 * s, rowY + 20 * s)
+        ctx.fillText(fmtHHMMSS(p.time), pbRightEdge - priBadgeW, rowY + 20 * s)
       })
       ctx.textAlign = 'left'
       ly += blockH + 14 * s
@@ -554,23 +589,25 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
       const flag = countryToFlag(r.country)
       const [dDM, dY] = dateParts(r.date)
       const raceName = r.name.replace(/\s+\d{4}$/, '').substring(0, 36)
+      const flagMidY = (nameY + subY) / 2 + 6 * s
 
-      // Date column (left, mono, 2-line stack: "DD-MM" / "YYYY")
-      ctx.fillStyle = `rgba(${orangeCh},0.55)`
+      // Date column (left, mono, 2-line stack: "DD MMM" / "YYYY")
+      ctx.fillStyle = `rgba(${orangeCh},0.75)`
       ctx.font = `500 ${Math.round(13 * s)}px "Geist Mono", monospace`
       ctx.letterSpacing = '0px'
       ctx.textAlign = 'left'
       ctx.fillText(dDM, rx, nameY)
-      ctx.fillStyle = `rgba(${orangeCh},0.40)`
+      ctx.fillStyle = `rgba(${orangeCh},0.55)`
       ctx.font = `500 ${Math.round(11 * s)}px "Geist Mono", monospace`
       ctx.fillText(dY, rx, subY)
 
-      // Flag (left of race name) — column shifted right to clear DD-MM-YYYY
-      ctx.fillStyle = D.muted
-      ctx.font = `600 ${Math.round(18 * s)}px "Barlow", Arial, sans-serif`
-      ctx.fillText(`${flag} `, rx + 86 * s, nameY)
+      // Flag — larger, vertically centered between name and distance lines
+      ctx.fillStyle = D.white
+      ctx.font = `${Math.round(22 * s)}px "Barlow", Arial, sans-serif`
+      ctx.letterSpacing = '0px'
+      ctx.fillText(`${flag} `, rx + 86 * s, flagMidY)
 
-      // Race name — line 1 (column shifted right to clear date stack)
+      // Race name — line 1
       ctx.fillStyle = D.white
       ctx.font = `700 ${Math.round(18 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
       ctx.letterSpacing = `${Math.round(0.5 * s)}px`
@@ -578,17 +615,28 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
 
       // Distance subtitle — line 2 (with PB badge tag if applicable)
       const distLabel = distanceSubtitle(r)
-      ctx.fillStyle = isPB ? D.gold : D.muted2
+      ctx.fillStyle = isPB ? D.gold : `rgba(${orangeCh},0.7)`
       ctx.font = `600 ${Math.round(11 * s)}px "Geist Mono", monospace`
       ctx.letterSpacing = `${Math.round(1.5 * s)}px`
       ctx.fillText(isPB ? `${distLabel}  ·  PB` : distLabel, rx + 116 * s, subY)
 
       if (r.time) {
-        ctx.fillStyle = isPB ? D.gold : D.orange
+        // Priority badge — right of time
+        if (r.priority) {
+          const priColor = r.priority === 'A' ? D.orange : r.priority === 'B' ? D.green : D.muted
+          ctx.fillStyle = priColor
+          ctx.font = `800 ${Math.round(13 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
+          ctx.letterSpacing = '0px'
+          ctx.textAlign = 'right'
+          ctx.fillText(r.priority, W - pad, subY)
+        }
+        ctx.fillStyle = isPB ? D.gold : D.white
+        ctx.globalAlpha = isPB ? 1 : 0.9
         ctx.font = `800 ${Math.round(18 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
         ctx.letterSpacing = '0px'
         ctx.textAlign = 'right'
-        ctx.fillText(r.time, W - pad, nameY)
+        ctx.fillText(fmtHHMMSS(r.time), W - pad - (r.priority ? 20 * s : 0), nameY)
+        ctx.globalAlpha = 1
       }
 
       // Bottom divider
@@ -635,6 +683,13 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
     ctx.letterSpacing = '0px'
     ctx.fillText(truncateText(ctx, `ID: BT-${raceCount}-${initials}${location ? ' · ' + location : ''}`, W - nameX - pad), nameX, vy + 46 * s)
 
+    if (athlete?.username) {
+      ctx.fillStyle = `rgba(${orangeCh},0.65)`
+      ctx.font = `600 ${Math.round(11 * s)}px "Geist Mono", monospace`
+      ctx.letterSpacing = '0px'
+      ctx.fillText(`@${athlete.username}`, nameX, vy + 62 * s)
+    }
+
     vy += avatarSize + 18 * s
 
     // Intel strip (4-across)
@@ -652,7 +707,7 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
       roundRect(ctx, cx, vy, stripCellW, stripCellH, 7 * s); ctx.fill()
       ctx.strokeStyle = D.cellBorder; ctx.lineWidth = 1
       roundRect(ctx, cx, vy, stripCellW, stripCellH, 7 * s); ctx.stroke()
-      ctx.fillStyle = D.muted2
+      ctx.fillStyle = D.muted
       ctx.font = `500 ${Math.round(11 * s)}px "Geist Mono", monospace`
       ctx.letterSpacing = `${Math.round(1 * s)}px`; ctx.textAlign = 'left'
       ctx.fillText(c.label.toUpperCase(), cx + 10 * s, vy + 22 * s)
@@ -679,18 +734,30 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
       ctx.letterSpacing = `${Math.round(2 * s)}px`; ctx.textAlign = 'left'
       ctx.fillText('BEST RECORDED TIMES', pad + 12 * s, vy + 22 * s)
 
+      const vPriW = 22 * s
       pbList.slice(0, rowsToShow).forEach((p, i) => {
         const rowY = vy + headerRow + rowOuter * i + 6 * s
-        ctx.fillStyle = D.muted
+        ctx.fillStyle = D.white
+        ctx.globalAlpha = 0.78
         ctx.font = `700 ${Math.round(14 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
         ctx.letterSpacing = `${Math.round(1.5 * s)}px`
         ctx.textAlign = 'left'
         ctx.fillText(p.label, pad + 14 * s, rowY + 18 * s)
+        ctx.globalAlpha = 1
+        // Priority badge (far right)
+        if (p.priority) {
+          const priColor = p.priority === 'A' ? D.orange : p.priority === 'B' ? D.green : D.muted
+          ctx.fillStyle = priColor
+          ctx.font = `800 ${Math.round(13 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
+          ctx.letterSpacing = '0px'
+          ctx.textAlign = 'right'
+          ctx.fillText(p.priority, W - pad - 14 * s, rowY + 18 * s)
+        }
         ctx.fillStyle = D.gold
         ctx.font = `900 ${Math.round(20 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
         ctx.letterSpacing = '-0.5px'
         ctx.textAlign = 'right'
-        ctx.fillText(p.time, W - pad - 14 * s, rowY + 20 * s)
+        ctx.fillText(fmtHHMMSS(p.time), W - pad - 14 * s - (p.priority ? vPriW : 0), rowY + 20 * s)
       })
       ctx.textAlign = 'left'
       vy += blockH + 14 * s
@@ -724,17 +791,20 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
       }
       const flag = countryToFlag(r.country)
       const [dDM, dY] = dateParts(r.date)
-      // Date column (left, 2-line stack DD-MM / YYYY)
-      ctx.fillStyle = `rgba(${orangeCh},0.55)`
+      const flagMidY = (nameY + subY) / 2 + 6 * s
+      // Date column (left, 2-line stack DD MMM / YYYY)
+      ctx.fillStyle = `rgba(${orangeCh},0.75)`
       ctx.font = `500 ${Math.round(13 * s)}px "Geist Mono", monospace`
       ctx.letterSpacing = '0px'; ctx.textAlign = 'left'
       ctx.fillText(dDM, pad, nameY)
-      ctx.fillStyle = `rgba(${orangeCh},0.40)`
+      ctx.fillStyle = `rgba(${orangeCh},0.55)`
       ctx.font = `500 ${Math.round(11 * s)}px "Geist Mono", monospace`
       ctx.fillText(dY, pad, subY)
-      ctx.fillStyle = D.muted
-      ctx.font = `600 ${Math.round(17 * s)}px "Barlow", Arial, sans-serif`
-      ctx.fillText(`${flag} `, pad + 86 * s, nameY)
+      // Flag — larger, centered between name and distance lines
+      ctx.fillStyle = D.white
+      ctx.font = `${Math.round(21 * s)}px "Barlow", Arial, sans-serif`
+      ctx.letterSpacing = '0px'
+      ctx.fillText(`${flag} `, pad + 86 * s, flagMidY)
       ctx.fillStyle = D.white
       ctx.font = `700 ${Math.round(17 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
       ctx.letterSpacing = `${Math.round(0.3 * s)}px`
@@ -742,15 +812,24 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
       ctx.fillText(truncateText(ctx, raceName, W - pad * 2 - 250 * s), pad + 116 * s, nameY)
       // Distance subtitle / PB tag
       const distLabel = distanceSubtitle(r)
-      ctx.fillStyle = isPB ? D.gold : D.muted2
+      ctx.fillStyle = isPB ? D.gold : `rgba(${orangeCh},0.7)`
       ctx.font = `600 ${Math.round(11 * s)}px "Geist Mono", monospace`
       ctx.letterSpacing = `${Math.round(1.5 * s)}px`
       ctx.fillText(isPB ? `${distLabel}  ·  PB` : distLabel, pad + 116 * s, subY)
       if (r.time) {
-        ctx.fillStyle = isPB ? D.gold : D.orange
+        if (r.priority) {
+          const priColor = r.priority === 'A' ? D.orange : r.priority === 'B' ? D.green : D.muted
+          ctx.fillStyle = priColor
+          ctx.font = `800 ${Math.round(13 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
+          ctx.letterSpacing = '0px'; ctx.textAlign = 'right'
+          ctx.fillText(r.priority, W - pad, subY)
+        }
+        ctx.fillStyle = isPB ? D.gold : D.white
+        ctx.globalAlpha = isPB ? 1 : 0.9
         ctx.font = `800 ${Math.round(17 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
         ctx.letterSpacing = '0px'; ctx.textAlign = 'right'
-        ctx.fillText(r.time, W - pad, nameY)
+        ctx.fillText(fmtHHMMSS(r.time), W - pad - (r.priority ? 20 * s : 0), nameY)
+        ctx.globalAlpha = 1
       }
       ctx.strokeStyle = 'rgba(255,255,255,0.04)'; ctx.lineWidth = 1
       ctx.beginPath(); ctx.moveTo(pad, ryRow + rowH - 1); ctx.lineTo(W - pad, ryRow + rowH - 1); ctx.stroke()
