@@ -21,7 +21,7 @@ export async function syncStateToSupabase() {
   // and let the next mutation re-fire once the JWT is installed.
   if (!hasClerkToken()) return
 
-  const { races, upcomingRaces, wishlistRaces, nextRace } = useRaceStore.getState()
+  const { races, upcomingRaces, wishlistRaces, nextRace, focusRaceId } = useRaceStore.getState()
   const { athlete, seasonPlans } = useAthleteStore.getState()
 
   try {
@@ -42,6 +42,7 @@ export async function syncStateToSupabase() {
           upcoming_races: upcomingRaces,
           wishlist_races: wishlistRaces,
           next_race: nextRace,
+          focus_race_id: focusRaceId,
           season_plans: seasonPlans,
           athlete,
         },

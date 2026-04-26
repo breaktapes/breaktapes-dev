@@ -20,6 +20,7 @@ export interface RaceState {
   setWishlistRaces: (races: Race[]) => void
   promoteNextRace: () => void
   setFocusRaceId: (id: string | null) => void
+  pinFocusRace: (id: string | null) => void
   addToWishlist: (race: Race) => void
   removeFromWishlist: (id: string) => void
   moveToUpcoming: (id: string) => void
@@ -122,6 +123,14 @@ export const useRaceStore = create<RaceState>()(
       },
 
       setFocusRaceId: (id) => set({ focusRaceId: id }),
+
+      // User-action variant — pins/unpins focus race AND pushes state to
+      // Supabase so the pin crosses devices. The plain `setFocusRaceId`
+      // setter stays silent so the remote-pull path doesn't echo back.
+      pinFocusRace: (id) => {
+        set({ focusRaceId: id })
+        void syncStateToSupabase()
+      },
 
       setRaces: (races) => set({ races }),
 

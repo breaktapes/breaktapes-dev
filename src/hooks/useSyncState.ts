@@ -13,6 +13,7 @@ interface RemoteState {
   athlete?: Athlete
   season_plans?: SeasonPlan[]
   next_race?: Race | null
+  focus_race_id?: string | null
 }
 
 /**
@@ -30,6 +31,7 @@ export function useSyncState() {
   const setUpcomingRaces = useRaceStore(s => s.setUpcomingRaces)
   const setWishlistRaces = useRaceStore(s => s.setWishlistRaces)
   const promoteNextRace = useRaceStore(s => s.promoteNextRace)
+  const setFocusRaceId = useRaceStore(s => s.setFocusRaceId)
   const setAthlete = useAthleteStore(s => s.setAthlete)
   const setSeasonPlans = useAthleteStore(s => s.setSeasonPlans)
 
@@ -57,6 +59,9 @@ export function useSyncState() {
       if (Array.isArray(remote.wishlist_races)) setWishlistRaces(remote.wishlist_races)
       // Regression fix (Session 13): if nextRace is null/past, auto-promote
       promoteNextRace()
+
+      // focus_race_id may be explicitly null (user un-pinned) — apply it as-is
+      if ('focus_race_id' in remote) setFocusRaceId(remote.focus_race_id ?? null)
 
       if (remote.athlete) setAthlete(remote.athlete)
       if (Array.isArray(remote.season_plans)) setSeasonPlans(remote.season_plans)
