@@ -378,7 +378,7 @@ function WishlistRow({ race, onPlan, onRemove }: {
 
 type ViewMode = 'compact' | 'detailed' | 'wishlist'
 
-function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport, onDiscover }: { races: Race[]; onAddRace: () => void; onImportRace: () => void; onOpenPassport: () => void; onDiscover: () => void }) {
+function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport, onDiscover }: { races: Race[]; onAddRace: () => void; onImportRace: () => void; onOpenPassport: (year: string) => void; onDiscover: () => void }) {
   const [expanded, setExpanded] = useState(false)
   const [yearFilter, setYearFilter] = useState('all')
   const [viewMode, setViewMode] = useState<ViewMode>('compact')
@@ -607,7 +607,7 @@ function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport, onDiscover
         </button>
         <button
           className="passport-dossier-btn"
-          onClick={onOpenPassport}
+          onClick={() => onOpenPassport(yearFilter)}
           title="Export Race Log Passport"
         >
           ⬛ DOSSIER
@@ -715,6 +715,7 @@ export function Races() {
   const [addRaceOpen, setAddRaceOpen]     = useState(false)
   const [importOpen, setImportOpen]       = useState(false)
   const [passportOpen, setPassportOpen]   = useState(false)
+  const [passportYear, setPassportYear]   = useState<string>('all')
 
   // One-time normalization pass — collapse admin labels into canonical
   // city names ("Dubai Emirate" → "Dubai", "Mumbai Suburban" → "Mumbai").
@@ -811,7 +812,7 @@ export function Races() {
       />
 
       {/* Bottom sheet */}
-      <RacesSheet races={races} onAddRace={() => setAddRaceOpen(true)} onImportRace={() => setImportOpen(true)} onOpenPassport={() => setPassportOpen(true)} onDiscover={() => navigate('/discover')} />
+      <RacesSheet races={races} onAddRace={() => setAddRaceOpen(true)} onImportRace={() => setImportOpen(true)} onOpenPassport={(y) => { setPassportYear(y); setPassportOpen(true) }} onDiscover={() => navigate('/discover')} />
 
       {addRaceOpen  && <AddRaceModal     onClose={() => setAddRaceOpen(false)} />}
       {importOpen   && <RaceImportModal  onClose={() => setImportOpen(false)} />}
@@ -820,6 +821,7 @@ export function Races() {
         <RaceLogPassport
           races={races}
           athlete={athlete ?? undefined}
+          initialYear={passportYear}
           onClose={() => setPassportOpen(false)}
         />
 
