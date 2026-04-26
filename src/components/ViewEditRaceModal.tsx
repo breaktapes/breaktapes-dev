@@ -11,6 +11,7 @@ import type { Race, Split } from '@/types'
 import { useUnits, fmtDistKm, distUnit, fmtPaceSecPerKm, computePaceSecPerKm } from '@/lib/units'
 import { getClaudeApiKey, importRaceScreenshot } from '@/lib/claude'
 import { removeMedalBackground } from '@/lib/removeBg'
+import { findSportDistMatch } from '@/lib/utils'
 
 // ─── Config (mirrors AddRaceModal) ──────────────────────────────────────────
 
@@ -416,13 +417,13 @@ function EditPanel({ race, onSave, onCancel }: { race: Race; onSave: (patch: Par
   const [lng, setLng]           = useState<number | undefined>(race.lng)
   const [distance, setDistance] = useState(() => {
     const sportDists = DISTANCES_BY_SPORT[race.sport ?? 'Running'] ?? []
-    const match = sportDists.find(d => d.value === race.distance)
-    return match ? match.value : '__custom__'
+    const matched = findSportDistMatch(race.distance ?? '', sportDists)
+    return matched ?? '__custom__'
   })
   const [customDist, setCustomDist] = useState(() => {
     const sportDists = DISTANCES_BY_SPORT[race.sport ?? 'Running'] ?? []
-    const match = sportDists.find(d => d.value === race.distance)
-    return match ? '' : (race.distance ?? '')
+    const matched = findSportDistMatch(race.distance ?? '', sportDists)
+    return matched ? '' : (race.distance ?? '')
   })
   const [outcome, setOutcome]   = useState(race.outcome ?? 'Finished')
   const [time, setTime]         = useState<HMS>(() => {

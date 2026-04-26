@@ -7,7 +7,7 @@ import { TimePickerWheel, type HMS } from '@/components/TimePickerWheel'
 import { CustomDistInput } from '@/components/CustomDistInput'
 import { CityPicker } from '@/components/CityPicker'
 import { countryNameHaystack } from '@/lib/countries'
-import { normalizeName, resolveDistKm, isAlreadyInCatalog } from '@/lib/utils'
+import { normalizeName, resolveDistKm, isAlreadyInCatalog, findSportDistMatch } from '@/lib/utils'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/useAuthStore'
 import type { Race, Split } from '@/types'
@@ -548,8 +548,9 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
       if (r.sport)   setSport(r.sport)
       if (r.distance) {
         const presets = DISTANCES_BY_SPORT[r.sport ?? 'Running'] ?? []
-        const match = presets.find(p => p.value === r.distance)
-        if (match) { setDistance(r.distance) } else { setDistance('__custom__'); setCustomDist(r.distance) }
+        const matched = findSportDistMatch(r.distance, presets)
+        if (matched) { setDistance(matched); setCustomDist('') }
+        else { setDistance('__custom__'); setCustomDist(r.distance) }
       }
       setShowSuggest(false)
       return
