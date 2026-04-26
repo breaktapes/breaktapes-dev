@@ -56,6 +56,10 @@ export const useAthleteStore = create<AthleteState>()(
         } else {
           set({ athlete: { ...current, ...defined } })
         }
+        // Persist athlete edits — without this, username / isPublic / units
+        // never reach Supabase, and the user_state row is never seeded for
+        // users whose only mutation has been to their profile.
+        void syncStateToSupabase()
       },
 
       setSeasonPlans: (seasonPlans) => set({ seasonPlans }),
