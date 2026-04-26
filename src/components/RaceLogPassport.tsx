@@ -8,7 +8,7 @@
  * Canvas rule: fillStyle cannot resolve CSS custom properties.
  * Colours are read from CSS custom properties at draw time so all 9 themes render correctly.
  */
-import { useRef, useState, useCallback } from 'react'
+import { useRef, useState, useCallback, useEffect } from 'react'
 import type { Race, Athlete } from '@/types'
 
 // ── Runtime CSS var reader ─────────────────────────────────────────────────────
@@ -76,18 +76,93 @@ function getYears(races: Race[]): string[] {
   return [...years].sort((a, b) => Number(b) - Number(a))
 }
 
-function getBestPB(races: Race[]): { time: string; dist: string; race: string } | null {
-  const PRIO = ['Marathon', 'Half Marathon', '70.3', 'IRONMAN', '10K', '5K']
-  for (const dist of PRIO) {
-    const r = races
-      .filter(r => r.distance === dist && r.time)
-      .sort((a, b) => timeToSecs(a.time!) - timeToSecs(b.time!))[0]
-    if (r) return { time: r.time!, dist: r.distance, race: r.name }
+// Normalize a distance label or numeric km string into a stable key so
+// "Marathon" / "42.2" / "42.195" all collide into the same PB bucket.
+function normDistKey(d: string): string {
+  if (!d) return ''
+  const lower = d.toLowerCase().trim()
+  if (lower === 'marathon') return 'marathon'
+  if (lower === 'half marathon') return 'half'
+  if (lower === '70.3' || lower === 'half ironman') return '70.3'
+  if (lower === 'ironman' || lower === 'full distance') return 'ironman'
+  if (lower === 'olympic') return 'olympic'
+  if (lower === 'sprint') return 'sprint'
+  if (lower === '5k') return '5k'
+  if (lower === '10k') return '10k'
+  const km = parseFloat(d)
+  if (!isNaN(km)) {
+    if (km >= 42.0 && km <= 42.3) return 'marathon'
+    if (km >= 21.0 && km <= 21.2) return 'half'
+    if (km >= 112.9 && km <= 113.1) return '70.3'
+    if (km >= 225.9 && km <= 226.1) return 'ironman'
+    if (km === 51.5) return 'olympic'
+    if (km === 25.75) return 'sprint'
+    if (km === 5) return '5k'
+    if (km === 10) return '10k'
+    return `${km}`
   }
-  const best = races
-    .filter(r => r.time)
-    .sort((a, b) => timeToSecs(a.time!) - timeToSecs(b.time!))[0]
-  return best ? { time: best.time!, dist: best.distance, race: best.name } : null
+  return lower
+}
+
+const DIST_LABELS: Record<string, string> = {
+  marathon: 'MARATHON',
+  half: 'HALF MARATHON',
+  '70.3': '70.3',
+  ironman: 'IRONMAN',
+  olympic: 'OLYMPIC',
+  sprint: 'SPRINT',
+  '5k': '5K',
+  '10k': '10K',
+}
+
+const PB_PRIORITY = ['marathon', 'half', '10k', '5k', 'ironman', '70.3', 'olympic', 'sprint']
+
+function buildPBList(races: Race[]): { key: string; label: string; time: string; race: string }[] {
+  const pb: Record<string, Race> = {}
+  for (const r of races) {
+    if (!r.time || !r.distance) continue
+    if (r.outcome && r.outcome !== 'Finished') continue
+    const secs = timeToSecs(r.time)
+    if (!isFinite(secs)) continue
+    const key = normDistKey(r.distance)
+    if (!key) continue
+    if (!pb[key] || timeToSecs(pb[key].time!) > secs) pb[key] = r
+  }
+  // Sort by priority then by remaining keys
+  const ordered = [
+    ...PB_PRIORITY.filter(k => pb[k]),
+    ...Object.keys(pb).filter(k => !PB_PRIORITY.includes(k)),
+  ]
+  return ordered.map(key => ({
+    key,
+    label: DIST_LABELS[key] || key.toUpperCase(),
+    time: pb[key].time!,
+    race: pb[key].name,
+  }))
+}
+
+function buildPBIdSet(races: Race[]): Set<string> {
+  const pb: Record<string, Race> = {}
+  for (const r of races) {
+    if (!r.time || !r.distance || !r.id) continue
+    if (r.outcome && r.outcome !== 'Finished') continue
+    const secs = timeToSecs(r.time)
+    if (!isFinite(secs)) continue
+    const key = normDistKey(r.distance)
+    if (!key) continue
+    if (!pb[key] || timeToSecs(pb[key].time!) > secs) pb[key] = r
+  }
+  return new Set(Object.values(pb).map(r => r.id))
+}
+
+function distanceSubtitle(r: Race): string {
+  const key = normDistKey(r.distance)
+  const label = DIST_LABELS[key]
+  if (label) return label
+  // Numeric distance — append unit
+  const km = parseFloat(r.distance)
+  if (!isNaN(km)) return `${km} KM`
+  return r.distance.toUpperCase()
 }
 
 function getSports(races: Race[]): string[] {
@@ -115,10 +190,11 @@ interface DrawOpts {
   year: string
   W: number
   H: number
+  avatarImg?: HTMLImageElement | null
 }
 
 function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
-  const { races, athlete, year, W, H } = opts
+  const { races, athlete, year, W, H, avatarImg } = opts
   canvas.width = W
   canvas.height = H
   const ctx = canvas.getContext('2d')!
@@ -135,7 +211,8 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
     const n = parseFloat(r.distance) || 0
     return s + n
   }, 0))
-  const pb = getBestPB(races)
+  const pbList = buildPBList(races)
+  const pbIds = buildPBIdSet(races)
   const sports = getSports(races)
   const flags = [...new Set(races.map(r => r.country).filter(Boolean))]
     .map(countryToFlag).filter(Boolean).slice(0, 16)
@@ -225,27 +302,40 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
     // ── Left column ──
     let ly = bodyY
 
-    // ID block
-    const avatarSize = Math.round(64 * s)
-    const ag2 = ctx.createLinearGradient(pad, ly, pad + avatarSize, ly + avatarSize)
-    ag2.addColorStop(0, D.orange); ag2.addColorStop(1, D.orangeDark)
-    ctx.fillStyle = ag2
-    roundRect(ctx, pad, ly, avatarSize, avatarSize, 10 * s)
-    ctx.fill()
-
-    // Avatar glow
-    ctx.shadowColor = `rgba(${orangeCh},0.4)`
-    ctx.shadowBlur = 18 * s
-    ctx.fillStyle = ag2
-    roundRect(ctx, pad, ly, avatarSize, avatarSize, 10 * s)
-    ctx.fill()
-    ctx.shadowBlur = 0
-
-    ctx.fillStyle = '#FFFFFF'
-    ctx.font = `900 ${Math.round(26 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
-    ctx.letterSpacing = '0px'
-    ctx.textAlign = 'center'
-    ctx.fillText(initials, pad + avatarSize / 2, ly + avatarSize * 0.68)
+    // ID block — photo (Clerk imageUrl) if loaded, else initials monogram
+    const avatarSize = Math.round(72 * s)
+    if (avatarImg && avatarImg.complete && avatarImg.naturalWidth > 0) {
+      // Glow ring behind photo
+      ctx.save()
+      ctx.shadowColor = `rgba(${orangeCh},0.4)`
+      ctx.shadowBlur = 18 * s
+      ctx.fillStyle = D.orange
+      roundRect(ctx, pad, ly, avatarSize, avatarSize, 12 * s); ctx.fill()
+      ctx.restore()
+      // Clip + draw photo
+      ctx.save()
+      roundRect(ctx, pad, ly, avatarSize, avatarSize, 12 * s); ctx.clip()
+      ctx.drawImage(avatarImg, pad, ly, avatarSize, avatarSize)
+      ctx.restore()
+      // Border ring
+      ctx.strokeStyle = `rgba(${orangeCh},0.5)`; ctx.lineWidth = 2 * s
+      roundRect(ctx, pad, ly, avatarSize, avatarSize, 12 * s); ctx.stroke()
+    } else {
+      const ag2 = ctx.createLinearGradient(pad, ly, pad + avatarSize, ly + avatarSize)
+      ag2.addColorStop(0, D.orange); ag2.addColorStop(1, D.orangeDark)
+      ctx.fillStyle = ag2
+      roundRect(ctx, pad, ly, avatarSize, avatarSize, 12 * s); ctx.fill()
+      ctx.shadowColor = `rgba(${orangeCh},0.4)`
+      ctx.shadowBlur = 18 * s
+      ctx.fillStyle = ag2
+      roundRect(ctx, pad, ly, avatarSize, avatarSize, 12 * s); ctx.fill()
+      ctx.shadowBlur = 0
+      ctx.fillStyle = '#FFFFFF'
+      ctx.font = `900 ${Math.round(30 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
+      ctx.letterSpacing = '0px'
+      ctx.textAlign = 'center'
+      ctx.fillText(initials, pad + avatarSize / 2, ly + avatarSize * 0.68)
+    }
 
     const nameX = pad + avatarSize + 14 * s
     ctx.textAlign = 'left'
@@ -321,35 +411,44 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
     })
     ly += cellH * 2 + 8 * s * 2 + 8 * s
 
-    // Best recorded time panel (striped)
-    if (pb) {
-      const pbH = Math.round(72 * s)
-      // Striped bg
+    // Best recorded times — show every distance the user has a PB at,
+    // not just the single fastest. Stacked rows: distance label · time.
+    if (pbList.length > 0) {
+      const headerRow = 28 * s
+      const rowOuter = 36 * s
+      const rowsToShow = Math.min(pbList.length, 5)
+      const blockH = Math.round(headerRow + rowOuter * rowsToShow + 14 * s)
+      // Striped background
       for (let x = pad; x < leftW - pad * 0.5; x += 8 * s) {
         ctx.fillStyle = `rgba(${orangeCh},0.04)`
-        ctx.fillRect(x, ly, 2 * s, pbH)
+        ctx.fillRect(x, ly, 2 * s, blockH)
       }
       ctx.strokeStyle = `rgba(${orangeCh},0.18)`; ctx.lineWidth = 1
-      roundRect(ctx, pad, ly, leftW - pad * 1.5, pbH, 8 * s); ctx.stroke()
+      roundRect(ctx, pad, ly, leftW - pad * 1.5, blockH, 8 * s); ctx.stroke()
 
       ctx.fillStyle = `rgba(${orangeCh},0.6)`
-      ctx.font = `600 ${Math.round(11 * s)}px "Geist Mono", "Courier New", monospace`
+      ctx.font = `600 ${Math.round(12 * s)}px "Geist Mono", "Courier New", monospace`
       ctx.letterSpacing = `${Math.round(2 * s)}px`
       ctx.textAlign = 'left'
-      ctx.fillText('BEST RECORDED TIME', pad + 12 * s, ly + 22 * s)
+      ctx.fillText('BEST RECORDED TIMES', pad + 14 * s, ly + 22 * s)
 
-      ctx.fillStyle = D.gold
-      ctx.font = `900 ${Math.round(34 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
-      ctx.letterSpacing = '-1px'
-      ctx.fillText(pb.time, pad + 12 * s, ly + pbH - 14 * s)
-      const pbTimeWidth = ctx.measureText(pb.time).width
-
-      ctx.fillStyle = D.muted
-      ctx.font = `500 ${Math.round(13 * s)}px "Barlow", Arial, sans-serif`
-      ctx.letterSpacing = '0px'
-      const pbLabel = `${pb.dist} · ${pb.race.replace(/\s+\d{4}$/, '').substring(0, 22)}`
-      ctx.fillText(truncateText(ctx, pbLabel, leftW - pad * 1.5 - pbTimeWidth - 32 * s), pad + 12 * s + pbTimeWidth + 14 * s, ly + pbH - 18 * s)
-      ly += pbH + 12 * s
+      pbList.slice(0, rowsToShow).forEach((p, i) => {
+        const rowY = ly + headerRow + rowOuter * i + 8 * s
+        // Distance label (left)
+        ctx.fillStyle = D.muted
+        ctx.font = `700 ${Math.round(15 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
+        ctx.letterSpacing = `${Math.round(1.5 * s)}px`
+        ctx.textAlign = 'left'
+        ctx.fillText(p.label, pad + 14 * s, rowY + 18 * s)
+        // Time (right, gold)
+        ctx.fillStyle = D.gold
+        ctx.font = `900 ${Math.round(22 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
+        ctx.letterSpacing = '-0.5px'
+        ctx.textAlign = 'right'
+        ctx.fillText(p.time, pad + leftW - pad * 1.5 - 14 * s, rowY + 20 * s)
+      })
+      ctx.textAlign = 'left'
+      ly += blockH + 14 * s
     }
 
     // Field operations (flags)
@@ -393,7 +492,9 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
     ctx.beginPath(); ctx.moveTo(rightX, ry); ctx.lineTo(W - pad, ry); ctx.stroke()
     ry += 10 * s
 
-    const minRowH = 32 * s
+    // Two-line rows so distance can sit under race name. Bumped row height
+    // to 48 * s (was 32) to fit the larger glyphs and second line.
+    const minRowH = 48 * s
     const rowH = Math.round(Math.max((bodyH - 48 * s) / Math.max(recentRaces.length, 1), minRowH))
     const maxRows = Math.floor((H - ry - pad * 2) / rowH)
 
@@ -401,39 +502,54 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
       const rx = rightX
       const rw = rightW
       const ryRow = ry + i * rowH
-      const textY = ryRow + rowH * 0.62
+      const isPB = pbIds.has(r.id)
+      const nameY = ryRow + rowH * 0.42
+      const subY  = ryRow + rowH * 0.78
 
-      // Alternating subtle bg
-      if (i % 2 === 0) {
+      // Alternating subtle bg + faint gold tint for PB rows
+      if (isPB) {
+        ctx.fillStyle = `rgba(${D.goldCh ?? '200, 150, 60'},0.06)`
+        ctx.fillRect(rx, ryRow, rw, rowH)
+      } else if (i % 2 === 0) {
         ctx.fillStyle = 'rgba(255,255,255,0.015)'
         ctx.fillRect(rx, ryRow, rw, rowH)
       }
 
       const flag = countryToFlag(r.country)
       const yr = r.date?.slice(0, 4) ?? ''
-      const raceName = r.name.replace(/\s+\d{4}$/, '').substring(0, 32)
+      const raceName = r.name.replace(/\s+\d{4}$/, '').substring(0, 36)
 
+      // Year (left, mono)
       ctx.fillStyle = `rgba(${orangeCh},0.55)`
-      ctx.font = `500 ${Math.round(11 * s)}px "Geist Mono", monospace`
+      ctx.font = `500 ${Math.round(13 * s)}px "Geist Mono", monospace`
       ctx.letterSpacing = '0px'
       ctx.textAlign = 'left'
-      ctx.fillText(yr, rx, textY)
+      ctx.fillText(yr, rx, nameY)
 
+      // Flag (left of race name)
       ctx.fillStyle = D.muted
-      ctx.font = `600 ${Math.round(14 * s)}px "Barlow", Arial, sans-serif`
-      ctx.fillText(`${flag} `, rx + 44 * s, textY)
+      ctx.font = `600 ${Math.round(18 * s)}px "Barlow", Arial, sans-serif`
+      ctx.fillText(`${flag} `, rx + 56 * s, nameY)
 
+      // Race name — line 1
       ctx.fillStyle = D.white
-      ctx.font = `700 ${Math.round(14 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
+      ctx.font = `700 ${Math.round(18 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
       ctx.letterSpacing = `${Math.round(0.5 * s)}px`
-      ctx.fillText(truncateText(ctx, raceName, rw - 180 * s), rx + 70 * s, textY)
+      ctx.fillText(truncateText(ctx, raceName, rw - 220 * s), rx + 86 * s, nameY)
+
+      // Distance subtitle — line 2 (with PB badge tag if applicable)
+      const distLabel = distanceSubtitle(r)
+      ctx.fillStyle = isPB ? D.gold : D.muted2
+      ctx.font = `600 ${Math.round(11 * s)}px "Geist Mono", monospace`
+      ctx.letterSpacing = `${Math.round(1.5 * s)}px`
+      ctx.fillText(isPB ? `${distLabel}  ·  PB` : distLabel, rx + 86 * s, subY)
 
       if (r.time) {
-        ctx.fillStyle = D.orange
-        ctx.font = `800 ${Math.round(14 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
+        ctx.fillStyle = isPB ? D.gold : D.orange
+        ctx.font = `800 ${Math.round(18 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
         ctx.letterSpacing = '0px'
         ctx.textAlign = 'right'
-        ctx.fillText(r.time, W - pad, textY)
+        ctx.fillText(r.time, W - pad, nameY)
       }
 
       // Bottom divider
@@ -448,16 +564,25 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
     // ── VERTICAL LAYOUT (9:16, 3:4) ──
     let vy = bodyY
 
-    // ID block (horizontal)
-    const avatarSize = Math.round(60 * s)
-    const ag2 = ctx.createLinearGradient(pad, vy, pad + avatarSize, vy + avatarSize)
-    ag2.addColorStop(0, D.orange); ag2.addColorStop(1, D.orangeDark)
-    ctx.fillStyle = ag2
-    roundRect(ctx, pad, vy, avatarSize, avatarSize, 9 * s); ctx.fill()
-    ctx.fillStyle = '#FFF'
-    ctx.font = `900 ${Math.round(24 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
-    ctx.letterSpacing = '0px'; ctx.textAlign = 'center'
-    ctx.fillText(initials, pad + avatarSize / 2, vy + avatarSize * 0.68)
+    // ID block (horizontal) — photo or monogram
+    const avatarSize = Math.round(72 * s)
+    if (avatarImg && avatarImg.complete && avatarImg.naturalWidth > 0) {
+      ctx.save()
+      roundRect(ctx, pad, vy, avatarSize, avatarSize, 11 * s); ctx.clip()
+      ctx.drawImage(avatarImg, pad, vy, avatarSize, avatarSize)
+      ctx.restore()
+      ctx.strokeStyle = `rgba(${orangeCh},0.5)`; ctx.lineWidth = 2 * s
+      roundRect(ctx, pad, vy, avatarSize, avatarSize, 11 * s); ctx.stroke()
+    } else {
+      const ag2 = ctx.createLinearGradient(pad, vy, pad + avatarSize, vy + avatarSize)
+      ag2.addColorStop(0, D.orange); ag2.addColorStop(1, D.orangeDark)
+      ctx.fillStyle = ag2
+      roundRect(ctx, pad, vy, avatarSize, avatarSize, 11 * s); ctx.fill()
+      ctx.fillStyle = '#FFF'
+      ctx.font = `900 ${Math.round(28 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
+      ctx.letterSpacing = '0px'; ctx.textAlign = 'center'
+      ctx.fillText(initials, pad + avatarSize / 2, vy + avatarSize * 0.68)
+    }
 
     const nameX = pad + avatarSize + 14 * s
     ctx.textAlign = 'left'
@@ -499,29 +624,37 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
     })
     vy += stripCellH + 14 * s
 
-    // Best time panel
-    if (pb) {
-      const pbH = Math.round(64 * s)
+    // Best recorded times — distance · time per row
+    if (pbList.length > 0) {
+      const headerRow = 28 * s
+      const rowOuter = 32 * s
+      const rowsToShow = Math.min(pbList.length, 4)
+      const blockH = Math.round(headerRow + rowOuter * rowsToShow + 14 * s)
       for (let x = pad; x < W - pad; x += 8 * s) {
-        ctx.fillStyle = `rgba(${orangeCh},0.04)`; ctx.fillRect(x, vy, 2 * s, pbH)
+        ctx.fillStyle = `rgba(${orangeCh},0.04)`; ctx.fillRect(x, vy, 2 * s, blockH)
       }
       ctx.strokeStyle = `rgba(${orangeCh},0.18)`; ctx.lineWidth = 1
-      roundRect(ctx, pad, vy, W - pad * 2, pbH, 7 * s); ctx.stroke()
+      roundRect(ctx, pad, vy, W - pad * 2, blockH, 7 * s); ctx.stroke()
       ctx.fillStyle = `rgba(${orangeCh},0.6)`
-      ctx.font = `600 ${Math.round(11 * s)}px "Geist Mono", monospace`
+      ctx.font = `600 ${Math.round(12 * s)}px "Geist Mono", monospace`
       ctx.letterSpacing = `${Math.round(2 * s)}px`; ctx.textAlign = 'left'
-      ctx.fillText('BEST RECORDED TIME', pad + 12 * s, vy + 22 * s)
-      ctx.fillStyle = D.gold
-      ctx.font = `900 ${Math.round(30 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
-      ctx.letterSpacing = '-1px'
-      ctx.fillText(pb.time, pad + 12 * s, vy + pbH - 14 * s)
-      const pbTimeWidth = ctx.measureText(pb.time).width
-      ctx.fillStyle = D.muted
-      ctx.font = `500 ${Math.round(12 * s)}px "Barlow", Arial, sans-serif`
-      ctx.letterSpacing = '0px'
-      const pbLabel = `${pb.dist} · ${pb.race.replace(/\s+\d{4}$/, '').substring(0, 28)}`
-      ctx.fillText(truncateText(ctx, pbLabel, W - pad * 2 - pbTimeWidth - 32 * s), pad + 12 * s + pbTimeWidth + 14 * s, vy + pbH - 18 * s)
-      vy += pbH + 14 * s
+      ctx.fillText('BEST RECORDED TIMES', pad + 12 * s, vy + 22 * s)
+
+      pbList.slice(0, rowsToShow).forEach((p, i) => {
+        const rowY = vy + headerRow + rowOuter * i + 6 * s
+        ctx.fillStyle = D.muted
+        ctx.font = `700 ${Math.round(14 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
+        ctx.letterSpacing = `${Math.round(1.5 * s)}px`
+        ctx.textAlign = 'left'
+        ctx.fillText(p.label, pad + 14 * s, rowY + 18 * s)
+        ctx.fillStyle = D.gold
+        ctx.font = `900 ${Math.round(20 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
+        ctx.letterSpacing = '-0.5px'
+        ctx.textAlign = 'right'
+        ctx.fillText(p.time, W - pad - 14 * s, rowY + 20 * s)
+      })
+      ctx.textAlign = 'left'
+      vy += blockH + 14 * s
     }
 
     // Mission log
@@ -535,35 +668,46 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
     ctx.beginPath(); ctx.moveTo(pad, vy); ctx.lineTo(W - pad, vy); ctx.stroke()
     vy += 8 * s
 
-    const rowH = Math.round(30 * s)
+    const rowH = Math.round(46 * s)
     const flagsReserve = flags.length > 0 ? 44 * s : 0
     const maxRows = Math.floor((H - vy - pad * 2 - flagsReserve) / rowH)
     recentRaces.slice(0, Math.min(maxRows, 12)).forEach((r, i) => {
       const ryRow = vy + i * rowH
-      const textY = ryRow + rowH * 0.62
-      if (i % 2 === 0) {
+      const isPB = pbIds.has(r.id)
+      const nameY = ryRow + rowH * 0.42
+      const subY  = ryRow + rowH * 0.78
+      if (isPB) {
+        ctx.fillStyle = `rgba(${D.goldCh ?? '200, 150, 60'},0.06)`
+        ctx.fillRect(pad, ryRow, W - pad * 2, rowH)
+      } else if (i % 2 === 0) {
         ctx.fillStyle = 'rgba(255,255,255,0.015)'
         ctx.fillRect(pad, ryRow, W - pad * 2, rowH)
       }
       const flag = countryToFlag(r.country)
       const yr = r.date?.slice(0, 4) ?? ''
       ctx.fillStyle = `rgba(${orangeCh},0.55)`
-      ctx.font = `500 ${Math.round(11 * s)}px "Geist Mono", monospace`
+      ctx.font = `500 ${Math.round(13 * s)}px "Geist Mono", monospace`
       ctx.letterSpacing = '0px'; ctx.textAlign = 'left'
-      ctx.fillText(yr, pad, textY)
+      ctx.fillText(yr, pad, nameY)
       ctx.fillStyle = D.muted
-      ctx.font = `600 ${Math.round(13 * s)}px "Barlow", Arial, sans-serif`
-      ctx.fillText(`${flag} `, pad + 42 * s, textY)
+      ctx.font = `600 ${Math.round(17 * s)}px "Barlow", Arial, sans-serif`
+      ctx.fillText(`${flag} `, pad + 56 * s, nameY)
       ctx.fillStyle = D.white
-      ctx.font = `700 ${Math.round(13 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
+      ctx.font = `700 ${Math.round(17 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
       ctx.letterSpacing = `${Math.round(0.3 * s)}px`
       const raceName = r.name.replace(/\s+\d{4}$/, '').substring(0, 36)
-      ctx.fillText(truncateText(ctx, raceName, W - pad * 2 - 180 * s), pad + 66 * s, textY)
+      ctx.fillText(truncateText(ctx, raceName, W - pad * 2 - 220 * s), pad + 86 * s, nameY)
+      // Distance subtitle / PB tag
+      const distLabel = distanceSubtitle(r)
+      ctx.fillStyle = isPB ? D.gold : D.muted2
+      ctx.font = `600 ${Math.round(11 * s)}px "Geist Mono", monospace`
+      ctx.letterSpacing = `${Math.round(1.5 * s)}px`
+      ctx.fillText(isPB ? `${distLabel}  ·  PB` : distLabel, pad + 86 * s, subY)
       if (r.time) {
-        ctx.fillStyle = D.orange
-        ctx.font = `800 ${Math.round(13 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
+        ctx.fillStyle = isPB ? D.gold : D.orange
+        ctx.font = `800 ${Math.round(17 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
         ctx.letterSpacing = '0px'; ctx.textAlign = 'right'
-        ctx.fillText(r.time, W - pad, textY)
+        ctx.fillText(r.time, W - pad, nameY)
       }
       ctx.strokeStyle = 'rgba(255,255,255,0.04)'; ctx.lineWidth = 1
       ctx.beginPath(); ctx.moveTo(pad, ryRow + rowH - 1); ctx.lineTo(W - pad, ryRow + rowH - 1); ctx.stroke()
@@ -608,17 +752,32 @@ interface Props {
   athlete?: Athlete
   onClose: () => void
   initialYear?: string
+  avatarUrl?: string | null
 }
 
-export function RaceLogPassport({ races, athlete, onClose, initialYear = 'all' }: Props) {
+export function RaceLogPassport({ races, athlete, onClose, initialYear = 'all', avatarUrl }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [year, setYear] = useState<string>(initialYear)
   const [ratio, setRatio] = useState<string>('16:9')
   const [drawn, setDrawn] = useState(false)
   const [exporting, setExporting] = useState(false)
+  const [avatarImg, setAvatarImg] = useState<HTMLImageElement | null>(null)
 
   // Read theme channel vars for JSX inline styles (CSS vars resolve at render time)
   const orangeCh = getComputedStyle(document.documentElement).getPropertyValue('--orange-ch').trim() || '232, 78, 27'
+
+  // Pre-load avatar image. Clerk's CDN serves with permissive CORS so
+  // crossOrigin='anonymous' lets us draw it onto the canvas without
+  // tainting it (which would block toBlob() at export time).
+  useEffect(() => {
+    if (!avatarUrl) { setAvatarImg(null); return }
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => setAvatarImg(img)
+    img.onerror = () => setAvatarImg(null)
+    img.src = avatarUrl
+    return () => { img.onload = null; img.onerror = null }
+  }, [avatarUrl])
 
   const years = getYears(races)
   const currentRatio = RATIOS.find(r => r.label === ratio)!
@@ -633,9 +792,10 @@ export function RaceLogPassport({ races, athlete, onClose, initialYear = 'all' }
       year,
       W: currentRatio.W,
       H: currentRatio.H,
+      avatarImg,
     })
     setDrawn(true)
-  }, [filteredRaces, athlete, year, currentRatio])
+  }, [filteredRaces, athlete, year, currentRatio, avatarImg])
 
   // Auto-draw when year/ratio changes if already drawn
   const handleYearChange = (y: string) => {
