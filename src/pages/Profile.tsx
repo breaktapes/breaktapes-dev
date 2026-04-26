@@ -1774,16 +1774,12 @@ export function Profile() {
     }
   }, [authUser])
 
-  if (!authUser) {
-    return (
-      <div style={st.page}>
-        <div style={st.emptyState}>
-          <div style={st.emptyIcon}>👤</div>
-          <div style={st.emptyText}>Sign in to view your athlete profile.</div>
-        </div>
-      </div>
-    )
-  }
+  // No authUser gate here — AuthGate already verifies Clerk's isSignedIn
+  // before rendering this page. Gating on the Zustand authUser races with
+  // useClerkSync's async token fetch and shows the sign-in prompt to a
+  // signed-in user whenever the token call hasn't resolved yet (or fails
+  // silently, e.g. missing JWT template). Sub-components that need authUser
+  // can guard themselves.
 
   return (
     <div style={st.page}>
