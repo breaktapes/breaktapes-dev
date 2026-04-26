@@ -186,6 +186,14 @@ function distanceSubtitle(r: Race): string {
   return r.distance.toUpperCase()
 }
 
+// Split YYYY-MM-DD into ["DD-MM", "YYYY"] for the two-line date column
+// in the mission log. Mirrors fmtDateDDMM in src/lib/utils.ts.
+function dateParts(d: string | undefined): [string, string] {
+  if (!d) return ['', '']
+  const m = String(d).match(/^(\d{4})-(\d{2})-(\d{2})/)
+  return m ? [`${m[3]}-${m[2]}`, m[1]] : [String(d), '']
+}
+
 function getSports(races: Race[]): string[] {
   const s = new Set(races.map(r => r.sport).filter(Boolean))
   const out = []
@@ -544,33 +552,36 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
       }
 
       const flag = countryToFlag(r.country)
-      const yr = r.date?.slice(0, 4) ?? ''
+      const [dDM, dY] = dateParts(r.date)
       const raceName = r.name.replace(/\s+\d{4}$/, '').substring(0, 36)
 
-      // Year (left, mono)
+      // Date column (left, mono, 2-line stack: "DD-MM" / "YYYY")
       ctx.fillStyle = `rgba(${orangeCh},0.55)`
       ctx.font = `500 ${Math.round(13 * s)}px "Geist Mono", monospace`
       ctx.letterSpacing = '0px'
       ctx.textAlign = 'left'
-      ctx.fillText(yr, rx, nameY)
+      ctx.fillText(dDM, rx, nameY)
+      ctx.fillStyle = `rgba(${orangeCh},0.40)`
+      ctx.font = `500 ${Math.round(11 * s)}px "Geist Mono", monospace`
+      ctx.fillText(dY, rx, subY)
 
-      // Flag (left of race name)
+      // Flag (left of race name) — column shifted right to clear DD-MM-YYYY
       ctx.fillStyle = D.muted
       ctx.font = `600 ${Math.round(18 * s)}px "Barlow", Arial, sans-serif`
-      ctx.fillText(`${flag} `, rx + 56 * s, nameY)
+      ctx.fillText(`${flag} `, rx + 86 * s, nameY)
 
-      // Race name — line 1
+      // Race name — line 1 (column shifted right to clear date stack)
       ctx.fillStyle = D.white
       ctx.font = `700 ${Math.round(18 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
       ctx.letterSpacing = `${Math.round(0.5 * s)}px`
-      ctx.fillText(truncateText(ctx, raceName, rw - 220 * s), rx + 86 * s, nameY)
+      ctx.fillText(truncateText(ctx, raceName, rw - 250 * s), rx + 116 * s, nameY)
 
       // Distance subtitle — line 2 (with PB badge tag if applicable)
       const distLabel = distanceSubtitle(r)
       ctx.fillStyle = isPB ? D.gold : D.muted2
       ctx.font = `600 ${Math.round(11 * s)}px "Geist Mono", monospace`
       ctx.letterSpacing = `${Math.round(1.5 * s)}px`
-      ctx.fillText(isPB ? `${distLabel}  ·  PB` : distLabel, rx + 86 * s, subY)
+      ctx.fillText(isPB ? `${distLabel}  ·  PB` : distLabel, rx + 116 * s, subY)
 
       if (r.time) {
         ctx.fillStyle = isPB ? D.gold : D.orange
@@ -712,25 +723,29 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
         ctx.fillRect(pad, ryRow, W - pad * 2, rowH)
       }
       const flag = countryToFlag(r.country)
-      const yr = r.date?.slice(0, 4) ?? ''
+      const [dDM, dY] = dateParts(r.date)
+      // Date column (left, 2-line stack DD-MM / YYYY)
       ctx.fillStyle = `rgba(${orangeCh},0.55)`
       ctx.font = `500 ${Math.round(13 * s)}px "Geist Mono", monospace`
       ctx.letterSpacing = '0px'; ctx.textAlign = 'left'
-      ctx.fillText(yr, pad, nameY)
+      ctx.fillText(dDM, pad, nameY)
+      ctx.fillStyle = `rgba(${orangeCh},0.40)`
+      ctx.font = `500 ${Math.round(11 * s)}px "Geist Mono", monospace`
+      ctx.fillText(dY, pad, subY)
       ctx.fillStyle = D.muted
       ctx.font = `600 ${Math.round(17 * s)}px "Barlow", Arial, sans-serif`
-      ctx.fillText(`${flag} `, pad + 56 * s, nameY)
+      ctx.fillText(`${flag} `, pad + 86 * s, nameY)
       ctx.fillStyle = D.white
       ctx.font = `700 ${Math.round(17 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
       ctx.letterSpacing = `${Math.round(0.3 * s)}px`
       const raceName = r.name.replace(/\s+\d{4}$/, '').substring(0, 36)
-      ctx.fillText(truncateText(ctx, raceName, W - pad * 2 - 220 * s), pad + 86 * s, nameY)
+      ctx.fillText(truncateText(ctx, raceName, W - pad * 2 - 250 * s), pad + 116 * s, nameY)
       // Distance subtitle / PB tag
       const distLabel = distanceSubtitle(r)
       ctx.fillStyle = isPB ? D.gold : D.muted2
       ctx.font = `600 ${Math.round(11 * s)}px "Geist Mono", monospace`
       ctx.letterSpacing = `${Math.round(1.5 * s)}px`
-      ctx.fillText(isPB ? `${distLabel}  ·  PB` : distLabel, pad + 86 * s, subY)
+      ctx.fillText(isPB ? `${distLabel}  ·  PB` : distLabel, pad + 116 * s, subY)
       if (r.time) {
         ctx.fillStyle = isPB ? D.gold : D.orange
         ctx.font = `800 ${Math.round(17 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
