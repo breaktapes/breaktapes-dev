@@ -16,7 +16,7 @@ import { WidgetDetailModal } from '@/components/WidgetDetailModal'
 import type { WidgetDynamicContext } from '@/lib/widgetContent'
 import type { Race, DashWidget } from '@/types'
 import { useUnits, distUnit } from '@/lib/units'
-import { fmtDateDDMM } from '@/lib/utils'
+import { fmtDateDDMM, distLabel as distLabelUtil } from '@/lib/utils'
 import {
   bestRiegelTable,
   bestVDOT, recentVDOT, equivalentPerformances, paceZones, vdotHistory,
@@ -103,18 +103,7 @@ function normalizeDistKey(d: string | undefined): string {
 }
 
 function distBadge(d: string | undefined): string {
-  if (!d) return ''
-  const n = distanceToKm(d)
-  if (n === 0) return d
-  if (n >= 225.9 && n <= 226.1) return 'IRONMAN'
-  if (n >= 112.9 && n <= 113.1) return '70.3'
-  if (n >= 51.4 && n <= 51.6) return 'Olympic'
-  if (n >= 42 && n <= 42.3) return 'Marathon'
-  if (n >= 21 && n <= 21.2) return 'Half Marathon'
-  if (n >= 10 && n <= 10.1) return '10K'
-  if (n >= 5 && n <= 5.1) return '5K'
-  if (n > 42.3) return 'Ultra'
-  return `${n}K`
+  return distLabelUtil(d)
 }
 
 function buildPBMap(races: Race[]): Record<string, Race> {
@@ -540,7 +529,7 @@ function RaceMorningBrief({ race, onEditRace, onComplete }: { race: Race; onEdit
         <div style={st.briefingTitle}>{(race.name ?? '').toUpperCase()}</div>
         <div style={st.briefingMeta}>
           {fmtDateIntl(race.date)}
-          {race.distance ? ` · ${distBadge(race.distance) || race.distance + 'K'}` : ''}
+          {race.distance ? ` · ${distBadge(race.distance)}` : ''}
         </div>
 
         {/* Weather */}
@@ -697,7 +686,7 @@ function PreRaceBriefing({ onAddRace, onEditRace, onComplete }: { onAddRace: () 
               <span style={st.briefingTag}>JUST RACED</span>
             </div>
             <div style={st.briefingTitle}>{(lastRace.name ?? '').toUpperCase()}</div>
-            <div style={st.briefingMeta}>{dLabel} · {distBadge(lastRace.distance) || (lastRace.distance + 'K')}</div>
+            <div style={st.briefingMeta}>{dLabel} · {distBadge(lastRace.distance)}</div>
             {lastRace.time && <div style={st.lastRacePill}>Finish: {lastRace.time}</div>}
             <button style={{ ...st.ctaPrimary, marginTop: '12px' }} onClick={onAddRace}>+ Add Next Race</button>
           </div>
@@ -736,7 +725,7 @@ function PreRaceBriefing({ onAddRace, onEditRace, onComplete }: { onAddRace: () 
         </div>
         <div style={st.briefingMeta}>
           {fmtDateIntl(nextRace.date)}
-          {nextRace.distance ? ` · ${distBadge(nextRace.distance) || nextRace.distance + 'K'}` : ''}
+          {nextRace.distance ? ` · ${distBadge(nextRace.distance)}` : ''}
         </div>
         {lastPill && (
           <div style={st.lastRacePill}>
@@ -1056,7 +1045,7 @@ function CountdownCard({ race, onShowAll, upcomingRaces, onSelectRace }: { race:
           </span>
           {race.distance && (
             <span style={{ color: 'var(--muted)' }}>
-              &nbsp;·&nbsp;{distBadge(race.distance) || race.distance + 'K'}
+              &nbsp;·&nbsp;{distBadge(race.distance)}
             </span>
           )}
           <span style={{ color: 'var(--muted)' }}>&nbsp;·&nbsp;{fmtDateIntl(race.date)}</span>
@@ -3795,7 +3784,7 @@ function WhatToRaceNextWidget() {
           <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
             <div style={{ minWidth: 0, flex: 1 }}>
               <div style={{ fontSize: '12px', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name ?? 'Unnamed Race'}</div>
-              <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '1px' }}>{fmtDateDDMM(r.date)} · {distBadge(r.distance) || r.distance}</div>
+              <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '1px' }}>{fmtDateDDMM(r.date)} · {distBadge(r.distance)}</div>
             </div>
             {r.priority && (
               <span style={{ fontSize: '10px', color: r.priority === 'A' ? 'var(--orange)' : 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, flexShrink: 0, marginLeft: '8px' }}>
@@ -4155,7 +4144,7 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                         </div>
                         <div style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: 1.5 }}>
                           {[r.city, r.country].filter(Boolean).join(', ')}
-                          {r.distance ? ` · ${distBadge(r.distance) || r.distance + 'K'}` : ''}
+                          {r.distance ? ` · ${distBadge(r.distance)}` : ''}
                           {' · '}{fmtDateIntl(r.date)}
                           {r.goalTime ? <span style={{ color: 'var(--orange)', marginLeft: '6px' }}>🎯 {r.goalTime}</span> : ''}
                         </div>
@@ -4176,7 +4165,7 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                         </div>
                         <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '3px' }}>
                           {[r.city, r.country].filter(Boolean).join(', ')}
-                          {r.distance ? ` · ${distBadge(r.distance) || r.distance + 'K'}` : ''}
+                          {r.distance ? ` · ${distBadge(r.distance)}` : ''}
                           {' · '}{fmtDateIntl(r.date)}
                           {r.goalTime ? <span style={{ color: 'var(--muted)', marginLeft: '4px' }}>· 🎯 {r.goalTime}</span> : ''}
                         </div>

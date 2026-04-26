@@ -22,6 +22,7 @@ import type { Race } from '@/types'
 import { useUnits, distUnit } from '@/lib/units'
 import { geocodeCity } from '@/lib/geocode'
 import { normalizeCityName } from '@/lib/cityNormalize'
+import { distLabel as distLabelUtil } from '@/lib/utils'
 
 // Error boundary for MapLibre — catches WebGL init failures, style errors, CSP blocks
 class MapErrorBoundary extends Component<
@@ -86,18 +87,7 @@ function distanceToKm(d: string | undefined): number {
 
 /** Human-readable distance label for display */
 function distLabel(d: string | undefined): string {
-  if (!d) return ''
-  const km = distanceToKm(d)
-  if (km === 0) return d
-  if (km >= 225.9 && km <= 226.1) return 'IRONMAN'
-  if (km >= 112.9 && km <= 113.1) return '70.3'
-  if (km >= 51.4 && km <= 51.6) return 'Olympic'
-  if (km >= 42.1 && km <= 42.3) return 'Marathon'
-  if (km >= 21.0 && km <= 21.2) return 'Half Marathon'
-  if (km > 42.3) return 'Ultra'
-  if (km === 10) return '10K'
-  if (km === 5) return '5K'
-  return `${km}K`
+  return distLabelUtil(d)
 }
 
 /** Country code → flag emoji */
