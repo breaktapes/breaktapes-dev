@@ -8,6 +8,7 @@ import { selectRaces, selectNextRace, selectAthlete, selectAuthUser } from '@/st
 import { EditProfileModal } from '@/components/EditProfileModal'
 import type { Race } from '@/types'
 import { useUnits, distUnit } from '@/lib/units'
+import { distLabel } from '@/lib/utils'
 import { APP_URL } from '@/env'
 import { supabase } from '@/lib/supabase'
 
@@ -72,16 +73,7 @@ function athleteLevel(raceCount: number): string {
   return 'NEW'
 }
 
-function distLabel(d: string | undefined): string {
-  if (!d) return ''
-  const n = parseFloat(d)
-  if (isNaN(n)) return d
-  if (n >= 42 && n <= 42.3) return 'Marathon'
-  if (n >= 21 && n <= 21.2) return 'Half Marathon'
-  if (n === 10) return '10K'
-  if (n === 5) return '5K'
-  return `${n} km`
-}
+
 
 const DIST_ORDER: string[] = ['5', '10', '21.1', '42.2', '1.5', '3', '15', '20', '25', '30', '50', '100']
 
