@@ -493,30 +493,31 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
       const pbRightEdge = pad + leftW - pad * 1.5 - 10 * s
       const priBadgeW = 22 * s
       pbList.slice(0, rowsToShow).forEach((p, i) => {
-        const rowY = ly + headerRow + rowOuter * i + 8 * s
-        // Distance label (left)
+        const rowTop = ly + headerRow + rowOuter * i
+        const rowMid = rowTop + rowOuter * 0.58
+        // Distance label (left), vertically centered in row
         ctx.fillStyle = D.white
         ctx.globalAlpha = 0.78
-        ctx.font = `700 ${Math.round(15 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
-        ctx.letterSpacing = `${Math.round(1.5 * s)}px`
+        ctx.font = `600 ${Math.round(13 * s)}px "Geist Mono", "Courier New", monospace`
+        ctx.letterSpacing = '0px'
         ctx.textAlign = 'left'
-        ctx.fillText(p.label, pad + 14 * s, rowY + 18 * s)
+        ctx.fillText(p.label, pad + 14 * s, rowMid)
         ctx.globalAlpha = 1
-        // Priority badge (far right, fixed column)
+        // Priority badge (far right, same Y as time)
         if (p.priority) {
           const priColor = p.priority === 'A' ? D.orange : p.priority === 'B' ? D.green : D.muted
           ctx.fillStyle = priColor
-          ctx.font = `800 ${Math.round(13 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
+          ctx.font = `700 ${Math.round(11 * s)}px "Geist Mono", "Courier New", monospace`
           ctx.letterSpacing = '0px'
           ctx.textAlign = 'right'
-          ctx.fillText(p.priority, pbRightEdge, rowY + 18 * s)
+          ctx.fillText(p.priority, pbRightEdge, rowMid)
         }
-        // Time (right-aligned, gold, consistent column)
+        // Time (monospace, right-aligned, consistent column)
         ctx.fillStyle = D.gold
-        ctx.font = `900 ${Math.round(22 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
-        ctx.letterSpacing = '-0.5px'
+        ctx.font = `600 ${Math.round(20 * s)}px "Geist Mono", "Courier New", monospace`
+        ctx.letterSpacing = '0px'
         ctx.textAlign = 'right'
-        ctx.fillText(fmtHHMMSS(p.time), pbRightEdge - priBadgeW, rowY + 20 * s)
+        ctx.fillText(fmtHHMMSS(p.time), pbRightEdge - (p.priority ? priBadgeW : 0), rowMid)
       })
       ctx.textAlign = 'left'
       ly += blockH + 14 * s
@@ -621,21 +622,22 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
       ctx.fillText(isPB ? `${distLabel}  ·  PB` : distLabel, rx + 116 * s, subY)
 
       if (r.time) {
-        // Priority badge — right of time
+        const timeCenterY = (nameY + subY) / 2 + 4 * s
+        // Priority badge — centered same as time, far right
         if (r.priority) {
           const priColor = r.priority === 'A' ? D.orange : r.priority === 'B' ? D.green : D.muted
           ctx.fillStyle = priColor
-          ctx.font = `800 ${Math.round(13 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
+          ctx.font = `700 ${Math.round(11 * s)}px "Geist Mono", "Courier New", monospace`
           ctx.letterSpacing = '0px'
           ctx.textAlign = 'right'
-          ctx.fillText(r.priority, W - pad, subY)
+          ctx.fillText(r.priority, W - pad, timeCenterY)
         }
         ctx.fillStyle = isPB ? D.gold : D.white
         ctx.globalAlpha = isPB ? 1 : 0.9
-        ctx.font = `800 ${Math.round(18 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
+        ctx.font = `600 ${Math.round(20 * s)}px "Geist Mono", "Courier New", monospace`
         ctx.letterSpacing = '0px'
         ctx.textAlign = 'right'
-        ctx.fillText(fmtHHMMSS(r.time), W - pad - (r.priority ? 20 * s : 0), nameY)
+        ctx.fillText(fmtHHMMSS(r.time), W - pad - (r.priority ? 22 * s : 0), timeCenterY)
         ctx.globalAlpha = 1
       }
 
@@ -736,28 +738,29 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
 
       const vPriW = 22 * s
       pbList.slice(0, rowsToShow).forEach((p, i) => {
-        const rowY = vy + headerRow + rowOuter * i + 6 * s
+        const rowTop = vy + headerRow + rowOuter * i
+        const rowMid = rowTop + rowOuter * 0.58
         ctx.fillStyle = D.white
         ctx.globalAlpha = 0.78
-        ctx.font = `700 ${Math.round(14 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
-        ctx.letterSpacing = `${Math.round(1.5 * s)}px`
+        ctx.font = `600 ${Math.round(12 * s)}px "Geist Mono", monospace`
+        ctx.letterSpacing = '0px'
         ctx.textAlign = 'left'
-        ctx.fillText(p.label, pad + 14 * s, rowY + 18 * s)
+        ctx.fillText(p.label, pad + 14 * s, rowMid)
         ctx.globalAlpha = 1
-        // Priority badge (far right)
+        // Priority badge (far right, same Y as time)
         if (p.priority) {
           const priColor = p.priority === 'A' ? D.orange : p.priority === 'B' ? D.green : D.muted
           ctx.fillStyle = priColor
-          ctx.font = `800 ${Math.round(13 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
+          ctx.font = `700 ${Math.round(11 * s)}px "Geist Mono", monospace`
           ctx.letterSpacing = '0px'
           ctx.textAlign = 'right'
-          ctx.fillText(p.priority, W - pad - 14 * s, rowY + 18 * s)
+          ctx.fillText(p.priority, W - pad - 14 * s, rowMid)
         }
         ctx.fillStyle = D.gold
-        ctx.font = `900 ${Math.round(20 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
-        ctx.letterSpacing = '-0.5px'
+        ctx.font = `600 ${Math.round(19 * s)}px "Geist Mono", monospace`
+        ctx.letterSpacing = '0px'
         ctx.textAlign = 'right'
-        ctx.fillText(fmtHHMMSS(p.time), W - pad - 14 * s - (p.priority ? vPriW : 0), rowY + 20 * s)
+        ctx.fillText(fmtHHMMSS(p.time), W - pad - 14 * s - (p.priority ? vPriW : 0), rowMid)
       })
       ctx.textAlign = 'left'
       vy += blockH + 14 * s
@@ -817,18 +820,19 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
       ctx.letterSpacing = `${Math.round(1.5 * s)}px`
       ctx.fillText(isPB ? `${distLabel}  ·  PB` : distLabel, pad + 116 * s, subY)
       if (r.time) {
+        const timeCenterY = (nameY + subY) / 2 + 4 * s
         if (r.priority) {
           const priColor = r.priority === 'A' ? D.orange : r.priority === 'B' ? D.green : D.muted
           ctx.fillStyle = priColor
-          ctx.font = `800 ${Math.round(13 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
+          ctx.font = `700 ${Math.round(11 * s)}px "Geist Mono", monospace`
           ctx.letterSpacing = '0px'; ctx.textAlign = 'right'
-          ctx.fillText(r.priority, W - pad, subY)
+          ctx.fillText(r.priority, W - pad, timeCenterY)
         }
         ctx.fillStyle = isPB ? D.gold : D.white
         ctx.globalAlpha = isPB ? 1 : 0.9
-        ctx.font = `800 ${Math.round(17 * s)}px "Barlow Condensed", "Arial Narrow", sans-serif`
+        ctx.font = `600 ${Math.round(19 * s)}px "Geist Mono", monospace`
         ctx.letterSpacing = '0px'; ctx.textAlign = 'right'
-        ctx.fillText(fmtHHMMSS(r.time), W - pad - (r.priority ? 20 * s : 0), nameY)
+        ctx.fillText(fmtHHMMSS(r.time), W - pad - (r.priority ? 22 * s : 0), timeCenterY)
         ctx.globalAlpha = 1
       }
       ctx.strokeStyle = 'rgba(255,255,255,0.04)'; ctx.lineWidth = 1
