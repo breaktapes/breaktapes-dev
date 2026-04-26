@@ -63,6 +63,43 @@ export function resolveDistKm(dist: string): number | null {
   return isNaN(n) ? null : n
 }
 
+/**
+ * Resolve an arbitrary stored race.distance value to a sport-specific
+ * preset. Tries (in order):
+ *   1. exact value match  ("42.2" → "42.2")
+ *   2. label match        ("Marathon" → "42.2", case-insensitive)
+ *   3. km equivalence     ("Marathon" → 42.2 → preset whose value parses to 42.2)
+ * Returns null if nothing matches — caller should treat as "Custom..." and
+ * keep the raw string as the custom-distance text. Without this layered
+ * resolution, races stored with label-style distances (legacy data, race
+ * imports, AI parses) silently flip to Custom in the edit modal and leak
+ * "Marathon" / "Half Marathon" into the numeric custom-km text field.
+ */
+export function findSportDistMatch(
+  raw: string,
+  presets: { label: string; value: string }[],
+): string | null {
+  if (!raw) return null
+  const lc = raw.trim().toLowerCase()
+  // Exact value match (current canonical form)
+  const direct = presets.find(p => p.value === raw)
+  if (direct) return direct.value
+  // Label match (covers "Marathon", "Half Marathon", etc.)
+  const labelMatch = presets.find(p => p.label.toLowerCase() === lc)
+  if (labelMatch) return labelMatch.value
+  // Km equivalence — collapses any numeric-equivalent label
+  // ("Marathon"/"42.195"/"42.2" all map to 42.2 → preset value "42.2")
+  const km = resolveDistKm(raw)
+  if (km != null) {
+    const numMatch = presets.find(p => {
+      const v = parseFloat(p.value)
+      return !isNaN(v) && Math.abs(v - km) < 0.05
+    })
+    if (numMatch) return numMatch.value
+  }
+  return null
+}
+
 // ── Catalog dedup check ───────────────────────────────────────────────────────
 
 interface CatalogRow { name: string; city?: string; year?: number }

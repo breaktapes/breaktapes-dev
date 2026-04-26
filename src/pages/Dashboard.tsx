@@ -3441,7 +3441,12 @@ function RaceComparerWidget() {
     )
   }
 
-  const selStyle: React.CSSProperties = { width: '100%', background: 'transparent', border: 'none', outline: 'none', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '10px', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '4px', color: 'inherit' }
+  // 12px (was 10) is the minimum iOS Safari treats as a non-zoom-trigger
+  // tap target. Wrappers also get data-no-widget-detail so taps never
+  // bubble to WidgetCard's onClick (which used to open the detail modal
+  // on top of the picker, dismissing it before the user could choose).
+  const selStyle: React.CSSProperties = { width: '100%', background: 'transparent', border: 'none', outline: 'none', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '12px', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '6px', color: 'inherit', padding: '4px 0', appearance: 'none', WebkitAppearance: 'none' }
+  const stopBubble = (e: React.SyntheticEvent) => e.stopPropagation()
 
   return (
     <WidgetCard id="race-comparer" style={st.glowCard}>
@@ -3450,15 +3455,15 @@ function RaceComparerWidget() {
         <div style={st.widgetTitle}>SIDE BY SIDE</div>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '10px' }}>
-        <div style={{ background: 'var(--surface3)', borderRadius: '8px', padding: '8px' }}>
-          <select value={idxA} onChange={e => setIdxA(Number(e.target.value))} style={{ ...selStyle, color: 'var(--orange)' }}>
+        <div data-no-widget-detail style={{ background: 'var(--surface3)', borderRadius: '8px', padding: '10px' }} onClick={stopBubble}>
+          <select value={idxA} onChange={e => setIdxA(Number(e.target.value))} onClick={stopBubble} style={{ ...selStyle, color: 'var(--orange)' }}>
             {past.map((r, i) => <option key={r.id} value={i}>{r.name ?? r.date}</option>)}
           </select>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', color: diff?.faster === 'A' ? 'var(--green)' : 'var(--white)' }}>{raceA?.time ?? '—'}</div>
           <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '2px' }}>{raceA?.date ?? ''}</div>
         </div>
-        <div style={{ background: 'var(--surface3)', borderRadius: '8px', padding: '8px' }}>
-          <select value={idxB} onChange={e => setIdxB(Number(e.target.value))} style={{ ...selStyle, color: 'var(--muted)' }}>
+        <div data-no-widget-detail style={{ background: 'var(--surface3)', borderRadius: '8px', padding: '10px' }} onClick={stopBubble}>
+          <select value={idxB} onChange={e => setIdxB(Number(e.target.value))} onClick={stopBubble} style={{ ...selStyle, color: 'var(--muted)' }}>
             {past.map((r, i) => <option key={r.id} value={i}>{r.name ?? r.date}</option>)}
           </select>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', color: diff?.faster === 'B' ? 'var(--green)' : 'var(--white)' }}>{raceB?.time ?? '—'}</div>
