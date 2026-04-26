@@ -484,7 +484,7 @@ function GreetingCard({ onCustomize }: { onCustomize: () => void }) {
 
 const DEFAULT_GEAR = ['Shoes', 'Watch', 'Race kit', 'Nutrition', 'Bib']
 
-function RaceMorningBrief({ race, onEditRace }: { race: Race; onEditRace?: (race: Race) => void }) {
+function RaceMorningBrief({ race, onEditRace, onComplete }: { race: Race; onEditRace?: (race: Race) => void; onComplete?: (race: Race) => void }) {
   const updateRace = useRaceStore(s => s.updateRace)
   const units = useUnits()
   const [newItem, setNewItem] = useState('')
@@ -629,12 +629,41 @@ function RaceMorningBrief({ race, onEditRace }: { race: Race; onEditRace?: (race
             </button>
           </div>
         </div>
+
+        {/* Mark Completed CTA — race day only */}
+        {isToday && onComplete && (
+          <button
+            onClick={() => onComplete(race)}
+            style={{
+              marginTop: '14px',
+              background: 'var(--green)',
+              color: '#000',
+              border: 'none',
+              borderRadius: '8px',
+              padding: '12px 16px',
+              fontFamily: 'var(--headline)',
+              fontWeight: 900,
+              fontSize: '13px',
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              cursor: 'pointer',
+              minHeight: '44px',
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+            }}
+          >
+            ✓ Mark Completed · Log Result
+          </button>
+        )}
       </div>
     </div>
   )
 }
 
-function PreRaceBriefing({ onAddRace, onEditRace }: { onAddRace: () => void; onEditRace?: (race: Race) => void }) {
+function PreRaceBriefing({ onAddRace, onEditRace, onComplete }: { onAddRace: () => void; onEditRace?: (race: Race) => void; onComplete?: (race: Race) => void }) {
   const races    = useRaceStore(selectRaces)
   const nextRace = useRaceStore(selectNextRace)   // always nearest upcoming — never follows focus pin
   const today    = todayStr()
@@ -653,7 +682,7 @@ function PreRaceBriefing({ onAddRace, onEditRace }: { onAddRace: () => void; onE
 
   // RACE_MORNING state: show when next race is today or tomorrow
   if (nextRace && daysUntil(nextRace.date) <= 1) {
-    return <RaceMorningBrief race={nextRace} onEditRace={onEditRace} />
+    return <RaceMorningBrief race={nextRace} onEditRace={onEditRace} onComplete={onComplete} />
   }
 
   if (!nextRace) {
@@ -5037,6 +5066,8 @@ export function Dashboard() {
   const [addRaceMode,       setAddRaceMode]       = useState<'past' | 'upcoming'>('past')
   const [showAllUpcoming,   setShowAllUpcoming]   = useState(false)
   const [editRace,          setEditRace]          = useState<Race | null>(null)
+  const [editRaceMode,      setEditRaceMode]      = useState<'view' | 'edit'>('view')
+  const dismissExpiredRace = useRaceStore(s => s.dismissExpiredRace)
   const [detailWidget,      setDetailWidget]      = useState<DashWidget | null>(null)
   const [detailPreview,     setDetailPreview]     = useState<React.ReactNode>(null)
   const [detailCtx,         setDetailCtx]         = useState<WidgetDynamicContext | undefined>(undefined)
@@ -5093,11 +5124,15 @@ export function Dashboard() {
       {showCustomize    && <DashCustomizeModal onClose={() => setShowCustomize(false)} />}
       {showAddRace      && <AddRaceModal defaultMode={addRaceMode} prefillDistance={riegelPrefillDist} onClose={() => { setShowAddRace(false); setRiegelPrefillDist(undefined) }} />}
       {showAllUpcoming  && <AllUpcomingModal onClose={() => setShowAllUpcoming(false)} onAddRace={openAddUpcomingRace} />}
-      {editRace         && <ViewEditRaceModal race={editRace} onClose={() => setEditRace(null)} />}
+      {editRace         && <ViewEditRaceModal race={editRace} initialMode={editRaceMode} onClose={() => { setEditRace(null); setEditRaceMode('view') }} />}
       {detailWidget     && <WidgetDetailModal widget={detailWidget} preview={detailPreview} dynamicContext={detailCtx} actions={widgetActions} onClose={closeDetail} />}
 
       <GreetingCard onCustomize={() => setShowCustomize(true)} />
-      <PreRaceBriefing onAddRace={openAddRace} onEditRace={(race) => setEditRace(race)} />
+      <PreRaceBriefing
+        onAddRace={openAddRace}
+        onEditRace={(race) => { setEditRaceMode('view'); setEditRace(race) }}
+        onComplete={(race) => { dismissExpiredRace(race.id); setEditRaceMode('edit'); setEditRace(race) }}
+      />
 
       {/* Expired upcoming race prompts */}
       <ExpiredRacePrompts onLogResult={() => { setAddRaceMode('past'); setShowAddRace(true) }} />
