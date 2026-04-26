@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useUser } from '@clerk/clerk-react'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { useAuthStore } from '@/stores/useAuthStore'
@@ -311,12 +312,41 @@ function AthleteHero({ onEdit }: { onEdit: () => void }) {
   const navigate = useNavigate()
   const units   = useUnits()
   const nextRace = useRaceStore(selectNextRace)
+  const { user } = useUser()
+  const fileRef = useRef<HTMLInputElement>(null)
+  const [uploading, setUploading] = useState(false)
 
   const initials = useMemo(() => {
     const f = athlete?.firstName?.slice(0, 1) ?? ''
     const l = athlete?.lastName?.slice(0, 1) ?? ''
     return (f + l).toUpperCase() || '?'
   }, [athlete])
+
+  // Clerk's default `imageUrl` is its initials avatar. Treat it as "no
+  // photo" so we keep our own monogram (matches the dossier export).
+  // Real uploads come back from Clerk's CDN at *.clerk.accounts.dev or
+  // images.clerk.dev, never the gravatar/initials fallback host.
+  const hasPhoto = !!user?.hasImage && !!user?.imageUrl
+
+  async function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file || !user) return
+    if (file.size > 10 * 1024 * 1024) {
+      alert('Image too large — must be under 10 MB')
+      return
+    }
+    setUploading(true)
+    try {
+      await user.setProfileImage({ file })
+      // Clerk re-issues user via reactive `useUser()` hook on success.
+    } catch (err) {
+      console.warn('[Profile] photo upload failed', err)
+      alert('Could not upload photo. Try a different image.')
+    } finally {
+      setUploading(false)
+      if (fileRef.current) fileRef.current.value = ''
+    }
+  }
 
   const fullName = athlete
     ? [athlete.firstName, athlete.lastName].filter(Boolean).join(' ') || 'Athlete'
@@ -357,9 +387,60 @@ function AthleteHero({ onEdit }: { onEdit: () => void }) {
     <div style={st.heroCard}>
       {/* Avatar row */}
       <div style={st.avatarRow}>
-        <div style={st.avatar}>
-          <span style={st.avatarInitials}>{initials}</span>
-        </div>
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          disabled={uploading}
+          aria-label={hasPhoto ? 'Change profile photo' : 'Upload profile photo'}
+          style={{
+            ...st.avatar,
+            padding: 0,
+            cursor: uploading ? 'wait' : 'pointer',
+            background: hasPhoto ? 'transparent' : 'var(--surface3)',
+            overflow: 'hidden',
+            position: 'relative',
+          }}
+        >
+          {hasPhoto ? (
+            <img
+              src={user.imageUrl}
+              alt={[athlete?.firstName, athlete?.lastName].filter(Boolean).join(' ') || 'Profile'}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            />
+          ) : (
+            <span style={st.avatarInitials}>{initials}</span>
+          )}
+          <span
+            aria-hidden
+            style={{
+              position: 'absolute',
+              bottom: 0,
+              right: 0,
+              width: '22px',
+              height: '22px',
+              borderRadius: '50%',
+              background: 'var(--orange)',
+              color: '#000',
+              fontSize: '11px',
+              fontWeight: 900,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: '2px solid var(--black)',
+              pointerEvents: 'none',
+            }}
+            title="Upload photo"
+          >
+            {uploading ? '…' : '+'}
+          </span>
+        </button>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          onChange={handlePhotoChange}
+          style={{ display: 'none' }}
+        />
         <div style={st.avatarInfo}>
           <div style={st.athleteName}>{fullName}</div>
           {sportCity && <div style={st.athleteSub}>{sportCity}</div>}
