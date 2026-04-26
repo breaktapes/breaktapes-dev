@@ -89,12 +89,14 @@ export function Settings() {
     updateAthlete({ isPublic: val })
     // Read existing state_json, merge in current athlete/race data, then upsert.
     // This ensures the Worker can render the full profile on first enable.
+    // .maybeSingle() returns null on 0 rows instead of erroring, so the very
+    // first toggle (no row yet) still proceeds to the upsert.
     const { data: existing } = await supabase
       .from('user_state')
       .select('state_json')
       .eq('user_id', authUser.id)
-      .single()
-    const current = (existing?.state_json as Record<string, unknown>) ?? {}
+      .maybeSingle()
+    const current = (existing?.state_json as Record<string, unknown> | null) ?? {}
     await supabase.from('user_state').upsert({
       user_id: authUser.id,
       username: athlete.username,

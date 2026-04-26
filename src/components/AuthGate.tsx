@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useUser, useAuth, SignIn, SignUp } from '@clerk/clerk-react'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { setClerkToken } from '@/lib/supabase'
+import { syncStateToSupabase } from '@/lib/syncState'
 import { IS_STAGING } from '@/env'
 
 type AuthView = 'signin' | 'signup'
@@ -19,6 +20,7 @@ function useClerkSync() {
   const setAuthUser = useAuthStore(s => s.setAuthUser)
   const setProAccess = useAuthStore(s => s.setProAccess)
   const updateAthlete = useAthleteStore(s => s.updateAthlete)
+  const didBootstrapSync = useRef(false)
 
   useEffect(() => {
     if (!isLoaded) return
@@ -26,6 +28,7 @@ function useClerkSync() {
     if (!isSignedIn || !user) {
       setAuthUser(null)
       setClerkToken(null)
+      didBootstrapSync.current = false
       return
     }
 
@@ -54,6 +57,17 @@ function useClerkSync() {
           email: user.primaryEmailAddress?.emailAddress ?? null,
         })
         setProAccess(IS_STAGING)
+
+        // Bootstrap sync — fires exactly once per session after the JWT
+        // is installed. Backfills the user_state row for users whose
+        // localStorage already holds races/athlete data but never managed
+        // a successful upsert (anyone who first signed in between the
+        // 2026-04-23 truncate and the 2026-04-26 state_json migration).
+        // Without this, the row stays missing until the next mutation.
+        if (!didBootstrapSync.current) {
+          didBootstrapSync.current = true
+          void syncStateToSupabase()
+        }
       } catch {
         // Leave authUser null on token failure — better to show landing
         // than to fire unauthenticated queries that pollute caches.
