@@ -4523,12 +4523,14 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
             return (
               <div
                 key={row.distance}
+                onClick={() => !row.isSameAsInput && handleSetGoal(row.distance)}
                 style={{
                   display: 'flex', flexDirection: 'column',
                   padding: '8px 10px', borderRadius: '6px',
                   background: row.isSameAsInput ? 'rgba(var(--orange-ch),0.1)' : 'var(--surface3)',
                   border: `1px solid ${row.isSameAsInput ? 'rgba(var(--orange-ch),0.3)' : hasGoal ? 'rgba(0,255,136,0.3)' : 'var(--border)'}`,
                   gap: '4px',
+                  cursor: row.isSameAsInput ? 'default' : 'pointer',
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -4540,14 +4542,6 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
                     <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', color: row.isSameAsInput ? 'var(--orange)' : 'var(--white)' }}>
                       {row.predictedTime}
                     </span>
-                    {!row.isSameAsInput && upcomingRaces.length > 0 && !hasGoal && (
-                      <button
-                        onClick={() => handleSetGoal(row.distance)}
-                        style={{ background: 'rgba(var(--orange-ch),0.15)', color: 'var(--orange)', border: '1px solid rgba(var(--orange-ch),0.4)', borderRadius: '5px', padding: '3px 8px', fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', cursor: 'pointer' }}
-                      >
-                        SET GOAL
-                      </button>
-                    )}
                     {hasGoal && (
                       <span style={{ fontSize: '10px', color: 'var(--green)', fontFamily: 'var(--headline)', fontWeight: 700 }}>✓ GOAL SET</span>
                     )}
