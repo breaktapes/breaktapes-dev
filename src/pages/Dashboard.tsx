@@ -4511,6 +4511,8 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
   return (
     <>
       <WidgetCard id="riegel-predictor" style={st.glowCard}>
+        {/* data-no-widget-detail on the wrapper prevents any click inside from opening the widget detail popup */}
+        <div data-no-widget-detail style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <div style={st.widgetLabel}>🔮 RACE PREDICTOR</div>
         <div style={st.widgetTitle}>RIEGEL PREDICTOR</div>
         <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '-4px' }}>
@@ -4523,6 +4525,7 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
             return (
               <div
                 key={row.distance}
+                data-no-widget-detail
                 onClick={() => !row.isSameAsInput && handleSetGoal(row.distance)}
                 style={{
                   display: 'flex', flexDirection: 'column',
@@ -4559,11 +4562,12 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
         <div style={{ fontSize: '11px', color: 'var(--muted2)', lineHeight: 1.5 }}>
           T₂ = T₁ × (D₂/D₁)^1.06
         </div>
+        </div>{/* end data-no-widget-detail wrapper */}
       </WidgetCard>
 
-      {/* Link sheet rendered via portal so it overlays the full page, not just the widget */}
+      {/* Link sheet rendered via portal — inset:0 covers header+nav fully */}
       {showLinkSheet && createPortal(
-        <div style={{ ...st.modalOverlay, zIndex: 1100 }} onClick={() => setShowLinkSheet(false)}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 1500, display: 'flex', alignItems: 'flex-end' }} onClick={() => setShowLinkSheet(false)}>
           <div style={{ ...st.customizeSheet, maxHeight: '60vh' }} onClick={e => e.stopPropagation()}>
             <div style={{ width: '40px', height: '4px', background: 'var(--border2)', borderRadius: '2px', margin: '0 auto 16px' }} />
             <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '15px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)', marginBottom: '4px' }}>
