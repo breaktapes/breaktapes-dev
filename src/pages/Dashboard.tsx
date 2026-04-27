@@ -3588,14 +3588,14 @@ function RaceStackWidget({ race }: { race: Race | null }) {
 // ─── Adaptive Goals Widget (Pro) ─────────────────────────────────────────────
 
 function AdaptiveGoalsWidget() {
-  const races = useRaceStore(selectRaces)
-  const today = todayStr()
+  const pastRaces    = useRaceStore(selectRaces)
+  const upcomingRaces = useRaceStore(selectUpcomingRaces)
 
   const data = useMemo(() => {
-    const past = races.filter(r => r.date <= today)
-    const pbMap = buildPBMap(past)
-    return races
+    const pbMap = buildPBMap(pastRaces)
+    return upcomingRaces
       .filter(r => r.goalTime)
+      .sort((a, b) => a.date.localeCompare(b.date))
       .map(r => {
         const key = normalizeDistKey(r.distance)
         const pb = pbMap[key]
@@ -3606,7 +3606,7 @@ function AdaptiveGoalsWidget() {
       })
       .filter(Boolean)
       .slice(0, 3) as { r: Race; goalSecs: number; pbSecs: number | null }[]
-  }, [races, today])
+  }, [pastRaces, upcomingRaces])
 
   if (!data.length) {
     return (
@@ -4791,16 +4791,16 @@ function EquivPerfWidget() {
       <div style={st.widgetTitle}>EQUIV PERFORMANCES</div>
       <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '-4px' }}>VDOT {vdotPt.vdot} · {vdotPt.raceName}</div>
 
-      {/* One-liner pill row */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
+      {/* Main 4-distance row — equal-width cards edge to edge */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr auto 1fr auto 1fr', gap: '0 4px', alignItems: 'center' }}>
         {mainDistances.map((e, i) => (
           <React.Fragment key={e.distance}>
-            {i > 0 && <span style={{ color: 'var(--muted2)', fontSize: '12px' }}>≈</span>}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: '8px', padding: '8px 10px', minWidth: '56px' }}>
+            {i > 0 && <span style={{ color: 'var(--muted2)', fontSize: '11px', textAlign: 'center' }}>≈</span>}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: '8px', padding: '8px 6px' }}>
               <span style={{ fontSize: '9px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
                 {e.distance.replace('Half Marathon','HM').replace('Marathon','MAR')}
               </span>
-              <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '15px', color: 'var(--white)', marginTop: '2px' }}>
+              <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '15px', color: 'var(--white)', marginTop: '2px', whiteSpace: 'nowrap' }}>
                 {e.timeStr}
               </span>
             </div>
