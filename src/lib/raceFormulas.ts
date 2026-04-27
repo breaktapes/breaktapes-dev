@@ -321,7 +321,7 @@ export function goalPaceCalc(
   if (goalTimeSecs <= 0 || distKm <= 0) return null
 
   const paceSecPerKm   = goalTimeSecs / distKm
-  const paceSecPerMile = paceSecPerKm * 1.60934
+  const paceSecPerMile = paceSecPerKm * 1.60934  // sec/mile (for storage/display)
   const requiredVDOT   = computeVDOT(goalTimeSecs, distKm)
 
   // Split targets every 5K, plus half and finish
@@ -358,7 +358,7 @@ export function goalPaceCalc(
     paceSecPerKm,
     pacePaceStr: fmtPace(paceSecPerKm, units),
     paceSecPerMile,
-    paceMileStr: fmtPace(paceSecPerMile, 'imperial'),
+    paceMileStr: fmtPace(paceSecPerKm, 'imperial'),  // pass km pace; fmtPace does the ×1.60934
     splitTargets,
     vsCurrentVDOT,
     requiredVDOT,
