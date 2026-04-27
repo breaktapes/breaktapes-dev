@@ -372,6 +372,11 @@ interface Achievement {
   findSourceRace?: (races: Race[]) => Race | null
 }
 
+function isRunningRace(r: Race): boolean {
+  const s = (r.sport ?? '').toLowerCase()
+  return s === '' || s === 'running' || s === 'run'
+}
+
 // Best time (seconds) for races in a km range, optionally filtered by sport
 function getPBSecsForDist(races: Race[], minKm: number, maxKm: number, sport?: string): number | null {
   let best: number | null = null
@@ -533,21 +538,21 @@ const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'ultra_initiate', icon: '🏔️', name: 'ULTRA INITIATE', group: 'special',
-    description: 'First 50K finish.',
-    check: r => r.some(x => parseFloat(x.distance) >= 45 && parseFloat(x.distance) <= 65),
-    findSourceRace: r => r.find(x => parseFloat(x.distance) >= 45 && parseFloat(x.distance) <= 65) ?? null,
+    description: 'First 50K running finish.',
+    check: r => r.some(x => isRunningRace(x) && parseFloat(x.distance) >= 45 && parseFloat(x.distance) <= 65),
+    findSourceRace: r => r.find(x => isRunningRace(x) && parseFloat(x.distance) >= 45 && parseFloat(x.distance) <= 65) ?? null,
   },
   {
     id: 'ultra_elite', icon: '🦅', name: 'ULTRA ELITE', group: 'special',
-    description: '100K completed.',
-    check: r => r.some(x => parseFloat(x.distance) >= 90 && parseFloat(x.distance) <= 130),
-    findSourceRace: r => r.find(x => parseFloat(x.distance) >= 90 && parseFloat(x.distance) <= 130) ?? null,
+    description: '100K running completed.',
+    check: r => r.some(x => isRunningRace(x) && parseFloat(x.distance) >= 90 && parseFloat(x.distance) <= 130),
+    findSourceRace: r => r.find(x => isRunningRace(x) && parseFloat(x.distance) >= 90 && parseFloat(x.distance) <= 130) ?? null,
   },
   {
     id: 'hundred_miler', icon: '💯', name: 'HUNDRED MILER', group: 'special',
-    description: '100-mile finish.',
-    check: r => r.some(x => parseFloat(x.distance) >= 140 && parseFloat(x.distance) <= 180),
-    findSourceRace: r => r.find(x => parseFloat(x.distance) >= 140 && parseFloat(x.distance) <= 180) ?? null,
+    description: '100-mile running finish.',
+    check: r => r.some(x => isRunningRace(x) && parseFloat(x.distance) >= 140 && parseFloat(x.distance) <= 180),
+    findSourceRace: r => r.find(x => isRunningRace(x) && parseFloat(x.distance) >= 140 && parseFloat(x.distance) <= 180) ?? null,
   },
   {
     id: 'iron_mind', icon: '🔱', name: 'IRON MIND', group: 'special',
@@ -698,13 +703,13 @@ const ACHIEVEMENTS: Achievement[] = [
   { id: 'marathon_world_class',      icon: '🏛️', name: 'WORLD CLASS',      group: 'ladder', family: 'marathon', tier: 15, description: 'Marathon under 2:20.',  check: r => { const pb = getPBSecsForDist(r, 40, 45); return pb !== null && pb < 8400 } },
 
   // ── Ultra Ladder (7 tiers) ────────────────────────────────────────────────
-  { id: 'ultra_50k_entry',           icon: '🏔️', name: 'ULTRA ENTRY',       group: 'ladder', family: 'ultra', tier: 1, description: '50K under 6:00.',          check: r => { const pb = getPBSecsForDist(r, 45, 65); return pb !== null && pb < 21600 } },
-  { id: 'ultra_50k_endurance_builder',icon:'🏔️', name: 'ENDURANCE BUILDER', group: 'ladder', family: 'ultra', tier: 2, description: '50K under 5:30.',          check: r => { const pb = getPBSecsForDist(r, 45, 65); return pb !== null && pb < 19800 } },
-  { id: 'ultra_50k_ultra_control',   icon: '🏔️', name: 'ULTRA CONTROL',     group: 'ladder', family: 'ultra', tier: 3, description: '50K under 5:00.',          check: r => { const pb = getPBSecsForDist(r, 45, 65); return pb !== null && pb < 18000 } },
-  { id: 'ultra_50k_ultra_strong',    icon: '🏔️', name: 'ULTRA STRONG',      group: 'ladder', family: 'ultra', tier: 4, description: '50K under 4:30.',          check: r => { const pb = getPBSecsForDist(r, 45, 65); return pb !== null && pb < 16200 } },
-  { id: 'ultra_50k_ultra_elite',     icon: '🏔️', name: 'ULTRA ELITE',       group: 'ladder', family: 'ultra', tier: 5, description: '50K under 4:00.',          check: r => { const pb = getPBSecsForDist(r, 45, 65); return pb !== null && pb < 14400 } },
-  { id: 'ultra_100k_century_runner', icon: '🏔️', name: 'CENTURY RUNNER',    group: 'ladder', family: 'ultra', tier: 6, description: '100K under 12:00.',        check: r => { const pb = getPBSecsForDist(r, 80, 130); return pb !== null && pb < 43200 } },
-  { id: 'ultra_100m_hundred_legend', icon: '🏔️', name: 'HUNDRED LEGEND',    group: 'ladder', family: 'ultra', tier: 7, description: '100 Mile under 24:00.',    check: r => { const pb = getPBSecsForDist(r, 140, 180); return pb !== null && pb < 86400 } },
+  { id: 'ultra_50k_entry',           icon: '🏔️', name: 'ULTRA ENTRY',       group: 'ladder', family: 'ultra', tier: 1, description: '50K running under 6:00.',       check: r => { const pb = getPBSecsForDist(r.filter(isRunningRace), 45, 65); return pb !== null && pb < 21600 } },
+  { id: 'ultra_50k_endurance_builder',icon:'🏔️', name: 'ENDURANCE BUILDER', group: 'ladder', family: 'ultra', tier: 2, description: '50K running under 5:30.',       check: r => { const pb = getPBSecsForDist(r.filter(isRunningRace), 45, 65); return pb !== null && pb < 19800 } },
+  { id: 'ultra_50k_ultra_control',   icon: '🏔️', name: 'ULTRA CONTROL',     group: 'ladder', family: 'ultra', tier: 3, description: '50K running under 5:00.',       check: r => { const pb = getPBSecsForDist(r.filter(isRunningRace), 45, 65); return pb !== null && pb < 18000 } },
+  { id: 'ultra_50k_ultra_strong',    icon: '🏔️', name: 'ULTRA STRONG',      group: 'ladder', family: 'ultra', tier: 4, description: '50K running under 4:30.',       check: r => { const pb = getPBSecsForDist(r.filter(isRunningRace), 45, 65); return pb !== null && pb < 16200 } },
+  { id: 'ultra_50k_ultra_elite',     icon: '🏔️', name: 'ULTRA ELITE',       group: 'ladder', family: 'ultra', tier: 5, description: '50K running under 4:00.',       check: r => { const pb = getPBSecsForDist(r.filter(isRunningRace), 45, 65); return pb !== null && pb < 14400 } },
+  { id: 'ultra_100k_century_runner', icon: '🏔️', name: 'CENTURY RUNNER',    group: 'ladder', family: 'ultra', tier: 6, description: '100K running under 12:00.',     check: r => { const pb = getPBSecsForDist(r.filter(isRunningRace), 80, 130); return pb !== null && pb < 43200 } },
+  { id: 'ultra_100m_hundred_legend', icon: '🏔️', name: 'HUNDRED LEGEND',    group: 'ladder', family: 'ultra', tier: 7, description: '100 Mile running under 24:00.', check: r => { const pb = getPBSecsForDist(r.filter(isRunningRace), 140, 180); return pb !== null && pb < 86400 } },
 
   // ── 70.3 Ladder (7 tiers) ─────────────────────────────────────────────────
   { id: 'tri703_half_iron_entry',  icon: '🔱', name: 'HALF IRON ENTRY',  group: 'ladder', family: 'tri703', tier: 1, description: '70.3 under 6:00.',   check: r => { const pb = getPBSecsForDist(r, 100, 130, 'triathlon'); return pb !== null && pb < 21600 } },
@@ -1496,31 +1501,41 @@ function AchievementsSection() {
           >
             {/* Drag handle */}
             <div style={{ width: '40px', height: '4px', background: 'var(--border2)', borderRadius: '2px', margin: '0 auto 24px' }} />
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '18px', marginBottom: '20px' }}>
-              <div style={{ fontSize: '52px', lineHeight: 1 }}>{popup.icon}</div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '20px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)', marginBottom: '6px' }}>
-                  {popup.name}
-                </div>
-                <div style={{ fontSize: '14px', color: 'rgba(245,245,245,0.7)', lineHeight: 1.6 }}>
-                  {popup.description}
-                </div>
+            {/* Header — centered */}
+            <div style={{ textAlign: 'center', marginBottom: '20px', position: 'relative' }}>
+              <button onClick={() => setPopup(null)} style={{ position: 'absolute', right: 0, top: 0, background: 'none', border: 'none', color: 'var(--muted)', fontSize: '24px', cursor: 'pointer', padding: '4px', lineHeight: 1 }}>×</button>
+              <div style={{ fontSize: '52px', lineHeight: 1, marginBottom: '12px' }}>{popup.icon}</div>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)', marginBottom: '6px' }}>
+                {popup.name}
               </div>
-              <button onClick={() => setPopup(null)} style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '24px', cursor: 'pointer', padding: '4px', lineHeight: 1 }}>×</button>
+              <div style={{ fontSize: '14px', color: 'rgba(245,245,245,0.65)', lineHeight: 1.6 }}>
+                {popup.description}
+              </div>
             </div>
             {unlockedIds.has(popup.id) ? (
-              <div style={{ background: 'rgba(var(--green-ch),0.08)', border: '1px solid rgba(var(--green-ch),0.25)', borderRadius: '10px', padding: '14px 16px' }}>
+              <div style={{ background: 'rgba(var(--green-ch),0.08)', border: '1px solid rgba(var(--green-ch),0.25)', borderRadius: '10px', padding: '14px 16px', textAlign: 'center' }}>
                 <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '12px', letterSpacing: '0.1em', color: 'var(--green)', marginBottom: popupRace ? '10px' : 0 }}>
                   ✓ UNLOCKED
                 </div>
-                {popupRace && (
-                  <div style={{ fontSize: '14px', color: 'rgba(245,245,245,0.75)', lineHeight: 1.55 }}>
-                    {popupRace.name}{popupRace.city ? ` · ${popupRace.city}` : ''}{popupRace.country ? `, ${popupRace.country}` : ''}{popupRace.date ? ` · ${popupRace.date}` : ''}
-                  </div>
-                )}
+                {popupRace && (() => {
+                  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+                  const d = new Date((popupRace.date ?? '') + 'T00:00:00')
+                  const dateStr = !isNaN(d.getTime()) ? `${String(d.getDate()).padStart(2,'0')} ${MONTHS[d.getMonth()]} ${d.getFullYear()}` : popupRace.date ?? ''
+                  const locParts = [popupRace.city, popupRace.country ? countryToISO3(popupRace.country) : ''].filter(Boolean)
+                  const loc = locParts.join(', ')
+                  return (
+                    <div>
+                      <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '15px', color: 'var(--white)', letterSpacing: '0.03em', marginBottom: '4px' }}>
+                        {popupRace.name}
+                      </div>
+                      {loc && <div style={{ fontSize: '13px', color: 'rgba(245,245,245,0.65)' }}>{loc}</div>}
+                      {dateStr && <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '2px' }}>{dateStr}</div>}
+                    </div>
+                  )
+                })()}
               </div>
             ) : (
-              <div style={{ background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: '10px', padding: '14px 16px' }}>
+              <div style={{ background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: '10px', padding: '14px 16px', textAlign: 'center' }}>
                 <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '12px', letterSpacing: '0.1em', color: 'var(--muted)' }}>
                   🔒 NOT YET UNLOCKED
                 </div>
