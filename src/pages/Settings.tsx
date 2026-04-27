@@ -2,9 +2,8 @@ import { useState, useEffect } from 'react'
 import { useClerk } from '@clerk/clerk-react'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
-import { useRaceStore } from '@/stores/useRaceStore'
 import { useWearableStore } from '@/stores/useWearableStore'
-import { supabase } from '@/lib/supabase'
+import { syncStateToSupabase } from '@/lib/syncState'
 import { startStravaOAuth } from '@/lib/strava'
 import { removeWearableToken } from '@/lib/wearableUtils'
 import { THEMES } from '@/types'
@@ -65,9 +64,6 @@ export function Settings() {
 
   const stravaToken = useWearableStore(s => s.stravaToken)
   const clearToken  = useWearableStore(s => s.clearToken)
-  const races = useRaceStore(s => s.races)
-  const upcomingRaces = useRaceStore(s => s.upcomingRaces)
-  const nextRace = useRaceStore(s => s.nextRace)
 
   const [accountExpanded, setAccountExpanded] = useState(false)
 
@@ -85,30 +81,12 @@ export function Settings() {
   async function togglePublic(val: boolean) {
     if (!athlete || (!athlete.username && val)) return // must have username first
     setIsPublic(val)
-    if (!authUser) return
+    // updateAthlete triggers syncStateToSupabase which uses the Worker endpoint
+    // (service role key, bypasses RLS). This is the reliable write path.
     updateAthlete({ isPublic: val })
-    // Read existing state_json, merge in current athlete/race data, then upsert.
-    // This ensures the Worker can render the full profile on first enable.
-    // .maybeSingle() returns null on 0 rows instead of erroring, so the very
-    // first toggle (no row yet) still proceeds to the upsert.
-    const { data: existing } = await supabase
-      .from('user_state')
-      .select('state_json')
-      .eq('user_id', authUser.id)
-      .maybeSingle()
-    const current = (existing?.state_json as Record<string, unknown> | null) ?? {}
-    await supabase.from('user_state').upsert({
-      user_id: authUser.id,
-      username: athlete.username,
-      is_public: val,
-      state_json: {
-        ...current,
-        races,
-        upcoming_races: upcomingRaces,
-        next_race: nextRace,
-        athlete: { ...(current.athlete as Record<string, unknown> ?? {}), ...athlete, isPublic: val },
-      },
-    }, { onConflict: 'user_id' })
+    // Fire an explicit sync so the public-profile Worker sees the change
+    // immediately regardless of any debounce in the store.
+    await syncStateToSupabase()
   }
 
   function applyTheme(themeId: ThemeId) {
