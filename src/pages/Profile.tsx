@@ -1,4 +1,6 @@
-import { useMemo, useState, useEffect, useRef } from 'react'
+import { useMemo, useState, useEffect, useRef, useCallback } from 'react'
+import { TimePickerWheel } from '@/components/TimePickerWheel'
+import type { HMS } from '@/components/TimePickerWheel'
 import { useNavigate } from 'react-router-dom'
 import { useUser } from '@clerk/clerk-react'
 import { useRaceStore } from '@/stores/useRaceStore'
@@ -11,6 +13,46 @@ import { useUnits, distUnit } from '@/lib/units'
 import { distLabel } from '@/lib/utils'
 import { APP_URL } from '@/env'
 import { supabase } from '@/lib/supabase'
+
+// ─── Goal distance presets (static, not from race history) ───────────────────
+
+const GOAL_SPORTS = ['Running', 'Triathlon', 'Cycling', 'Swimming', 'HYROX'] as const
+
+const GOAL_DISTANCES: Record<string, { label: string; value: string }[]> = {
+  Running:   [
+    { label: '5K',           value: '5' },
+    { label: '10K',          value: '10' },
+    { label: '10 Mile',      value: '16.09' },
+    { label: 'Half Marathon',value: '21.1' },
+    { label: 'Marathon',     value: '42.2' },
+    { label: '50K',          value: '50' },
+    { label: '100K',         value: '100' },
+    { label: '100 Mile',     value: '160.93' },
+  ],
+  Triathlon: [
+    { label: 'Sprint',       value: '25.75' },
+    { label: 'Olympic',      value: '51.5' },
+    { label: '70.3',         value: '113' },
+    { label: 'IRONMAN',      value: '226' },
+  ],
+  Cycling:   [
+    { label: '50K',          value: '50' },
+    { label: '100K',         value: '100' },
+    { label: 'Century (161km)', value: '161' },
+  ],
+  Swimming:  [
+    { label: '1K',           value: '1' },
+    { label: '3K',           value: '3' },
+    { label: '5K',           value: '5' },
+    { label: '10K',          value: '10' },
+  ],
+  HYROX:     [
+    { label: 'Solo Open',    value: 'Solo Open' },
+    { label: 'Solo Pro',     value: 'Solo Pro' },
+    { label: 'Doubles Open', value: 'Doubles Open' },
+    { label: 'Doubles Pro',  value: 'Doubles Pro' },
+  ],
+}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -1631,38 +1673,20 @@ function GoalsSection() {
   // Add-goal form state
   const [addMode, setAddMode] = useState<'km' | 'races' | 'dist' | null>(null)
   const [annualVal, setAnnualVal] = useState('')
-  const [distTarget, setDistTarget] = useState({ dist: '', h: '', m: '', s: '', deadline: '' })
 
-  // Distance picker grouped by sport — running first, then triathlon, etc.
-  // Within each group, distances are sorted numerically when possible so a
-  // user sees 5K → 10K → Half → Marathon, not "10K, 16.09, 160.93, 42.2".
-  const distGroups = useMemo(() => {
-    const buckets = new Map<string, Set<string>>()
-    for (const r of races) {
-      if (!r.distance) continue
-      const sport = (r.sport ?? 'Running').trim() || 'Running'
-      if (!buckets.has(sport)) buckets.set(sport, new Set())
-      buckets.get(sport)!.add(r.distance)
-    }
-    const SPORT_ORDER = ['Running', 'Triathlon', 'Cycling', 'Swimming', 'HYROX']
-    const sortDist = (a: string, b: string) => {
-      const an = parseFloat(a), bn = parseFloat(b)
-      const aNum = !Number.isNaN(an), bNum = !Number.isNaN(bn)
-      if (aNum && bNum) return an - bn
-      if (aNum) return -1
-      if (bNum) return 1
-      return a.localeCompare(b)
-    }
-    return [...buckets.entries()]
-      .sort(([a], [b]) => {
-        const ai = SPORT_ORDER.indexOf(a), bi = SPORT_ORDER.indexOf(b)
-        if (ai === -1 && bi === -1) return a.localeCompare(b)
-        if (ai === -1) return 1
-        if (bi === -1) return -1
-        return ai - bi
-      })
-      .map(([sport, set]) => ({ sport, distances: [...set].sort(sortDist) }))
-  }, [races])
+  // 2-step dist goal picker: sport → distance
+  const [goalSport,    setGoalSport]    = useState('Running')
+  const [goalDist,     setGoalDist]     = useState('')       // value from GOAL_DISTANCES or '__custom__'
+  const [goalCustomKm, setGoalCustomKm] = useState('')       // numeric string
+  const [goalCustomUnit, setGoalCustomUnit] = useState<'km' | 'mi'>('km')
+  const [goalHMS,      setGoalHMS]      = useState<HMS>({ h: 0, m: 0, s: 0 })
+  const [goalDeadline, setGoalDeadline] = useState('')
+
+  const handleGoalSportChange = useCallback((s: string) => {
+    setGoalSport(s)
+    setGoalDist('')
+    setGoalCustomKm('')
+  }, [])
 
   function saveAnnual() {
     const v = parseInt(annualVal)
@@ -1673,13 +1697,24 @@ function GoalsSection() {
   }
 
   function saveDist() {
-    const h = parseInt(distTarget.h) || 0
-    const m = parseInt(distTarget.m) || 0
-    const s = parseInt(distTarget.s) || 0
-    const secs = h * 3600 + m * 60 + s
-    if (!distTarget.dist || secs <= 0) return
-    addDistGoal({ dist: distTarget.dist, targetSecs: secs, deadline: distTarget.deadline || undefined })
-    setDistTarget({ dist: '', h: '', m: '', s: '', deadline: '' })
+    const secs = goalHMS.h * 3600 + goalHMS.m * 60 + goalHMS.s
+    let distVal = goalDist
+    if (goalDist === '__custom__') {
+      const km = goalCustomUnit === 'mi'
+        ? (parseFloat(goalCustomKm) * 1.60934)
+        : parseFloat(goalCustomKm)
+      if (!km || isNaN(km)) return
+      distVal = `${Math.round(km * 10) / 10}km`
+    }
+    if (!distVal || secs <= 0) return
+    // Use the human label for GOAL_DISTANCES entries
+    const preset = (GOAL_DISTANCES[goalSport] ?? []).find(o => o.value === distVal)
+    const label = preset ? preset.label : distVal
+    addDistGoal({ dist: label, targetSecs: secs, deadline: goalDeadline || undefined })
+    setGoalDist('')
+    setGoalCustomKm('')
+    setGoalHMS({ h: 0, m: 0, s: 0 })
+    setGoalDeadline('')
     setAddMode(null)
   }
 
@@ -1787,25 +1822,107 @@ function GoalsSection() {
         </div>
       )}
       {addMode === 'dist' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '12px' }}>
-          <select value={distTarget.dist} onChange={e => setDistTarget(d => ({ ...d, dist: e.target.value }))} style={{ ...inputSt, width: '100%' }}>
-            <option value="">Select distance…</option>
-            {distGroups.map(g => (
-              <optgroup key={g.sport} label={g.sport}>
-                {g.distances.map(d => <option key={d} value={d}>{d}</option>)}
-              </optgroup>
-            ))}
-          </select>
-          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-            <span style={{ fontSize: '11px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700 }}>TARGET</span>
-            <input type="number" placeholder="H" min={0} value={distTarget.h} onChange={e => setDistTarget(d => ({ ...d, h: e.target.value }))} style={{ ...inputSt, width: '50px' }} />
-            <input type="number" placeholder="M" min={0} max={59} value={distTarget.m} onChange={e => setDistTarget(d => ({ ...d, m: e.target.value }))} style={{ ...inputSt, width: '50px' }} />
-            <input type="number" placeholder="S" min={0} max={59} value={distTarget.s} onChange={e => setDistTarget(d => ({ ...d, s: e.target.value }))} style={{ ...inputSt, width: '50px' }} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '8px', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '10px', padding: '14px' }}>
+
+          {/* Step 1 — Sport chips */}
+          <div>
+            <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '8px' }}>Sport</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              {GOAL_SPORTS.map(s => {
+                const active = goalSport === s
+                return (
+                  <button key={s} onClick={() => handleGoalSportChange(s)} style={{
+                    background: active ? 'rgba(var(--orange-ch),0.15)' : 'var(--surface)',
+                    color: active ? 'var(--orange)' : 'var(--muted)',
+                    border: `1px solid ${active ? 'rgba(var(--orange-ch),0.4)' : 'var(--border2)'}`,
+                    borderRadius: '20px', padding: '5px 12px',
+                    fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700,
+                    letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer',
+                  }}>{s}</button>
+                )
+              })}
+            </div>
           </div>
-          <input type="date" placeholder="Deadline (optional)" value={distTarget.deadline} onChange={e => setDistTarget(d => ({ ...d, deadline: e.target.value }))} style={{ ...inputSt, width: '100%' }} />
+
+          {/* Step 2 — Distance chips */}
+          <div>
+            <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '8px' }}>Distance</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              {(GOAL_DISTANCES[goalSport] ?? []).map(opt => {
+                const active = goalDist === opt.value
+                return (
+                  <button key={opt.value} onClick={() => setGoalDist(active ? '' : opt.value)} style={{
+                    background: active ? 'rgba(var(--orange-ch),0.15)' : 'var(--surface)',
+                    color: active ? 'var(--orange)' : 'var(--muted)',
+                    border: `1px solid ${active ? 'rgba(var(--orange-ch),0.4)' : 'var(--border2)'}`,
+                    borderRadius: '20px', padding: '5px 12px',
+                    fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700,
+                    letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer',
+                  }}>{opt.label}</button>
+                )
+              })}
+              {/* Custom chip — only for non-HYROX sports */}
+              {goalSport !== 'HYROX' && (
+                <button onClick={() => setGoalDist(goalDist === '__custom__' ? '' : '__custom__')} style={{
+                  background: goalDist === '__custom__' ? 'rgba(var(--orange-ch),0.15)' : 'var(--surface)',
+                  color: goalDist === '__custom__' ? 'var(--orange)' : 'var(--muted)',
+                  border: `1px solid ${goalDist === '__custom__' ? 'rgba(var(--orange-ch),0.4)' : 'var(--border2)'}`,
+                  borderRadius: '20px', padding: '5px 12px',
+                  fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700,
+                  letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer',
+                }}>Custom +</button>
+              )}
+            </div>
+
+            {/* Custom distance input */}
+            {goalDist === '__custom__' && (
+              <div style={{ display: 'flex', gap: '6px', marginTop: '10px', alignItems: 'center' }}>
+                <input
+                  type="number" min={0} step={0.1}
+                  placeholder={goalCustomUnit === 'km' ? 'e.g. 30' : 'e.g. 18.6'}
+                  value={goalCustomKm}
+                  onChange={e => setGoalCustomKm(e.target.value)}
+                  style={{ ...inputSt, flex: 1, minWidth: 0 }}
+                />
+                <div style={{ display: 'flex', borderRadius: '6px', overflow: 'hidden', border: '1px solid var(--border2)', flexShrink: 0 }}>
+                  {(['km', 'mi'] as const).map(u => (
+                    <button key={u} onClick={() => setGoalCustomUnit(u)} style={{
+                      background: goalCustomUnit === u ? 'var(--orange)' : 'var(--surface)',
+                      color: goalCustomUnit === u ? 'var(--black)' : 'var(--muted)',
+                      border: 'none', padding: '7px 12px',
+                      fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700,
+                      letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer',
+                    }}>{u}</button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Target time wheel */}
+          {(goalDist !== '') && (
+            <>
+              <div>
+                <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '8px' }}>Target Time</div>
+                <TimePickerWheel value={goalHMS} onChange={setGoalHMS} maxHours={99} />
+              </div>
+
+              {/* Deadline */}
+              <div>
+                <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '8px' }}>Deadline (optional)</div>
+                <input
+                  type="date"
+                  value={goalDeadline}
+                  onChange={e => setGoalDeadline(e.target.value)}
+                  style={{ ...inputSt, width: '100%', boxSizing: 'border-box', maxWidth: '100%', WebkitAppearance: 'none', appearance: 'none' }}
+                />
+              </div>
+            </>
+          )}
+
           <div style={{ display: 'flex', gap: '8px' }}>
-            <button onClick={saveDist} style={{ ...smallBtn, flex: 1 }}>Add Goal</button>
-            <button onClick={() => setAddMode(null)} style={{ ...smallBtn, background: 'var(--surface3)', color: 'var(--muted)', flex: 1 }}>Cancel</button>
+            <button onClick={saveDist} disabled={!goalDist || (goalDist === '__custom__' && !goalCustomKm)} style={{ ...smallBtn, flex: 1, opacity: (!goalDist || (goalDist === '__custom__' && !goalCustomKm)) ? 0.4 : 1 }}>Add Goal</button>
+            <button onClick={() => { setAddMode(null); setGoalDist(''); setGoalCustomKm(''); setGoalHMS({ h:0, m:0, s:0 }); setGoalDeadline('') }} style={{ ...smallBtn, background: 'var(--surface)', color: 'var(--muted)', flex: 1 }}>Cancel</button>
           </div>
         </div>
       )}
