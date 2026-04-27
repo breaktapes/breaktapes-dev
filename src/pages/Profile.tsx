@@ -67,11 +67,32 @@ function yearsActive(races: Race[]): number {
   return new Date().getFullYear() - Math.min(...years) + 1
 }
 
+const DIST_LABEL_KM: Record<string, number> = {
+  'marathon': 42.195, 'full marathon': 42.195,
+  'half marathon': 21.0975, 'half': 21.0975,
+  'ironman': 226, 'full ironman': 226, 'full distance': 226,
+  'half ironman': 113, '70.3': 113, 'middle distance': 113,
+  'olympic': 51.5, 'olympic triathlon': 51.5,
+  'sprint': 25.75, 'sprint triathlon': 25.75,
+  '5k': 5, '10k': 10, '15k': 15, '20k': 20, '25k': 25, '30k': 30,
+  '50k': 50, '60k': 60, '80k': 80, '90k': 90, '100k': 100,
+  '160k': 160, '50mi': 80.47, '100mi': 160.93,
+  'ultra': 50, 'ultramarathon': 50,
+  'mile': 1.609, '1 mile': 1.609, '5 mile': 8.047, '10 mile': 16.09,
+  'hyrox': 8,
+}
+
+function distToKm(d: string | undefined): number {
+  if (!d) return 0
+  const n = parseFloat(d)
+  if (!isNaN(n)) return n
+  return DIST_LABEL_KM[d.toLowerCase().trim()] ?? 0
+}
+
 function totalKm(races: Race[]): number {
-  return races.reduce((sum, r) => {
-    const d = parseFloat(r.distance)
-    return sum + (isNaN(d) ? 0 : d)
-  }, 0)
+  return races
+    .filter(r => !r.outcome || r.outcome === 'Finished')
+    .reduce((sum, r) => sum + distToKm(r.distance), 0)
 }
 
 function uniqueCountries(races: Race[]): string[] {
