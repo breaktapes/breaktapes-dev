@@ -19,7 +19,7 @@ import { useUnits, distUnit } from '@/lib/units'
 import { fmtDateDDMM, distLabel as distLabelUtil } from '@/lib/utils'
 import {
   bestRiegelTable,
-  bestVDOT, recentVDOT, equivalentPerformances, paceZones, vdotHistory,
+  bestVDOT, latestPBVDOT, equivalentPerformances, paceZones, vdotHistory,
   goalPaceCalc, parseTimeSecs as fParseTimeSecs, parseDistKm as fParseDistKm,
   bestWeatherImpact, distanceMilestones, secsToHMS as fSecsToHMS,
   raceDensityWarnings, findCourseRepeats,
@@ -130,7 +130,9 @@ function totalKm(races: Race[]) {
   return races.reduce((s, r) => s + distanceToKm(r.distance), 0)
 }
 function medalCount(races: Race[]) {
-  return races.filter(r => r.medal && r.medal !== 'finisher').length
+  const finisher = races.filter(r => r.medal && r.medal !== '').length
+  const podium   = races.filter(r => r.medal === 'gold' || r.medal === 'silver' || r.medal === 'bronze').length
+  return finisher + podium
 }
 
 function computeAge(dob: string | undefined): number | null {
@@ -1600,12 +1602,13 @@ function TrainingCorrelWidget() {
 
   if (!stravaToken?.access_token) {
     return (
-      <div style={{ ...st.glowCard, border: '1px dashed var(--border2)' }}>
+      <WidgetCard id="training-correl" style={st.glowCard}>
         <div style={st.widgetLabel}>TRAINING CORRELATION</div>
+        <div style={st.widgetTitle}>LOAD VS RESULT</div>
         <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.6, marginTop: '6px' }}>
           Connect Strava and build a few matched race windows to see how load tracks with outcomes.
         </div>
-      </div>
+      </WidgetCard>
     )
   }
 
@@ -3449,14 +3452,14 @@ function RaceComparerWidget() {
             {past.map((r, i) => <option key={r.id} value={i}>{r.name ?? r.date}</option>)}
           </select>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', color: diff?.faster === 'A' ? 'var(--green)' : 'var(--white)' }}>{raceA?.time ?? '—'}</div>
-          <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '2px' }}>{raceA?.date ?? ''}</div>
+          <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '2px' }}>{fmtDateDDMM(raceA?.date ?? '')}</div>
         </div>
         <div data-no-widget-detail style={{ background: 'var(--surface3)', borderRadius: '8px', padding: '10px' }} onClick={stopBubble}>
           <select value={idxB} onChange={e => setIdxB(Number(e.target.value))} onClick={stopBubble} style={{ ...selStyle, color: 'var(--muted)' }}>
             {past.map((r, i) => <option key={r.id} value={i}>{r.name ?? r.date}</option>)}
           </select>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', color: diff?.faster === 'B' ? 'var(--green)' : 'var(--white)' }}>{raceB?.time ?? '—'}</div>
-          <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '2px' }}>{raceB?.date ?? ''}</div>
+          <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '2px' }}>{fmtDateDDMM(raceB?.date ?? '')}</div>
         </div>
       </div>
       {diff && (
@@ -3739,9 +3742,9 @@ function BreakTapeWidget() {
 // ─── What To Race Next Widget (Pro) ──────────────────────────────────────────
 
 function WhatToRaceNextWidget() {
-  const races = useRaceStore(selectRaces)
-  const today = todayStr()
-  const upcoming = useMemo(() => races.filter(r => r.date > today).sort((a, b) => a.date.localeCompare(b.date)), [races, today])
+  const races    = useRaceStore(selectRaces)
+  const upcoming = useRaceStore(selectUpcomingRaces)
+  const today    = todayStr()
   const past     = useMemo(() => races.filter(r => r.date <= today && r.time), [races, today])
 
   const recommendation = useMemo(() => {
@@ -3809,11 +3812,14 @@ function StoryModeWidget() {
     const thisYear = races.filter(r => (r.date ?? '').startsWith(String(year)))
     if (!thisYear.length) return null
     const countries = new Set(thisYear.map(r => r.country).filter(Boolean)).size
-    const medals    = thisYear.filter(r => r.medal && r.medal !== '').length
+    const finisher  = thisYear.filter(r => r.medal && r.medal !== '').length
+    const podium    = thisYear.filter(r => r.medal === 'gold' || r.medal === 'silver' || r.medal === 'bronze').length
+    const medals    = finisher + podium
     return {
       raceCount: thisYear.length,
       countries,
       medals,
+      podium,
       headline: `${thisYear.length} race${thisYear.length !== 1 ? 's' : ''} across ${countries || 1} countr${countries === 1 ? 'y' : 'ies'}`,
     }
   }, [races, year])
@@ -3852,6 +3858,14 @@ function StoryModeWidget() {
           </div>
         ))}
       </div>
+      {story.podium > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 10px', background: 'rgba(255,215,0,0.08)', border: '1px solid rgba(255,215,0,0.25)', borderRadius: '6px' }}>
+          <span style={{ fontSize: 14 }}>🏆</span>
+          <span style={{ fontSize: '11px', color: '#FFD770', fontFamily: 'var(--headline)', fontWeight: 700 }}>
+            {story.podium} PODIUM FINISH{story.podium !== 1 ? 'ES' : ''} THIS YEAR
+          </span>
+        </div>
+      )}
       <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 8 }}>
         Annual recap and season cards build on this data.
       </div>
@@ -3932,10 +3946,15 @@ function DashZone({ id, tag, label, children }: ZoneProps) {
 
 // ─── Personal Bests Widget ────────────────────────────────────────────────────
 
+// Standard distances shown in STD mode
+const STD_RUN = new Set(['5K', '10K', '10 Mile', 'Half Marathon', 'Marathon', 'Ultra'])
+const STD_TRI = new Set(['Super Sprint', 'Sprint', 'Olympic', '70.3', 'IRONMAN'])
+
 function PersonalBestsWidget() {
   const races = useRaceStore(selectRaces)
   const pbMap = useMemo(() => buildPBMap(races), [races])
   const [selectedRace, setSelectedRace] = useState<Race | null>(null)
+  const [showAll, setShowAll] = useState(false)
 
   // Group PBs by sport
   const groups = useMemo(() => {
@@ -3944,8 +3963,8 @@ function PersonalBestsWidget() {
     const other: { key: string; r: Race }[] = []
 
     const distOrder: Record<string, number> = {
-      '5K': 1, '10K': 2, 'Half Marathon': 3, 'Marathon': 4,
-      'Ultra Marathon': 5, 'Olympic': 6, '70.3': 7, 'Ironman': 8,
+      '5K': 1, '10K': 2, '10 Mile': 3, 'Half Marathon': 4, 'Marathon': 5, 'Ultra': 6,
+      'Super Sprint': 1, 'Sprint': 2, 'Olympic': 3, '70.3': 4, 'IRONMAN': 5,
     }
 
     for (const [key, r] of Object.entries(pbMap)) {
@@ -3956,15 +3975,24 @@ function PersonalBestsWidget() {
       else other.push(entry)
     }
 
-    const sortFn = (a: { key: string }, b: { key: string }) =>
-      (distOrder[a.key] ?? 99) - (distOrder[b.key] ?? 99)
+    const sortFn = (a: { key: string; r: Race }, b: { key: string; r: Race }) => {
+      const aLabel = distBadge(a.r.distance) || a.key
+      const bLabel = distBadge(b.r.distance) || b.key
+      return (distOrder[aLabel] ?? 99) - (distOrder[bLabel] ?? 99)
+    }
+
+    const filterStd = (entries: { key: string; r: Race }[], stdSet: Set<string>) =>
+      showAll ? entries : entries.filter(e => stdSet.has(distBadge(e.r.distance) || e.key))
+
+    const runFiltered = filterStd(run, STD_RUN)
+    const triFiltered = filterStd(tri, STD_TRI)
 
     return [
-      ...(run.length ? [{ sport: 'Running', dot: '#00FF88', dotGlow: 'rgba(0,255,136,0.6)', entries: run.sort(sortFn) }] : []),
-      ...(tri.length ? [{ sport: 'Triathlon', dot: '#7C3AED', dotGlow: 'rgba(124,58,237,0.6)', entries: tri.sort(sortFn) }] : []),
-      ...(other.length ? [{ sport: 'Other', dot: 'var(--orange)', dotGlow: 'rgba(232,78,27,0.6)', entries: other.sort(sortFn) }] : []),
+      ...(runFiltered.length ? [{ sport: 'Running',   dot: '#00FF88', dotGlow: 'rgba(0,255,136,0.6)',    entries: runFiltered.sort(sortFn) }] : []),
+      ...(triFiltered.length ? [{ sport: 'Triathlon', dot: '#7C3AED', dotGlow: 'rgba(124,58,237,0.6)',   entries: triFiltered.sort(sortFn) }] : []),
+      ...(showAll && other.length ? [{ sport: 'Other', dot: 'var(--orange)', dotGlow: 'rgba(232,78,27,0.6)', entries: other.sort(sortFn) }] : []),
     ]
-  }, [pbMap])
+  }, [pbMap, showAll])
 
   if (!groups.length) {
     return (
@@ -3979,7 +4007,23 @@ function PersonalBestsWidget() {
 
   return (
     <WidgetCard id="personal-bests" style={st.glowCard}>
-      <div style={st.widgetTitle}>PERSONAL BESTS</div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+        <div style={st.widgetTitle}>PERSONAL BESTS</div>
+        <button
+          onClick={e => { e.stopPropagation(); setShowAll(v => !v) }}
+          data-no-widget-detail
+          style={{
+            background: showAll ? 'rgba(var(--orange-ch),0.15)' : 'var(--surface3)',
+            color: showAll ? 'var(--orange)' : 'var(--muted)',
+            border: `1px solid ${showAll ? 'rgba(var(--orange-ch),0.4)' : 'var(--border2)'}`,
+            borderRadius: '5px', padding: '3px 9px',
+            fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em',
+            cursor: 'pointer', flexShrink: 0,
+          }}
+        >
+          {showAll ? 'ALL' : 'STD'}
+        </button>
+      </div>
       {groups.map(g => (
         <div key={g.sport} style={{ marginTop: '14px' }}>
           {/* Sport header */}
@@ -4029,7 +4073,7 @@ function PersonalBestsWidget() {
                   </div>
                   {/* Date */}
                   <div style={{ fontSize: '10px', color: 'var(--muted2)', marginTop: '2px' }}>
-                    {new Date(r.date + 'T00:00:00').toLocaleDateString('en', { month: 'short', year: 'numeric' })}
+                    {fmtDateDDMM(r.date)}
                   </div>
                 </div>
               )
@@ -4329,6 +4373,22 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
     setSelectedRow(null)
   }
 
+  // For each predicted distance, find upcoming races that match
+  function matchingUpcoming(distance: string): typeof upcomingRaces {
+    return upcomingRaces.filter(r => distBadge(r.distance) === distance)
+  }
+
+  function handleSetGoal(distance: string) {
+    const matches = matchingUpcoming(distance)
+    if (matches.length === 1) {
+      // Auto-apply directly — no sheet needed
+      const row = table.find(r => r.distance === distance)
+      if (row) { updateRace(matches[0].id, { goalTime: row.predictedTime }); return }
+    }
+    setSelectedRow(distance)
+    setShowLinkSheet(true)
+  }
+
   return (
     <>
       <WidgetCard id="riegel-predictor" style={st.glowCard}>
@@ -4338,35 +4398,50 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
           Based on {race.name} · {fmtDateDDMM(race.date)}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          {table.map(row => (
-            <div
-              key={row.distance}
-              style={{
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                padding: '8px 10px', borderRadius: '6px',
-                background: row.isSameAsInput ? 'rgba(var(--orange-ch),0.1)' : 'var(--surface3)',
-                border: `1px solid ${row.isSameAsInput ? 'rgba(var(--orange-ch),0.3)' : 'var(--border)'}`,
-              }}
-            >
-              <span style={{ fontSize: '13px', color: row.isSameAsInput ? 'var(--orange)' : 'var(--white)', fontWeight: row.isSameAsInput ? 700 : 400 }}>
-                {row.distance}
-                {row.isSameAsInput && <span style={{ fontSize: '10px', marginLeft: '6px', color: 'var(--muted)', textTransform: 'uppercase', fontFamily: 'var(--headline)' }}>actual</span>}
-              </span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', color: row.isSameAsInput ? 'var(--orange)' : 'var(--white)' }}>
-                  {row.predictedTime}
-                </span>
-                {!row.isSameAsInput && upcomingRaces.length > 0 && (
-                  <button
-                    onClick={() => { setSelectedRow(row.distance); setShowLinkSheet(true) }}
-                    style={{ background: 'rgba(var(--orange-ch),0.15)', color: 'var(--orange)', border: '1px solid rgba(var(--orange-ch),0.4)', borderRadius: '5px', padding: '3px 8px', fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', cursor: 'pointer' }}
-                  >
-                    SET GOAL
-                  </button>
+          {table.map(row => {
+            const matched = matchingUpcoming(row.distance)
+            const hasGoal = matched.length > 0 && matched.some(r => r.goalTime === row.predictedTime)
+            return (
+              <div
+                key={row.distance}
+                style={{
+                  display: 'flex', flexDirection: 'column',
+                  padding: '8px 10px', borderRadius: '6px',
+                  background: row.isSameAsInput ? 'rgba(var(--orange-ch),0.1)' : 'var(--surface3)',
+                  border: `1px solid ${row.isSameAsInput ? 'rgba(var(--orange-ch),0.3)' : hasGoal ? 'rgba(0,255,136,0.3)' : 'var(--border)'}`,
+                  gap: '4px',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '13px', color: row.isSameAsInput ? 'var(--orange)' : 'var(--white)', fontWeight: row.isSameAsInput ? 700 : 400 }}>
+                    {row.distance}
+                    {row.isSameAsInput && <span style={{ fontSize: '10px', marginLeft: '6px', color: 'var(--muted)', textTransform: 'uppercase', fontFamily: 'var(--headline)' }}>actual</span>}
+                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', color: row.isSameAsInput ? 'var(--orange)' : 'var(--white)' }}>
+                      {row.predictedTime}
+                    </span>
+                    {!row.isSameAsInput && upcomingRaces.length > 0 && !hasGoal && (
+                      <button
+                        onClick={() => handleSetGoal(row.distance)}
+                        style={{ background: 'rgba(var(--orange-ch),0.15)', color: 'var(--orange)', border: '1px solid rgba(var(--orange-ch),0.4)', borderRadius: '5px', padding: '3px 8px', fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', cursor: 'pointer' }}
+                      >
+                        SET GOAL
+                      </button>
+                    )}
+                    {hasGoal && (
+                      <span style={{ fontSize: '10px', color: 'var(--green)', fontFamily: 'var(--headline)', fontWeight: 700 }}>✓ GOAL SET</span>
+                    )}
+                  </div>
+                </div>
+                {matched.length > 0 && (
+                  <div style={{ fontSize: '10px', color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    📅 {matched.map(r => r.name ?? 'Upcoming Race').join(' · ')}
+                  </div>
                 )}
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
         <div style={{ fontSize: '11px', color: 'var(--muted2)', lineHeight: 1.5 }}>
           T₂ = T₁ × (D₂/D₁)^1.06
@@ -4425,10 +4500,10 @@ function VDOTScoreWidget() {
   const races      = useRaceStore(selectRaces)
   const units      = useUnits()
   const history    = useMemo(() => vdotHistory(races), [races])
-  const peakVDOT   = useMemo(() => bestVDOT(races), [races])
-  const currentVDOT = useMemo(() => recentVDOT(races), [races])
-  // Display current fitness for zones/equiv; show peak as secondary if different
-  const displayPt  = currentVDOT ?? peakVDOT
+  const peakVDOT    = useMemo(() => bestVDOT(races), [races])
+  const currentVDOT = useMemo(() => latestPBVDOT(races), [races])
+  // Display latest PB-based VDOT as current; show all-time peak as secondary if higher
+  const displayPt   = currentVDOT ?? peakVDOT
   const equivs     = useMemo(() => displayPt ? equivalentPerformances(displayPt.vdot) : [], [displayPt])
   const zones      = useMemo(() => displayPt ? paceZones(displayPt.vdot, units) : [], [displayPt, units])
   const showPeak   = peakVDOT && currentVDOT && peakVDOT.vdot > currentVDOT.vdot
@@ -4864,16 +4939,23 @@ function UpcomingDensityWidget() {
 
 // ─── Course Repeats Widget ────────────────────────────────────────────────────
 
+function toTitleCase(s: string): string {
+  return s.replace(/\b\w+/g, w => w.charAt(0).toUpperCase() + w.slice(1))
+}
+
 function CourseRepeatsWidget() {
   const races = useRaceStore(selectRaces)
+  const [expanded, setExpanded] = useState<string | null>(null)
 
   const courses = useMemo(() => {
     const map = findCourseRepeats(races)
     return Array.from(map.entries())
       .filter(([, rs]) => rs.length >= 3)
-      .map(([name, rs]) => {
+      .map(([key, rs]) => {
+        // Use original name from the most recent entry for proper casing
         const sorted = [...rs].sort((a, b) => a.date.localeCompare(b.date))
-        const timed  = rs.filter(r => r.time)
+        const displayName = toTitleCase(sorted[sorted.length - 1].name ?? key)
+        const timed  = sorted.filter(r => r.time)
         const pb     = timed.length
           ? timed.reduce((best, r) => {
               const secs = (t: string) => t.split(':').reduce((s, v, i, arr) => s + Number(v) * Math.pow(60, arr.length - 1 - i), 0)
@@ -4887,7 +4969,7 @@ function CourseRepeatsWidget() {
           const t0 = secs(last2[0].time!), t1 = secs(last2[1].time!)
           trend = t1 < t0 ? 'improving' : t1 > t0 ? 'declining' : 'flat'
         }
-        return { name, count: rs.length, first: sorted[0].date, pb, trend }
+        return { key, displayName, count: rs.length, first: sorted[0].date, pb, trend, timed }
       })
       .sort((a, b) => b.count - a.count)
   }, [races])
@@ -4906,21 +4988,49 @@ function CourseRepeatsWidget() {
       <div style={st.widgetTitle}>COURSE REPEATS</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {courses.slice(0, 4).map(c => (
-          <div key={c.name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: 'var(--surface3)', borderRadius: '8px', border: '1px solid var(--border)' }}>
-            <div>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '13px', color: 'var(--white)' }}>{c.name}</div>
-              <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '2px' }}>{c.count}× · since {c.first}</div>
-            </div>
-            <div style={{ textAlign: 'right', flexShrink: 0 }}>
-              {c.pb?.time && (
-                <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', color: 'var(--orange)' }}>{c.pb.time}</div>
-              )}
-              <div style={{ fontSize: '12px', marginTop: '2px' }}>
-                {c.trend === 'improving' && <span style={{ color: 'var(--green)' }}>▲ FASTER</span>}
-                {c.trend === 'declining' && <span style={{ color: '#ff6b6b' }}>▼ SLOWER</span>}
-                {c.trend === 'flat'      && <span style={{ color: 'var(--muted)' }}>— FLAT</span>}
+          <div key={c.key}>
+            <div
+              data-no-widget-detail
+              onClick={e => { e.stopPropagation(); setExpanded(expanded === c.key ? null : c.key) }}
+              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: 'var(--surface3)', borderRadius: expanded === c.key ? '8px 8px 0 0' : '8px', border: '1px solid var(--border)', cursor: 'pointer' }}
+            >
+              <div>
+                <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '13px', color: 'var(--white)' }}>{c.displayName}</div>
+                <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '2px' }}>{c.count}× · since {fmtDateDDMM(c.first)}</div>
+              </div>
+              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                {c.pb?.time && (
+                  <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', color: 'var(--orange)' }}>{c.pb.time}</div>
+                )}
+                <div style={{ fontSize: '12px', marginTop: '2px' }}>
+                  {c.trend === 'improving' && <span style={{ color: 'var(--green)' }}>▲ FASTER</span>}
+                  {c.trend === 'declining' && <span style={{ color: '#ff6b6b' }}>▼ SLOWER</span>}
+                  {c.trend === 'flat'      && <span style={{ color: 'var(--muted)' }}>— FLAT</span>}
+                </div>
               </div>
             </div>
+            {/* Year-by-year comparison */}
+            {expanded === c.key && (
+              <div style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderTop: 'none', borderRadius: '0 0 8px 8px', padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {c.timed.map(r => {
+                  const isPB = r.id === c.pb?.id
+                  return (
+                    <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid var(--border)' }}>
+                      <div>
+                        <div style={{ fontSize: '11px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700 }}>
+                          {r.date.slice(0, 4)}
+                        </div>
+                        <div style={{ fontSize: '10px', color: 'var(--muted2)' }}>{fmtDateDDMM(r.date)}</div>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        {isPB && <span style={{ fontSize: '9px', color: '#FFD770', fontFamily: 'var(--headline)', fontWeight: 700 }}>PB</span>}
+                        <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', color: isPB ? 'var(--orange)' : 'var(--white)' }}>{r.time}</span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
         ))}
       </div>
