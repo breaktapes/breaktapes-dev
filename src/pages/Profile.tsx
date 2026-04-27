@@ -211,14 +211,18 @@ const ISO2_TO_ISO3: Record<string, string> = {
   GB:'GBR', US:'USA', VN:'VIE', ZW:'ZIM',
 }
 
-function countryToFlag(name: string): string {
-  const iso2 = COUNTRY_NAME_TO_ISO2[name.toLowerCase().trim()] ?? (name.length === 2 ? name.toUpperCase() : '')
+function countryToISO2(name: string): string {
+  return COUNTRY_NAME_TO_ISO2[name.toLowerCase().trim()] ?? (name.length === 2 ? name.toUpperCase() : '')
+}
+
+function countryFlagUrl(name: string): string {
+  const iso2 = countryToISO2(name)
   if (!iso2) return ''
-  return iso2.toUpperCase().replace(/./g, c => String.fromCodePoint(0x1F1E5 + c.charCodeAt(0)))
+  return `https://flagcdn.com/20x15/${iso2.toLowerCase()}.png`
 }
 
 function countryToISO3(name: string): string {
-  const iso2 = COUNTRY_NAME_TO_ISO2[name.toLowerCase().trim()] ?? (name.length === 2 ? name.toUpperCase() : '')
+  const iso2 = countryToISO2(name)
   if (!iso2) return name.slice(0, 3).toUpperCase()
   return ISO2_TO_ISO3[iso2] ?? iso2
 }
@@ -941,25 +945,34 @@ function AthleteHero({ onEdit }: { onEdit: () => void }) {
         ))}
       </div>
 
-      {/* Countries raced — flag + ISO3 pills */}
+      {/* Countries raced — flag image + name */}
       {(() => {
         const ctrs = uniqueCountries(races)
         if (!ctrs.length) return null
         return (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
             {ctrs.map(c => {
-              const flag = countryToFlag(c)
+              const flagUrl = countryFlagUrl(c)
               const abbr = countryToISO3(c)
               return (
                 <span key={c} style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '4px',
+                  display: 'inline-flex', alignItems: 'center', gap: '6px',
                   background: 'var(--surface3)', border: '1px solid var(--border2)',
-                  borderRadius: '100px', padding: '3px 10px',
-                  fontSize: '11px', fontFamily: 'var(--headline)',
-                  fontWeight: 700, letterSpacing: '0.06em', color: 'var(--white)',
+                  borderRadius: '8px', padding: '5px 10px',
                 }}>
-                  {flag && <span style={{ fontSize: '13px', lineHeight: 1 }}>{flag}</span>}
-                  {abbr}
+                  {flagUrl && (
+                    <img
+                      src={flagUrl}
+                      alt={c}
+                      width={20}
+                      height={15}
+                      style={{ display: 'block', borderRadius: '2px', flexShrink: 0 }}
+                    />
+                  )}
+                  <span style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
+                    <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px', letterSpacing: '0.08em', color: 'var(--white)', lineHeight: 1 }}>{abbr}</span>
+                    <span style={{ fontSize: '9px', color: 'var(--muted)', lineHeight: 1, fontFamily: 'var(--body)' }}>{c}</span>
+                  </span>
                 </span>
               )
             })}
