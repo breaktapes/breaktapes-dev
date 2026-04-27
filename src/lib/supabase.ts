@@ -15,6 +15,11 @@ export function hasClerkToken(): boolean {
   return _clerkToken !== null
 }
 
+/** Returns the raw Clerk JWT (for use in Worker sync endpoint). */
+export function getClerkToken(): string | null {
+  return _clerkToken
+}
+
 export const supabase = createClient(
   SUPABASE_URL || 'http://localhost:54321',
   SUPABASE_ANON_KEY || 'placeholder-key',
