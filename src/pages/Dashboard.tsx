@@ -4042,21 +4042,27 @@ function DashZone({ id, tag, label, children }: ZoneProps) {
 
 // ─── Personal Bests Widget ────────────────────────────────────────────────────
 
-// Standard distances shown in STD mode
-const STD_RUN = new Set(['5K', '10K', '10 Mile', 'Half Marathon', 'Marathon', 'Ultra'])
-const STD_TRI = new Set(['Super Sprint', 'Sprint', 'Olympic', '70.3', 'IRONMAN'])
 
 function PersonalBestsWidget() {
   const races = useRaceStore(selectRaces)
   const pbMap = useMemo(() => buildPBMap(races), [races])
   const [selectedRace, setSelectedRace] = useState<Race | null>(null)
-  const [showAll, setShowAll] = useState(false)
+  const [hiddenDists, setHiddenDists] = useState<Set<string>>(new Set())
+
+  const toggleDist = useCallback((label: string) => {
+    setHiddenDists(prev => {
+      const next = new Set(prev)
+      if (next.has(label)) next.delete(label); else next.add(label)
+      return next
+    })
+  }, [])
 
   // Group PBs by sport
   const { groups, allDists } = useMemo(() => {
     const run: { key: string; r: Race }[] = []
     const tri: { key: string; r: Race }[] = []
     const other: { key: string; r: Race }[] = []
+    const collectedDists: string[] = []
 
     const distOrder: Record<string, number> = {
       '5K': 1, '10K': 2, '10 Mile': 3, 'Half Marathon': 4, 'Marathon': 5, 'Ultra': 6,
@@ -4066,7 +4072,7 @@ function PersonalBestsWidget() {
     for (const [key, r] of Object.entries(pbMap)) {
       const sport = (r.sport ?? 'Running').toLowerCase()
       const label = distBadge(r.distance) || key
-      if (!allDists.includes(label)) allDists.push(label)
+      if (!collectedDists.includes(label)) collectedDists.push(label)
       const entry = { key, r }
       if (sport.includes('tri') || sport.includes('iron')) tri.push(entry)
       else if (sport.includes('run') || sport.includes('cycling') || sport.includes('swim')) run.push(entry)
@@ -4079,20 +4085,24 @@ function PersonalBestsWidget() {
       return (distOrder[aLabel] ?? 99) - (distOrder[bLabel] ?? 99)
     }
 
-    const filterStd = (entries: { key: string; r: Race }[], stdSet: Set<string>) =>
-      showAll ? entries : entries.filter(e => stdSet.has(distBadge(e.r.distance) || e.key))
+    const filterVis = (entries: { key: string; r: Race }[]) =>
+      hiddenDists.size === 0 ? entries : entries.filter(e => !hiddenDists.has(distBadge(e.r.distance) || e.key))
 
-    const runFiltered = filterStd(run, STD_RUN)
-    const triFiltered = filterStd(tri, STD_TRI)
+    const runFiltered = filterVis(run)
+    const triFiltered = filterVis(tri)
+    const otherFiltered = filterVis(other)
 
-    return [
-      ...(runFiltered.length ? [{ sport: 'Running',   dot: '#00FF88', dotGlow: 'rgba(0,255,136,0.6)',    entries: runFiltered.sort(sortFn) }] : []),
-      ...(triFiltered.length ? [{ sport: 'Triathlon', dot: '#7C3AED', dotGlow: 'rgba(124,58,237,0.6)',   entries: triFiltered.sort(sortFn) }] : []),
-      ...(showAll && other.length ? [{ sport: 'Other', dot: 'var(--orange)', dotGlow: 'rgba(232,78,27,0.6)', entries: other.sort(sortFn) }] : []),
-    ]
-  }, [pbMap, showAll])
+    return {
+      allDists: collectedDists,
+      groups: [
+        ...(runFiltered.length ? [{ sport: 'Running',   dot: '#00FF88', dotGlow: 'rgba(0,255,136,0.6)',    entries: runFiltered.sort(sortFn) }] : []),
+        ...(triFiltered.length ? [{ sport: 'Triathlon', dot: '#7C3AED', dotGlow: 'rgba(124,58,237,0.6)',   entries: triFiltered.sort(sortFn) }] : []),
+        ...(otherFiltered.length ? [{ sport: 'Other', dot: 'var(--orange)', dotGlow: 'rgba(232,78,27,0.6)', entries: otherFiltered.sort(sortFn) }] : []),
+      ],
+    }
+  }, [pbMap, hiddenDists])
 
-  if (!groups.length) {
+  if (!allDists.length) {
     return (
       <WidgetCard id="personal-bests" style={st.glowCard}>
         <div style={st.widgetLabel}>PERSONAL BESTS</div>
@@ -4105,23 +4115,34 @@ function PersonalBestsWidget() {
 
   return (
     <WidgetCard id="personal-bests" style={st.glowCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
-        <div style={st.widgetTitle}>PERSONAL BESTS</div>
-        <button
-          onClick={e => { e.stopPropagation(); setShowAll(v => !v) }}
-          data-no-widget-detail
-          style={{
-            background: showAll ? 'rgba(var(--orange-ch),0.15)' : 'var(--surface3)',
-            color: showAll ? 'var(--orange)' : 'var(--muted)',
-            border: `1px solid ${showAll ? 'rgba(var(--orange-ch),0.4)' : 'var(--border2)'}`,
-            borderRadius: '5px', padding: '3px 9px',
-            fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em',
-            cursor: 'pointer', flexShrink: 0,
-          }}
-        >
-          {showAll ? 'ALL' : 'STD'}
-        </button>
-      </div>
+      <div style={st.widgetTitle}>PERSONAL BESTS</div>
+      {/* Distance chip filter */}
+      {allDists.length > 1 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px', marginBottom: '4px' }}>
+          {allDists.map(label => {
+            const hidden = hiddenDists.has(label)
+            return (
+              <button
+                key={label}
+                onClick={e => { e.stopPropagation(); toggleDist(label) }}
+                data-no-widget-detail
+                style={{
+                  background: hidden ? 'var(--surface3)' : 'rgba(var(--orange-ch),0.12)',
+                  color: hidden ? 'var(--muted2)' : 'var(--orange)',
+                  border: `1px solid ${hidden ? 'var(--border)' : 'rgba(var(--orange-ch),0.35)'}`,
+                  borderRadius: '20px', padding: '3px 10px',
+                  fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em',
+                  cursor: 'pointer', flexShrink: 0,
+                  textDecoration: hidden ? 'line-through' : 'none',
+                  opacity: hidden ? 0.5 : 1,
+                }}
+              >
+                {label}
+              </button>
+            )
+          })}
+        </div>
+      )}
       {groups.map(g => (
         <div key={g.sport} style={{ marginTop: '14px' }}>
           {/* Sport header */}
