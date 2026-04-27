@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect, useRef, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { TimePickerWheel } from '@/components/TimePickerWheel'
 import type { HMS } from '@/components/TimePickerWheel'
 import { useNavigate } from 'react-router-dom'
@@ -151,7 +152,76 @@ function athleteLevel(raceCount: number): string {
 
 
 
-const DIST_ORDER: string[] = ['5', '10', '21.1', '42.2', '1.5', '3', '15', '20', '25', '30', '50', '100']
+// Canonical PB distance order: running distances first (ascending km), then triathlon (ascending).
+// Only these distances appear in the Personal Bests section; non-standard distances are excluded.
+const PB_DISTANCES: Array<{ key: string; label: string }> = [
+  { key: '5',      label: '5K' },
+  { key: '10',     label: '10K' },
+  { key: '16.09',  label: '10 Mile' },
+  { key: '21.1',   label: 'Half Marathon' },
+  { key: '42.2',   label: 'Marathon' },
+  { key: '42.195', label: 'Marathon' },
+  { key: '50',     label: '50K' },
+  { key: '100',    label: '100K' },
+  { key: '160.93', label: '100 Mile' },
+  // Triathlon
+  { key: '17.65',  label: 'Super Sprint' },
+  { key: '25.75',  label: 'Sprint' },
+  { key: '51.5',   label: 'Olympic' },
+  { key: '113',    label: '70.3' },
+  { key: '226',    label: 'Ironman' },
+]
+const PB_KEY_ORDER: Map<string, number> = new Map(PB_DISTANCES.map((d, i) => [d.key, i]))
+const PB_KEY_LABEL: Map<string, string>  = new Map(PB_DISTANCES.map(d => [d.key, d.label]))
+
+// country full-name → ISO-2 code (covers the most common racing nations)
+const COUNTRY_NAME_TO_ISO2: Record<string, string> = {
+  'united arab emirates': 'AE', 'afghanistan': 'AF', 'albania': 'AL', 'algeria': 'DZ',
+  'argentina': 'AR', 'australia': 'AU', 'austria': 'AT', 'bahrain': 'BH',
+  'bangladesh': 'BD', 'belgium': 'BE', 'brazil': 'BR', 'canada': 'CA',
+  'chile': 'CL', 'china': 'CN', 'colombia': 'CO', 'croatia': 'HR',
+  'czech republic': 'CZ', 'denmark': 'DK', 'ecuador': 'EC', 'egypt': 'EG',
+  'ethiopia': 'ET', 'finland': 'FI', 'france': 'FR', 'germany': 'DE',
+  'ghana': 'GH', 'greece': 'GR', 'hong kong': 'HK', 'hungary': 'HU',
+  'iceland': 'IS', 'india': 'IN', 'indonesia': 'ID', 'iran': 'IR',
+  'ireland': 'IE', 'israel': 'IL', 'italy': 'IT', 'jamaica': 'JM',
+  'japan': 'JP', 'jordan': 'JO', 'kenya': 'KE', 'kuwait': 'KW',
+  'lebanon': 'LB', 'malaysia': 'MY', 'mexico': 'MX', 'morocco': 'MA',
+  'nepal': 'NP', 'netherlands': 'NL', 'new zealand': 'NZ', 'nigeria': 'NG',
+  'norway': 'NO', 'oman': 'OM', 'pakistan': 'PK', 'peru': 'PE',
+  'philippines': 'PH', 'poland': 'PL', 'portugal': 'PT', 'qatar': 'QA',
+  'romania': 'RO', 'russia': 'RU', 'saudi arabia': 'SA', 'singapore': 'SG',
+  'south africa': 'ZA', 'south korea': 'KR', 'spain': 'ES', 'sri lanka': 'LK',
+  'sweden': 'SE', 'switzerland': 'CH', 'taiwan': 'TW', 'tanzania': 'TZ',
+  'thailand': 'TH', 'turkey': 'TR', 'uganda': 'UG', 'ukraine': 'UA',
+  'united kingdom': 'GB', 'united states': 'US', 'vietnam': 'VN', 'zimbabwe': 'ZW',
+}
+
+// ISO-2 → ISO-3 abbreviation
+const ISO2_TO_ISO3: Record<string, string> = {
+  AE:'UAE', AF:'AFG', AL:'ALB', DZ:'ALG', AR:'ARG', AU:'AUS', AT:'AUT', BH:'BHR',
+  BD:'BAN', BE:'BEL', BR:'BRA', CA:'CAN', CL:'CHI', CN:'CHN', CO:'COL', HR:'CRO',
+  CZ:'CZE', DK:'DEN', EC:'ECU', EG:'EGY', ET:'ETH', FI:'FIN', FR:'FRA', DE:'GER',
+  GH:'GHA', GR:'GRE', HK:'HKG', HU:'HUN', IS:'ISL', IN:'IND', ID:'INA', IR:'IRI',
+  IE:'IRL', IL:'ISR', IT:'ITA', JM:'JAM', JP:'JPN', JO:'JOR', KE:'KEN', KW:'KUW',
+  LB:'LBN', MY:'MAS', MX:'MEX', MA:'MAR', NP:'NEP', NL:'NED', NZ:'NZL', NG:'NGR',
+  NO:'NOR', OM:'OMA', PK:'PAK', PE:'PER', PH:'PHI', PL:'POL', PT:'POR', QA:'QAT',
+  RO:'ROU', RU:'RUS', SA:'KSA', SG:'SGP', ZA:'RSA', KR:'KOR', ES:'ESP', LK:'SRI',
+  SE:'SWE', CH:'SUI', TW:'TPE', TZ:'TAN', TH:'THA', TR:'TUR', UG:'UGA', UA:'UKR',
+  GB:'GBR', US:'USA', VN:'VIE', ZW:'ZIM',
+}
+
+function countryToFlag(name: string): string {
+  const iso2 = COUNTRY_NAME_TO_ISO2[name.toLowerCase().trim()] ?? (name.length === 2 ? name.toUpperCase() : '')
+  if (!iso2) return ''
+  return iso2.toUpperCase().replace(/./g, c => String.fromCodePoint(0x1F1E5 + c.charCodeAt(0)))
+}
+
+function countryToISO3(name: string): string {
+  const iso2 = COUNTRY_NAME_TO_ISO2[name.toLowerCase().trim()] ?? (name.length === 2 ? name.toUpperCase() : '')
+  if (!iso2) return name.slice(0, 3).toUpperCase()
+  return ISO2_TO_ISO3[iso2] ?? iso2
+}
 
 // ─── Age-Grade Standards (WA road-race tables) ────────────────────────────────
 
@@ -268,16 +338,12 @@ function buildPBByDist(races: Race[]): Array<{ key: string; label: string; race:
   for (const r of races) {
     if (!r.time || !r.distance) continue
     const key = r.distance
+    if (!PB_KEY_ORDER.has(key)) continue  // skip non-canonical distances
     if (!map[key] || r.time < map[key].time!) map[key] = r
   }
-  const entries = Object.entries(map)
-  entries.sort(([a], [b]) => {
-    const ai = DIST_ORDER.indexOf(a); const bi = DIST_ORDER.indexOf(b)
-    if (ai !== -1 && bi !== -1) return ai - bi
-    if (ai !== -1) return -1; if (bi !== -1) return 1
-    return parseFloat(a) - parseFloat(b)
-  })
-  return entries.map(([key, race]) => ({ key, label: distLabel(key), race }))
+  return [...PB_KEY_ORDER.keys()]
+    .filter(key => map[key])
+    .map(key => ({ key, label: PB_KEY_LABEL.get(key) ?? distLabel(key), race: map[key] }))
 }
 
 function parseHMS(str: string): number | null {
@@ -727,6 +793,12 @@ function AthleteHero({ onEdit }: { onEdit: () => void }) {
   const { user } = useUser()
   const fileRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
+  const [copyToast, setCopyToast] = useState(false)
+
+  function showCopyToast() {
+    setCopyToast(true)
+    setTimeout(() => setCopyToast(false), 2500)
+  }
 
   const initials = useMemo(() => {
     const f = athlete?.firstName?.slice(0, 1) ?? ''
@@ -790,6 +862,7 @@ function AthleteHero({ onEdit }: { onEdit: () => void }) {
       : []
 
   return (
+    <>
     <div style={st.heroCard}>
       {/* Avatar row */}
       <div style={st.avatarRow}>
@@ -868,6 +941,32 @@ function AthleteHero({ onEdit }: { onEdit: () => void }) {
         ))}
       </div>
 
+      {/* Countries raced — flag + ISO3 pills */}
+      {(() => {
+        const ctrs = uniqueCountries(races)
+        if (!ctrs.length) return null
+        return (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+            {ctrs.map(c => {
+              const flag = countryToFlag(c)
+              const abbr = countryToISO3(c)
+              return (
+                <span key={c} style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '4px',
+                  background: 'var(--surface3)', border: '1px solid var(--border2)',
+                  borderRadius: '100px', padding: '3px 10px',
+                  fontSize: '11px', fontFamily: 'var(--headline)',
+                  fontWeight: 700, letterSpacing: '0.06em', color: 'var(--white)',
+                }}>
+                  {flag && <span style={{ fontSize: '13px', lineHeight: 1 }}>{flag}</span>}
+                  {abbr}
+                </span>
+              )
+            })}
+          </div>
+        )
+      })()}
+
       {/* Bio + clubs */}
       {(athlete?.bio || clubs.length > 0) && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -938,7 +1037,7 @@ function AthleteHero({ onEdit }: { onEdit: () => void }) {
             }}
             onClick={() => {
               const url = `${APP_URL}/u/${athlete.username}`
-              navigator.clipboard.writeText(url).catch(() => {})
+              navigator.clipboard.writeText(url).then(() => showCopyToast()).catch(() => showCopyToast())
             }}
           >
             Share Profile ↗
@@ -969,6 +1068,20 @@ function AthleteHero({ onEdit }: { onEdit: () => void }) {
         </button>
       </div>
     </div>
+    {copyToast && createPortal(
+      <div style={{
+        position: 'fixed', bottom: 'calc(var(--safe-bottom, 0px) + 80px)', left: '50%',
+        transform: 'translateX(-50%)', zIndex: 2000,
+        background: 'var(--surface3)', border: '1px solid rgba(var(--orange-ch),0.5)',
+        color: 'var(--orange)', borderRadius: '20px', padding: '10px 20px',
+        fontSize: '13px', fontFamily: 'var(--headline)', fontWeight: 700,
+        letterSpacing: '0.06em', whiteSpace: 'nowrap', pointerEvents: 'none',
+      }}>
+        Link copied ✓
+      </div>,
+      document.body
+    )}
+    </>
   )
 }
 
@@ -1358,75 +1471,51 @@ function AchievementsSection() {
         </div>
       </div>
 
-      {/* Achievement popup */}
-      {popup && (
+      {/* Achievement popup — portal so it renders above bottom nav */}
+      {popup && createPortal(
         <div
-          style={{ position: 'fixed', inset: 0, zIndex: 950, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'flex-end' }}
+          style={{ position: 'fixed', inset: 0, zIndex: 1500, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'flex-end' }}
           onClick={() => setPopup(null)}
         >
           <div
-            style={{ background: 'var(--surface2)', borderRadius: '16px 16px 0 0', padding: '24px', width: '100%', maxHeight: '60vh', overflowY: 'auto', borderTop: '1px solid var(--border)' }}
+            style={{ background: 'var(--surface2)', borderRadius: '20px 20px 0 0', padding: '28px 24px 32px', width: '100%', maxHeight: '75vh', overflowY: 'auto', borderTop: '1px solid var(--border2)', boxShadow: '0 -8px 40px rgba(0,0,0,0.5)' }}
             onClick={e => e.stopPropagation()}
           >
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', marginBottom: '16px' }}>
-              <div style={{ fontSize: '40px', lineHeight: 1 }}>{popup.icon}</div>
+            {/* Drag handle */}
+            <div style={{ width: '40px', height: '4px', background: 'var(--border2)', borderRadius: '2px', margin: '0 auto 24px' }} />
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '18px', marginBottom: '20px' }}>
+              <div style={{ fontSize: '52px', lineHeight: 1 }}>{popup.icon}</div>
               <div style={{ flex: 1 }}>
-                <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)', marginBottom: '4px' }}>
+                <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '20px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)', marginBottom: '6px' }}>
                   {popup.name}
                 </div>
-                <div style={{ fontSize: '13px', color: 'rgba(245,245,245,0.65)', lineHeight: 1.55 }}>
+                <div style={{ fontSize: '14px', color: 'rgba(245,245,245,0.7)', lineHeight: 1.6 }}>
                   {popup.description}
                 </div>
               </div>
-              <button onClick={() => setPopup(null)} style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '20px', cursor: 'pointer', padding: '4px', lineHeight: 1 }}>×</button>
+              <button onClick={() => setPopup(null)} style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '24px', cursor: 'pointer', padding: '4px', lineHeight: 1 }}>×</button>
             </div>
             {unlockedIds.has(popup.id) ? (
-              <div style={{ background: 'rgba(var(--green-ch),0.08)', border: '1px solid rgba(var(--green-ch),0.2)', borderRadius: '8px', padding: '12px' }}>
-                <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px', letterSpacing: '0.1em', color: 'var(--green)', marginBottom: popupRace ? '8px' : 0 }}>
+              <div style={{ background: 'rgba(var(--green-ch),0.08)', border: '1px solid rgba(var(--green-ch),0.25)', borderRadius: '10px', padding: '14px 16px' }}>
+                <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '12px', letterSpacing: '0.1em', color: 'var(--green)', marginBottom: popupRace ? '10px' : 0 }}>
                   ✓ UNLOCKED
                 </div>
                 {popupRace && (
-                  <div style={{ fontSize: '13px', color: 'rgba(245,245,245,0.7)', lineHeight: 1.55 }}>
+                  <div style={{ fontSize: '14px', color: 'rgba(245,245,245,0.75)', lineHeight: 1.55 }}>
                     {popupRace.name}{popupRace.city ? ` · ${popupRace.city}` : ''}{popupRace.country ? `, ${popupRace.country}` : ''}{popupRace.date ? ` · ${popupRace.date}` : ''}
                   </div>
                 )}
               </div>
             ) : (
-              <div style={{ background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: '8px', padding: '12px' }}>
-                <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px', letterSpacing: '0.1em', color: 'var(--muted)' }}>
+              <div style={{ background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: '10px', padding: '14px 16px' }}>
+                <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '12px', letterSpacing: '0.1em', color: 'var(--muted)' }}>
                   🔒 NOT YET UNLOCKED
                 </div>
               </div>
             )}
           </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ─── Countries Raced ──────────────────────────────────────────────────────────
-
-function CountriesRaced() {
-  const races    = useRaceStore(selectRaces)
-  const countries = useMemo(() => uniqueCountries(races), [races])
-
-  return (
-    <div style={st.section}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
-        <div style={st.sectionTitle}>COUNTRIES RACED</div>
-        <div style={{ height: '1px', flex: 1, background: 'var(--border)', marginLeft: '16px' }} />
-      </div>
-      {countries.length === 0 ? (
-        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', padding: '8px 0' }}>
-          Log a race to see your countries.
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '12px' }}>
-          {countries.map(c => (
-            <div key={c} style={st.countryPill}>{(c ?? '').toUpperCase()}</div>
-          ))}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
@@ -2258,80 +2347,60 @@ function GoalsSection() {
       {addMode === 'dist' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '8px', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '10px', padding: '14px' }}>
 
-          {/* Step 1 — Sport chips */}
-          <div>
-            <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '8px' }}>Sport</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-              {GOAL_SPORTS.map(s => {
-                const active = goalSport === s
-                return (
-                  <button key={s} onClick={() => handleGoalSportChange(s)} style={{
-                    background: active ? 'rgba(var(--orange-ch),0.15)' : 'var(--surface)',
-                    color: active ? 'var(--orange)' : 'var(--muted)',
-                    border: `1px solid ${active ? 'rgba(var(--orange-ch),0.4)' : 'var(--border2)'}`,
-                    borderRadius: '20px', padding: '5px 12px',
-                    fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700,
-                    letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer',
-                  }}>{s}</button>
-                )
-              })}
+          {/* Step 1 — Sport dropdown */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+            <div>
+              <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '6px' }}>Sport</div>
+              <select
+                value={goalSport}
+                onChange={e => handleGoalSportChange(e.target.value)}
+                style={{ ...inputSt, width: '100%', boxSizing: 'border-box', cursor: 'pointer' }}
+              >
+                {GOAL_SPORTS.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+
+            {/* Step 2 — Distance dropdown */}
+            <div>
+              <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '6px' }}>Distance</div>
+              <select
+                value={goalDist}
+                onChange={e => setGoalDist(e.target.value)}
+                style={{ ...inputSt, width: '100%', boxSizing: 'border-box', cursor: 'pointer' }}
+              >
+                <option value="">Select…</option>
+                {(GOAL_DISTANCES[goalSport] ?? []).map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+                {goalSport !== 'HYROX' && <option value="__custom__">Custom…</option>}
+              </select>
             </div>
           </div>
 
-          {/* Step 2 — Distance chips */}
-          <div>
-            <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '8px' }}>Distance</div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-              {(GOAL_DISTANCES[goalSport] ?? []).map(opt => {
-                const active = goalDist === opt.value
-                return (
-                  <button key={opt.value} onClick={() => setGoalDist(active ? '' : opt.value)} style={{
-                    background: active ? 'rgba(var(--orange-ch),0.15)' : 'var(--surface)',
-                    color: active ? 'var(--orange)' : 'var(--muted)',
-                    border: `1px solid ${active ? 'rgba(var(--orange-ch),0.4)' : 'var(--border2)'}`,
-                    borderRadius: '20px', padding: '5px 12px',
+
+          {/* Custom distance input */}
+          {goalDist === '__custom__' && (
+            <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+              <input
+                type="number" min={0} step={0.1}
+                placeholder={goalCustomUnit === 'km' ? 'e.g. 30' : 'e.g. 18.6'}
+                value={goalCustomKm}
+                onChange={e => setGoalCustomKm(e.target.value)}
+                style={{ ...inputSt, flex: 1, minWidth: 0 }}
+              />
+              <div style={{ display: 'flex', borderRadius: '6px', overflow: 'hidden', border: '1px solid var(--border2)', flexShrink: 0 }}>
+                {(['km', 'mi'] as const).map(u => (
+                  <button key={u} onClick={() => setGoalCustomUnit(u)} style={{
+                    background: goalCustomUnit === u ? 'var(--orange)' : 'var(--surface)',
+                    color: goalCustomUnit === u ? 'var(--black)' : 'var(--muted)',
+                    border: 'none', padding: '7px 12px',
                     fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700,
                     letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer',
-                  }}>{opt.label}</button>
-                )
-              })}
-              {/* Custom chip — only for non-HYROX sports */}
-              {goalSport !== 'HYROX' && (
-                <button onClick={() => setGoalDist(goalDist === '__custom__' ? '' : '__custom__')} style={{
-                  background: goalDist === '__custom__' ? 'rgba(var(--orange-ch),0.15)' : 'var(--surface)',
-                  color: goalDist === '__custom__' ? 'var(--orange)' : 'var(--muted)',
-                  border: `1px solid ${goalDist === '__custom__' ? 'rgba(var(--orange-ch),0.4)' : 'var(--border2)'}`,
-                  borderRadius: '20px', padding: '5px 12px',
-                  fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700,
-                  letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer',
-                }}>Custom +</button>
-              )}
-            </div>
-
-            {/* Custom distance input */}
-            {goalDist === '__custom__' && (
-              <div style={{ display: 'flex', gap: '6px', marginTop: '10px', alignItems: 'center' }}>
-                <input
-                  type="number" min={0} step={0.1}
-                  placeholder={goalCustomUnit === 'km' ? 'e.g. 30' : 'e.g. 18.6'}
-                  value={goalCustomKm}
-                  onChange={e => setGoalCustomKm(e.target.value)}
-                  style={{ ...inputSt, flex: 1, minWidth: 0 }}
-                />
-                <div style={{ display: 'flex', borderRadius: '6px', overflow: 'hidden', border: '1px solid var(--border2)', flexShrink: 0 }}>
-                  {(['km', 'mi'] as const).map(u => (
-                    <button key={u} onClick={() => setGoalCustomUnit(u)} style={{
-                      background: goalCustomUnit === u ? 'var(--orange)' : 'var(--surface)',
-                      color: goalCustomUnit === u ? 'var(--black)' : 'var(--muted)',
-                      border: 'none', padding: '7px 12px',
-                      fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700,
-                      letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer',
-                    }}>{u}</button>
-                  ))}
-                </div>
+                  }}>{u}</button>
+                ))}
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Target time wheel */}
           {(goalDist !== '') && (
@@ -2471,7 +2540,6 @@ export function Profile() {
       <AthleteHero onEdit={() => setShowEdit(true)} />
       <MedalWall />
       <AchievementsSection />
-      <CountriesRaced />
       <PersonalBests />
       <SignatureDistances />
       <AgeGradeTrajectory />

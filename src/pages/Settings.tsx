@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useClerk } from '@clerk/clerk-react'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
@@ -66,6 +67,8 @@ export function Settings() {
   const clearToken  = useWearableStore(s => s.clearToken)
 
   const [accountExpanded, setAccountExpanded] = useState(false)
+  const [copyToast, setCopyToast] = useState(false)
+  function showCopyToast() { setCopyToast(true); setTimeout(() => setCopyToast(false), 2500) }
 
   const activeTheme = useThemeStore(s => s.theme)
   const storeSetTheme = useThemeStore(s => s.setTheme)
@@ -100,6 +103,7 @@ export function Settings() {
   }
 
   return (
+    <>
     <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       {/* Page heading */}
       <h1 style={{
@@ -240,7 +244,7 @@ export function Settings() {
           {athlete?.isPublic && athlete?.username && (
             <button
               style={{ ...btnGhost, fontSize: '12px', padding: '0.6rem 1rem', marginBottom: '14px' }}
-              onClick={() => navigator.clipboard.writeText(`${APP_URL}/u/${athlete.username}`)}
+              onClick={() => navigator.clipboard.writeText(`${APP_URL}/u/${athlete.username}`).then(() => showCopyToast()).catch(() => showCopyToast())}
             >
               Copy Profile Link
             </button>
@@ -477,5 +481,19 @@ export function Settings() {
         </div>
       </section>
     </div>
+    {copyToast && createPortal(
+      <div style={{
+        position: 'fixed', bottom: 'calc(var(--safe-bottom, 0px) + 80px)', left: '50%',
+        transform: 'translateX(-50%)', zIndex: 2000,
+        background: 'var(--surface3)', border: '1px solid rgba(var(--orange-ch),0.5)',
+        color: 'var(--orange)', borderRadius: '20px', padding: '10px 20px',
+        fontSize: '13px', fontFamily: 'var(--headline)', fontWeight: 700,
+        letterSpacing: '0.06em', whiteSpace: 'nowrap', pointerEvents: 'none',
+      }}>
+        Link copied ✓
+      </div>,
+      document.body
+    )}
+    </>
   )
 }
