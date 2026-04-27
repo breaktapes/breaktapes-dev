@@ -1,4 +1,6 @@
-import { useMemo, useState, useEffect, useRef } from 'react'
+import { useMemo, useState, useEffect, useRef, useCallback } from 'react'
+import { TimePickerWheel } from '@/components/TimePickerWheel'
+import type { HMS } from '@/components/TimePickerWheel'
 import { useNavigate } from 'react-router-dom'
 import { useUser } from '@clerk/clerk-react'
 import { useRaceStore } from '@/stores/useRaceStore'
@@ -11,6 +13,46 @@ import { useUnits, distUnit } from '@/lib/units'
 import { distLabel } from '@/lib/utils'
 import { APP_URL } from '@/env'
 import { supabase } from '@/lib/supabase'
+
+// ─── Goal distance presets (static, not from race history) ───────────────────
+
+const GOAL_SPORTS = ['Running', 'Triathlon', 'Cycling', 'Swimming', 'HYROX'] as const
+
+const GOAL_DISTANCES: Record<string, { label: string; value: string }[]> = {
+  Running:   [
+    { label: '5K',           value: '5' },
+    { label: '10K',          value: '10' },
+    { label: '10 Mile',      value: '16.09' },
+    { label: 'Half Marathon',value: '21.1' },
+    { label: 'Marathon',     value: '42.2' },
+    { label: '50K',          value: '50' },
+    { label: '100K',         value: '100' },
+    { label: '100 Mile',     value: '160.93' },
+  ],
+  Triathlon: [
+    { label: 'Sprint',       value: '25.75' },
+    { label: 'Olympic',      value: '51.5' },
+    { label: '70.3',         value: '113' },
+    { label: 'IRONMAN',      value: '226' },
+  ],
+  Cycling:   [
+    { label: '50K',          value: '50' },
+    { label: '100K',         value: '100' },
+    { label: 'Century (161km)', value: '161' },
+  ],
+  Swimming:  [
+    { label: '1K',           value: '1' },
+    { label: '3K',           value: '3' },
+    { label: '5K',           value: '5' },
+    { label: '10K',          value: '10' },
+  ],
+  HYROX:     [
+    { label: 'Solo Open',    value: 'Solo Open' },
+    { label: 'Solo Pro',     value: 'Solo Pro' },
+    { label: 'Doubles Open', value: 'Doubles Open' },
+    { label: 'Doubles Pro',  value: 'Doubles Pro' },
+  ],
+}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -252,30 +294,374 @@ interface Achievement {
   id: string
   icon: string
   name: string
-  group: 'special' | 'milestone' | 'event'
+  description: string
+  group: 'special' | 'ladder'
+  family?: string   // ladder family: '10k' | 'half' | 'marathon' | 'ultra' | 'tri703' | 'iron'
+  tier?: number     // ladder tier order (lower = slower / easier)
   check: (races: Race[], athlete: ReturnType<typeof selectAthlete>) => boolean
+  findSourceRace?: (races: Race[]) => Race | null
+}
+
+// Best time (seconds) for races in a km range, optionally filtered by sport
+function getPBSecsForDist(races: Race[], minKm: number, maxKm: number, sport?: string): number | null {
+  let best: number | null = null
+  for (const r of races) {
+    if (!r.time) continue
+    const km = parseFloat(r.distance)
+    if (isNaN(km) || km < minKm || km > maxKm) continue
+    if (sport && r.sport !== sport) continue
+    const secs = parseHMS(r.time)
+    if (secs === null) continue
+    if (best === null || secs < best) best = secs
+  }
+  return best
+}
+
+// Rough continent codes keyed by country name (as stored in race catalog)
+const CONTINENT_MAP: Record<string, string> = {
+  // Africa
+  'Egypt': 'AF', 'South Africa': 'AF', 'Morocco': 'AF', 'Kenya': 'AF', 'Ethiopia': 'AF',
+  'Nigeria': 'AF', 'Tanzania': 'AF', 'Uganda': 'AF', 'Ghana': 'AF', 'Namibia': 'AF',
+  'Zimbabwe': 'AF', 'Rwanda': 'AF', 'Algeria': 'AF', 'Tunisia': 'AF',
+  // Asia / Middle East
+  'Japan': 'AS', 'China': 'AS', 'South Korea': 'AS', 'India': 'AS', 'Thailand': 'AS',
+  'Singapore': 'AS', 'Hong Kong': 'AS', 'Taiwan': 'AS', 'Malaysia': 'AS', 'Indonesia': 'AS',
+  'Philippines': 'AS', 'Vietnam': 'AS', 'Nepal': 'AS', 'Sri Lanka': 'AS',
+  'United Arab Emirates': 'AS', 'Saudi Arabia': 'AS', 'Qatar': 'AS', 'Bahrain': 'AS',
+  'Kuwait': 'AS', 'Jordan': 'AS', 'Israel': 'AS', 'Lebanon': 'AS', 'Oman': 'AS', 'Turkey': 'AS',
+  // Europe
+  'Germany': 'EU', 'France': 'EU', 'United Kingdom': 'EU', 'Italy': 'EU', 'Spain': 'EU',
+  'Netherlands': 'EU', 'Belgium': 'EU', 'Switzerland': 'EU', 'Austria': 'EU', 'Sweden': 'EU',
+  'Norway': 'EU', 'Denmark': 'EU', 'Finland': 'EU', 'Poland': 'EU', 'Czech Republic': 'EU',
+  'Portugal': 'EU', 'Greece': 'EU', 'Ireland': 'EU', 'Hungary': 'EU', 'Romania': 'EU',
+  'Croatia': 'EU', 'Slovakia': 'EU', 'Slovenia': 'EU', 'Estonia': 'EU', 'Latvia': 'EU',
+  'Lithuania': 'EU', 'Luxembourg': 'EU', 'Malta': 'EU', 'Serbia': 'EU', 'Bulgaria': 'EU',
+  // North America
+  'United States': 'NA', 'Canada': 'NA', 'Mexico': 'NA', 'Jamaica': 'NA',
+  'Dominican Republic': 'NA', 'Puerto Rico': 'NA',
+  // South America
+  'Brazil': 'SA', 'Argentina': 'SA', 'Chile': 'SA', 'Colombia': 'SA', 'Peru': 'SA',
+  'Uruguay': 'SA', 'Ecuador': 'SA', 'Bolivia': 'SA',
+  // Oceania
+  'Australia': 'OC', 'New Zealand': 'OC',
+}
+
+function continentOf(country: string): string {
+  return CONTINENT_MAP[country] ?? 'UNKNOWN'
 }
 
 const ACHIEVEMENTS: Achievement[] = [
-  { id: 'first-finish',      icon: '🏁', name: 'FIRST FINISH',          group: 'milestone', check: r => r.length >= 1 },
-  { id: 'half-starter',      icon: '🌓', name: 'HALF STARTER',          group: 'milestone', check: r => r.some(x => parseFloat(x.distance) >= 21) },
-  { id: 'full-marathon',     icon: '🔥', name: 'MARATHON FINISHER',     group: 'milestone', check: r => r.some(x => parseFloat(x.distance) >= 42) },
-  { id: 'photo-finish',      icon: '📷', name: 'PHOTO FINISH',          group: 'special',   check: r => r.some(x => x.medalPhoto) },
-  { id: 'pb-streak',         icon: '⚡', name: 'PB STREAK',             group: 'special',   check: r => r.filter(x => x.time).length >= 3 },
-  { id: '5-races',           icon: '5️⃣', name: 'FIVE FINISHER',        group: 'milestone', check: r => r.length >= 5 },
-  { id: '10-races',          icon: '🔟', name: 'TEN DONE',              group: 'milestone', check: r => r.length >= 10 },
-  { id: 'globe-trotter',     icon: '🌍', name: 'GLOBE TROTTER',         group: 'special',   check: r => new Set(r.map(x => x.country).filter(Boolean)).size >= 3 },
-  { id: 'comrades',          icon: '🔥', name: 'COMRADES MARATHON FINISHER', group: 'event', check: r => r.some(x => (x.name ?? '').toLowerCase().includes('comrades')) },
-  // Locked achievements
-  { id: 'climb-crusher',     icon: '🏔', name: 'CLIMB CRUSHER',        group: 'special',   check: r => r.some(x => (x.elevation ?? 0) > 1000) },
-  { id: 'heat-warrior',      icon: '🔥', name: 'HEAT WARRIOR',         group: 'special',   check: r => r.some(x => (x.weather?.temp ?? 0) > 30) },
-  { id: 'night-runner',      icon: '🌙', name: 'NIGHT RUNNER',         group: 'special',   check: () => false },
-  { id: 'neg-split',         icon: '⚡', name: 'NEGATIVE SPLIT MASTER', group: 'special',  check: () => false },
-  { id: 'no-quit',           icon: '❤️', name: 'NO QUIT',              group: 'special',   check: r => r.some(x => x.outcome === 'Finished' && (x.elevation ?? 0) > 500) },
-  { id: 'pain-cave',         icon: '💗', name: 'PAIN CAVE',            group: 'special',   check: () => false },
-  { id: 'comeback-run',      icon: '🔄', name: 'COMEBACK RUN',         group: 'special',   check: () => false },
-  { id: 'solo-warrior',      icon: '🪖', name: 'SOLO WARRIOR',         group: 'special',   check: () => false },
-  { id: 'desert-runner',     icon: '🏜', name: 'DESERT RUNNER',        group: 'special',   check: () => false },
+  // ── Special singles (39) ──────────────────────────────────────────────────
+  {
+    id: 'climb_crusher', icon: '⛰️', name: 'CLIMB CRUSHER', group: 'special',
+    description: 'Completed a race with 500m+ elevation gain.',
+    check: r => r.some(x => (x.elevation ?? 0) >= 500),
+    findSourceRace: r => r.find(x => (x.elevation ?? 0) >= 500) ?? null,
+  },
+  {
+    id: 'heat_warrior', icon: '🌡️', name: 'HEAT WARRIOR', group: 'special',
+    description: 'Finished a race above 30°C.',
+    check: r => r.some(x => (x.weather?.temp ?? 0) > 30),
+    findSourceRace: r => r.find(x => (x.weather?.temp ?? 0) > 30) ?? null,
+  },
+  {
+    id: 'night_runner', icon: '🌙', name: 'NIGHT RUNNER', group: 'special',
+    description: 'Completed a race starting after sunset.',
+    check: () => false,
+  },
+  {
+    id: 'negative_split_master', icon: '⚡', name: 'NEGATIVE SPLIT MASTER', group: 'special',
+    description: 'Ran a race with a faster second half.',
+    check: () => false,
+  },
+  {
+    id: 'no_quit', icon: '🫀', name: 'NO QUIT', group: 'special',
+    description: 'Finished a race you almost DNF\'d.',
+    check: () => false,
+  },
+  {
+    id: 'pain_cave', icon: '❤️', name: 'PAIN CAVE', group: 'special',
+    description: 'HR in Zone 4/5 for 70%+ of a race.',
+    check: () => false,
+  },
+  {
+    id: 'comeback_run', icon: '🔁', name: 'COMEBACK RUN', group: 'special',
+    description: 'Race after injury break.',
+    check: () => false,
+  },
+  {
+    id: 'solo_warrior', icon: '🪖', name: 'SOLO WARRIOR', group: 'special',
+    description: 'No pacer, no group — full solo race.',
+    check: () => false,
+  },
+  {
+    id: 'desert_runner', icon: '🏜️', name: 'DESERT RUNNER', group: 'special',
+    description: 'Race in desert terrain.',
+    check: () => false,
+  },
+  {
+    id: 'mountain_goat', icon: '🐐', name: 'MOUNTAIN GOAT', group: 'special',
+    description: 'Trail race with significant elevation.',
+    check: r => r.some(x => x.surface === 'trail' && (x.elevation ?? 0) >= 200),
+    findSourceRace: r => r.find(x => x.surface === 'trail' && (x.elevation ?? 0) >= 200) ?? null,
+  },
+  {
+    id: 'sea_level_sprinter', icon: '🌊', name: 'SEA LEVEL SPRINTER', group: 'special',
+    description: 'Coastal race finish.',
+    check: () => false,
+  },
+  {
+    id: 'stamp_collector', icon: '📮', name: 'STAMP COLLECTOR', group: 'special',
+    description: 'Raced in 10 different cities.',
+    check: r => new Set(r.map(x => x.city).filter(Boolean)).size >= 10,
+  },
+  {
+    id: 'continental', icon: '🌍', name: 'CONTINENTAL', group: 'special',
+    description: 'Race on 3+ continents.',
+    check: r => new Set(r.map(x => x.country).filter(Boolean).map(continentOf).filter(c => c !== 'UNKNOWN')).size >= 3,
+  },
+  {
+    id: 'race_tourist', icon: '🧳', name: 'RACE TOURIST', group: 'special',
+    description: '5 races in different countries.',
+    check: r => new Set(r.map(x => x.country).filter(Boolean)).size >= 5,
+  },
+  {
+    id: 'season_finisher', icon: '📆', name: 'SEASON FINISHER', group: 'special',
+    description: '5+ races in a calendar year.',
+    check: r => {
+      const y: Record<string, number> = {}
+      for (const x of r) { const yr = x.date?.slice(0, 4); if (yr) y[yr] = (y[yr] ?? 0) + 1 }
+      return Object.values(y).some(c => c >= 5)
+    },
+  },
+  {
+    id: 'double_trouble', icon: '✌️', name: 'DOUBLE TROUBLE', group: 'special',
+    description: 'Two races within 7 days.',
+    check: r => {
+      const sorted = [...r].filter(x => x.date).sort((a, b) => a.date.localeCompare(b.date))
+      for (let i = 1; i < sorted.length; i++) {
+        const diff = (new Date(sorted[i].date + 'T00:00:00').getTime() - new Date(sorted[i-1].date + 'T00:00:00').getTime()) / 86400000
+        if (diff <= 7) return true
+      }
+      return false
+    },
+  },
+  {
+    id: 'sprint_specialist', icon: '💨', name: 'SPRINT SPECIALIST', group: 'special',
+    description: '5 x 5K races.',
+    check: r => r.filter(x => { const km = parseFloat(x.distance); return km >= 4.5 && km <= 6 }).length >= 5,
+  },
+  {
+    id: 'half_collector', icon: '🌓', name: 'HALF COLLECTOR', group: 'special',
+    description: '10 half marathons.',
+    check: r => r.filter(x => { const km = parseFloat(x.distance); return km >= 20 && km <= 23 }).length >= 10,
+  },
+  {
+    id: 'marathoner_plus', icon: '🏛️', name: 'MARATHONER+', group: 'special',
+    description: '5 marathons.',
+    check: r => r.filter(x => { const km = parseFloat(x.distance); return km >= 40 && km <= 45 }).length >= 5,
+  },
+  {
+    id: 'ultra_initiate', icon: '🏔️', name: 'ULTRA INITIATE', group: 'special',
+    description: 'First 50K finish.',
+    check: r => r.some(x => parseFloat(x.distance) >= 45 && parseFloat(x.distance) <= 65),
+    findSourceRace: r => r.find(x => parseFloat(x.distance) >= 45 && parseFloat(x.distance) <= 65) ?? null,
+  },
+  {
+    id: 'ultra_elite', icon: '🦅', name: 'ULTRA ELITE', group: 'special',
+    description: '100K completed.',
+    check: r => r.some(x => parseFloat(x.distance) >= 90 && parseFloat(x.distance) <= 130),
+    findSourceRace: r => r.find(x => parseFloat(x.distance) >= 90 && parseFloat(x.distance) <= 130) ?? null,
+  },
+  {
+    id: 'hundred_miler', icon: '💯', name: 'HUNDRED MILER', group: 'special',
+    description: '100-mile finish.',
+    check: r => r.some(x => parseFloat(x.distance) >= 140 && parseFloat(x.distance) <= 180),
+    findSourceRace: r => r.find(x => parseFloat(x.distance) >= 140 && parseFloat(x.distance) <= 180) ?? null,
+  },
+  {
+    id: 'iron_mind', icon: '🔱', name: 'IRON MIND', group: 'special',
+    description: 'Finished a 70.3 triathlon.',
+    check: r => r.some(x => parseFloat(x.distance) >= 100 && parseFloat(x.distance) <= 130 && x.sport === 'triathlon'),
+    findSourceRace: r => r.find(x => parseFloat(x.distance) >= 100 && parseFloat(x.distance) <= 130 && x.sport === 'triathlon') ?? null,
+  },
+  {
+    id: 'full_send', icon: '🛡️', name: 'FULL SEND', group: 'special',
+    description: 'Completed a Full Ironman.',
+    check: r => r.some(x => parseFloat(x.distance) >= 200 && x.sport === 'triathlon'),
+    findSourceRace: r => r.find(x => parseFloat(x.distance) >= 200 && x.sport === 'triathlon') ?? null,
+  },
+  {
+    id: 'swim_survivor', icon: '🏊', name: 'SWIM SURVIVOR', group: 'special',
+    description: 'Open water race finish.',
+    check: () => false,
+  },
+  {
+    id: 'pacemaker', icon: '⏱️', name: 'PACEMAKER', group: 'special',
+    description: 'Official pacer role at a race.',
+    check: () => false,
+  },
+  {
+    id: 'first_timer_guide', icon: '🤝', name: 'FIRST TIMER GUIDE', group: 'special',
+    description: 'Helped someone finish their first race.',
+    check: () => false,
+  },
+  {
+    id: 'club_loyalist', icon: '🏃', name: 'CLUB LOYALIST', group: 'special',
+    description: '3+ years with a run club.',
+    check: () => false,
+  },
+  {
+    id: 'photo_finish', icon: '📸', name: 'PHOTO FINISH', group: 'special',
+    description: 'Race photo uploaded.',
+    check: r => r.some(x => x.medalPhoto || (x.photos?.length ?? 0) > 0),
+    findSourceRace: r => r.find(x => x.medalPhoto || (x.photos?.length ?? 0) > 0) ?? null,
+  },
+  {
+    id: 'early_bird', icon: '🌅', name: 'EARLY BIRD', group: 'special',
+    description: 'Race start before 6 AM.',
+    check: r => r.some(x => {
+      const st = x.startTime; if (!st) return false
+      const h = parseInt(st.split(':')[0] ?? '24', 10)
+      return h < 6
+    }),
+    findSourceRace: r => r.find(x => { const st = x.startTime; if (!st) return false; return parseInt(st.split(':')[0] ?? '24', 10) < 6 }) ?? null,
+  },
+  {
+    id: 'bib_collector', icon: '🎽', name: 'BIB COLLECTOR', group: 'special',
+    description: '25 race bibs collected.',
+    check: r => r.length >= 25,
+  },
+  {
+    id: 'medal_wall', icon: '🏅', name: 'MEDAL WALL', group: 'special',
+    description: '50 medals collected.',
+    check: r => r.length >= 50,
+  },
+  {
+    id: 'lucky_number', icon: '🍀', name: 'LUCKY NUMBER', group: 'special',
+    description: 'Same bib number in two different races.',
+    check: r => {
+      const bibs = r.map(x => x.bibNumber).filter(Boolean) as string[]
+      return new Set(bibs).size < bibs.length
+    },
+  },
+  {
+    id: 'back_to_back_ultra', icon: '🧱', name: 'BACK-TO-BACK ULTRA', group: 'special',
+    description: '2 ultras (50K+) within a week.',
+    check: r => {
+      const ultras = r.filter(x => parseFloat(x.distance) >= 45 && x.date).sort((a, b) => a.date.localeCompare(b.date))
+      for (let i = 1; i < ultras.length; i++) {
+        const diff = (new Date(ultras[i].date + 'T00:00:00').getTime() - new Date(ultras[i-1].date + 'T00:00:00').getTime()) / 86400000
+        if (diff <= 7) return true
+      }
+      return false
+    },
+  },
+  {
+    id: 'comrades_marathon_finisher', icon: '🔥', name: 'COMRADES MARATHON FINISHER', group: 'special',
+    description: 'Completed the Comrades Marathon.',
+    check: r => r.some(x => (x.name ?? '').toLowerCase().includes('comrades')),
+    findSourceRace: r => r.find(x => (x.name ?? '').toLowerCase().includes('comrades')) ?? null,
+  },
+  {
+    id: 'six_star_journey_started', icon: '⭐', name: 'SIX STAR JOURNEY STARTED', group: 'special',
+    description: 'Completed your first World Marathon Major.',
+    check: r => MAJORS.some(m => r.some(x => matchesMajor(x, m))),
+    findSourceRace: r => r.find(x => MAJORS.some(m => matchesMajor(x, m))) ?? null,
+  },
+  {
+    id: 'six_star_marathon_finisher', icon: '🌟', name: 'SIX STAR MARATHON FINISHER', group: 'special',
+    description: 'Completed all six World Marathon Majors.',
+    check: r => MAJORS.every(m => r.some(x => matchesMajor(x, m))),
+  },
+  {
+    id: 'extreme_conditions', icon: '🗻', name: 'EXTREME CONDITIONS', group: 'special',
+    description: 'Race above 3,000m altitude.',
+    check: () => false,
+  },
+  {
+    id: 'cutoff_survivor', icon: '⏳', name: 'CUTOFF SURVIVOR', group: 'special',
+    description: 'Finished within the last 5% of finishers.',
+    check: () => false,
+  },
+
+  // ── 10K Ladder (7 tiers) ──────────────────────────────────────────────────
+  { id: '10k_first_gear',     icon: '🏁', name: 'FIRST GEAR',     group: 'ladder', family: '10k', tier: 1, description: '10K under 60 min.',        check: r => { const pb = getPBSecsForDist(r, 9.5, 11); return pb !== null && pb < 3600 }, findSourceRace: r => r.filter(x => { const km = parseFloat(x.distance); return km >= 9.5 && km <= 11 && x.time && (parseHMS(x.time) ?? Infinity) < 3600 }).sort((a, b) => (a.time ?? '').localeCompare(b.time ?? ''))[0] ?? null },
+  { id: '10k_steady_roll',    icon: '🏁', name: 'STEADY ROLL',    group: 'ladder', family: '10k', tier: 2, description: '10K under 55 min.',        check: r => { const pb = getPBSecsForDist(r, 9.5, 11); return pb !== null && pb < 3300 } },
+  { id: '10k_breaking_rhythm',icon: '🏁', name: 'BREAKING RHYTHM',group: 'ladder', family: '10k', tier: 3, description: '10K under 50 min.',        check: r => { const pb = getPBSecsForDist(r, 9.5, 11); return pb !== null && pb < 3000 } },
+  { id: '10k_locked_in',      icon: '🏁', name: 'LOCKED IN',      group: 'ladder', family: '10k', tier: 4, description: '10K under 45 min.',        check: r => { const pb = getPBSecsForDist(r, 9.5, 11); return pb !== null && pb < 2700 } },
+  { id: '10k_sharp_pace',     icon: '🏁', name: 'SHARP PACE',     group: 'ladder', family: '10k', tier: 5, description: '10K under 40 min.',        check: r => { const pb = getPBSecsForDist(r, 9.5, 11); return pb !== null && pb < 2400 } },
+  { id: '10k_speed_control',  icon: '🏁', name: 'SPEED CONTROL',  group: 'ladder', family: '10k', tier: 6, description: '10K under 35 min.',        check: r => { const pb = getPBSecsForDist(r, 9.5, 11); return pb !== null && pb < 2100 } },
+  { id: '10k_velocity_elite', icon: '🏁', name: 'VELOCITY ELITE', group: 'ladder', family: '10k', tier: 7, description: '10K under 30 min.',        check: r => { const pb = getPBSecsForDist(r, 9.5, 11); return pb !== null && pb < 1800 } },
+
+  // ── Half Marathon Ladder (14 tiers) ──────────────────────────────────────
+  { id: 'half_half_starter',   icon: '🌓', name: 'HALF STARTER',    group: 'ladder', family: 'half', tier: 1,  description: 'Half under 2:30.',  check: r => { const pb = getPBSecsForDist(r, 20, 23); return pb !== null && pb < 9000 } },
+  { id: 'half_finding_flow',   icon: '🌓', name: 'FINDING FLOW',    group: 'ladder', family: 'half', tier: 2,  description: 'Half under 2:20.',  check: r => { const pb = getPBSecsForDist(r, 20, 23); return pb !== null && pb < 8400 } },
+  { id: 'half_built_engine',   icon: '🌓', name: 'BUILT ENGINE',    group: 'ladder', family: 'half', tier: 3,  description: 'Half under 2:10.',  check: r => { const pb = getPBSecsForDist(r, 20, 23); return pb !== null && pb < 7800 } },
+  { id: 'half_strong_hold',    icon: '🌓', name: 'STRONG HOLD',     group: 'ladder', family: 'half', tier: 4,  description: 'Half under 2:00.',  check: r => { const pb = getPBSecsForDist(r, 20, 23); return pb !== null && pb < 7200 } },
+  { id: 'half_pace_driver',    icon: '🌓', name: 'PACE DRIVER',     group: 'ladder', family: 'half', tier: 5,  description: 'Half under 1:50.',  check: r => { const pb = getPBSecsForDist(r, 20, 23); return pb !== null && pb < 6600 } },
+  { id: 'half_subtle_shift',   icon: '🌓', name: 'SUBTLE SHIFT',    group: 'ladder', family: 'half', tier: 6,  description: 'Half under 1:45.',  check: r => { const pb = getPBSecsForDist(r, 20, 23); return pb !== null && pb < 6300 } },
+  { id: 'half_double_digits',  icon: '🌓', name: 'DOUBLE DIGITS',   group: 'ladder', family: 'half', tier: 7,  description: 'Half under 1:40.',  check: r => { const pb = getPBSecsForDist(r, 20, 23); return pb !== null && pb < 6000 } },
+  { id: 'half_on_the_edge',    icon: '🌓', name: 'ON THE EDGE',     group: 'ladder', family: 'half', tier: 8,  description: 'Half under 1:35.',  check: r => { const pb = getPBSecsForDist(r, 20, 23); return pb !== null && pb < 5700 } },
+  { id: 'half_half_elite',     icon: '🌓', name: 'HALF ELITE',      group: 'ladder', family: 'half', tier: 9,  description: 'Half under 1:30.',  check: r => { const pb = getPBSecsForDist(r, 20, 23); return pb !== null && pb < 5400 } },
+  { id: 'half_sharp_operator', icon: '🌓', name: 'SHARP OPERATOR',  group: 'ladder', family: 'half', tier: 10, description: 'Half under 1:25.',  check: r => { const pb = getPBSecsForDist(r, 20, 23); return pb !== null && pb < 5100 } },
+  { id: 'half_speed_endurance',icon: '🌓', name: 'SPEED ENDURANCE', group: 'ladder', family: 'half', tier: 11, description: 'Half under 1:20.',  check: r => { const pb = getPBSecsForDist(r, 20, 23); return pb !== null && pb < 4800 } },
+  { id: 'half_precision_runner',icon:'🌓', name: 'PRECISION RUNNER',group: 'ladder', family: 'half', tier: 12, description: 'Half under 1:15.',  check: r => { const pb = getPBSecsForDist(r, 20, 23); return pb !== null && pb < 4500 } },
+  { id: 'half_top_tier',       icon: '🌓', name: 'TOP TIER',        group: 'ladder', family: 'half', tier: 13, description: 'Half under 1:05.',  check: r => { const pb = getPBSecsForDist(r, 20, 23); return pb !== null && pb < 3900 } },
+  { id: 'half_unreal_territory',icon:'🌓', name: 'UNREAL TERRITORY',group: 'ladder', family: 'half', tier: 14, description: 'Half under 60 min.', check: r => { const pb = getPBSecsForDist(r, 20, 23); return pb !== null && pb < 3600 } },
+
+  // ── Marathon Ladder (15 tiers) ────────────────────────────────────────────
+  { id: 'marathon_first_marathoner', icon: '🏛️', name: 'FIRST MARATHONER', group: 'ladder', family: 'marathon', tier: 1,  description: 'Marathon under 5:00.',  check: r => { const pb = getPBSecsForDist(r, 40, 45); return pb !== null && pb < 18000 } },
+  { id: 'marathon_settling_in',      icon: '🏛️', name: 'SETTLING IN',      group: 'ladder', family: 'marathon', tier: 2,  description: 'Marathon under 4:30.',  check: r => { const pb = getPBSecsForDist(r, 40, 45); return pb !== null && pb < 16200 } },
+  { id: 'marathon_sub4_club',        icon: '🏛️', name: 'SUB-4 CLUB',       group: 'ladder', family: 'marathon', tier: 3,  description: 'Marathon under 4:00.',  check: r => { const pb = getPBSecsForDist(r, 40, 45); return pb !== null && pb < 14400 } },
+  { id: 'marathon_rising_standard',  icon: '🏛️', name: 'RISING STANDARD',  group: 'ladder', family: 'marathon', tier: 4,  description: 'Marathon under 3:45.',  check: r => { const pb = getPBSecsForDist(r, 40, 45); return pb !== null && pb < 13500 } },
+  { id: 'marathon_serious_runner',   icon: '🏛️', name: 'SERIOUS RUNNER',   group: 'ladder', family: 'marathon', tier: 5,  description: 'Marathon under 3:30.',  check: r => { const pb = getPBSecsForDist(r, 40, 45); return pb !== null && pb < 12600 } },
+  { id: 'marathon_competitive_edge', icon: '🏛️', name: 'COMPETITIVE EDGE', group: 'ladder', family: 'marathon', tier: 6,  description: 'Marathon under 3:15.',  check: r => { const pb = getPBSecsForDist(r, 40, 45); return pb !== null && pb < 11700 } },
+  { id: 'marathon_elite_barrier',    icon: '🏛️', name: 'ELITE BARRIER',    group: 'ladder', family: 'marathon', tier: 7,  description: 'Marathon under 3:00.',  check: r => { const pb = getPBSecsForDist(r, 40, 45); return pb !== null && pb < 10800 } },
+  { id: 'marathon_breaking_limits',  icon: '🏛️', name: 'BREAKING LIMITS',  group: 'ladder', family: 'marathon', tier: 8,  description: 'Marathon under 2:55.',  check: r => { const pb = getPBSecsForDist(r, 40, 45); return pb !== null && pb < 10500 } },
+  { id: 'marathon_precision_pace',   icon: '🏛️', name: 'PRECISION PACE',   group: 'ladder', family: 'marathon', tier: 9,  description: 'Marathon under 2:50.',  check: r => { const pb = getPBSecsForDist(r, 40, 45); return pb !== null && pb < 10200 } },
+  { id: 'marathon_high_performance', icon: '🏛️', name: 'HIGH PERFORMANCE', group: 'ladder', family: 'marathon', tier: 10, description: 'Marathon under 2:45.',  check: r => { const pb = getPBSecsForDist(r, 40, 45); return pb !== null && pb < 9900 } },
+  { id: 'marathon_advanced_tier',    icon: '🏛️', name: 'ADVANCED TIER',    group: 'ladder', family: 'marathon', tier: 11, description: 'Marathon under 2:40.',  check: r => { const pb = getPBSecsForDist(r, 40, 45); return pb !== null && pb < 9600 } },
+  { id: 'marathon_national_level',   icon: '🏛️', name: 'NATIONAL LEVEL',   group: 'ladder', family: 'marathon', tier: 12, description: 'Marathon under 2:35.',  check: r => { const pb = getPBSecsForDist(r, 40, 45); return pb !== null && pb < 9300 } },
+  { id: 'marathon_elite_class',      icon: '🏛️', name: 'ELITE CLASS',      group: 'ladder', family: 'marathon', tier: 13, description: 'Marathon under 2:30.',  check: r => { const pb = getPBSecsForDist(r, 40, 45); return pb !== null && pb < 9000 } },
+  { id: 'marathon_sub_elite',        icon: '🏛️', name: 'SUB-ELITE',        group: 'ladder', family: 'marathon', tier: 14, description: 'Marathon under 2:25.',  check: r => { const pb = getPBSecsForDist(r, 40, 45); return pb !== null && pb < 8700 } },
+  { id: 'marathon_world_class',      icon: '🏛️', name: 'WORLD CLASS',      group: 'ladder', family: 'marathon', tier: 15, description: 'Marathon under 2:20.',  check: r => { const pb = getPBSecsForDist(r, 40, 45); return pb !== null && pb < 8400 } },
+
+  // ── Ultra Ladder (7 tiers) ────────────────────────────────────────────────
+  { id: 'ultra_50k_entry',           icon: '🏔️', name: 'ULTRA ENTRY',       group: 'ladder', family: 'ultra', tier: 1, description: '50K under 6:00.',          check: r => { const pb = getPBSecsForDist(r, 45, 65); return pb !== null && pb < 21600 } },
+  { id: 'ultra_50k_endurance_builder',icon:'🏔️', name: 'ENDURANCE BUILDER', group: 'ladder', family: 'ultra', tier: 2, description: '50K under 5:30.',          check: r => { const pb = getPBSecsForDist(r, 45, 65); return pb !== null && pb < 19800 } },
+  { id: 'ultra_50k_ultra_control',   icon: '🏔️', name: 'ULTRA CONTROL',     group: 'ladder', family: 'ultra', tier: 3, description: '50K under 5:00.',          check: r => { const pb = getPBSecsForDist(r, 45, 65); return pb !== null && pb < 18000 } },
+  { id: 'ultra_50k_ultra_strong',    icon: '🏔️', name: 'ULTRA STRONG',      group: 'ladder', family: 'ultra', tier: 4, description: '50K under 4:30.',          check: r => { const pb = getPBSecsForDist(r, 45, 65); return pb !== null && pb < 16200 } },
+  { id: 'ultra_50k_ultra_elite',     icon: '🏔️', name: 'ULTRA ELITE',       group: 'ladder', family: 'ultra', tier: 5, description: '50K under 4:00.',          check: r => { const pb = getPBSecsForDist(r, 45, 65); return pb !== null && pb < 14400 } },
+  { id: 'ultra_100k_century_runner', icon: '🏔️', name: 'CENTURY RUNNER',    group: 'ladder', family: 'ultra', tier: 6, description: '100K under 12:00.',        check: r => { const pb = getPBSecsForDist(r, 80, 130); return pb !== null && pb < 43200 } },
+  { id: 'ultra_100m_hundred_legend', icon: '🏔️', name: 'HUNDRED LEGEND',    group: 'ladder', family: 'ultra', tier: 7, description: '100 Mile under 24:00.',    check: r => { const pb = getPBSecsForDist(r, 140, 180); return pb !== null && pb < 86400 } },
+
+  // ── 70.3 Ladder (7 tiers) ─────────────────────────────────────────────────
+  { id: 'tri703_half_iron_entry',  icon: '🔱', name: 'HALF IRON ENTRY',  group: 'ladder', family: 'tri703', tier: 1, description: '70.3 under 6:00.',   check: r => { const pb = getPBSecsForDist(r, 100, 130, 'triathlon'); return pb !== null && pb < 21600 } },
+  { id: 'tri703_building_strength',icon: '🔱', name: 'BUILDING STRENGTH',group: 'ladder', family: 'tri703', tier: 2, description: '70.3 under 5:30.',   check: r => { const pb = getPBSecsForDist(r, 100, 130, 'triathlon'); return pb !== null && pb < 19800 } },
+  { id: 'tri703_iron_control',     icon: '🔱', name: 'IRON CONTROL',     group: 'ladder', family: 'tri703', tier: 3, description: '70.3 under 5:00.',   check: r => { const pb = getPBSecsForDist(r, 100, 130, 'triathlon'); return pb !== null && pb < 18000 } },
+  { id: 'tri703_competitive_field',icon: '🔱', name: 'COMPETITIVE FIELD',group: 'ladder', family: 'tri703', tier: 4, description: '70.3 under 4:45.',   check: r => { const pb = getPBSecsForDist(r, 100, 130, 'triathlon'); return pb !== null && pb < 17100 } },
+  { id: 'tri703_sharp_execution', icon: '🔱', name: 'SHARP EXECUTION',  group: 'ladder', family: 'tri703', tier: 5, description: '70.3 under 4:30.',   check: r => { const pb = getPBSecsForDist(r, 100, 130, 'triathlon'); return pb !== null && pb < 16200 } },
+  { id: 'tri703_elite_amateur',   icon: '🔱', name: 'ELITE AMATEUR',    group: 'ladder', family: 'tri703', tier: 6, description: '70.3 under 4:15.',   check: r => { const pb = getPBSecsForDist(r, 100, 130, 'triathlon'); return pb !== null && pb < 15300 } },
+  { id: 'tri703_iron_elite',      icon: '🔱', name: 'IRON ELITE',       group: 'ladder', family: 'tri703', tier: 7, description: '70.3 under 4:00.',   check: r => { const pb = getPBSecsForDist(r, 100, 130, 'triathlon'); return pb !== null && pb < 14400 } },
+
+  // ── Full Ironman Ladder (7 tiers) ─────────────────────────────────────────
+  { id: 'ironman_full_iron_finisher', icon: '🛡️', name: 'IRON FINISHER',  group: 'ladder', family: 'iron', tier: 1, description: 'Full Ironman under 12:00.', check: r => { const pb = getPBSecsForDist(r, 200, 250, 'triathlon'); return pb !== null && pb < 43200 } },
+  { id: 'ironman_full_iron_builder',  icon: '🛡️', name: 'IRON BUILDER',   group: 'ladder', family: 'iron', tier: 2, description: 'Full Ironman under 11:30.', check: r => { const pb = getPBSecsForDist(r, 200, 250, 'triathlon'); return pb !== null && pb < 41400 } },
+  { id: 'ironman_full_strong_iron',   icon: '🛡️', name: 'STRONG IRON',    group: 'ladder', family: 'iron', tier: 3, description: 'Full Ironman under 11:00.', check: r => { const pb = getPBSecsForDist(r, 200, 250, 'triathlon'); return pb !== null && pb < 39600 } },
+  { id: 'ironman_full_iron_competitor',icon:'🛡️', name: 'IRON COMPETITOR',group: 'ladder', family: 'iron', tier: 4, description: 'Full Ironman under 10:30.', check: r => { const pb = getPBSecsForDist(r, 200, 250, 'triathlon'); return pb !== null && pb < 37800 } },
+  { id: 'ironman_full_sub10_club',    icon: '🛡️', name: 'SUB-10 CLUB',    group: 'ladder', family: 'iron', tier: 5, description: 'Full Ironman under 10:00.', check: r => { const pb = getPBSecsForDist(r, 200, 250, 'triathlon'); return pb !== null && pb < 36000 } },
+  { id: 'ironman_full_elite_iron',    icon: '🛡️', name: 'ELITE IRON',     group: 'ladder', family: 'iron', tier: 6, description: 'Full Ironman under 9:30.',  check: r => { const pb = getPBSecsForDist(r, 200, 250, 'triathlon'); return pb !== null && pb < 34200 } },
+  { id: 'ironman_full_world_tier',    icon: '🛡️', name: 'WORLD TIER',     group: 'ladder', family: 'iron', tier: 7, description: 'Full Ironman under 9:00.',  check: r => { const pb = getPBSecsForDist(r, 200, 250, 'triathlon'); return pb !== null && pb < 32400 } },
+]
+
+const LADDER_FAMILIES: Array<{ key: string; label: string; icon: string }> = [
+  { key: '10k',      label: '10K',          icon: '🏁' },
+  { key: 'half',     label: 'HALF MARATHON',icon: '🌓' },
+  { key: 'marathon', label: 'MARATHON',     icon: '🏛️' },
+  { key: 'ultra',    label: 'ULTRA',        icon: '🏔️' },
+  { key: 'tri703',   label: '70.3',         icon: '🔱' },
+  { key: 'iron',     label: 'FULL IRONMAN', icon: '🛡️' },
 ]
 
 // World Marathon Majors
@@ -825,6 +1211,7 @@ function MedalWall() {
 function AchievementsSection() {
   const races   = useRaceStore(selectRaces)
   const athlete = useAthleteStore(selectAthlete)
+  const [popup, setPopup] = useState<Achievement | null>(null)
 
   const unlocked = useMemo(
     () => ACHIEVEMENTS.filter(a => a.check(races, athlete)),
@@ -832,10 +1219,29 @@ function AchievementsSection() {
   )
 
   const unlockedIds = new Set(unlocked.map(a => a.id))
-  const totalCount  = ACHIEVEMENTS.length
+  const specialAll  = ACHIEVEMENTS.filter(a => a.group === 'special')
+  const recentPills = unlocked.filter(a => a.group === 'special').slice(-3).reverse()
 
-  // Recent unlocked pills (last 3)
-  const recentPills = unlocked.slice(-3).reverse()
+  // For each ladder family, find highest unlocked tier
+  const ladderStatus = useMemo(() => {
+    const out: Record<string, { highest: Achievement | null; unlockedCount: number; total: number }> = {}
+    for (const fam of LADDER_FAMILIES) {
+      const tiers = ACHIEVEMENTS.filter(a => a.family === fam.key).sort((a, b) => (a.tier ?? 0) - (b.tier ?? 0))
+      const unlockedTiers = tiers.filter(a => unlockedIds.has(a.id))
+      out[fam.key] = {
+        highest: unlockedTiers.length > 0 ? unlockedTiers[unlockedTiers.length - 1] : null,
+        unlockedCount: unlockedTiers.length,
+        total: tiers.length,
+      }
+    }
+    return out
+  }, [unlockedIds])
+
+  // Popup source race
+  const popupRace = useMemo(() => {
+    if (!popup?.findSourceRace) return null
+    return popup.findSourceRace(races)
+  }, [popup, races])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -849,7 +1255,7 @@ function AchievementsSection() {
             {unlocked.length}
           </span>
           <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '20px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-            OF {totalCount} UNLOCKED
+            OF {ACHIEVEMENTS.length} UNLOCKED
           </span>
         </div>
         <div style={{ fontSize: '14px', color: 'rgba(245,245,245,0.55)', lineHeight: 1.55, marginBottom: '16px', maxWidth: '340px' }}>
@@ -859,72 +1265,142 @@ function AchievementsSection() {
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             {recentPills.map(a => (
               <div key={a.id} style={st.achievementPill}>
-                <span>{a.name}</span>
+                <span>{a.icon} {a.name}</span>
               </div>
             ))}
           </div>
         )}
       </div>
 
-      {/* Achievement icons grid */}
+      {/* Special achievements grid */}
+      <div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 0 10px', borderBottom: '1px solid var(--border)' }}>
+          <span style={{ fontSize: '14px' }}>⭐</span>
+          <span style={{ fontFamily: 'var(--headline)', fontSize: '11px', fontWeight: 700, letterSpacing: '0.14em', color: 'var(--muted)', textTransform: 'uppercase' }}>
+            SPECIAL ACHIEVEMENTS
+          </span>
+          <span style={{ marginLeft: 'auto', fontSize: '11px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700 }}>
+            {unlocked.filter(a => a.group === 'special').length}/{specialAll.length}
+          </span>
+        </div>
+        <div style={{ ...st.achievementGrid, marginTop: '12px' }}>
+          {specialAll.map(a => {
+            const isUnlocked = unlockedIds.has(a.id)
+            return (
+              <div
+                key={a.id}
+                onClick={() => setPopup(a)}
+                style={{ ...st.achievementTile, cursor: 'pointer', opacity: isUnlocked ? 1 : 0.5, borderColor: isUnlocked ? 'rgba(var(--green-ch),0.35)' : 'var(--border)', borderTopWidth: isUnlocked ? '2px' : '1px' }}
+              >
+                <div style={{ fontSize: '18px', marginBottom: '6px' }}>{a.icon}</div>
+                <div style={st.achievementName}>{a.name}</div>
+                <div style={{ ...st.achievementStatus, background: isUnlocked ? 'rgba(var(--green-ch), 0.1)' : 'var(--surface)', color: isUnlocked ? 'var(--green)' : 'var(--muted)' }}>
+                  {isUnlocked ? 'UNLOCKED' : 'LOCKED'}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Performance Ladders */}
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 0 10px', borderBottom: '1px solid var(--border)' }}>
           <span style={{ fontSize: '14px' }}>🏆</span>
           <span style={{ fontFamily: 'var(--headline)', fontSize: '11px', fontWeight: 700, letterSpacing: '0.14em', color: 'var(--muted)', textTransform: 'uppercase' }}>
-            ACHIEVEMENT ICONS
+            PERFORMANCE LADDERS
           </span>
         </div>
-
-        {/* Special achievements */}
-        <div style={{ ...st.achievementGroup, marginTop: '12px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)' }}>
-              SPECIAL ACHIEVEMENTS
-            </span>
-            <span style={{ fontSize: '12px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700 }}>
-              {unlocked.filter(a => a.group === 'special').length}/{ACHIEVEMENTS.filter(a => a.group === 'special').length}
-            </span>
-          </div>
-          <div style={st.achievementGrid}>
-            {ACHIEVEMENTS.filter(a => a.group === 'special').map(a => {
-              const isUnlocked = unlockedIds.has(a.id)
-              return (
-                <div key={a.id} style={{ ...st.achievementTile, opacity: isUnlocked ? 1 : 0.55, borderColor: isUnlocked ? 'rgba(var(--green-ch),0.35)' : 'var(--border)', borderTopWidth: isUnlocked ? '2px' : '1px' }}>
-                  <div style={st.achievementName}>{a.name}</div>
-                  <div style={{ ...st.achievementStatus, background: isUnlocked ? 'rgba(var(--green-ch), 0.1)' : 'var(--surface)', color: isUnlocked ? 'var(--green)' : 'var(--muted)' }}>
-                    {isUnlocked ? 'UNLOCKED' : 'LOCKED'}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px' }}>
+          {LADDER_FAMILIES.map(fam => {
+            const status = ladderStatus[fam.key]
+            const tiers = ACHIEVEMENTS.filter(a => a.family === fam.key).sort((a, b) => (a.tier ?? 0) - (b.tier ?? 0))
+            return (
+              <div key={fam.key} style={{ background: 'var(--surface2)', borderRadius: '10px', padding: '14px', border: '1px solid var(--border)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{ fontSize: '16px' }}>{fam.icon}</span>
+                    <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>
+                      {fam.label}
+                    </span>
                   </div>
+                  <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px', color: status?.highest ? 'var(--orange)' : 'var(--muted)' }}>
+                    {status?.highest ? status.highest.name : 'NOT STARTED'}
+                  </span>
                 </div>
-              )
-            })}
-          </div>
-        </div>
-
-        {/* Milestone achievements */}
-        <div style={{ ...st.achievementGroup, marginTop: '16px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-            <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)' }}>
-              MILESTONES
-            </span>
-            <span style={{ fontSize: '12px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700 }}>
-              {unlocked.filter(a => a.group === 'milestone').length}/{ACHIEVEMENTS.filter(a => a.group === 'milestone').length}
-            </span>
-          </div>
-          <div style={st.achievementGrid}>
-            {ACHIEVEMENTS.filter(a => a.group === 'milestone' || a.group === 'event').map(a => {
-              const isUnlocked = unlockedIds.has(a.id)
-              return (
-                <div key={a.id} style={{ ...st.achievementTile, opacity: isUnlocked ? 1 : 0.55, borderColor: isUnlocked ? 'rgba(var(--orange-ch),0.35)' : 'var(--border)', borderTopWidth: isUnlocked ? '2px' : '1px' }}>
-                  <div style={st.achievementName}>{a.name}</div>
-                  <div style={{ ...st.achievementStatus, background: isUnlocked ? 'rgba(var(--orange-ch), 0.08)' : 'var(--surface)', color: isUnlocked ? 'var(--orange)' : 'var(--muted)' }}>
-                    {isUnlocked ? 'UNLOCKED' : 'LOCKED'}
+                {/* Tier progress dots */}
+                <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                  {tiers.map(t => {
+                    const isUnlocked = unlockedIds.has(t.id)
+                    const isHighest = status?.highest?.id === t.id
+                    return (
+                      <div
+                        key={t.id}
+                        onClick={() => setPopup(t)}
+                        title={t.name}
+                        style={{
+                          flex: 1, height: '6px', borderRadius: '3px', cursor: 'pointer',
+                          background: isHighest ? 'var(--orange)' : isUnlocked ? 'rgba(var(--orange-ch),0.45)' : 'var(--surface3)',
+                          transition: 'background 0.2s',
+                        }}
+                      />
+                    )
+                  })}
+                </div>
+                {status?.highest && (
+                  <div style={{ marginTop: '8px', fontSize: '11px', color: 'var(--muted)' }}>
+                    {status.highest.description}
                   </div>
-                </div>
-              )
-            })}
-          </div>
+                )}
+              </div>
+            )
+          })}
         </div>
       </div>
+
+      {/* Achievement popup */}
+      {popup && (
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 950, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'flex-end' }}
+          onClick={() => setPopup(null)}
+        >
+          <div
+            style={{ background: 'var(--surface2)', borderRadius: '16px 16px 0 0', padding: '24px', width: '100%', maxHeight: '60vh', overflowY: 'auto', borderTop: '1px solid var(--border)' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', marginBottom: '16px' }}>
+              <div style={{ fontSize: '40px', lineHeight: 1 }}>{popup.icon}</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)', marginBottom: '4px' }}>
+                  {popup.name}
+                </div>
+                <div style={{ fontSize: '13px', color: 'rgba(245,245,245,0.65)', lineHeight: 1.55 }}>
+                  {popup.description}
+                </div>
+              </div>
+              <button onClick={() => setPopup(null)} style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '20px', cursor: 'pointer', padding: '4px', lineHeight: 1 }}>×</button>
+            </div>
+            {unlockedIds.has(popup.id) ? (
+              <div style={{ background: 'rgba(var(--green-ch),0.08)', border: '1px solid rgba(var(--green-ch),0.2)', borderRadius: '8px', padding: '12px' }}>
+                <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px', letterSpacing: '0.1em', color: 'var(--green)', marginBottom: popupRace ? '8px' : 0 }}>
+                  ✓ UNLOCKED
+                </div>
+                {popupRace && (
+                  <div style={{ fontSize: '13px', color: 'rgba(245,245,245,0.7)', lineHeight: 1.55 }}>
+                    {popupRace.name}{popupRace.city ? ` · ${popupRace.city}` : ''}{popupRace.country ? `, ${popupRace.country}` : ''}{popupRace.date ? ` · ${popupRace.date}` : ''}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div style={{ background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: '8px', padding: '12px' }}>
+                <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px', letterSpacing: '0.1em', color: 'var(--muted)' }}>
+                  🔒 NOT YET UNLOCKED
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -1631,38 +2107,20 @@ function GoalsSection() {
   // Add-goal form state
   const [addMode, setAddMode] = useState<'km' | 'races' | 'dist' | null>(null)
   const [annualVal, setAnnualVal] = useState('')
-  const [distTarget, setDistTarget] = useState({ dist: '', h: '', m: '', s: '', deadline: '' })
 
-  // Distance picker grouped by sport — running first, then triathlon, etc.
-  // Within each group, distances are sorted numerically when possible so a
-  // user sees 5K → 10K → Half → Marathon, not "10K, 16.09, 160.93, 42.2".
-  const distGroups = useMemo(() => {
-    const buckets = new Map<string, Set<string>>()
-    for (const r of races) {
-      if (!r.distance) continue
-      const sport = (r.sport ?? 'Running').trim() || 'Running'
-      if (!buckets.has(sport)) buckets.set(sport, new Set())
-      buckets.get(sport)!.add(r.distance)
-    }
-    const SPORT_ORDER = ['Running', 'Triathlon', 'Cycling', 'Swimming', 'HYROX']
-    const sortDist = (a: string, b: string) => {
-      const an = parseFloat(a), bn = parseFloat(b)
-      const aNum = !Number.isNaN(an), bNum = !Number.isNaN(bn)
-      if (aNum && bNum) return an - bn
-      if (aNum) return -1
-      if (bNum) return 1
-      return a.localeCompare(b)
-    }
-    return [...buckets.entries()]
-      .sort(([a], [b]) => {
-        const ai = SPORT_ORDER.indexOf(a), bi = SPORT_ORDER.indexOf(b)
-        if (ai === -1 && bi === -1) return a.localeCompare(b)
-        if (ai === -1) return 1
-        if (bi === -1) return -1
-        return ai - bi
-      })
-      .map(([sport, set]) => ({ sport, distances: [...set].sort(sortDist) }))
-  }, [races])
+  // 2-step dist goal picker: sport → distance
+  const [goalSport,    setGoalSport]    = useState('Running')
+  const [goalDist,     setGoalDist]     = useState('')       // value from GOAL_DISTANCES or '__custom__'
+  const [goalCustomKm, setGoalCustomKm] = useState('')       // numeric string
+  const [goalCustomUnit, setGoalCustomUnit] = useState<'km' | 'mi'>('km')
+  const [goalHMS,      setGoalHMS]      = useState<HMS>({ h: 0, m: 0, s: 0 })
+  const [goalDeadline, setGoalDeadline] = useState('')
+
+  const handleGoalSportChange = useCallback((s: string) => {
+    setGoalSport(s)
+    setGoalDist('')
+    setGoalCustomKm('')
+  }, [])
 
   function saveAnnual() {
     const v = parseInt(annualVal)
@@ -1673,13 +2131,24 @@ function GoalsSection() {
   }
 
   function saveDist() {
-    const h = parseInt(distTarget.h) || 0
-    const m = parseInt(distTarget.m) || 0
-    const s = parseInt(distTarget.s) || 0
-    const secs = h * 3600 + m * 60 + s
-    if (!distTarget.dist || secs <= 0) return
-    addDistGoal({ dist: distTarget.dist, targetSecs: secs, deadline: distTarget.deadline || undefined })
-    setDistTarget({ dist: '', h: '', m: '', s: '', deadline: '' })
+    const secs = goalHMS.h * 3600 + goalHMS.m * 60 + goalHMS.s
+    let distVal = goalDist
+    if (goalDist === '__custom__') {
+      const km = goalCustomUnit === 'mi'
+        ? (parseFloat(goalCustomKm) * 1.60934)
+        : parseFloat(goalCustomKm)
+      if (!km || isNaN(km)) return
+      distVal = `${Math.round(km * 10) / 10}km`
+    }
+    if (!distVal || secs <= 0) return
+    // Use the human label for GOAL_DISTANCES entries
+    const preset = (GOAL_DISTANCES[goalSport] ?? []).find(o => o.value === distVal)
+    const label = preset ? preset.label : distVal
+    addDistGoal({ dist: label, targetSecs: secs, deadline: goalDeadline || undefined })
+    setGoalDist('')
+    setGoalCustomKm('')
+    setGoalHMS({ h: 0, m: 0, s: 0 })
+    setGoalDeadline('')
     setAddMode(null)
   }
 
@@ -1787,25 +2256,107 @@ function GoalsSection() {
         </div>
       )}
       {addMode === 'dist' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '12px' }}>
-          <select value={distTarget.dist} onChange={e => setDistTarget(d => ({ ...d, dist: e.target.value }))} style={{ ...inputSt, width: '100%' }}>
-            <option value="">Select distance…</option>
-            {distGroups.map(g => (
-              <optgroup key={g.sport} label={g.sport}>
-                {g.distances.map(d => <option key={d} value={d}>{d}</option>)}
-              </optgroup>
-            ))}
-          </select>
-          <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-            <span style={{ fontSize: '11px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700 }}>TARGET</span>
-            <input type="number" placeholder="H" min={0} value={distTarget.h} onChange={e => setDistTarget(d => ({ ...d, h: e.target.value }))} style={{ ...inputSt, width: '50px' }} />
-            <input type="number" placeholder="M" min={0} max={59} value={distTarget.m} onChange={e => setDistTarget(d => ({ ...d, m: e.target.value }))} style={{ ...inputSt, width: '50px' }} />
-            <input type="number" placeholder="S" min={0} max={59} value={distTarget.s} onChange={e => setDistTarget(d => ({ ...d, s: e.target.value }))} style={{ ...inputSt, width: '50px' }} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '8px', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '10px', padding: '14px' }}>
+
+          {/* Step 1 — Sport chips */}
+          <div>
+            <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '8px' }}>Sport</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              {GOAL_SPORTS.map(s => {
+                const active = goalSport === s
+                return (
+                  <button key={s} onClick={() => handleGoalSportChange(s)} style={{
+                    background: active ? 'rgba(var(--orange-ch),0.15)' : 'var(--surface)',
+                    color: active ? 'var(--orange)' : 'var(--muted)',
+                    border: `1px solid ${active ? 'rgba(var(--orange-ch),0.4)' : 'var(--border2)'}`,
+                    borderRadius: '20px', padding: '5px 12px',
+                    fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700,
+                    letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer',
+                  }}>{s}</button>
+                )
+              })}
+            </div>
           </div>
-          <input type="date" placeholder="Deadline (optional)" value={distTarget.deadline} onChange={e => setDistTarget(d => ({ ...d, deadline: e.target.value }))} style={{ ...inputSt, width: '100%' }} />
+
+          {/* Step 2 — Distance chips */}
+          <div>
+            <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '8px' }}>Distance</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              {(GOAL_DISTANCES[goalSport] ?? []).map(opt => {
+                const active = goalDist === opt.value
+                return (
+                  <button key={opt.value} onClick={() => setGoalDist(active ? '' : opt.value)} style={{
+                    background: active ? 'rgba(var(--orange-ch),0.15)' : 'var(--surface)',
+                    color: active ? 'var(--orange)' : 'var(--muted)',
+                    border: `1px solid ${active ? 'rgba(var(--orange-ch),0.4)' : 'var(--border2)'}`,
+                    borderRadius: '20px', padding: '5px 12px',
+                    fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700,
+                    letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer',
+                  }}>{opt.label}</button>
+                )
+              })}
+              {/* Custom chip — only for non-HYROX sports */}
+              {goalSport !== 'HYROX' && (
+                <button onClick={() => setGoalDist(goalDist === '__custom__' ? '' : '__custom__')} style={{
+                  background: goalDist === '__custom__' ? 'rgba(var(--orange-ch),0.15)' : 'var(--surface)',
+                  color: goalDist === '__custom__' ? 'var(--orange)' : 'var(--muted)',
+                  border: `1px solid ${goalDist === '__custom__' ? 'rgba(var(--orange-ch),0.4)' : 'var(--border2)'}`,
+                  borderRadius: '20px', padding: '5px 12px',
+                  fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700,
+                  letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer',
+                }}>Custom +</button>
+              )}
+            </div>
+
+            {/* Custom distance input */}
+            {goalDist === '__custom__' && (
+              <div style={{ display: 'flex', gap: '6px', marginTop: '10px', alignItems: 'center' }}>
+                <input
+                  type="number" min={0} step={0.1}
+                  placeholder={goalCustomUnit === 'km' ? 'e.g. 30' : 'e.g. 18.6'}
+                  value={goalCustomKm}
+                  onChange={e => setGoalCustomKm(e.target.value)}
+                  style={{ ...inputSt, flex: 1, minWidth: 0 }}
+                />
+                <div style={{ display: 'flex', borderRadius: '6px', overflow: 'hidden', border: '1px solid var(--border2)', flexShrink: 0 }}>
+                  {(['km', 'mi'] as const).map(u => (
+                    <button key={u} onClick={() => setGoalCustomUnit(u)} style={{
+                      background: goalCustomUnit === u ? 'var(--orange)' : 'var(--surface)',
+                      color: goalCustomUnit === u ? 'var(--black)' : 'var(--muted)',
+                      border: 'none', padding: '7px 12px',
+                      fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700,
+                      letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer',
+                    }}>{u}</button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Target time wheel */}
+          {(goalDist !== '') && (
+            <>
+              <div>
+                <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '8px' }}>Target Time</div>
+                <TimePickerWheel value={goalHMS} onChange={setGoalHMS} maxHours={99} />
+              </div>
+
+              {/* Deadline */}
+              <div>
+                <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '8px' }}>Deadline (optional)</div>
+                <input
+                  type="date"
+                  value={goalDeadline}
+                  onChange={e => setGoalDeadline(e.target.value)}
+                  style={{ ...inputSt, width: '100%', boxSizing: 'border-box', maxWidth: '100%', WebkitAppearance: 'none', appearance: 'none' }}
+                />
+              </div>
+            </>
+          )}
+
           <div style={{ display: 'flex', gap: '8px' }}>
-            <button onClick={saveDist} style={{ ...smallBtn, flex: 1 }}>Add Goal</button>
-            <button onClick={() => setAddMode(null)} style={{ ...smallBtn, background: 'var(--surface3)', color: 'var(--muted)', flex: 1 }}>Cancel</button>
+            <button onClick={saveDist} disabled={!goalDist || (goalDist === '__custom__' && !goalCustomKm)} style={{ ...smallBtn, flex: 1, opacity: (!goalDist || (goalDist === '__custom__' && !goalCustomKm)) ? 0.4 : 1 }}>Add Goal</button>
+            <button onClick={() => { setAddMode(null); setGoalDist(''); setGoalCustomKm(''); setGoalHMS({ h:0, m:0, s:0 }); setGoalDeadline('') }} style={{ ...smallBtn, background: 'var(--surface)', color: 'var(--muted)', flex: 1 }}>Cancel</button>
           </div>
         </div>
       )}

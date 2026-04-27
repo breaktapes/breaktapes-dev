@@ -1,81 +1,80 @@
 /**
  * Single entry point for writing the user's full app state to Supabase.
  *
- * Snapshots BOTH the race store and the athlete store in one go, then
- * does a read-merge-write upsert against `user_state`. Earlier inline
- * versions of this helper lived in useRaceStore and only synced races +
- * upcoming + nextRace, so wishlistRaces / seasonPlans were localStorage-
- * only and disappeared between devices. Centralising here means every
- * mutation action — race, wishlist, or season plan — pushes the same
- * complete payload, and there is one place to add a new persisted slice.
+ * Uses the /api/sync Worker endpoint (service role key, bypasses RLS) instead
+ * of writing through the Supabase client directly. This removes the dependency
+ * on the Clerk-Supabase JWT template being configured — the Worker decodes the
+ * Clerk session token to identify the user, then writes with the service role.
  *
- * Always writes `username` + `is_public` columns alongside `state_json`
- * so the public-profile Worker can find and gate rows correctly. Without
- * those two columns set, the worker's `WHERE username=? AND is_public=true`
- * query never matches and the SSR profile 404s.
+ * Fallback: if the Worker endpoint fails (e.g. SUPABASE_SERVICE_ROLE_KEY not
+ * set), falls back to the old direct Supabase client path so dev environments
+ * still work without the secret configured.
  */
-import { supabase, hasClerkToken } from '@/lib/supabase'
+import { supabase, getClerkToken } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
+import { APP_URL } from '@/env'
 
 export async function syncStateToSupabase() {
   const authUser = useAuthStore.getState().authUser
   if (!authUser) return
-  // RLS would silently reject an unauthenticated upsert — better to skip
-  // and let the next mutation re-fire once the JWT is installed.
-  if (!hasClerkToken()) return
+
+  const token = getClerkToken()
 
   const { races, upcomingRaces, wishlistRaces, nextRace, focusRaceId } = useRaceStore.getState()
   const { athlete, seasonPlans } = useAthleteStore.getState()
 
-  try {
-    // .maybeSingle() returns null + no error when zero rows match — vs
-    // .single() which historically returned a PGRST116 error. Keeps the
-    // read-merge-write path robust on first sync.
-    const { data: existing, error: readErr } = await supabase
-      .from('user_state')
-      .select('state_json')
-      .eq('user_id', authUser.id)
-      .maybeSingle()
+  const stateJson = {
+    races,
+    upcoming_races: upcomingRaces,
+    wishlist_races: wishlistRaces,
+    next_race: nextRace,
+    focus_race_id: focusRaceId,
+    season_plans: seasonPlans,
+    athlete,
+  }
 
-    if (readErr) {
-      // Surface read failures so they don't silently mask write failures
-      // on the second device. Write still attempts below.
-      console.warn('[syncState] read existing failed', readErr)
+  // Primary path: POST to /api/sync on the Cloudflare Worker.
+  // The Worker writes with the service role key, bypassing RLS entirely.
+  // This works regardless of whether the Clerk-Supabase JWT template is set up.
+  if (token) {
+    try {
+      const syncUrl = `${APP_URL}/api/sync`
+      const res = await fetch(syncUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          username:   athlete?.username   ?? null,
+          is_public:  athlete?.isPublic   ?? false,
+          state_json: stateJson,
+        }),
+      })
+      if (res.ok) return  // success — done
+      console.warn('[syncState] Worker sync failed', res.status, await res.text().catch(() => ''))
+    } catch (e) {
+      console.warn('[syncState] Worker sync error', e)
     }
+  }
 
-    const current = (existing?.state_json as Record<string, unknown> | null) ?? {}
-
+  // Fallback: direct Supabase client (works in dev / when service role key absent).
+  // This path is subject to the Clerk-Supabase JWT template requirement but
+  // keeps local dev functional without needing the Worker secret.
+  try {
     const { error: writeErr } = await supabase.from('user_state').upsert(
       {
-        user_id: authUser.id,
-        // Mirror username + is_public as columns so the public-profile
-        // Worker (anon SELECT) can filter without parsing JSON. Default
-        // is_public to false until the user explicitly toggles it; never
-        // accidentally publish private data.
-        username: athlete?.username ?? null,
-        is_public: athlete?.isPublic ?? false,
-        state_json: {
-          ...current,
-          races,
-          upcoming_races: upcomingRaces,
-          wishlist_races: wishlistRaces,
-          next_race: nextRace,
-          focus_race_id: focusRaceId,
-          season_plans: seasonPlans,
-          athlete,
-        },
+        user_id:    authUser.id,
+        username:   athlete?.username   ?? null,
+        is_public:  athlete?.isPublic   ?? false,
+        state_json: stateJson,
       },
       { onConflict: 'user_id' },
     )
-
-    if (writeErr) {
-      console.warn('[syncState] upsert failed', writeErr)
-    }
+    if (writeErr) console.warn('[syncState] fallback upsert failed', writeErr)
   } catch (e) {
-    // fire-and-forget — UI never blocks on sync. Realtime + next-mutation
-    // retry will reconcile on the eventual successful round trip.
-    console.warn('[syncState] unexpected error', e)
+    console.warn('[syncState] fallback unexpected error', e)
   }
 }
