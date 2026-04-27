@@ -5,10 +5,14 @@
  * Use this anywhere the user sees a date as plain text. Date inputs and
  * internal comparisons MUST stay in YYYY-MM-DD.
  */
+const _MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+
 export function fmtDateDDMM(d: string | undefined | null): string {
   if (!d) return ''
   const m = String(d).match(/^(\d{4})-(\d{2})-(\d{2})/)
-  return m ? `${m[3]}-${m[2]}-${m[1]}` : String(d)
+  if (!m) return String(d)
+  const mon = _MONTHS[parseInt(m[2], 10) - 1] ?? m[2]
+  return `${m[3]} ${mon} ${m[1]}`
 }
 
 const SPONSOR_RE = /\b(tcs|bmo|bmw|virgin money|adnoc|asics|zurich|bank of america)\b/g

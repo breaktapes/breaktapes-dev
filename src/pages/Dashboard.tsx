@@ -16,7 +16,7 @@ import { WidgetDetailModal } from '@/components/WidgetDetailModal'
 import type { WidgetDynamicContext } from '@/lib/widgetContent'
 import type { Race, DashWidget } from '@/types'
 import { useUnits, distUnit } from '@/lib/units'
-import { fmtDateDDMM, distLabel as distLabelUtil } from '@/lib/utils'
+import { fmtDateDDMM, distLabel as distLabelUtil, normalizeName } from '@/lib/utils'
 import {
   bestRiegelTable,
   bestVDOT, recentVDOT, equivalentPerformances, paceZones, vdotHistory,
@@ -227,6 +227,40 @@ function getBQTarget(dob: string | undefined, gender: string | undefined, boston
   const brackets = [80, 75, 70, 65, 60, 55, 50, 45, 40, 35, 18]
   const bracket = brackets.find(b => age >= b) ?? 18
   return getBQStandards(bostonYear)[`${g}${bracket}`] ?? null
+}
+
+function toHHMMSS(t: string | undefined): string {
+  if (!t) return '—'
+  const parts = t.split(':')
+  if (parts.length === 3) return `${parts[0].padStart(2, '0')}:${parts[1]}:${parts[2]}`
+  return t
+}
+
+const _COUNTRY_ISO: Record<string, string> = {
+  'united arab emirates': 'AE', 'uae': 'AE', 'usa': 'US', 'united states': 'US',
+  'united states of america': 'US', 'uk': 'GB', 'united kingdom': 'GB', 'great britain': 'GB',
+  'france': 'FR', 'germany': 'DE', 'italy': 'IT', 'spain': 'ES', 'kenya': 'KE',
+  'ethiopia': 'ET', 'south africa': 'ZA', 'australia': 'AU', 'canada': 'CA', 'japan': 'JP',
+  'china': 'CN', 'india': 'IN', 'brazil': 'BR', 'netherlands': 'NL', 'belgium': 'BE',
+  'switzerland': 'CH', 'austria': 'AT', 'sweden': 'SE', 'norway': 'NO', 'denmark': 'DK',
+  'finland': 'FI', 'portugal': 'PT', 'greece': 'GR', 'turkey': 'TR', 'poland': 'PL',
+  'new zealand': 'NZ', 'mexico': 'MX', 'chile': 'CL', 'argentina': 'AR', 'colombia': 'CO',
+  'oman': 'OM', 'bahrain': 'BH', 'qatar': 'QA', 'kuwait': 'KW', 'saudi arabia': 'SA',
+  'jordan': 'JO', 'morocco': 'MA', 'egypt': 'EG', 'nigeria': 'NG', 'tanzania': 'TZ',
+  'uganda': 'UG', 'singapore': 'SG', 'thailand': 'TH', 'malaysia': 'MY', 'indonesia': 'ID',
+  'hong kong': 'HK', 'taiwan': 'TW', 'south korea': 'KR', 'ireland': 'IE', 'iceland': 'IS',
+  'croatia': 'HR', 'czech republic': 'CZ', 'hungary': 'HU', 'romania': 'RO', 'russia': 'RU',
+  'ukraine': 'UA', 'peru': 'PE', 'ecuador': 'EC', 'costa rica': 'CR', 'ghana': 'GH',
+  'eritrea': 'ER', 'bahamas': 'BS', 'jamaica': 'JM', 'trinidad': 'TT', 'iran': 'IR',
+  'israel': 'IL', 'lebanon': 'LB', 'zimbabwe': 'ZW', 'namibia': 'NA', 'botswana': 'BW',
+}
+
+function countryToFlag(country: string | undefined): string {
+  if (!country) return ''
+  const key = country.toLowerCase().trim()
+  const iso = /^[a-z]{2}$/i.test(key) ? key.toUpperCase() : _COUNTRY_ISO[key]
+  if (!iso || iso.length !== 2) return ''
+  return [...iso.toUpperCase()].map(c => String.fromCodePoint(0x1F1E6 - 65 + c.charCodeAt(0))).join('')
 }
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -1314,37 +1348,36 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
   return (
     <WidgetCard id="recent-races" style={st.glowCard}>
       <div style={st.widgetLabel}>RECENT RACES</div>
-      <div style={{ display: 'flex', flexDirection: 'column', marginTop: '10px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', marginTop: '4px' }}>
         {recent.map((r, i) => {
           const isPB = !!r.time && pbMap[normalizeDistKey(r.distance)]?.id === r.id
-          const d = new Date(r.date + 'T00:00:00')
-          const dateStr = d.toLocaleDateString('en', { day: 'numeric', month: 'short', year: '2-digit' })
-          const city = [r.city, r.country].filter(Boolean).join(', ')
-          const label = distBadge(r.distance)
+          const dateStr = fmtDateDDMM(r.date)
+          const flag = countryToFlag(r.country)
+          const cityMeta = [flag && r.city ? `${flag} ${r.city}` : r.city, distBadge(r.distance)].filter(Boolean).join(' · ')
           return (
             <div key={r.id} style={{
               display: 'flex', alignItems: 'center', gap: '12px',
-              padding: '14px 0',
+              padding: '10px 0',
               borderBottom: i < recent.length - 1 ? '1px solid var(--border)' : 'none',
             }}>
               {/* Left: name + meta */}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '7px', flexWrap: 'wrap' }}>
-                  <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '15px', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {r.name ?? 'Untitled'}
                   </span>
                   {isPB && (
                     <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: '#C8963C', background: 'rgba(200,150,60,0.12)', border: '1px solid rgba(200,150,60,0.3)', borderRadius: '4px', padding: '2px 6px', flexShrink: 0 }}>PB</span>
                   )}
                 </div>
-                <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '3px' }}>
-                  {dateStr}{city ? ` · ${city}` : ''}{label ? ` · ${label}` : ''}
+                <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>
+                  {dateStr}{cityMeta ? ` · ${cityMeta}` : ''}
                 </div>
               </div>
-              {/* Right: time */}
+              {/* Right: time — monospace for alignment */}
               {r.time && (
-                <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '18px', color: isPB ? '#C8963C' : 'var(--orange)', flexShrink: 0, letterSpacing: '0.02em' }}>
-                  {r.time}
+                <div style={{ fontFamily: 'var(--mono)', fontWeight: 700, fontSize: '15px', color: isPB ? '#C8963C' : 'var(--orange)', flexShrink: 0, letterSpacing: '0.02em' }}>
+                  {toHHMMSS(r.time)}
                 </div>
               )}
             </div>
@@ -2309,14 +2342,37 @@ function GapToGoalWidget({ race }: { race: Race | null }) {
     if (!nextRace?.goalTime) return null
     const goalSecs = parseHMS(nextRace.goalTime)
     if (!goalSecs) return null
+    const past = races.filter(r => r.date <= today)
+
+    // Prefer same-course PB: find best time from past races with matching normalized name
+    let courseLabel: string | null = null
+    let coursePBRace: Race | null = null
+    if (nextRace.name) {
+      const normTarget = normalizeName(nextRace.name)
+      const courseRaces = past.filter(r => r.name && normalizeName(r.name) === normTarget && r.time)
+      if (courseRaces.length > 0) {
+        coursePBRace = courseRaces.reduce((best, r) => {
+          const bs = parseHMS(best.time ?? '') ?? Infinity
+          const rs = parseHMS(r.time ?? '') ?? Infinity
+          return rs < bs ? r : best
+        })
+        courseLabel = coursePBRace.name ?? null
+      }
+    }
+
+    // Fall back to generic distance PB
+    const pbMap = buildPBMap(past)
     const key = normalizeDistKey(nextRace.distance)
-    const pbMap = buildPBMap(races.filter(r => r.date <= today))
-    const pb = pbMap[key]
-    if (!pb?.time) return { goal: secsToHMS(goalSecs), pb: null, gap: null, raceName: nextRace.name }
-    const pbSecs = parseHMS(pb.time)
-    if (!pbSecs) return { goal: secsToHMS(goalSecs), pb: pb.time, gap: null, raceName: nextRace.name }
+    const distPBRace = pbMap[key]
+
+    const pbRace = coursePBRace ?? distPBRace ?? null
+    const pbLabel = courseLabel ?? null
+
+    if (!pbRace?.time) return { goal: secsToHMS(goalSecs), pb: null, gap: null, raceName: nextRace.name, pbLabel: null, isCourse: false }
+    const pbSecs = parseHMS(pbRace.time)
+    if (!pbSecs) return { goal: secsToHMS(goalSecs), pb: pbRace.time, gap: null, raceName: nextRace.name, pbLabel, isCourse: !!coursePBRace }
     const gap = goalSecs - pbSecs
-    return { goal: secsToHMS(goalSecs), pb: pb.time, gap, raceName: nextRace.name }
+    return { goal: secsToHMS(goalSecs), pb: pbRace.time, gap, raceName: nextRace.name, pbLabel, isCourse: !!coursePBRace }
   }, [races, nextRace, today])
 
   if (!nextRace) {
@@ -2343,7 +2399,7 @@ function GapToGoalWidget({ race }: { race: Race | null }) {
 
   const gapColor = result.gap == null ? 'var(--muted)' : result.gap <= 0 ? 'var(--green)' : 'var(--orange)'
   const gapLabel = result.gap == null
-    ? 'No PB logged for this distance yet'
+    ? result.isCourse ? `No previous ${result.pbLabel ?? 'course'} result logged` : 'No PB logged for this distance yet'
     : result.gap <= 0
       ? `${secsToHMS(Math.abs(result.gap))} AHEAD OF GOAL`
       : `${secsToHMS(result.gap)} BEHIND GOAL`
@@ -2373,7 +2429,9 @@ function GapToGoalWidget({ race }: { race: Race | null }) {
         {result.pb && (
           <div style={{ paddingBottom: '1px' }}>
             <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '18px', color: 'var(--muted)', lineHeight: 1 }}>{result.pb}</div>
-            <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted2)', textTransform: 'uppercase', marginTop: '3px' }}>CURRENT PB</div>
+            <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted2)', textTransform: 'uppercase', marginTop: '3px' }}>
+              {result.isCourse ? 'COURSE PB' : 'DISTANCE PB'}
+            </div>
           </div>
         )}
       </div>
@@ -3533,6 +3591,19 @@ function RaceStackWidget({ race }: { race: Race | null }) {
   }, [nextRace])
 
   const [openCat, setOpenCat] = useState<string | null>('RACE KIT')
+  const [deletedItems, setDeletedItems] = useState<Set<string>>(() => new Set())
+  const [customItems, setCustomItems] = useState<Record<string, string[]>>({})
+  const [newItemText, setNewItemText] = useState('')
+
+  function deleteItem(item: string) {
+    setDeletedItems(prev => new Set([...prev, item]))
+  }
+  function addItem(catLabel: string) {
+    const text = newItemText.trim()
+    if (!text) return
+    setCustomItems(prev => ({ ...prev, [catLabel]: [...(prev[catLabel] ?? []), text] }))
+    setNewItemText('')
+  }
 
   return (
     <WidgetCard id="race-stack" style={st.glowCard}>
@@ -3552,30 +3623,55 @@ function RaceStackWidget({ race }: { race: Race | null }) {
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px' }}>
-          {checklist.map(cat => (
-            <div key={cat.label}>
-              <button
-                onClick={() => setOpenCat(openCat === cat.label ? null : cat.label)}
-                style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0' }}
-              >
-                <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px', letterSpacing: '0.12em', color: 'var(--white)', textTransform: 'uppercase' as const }}>
-                  {cat.emoji} {cat.label}
-                </span>
-                <span style={{ fontSize: '10px', color: 'var(--muted)' }}>{openCat === cat.label ? '▲' : '▼'} {cat.items.length}</span>
-              </button>
-              {openCat === cat.label && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', paddingBottom: '6px' }}>
-                  {cat.items.map(item => (
-                    <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '12px', color: 'var(--muted)' }}>
-                      <span style={{ color: 'var(--orange)', flexShrink: 0, marginTop: '1px' }}>✓</span>
-                      {item}
+          {checklist.map(cat => {
+            const visibleItems = cat.items.filter(i => !deletedItems.has(i))
+            const extras = customItems[cat.label] ?? []
+            const totalCount = visibleItems.length + extras.length
+            const isOpen = openCat === cat.label
+            return (
+              <div key={cat.label}>
+                <button
+                  onClick={() => setOpenCat(isOpen ? null : cat.label)}
+                  style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0' }}
+                >
+                  <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px', letterSpacing: '0.12em', color: 'var(--white)', textTransform: 'uppercase' as const }}>
+                    {cat.emoji} {cat.label}
+                  </span>
+                  <span style={{ fontSize: '10px', color: 'var(--muted)' }}>{isOpen ? '▲' : '▼'} {totalCount}</span>
+                </button>
+                {isOpen && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingBottom: '8px' }}>
+                    {visibleItems.map(item => (
+                      <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '12px', color: 'var(--muted)' }}>
+                        <span style={{ color: 'var(--orange)', flexShrink: 0, marginTop: '1px' }}>✓</span>
+                        <span style={{ flex: 1 }}>{item}</span>
+                        <button onClick={() => deleteItem(item)} style={{ background: 'none', border: 'none', color: 'var(--muted2)', cursor: 'pointer', fontSize: '13px', padding: '0', lineHeight: 1, flexShrink: 0 }}>✕</button>
+                      </div>
+                    ))}
+                    {extras.map((item, i) => (
+                      <div key={`custom-${i}`} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '12px', color: 'var(--muted)' }}>
+                        <span style={{ color: 'var(--green)', flexShrink: 0, marginTop: '1px' }}>+</span>
+                        <span style={{ flex: 1 }}>{item}</span>
+                        <button onClick={() => setCustomItems(prev => ({ ...prev, [cat.label]: (prev[cat.label] ?? []).filter((_, j) => j !== i) }))} style={{ background: 'none', border: 'none', color: 'var(--muted2)', cursor: 'pointer', fontSize: '13px', padding: '0', lineHeight: 1, flexShrink: 0 }}>✕</button>
+                      </div>
+                    ))}
+                    {/* Add new item row */}
+                    <div style={{ display: 'flex', gap: '6px', marginTop: '4px' }}>
+                      <input
+                        value={newItemText}
+                        onChange={e => setNewItemText(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && addItem(cat.label)}
+                        placeholder="Add item…"
+                        style={{ flex: 1, background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '5px', padding: '5px 8px', fontSize: '11px', color: 'var(--white)', outline: 'none' }}
+                      />
+                      <button onClick={() => addItem(cat.label)} style={{ background: 'rgba(var(--orange-ch),0.15)', border: '1px solid rgba(var(--orange-ch),0.3)', borderRadius: '5px', color: 'var(--orange)', fontSize: '14px', padding: '0 10px', cursor: 'pointer' }}>+</button>
                     </div>
-                  ))}
-                </div>
-              )}
-              <div style={st.widgetDivider} />
-            </div>
-          ))}
+                  </div>
+                )}
+                <div style={st.widgetDivider} />
+              </div>
+            )
+          })}
           <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>
             Tailored for {distBadge(nextRace?.distance) || nextRace?.distance || 'your race'} · {(nextRace?.surface ?? 'road')}
           </div>
@@ -3936,35 +4032,52 @@ function PersonalBestsWidget() {
   const races = useRaceStore(selectRaces)
   const pbMap = useMemo(() => buildPBMap(races), [races])
   const [selectedRace, setSelectedRace] = useState<Race | null>(null)
+  const [hiddenDists, setHiddenDists] = useState<Set<string>>(() => new Set())
+
+  const toggleDist = (d: string) =>
+    setHiddenDists(prev => { const n = new Set(prev); n.has(d) ? n.delete(d) : n.add(d); return n })
+
+  const distOrder: Record<string, number> = {
+    '1 Mile': 0, '3K': 0.5, '5K': 1, '8K': 1.5, '10K': 2, '10 Mile': 2.5,
+    'Half Marathon': 3, 'Marathon': 4, 'Ultra': 5, 'Ultra Marathon': 5,
+    'Super Sprint': 6, 'Sprint': 6.5, 'Olympic': 7, '70.3': 8, 'IRONMAN': 9, 'Ironman': 9,
+  }
 
   // Group PBs by sport
-  const groups = useMemo(() => {
+  const { groups, allDists } = useMemo(() => {
     const run: { key: string; r: Race }[] = []
     const tri: { key: string; r: Race }[] = []
     const other: { key: string; r: Race }[] = []
-
-    const distOrder: Record<string, number> = {
-      '5K': 1, '10K': 2, 'Half Marathon': 3, 'Marathon': 4,
-      'Ultra Marathon': 5, 'Olympic': 6, '70.3': 7, 'Ironman': 8,
-    }
+    const allDists: string[] = []
 
     for (const [key, r] of Object.entries(pbMap)) {
       const sport = (r.sport ?? 'Running').toLowerCase()
+      const label = distBadge(r.distance) || key
+      if (!allDists.includes(label)) allDists.push(label)
       const entry = { key, r }
       if (sport.includes('tri') || sport.includes('iron')) tri.push(entry)
       else if (sport.includes('run') || sport.includes('cycling') || sport.includes('swim')) run.push(entry)
       else other.push(entry)
     }
 
-    const sortFn = (a: { key: string }, b: { key: string }) =>
-      (distOrder[a.key] ?? 99) - (distOrder[b.key] ?? 99)
+    const sortFn = (a: { key: string; r: Race }, b: { key: string; r: Race }) => {
+      const ka = distBadge(a.r.distance) || a.key
+      const kb = distBadge(b.r.distance) || b.key
+      return (distOrder[ka] ?? 99) - (distOrder[kb] ?? 99)
+    }
 
-    return [
-      ...(run.length ? [{ sport: 'Running', dot: '#00FF88', dotGlow: 'rgba(0,255,136,0.6)', entries: run.sort(sortFn) }] : []),
-      ...(tri.length ? [{ sport: 'Triathlon', dot: '#7C3AED', dotGlow: 'rgba(124,58,237,0.6)', entries: tri.sort(sortFn) }] : []),
-      ...(other.length ? [{ sport: 'Other', dot: 'var(--orange)', dotGlow: 'rgba(232,78,27,0.6)', entries: other.sort(sortFn) }] : []),
-    ]
-  }, [pbMap])
+    const filterVis = (arr: { key: string; r: Race }[]) =>
+      arr.filter(e => !hiddenDists.has(distBadge(e.r.distance) || e.key))
+
+    return {
+      allDists: allDists.sort((a, b) => (distOrder[a] ?? 99) - (distOrder[b] ?? 99)),
+      groups: [
+        ...(run.length ? [{ sport: 'Running', dot: '#00FF88', dotGlow: 'rgba(0,255,136,0.6)', entries: filterVis(run).sort(sortFn) }] : []),
+        ...(tri.length ? [{ sport: 'Triathlon', dot: '#7C3AED', dotGlow: 'rgba(124,58,237,0.6)', entries: filterVis(tri).sort(sortFn) }] : []),
+        ...(other.length ? [{ sport: 'Other', dot: 'var(--orange)', dotGlow: 'rgba(232,78,27,0.6)', entries: filterVis(other).sort(sortFn) }] : []),
+      ].filter(g => g.entries.length > 0),
+    }
+  }, [pbMap, hiddenDists])
 
   if (!groups.length) {
     return (
@@ -3979,7 +4092,29 @@ function PersonalBestsWidget() {
 
   return (
     <WidgetCard id="personal-bests" style={st.glowCard}>
-      <div style={st.widgetLabel}>PERSONAL BESTS</div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+        <div style={st.widgetLabel}>PERSONAL BESTS</div>
+      </div>
+      {/* Distance filter chips */}
+      {allDists.length > 1 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '6px' }}>
+          {allDists.map(d => {
+            const active = !hiddenDists.has(d)
+            return (
+              <button key={d} onClick={() => toggleDist(d)} style={{
+                fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '10px',
+                letterSpacing: '0.08em', textTransform: 'uppercase',
+                padding: '3px 9px', borderRadius: '20px', cursor: 'pointer',
+                background: active ? 'rgba(var(--orange-ch),0.15)' : 'var(--surface3)',
+                color: active ? 'var(--orange)' : 'var(--muted)',
+                border: `1px solid ${active ? 'rgba(var(--orange-ch),0.4)' : 'var(--border2)'}`,
+              }}>
+                {d}
+              </button>
+            )
+          })}
+        </div>
+      )}
       {groups.map(g => (
         <div key={g.sport} style={{ marginTop: '14px' }}>
           {/* Sport header */}
@@ -4338,35 +4473,34 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
           Based on {race.name} · {fmtDateDDMM(race.date)}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          {table.map(row => (
-            <div
-              key={row.distance}
-              style={{
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                padding: '8px 10px', borderRadius: '6px',
-                background: row.isSameAsInput ? 'rgba(var(--orange-ch),0.1)' : 'var(--surface3)',
-                border: `1px solid ${row.isSameAsInput ? 'rgba(var(--orange-ch),0.3)' : 'var(--border)'}`,
-              }}
-            >
-              <span style={{ fontSize: '13px', color: row.isSameAsInput ? 'var(--orange)' : 'var(--white)', fontWeight: row.isSameAsInput ? 700 : 400 }}>
-                {row.distance}
-                {row.isSameAsInput && <span style={{ fontSize: '10px', marginLeft: '6px', color: 'var(--muted)', textTransform: 'uppercase', fontFamily: 'var(--headline)' }}>actual</span>}
-              </span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', color: row.isSameAsInput ? 'var(--orange)' : 'var(--white)' }}>
-                  {row.predictedTime}
+          {table.map(row => {
+            const goalSet = upcomingRaces.some(u => u.goalTime === row.predictedTime)
+            const clickable = !row.isSameAsInput && upcomingRaces.length > 0
+            return (
+              <div
+                key={row.distance}
+                onClick={clickable ? () => { setSelectedRow(row.distance); setShowLinkSheet(true) } : undefined}
+                style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  padding: '8px 10px', borderRadius: '6px',
+                  background: row.isSameAsInput ? 'rgba(var(--orange-ch),0.1)' : goalSet ? 'rgba(0,255,136,0.06)' : 'var(--surface3)',
+                  border: `1px solid ${row.isSameAsInput ? 'rgba(var(--orange-ch),0.3)' : goalSet ? 'rgba(0,255,136,0.25)' : 'var(--border)'}`,
+                  cursor: clickable ? 'pointer' : 'default',
+                }}
+              >
+                <span style={{ fontSize: '13px', color: row.isSameAsInput ? 'var(--orange)' : 'var(--white)', fontWeight: row.isSameAsInput ? 700 : 400 }}>
+                  {row.distance}
+                  {row.isSameAsInput && <span style={{ fontSize: '10px', marginLeft: '6px', color: 'var(--muted)', textTransform: 'uppercase', fontFamily: 'var(--headline)' }}>actual</span>}
                 </span>
-                {!row.isSameAsInput && upcomingRaces.length > 0 && (
-                  <button
-                    onClick={() => { setSelectedRow(row.distance); setShowLinkSheet(true) }}
-                    style={{ background: 'rgba(var(--orange-ch),0.15)', color: 'var(--orange)', border: '1px solid rgba(var(--orange-ch),0.4)', borderRadius: '5px', padding: '3px 8px', fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', cursor: 'pointer' }}
-                  >
-                    SET GOAL
-                  </button>
-                )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontFamily: 'var(--mono)', fontWeight: 700, fontSize: '15px', color: row.isSameAsInput ? 'var(--orange)' : 'var(--white)' }}>
+                    {toHHMMSS(row.predictedTime)}
+                  </span>
+                  {goalSet && <span style={{ fontSize: '10px', color: 'var(--green)', fontFamily: 'var(--headline)', fontWeight: 700 }}>✓ GOAL</span>}
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
         <div style={{ fontSize: '11px', color: 'var(--muted2)', lineHeight: 1.5 }}>
           T₂ = T₁ × (D₂/D₁)^1.06
