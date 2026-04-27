@@ -57,6 +57,7 @@ export interface Athlete {
   dob?: string          // YYYY-MM-DD
   gender?: string       // "M" | "F" | "NB"
   club?: string
+  clubs?: string[]
   city?: string
   country?: string
   bio?: string

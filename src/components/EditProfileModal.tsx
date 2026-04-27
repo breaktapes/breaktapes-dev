@@ -28,7 +28,12 @@ export function EditProfileModal({ onClose }: Props) {
   const [dob,       setDob]       = useState(athlete?.dob ?? '')
   const [gender,    setGender]    = useState(athlete?.gender ?? '')
   const [mainSport, setMainSport] = useState(athlete?.mainSport ?? 'Running')
-  const [club,      setClub]      = useState(athlete?.club ?? '')
+  const [clubs, setClubs] = useState<string[]>(() => {
+    if (athlete?.clubs?.length) return athlete.clubs
+    if (athlete?.club) return athlete.club.split(/\s*\/\s*/).map(s => s.trim()).filter(Boolean)
+    return []
+  })
+  const [clubInput, setClubInput] = useState('')
   const [bio,       setBio]       = useState(athlete?.bio ?? '')
   const [saving,    setSaving]    = useState(false)
   const [error,     setError]     = useState('')
@@ -54,8 +59,8 @@ export function EditProfileModal({ onClose }: Props) {
       dob,
       gender,
       mainSport,
-      // Club is optional — pass value so user can intentionally clear it; undefined = not touched
-      ...(club.trim() !== (athlete?.club ?? '') ? { club: club.trim() || undefined } : {}),
+      clubs: clubs.length ? clubs : undefined,
+      club: clubs.length ? clubs.join(' / ') : undefined,
       bio:       bio.trim(),
     }
     updateAthlete(patch)
@@ -144,9 +149,47 @@ export function EditProfileModal({ onClose }: Props) {
             </select>
           </Field>
 
-          {/* Club — optional */}
-          <Field label="Club / Team">
-            <input style={st.input} value={club} onChange={e => setClub(e.target.value)} placeholder="e.g. Berlin Running Club (optional)" />
+          {/* Clubs — optional, multi-entry */}
+          <Field label="Clubs / Teams">
+            {clubs.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
+                {clubs.map(c => (
+                  <span key={c} style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '5px',
+                    background: 'rgba(var(--orange-ch), 0.12)',
+                    border: '1px solid rgba(var(--orange-ch), 0.3)',
+                    borderRadius: '100px', padding: '3px 10px',
+                    fontSize: '12px', fontFamily: 'var(--body)',
+                    color: 'var(--orange)',
+                  }}>
+                    {c}
+                    <button
+                      type="button"
+                      onClick={() => setClubs(prev => prev.filter(x => x !== c))}
+                      style={{ background: 'none', border: 'none', color: 'var(--orange)', cursor: 'pointer', padding: 0, fontSize: '13px', lineHeight: 1, opacity: 0.7 }}
+                      aria-label={`Remove ${c}`}
+                    >×</button>
+                  </span>
+                ))}
+              </div>
+            )}
+            <input
+              style={st.input}
+              value={clubInput}
+              onChange={e => setClubInput(e.target.value)}
+              onKeyDown={e => {
+                if ((e.key === 'Enter' || e.key === ',') && clubInput.trim()) {
+                  e.preventDefault()
+                  const val = clubInput.trim().replace(/,$/, '')
+                  if (val && !clubs.includes(val) && clubs.length < 8) {
+                    setClubs(prev => [...prev, val])
+                  }
+                  setClubInput('')
+                }
+              }}
+              placeholder={clubs.length < 8 ? 'Type a club name, press Enter to add…' : 'Max 8 clubs'}
+              disabled={clubs.length >= 8}
+            />
           </Field>
 
           {/* Bio */}

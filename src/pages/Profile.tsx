@@ -30,6 +30,19 @@ function fmtMonthYear(year: number, month: number): string {
   return `${months[month]} ${year}`
 }
 
+function fmtDDMMMYYYY(dateStr: string): string {
+  const d = new Date(dateStr + 'T00:00:00')
+  const day = String(d.getDate()).padStart(2, '0')
+  const mon = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][d.getMonth()]
+  return `${day}${mon}${d.getFullYear()}`
+}
+
+function abbreviateCountry(c: string): string {
+  if (!c) return ''
+  const words = c.trim().split(/\s+/)
+  return words.length === 1 ? c.slice(0, 3).toUpperCase() : words.map(w => w[0].toUpperCase()).join('')
+}
+
 function computeAge(dob: string | undefined): number | null {
   if (!dob) return null
   const birth = new Date(dob + 'T00:00:00')
@@ -363,17 +376,11 @@ function AthleteHero({ onEdit }: { onEdit: () => void }) {
   const ag = ageGroup(athlete?.dob, athlete?.gender)
   const age = computeAge(athlete?.dob)
 
-  // Detail rows that used to live in the standalone DETAILS section. They now
-  // sit inside the hero card so the user sees city / country / age / sport /
-  // club without scrolling.
-  const detailFields: Array<{ label: string; value: string | null | undefined }> = [
-    { label: 'City',       value: athlete?.city },
-    { label: 'Country',    value: athlete?.country },
-    { label: 'Age',        value: age !== null ? `${age}${ag ? ` · ${ag}` : ''}` : null },
-    { label: 'Main Sport', value: athlete?.mainSport },
-    { label: 'Club',       value: athlete?.club },
-  ]
-  const visibleDetails = detailFields.filter(f => f.value)
+  const clubs = athlete?.clubs?.length
+    ? athlete.clubs
+    : athlete?.club
+      ? athlete.club.split(/\s*\/\s*/).map(s => s.trim()).filter(Boolean)
+      : []
 
   return (
     <div style={st.heroCard}>
@@ -441,7 +448,7 @@ function AthleteHero({ onEdit }: { onEdit: () => void }) {
             {age !== null && <span style={st.levelBadge}>{age}yr{ag ? ` · ${ag}` : ''}</span>}
           </div>
         </div>
-        <button style={st.editBtnSmall} onClick={onEdit}>Edit</button>
+        <button style={st.editBtnSmall} onClick={onEdit}>✎ EDIT</button>
       </div>
 
       {/* Stats row */}
@@ -454,16 +461,37 @@ function AthleteHero({ onEdit }: { onEdit: () => void }) {
         ))}
       </div>
 
-      {/* Inline details (formerly the standalone DETAILS section) */}
-      {visibleDetails.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', paddingTop: '4px', borderTop: '1px solid var(--border)' }}>
-          {visibleDetails.map(f => (
-            <div key={f.label} style={st.detailRow}>
-              <div style={st.detailLabel}>{f.label}</div>
-              <div style={st.detailValue}>{f.value}</div>
+      {/* Bio + clubs */}
+      {(athlete?.bio || clubs.length > 0) && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {athlete?.bio && (
+            <div style={{
+              fontSize: '14px',
+              color: 'rgba(245,245,245,0.72)',
+              lineHeight: 1.65,
+              borderLeft: '3px solid rgba(var(--orange-ch), 0.4)',
+              paddingLeft: '12px',
+            }}>
+              {athlete.bio}
             </div>
-          ))}
-          {athlete?.bio && <div style={st.bio}>{athlete.bio}</div>}
+          )}
+          {clubs.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              {clubs.map(c => (
+                <span key={c} style={{
+                  display: 'inline-flex', alignItems: 'center',
+                  background: 'rgba(var(--orange-ch), 0.1)',
+                  border: '1px solid rgba(var(--orange-ch), 0.25)',
+                  borderRadius: '100px', padding: '4px 12px',
+                  fontSize: '11px', fontFamily: 'var(--headline)',
+                  fontWeight: 700, letterSpacing: '0.06em',
+                  color: 'var(--orange)',
+                }}>
+                  {c}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -480,56 +508,59 @@ function AthleteHero({ onEdit }: { onEdit: () => void }) {
         )
       })()}
 
-      {/* Share Profile button — visible when username set + is_public */}
-      {athlete?.username && athlete?.isPublic && (
+      {/* Action buttons */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: athlete?.username && athlete?.isPublic ? '1fr 1fr' : '1fr',
+        gap: '8px',
+      }}>
+        {athlete?.username && athlete?.isPublic && (
+          <button
+            style={{
+              background: 'rgba(var(--orange-ch), 0.12)',
+              border: '1px solid rgba(var(--orange-ch), 0.3)',
+              borderRadius: '8px',
+              color: 'var(--orange)',
+              padding: '10px 16px',
+              fontFamily: 'var(--headline)',
+              fontWeight: 700,
+              fontSize: '12px',
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              cursor: 'pointer',
+            }}
+            onClick={() => {
+              const url = `${APP_URL}/u/${athlete.username}`
+              navigator.clipboard.writeText(url).catch(() => {})
+            }}
+          >
+            Share Profile ↗
+          </button>
+        )}
         <button
           style={{
             background: 'transparent',
             border: '1px solid var(--border2)',
-            borderRadius: '6px',
+            borderRadius: '8px',
             color: 'var(--muted)',
-            padding: '8px 16px',
+            padding: '10px 16px',
             fontFamily: 'var(--headline)',
             fontWeight: 700,
             fontSize: '12px',
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
             cursor: 'pointer',
-            alignSelf: 'flex-start',
           }}
           onClick={() => {
-            const url = `${APP_URL}/u/${athlete.username}`
-            navigator.clipboard.writeText(url).catch(() => {})
+            const params = athlete?.username && athlete?.isPublic
+              ? `?a=${encodeURIComponent(athlete.username)}`
+              : ''
+            navigate(`/compare${params}`)
           }}
         >
-          Share Profile ↗
+          Compare ↔
         </button>
-      )}
-      {/* Compare button — always visible */}
-      <button
-        style={{
-          background: 'transparent',
-          border: '1px solid var(--border2)',
-          borderRadius: '6px',
-          color: 'var(--muted)',
-          padding: '8px 16px',
-          fontFamily: 'var(--headline)',
-          fontWeight: 700,
-          fontSize: '12px',
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase',
-          cursor: 'pointer',
-          alignSelf: 'flex-start',
-        }}
-        onClick={() => {
-          const params = athlete?.username && athlete?.isPublic
-            ? `?a=${encodeURIComponent(athlete.username)}`
-            : ''
-          navigate(`/compare${params}`)
-        }}
-      >
-        Compare ↔
-      </button>
+      </div>
     </div>
   )
 }
@@ -1295,9 +1326,9 @@ function RaceActivityHeatmap() {
         <div style={{ height: '1px', flex: 1, background: 'var(--border)', marginLeft: '16px' }} />
       </div>
 
-      <div style={{ background: 'var(--surface3)', borderRadius: '12px', padding: '14px', marginTop: '10px', overflowX: 'auto' }}>
+      <div style={{ background: 'var(--surface3)', borderRadius: '12px', padding: '14px', marginTop: '10px' }}>
         {/* Month headers */}
-        <div style={{ display: 'grid', gridTemplateColumns: '42px repeat(12, 1fr)', gap: '4px', marginBottom: '6px', minWidth: '480px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '36px repeat(12, 1fr)', gap: '4px', marginBottom: '6px' }}>
           <div />
           {MONTH_LABELS.map(m => (
             <div key={m} style={{ fontFamily: 'var(--headline)', fontSize: '9px', fontWeight: 700, letterSpacing: '0.08em', color: 'var(--muted)', textAlign: 'center', textTransform: 'uppercase' }}>
@@ -1308,7 +1339,7 @@ function RaceActivityHeatmap() {
 
         {/* Year rows */}
         {years.map(year => (
-          <div key={year} style={{ display: 'grid', gridTemplateColumns: '42px repeat(12, 1fr)', gap: '4px', marginBottom: '4px', minWidth: '480px' }}>
+          <div key={year} style={{ display: 'grid', gridTemplateColumns: '36px repeat(12, 1fr)', gap: '4px', marginBottom: '4px' }}>
             <div style={{ fontFamily: 'var(--headline)', fontSize: '10px', fontWeight: 700, color: 'var(--muted)', display: 'flex', alignItems: 'center' }}>
               {year}
             </div>
@@ -1363,16 +1394,23 @@ function RaceActivityHeatmap() {
               {selectedRaces.sort((a, b) => a.date.localeCompare(b.date)).map(r => (
                 <div key={r.id} style={{ background: 'var(--surface3)', borderRadius: '8px', padding: '12px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
-                    <div>
+                    <div style={{ minWidth: 0 }}>
                       <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', lineHeight: 1.2 }}>
                         {r.name}
                       </div>
                       <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '3px' }}>
-                        {[distLabel(r.distance), r.city, r.country].filter(Boolean).join(' · ')}
+                        {[distLabel(r.distance), r.city, abbreviateCountry(r.country)].filter(Boolean).join(' · ')}
                       </div>
                     </div>
-                    <div style={{ fontSize: '12px', color: 'var(--muted)', flexShrink: 0 }}>
-                      {fmtDate(r.date)}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px', flexShrink: 0 }}>
+                      <div style={{ fontSize: '11px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.04em' }}>
+                        {fmtDDMMMYYYY(r.date)}
+                      </div>
+                      {r.time && (
+                        <div style={{ fontSize: '13px', fontFamily: 'var(--headline)', fontWeight: 800, color: 'var(--orange)', letterSpacing: '0.04em' }}>
+                          {r.time}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1983,7 +2021,7 @@ const st = {
     flexDirection: 'column',
     alignItems: 'center',
     gap: '3px',
-    background: 'var(--surface3)',
+    background: 'linear-gradient(160deg, var(--surface3) 0%, rgba(var(--orange-ch),0.05) 100%)',
     borderRadius: '10px',
     padding: '12px 8px',
     minWidth: 0,
@@ -2011,6 +2049,7 @@ const st = {
   focusCard: {
     background: 'rgba(var(--orange-ch), 0.08)',
     border: '1px solid rgba(var(--orange-ch), 0.2)',
+    borderLeft: '3px solid var(--orange)',
     borderRadius: '10px',
     padding: '14px',
     display: 'flex',
@@ -2044,9 +2083,9 @@ const st = {
 
   focusDays: {
     fontFamily: 'var(--headline)',
-    fontSize: '13px',
+    fontSize: '15px',
     fontWeight: 800,
-    letterSpacing: '0.06em',
+    letterSpacing: '0.08em',
     textTransform: 'uppercase',
     color: 'var(--orange)',
     marginTop: '4px',
@@ -2256,12 +2295,13 @@ const st = {
   editBtnSmall: {
     background: 'transparent',
     border: '1px solid var(--border2)',
-    borderRadius: '6px',
+    borderRadius: '100px',
     color: 'var(--muted)',
-    padding: '5px 14px',
-    fontSize: 'var(--text-xs)',
-    fontFamily: 'var(--body)',
-    fontWeight: 600,
+    padding: '5px 12px',
+    fontSize: '11px',
+    fontFamily: 'var(--headline)',
+    fontWeight: 700,
+    letterSpacing: '0.08em',
     cursor: 'pointer',
     flexShrink: 0,
   } as React.CSSProperties,
