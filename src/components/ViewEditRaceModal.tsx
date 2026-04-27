@@ -11,7 +11,7 @@ import type { Race, Split } from '@/types'
 import { useUnits, fmtDistKm, distUnit, fmtPaceSecPerKm, computePaceSecPerKm } from '@/lib/units'
 import { getClaudeApiKey, importRaceScreenshot } from '@/lib/claude'
 import { removeMedalBackground } from '@/lib/removeBg'
-import { findSportDistMatch, distLabel as distLabelUtil } from '@/lib/utils'
+import { findSportDistMatch, distLabel as distLabelUtil, fmtDateDDMM } from '@/lib/utils'
 
 // ─── Config (mirrors AddRaceModal) ──────────────────────────────────────────
 
@@ -104,9 +104,7 @@ const MEDAL_COLORS: Record<string, string> = {
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function fmtDate(dateStr: string): string {
-  if (!dateStr) return '—'
-  const d = new Date(dateStr + 'T00:00:00')
-  return d.toLocaleDateString('en', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })
+  return fmtDateDDMM(dateStr) || '—'
 }
 
 // Flat map: label or value → numeric km string (e.g. "Half Marathon" → "21.1", "42.2" → "42.2")

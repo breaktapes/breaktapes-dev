@@ -205,8 +205,38 @@ export function bestVDOT(races: Race[]): VDOTPoint | null {
 export function recentVDOT(races: Race[]): VDOTPoint | null {
   const history = vdotHistory(races)
   if (!history.length) return null
-  // Return the most recently dated entry (history is sorted asc by date)
   return history[history.length - 1]
+}
+
+/**
+ * VDOT from the most recently set running PB.
+ * Computes the best time per distance bin, then returns the PB race
+ * that was set most recently. This keeps the score reflecting actual
+ * current fitness without dropping whenever a non-PB race is run.
+ */
+export function latestPBVDOT(races: Race[]): VDOTPoint | null {
+  // One pass: track best time (and associated VDOT) per distance bin
+  const pbByBin = new Map<string, { secs: number; vdot: number; date: string; raceName: string }>()
+  for (const r of races) {
+    if (!r.time || !r.distance) continue
+    if (!isRunningRace(r)) continue
+    if (r.outcome === 'DNF' || r.outcome === 'DNS' || r.outcome === 'DSQ') continue
+    const secs = parseTimeSecs(r.time)
+    const distKm = parseDistKm(r.distance)
+    if (!secs || !distKm || distKm > 42.3) continue
+    const vdot = computeVDOT(secs, distKm)
+    if (!vdot) continue
+    const bin = String(Math.round(distKm * 10))
+    const existing = pbByBin.get(bin)
+    if (!existing || secs < existing.secs) {
+      pbByBin.set(bin, { secs, vdot, date: r.date, raceName: r.name ?? r.date })
+    }
+  }
+  if (!pbByBin.size) return null
+  // Return the PB race that was most recently set
+  const pbs = Array.from(pbByBin.values()).sort((a, b) => b.date.localeCompare(a.date))
+  const latest = pbs[0]
+  return { date: latest.date, vdot: Math.round(latest.vdot * 10) / 10, raceName: latest.raceName }
 }
 
 export interface EquivPerf {
