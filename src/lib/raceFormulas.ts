@@ -423,12 +423,14 @@ export function bestWeatherImpact(races: Race[]): { race: Race; impact: WeatherI
 export function findCourseRepeats(races: Race[]): Map<string, Race[]> {
   const groups = new Map<string, Race[]>()
   for (const r of races) {
-    // Key: normalized race name (lowercase, strip year-like 4-digit numbers)
-    const key = r.name.toLowerCase()
+    const nameKey = r.name.toLowerCase()
       .replace(/\b(20\d{2}|19\d{2})\b/g, '')
       .replace(/[^\w\s]/g, '')
       .trim()
       .replace(/\s+/g, ' ')
+    // Include distance so same-name races at different distances don't merge
+    const distKey = r.distance ? String(parseDistKm(r.distance) ?? r.distance).toLowerCase() : 'unknown'
+    const key = `${nameKey}||${distKey}`
     if (!groups.has(key)) groups.set(key, [])
     groups.get(key)!.push(r)
   }
