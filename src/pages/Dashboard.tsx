@@ -4523,6 +4523,7 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
             return (
               <div
                 key={row.distance}
+                data-no-widget-detail
                 onClick={() => !row.isSameAsInput && handleSetGoal(row.distance)}
                 style={{
                   display: 'flex', flexDirection: 'column',
