@@ -152,7 +152,27 @@ function athleteLevel(raceCount: number): string {
 
 
 
-const DIST_ORDER: string[] = ['5', '10', '21.1', '42.2', '1.5', '3', '15', '20', '25', '30', '50', '100']
+// Canonical PB distance order: running distances first (ascending km), then triathlon (ascending).
+// Only these distances appear in the Personal Bests section; non-standard distances are excluded.
+const PB_DISTANCES: Array<{ key: string; label: string }> = [
+  { key: '5',      label: '5K' },
+  { key: '10',     label: '10K' },
+  { key: '16.09',  label: '10 Mile' },
+  { key: '21.1',   label: 'Half Marathon' },
+  { key: '42.2',   label: 'Marathon' },
+  { key: '42.195', label: 'Marathon' },
+  { key: '50',     label: '50K' },
+  { key: '100',    label: '100K' },
+  { key: '160.93', label: '100 Mile' },
+  // Triathlon
+  { key: '17.65',  label: 'Super Sprint' },
+  { key: '25.75',  label: 'Sprint' },
+  { key: '51.5',   label: 'Olympic' },
+  { key: '113',    label: '70.3' },
+  { key: '226',    label: 'Ironman' },
+]
+const PB_KEY_ORDER: Map<string, number> = new Map(PB_DISTANCES.map((d, i) => [d.key, i]))
+const PB_KEY_LABEL: Map<string, string>  = new Map(PB_DISTANCES.map(d => [d.key, d.label]))
 
 // country full-name → ISO-2 code (covers the most common racing nations)
 const COUNTRY_NAME_TO_ISO2: Record<string, string> = {
@@ -318,16 +338,12 @@ function buildPBByDist(races: Race[]): Array<{ key: string; label: string; race:
   for (const r of races) {
     if (!r.time || !r.distance) continue
     const key = r.distance
+    if (!PB_KEY_ORDER.has(key)) continue  // skip non-canonical distances
     if (!map[key] || r.time < map[key].time!) map[key] = r
   }
-  const entries = Object.entries(map)
-  entries.sort(([a], [b]) => {
-    const ai = DIST_ORDER.indexOf(a); const bi = DIST_ORDER.indexOf(b)
-    if (ai !== -1 && bi !== -1) return ai - bi
-    if (ai !== -1) return -1; if (bi !== -1) return 1
-    return parseFloat(a) - parseFloat(b)
-  })
-  return entries.map(([key, race]) => ({ key, label: distLabel(key), race }))
+  return [...PB_KEY_ORDER.keys()]
+    .filter(key => map[key])
+    .map(key => ({ key, label: PB_KEY_LABEL.get(key) ?? distLabel(key), race: map[key] }))
 }
 
 function parseHMS(str: string): number | null {
