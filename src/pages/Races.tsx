@@ -373,7 +373,11 @@ function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport, onDiscover
   const [expanded, setExpanded] = useState(false)
   const [yearFilter, setYearFilter] = useState('all')
   const [viewMode, setViewMode] = useState<ViewMode>('compact')
-  const [selectedRace, setSelectedRace] = useState<Race | null>(null)
+  const [selectedRaceId, setSelectedRaceId] = useState<string | null>(null)
+  const selectedRace = useMemo(
+    () => selectedRaceId ? (races.find(r => r.id === selectedRaceId) ?? null) : null,
+    [selectedRaceId, races]
+  )
   const [search, setSearch] = useState('')
   const [visibleCount, setVisibleCount] = useState(20)
   const startY = useRef(0)
@@ -529,7 +533,7 @@ function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport, onDiscover
         ) : viewMode === 'compact' ? (
           <>
             {sorted.slice(0, visibleCount).map(r => (
-              <CompactRow key={r.id} race={r} isPB={pbMap[normKey(r.distance)]?.id === r.id} onClick={() => { setSelectedRace(r); setExpanded(true) }} />
+              <CompactRow key={r.id} race={r} isPB={pbMap[normKey(r.distance)]?.id === r.id} onClick={() => { setSelectedRaceId(r.id); setExpanded(true) }} />
             ))}
             {sorted.length > visibleCount && (
               <button
@@ -543,7 +547,7 @@ function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport, onDiscover
         ) : (
           <>
             {sorted.slice(0, visibleCount).map(r => (
-              <DetailedRow key={r.id} race={r} isPB={pbMap[normKey(r.distance)]?.id === r.id} onClick={() => { setSelectedRace(r); setExpanded(true) }} />
+              <DetailedRow key={r.id} race={r} isPB={pbMap[normKey(r.distance)]?.id === r.id} onClick={() => { setSelectedRaceId(r.id); setExpanded(true) }} />
             ))}
             {sorted.length > visibleCount && (
               <button
@@ -609,7 +613,7 @@ function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport, onDiscover
       {selectedRace && (
         <ViewEditRaceModal
           race={selectedRace}
-          onClose={() => setSelectedRace(null)}
+          onClose={() => setSelectedRaceId(null)}
         />
       )}
     </div>
