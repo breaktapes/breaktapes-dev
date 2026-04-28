@@ -2,6 +2,20 @@
 
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+## [0.6.7.0] - 2026-04-28
+
+### Added
+- **Race Detail — More Stats fields visible in view mode:** Start Time, Avg Heart Rate, Terrain, Shoe/Kit, and Role now appear in the info rows when set.
+
+### Changed
+- **Race Detail — stat cards** now show only Finish Time, Distance, and Pace. Overall/Gender/Age Group results moved to pill chips below the location row.
+- **Race Detail — PB highlight:** When a race is a Personal Best, the entire modal gets a gold glow border and a "⭐ PERSONAL BEST" banner (previously only the time card was tinted).
+- **Race Detail — country abbreviation:** Long country names in the location pill now show as abbreviations (UAE, USA, UK, NZ, SA, KSA, etc.).
+- **Race Detail — surface/terrain capitalization:** Values now display with a capital first letter (Road, Trail, etc.).
+- **Race Detail — edit saves persist:** Fixed a stale prop bug where Start Time, Terrain, Surface, and Role at Race reverted after saving. Race detail now reads live from the store by ID.
+- **Weather auto-fill — performance:** Races within the last 92 days now use the forecast API (~200ms) instead of the ERA5 archive (~3-5s).
+- **Edit Race — start time field height** normalized to match all other input fields (was taller due to native time picker intrinsic size).
+
 ## [0.6.6.0] - 2026-04-28
 
 ### Changed
