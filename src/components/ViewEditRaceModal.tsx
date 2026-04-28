@@ -436,6 +436,7 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
   const [notes, setNotes]       = useState(race.notes ?? '')
   const [elevation, setElevation] = useState(race.elevation != null ? String(race.elevation) : '')
   const [surface, setSurface]   = useState(race.surface ?? '')
+  const [roleAtRace, setRoleAtRace] = useState<'' | 'runner' | 'pacer' | 'guide'>(race.roleAtRace ?? '')
   const [splits, setSplits]     = useState<Split[]>(race.splits ?? [])
   const [medalPhoto, setMedalPhoto]   = useState<string | undefined>(race.medalPhoto)
   const [bgRemoving, setBgRemoving]   = useState(false)
@@ -554,6 +555,11 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
     const effectiveDist = isCustomDist ? customDist : distance
     const effectiveMedal = medal === '__custom__' ? customMedal : medal
     const hasGoalHMS = goalHMS.h > 0 || goalHMS.m > 0 || goalHMS.s > 0
+    // Sport required for ultra distances (>42.3km) — otherwise ultra achievements can't unlock
+    if (!isUpcoming && parseFloat(effectiveDist) > 42.3 && !sport) {
+      alert('Sport is required for ultra distances (>42km). Please select a sport.')
+      return
+    }
     const patch: Partial<Race> = {
       name: name.trim() || undefined,
       sport,
@@ -580,6 +586,7 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
       notes: notes.trim() || undefined,
       elevation: isUpcoming ? undefined : elevation ? Number(elevation) : undefined,
       surface: isUpcoming ? undefined : surface || undefined,
+      roleAtRace: isUpcoming ? undefined : (roleAtRace || undefined) as 'runner' | 'pacer' | 'guide' | undefined,
       splits: isUpcoming ? undefined : splits.length > 0 ? splits : undefined,
       medalPhoto: isUpcoming ? undefined : medalPhoto ?? undefined,
       photos: isUpcoming ? undefined : photos.length > 0 ? photos : undefined,
@@ -826,6 +833,8 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
             <option value="road">Road</option>
             <option value="trail">Trail</option>
             <option value="track">Track</option>
+            <option value="desert">Desert</option>
+            <option value="coastal">Coastal</option>
           </select>
         </Field>
       </div>
@@ -837,6 +846,15 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
           onChange={e => setNotes(e.target.value)}
           placeholder="Anything worth remembering..."
         />
+      </Field>
+
+      <Field label="Role at Race">
+        <select style={st.input} value={roleAtRace} onChange={e => setRoleAtRace(e.target.value as '' | 'runner' | 'pacer' | 'guide')}>
+          <option value="">Runner (default)</option>
+          <option value="runner">Runner</option>
+          <option value="pacer">Pacer</option>
+          <option value="guide">Guide (first-timer guide)</option>
+        </select>
       </Field>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '0.75rem' }}>

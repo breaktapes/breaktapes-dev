@@ -34,6 +34,9 @@ export function EditProfileModal({ onClose }: Props) {
     return []
   })
   const [clubInput, setClubInput] = useState('')
+  const [clubJoinDates, setClubJoinDates] = useState<Record<string, string>>(athlete?.clubJoinDates ?? {})
+  const [injuryBreakStart, setInjuryBreakStart] = useState(athlete?.injuryBreakStart ?? '')
+  const [injuryBreakEnd, setInjuryBreakEnd] = useState(athlete?.injuryBreakEnd ?? '')
   const [bio,       setBio]       = useState(athlete?.bio ?? '')
   const [saving,    setSaving]    = useState(false)
   const [error,     setError]     = useState('')
@@ -61,6 +64,9 @@ export function EditProfileModal({ onClose }: Props) {
       mainSport,
       clubs: clubs.length ? clubs : undefined,
       club: clubs.length ? clubs.join(' / ') : undefined,
+      clubJoinDates: Object.keys(clubJoinDates).length ? clubJoinDates : undefined,
+      injuryBreakStart: injuryBreakStart || undefined,
+      injuryBreakEnd: injuryBreakEnd || undefined,
       bio:       bio.trim(),
     }
     updateAthlete(patch)
@@ -149,27 +155,39 @@ export function EditProfileModal({ onClose }: Props) {
             </select>
           </Field>
 
-          {/* Clubs — optional, multi-entry */}
+          {/* Clubs — optional, multi-entry with join date */}
           <Field label="Clubs / Teams">
             {clubs.length > 0 && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '8px' }}>
                 {clubs.map(c => (
-                  <span key={c} style={{
-                    display: 'inline-flex', alignItems: 'center', gap: '5px',
-                    background: 'rgba(var(--orange-ch), 0.12)',
-                    border: '1px solid rgba(var(--orange-ch), 0.3)',
-                    borderRadius: '100px', padding: '3px 10px',
-                    fontSize: '12px', fontFamily: 'var(--body)',
-                    color: 'var(--orange)',
-                  }}>
-                    {c}
-                    <button
-                      type="button"
-                      onClick={() => setClubs(prev => prev.filter(x => x !== c))}
-                      style={{ background: 'none', border: 'none', color: 'var(--orange)', cursor: 'pointer', padding: 0, fontSize: '13px', lineHeight: 1, opacity: 0.7 }}
-                      aria-label={`Remove ${c}`}
-                    >×</button>
-                  </span>
+                  <div key={c} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span style={{
+                      display: 'inline-flex', alignItems: 'center', gap: '5px', flex: 1, minWidth: 0,
+                      background: 'rgba(var(--orange-ch), 0.12)',
+                      border: '1px solid rgba(var(--orange-ch), 0.3)',
+                      borderRadius: '100px', padding: '3px 10px',
+                      fontSize: '12px', fontFamily: 'var(--body)',
+                      color: 'var(--orange)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    }}>
+                      {c}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setClubs(prev => prev.filter(x => x !== c))
+                          setClubJoinDates(prev => { const n = { ...prev }; delete n[c]; return n })
+                        }}
+                        style={{ background: 'none', border: 'none', color: 'var(--orange)', cursor: 'pointer', padding: 0, fontSize: '13px', lineHeight: 1, opacity: 0.7, flexShrink: 0 }}
+                        aria-label={`Remove ${c}`}
+                      >×</button>
+                    </span>
+                    <input
+                      type="date"
+                      style={{ ...st.input, width: '130px', flexShrink: 0, fontSize: '11px', padding: '4px 8px' }}
+                      value={clubJoinDates[c] ?? ''}
+                      onChange={e => setClubJoinDates(prev => ({ ...prev, [c]: e.target.value }))}
+                      title="Join date"
+                    />
+                  </div>
                 ))}
               </div>
             )}
@@ -190,6 +208,38 @@ export function EditProfileModal({ onClose }: Props) {
               placeholder={clubs.length < 8 ? 'Type a club name, press Enter to add…' : 'Max 8 clubs'}
               disabled={clubs.length >= 8}
             />
+            {clubs.length > 0 && (
+              <p style={{ margin: '4px 0 0', fontSize: '11px', color: 'var(--muted)' }}>
+                Add a join date next to each club to unlock the Club Loyalist achievement (3+ years).
+              </p>
+            )}
+          </Field>
+
+          {/* Injury Break */}
+          <Field label="Injury Break">
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+              <div>
+                <p style={{ margin: '0 0 4px', fontSize: '11px', color: 'var(--muted)' }}>Start</p>
+                <input
+                  type="date"
+                  style={st.input}
+                  value={injuryBreakStart}
+                  onChange={e => setInjuryBreakStart(e.target.value)}
+                />
+              </div>
+              <div>
+                <p style={{ margin: '0 0 4px', fontSize: '11px', color: 'var(--muted)' }}>End / Return</p>
+                <input
+                  type="date"
+                  style={st.input}
+                  value={injuryBreakEnd}
+                  onChange={e => setInjuryBreakEnd(e.target.value)}
+                />
+              </div>
+            </div>
+            <p style={{ margin: '4px 0 0', fontSize: '11px', color: 'var(--muted)' }}>
+              Any race after your return date unlocks the Comeback Run achievement (min 2-week break).
+            </p>
           </Field>
 
           {/* Bio */}
