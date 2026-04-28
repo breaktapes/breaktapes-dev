@@ -427,6 +427,11 @@ function isRunningRace(r: Race): boolean {
   return s === '' || s === 'running' || s === 'run'
 }
 
+function isTriRace(r: Race): boolean {
+  const s = (r.sport ?? '').toLowerCase()
+  return s.includes('tri') || s.includes('iron')
+}
+
 // Best time (seconds) for races in a km range, optionally filtered by sport
 function getPBSecsForDist(races: Race[], minKm: number, maxKm: number, sport?: string): number | null {
   let best: number | null = null
@@ -434,7 +439,7 @@ function getPBSecsForDist(races: Race[], minKm: number, maxKm: number, sport?: s
     if (!r.time) continue
     const km = parseFloat(r.distance)
     if (isNaN(km) || km < minKm || km > maxKm) continue
-    if (sport && r.sport !== sport) continue
+    if (sport && (r.sport ?? '').toLowerCase() !== sport.toLowerCase()) continue
     const secs = parseHMS(r.time)
     if (secs === null) continue
     if (best === null || secs < best) best = secs
@@ -589,8 +594,8 @@ const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'ultra_initiate', icon: '🏔️', name: 'ULTRA INITIATE', group: 'special',
     description: 'First 50K running finish.',
-    check: r => r.some(x => isRunningRace(x) && parseFloat(x.distance) >= 45 && parseFloat(x.distance) <= 65),
-    findSourceRace: r => r.find(x => isRunningRace(x) && parseFloat(x.distance) >= 45 && parseFloat(x.distance) <= 65) ?? null,
+    check: r => r.some(x => isRunningRace(x) && parseFloat(x.distance) >= 45),
+    findSourceRace: r => r.filter(x => isRunningRace(x) && parseFloat(x.distance) >= 45).sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance))[0] ?? null,
   },
   {
     id: 'ultra_elite', icon: '🦅', name: 'ULTRA ELITE', group: 'special',
@@ -607,14 +612,14 @@ const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'iron_mind', icon: '🔱', name: 'IRON MIND', group: 'special',
     description: 'Finished a 70.3 triathlon.',
-    check: r => r.some(x => parseFloat(x.distance) >= 100 && parseFloat(x.distance) <= 130 && x.sport === 'triathlon'),
-    findSourceRace: r => r.find(x => parseFloat(x.distance) >= 100 && parseFloat(x.distance) <= 130 && x.sport === 'triathlon') ?? null,
+    check: r => r.some(x => parseFloat(x.distance) >= 100 && parseFloat(x.distance) <= 130 && isTriRace(x)),
+    findSourceRace: r => r.find(x => parseFloat(x.distance) >= 100 && parseFloat(x.distance) <= 130 && isTriRace(x)) ?? null,
   },
   {
     id: 'full_send', icon: '🛡️', name: 'FULL SEND', group: 'special',
     description: 'Completed a Full Ironman.',
-    check: r => r.some(x => parseFloat(x.distance) >= 200 && x.sport === 'triathlon'),
-    findSourceRace: r => r.find(x => parseFloat(x.distance) >= 200 && x.sport === 'triathlon') ?? null,
+    check: r => r.some(x => parseFloat(x.distance) >= 200 && isTriRace(x)),
+    findSourceRace: r => r.find(x => parseFloat(x.distance) >= 200 && isTriRace(x)) ?? null,
   },
   {
     id: 'swim_survivor', icon: '🏊', name: 'SWIM SURVIVOR', group: 'special',
@@ -674,7 +679,7 @@ const ACHIEVEMENTS: Achievement[] = [
     id: 'back_to_back_ultra', icon: '🧱', name: 'BACK-TO-BACK ULTRA', group: 'special',
     description: '2 ultras (50K+) within a week.',
     check: r => {
-      const ultras = r.filter(x => parseFloat(x.distance) >= 45 && x.date).sort((a, b) => a.date.localeCompare(b.date))
+      const ultras = r.filter(x => isRunningRace(x) && parseFloat(x.distance) >= 45 && x.date).sort((a, b) => a.date.localeCompare(b.date))
       for (let i = 1; i < ultras.length; i++) {
         const diff = (new Date(ultras[i].date + 'T00:00:00').getTime() - new Date(ultras[i-1].date + 'T00:00:00').getTime()) / 86400000
         if (diff <= 7) return true
