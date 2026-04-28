@@ -856,7 +856,7 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                 <Field label="Start Time">
-                  <input type="time" style={st.input} value={startTime} onChange={e => setStartTime(e.target.value)} />
+                  <input type="time" style={{ ...st.input, height: 40, lineHeight: '1.4', WebkitAppearance: 'none', appearance: 'none', maxWidth: '100%' }} value={startTime} onChange={e => setStartTime(e.target.value)} />
                 </Field>
                 <Field label="Avg Heart Rate (bpm)">
                   <input type="number" style={st.input} value={avgHeartRate} onChange={e => setAvgHeartRate(e.target.value)} placeholder="155" />
