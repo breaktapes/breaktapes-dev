@@ -1,1 +1,1 @@
-/Users/akrish/DEV/.claude/worktrees/distracted-franklin-5dc719/.claude/skills/gstack/design-html/SKILL.md
+/Users/akrish/DEV/.claude/worktrees/serene-dirac-211abb/.claude/skills/gstack/design-html/SKILL.md
