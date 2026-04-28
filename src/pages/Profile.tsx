@@ -767,6 +767,10 @@ const ACHIEVEMENTS: Achievement[] = [
   { id: 'ultra_100m_hundred_legend', icon: '🏔️', name: 'HUNDRED LEGEND',    group: 'ladder', family: 'ultra', tier: 7, description: '100 Mile running under 24:00.', check: r => { const pb = getPBSecsForDist(r.filter(isRunningRace), 140, 180); return pb !== null && pb < 86400 } },
 
   // ── 70.3 Ladder (7 tiers) ─────────────────────────────────────────────────
+  { id: 'tri703_finisher',         icon: '🔱', name: '70.3 FINISHER',    group: 'ladder', family: 'tri703', tier: 0, description: 'Completed a 70.3 triathlon.',
+    check: r => r.some(x => isTriRace(x) && parseFloat(x.distance) >= 100 && parseFloat(x.distance) <= 130 && !!x.time),
+    findSourceRace: r => r.find(x => isTriRace(x) && parseFloat(x.distance) >= 100 && parseFloat(x.distance) <= 130 && !!x.time) ?? null,
+  },
   { id: 'tri703_half_iron_entry',  icon: '🔱', name: 'HALF IRON ENTRY',  group: 'ladder', family: 'tri703', tier: 1, description: '70.3 under 6:00.',   check: r => { const pb = getPBSecsForDist(r, 100, 130, 'triathlon'); return pb !== null && pb < 21600 } },
   { id: 'tri703_building_strength',icon: '🔱', name: 'BUILDING STRENGTH',group: 'ladder', family: 'tri703', tier: 2, description: '70.3 under 5:30.',   check: r => { const pb = getPBSecsForDist(r, 100, 130, 'triathlon'); return pb !== null && pb < 19800 } },
   { id: 'tri703_iron_control',     icon: '🔱', name: 'IRON CONTROL',     group: 'ladder', family: 'tri703', tier: 3, description: '70.3 under 5:00.',   check: r => { const pb = getPBSecsForDist(r, 100, 130, 'triathlon'); return pb !== null && pb < 18000 } },
@@ -776,6 +780,10 @@ const ACHIEVEMENTS: Achievement[] = [
   { id: 'tri703_iron_elite',      icon: '🔱', name: 'IRON ELITE',       group: 'ladder', family: 'tri703', tier: 7, description: '70.3 under 4:00.',   check: r => { const pb = getPBSecsForDist(r, 100, 130, 'triathlon'); return pb !== null && pb < 14400 } },
 
   // ── Full Ironman Ladder (7 tiers) ─────────────────────────────────────────
+  { id: 'ironman_finisher',           icon: '🛡️', name: 'IRONMAN FINISHER', group: 'ladder', family: 'iron', tier: 0, description: 'Completed a full Ironman.',
+    check: r => r.some(x => isTriRace(x) && parseFloat(x.distance) >= 200 && !!x.time),
+    findSourceRace: r => r.find(x => isTriRace(x) && parseFloat(x.distance) >= 200 && !!x.time) ?? null,
+  },
   { id: 'ironman_full_iron_finisher', icon: '🛡️', name: 'IRON FINISHER',  group: 'ladder', family: 'iron', tier: 1, description: 'Full Ironman under 12:00.', check: r => { const pb = getPBSecsForDist(r, 200, 250, 'triathlon'); return pb !== null && pb < 43200 } },
   { id: 'ironman_full_iron_builder',  icon: '🛡️', name: 'IRON BUILDER',   group: 'ladder', family: 'iron', tier: 2, description: 'Full Ironman under 11:30.', check: r => { const pb = getPBSecsForDist(r, 200, 250, 'triathlon'); return pb !== null && pb < 41400 } },
   { id: 'ironman_full_strong_iron',   icon: '🛡️', name: 'STRONG IRON',    group: 'ladder', family: 'iron', tier: 3, description: 'Full Ironman under 11:00.', check: r => { const pb = getPBSecsForDist(r, 200, 250, 'triathlon'); return pb !== null && pb < 39600 } },
