@@ -540,7 +540,12 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
     setWeatherFetching(true)
     setWeatherFetchMsg(null)
     try {
-      const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lng}&start_date=${date}&end_date=${date}&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&wind_speed_unit=kmh&timezone=auto`
+      const daysAgo = Math.floor((Date.now() - new Date(date).getTime()) / 86_400_000)
+      // Forecast API is CDN-cached (~200ms); archive ERA5 is slow (~3-5s). Use forecast for recent races.
+      const baseUrl = daysAgo <= 92
+        ? `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&start_date=${date}&end_date=${date}&past_days=92&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&wind_speed_unit=kmh&timezone=auto`
+        : `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lng}&start_date=${date}&end_date=${date}&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&wind_speed_unit=kmh&timezone=auto`
+      const url = baseUrl
       const res = await fetch(url)
       if (!res.ok) throw new Error('API error')
       const data = await res.json()
