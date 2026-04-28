@@ -419,7 +419,7 @@ interface Achievement {
   family?: string   // ladder family: '10k' | 'half' | 'marathon' | 'ultra' | 'tri703' | 'iron'
   tier?: number     // ladder tier order (lower = slower / easier)
   check: (races: Race[], athlete: ReturnType<typeof selectAthlete>) => boolean
-  findSourceRace?: (races: Race[]) => Race | null
+  findSourceRace?: (races: Race[], athlete: ReturnType<typeof selectAthlete>) => Race | null
 }
 
 function isRunningRace(r: Race): boolean {
@@ -480,13 +480,45 @@ function continentOf(country: string): string {
   return CONTINENT_MAP[country] ?? 'UNKNOWN'
 }
 
+function isNegativeSplit(race: Race): boolean {
+  if (!isRunningRace(race)) return false
+  const splits = (race.splits ?? []).filter(s => s.split && parseHMS(s.split) !== null)
+  if (splits.length < 2) return false
+  const times = splits.map(s => parseHMS(s.split!) ?? 0)
+  const mid = Math.floor(times.length / 2)
+  const avgFirst = times.slice(0, mid).reduce((a, b) => a + b, 0) / mid
+  const avgSecond = times.slice(mid).reduce((a, b) => a + b, 0) / (times.length - mid)
+  return avgSecond < avgFirst
+}
+
+function hadCrisisAndRecovery(race: Race): boolean {
+  if (!isRunningRace(race)) return false
+  const splits = (race.splits ?? []).filter(s => s.split && parseHMS(s.split) !== null)
+  if (splits.length < 3) return false
+  const times = splits.map(s => parseHMS(s.split!) ?? 0)
+  const avg = times.reduce((a, b) => a + b, 0) / times.length
+  let hadCrisis = false
+  for (let i = 0; i < times.length - 1; i++) {
+    if (times[i] > avg * 1.2) hadCrisis = true
+    if (hadCrisis && times[i] <= avg) return true
+  }
+  return false
+}
+
+function isoWeek(dateStr: string): string {
+  const d = new Date(dateStr + 'T00:00:00')
+  const jan4 = new Date(d.getFullYear(), 0, 4)
+  const week = Math.ceil(((d.getTime() - jan4.getTime()) / 86400000 + jan4.getDay() + 1) / 7)
+  return `${d.getFullYear()}-W${week}`
+}
+
 const ACHIEVEMENTS: Achievement[] = [
   // ── Special singles (39) ──────────────────────────────────────────────────
   {
     id: 'climb_crusher', icon: '⛰️', name: 'CLIMB CRUSHER', group: 'special',
-    description: 'Completed a race with 500m+ elevation gain.',
-    check: r => r.some(x => (x.elevation ?? 0) >= 500),
-    findSourceRace: r => r.find(x => (x.elevation ?? 0) >= 500) ?? null,
+    description: 'Completed a running race with 500m+ elevation gain.',
+    check: r => r.some(x => isRunningRace(x) && (x.elevation ?? 0) >= 500),
+    findSourceRace: r => r.find(x => isRunningRace(x) && (x.elevation ?? 0) >= 500) ?? null,
   },
   {
     id: 'heat_warrior', icon: '🌡️', name: 'HEAT WARRIOR', group: 'special',
@@ -496,18 +528,29 @@ const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'night_runner', icon: '🌙', name: 'NIGHT RUNNER', group: 'special',
-    description: 'Completed a race starting after sunset.',
-    check: () => false,
+    description: 'Completed a race starting after 8 PM or before 6 AM.',
+    check: r => r.some(x => {
+      if (!x.startTime) return false
+      const h = parseInt(x.startTime.split(':')[0] ?? '12', 10)
+      return h >= 20 || h < 6
+    }),
+    findSourceRace: r => r.find(x => {
+      if (!x.startTime) return false
+      const h = parseInt(x.startTime.split(':')[0] ?? '12', 10)
+      return h >= 20 || h < 6
+    }) ?? null,
   },
   {
     id: 'negative_split_master', icon: '⚡', name: 'NEGATIVE SPLIT MASTER', group: 'special',
-    description: 'Ran a race with a faster second half.',
-    check: () => false,
+    description: 'Ran a running race with a faster second half (based on splits).',
+    check: r => r.some(isNegativeSplit),
+    findSourceRace: r => r.find(isNegativeSplit) ?? null,
   },
   {
     id: 'no_quit', icon: '🫀', name: 'NO QUIT', group: 'special',
-    description: 'Finished a race you almost DNF\'d.',
-    check: () => false,
+    description: 'Drastically slowed mid-race but dug deep to finish (based on splits).',
+    check: r => r.some(hadCrisisAndRecovery),
+    findSourceRace: r => r.find(hadCrisisAndRecovery) ?? null,
   },
   {
     id: 'pain_cave', icon: '❤️', name: 'PAIN CAVE', group: 'special',
@@ -516,8 +559,20 @@ const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'comeback_run', icon: '🔁', name: 'COMEBACK RUN', group: 'special',
-    description: 'Race after injury break.',
-    check: () => false,
+    description: 'Raced after a 2+ week injury break. Set your break dates in Edit Profile.',
+    check: (r, athlete) => {
+      const end = athlete?.injuryBreakEnd
+      const start = athlete?.injuryBreakStart
+      if (!end || !start) return false
+      const daysOff = (new Date(end + 'T00:00:00').getTime() - new Date(start + 'T00:00:00').getTime()) / 86400000
+      if (daysOff < 14) return false
+      return r.some(x => x.date > end)
+    },
+    findSourceRace: (r, athlete) => {
+      const end = athlete?.injuryBreakEnd
+      if (!end) return null
+      return r.filter(x => x.date > end).sort((a, b) => a.date.localeCompare(b.date))[0] ?? null
+    },
   },
   {
     id: 'solo_warrior', icon: '🪖', name: 'SOLO WARRIOR', group: 'special',
@@ -526,8 +581,9 @@ const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'desert_runner', icon: '🏜️', name: 'DESERT RUNNER', group: 'special',
-    description: 'Race in desert terrain.',
-    check: () => false,
+    description: 'Completed a race tagged with Desert terrain.',
+    check: r => r.some(x => x.surface === 'desert'),
+    findSourceRace: r => r.find(x => x.surface === 'desert') ?? null,
   },
   {
     id: 'mountain_goat', icon: '🐐', name: 'MOUNTAIN GOAT', group: 'special',
@@ -537,8 +593,9 @@ const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'sea_level_sprinter', icon: '🌊', name: 'SEA LEVEL SPRINTER', group: 'special',
-    description: 'Coastal race finish.',
-    check: () => false,
+    description: 'Completed a race tagged with Coastal terrain.',
+    check: r => r.some(x => x.surface === 'coastal'),
+    findSourceRace: r => r.find(x => x.surface === 'coastal') ?? null,
   },
   {
     id: 'stamp_collector', icon: '📮', name: 'STAMP COLLECTOR', group: 'special',
@@ -578,68 +635,86 @@ const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'sprint_specialist', icon: '💨', name: 'SPRINT SPECIALIST', group: 'special',
-    description: '5 x 5K races.',
-    check: r => r.filter(x => { const km = parseFloat(x.distance); return km >= 4.5 && km <= 6 }).length >= 5,
+    description: '5 x 5K races (exact 5K distance).',
+    check: r => r.filter(x => { const km = parseFloat(x.distance); return km >= 4.9 && km <= 5.1 }).length >= 5,
   },
   {
     id: 'half_collector', icon: '🌓', name: 'HALF COLLECTOR', group: 'special',
-    description: '10 half marathons.',
-    check: r => r.filter(x => { const km = parseFloat(x.distance); return km >= 20 && km <= 23 }).length >= 10,
+    description: '10 half marathons (exactly 21.1 km).',
+    check: r => r.filter(x => { const km = parseFloat(x.distance); return km >= 21.0 && km <= 21.2 }).length >= 10,
   },
   {
     id: 'marathoner_plus', icon: '🏛️', name: 'MARATHONER+', group: 'special',
-    description: '5 marathons.',
-    check: r => r.filter(x => { const km = parseFloat(x.distance); return km >= 40 && km <= 45 }).length >= 5,
+    description: '5 full marathons (exactly 42.2 km).',
+    check: r => r.filter(x => { const km = parseFloat(x.distance); return km >= 42.1 && km <= 42.3 }).length >= 5,
   },
   {
     id: 'ultra_initiate', icon: '🏔️', name: 'ULTRA INITIATE', group: 'special',
-    description: 'First 50K running finish.',
-    check: r => r.some(x => isRunningRace(x) && parseFloat(x.distance) >= 45),
-    findSourceRace: r => r.filter(x => isRunningRace(x) && parseFloat(x.distance) >= 45).sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance))[0] ?? null,
+    description: 'First 50K+ running finish. Sport field must be filled in.',
+    check: r => r.some(x => x.sport && isRunningRace(x) && parseFloat(x.distance) >= 50),
+    findSourceRace: r => r.filter(x => x.sport && isRunningRace(x) && parseFloat(x.distance) >= 50).sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance))[0] ?? null,
   },
   {
     id: 'ultra_elite', icon: '🦅', name: 'ULTRA ELITE', group: 'special',
-    description: '100K running completed.',
-    check: r => r.some(x => isRunningRace(x) && parseFloat(x.distance) >= 90 && parseFloat(x.distance) <= 130),
-    findSourceRace: r => r.find(x => isRunningRace(x) && parseFloat(x.distance) >= 90 && parseFloat(x.distance) <= 130) ?? null,
+    description: '100K+ running completed. Includes any running race ≥ 90 km.',
+    check: r => r.some(x => x.sport && isRunningRace(x) && parseFloat(x.distance) >= 90),
+    findSourceRace: r => r.filter(x => x.sport && isRunningRace(x) && parseFloat(x.distance) >= 90).sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance))[0] ?? null,
   },
   {
     id: 'hundred_miler', icon: '💯', name: 'HUNDRED MILER', group: 'special',
-    description: '100-mile running finish.',
-    check: r => r.some(x => isRunningRace(x) && parseFloat(x.distance) >= 140 && parseFloat(x.distance) <= 180),
-    findSourceRace: r => r.find(x => isRunningRace(x) && parseFloat(x.distance) >= 140 && parseFloat(x.distance) <= 180) ?? null,
+    description: '100-mile running finish (161 km+). Sport field must be filled in.',
+    check: r => r.some(x => x.sport && isRunningRace(x) && parseFloat(x.distance) >= 161),
+    findSourceRace: r => r.find(x => x.sport && isRunningRace(x) && parseFloat(x.distance) >= 161) ?? null,
   },
   {
     id: 'iron_mind', icon: '🔱', name: 'IRON MIND', group: 'special',
-    description: 'Finished a 70.3 triathlon.',
-    check: r => r.some(x => parseFloat(x.distance) >= 100 && parseFloat(x.distance) <= 130 && isTriRace(x)),
-    findSourceRace: r => r.find(x => parseFloat(x.distance) >= 100 && parseFloat(x.distance) <= 130 && isTriRace(x)) ?? null,
+    description: 'Finished a 70.3 triathlon (113 km, exact distance).',
+    check: r => r.some(x => isTriRace(x) && parseFloat(x.distance) >= 112 && parseFloat(x.distance) <= 114),
+    findSourceRace: r => r.find(x => isTriRace(x) && parseFloat(x.distance) >= 112 && parseFloat(x.distance) <= 114) ?? null,
   },
   {
     id: 'full_send', icon: '🛡️', name: 'FULL SEND', group: 'special',
-    description: 'Completed a Full Ironman.',
-    check: r => r.some(x => parseFloat(x.distance) >= 200 && isTriRace(x)),
-    findSourceRace: r => r.find(x => parseFloat(x.distance) >= 200 && isTriRace(x)) ?? null,
+    description: 'Completed a full Ironman (226 km, exact distance).',
+    check: r => r.some(x => isTriRace(x) && parseFloat(x.distance) >= 225 && parseFloat(x.distance) <= 228),
+    findSourceRace: r => r.find(x => isTriRace(x) && parseFloat(x.distance) >= 225 && parseFloat(x.distance) <= 228) ?? null,
   },
   {
     id: 'swim_survivor', icon: '🏊', name: 'SWIM SURVIVOR', group: 'special',
-    description: 'Open water race finish.',
-    check: () => false,
+    description: 'Finished a swim race or a triathlon (which includes a swim segment).',
+    check: r => r.some(x =>
+      x.outcome !== 'DNF' && (
+        (x.sport ?? '').toLowerCase().includes('swim') ||
+        isTriRace(x)
+      )
+    ),
+    findSourceRace: r => r.find(x =>
+      x.outcome !== 'DNF' && (
+        (x.sport ?? '').toLowerCase().includes('swim') ||
+        isTriRace(x)
+      )
+    ) ?? null,
   },
   {
     id: 'pacemaker', icon: '⏱️', name: 'PACEMAKER', group: 'special',
-    description: 'Official pacer role at a race.',
-    check: () => false,
+    description: 'Served as an official pacer at a race. Set "Role at Race" to Pacer in the race form.',
+    check: r => r.some(x => x.roleAtRace === 'pacer'),
+    findSourceRace: r => r.find(x => x.roleAtRace === 'pacer') ?? null,
   },
   {
     id: 'first_timer_guide', icon: '🤝', name: 'FIRST TIMER GUIDE', group: 'special',
-    description: 'Helped someone finish their first race.',
-    check: () => false,
+    description: 'Guided someone through their first race. Set "Role at Race" to Guide in the race form.',
+    check: r => r.some(x => x.roleAtRace === 'guide'),
+    findSourceRace: r => r.find(x => x.roleAtRace === 'guide') ?? null,
   },
   {
     id: 'club_loyalist', icon: '🏃', name: 'CLUB LOYALIST', group: 'special',
-    description: '3+ years with a run club.',
-    check: () => false,
+    description: '3+ years with a run club. Add your club join date in Edit Profile.',
+    check: (_r, athlete) => {
+      const dates = athlete?.clubJoinDates ?? {}
+      const threeYearsAgo = new Date()
+      threeYearsAgo.setFullYear(threeYearsAgo.getFullYear() - 3)
+      return Object.values(dates).some(d => !!d && new Date(d + 'T00:00:00') <= threeYearsAgo)
+    },
   },
   {
     id: 'photo_finish', icon: '📸', name: 'PHOTO FINISH', group: 'special',
@@ -677,14 +752,12 @@ const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'back_to_back_ultra', icon: '🧱', name: 'BACK-TO-BACK ULTRA', group: 'special',
-    description: '2 ultras (50K+) within a week.',
+    description: '2 running ultras (50K+) in the same calendar week. Running only.',
     check: r => {
-      const ultras = r.filter(x => isRunningRace(x) && parseFloat(x.distance) >= 45 && x.date).sort((a, b) => a.date.localeCompare(b.date))
-      for (let i = 1; i < ultras.length; i++) {
-        const diff = (new Date(ultras[i].date + 'T00:00:00').getTime() - new Date(ultras[i-1].date + 'T00:00:00').getTime()) / 86400000
-        if (diff <= 7) return true
-      }
-      return false
+      const ultras = r.filter(x => x.sport && isRunningRace(x) && parseFloat(x.distance) >= 50 && x.date)
+      const weekMap: Record<string, number> = {}
+      for (const u of ultras) { const w = isoWeek(u.date); weekMap[w] = (weekMap[w] ?? 0) + 1 }
+      return Object.values(weekMap).some(c => c >= 2)
     },
   },
   {
@@ -767,30 +840,30 @@ const ACHIEVEMENTS: Achievement[] = [
   { id: 'ultra_100m_hundred_legend', icon: '🏔️', name: 'HUNDRED LEGEND',    group: 'ladder', family: 'ultra', tier: 7, description: '100 Mile running under 24:00.', check: r => { const pb = getPBSecsForDist(r.filter(isRunningRace), 140, 180); return pb !== null && pb < 86400 } },
 
   // ── 70.3 Ladder (7 tiers) ─────────────────────────────────────────────────
-  { id: 'tri703_finisher',         icon: '🔱', name: '70.3 FINISHER',    group: 'ladder', family: 'tri703', tier: 0, description: 'Completed a 70.3 triathlon.',
-    check: r => r.some(x => isTriRace(x) && parseFloat(x.distance) >= 100 && parseFloat(x.distance) <= 130 && !!x.time),
-    findSourceRace: r => r.find(x => isTriRace(x) && parseFloat(x.distance) >= 100 && parseFloat(x.distance) <= 130 && !!x.time) ?? null,
+  { id: 'tri703_finisher',         icon: '🔱', name: '70.3 FINISHER',    group: 'ladder', family: 'tri703', tier: 0, description: 'Completed a 70.3 triathlon (113 km).',
+    check: r => r.some(x => isTriRace(x) && parseFloat(x.distance) >= 112 && parseFloat(x.distance) <= 114 && !!x.time),
+    findSourceRace: r => r.find(x => isTriRace(x) && parseFloat(x.distance) >= 112 && parseFloat(x.distance) <= 114 && !!x.time) ?? null,
   },
-  { id: 'tri703_half_iron_entry',  icon: '🔱', name: 'HALF IRON ENTRY',  group: 'ladder', family: 'tri703', tier: 1, description: '70.3 under 6:00.',   check: r => { const pb = getPBSecsForDist(r, 100, 130, 'triathlon'); return pb !== null && pb < 21600 } },
-  { id: 'tri703_building_strength',icon: '🔱', name: 'BUILDING STRENGTH',group: 'ladder', family: 'tri703', tier: 2, description: '70.3 under 5:30.',   check: r => { const pb = getPBSecsForDist(r, 100, 130, 'triathlon'); return pb !== null && pb < 19800 } },
-  { id: 'tri703_iron_control',     icon: '🔱', name: 'IRON CONTROL',     group: 'ladder', family: 'tri703', tier: 3, description: '70.3 under 5:00.',   check: r => { const pb = getPBSecsForDist(r, 100, 130, 'triathlon'); return pb !== null && pb < 18000 } },
-  { id: 'tri703_competitive_field',icon: '🔱', name: 'COMPETITIVE FIELD',group: 'ladder', family: 'tri703', tier: 4, description: '70.3 under 4:45.',   check: r => { const pb = getPBSecsForDist(r, 100, 130, 'triathlon'); return pb !== null && pb < 17100 } },
-  { id: 'tri703_sharp_execution', icon: '🔱', name: 'SHARP EXECUTION',  group: 'ladder', family: 'tri703', tier: 5, description: '70.3 under 4:30.',   check: r => { const pb = getPBSecsForDist(r, 100, 130, 'triathlon'); return pb !== null && pb < 16200 } },
-  { id: 'tri703_elite_amateur',   icon: '🔱', name: 'ELITE AMATEUR',    group: 'ladder', family: 'tri703', tier: 6, description: '70.3 under 4:15.',   check: r => { const pb = getPBSecsForDist(r, 100, 130, 'triathlon'); return pb !== null && pb < 15300 } },
-  { id: 'tri703_iron_elite',      icon: '🔱', name: 'IRON ELITE',       group: 'ladder', family: 'tri703', tier: 7, description: '70.3 under 4:00.',   check: r => { const pb = getPBSecsForDist(r, 100, 130, 'triathlon'); return pb !== null && pb < 14400 } },
+  { id: 'tri703_half_iron_entry',  icon: '🔱', name: 'HALF IRON ENTRY',  group: 'ladder', family: 'tri703', tier: 1, description: '70.3 under 6:00.',   check: r => { const pb = getPBSecsForDist(r, 112, 114, 'triathlon'); return pb !== null && pb < 21600 } },
+  { id: 'tri703_building_strength',icon: '🔱', name: 'BUILDING STRENGTH',group: 'ladder', family: 'tri703', tier: 2, description: '70.3 under 5:30.',   check: r => { const pb = getPBSecsForDist(r, 112, 114, 'triathlon'); return pb !== null && pb < 19800 } },
+  { id: 'tri703_iron_control',     icon: '🔱', name: 'IRON CONTROL',     group: 'ladder', family: 'tri703', tier: 3, description: '70.3 under 5:00.',   check: r => { const pb = getPBSecsForDist(r, 112, 114, 'triathlon'); return pb !== null && pb < 18000 } },
+  { id: 'tri703_competitive_field',icon: '🔱', name: 'COMPETITIVE FIELD',group: 'ladder', family: 'tri703', tier: 4, description: '70.3 under 4:45.',   check: r => { const pb = getPBSecsForDist(r, 112, 114, 'triathlon'); return pb !== null && pb < 17100 } },
+  { id: 'tri703_sharp_execution', icon: '🔱', name: 'SHARP EXECUTION',  group: 'ladder', family: 'tri703', tier: 5, description: '70.3 under 4:30.',   check: r => { const pb = getPBSecsForDist(r, 112, 114, 'triathlon'); return pb !== null && pb < 16200 } },
+  { id: 'tri703_elite_amateur',   icon: '🔱', name: 'ELITE AMATEUR',    group: 'ladder', family: 'tri703', tier: 6, description: '70.3 under 4:15.',   check: r => { const pb = getPBSecsForDist(r, 112, 114, 'triathlon'); return pb !== null && pb < 15300 } },
+  { id: 'tri703_iron_elite',      icon: '🔱', name: 'IRON ELITE',       group: 'ladder', family: 'tri703', tier: 7, description: '70.3 under 4:00.',   check: r => { const pb = getPBSecsForDist(r, 112, 114, 'triathlon'); return pb !== null && pb < 14400 } },
 
   // ── Full Ironman Ladder (7 tiers) ─────────────────────────────────────────
-  { id: 'ironman_finisher',           icon: '🛡️', name: 'IRONMAN FINISHER', group: 'ladder', family: 'iron', tier: 0, description: 'Completed a full Ironman.',
-    check: r => r.some(x => isTriRace(x) && parseFloat(x.distance) >= 200 && !!x.time),
-    findSourceRace: r => r.find(x => isTriRace(x) && parseFloat(x.distance) >= 200 && !!x.time) ?? null,
+  { id: 'ironman_finisher',           icon: '🛡️', name: 'IRONMAN FINISHER', group: 'ladder', family: 'iron', tier: 0, description: 'Completed a full Ironman (226 km).',
+    check: r => r.some(x => isTriRace(x) && parseFloat(x.distance) >= 225 && parseFloat(x.distance) <= 228 && !!x.time),
+    findSourceRace: r => r.find(x => isTriRace(x) && parseFloat(x.distance) >= 225 && parseFloat(x.distance) <= 228 && !!x.time) ?? null,
   },
-  { id: 'ironman_full_iron_finisher', icon: '🛡️', name: 'IRON FINISHER',  group: 'ladder', family: 'iron', tier: 1, description: 'Full Ironman under 12:00.', check: r => { const pb = getPBSecsForDist(r, 200, 250, 'triathlon'); return pb !== null && pb < 43200 } },
-  { id: 'ironman_full_iron_builder',  icon: '🛡️', name: 'IRON BUILDER',   group: 'ladder', family: 'iron', tier: 2, description: 'Full Ironman under 11:30.', check: r => { const pb = getPBSecsForDist(r, 200, 250, 'triathlon'); return pb !== null && pb < 41400 } },
-  { id: 'ironman_full_strong_iron',   icon: '🛡️', name: 'STRONG IRON',    group: 'ladder', family: 'iron', tier: 3, description: 'Full Ironman under 11:00.', check: r => { const pb = getPBSecsForDist(r, 200, 250, 'triathlon'); return pb !== null && pb < 39600 } },
-  { id: 'ironman_full_iron_competitor',icon:'🛡️', name: 'IRON COMPETITOR',group: 'ladder', family: 'iron', tier: 4, description: 'Full Ironman under 10:30.', check: r => { const pb = getPBSecsForDist(r, 200, 250, 'triathlon'); return pb !== null && pb < 37800 } },
-  { id: 'ironman_full_sub10_club',    icon: '🛡️', name: 'SUB-10 CLUB',    group: 'ladder', family: 'iron', tier: 5, description: 'Full Ironman under 10:00.', check: r => { const pb = getPBSecsForDist(r, 200, 250, 'triathlon'); return pb !== null && pb < 36000 } },
-  { id: 'ironman_full_elite_iron',    icon: '🛡️', name: 'ELITE IRON',     group: 'ladder', family: 'iron', tier: 6, description: 'Full Ironman under 9:30.',  check: r => { const pb = getPBSecsForDist(r, 200, 250, 'triathlon'); return pb !== null && pb < 34200 } },
-  { id: 'ironman_full_world_tier',    icon: '🛡️', name: 'WORLD TIER',     group: 'ladder', family: 'iron', tier: 7, description: 'Full Ironman under 9:00.',  check: r => { const pb = getPBSecsForDist(r, 200, 250, 'triathlon'); return pb !== null && pb < 32400 } },
+  { id: 'ironman_full_iron_finisher', icon: '🛡️', name: 'IRON FINISHER',  group: 'ladder', family: 'iron', tier: 1, description: 'Full Ironman under 12:00.', check: r => { const pb = getPBSecsForDist(r, 225, 228, 'triathlon'); return pb !== null && pb < 43200 } },
+  { id: 'ironman_full_iron_builder',  icon: '🛡️', name: 'IRON BUILDER',   group: 'ladder', family: 'iron', tier: 2, description: 'Full Ironman under 11:30.', check: r => { const pb = getPBSecsForDist(r, 225, 228, 'triathlon'); return pb !== null && pb < 41400 } },
+  { id: 'ironman_full_strong_iron',   icon: '🛡️', name: 'STRONG IRON',    group: 'ladder', family: 'iron', tier: 3, description: 'Full Ironman under 11:00.', check: r => { const pb = getPBSecsForDist(r, 225, 228, 'triathlon'); return pb !== null && pb < 39600 } },
+  { id: 'ironman_full_iron_competitor',icon:'🛡️', name: 'IRON COMPETITOR',group: 'ladder', family: 'iron', tier: 4, description: 'Full Ironman under 10:30.', check: r => { const pb = getPBSecsForDist(r, 225, 228, 'triathlon'); return pb !== null && pb < 37800 } },
+  { id: 'ironman_full_sub10_club',    icon: '🛡️', name: 'SUB-10 CLUB',    group: 'ladder', family: 'iron', tier: 5, description: 'Full Ironman under 10:00.', check: r => { const pb = getPBSecsForDist(r, 225, 228, 'triathlon'); return pb !== null && pb < 36000 } },
+  { id: 'ironman_full_elite_iron',    icon: '🛡️', name: 'ELITE IRON',     group: 'ladder', family: 'iron', tier: 6, description: 'Full Ironman under 9:30.',  check: r => { const pb = getPBSecsForDist(r, 225, 228, 'triathlon'); return pb !== null && pb < 34200 } },
+  { id: 'ironman_full_world_tier',    icon: '🛡️', name: 'WORLD TIER',     group: 'ladder', family: 'iron', tier: 7, description: 'Full Ironman under 9:00.',  check: r => { const pb = getPBSecsForDist(r, 225, 228, 'triathlon'); return pb !== null && pb < 32400 } },
 ]
 
 const LADDER_FAMILIES: Array<{ key: string; label: string; icon: string }> = [
@@ -1434,8 +1507,8 @@ function AchievementsSection() {
   // Popup source race
   const popupRace = useMemo(() => {
     if (!popup?.findSourceRace) return null
-    return popup.findSourceRace(races)
-  }, [popup, races])
+    return popup.findSourceRace(races, athlete)
+  }, [popup, races, athlete])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>

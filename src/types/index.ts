@@ -21,7 +21,7 @@ export interface Race {
   medalPhoto?: string    // URL
   splits?: Split[]
   elevation?: number
-  surface?: string       // "road" | "trail" | "track"
+  surface?: string       // "road" | "trail" | "track" | "desert" | "coastal"
   weather?: RaceWeather
   notes?: string
   isArace?: boolean
@@ -30,6 +30,7 @@ export interface Race {
   goalTime?: string
   startTime?: string        // race-day wall-clock start time "HH:MM" or "HH:MM:SS" (local race-city time)
   bibNumber?: string
+  roleAtRace?: 'runner' | 'pacer' | 'guide'  // role the athlete played at this race
   lat?: number
   lng?: number
   strava_id?: number    // Strava activity ID — used to de-duplicate imports
@@ -58,6 +59,7 @@ export interface Athlete {
   gender?: string       // "M" | "F" | "NB"
   club?: string
   clubs?: string[]
+  clubJoinDates?: Record<string, string>  // club name → YYYY-MM-DD join date
   city?: string
   country?: string
   bio?: string
@@ -65,6 +67,8 @@ export interface Athlete {
   mainSport?: string
   weeklyKm?: number
   username?: string
+  injuryBreakStart?: string  // YYYY-MM-DD — start of injury break
+  injuryBreakEnd?: string    // YYYY-MM-DD — end of injury break (comeback_run unlocks for races after this)
   usernameSetAt?: string  // ISO timestamp — username locked for 1 year after this
   isPublic?: boolean
   units?: 'metric' | 'imperial'  // distance + pace display preference (default: metric)
