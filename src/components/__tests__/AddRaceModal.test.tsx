@@ -7,15 +7,6 @@ import { AddRaceModal } from '../AddRaceModal'
 import { useRaceStore } from '@/stores/useRaceStore'
 import type { CatalogRace } from '@/hooks/useRaceCatalog'
 
-// Mock framer-motion (causes jsdom issues)
-vi.mock('framer-motion', () => ({
-  motion: {
-    div: ({ children, ...p }: any) => <div {...p}>{children}</div>,
-    span: ({ children, ...p }: any) => <span {...p}>{children}</span>,
-  },
-  AnimatePresence: ({ children }: any) => <>{children}</>,
-}))
-
 // Mock useRaceCatalog so tests control catalog state
 vi.mock('@/hooks/useRaceCatalog')
 import { useRaceCatalog } from '@/hooks/useRaceCatalog'

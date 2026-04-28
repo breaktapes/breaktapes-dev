@@ -13,7 +13,7 @@ import { removeBackground, type Config } from '@imgly/background-removal'
 
 // Config: use CDN assets (avoids bundling the 50 MB model into dist)
 const RMBG_CONFIG: Config = {
-  publicPath: 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.5/dist/',
+  publicPath: 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/dist/',
   debug: false,
   model: 'isnet_quint8',
 }

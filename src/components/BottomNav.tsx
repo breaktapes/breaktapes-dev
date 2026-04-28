@@ -1,5 +1,4 @@
 import { NavLink, useLocation } from 'react-router-dom'
-import { motion } from 'framer-motion'
 
 // ─── SVG Icons ────────────────────────────────────────────────────────────────
 
@@ -101,8 +100,7 @@ export function BottomNav() {
               {label}
             </span>
             {isActive && (
-              <motion.span
-                layoutId="nav-indicator"
+              <span
                 style={{
                   position: 'absolute',
                   top: 0, left: '20%', right: '20%',
@@ -110,8 +108,8 @@ export function BottomNav() {
                   background: 'linear-gradient(135deg, var(--orange) 0%, color-mix(in srgb, var(--orange) 70%, black) 100%)',
                   borderRadius: '0 0 3px 3px',
                   boxShadow: '0 0 10px rgba(var(--orange-ch), 0.6)',
+                  animation: 'fadeIn 0.15s ease-out',
                 }}
-                transition={{ type: 'spring', stiffness: 400, damping: 30 }}
               />
             )}
           </NavLink>
