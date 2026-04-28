@@ -197,34 +197,6 @@ interface Props {
   isUpcoming?: boolean
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-// Maps verbose country names to short display abbreviations for pills
-const COUNTRY_SHORT: Record<string, string> = {
-  'united arab emirates': 'UAE',
-  'united states': 'USA',
-  'united states of america': 'USA',
-  'united kingdom': 'UK',
-  'new zealand': 'NZ',
-  'south africa': 'SA',
-  'south korea': 'S. Korea',
-  'saudi arabia': 'KSA',
-  'czech republic': 'Czechia',
-  'hong kong': 'HK',
-  'costa rica': 'Costa Rica',
-  'puerto rico': 'Puerto Rico',
-}
-
-function shortCountry(name: string): string {
-  if (!name) return ''
-  return COUNTRY_SHORT[name.toLowerCase()] ?? name
-}
-
-function capitalize(s: string): string {
-  if (!s) return s
-  return s.charAt(0).toUpperCase() + s.slice(1)
-}
-
 // ─── View panel (read mode) ───────────────────────────────────────────────────
 
 function ViewPanel({ race, isPB, onEdit, onDelete, onShare }: { race: Race; isPB: boolean; onEdit: () => void; onDelete: () => void; onShare: () => void }) {
@@ -232,32 +204,22 @@ function ViewPanel({ race, isPB, onEdit, onDelete, onShare }: { race: Race; isPB
   const medalColor = race.medal ? (MEDAL_COLORS[race.medal] ?? 'var(--orange)') : null
   const units = useUnits()
 
-  const pbGlow = isPB ? {
-    boxShadow: 'inset 0 0 0 1px rgba(200,150,60,0.35), 0 0 24px rgba(200,150,60,0.08)',
-    background: 'rgba(200,150,60,0.03)',
-  } : {}
-
   return (
-    <div style={{ ...st.body, ...pbGlow, borderRadius: 'inherit' }}>
-      {/* PB banner */}
-      {isPB && (
-        <div style={{ textAlign: 'center', background: 'rgba(200,150,60,0.12)', border: '1px solid rgba(200,150,60,0.3)', borderRadius: 8, padding: '6px 12px', color: '#C8963C', fontSize: 12, fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em' }}>
-          ⭐ PERSONAL BEST
-        </div>
-      )}
-
+    <div style={st.body}>
       {/* Name + date — centered hero */}
       <div style={{ textAlign: 'center', paddingBottom: '4px' }}>
         <h2 style={{ ...st.raceName, textAlign: 'center', textTransform: 'uppercase' }}>{race.name || 'UNTITLED RACE'}</h2>
         <p style={{ ...st.raceMeta, textAlign: 'center' }}>{fmtDate(race.date)}</p>
       </div>
 
-      {/* Key stats row — time, distance, pace only */}
+      {/* Key stats row */}
       <div style={st.statsRow}>
         {race.time && (
           <div style={{ ...st.statBox, ...(isPB ? { borderColor: 'rgba(200,150,60,0.45)', background: 'rgba(200,150,60,0.07)' } : {}) }}>
             <div style={{ ...st.statVal, color: isPB ? '#C8963C' : 'var(--orange)' }}>{race.time}</div>
-            <div style={{ ...st.statLabel, ...(isPB ? { color: 'rgba(200,150,60,0.7)' } : {}) }}>FINISH TIME</div>
+            <div style={{ ...st.statLabel, ...(isPB ? { color: 'rgba(200,150,60,0.7)' } : {}) }}>
+              {isPB ? '⭐ PERSONAL BEST' : 'FINISH TIME'}
+            </div>
           </div>
         )}
         {race.distance && (() => {
@@ -273,6 +235,7 @@ function ViewPanel({ race, isPB, onEdit, onDelete, onShare }: { race: Race; isPB
             </div>
           )
         })()}
+        {/* Pace stat — computed from time + distance */}
         {race.time && race.distance && (() => {
           const { isNumeric } = resolveDistKm(race.distance)
           if (!isNumeric) return null
@@ -287,14 +250,32 @@ function ViewPanel({ race, isPB, onEdit, onDelete, onShare }: { race: Race; isPB
             </div>
           )
         })()}
+        {race.placing && (
+          <div style={st.statBox}>
+            <div style={st.statVal}>{race.placing}</div>
+            <div style={st.statLabel}>OVERALL</div>
+          </div>
+        )}
+        {race.genderPlacing && (
+          <div style={st.statBox}>
+            <div style={st.statVal}>{race.genderPlacing}</div>
+            <div style={st.statLabel}>GENDER</div>
+          </div>
+        )}
+        {race.agPlacing && (
+          <div style={st.statBox}>
+            <div style={st.statVal}>{race.agPlacing}</div>
+            <div style={st.statLabel}>{race.agLabel || 'AGE GROUP'}</div>
+          </div>
+        )}
       </div>
 
-      {/* Pill chips — location, priority, medal, placing */}
-      {(race.city || race.country || race.priority || race.medal || race.placing || race.genderPlacing || race.agPlacing) && (
+      {/* Pill chips — location, priority, medal */}
+      {(race.city || race.country || race.priority || race.medal) && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
           {(race.city || race.country) && (
             <span style={st.infoPill}>
-              📍 {[race.city, shortCountry(race.country ?? '')].filter(Boolean).join(', ')}
+              📍 {[race.city, race.country].filter(Boolean).join(', ')}
             </span>
           )}
           {race.priority && (
@@ -305,17 +286,8 @@ function ViewPanel({ race, isPB, onEdit, onDelete, onShare }: { race: Race; isPB
           {race.medal && (
             <span style={{ ...st.infoPill, borderColor: `${medalColor}55`, color: medalColor ?? 'var(--white)' }}>
               {race.medal === 'gold' ? '🥇' : race.medal === 'silver' ? '🥈' : race.medal === 'bronze' ? '🥉' : '🏅'}{' '}
-              {race.medal === '__custom__' ? 'Custom' : capitalize(race.medal)}
+              {race.medal === '__custom__' ? 'Custom' : race.medal.charAt(0).toUpperCase() + race.medal.slice(1)}
             </span>
-          )}
-          {race.placing && (
-            <span style={st.infoPill}>🏁 {race.placing} Overall</span>
-          )}
-          {race.genderPlacing && (
-            <span style={st.infoPill}>⚥ {race.genderPlacing} Gender</span>
-          )}
-          {race.agPlacing && (
-            <span style={st.infoPill}>👤 {race.agPlacing} {race.agLabel || 'Age Group'}</span>
           )}
         </div>
       )}
@@ -327,12 +299,7 @@ function ViewPanel({ race, isPB, onEdit, onDelete, onShare }: { race: Race; isPB
         {race.bibNumber && <InfoRow label="Bib" value={race.bibNumber} />}
         {race.goalTime && <InfoRow label="Goal Time" value={race.goalTime} />}
         {race.elevation != null && <InfoRow label="Elevation" value={`${race.elevation}m`} />}
-        {race.surface && <InfoRow label="Surface" value={capitalize(race.surface)} />}
-        {race.terrain && <InfoRow label="Terrain" value={capitalize(race.terrain)} />}
-        {race.shoe && <InfoRow label="Shoe / Kit" value={race.shoe} />}
-        {race.startTime && <InfoRow label="Start Time" value={race.startTime} />}
-        {race.avgHeartRate != null && <InfoRow label="Avg Heart Rate" value={`${race.avgHeartRate} bpm`} />}
-        {race.roleAtRace && race.roleAtRace !== 'runner' && <InfoRow label="Role" value={capitalize(race.roleAtRace)} />}
+        {race.surface && <InfoRow label="Surface" value={race.surface} />}
       </div>
 
       {/* Splits */}
@@ -573,12 +540,7 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
     setWeatherFetching(true)
     setWeatherFetchMsg(null)
     try {
-      const daysAgo = Math.floor((Date.now() - new Date(date).getTime()) / 86_400_000)
-      // Forecast API is CDN-cached (~200ms); archive ERA5 is slow (~3-5s). Use forecast for recent races.
-      const baseUrl = daysAgo <= 92
-        ? `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&start_date=${date}&end_date=${date}&past_days=92&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&wind_speed_unit=kmh&timezone=auto`
-        : `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lng}&start_date=${date}&end_date=${date}&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&wind_speed_unit=kmh&timezone=auto`
-      const url = baseUrl
+      const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lng}&start_date=${date}&end_date=${date}&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&wind_speed_unit=kmh&timezone=auto`
       const res = await fetch(url)
       if (!res.ok) throw new Error('API error')
       const data = await res.json()
@@ -894,7 +856,7 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                 <Field label="Start Time">
-                  <input type="time" style={{ ...st.input, height: 40, lineHeight: '1.4', WebkitAppearance: 'none', appearance: 'none', maxWidth: '100%' }} value={startTime} onChange={e => setStartTime(e.target.value)} />
+                  <input type="time" style={st.input} value={startTime} onChange={e => setStartTime(e.target.value)} />
                 </Field>
                 <Field label="Avg Heart Rate (bpm)">
                   <input type="number" style={st.input} value={avgHeartRate} onChange={e => setAvgHeartRate(e.target.value)} placeholder="155" />
