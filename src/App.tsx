@@ -1,13 +1,11 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { AnimatePresence, motion } from 'framer-motion'
 import { Component, lazy, Suspense } from 'react'
 import type { ReactNode } from 'react'
 import { ClerkProvider } from '@clerk/clerk-react'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import { AuthGate } from '@/components/AuthGate'
 import { Layout } from '@/components/Layout'
-import { transitions } from '@/lib/motion'
 import { CLERK_PUBLISHABLE_KEY } from '@/env'
 
 // Lazy-loaded pages — each is a separate JS chunk.
@@ -70,35 +68,29 @@ const queryClient = new QueryClient({
 function AnimatedRoutes() {
   const location = useLocation()
   return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key={location.pathname}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={transitions.page}
-        style={{ minHeight: '100%' }}
-      >
-        <Suspense fallback={<div style={{ minHeight: '40vh' }} />}>
-          <Routes location={location}>
-            <Route path="/"         element={<Dashboard />} />
-            <Route path="/races"    element={<Races />} />
-            <Route path="/train"    element={<Train />} />
-            <Route path="/you"      element={<Profile />} />
-            {/* <Route path="/gear"  element={<Gear />} /> */}  {/* removed from nav — kept for post-MVP */}
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/discover" element={<Discover />} />
-            <Route path="/compare"  element={<Compare />} />
-            {/* Backwards compat aliases */}
-            <Route path="/pace"    element={<Navigate to="/train" replace />} />
-            <Route path="/history" element={<Navigate to="/races" replace />} />
-            <Route path="/map"     element={<Navigate to="/races" replace />} />
-            {/* Catch-all */}
-            <Route path="*"        element={<Navigate to="/" replace />} />
-          </Routes>
-        </Suspense>
-      </motion.div>
-    </AnimatePresence>
+    <div
+      key={location.pathname}
+      style={{ minHeight: '100%', animation: 'fadeIn 0.15s ease-out' }}
+    >
+      <Suspense fallback={<div style={{ minHeight: '40vh' }} />}>
+        <Routes location={location}>
+          <Route path="/"         element={<Dashboard />} />
+          <Route path="/races"    element={<Races />} />
+          <Route path="/train"    element={<Train />} />
+          <Route path="/you"      element={<Profile />} />
+          {/* <Route path="/gear"  element={<Gear />} /> */}  {/* removed from nav — kept for post-MVP */}
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/discover" element={<Discover />} />
+          <Route path="/compare"  element={<Compare />} />
+          {/* Backwards compat aliases */}
+          <Route path="/pace"    element={<Navigate to="/train" replace />} />
+          <Route path="/history" element={<Navigate to="/races" replace />} />
+          <Route path="/map"     element={<Navigate to="/races" replace />} />
+          {/* Catch-all */}
+          <Route path="*"        element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
+    </div>
   )
 }
 

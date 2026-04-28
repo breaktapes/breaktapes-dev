@@ -16,6 +16,20 @@ export default defineConfig({
         if (id === '\0onnxruntime-webgpu-stub') return 'export default null'
       },
     },
+    // @imgly/background-removal sets ort.env.wasm.wasmPaths to the CDN publicPath
+    // before creating any inference session, so the local WASM copy is never fetched
+    // at runtime. Remove it from the build output to stay under Cloudflare's 25MB
+    // per-file limit (the file is 23 MB — 2 MB from the hard limit).
+    {
+      name: 'remove-ort-wasm',
+      generateBundle(_options: Record<string, unknown>, bundle: Record<string, unknown>) {
+        for (const key of Object.keys(bundle)) {
+          if (key.includes('ort-wasm') && key.endsWith('.wasm')) {
+            delete bundle[key]
+          }
+        }
+      },
+    },
   ],
   resolve: {
     alias: {
@@ -40,6 +54,10 @@ export default defineConfig({
             // React core — almost never changes
             if (id.includes('react-dom') || id.includes('react-router')) {
               return 'vendor-react'
+            }
+            // Clerk — auth lib, changes independently from app code
+            if (id.includes('@clerk')) {
+              return 'vendor-clerk'
             }
             // Charts + animation
             if (id.includes('recharts') || id.includes('framer-motion') || id.includes('d3-')) {
