@@ -2,6 +2,17 @@
 
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+## [0.6.6.0] - 2026-04-28
+
+### Changed
+- **Edit Race modal — title** font size bumped for stronger hierarchy.
+- **Edit Race modal — removed "Editing: …" subtitle** from header (redundant with form context).
+- **Edit Race modal — screenshot import removed** (requires Anthropic API key; surfaced when unavailable).
+- **Edit Race modal — Priority field** moved below City/Country, above Placing (better form flow).
+- **Edit Race modal — More Stats collapsible section** added below Notes. Contains: Bib Number, Goal Time, Start Time, Avg Heart Rate, Surface, Terrain, Elevation, Shoe/Kit, Role at Race, Weather (Temp/Conditions/Wind/Humidity).
+- **Edit Race modal — Weather auto-fill** fetches historical weather from Open-Meteo archive API using race lat/lng + date. Averages readings across the race duration window (start time to finish). Requires city to be selected via the city picker (to get coordinates).
+- **Race type** — added `avgHeartRate`, `terrain`, and `shoe` fields.
+
 ## [0.6.5.0] - 2026-04-27
 
 ### Added

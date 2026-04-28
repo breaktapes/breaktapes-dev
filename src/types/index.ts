@@ -37,6 +37,9 @@ export interface Race {
   gear?: string[]       // race day gear checklist items (custom items only)
   packedGear?: string[] // items checked off as packed
   photos?: string[]     // race day / finish line photos (compressed base64 data URLs)
+  avgHeartRate?: number  // average HR in bpm
+  terrain?: string       // "flat" | "rolling" | "hilly" | "mountainous"
+  shoe?: string          // shoe / kit worn
 }
 
 export interface Split {

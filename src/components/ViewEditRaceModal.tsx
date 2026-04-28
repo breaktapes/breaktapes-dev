@@ -9,7 +9,6 @@ import { CityPicker } from '@/components/CityPicker'
 import { TimePickerWheel, type HMS } from '@/components/TimePickerWheel'
 import type { Race, Split } from '@/types'
 import { useUnits, fmtDistKm, distUnit, fmtPaceSecPerKm, computePaceSecPerKm } from '@/lib/units'
-import { getClaudeApiKey, importRaceScreenshot } from '@/lib/claude'
 import { removeMedalBackground } from '@/lib/removeBg'
 import { findSportDistMatch, distLabel as distLabelUtil, fmtDateDDMM } from '@/lib/utils'
 
@@ -138,6 +137,19 @@ function resolveDistKm(dist: string): { km: string; isNumeric: boolean } {
   return { km: dist, isNumeric: false }
 }
 
+
+function _wmoCondition(code: number): string {
+  if (code === 0)             return 'Clear sky'
+  if (code <= 3)              return 'Partly cloudy'
+  if (code <= 49)             return 'Foggy'
+  if (code <= 57)             return 'Drizzle'
+  if (code <= 67)             return 'Rain'
+  if (code <= 77)             return 'Snow'
+  if (code <= 82)             return 'Rain showers'
+  if (code <= 86)             return 'Snow showers'
+  if (code <= 99)             return 'Thunderstorm'
+  return 'Unknown'
+}
 
 // ─── PB detection ────────────────────────────────────────────────────────────
 
@@ -437,7 +449,19 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
   const [elevation, setElevation] = useState(race.elevation != null ? String(race.elevation) : '')
   const [surface, setSurface]   = useState(race.surface ?? '')
   const [roleAtRace, setRoleAtRace] = useState<'' | 'runner' | 'pacer' | 'guide'>(race.roleAtRace ?? '')
-  const [splits, setSplits]     = useState<Split[]>(race.splits ?? [])
+  const [splits]                = useState<Split[]>(race.splits ?? [])
+  // More Stats
+  const [moreOpen, setMoreOpen]           = useState(false)
+  const [startTime, setStartTime]         = useState(race.startTime ?? '')
+  const [avgHeartRate, setAvgHeartRate]   = useState(race.avgHeartRate != null ? String(race.avgHeartRate) : '')
+  const [terrain, setTerrain]             = useState(race.terrain ?? '')
+  const [shoe, setShoe]                   = useState(race.shoe ?? '')
+  const [weatherTemp, setWeatherTemp]     = useState(race.weather?.temp != null ? String(race.weather.temp) : '')
+  const [weatherCond, setWeatherCond]     = useState(race.weather?.condition ?? '')
+  const [weatherWind, setWeatherWind]     = useState(race.weather?.wind != null ? String(race.weather.wind) : '')
+  const [weatherHum, setWeatherHum]       = useState(race.weather?.humidity != null ? String(race.weather.humidity) : '')
+  const [weatherFetching, setWeatherFetching] = useState(false)
+  const [weatherFetchMsg, setWeatherFetchMsg] = useState<{ ok: boolean; msg: string } | null>(null)
   const [medalPhoto, setMedalPhoto]   = useState<string | undefined>(race.medalPhoto)
   const [bgRemoving, setBgRemoving]   = useState(false)
   const medalInputRef = useRef<HTMLInputElement>(null)
@@ -445,10 +469,6 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
   const [photosUploading, setPhotosUploading] = useState(false)
   const photosInputRef = useRef<HTMLInputElement>(null)
 
-  // Screenshot import state
-  const [screenshotParsing, setScreenshotParsing] = useState(false)
-  const [screenshotStatus, setScreenshotStatus]   = useState<{ ok: boolean; msg: string } | null>(null)
-  const screenshotInputRef = useRef<HTMLInputElement>(null)
 
   const sportDists = DISTANCES_BY_SPORT[sport] ?? []
   const isCustomDist = CUSTOM_DIST_VALUES.includes(distance)
@@ -512,42 +532,51 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
     }
   }
 
-  async function handleScreenshotImport(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const apiKey = getClaudeApiKey()
-    if (!apiKey) {
-      setScreenshotStatus({ ok: false, msg: 'Add your Anthropic API key in Settings first.' })
-      e.target.value = ''
+  async function autoFillWeather() {
+    if (!lat || !lng || !date) {
+      setWeatherFetchMsg({ ok: false, msg: 'Need city + date first' })
       return
     }
-    setScreenshotParsing(true)
-    setScreenshotStatus(null)
+    setWeatherFetching(true)
+    setWeatherFetchMsg(null)
     try {
-      const base64 = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader()
-        reader.onload = () => resolve((reader.result as string).split(',')[1])
-        reader.onerror = () => reject(reader.error)
-        reader.readAsDataURL(file)
-      })
-      const parsed = await importRaceScreenshot(base64, file.type, apiKey)
-      let fieldsImported = 0
-      if (parsed.time) {
-        const parts = parsed.time.split(':').map(Number)
-        if (parts.length === 3 && !parts.some(isNaN)) {
-          setTime({ h: parts[0], m: parts[1], s: parts[2] })
-          fieldsImported++
-        }
-      }
-      if (parsed.placing) { setPlacing(parsed.placing); fieldsImported++ }
-      if (parsed.splits && parsed.splits.length > 0) { setSplits(parsed.splits); fieldsImported++ }
-      setScreenshotStatus({ ok: true, msg: `Imported ${fieldsImported} fields + ${parsed.splits?.length ?? 0} splits` })
-      setTimeout(() => setScreenshotStatus(null), 4000)
-    } catch (err) {
-      setScreenshotStatus({ ok: false, msg: err instanceof Error ? err.message : 'Could not parse. Check your API key.' })
+      const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lng}&start_date=${date}&end_date=${date}&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&wind_speed_unit=kmh&timezone=auto`
+      const res = await fetch(url)
+      if (!res.ok) throw new Error('API error')
+      const data = await res.json()
+
+      // Use startTime hour if set, otherwise 9 AM default
+      const startHour = startTime ? parseInt(startTime.split(':')[0], 10) : 9
+      // Estimate race duration in hours from existing time state
+      const totalSecs = time.h * 3600 + time.m * 60 + time.s
+      const durationHrs = totalSecs > 0 ? Math.ceil(totalSecs / 3600) : 1
+      const endHour = Math.min(startHour + durationHrs, 23)
+
+      // Average hourly readings across race window
+      const slice = (arr: number[]) => arr.slice(startHour, endHour + 1).filter(v => v != null)
+      const avg = (arr: number[]) => arr.length ? Math.round(arr.reduce((a, b) => a + b, 0) / arr.length) : null
+
+      const temps = slice(data.hourly.temperature_2m ?? [])
+      const hums  = slice(data.hourly.relative_humidity_2m ?? [])
+      const winds = slice(data.hourly.wind_speed_10m ?? [])
+      const codes = slice(data.hourly.weather_code ?? [])
+
+      const avgTemp = avg(temps)
+      const avgHum  = avg(hums)
+      const avgWind = avg(winds)
+      const dominantCode = codes.length ? codes[Math.floor(codes.length / 2)] : null
+
+      if (avgTemp != null) setWeatherTemp(String(avgTemp))
+      if (avgHum  != null) setWeatherHum(String(avgHum))
+      if (avgWind != null) setWeatherWind(String(avgWind))
+      if (dominantCode != null) setWeatherCond(_wmoCondition(dominantCode))
+
+      setWeatherFetchMsg({ ok: true, msg: `Filled from ${durationHrs}h window (${startHour}:00–${endHour}:00)` })
+      setTimeout(() => setWeatherFetchMsg(null), 4000)
+    } catch {
+      setWeatherFetchMsg({ ok: false, msg: 'Could not fetch weather. Try manually.' })
     } finally {
-      setScreenshotParsing(false)
-      e.target.value = ''
+      setWeatherFetching(false)
     }
   }
 
@@ -590,6 +619,16 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
       splits: isUpcoming ? undefined : splits.length > 0 ? splits : undefined,
       medalPhoto: isUpcoming ? undefined : medalPhoto ?? undefined,
       photos: isUpcoming ? undefined : photos.length > 0 ? photos : undefined,
+      startTime: isUpcoming ? undefined : startTime.trim() || undefined,
+      avgHeartRate: isUpcoming ? undefined : avgHeartRate ? Number(avgHeartRate) : undefined,
+      terrain: isUpcoming ? undefined : terrain || undefined,
+      shoe: isUpcoming ? undefined : shoe.trim() || undefined,
+      weather: isUpcoming ? undefined : (weatherTemp || weatherCond || weatherWind || weatherHum) ? {
+        temp: weatherTemp ? Number(weatherTemp) : undefined,
+        condition: weatherCond || undefined,
+        wind: weatherWind ? Number(weatherWind) : undefined,
+        humidity: weatherHum ? Number(weatherHum) : undefined,
+      } : race.weather,
     }
     // Require sport for ultra distances
     if (!isUpcoming && effectiveDist && parseFloat(effectiveDist) > 42.3 && !sport) {
@@ -601,10 +640,6 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
 
   return (
     <div style={st.body}>
-      <p style={{ margin: 0, fontSize: '11px', color: 'var(--muted)', fontFamily: 'var(--headline)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-        Editing: {race.name || 'Untitled Race'}
-      </p>
-
       <Field label="Race Name">
         <input style={st.input} value={name} onChange={e => setName(e.target.value)} placeholder="e.g. London Marathon" />
       </Field>
@@ -647,44 +682,6 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
         </Field>
       )}
 
-      {/* ── Results screenshot import ── */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-        <button
-          onClick={() => screenshotInputRef.current?.click()}
-          disabled={screenshotParsing}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            background: 'transparent',
-            border: '1px dashed var(--border2)',
-            borderRadius: '6px',
-            color: 'var(--muted)',
-            fontSize: '12px',
-            fontFamily: 'var(--body)',
-            padding: '8px 12px',
-            cursor: 'pointer',
-            width: '100%',
-            justifyContent: 'center',
-          }}
-        >
-          <span style={{ fontSize: '14px' }}>📸</span>
-          {screenshotParsing ? 'Parsing screenshot…' : 'Import results screenshot (auto-fill time + splits)'}
-        </button>
-        <input
-          ref={screenshotInputRef}
-          type="file"
-          accept="image/*"
-          style={{ display: 'none' }}
-          onChange={handleScreenshotImport}
-        />
-        {screenshotStatus && (
-          <p style={{ margin: 0, fontSize: '11px', color: screenshotStatus.ok ? 'var(--green)' : '#ff6b6b', lineHeight: 1.4 }}>
-            {screenshotStatus.ok ? '✓ ' : '✗ '}{screenshotStatus.msg}
-          </p>
-        )}
-      </div>
-
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
         <Field label="City">
           <CityPicker
@@ -703,6 +700,12 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
           <input style={st.input} value={country} onChange={e => setCountry(e.target.value)} placeholder="Auto-filled" />
         </Field>
       </div>
+
+      <Field label="Priority">
+        <select style={st.input} value={priority} onChange={e => setPriority(e.target.value as '' | 'A' | 'B' | 'C')}>
+          {RACE_PRIORITIES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
+        </select>
+      </Field>
 
       {/* Placing — Overall · Gender · Age Group, three inputs in one row */}
       <div>
@@ -806,43 +809,12 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
         </Field>
       </div>
 
-      <Field label="Priority">
-        <select style={st.input} value={priority} onChange={e => setPriority(e.target.value as '' | 'A' | 'B' | 'C')}>
-          {RACE_PRIORITIES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
-        </select>
-      </Field>
-
       {isUpcoming ? (
         <Field label={<>Goal Time <span style={{ opacity: 0.5, fontWeight: 400, fontSize: '11px', textTransform: 'lowercase', letterSpacing: 0 }}>(optional)</span></>}>
           <TimePickerWheel value={goalHMS} onChange={setGoalHMS} maxHours={99} />
           <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '6px' }}>Scroll to set · Used by Gap To Goal widget</div>
         </Field>
-      ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-          <Field label="Bib Number">
-            <input style={st.input} value={bibNumber} onChange={e => setBibNumber(e.target.value)} placeholder="1234" />
-          </Field>
-          <Field label="Goal Time">
-            <input style={st.input} value={goalTime} onChange={e => setGoalTime(e.target.value)} placeholder="3:30:00" />
-          </Field>
-        </div>
-      )}
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
-        <Field label="Elevation (m)">
-          <input type="number" style={st.input} value={elevation} onChange={e => setElevation(e.target.value)} placeholder="450" />
-        </Field>
-        <Field label="Surface">
-          <select style={st.input} value={surface} onChange={e => setSurface(e.target.value)}>
-            <option value="">—</option>
-            <option value="road">Road</option>
-            <option value="trail">Trail</option>
-            <option value="track">Track</option>
-            <option value="desert">Desert</option>
-            <option value="coastal">Coastal</option>
-          </select>
-        </Field>
-      </div>
+      ) : null}
 
       <Field label="Notes">
         <textarea
@@ -853,14 +825,124 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
         />
       </Field>
 
-      <Field label="Role at Race">
-        <select style={st.input} value={roleAtRace} onChange={e => setRoleAtRace(e.target.value as '' | 'runner' | 'pacer' | 'guide')}>
-          <option value="">Runner (default)</option>
-          <option value="runner">Runner</option>
-          <option value="pacer">Pacer</option>
-          <option value="guide">Guide (first-timer guide)</option>
-        </select>
-      </Field>
+      {/* ── More Stats ── */}
+      {!isUpcoming && (
+        <div>
+          <button
+            type="button"
+            onClick={() => setMoreOpen(o => !o)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '6px',
+              background: 'transparent', border: 'none', padding: '4px 0',
+              color: 'var(--muted)', fontSize: '11px', fontFamily: 'var(--headline)',
+              fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
+              cursor: 'pointer', width: '100%',
+            }}
+          >
+            <span style={{ display: 'inline-block', transition: 'transform 0.2s', transform: moreOpen ? 'rotate(90deg)' : 'rotate(0deg)' }}>▶</span>
+            More Stats
+          </button>
+
+          {moreOpen && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '12px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <Field label="Bib Number">
+                  <input style={st.input} value={bibNumber} onChange={e => setBibNumber(e.target.value)} placeholder="1234" />
+                </Field>
+                <Field label="Goal Time">
+                  <input style={st.input} value={goalTime} onChange={e => setGoalTime(e.target.value)} placeholder="3:30:00" />
+                </Field>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <Field label="Start Time">
+                  <input type="time" style={st.input} value={startTime} onChange={e => setStartTime(e.target.value)} />
+                </Field>
+                <Field label="Avg Heart Rate (bpm)">
+                  <input type="number" style={st.input} value={avgHeartRate} onChange={e => setAvgHeartRate(e.target.value)} placeholder="155" />
+                </Field>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <Field label="Surface">
+                  <select style={st.input} value={surface} onChange={e => setSurface(e.target.value)}>
+                    <option value="">—</option>
+                    <option value="road">Road</option>
+                    <option value="trail">Trail</option>
+                    <option value="track">Track</option>
+                    <option value="desert">Desert</option>
+                    <option value="coastal">Coastal</option>
+                  </select>
+                </Field>
+                <Field label="Terrain">
+                  <select style={st.input} value={terrain} onChange={e => setTerrain(e.target.value)}>
+                    <option value="">—</option>
+                    <option value="flat">Flat</option>
+                    <option value="rolling">Rolling</option>
+                    <option value="hilly">Hilly</option>
+                    <option value="mountainous">Mountainous</option>
+                  </select>
+                </Field>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <Field label="Elevation (m)">
+                  <input type="number" style={st.input} value={elevation} onChange={e => setElevation(e.target.value)} placeholder="450" />
+                </Field>
+                <Field label="Shoe / Kit">
+                  <input style={st.input} value={shoe} onChange={e => setShoe(e.target.value)} placeholder="e.g. Vaporfly 3" />
+                </Field>
+              </div>
+
+              <Field label="Role at Race">
+                <select style={st.input} value={roleAtRace} onChange={e => setRoleAtRace(e.target.value as '' | 'runner' | 'pacer' | 'guide')}>
+                  <option value="">Runner (default)</option>
+                  <option value="runner">Runner</option>
+                  <option value="pacer">Pacer</option>
+                  <option value="guide">Guide (first-timer guide)</option>
+                </select>
+              </Field>
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                <p style={{ margin: 0, fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Weather</p>
+                <button
+                  type="button"
+                  onClick={autoFillWeather}
+                  disabled={weatherFetching || !lat || !lng || !date}
+                  style={{
+                    background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px',
+                    color: (!lat || !lng || !date) ? 'var(--muted2)' : 'var(--orange)',
+                    fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700,
+                    letterSpacing: '0.08em', textTransform: 'uppercase', padding: '4px 10px',
+                    cursor: (!lat || !lng || !date) ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  {weatherFetching ? '⏳ Fetching…' : '⚡ Auto-fill'}
+                </button>
+              </div>
+              {weatherFetchMsg && (
+                <p style={{ margin: '-8px 0 0', fontSize: '11px', color: weatherFetchMsg.ok ? 'var(--green)' : '#ff6b6b' }}>
+                  {weatherFetchMsg.ok ? '✓ ' : '✗ '}{weatherFetchMsg.msg}
+                </p>
+              )}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <Field label="Temp (°C)">
+                  <input type="number" style={st.input} value={weatherTemp} onChange={e => setWeatherTemp(e.target.value)} placeholder="18" />
+                </Field>
+                <Field label="Conditions">
+                  <input style={st.input} value={weatherCond} onChange={e => setWeatherCond(e.target.value)} placeholder="Sunny, light wind" />
+                </Field>
+                <Field label="Wind (km/h)">
+                  <input type="number" style={st.input} value={weatherWind} onChange={e => setWeatherWind(e.target.value)} placeholder="12" />
+                </Field>
+                <Field label="Humidity (%)">
+                  <input type="number" style={st.input} value={weatherHum} onChange={e => setWeatherHum(e.target.value)} placeholder="65" />
+                </Field>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '0.75rem' }}>
         <button style={st.cancelBtn} onClick={onCancel}>Cancel</button>
@@ -1004,7 +1086,7 @@ const st = {
   title: {
     fontFamily: 'var(--headline)',
     fontWeight: 900,
-    fontSize: '15px',
+    fontSize: '18px',
     letterSpacing: '0.12em',
     textTransform: 'uppercase',
     color: 'var(--white)',
