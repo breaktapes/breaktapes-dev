@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useClerk } from '@clerk/clerk-react'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
-import { useRaceStore } from '@/stores/useRaceStore'
 import { useWearableStore } from '@/stores/useWearableStore'
-import { supabase } from '@/lib/supabase'
+import { syncStateToSupabase } from '@/lib/syncState'
 import { startStravaOAuth } from '@/lib/strava'
 import { removeWearableToken } from '@/lib/wearableUtils'
 import { THEMES } from '@/types'
 import type { ThemeId } from '@/types'
+import { useThemeStore } from '@/stores/useThemeStore'
 import { APP_URL } from '@/env'
 
 const btnMain: React.CSSProperties = {
@@ -64,15 +65,13 @@ export function Settings() {
 
   const stravaToken = useWearableStore(s => s.stravaToken)
   const clearToken  = useWearableStore(s => s.clearToken)
-  const races = useRaceStore(s => s.races)
-  const upcomingRaces = useRaceStore(s => s.upcomingRaces)
-  const nextRace = useRaceStore(s => s.nextRace)
 
   const [accountExpanded, setAccountExpanded] = useState(false)
+  const [copyToast, setCopyToast] = useState(false)
+  function showCopyToast() { setCopyToast(true); setTimeout(() => setCopyToast(false), 2500) }
 
-  const [activeTheme, setActiveTheme] = useState<ThemeId>(
-    () => (localStorage.getItem('bt_theme') as ThemeId) || 'carbon'
-  )
+  const activeTheme = useThemeStore(s => s.theme)
+  const storeSetTheme = useThemeStore(s => s.setTheme)
 
   // Public profile state
   const [isPublic, setIsPublic] = useState(athlete?.isPublic ?? false)
@@ -85,36 +84,16 @@ export function Settings() {
   async function togglePublic(val: boolean) {
     if (!athlete || (!athlete.username && val)) return // must have username first
     setIsPublic(val)
-    if (!authUser) return
+    // updateAthlete triggers syncStateToSupabase which uses the Worker endpoint
+    // (service role key, bypasses RLS). This is the reliable write path.
     updateAthlete({ isPublic: val })
-    // Read existing state_json, merge in current athlete/race data, then upsert.
-    // This ensures the Worker can render the full profile on first enable.
-    // .maybeSingle() returns null on 0 rows instead of erroring, so the very
-    // first toggle (no row yet) still proceeds to the upsert.
-    const { data: existing } = await supabase
-      .from('user_state')
-      .select('state_json')
-      .eq('user_id', authUser.id)
-      .maybeSingle()
-    const current = (existing?.state_json as Record<string, unknown> | null) ?? {}
-    await supabase.from('user_state').upsert({
-      user_id: authUser.id,
-      username: athlete.username,
-      is_public: val,
-      state_json: {
-        ...current,
-        races,
-        upcoming_races: upcomingRaces,
-        next_race: nextRace,
-        athlete: { ...(current.athlete as Record<string, unknown> ?? {}), ...athlete, isPublic: val },
-      },
-    }, { onConflict: 'user_id' })
+    // Fire an explicit sync so the public-profile Worker sees the change
+    // immediately regardless of any debounce in the store.
+    await syncStateToSupabase()
   }
 
   function applyTheme(themeId: ThemeId) {
-    document.documentElement.dataset.theme = themeId
-    localStorage.setItem('bt_theme', themeId)
-    setActiveTheme(themeId)
+    storeSetTheme(themeId)
   }
 
   async function handleSignOut() {
@@ -124,6 +103,7 @@ export function Settings() {
   }
 
   return (
+    <>
     <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       {/* Page heading */}
       <h1 style={{
@@ -264,7 +244,7 @@ export function Settings() {
           {athlete?.isPublic && athlete?.username && (
             <button
               style={{ ...btnGhost, fontSize: '12px', padding: '0.6rem 1rem', marginBottom: '14px' }}
-              onClick={() => navigator.clipboard.writeText(`${APP_URL}/u/${athlete.username}`)}
+              onClick={() => navigator.clipboard.writeText(`${APP_URL}/u/${athlete.username}`).then(() => showCopyToast()).catch(() => showCopyToast())}
             >
               Copy Profile Link
             </button>
@@ -501,5 +481,19 @@ export function Settings() {
         </div>
       </section>
     </div>
+    {copyToast && createPortal(
+      <div style={{
+        position: 'fixed', bottom: 'calc(var(--safe-bottom, 0px) + 80px)', left: '50%',
+        transform: 'translateX(-50%)', zIndex: 2000,
+        background: 'var(--surface3)', border: '1px solid rgba(var(--orange-ch),0.5)',
+        color: 'var(--orange)', borderRadius: '20px', padding: '10px 20px',
+        fontSize: '13px', fontFamily: 'var(--headline)', fontWeight: 700,
+        letterSpacing: '0.06em', whiteSpace: 'nowrap', pointerEvents: 'none',
+      }}>
+        Link copied ✓
+      </div>,
+      document.body
+    )}
+    </>
   )
 }

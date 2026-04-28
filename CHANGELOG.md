@@ -2,6 +2,23 @@
 
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+## [0.6.5.0] - 2026-04-27
+
+### Added
+- **You page — multi-club support:** Edit Profile now accepts multiple clubs/teams as pills (Enter or comma to add, × to remove, max 8). Clubs display as orange pills in the profile hero card. Backward-compatible with the existing single `club` field.
+- **Goals — sport + distance chip picker:** Selecting a distance goal now uses a 2-step flow: pick a sport (Running, Triathlon, Cycling, Swimming, HYROX), then pick from predefined canonical distances in ascending order. No more raw km values or race-history-derived options.
+- **Goals — infinite-scroll time wheel:** Target time for distance goals now uses the `TimePickerWheel` drum-roll component instead of plain number inputs.
+- **Goals — custom distance:** A "Custom +" chip lets users enter any distance in km or miles with a unit toggle.
+- **Goals — 21 new unit tests:** Coverage for `saveDist` logic, `GOAL_DISTANCES` preset structure, clubs init backward-compat split, and save-patch round-trip.
+
+### Changed
+- **You page — hero card redesign:** Removed redundant detail rows (city/country/age/sport already shown in subtitle and badges). Bio gains an orange left-border accent. Stats cells use a subtle gradient. Focus Race card has a left orange border. Action buttons are now in a 2-column grid.
+- **Race Activity heatmap:** Removed `overflowX: auto` and fixed `minWidth` so the grid fills the container at any viewport width without horizontal scroll. Date format in race cards changed to DDMMMYYYY. Country abbreviated to 3-letter code.
+- **Goals — date input:** Deadline field now stays within the widget box (`width:100%`, `boxSizing:border-box`, `appearance:none`).
+
+### Fixed
+- Total KM in hero card now excludes DNF/DSQ/DNS races and correctly resolves named distances ("Marathon" → 42.195 km) to match the Races tab StatsStrip.
+
 ## [0.6.4.3] - 2026-04-25
 
 ### Changed

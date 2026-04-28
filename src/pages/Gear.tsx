@@ -917,7 +917,7 @@ export function Gear() {
                           <div>
                             <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>{stack.name}</div>
                             <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>
-                              {linkedRace ? `📍 ${linkedRace.name ?? 'Race'} · ${linkedRace.date}` : stack.template ? `Template: ${stack.template}` : 'Custom stack'} · {stack.itemIds.length} items
+                              {linkedRace ? `📍 ${linkedRace.name ?? 'Race'} · ${fmtDateDDMM(linkedRace.date)}` : stack.template ? `Template: ${stack.template}` : 'Custom stack'} · {stack.itemIds.length} items
                             </div>
                           </div>
                           <div style={{ display: 'flex', gap: '6px' }}>

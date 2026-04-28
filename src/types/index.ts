@@ -30,13 +30,13 @@ export interface Race {
   goalTime?: string
   startTime?: string        // race-day wall-clock start time "HH:MM" or "HH:MM:SS" (local race-city time)
   bibNumber?: string
+  roleAtRace?: 'runner' | 'pacer' | 'guide'  // role the athlete played at this race
   lat?: number
   lng?: number
   strava_id?: number    // Strava activity ID — used to de-duplicate imports
   gear?: string[]       // race day gear checklist items (custom items only)
   packedGear?: string[] // items checked off as packed
   photos?: string[]     // race day / finish line photos (compressed base64 data URLs)
-  roleAtRace?: 'runner' | 'pacer' | 'guide'
 }
 
 export interface Split {
@@ -67,11 +67,11 @@ export interface Athlete {
   mainSport?: string
   weeklyKm?: number
   username?: string
+  injuryBreakStart?: string  // YYYY-MM-DD — start of injury break
+  injuryBreakEnd?: string    // YYYY-MM-DD — end of injury break (comeback_run unlocks for races after this)
   usernameSetAt?: string  // ISO timestamp — username locked for 1 year after this
   isPublic?: boolean
   units?: 'metric' | 'imperial'  // distance + pace display preference (default: metric)
-  injuryBreakStart?: string  // YYYY-MM-DD — start of injury/break for comeback_run achievement
-  injuryBreakEnd?: string    // YYYY-MM-DD — end of injury/break
   profileVisibility?: {
     races?: boolean       // race history & finish times (default true)
     pbs?: boolean         // personal bests (default true)

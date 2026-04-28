@@ -54,7 +54,7 @@ const DEFAULT_WIDGETS: DashWidget[] = [
   { id: 'weather-impact',   label: 'Weather Impact Score',      icon: '🌡', zone: 'recently', enabled: true,  pro: false },
   { id: 'distance-milestones', label: 'Distance Milestones',   icon: '🏅', zone: 'context',  enabled: true,  pro: false },
   // Day 3 formula widgets
-  { id: 'equiv-perf',       label: 'Equivalent Performances',   icon: '🎯', zone: 'context',  enabled: true,  pro: false },
+  { id: 'equiv-perf',       label: 'Equivalent Performances',   icon: '🎯', zone: 'context',  enabled: false, pro: false },
   { id: 'upcoming-density', label: 'Race Conflict Checker',     icon: '📆', zone: 'trending', enabled: true,  pro: false },
   { id: 'course-repeats',   label: 'Course Repeats',            icon: '🔄', zone: 'context',  enabled: true,  pro: false },
 ]
