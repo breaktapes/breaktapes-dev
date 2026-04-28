@@ -449,6 +449,7 @@ function EditPanel({ race, onSave, onCancel }: { race: Race; onSave: (patch: Par
   const [notes, setNotes]       = useState(race.notes ?? '')
   const [elevation, setElevation] = useState(race.elevation != null ? String(race.elevation) : '')
   const [surface, setSurface]   = useState(race.surface ?? '')
+  const [roleAtRace, setRoleAtRace] = useState<'' | 'runner' | 'pacer' | 'guide'>(race.roleAtRace ?? '')
   const [splits, setSplits]     = useState<Split[]>(race.splits ?? [])
   const [medalPhoto, setMedalPhoto]   = useState<string | undefined>(race.medalPhoto)
   const [bgRemoving, setBgRemoving]   = useState(false)
@@ -593,6 +594,12 @@ function EditPanel({ race, onSave, onCancel }: { race: Race; onSave: (patch: Par
       splits: splits.length > 0 ? splits : undefined,
       medalPhoto: medalPhoto ?? undefined,
       photos: photos.length > 0 ? photos : undefined,
+      roleAtRace: (roleAtRace || undefined) as 'runner' | 'pacer' | 'guide' | undefined,
+    }
+    // Require sport for ultra distances
+    if (effectiveDist && parseFloat(effectiveDist) > 42.3 && !sport) {
+      alert('Sport is required for ultra distances (>42km). Please select a sport.')
+      return
     }
     onSave(patch)
   }
@@ -827,6 +834,8 @@ function EditPanel({ race, onSave, onCancel }: { race: Race; onSave: (patch: Par
             <option value="road">Road</option>
             <option value="trail">Trail</option>
             <option value="track">Track</option>
+            <option value="desert">Desert</option>
+            <option value="coastal">Coastal</option>
           </select>
         </Field>
       </div>
@@ -838,6 +847,15 @@ function EditPanel({ race, onSave, onCancel }: { race: Race; onSave: (patch: Par
           onChange={e => setNotes(e.target.value)}
           placeholder="Anything worth remembering..."
         />
+      </Field>
+
+      <Field label="Role at Race">
+        <select style={st.input} value={roleAtRace} onChange={e => setRoleAtRace(e.target.value as '' | 'runner' | 'pacer' | 'guide')}>
+          <option value="">Runner (default)</option>
+          <option value="runner">Runner</option>
+          <option value="pacer">Pacer</option>
+          <option value="guide">Guide (first-timer guide)</option>
+        </select>
       </Field>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '0.75rem' }}>

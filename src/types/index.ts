@@ -21,7 +21,7 @@ export interface Race {
   medalPhoto?: string    // URL
   splits?: Split[]
   elevation?: number
-  surface?: string       // "road" | "trail" | "track"
+  surface?: string       // "road" | "trail" | "track" | "desert" | "coastal"
   weather?: RaceWeather
   notes?: string
   isArace?: boolean
@@ -36,6 +36,7 @@ export interface Race {
   gear?: string[]       // race day gear checklist items (custom items only)
   packedGear?: string[] // items checked off as packed
   photos?: string[]     // race day / finish line photos (compressed base64 data URLs)
+  roleAtRace?: 'runner' | 'pacer' | 'guide'
 }
 
 export interface Split {
@@ -57,6 +58,8 @@ export interface Athlete {
   dob?: string          // YYYY-MM-DD
   gender?: string       // "M" | "F" | "NB"
   club?: string
+  clubs?: string[]
+  clubJoinDates?: Record<string, string>  // club name → YYYY-MM-DD join date
   city?: string
   country?: string
   bio?: string
@@ -67,6 +70,8 @@ export interface Athlete {
   usernameSetAt?: string  // ISO timestamp — username locked for 1 year after this
   isPublic?: boolean
   units?: 'metric' | 'imperial'  // distance + pace display preference (default: metric)
+  injuryBreakStart?: string  // YYYY-MM-DD — start of injury/break for comeback_run achievement
+  injuryBreakEnd?: string    // YYYY-MM-DD — end of injury/break
   profileVisibility?: {
     races?: boolean       // race history & finish times (default true)
     pbs?: boolean         // personal bests (default true)
