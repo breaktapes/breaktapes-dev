@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, KeyboardEvent } from 'react'
 import { createPortal } from 'react-dom'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { supabase } from '@/lib/supabase'
@@ -28,18 +28,44 @@ export function EditProfileModal({ onClose }: Props) {
   const [dob,       setDob]       = useState(athlete?.dob ?? '')
   const [gender,    setGender]    = useState(athlete?.gender ?? '')
   const [mainSport, setMainSport] = useState(athlete?.mainSport ?? 'Running')
+  const [bio,       setBio]       = useState(athlete?.bio ?? '')
+  const [saving,    setSaving]    = useState(false)
+  const [error,     setError]     = useState('')
+
+  // Multi-club state — migrate legacy single club field on first open
   const [clubs, setClubs] = useState<string[]>(() => {
     if (athlete?.clubs?.length) return athlete.clubs
     if (athlete?.club) return athlete.club.split(/\s*\/\s*/).map(s => s.trim()).filter(Boolean)
     return []
   })
   const [clubInput, setClubInput] = useState('')
-  const [bio,       setBio]       = useState(athlete?.bio ?? '')
-  const [saving,    setSaving]    = useState(false)
-  const [error,     setError]     = useState('')
+  const [clubJoinDates, setClubJoinDates] = useState<Record<string, string>>(athlete?.clubJoinDates ?? {})
+
+  // Injury break dates (for comeback_run achievement)
+  const [injuryBreakStart, setInjuryBreakStart] = useState(athlete?.injuryBreakStart ?? '')
+  const [injuryBreakEnd,   setInjuryBreakEnd]   = useState(athlete?.injuryBreakEnd ?? '')
+
+  function addClub() {
+    const trimmed = clubInput.trim()
+    if (!trimmed || clubs.includes(trimmed) || clubs.length >= 8) return
+    setClubs(prev => [...prev, trimmed])
+    setClubInput('')
+  }
+
+  function removeClub(name: string) {
+    setClubs(prev => prev.filter(c => c !== name))
+    setClubJoinDates(prev => { const n = { ...prev }; delete n[name]; return n })
+  }
+
+  function handleClubKeyDown(e: KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault()
+      addClub()
+    }
+  }
 
   async function handleSave() {
-    // All fields required except Club
+    // All fields required except clubs and injury break
     if (!firstName.trim())  { setError('First name is required'); return }
     if (!lastName.trim())   { setError('Last name is required'); return }
     if (!city.trim())       { setError('City is required'); return }
@@ -59,9 +85,12 @@ export function EditProfileModal({ onClose }: Props) {
       dob,
       gender,
       mainSport,
-      clubs: clubs.length ? clubs : undefined,
-      club: clubs.length ? clubs.join(' / ') : undefined,
       bio:       bio.trim(),
+      clubs:     clubs.length > 0 ? clubs : undefined,
+      club:      clubs.length > 0 ? clubs.join(' / ') : undefined,
+      clubJoinDates: Object.keys(clubJoinDates).length > 0 ? clubJoinDates : undefined,
+      injuryBreakStart: injuryBreakStart || undefined,
+      injuryBreakEnd:   injuryBreakEnd || undefined,
     }
     updateAthlete(patch)
 
@@ -149,47 +178,49 @@ export function EditProfileModal({ onClose }: Props) {
             </select>
           </Field>
 
-          {/* Clubs — optional, multi-entry */}
-          <Field label="Clubs / Teams">
+          {/* Clubs — multi-pill tag input */}
+          <Field label="Club / Team">
             {clubs.length > 0 && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '8px' }}>
                 {clubs.map(c => (
-                  <span key={c} style={{
-                    display: 'inline-flex', alignItems: 'center', gap: '5px',
-                    background: 'rgba(var(--orange-ch), 0.12)',
-                    border: '1px solid rgba(var(--orange-ch), 0.3)',
-                    borderRadius: '100px', padding: '3px 10px',
-                    fontSize: '12px', fontFamily: 'var(--body)',
-                    color: 'var(--orange)',
-                  }}>
-                    {c}
-                    <button
-                      type="button"
-                      onClick={() => setClubs(prev => prev.filter(x => x !== c))}
-                      style={{ background: 'none', border: 'none', color: 'var(--orange)', cursor: 'pointer', padding: 0, fontSize: '13px', lineHeight: 1, opacity: 0.7 }}
-                      aria-label={`Remove ${c}`}
-                    >×</button>
-                  </span>
+                  <div key={c} style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    <span style={st.clubPill}>
+                      {c}
+                      <button
+                        style={st.pillRemove}
+                        onClick={() => removeClub(c)}
+                        aria-label={`Remove ${c}`}
+                      >×</button>
+                    </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flex: 1, minWidth: '120px' }}>
+                      <span style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', letterSpacing: '0.06em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>joined</span>
+                      <input
+                        type="date"
+                        style={{ ...st.input, fontSize: '12px', padding: '4px 8px', flex: 1 }}
+                        value={clubJoinDates[c] ?? ''}
+                        onChange={e => setClubJoinDates(prev => ({ ...prev, [c]: e.target.value }))}
+                      />
+                    </div>
+                  </div>
                 ))}
               </div>
             )}
-            <input
-              style={st.input}
-              value={clubInput}
-              onChange={e => setClubInput(e.target.value)}
-              onKeyDown={e => {
-                if ((e.key === 'Enter' || e.key === ',') && clubInput.trim()) {
-                  e.preventDefault()
-                  const val = clubInput.trim().replace(/,$/, '')
-                  if (val && !clubs.includes(val) && clubs.length < 8) {
-                    setClubs(prev => [...prev, val])
-                  }
-                  setClubInput('')
-                }
-              }}
-              placeholder={clubs.length < 8 ? 'Type a club name, press Enter to add…' : 'Max 8 clubs'}
-              disabled={clubs.length >= 8}
-            />
+            {clubs.length < 8 && (
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <input
+                  style={{ ...st.input, flex: 1 }}
+                  value={clubInput}
+                  onChange={e => setClubInput(e.target.value)}
+                  onKeyDown={handleClubKeyDown}
+                  placeholder={clubs.length === 0 ? 'e.g. Berlin Running Club (press Enter)' : 'Add another club…'}
+                />
+                <button
+                  style={st.addClubBtn}
+                  onClick={addClub}
+                  disabled={!clubInput.trim()}
+                >+</button>
+              </div>
+            )}
           </Field>
 
           {/* Bio */}
@@ -200,6 +231,20 @@ export function EditProfileModal({ onClose }: Props) {
               onChange={e => setBio(e.target.value)}
               placeholder="A few words about you..."
             />
+          </Field>
+
+          {/* Injury Break — for comeback_run achievement */}
+          <Field label="Injury / Break Period">
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+              <div>
+                <span style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>From</span>
+                <DateInput value={injuryBreakStart} onChange={setInjuryBreakStart} max={new Date().toISOString().split('T')[0]} />
+              </div>
+              <div>
+                <span style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>To</span>
+                <DateInput value={injuryBreakEnd} onChange={setInjuryBreakEnd} max={new Date().toISOString().split('T')[0]} />
+              </div>
+            </div>
           </Field>
 
           {error && (
@@ -236,7 +281,7 @@ const st = {
 
   sheet: {
     width: '100%',
-    maxHeight: '90dvh',
+    maxHeight: '90vh',
     background: 'var(--surface2)',
     borderTop: '1px solid var(--border2)',
     borderRadius: '16px 16px 0 0',
@@ -317,5 +362,44 @@ const st = {
     width: '100%',
     marginTop: '4px',
     padding: '14px',
+  } as React.CSSProperties,
+
+  clubPill: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+    background: 'rgba(var(--orange-ch),0.12)',
+    border: '1px solid rgba(var(--orange-ch),0.3)',
+    color: 'var(--orange)',
+    borderRadius: '100px',
+    padding: '4px 10px',
+    fontSize: '12px',
+    fontFamily: 'var(--headline)',
+    fontWeight: 700,
+    letterSpacing: '0.06em',
+    whiteSpace: 'nowrap',
+  } as React.CSSProperties,
+
+  pillRemove: {
+    background: 'transparent',
+    border: 'none',
+    color: 'var(--orange)',
+    cursor: 'pointer',
+    padding: 0,
+    fontSize: '14px',
+    lineHeight: 1,
+    display: 'flex',
+    alignItems: 'center',
+  } as React.CSSProperties,
+
+  addClubBtn: {
+    background: 'var(--surface3)',
+    border: '1px solid var(--border2)',
+    borderRadius: '6px',
+    color: 'var(--white)',
+    fontSize: '18px',
+    cursor: 'pointer',
+    padding: '0 12px',
+    flexShrink: 0,
   } as React.CSSProperties,
 }
