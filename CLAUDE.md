@@ -1195,6 +1195,60 @@ Direct DB access (psql/psycopg2) is blocked from localhost — Supabase only exp
 
 ---
 
+### Session 29 (2026-04-28) — Achievements live logic, multi-club, roleAtRace, injury break
+
+**Branches:** `claude/gracious-bose-0ffa25` → staging (PR #275) → main (PR #276)
+
+#### Changes shipped
+- **18 achievement checks now live** — replaced `() => false` stubs with real race-data logic. Key helpers added to `src/pages/Profile.tsx`:
+  - `isRunningRace(r)`: sport `''` | `'running'` | `'run'` treated as running (handles legacy empty-sport races)
+  - `isTriRace(r)`: case-insensitive includes `'tri'` or `'iron'`
+  - `isNegativeSplit(race)`: splits analysis — avgSecondHalf < avgFirstHalf
+  - `hadCrisisAndRecovery(race)`: detects split > 1.2× avg then recovery to ≤ avg
+  - `isoWeek(dateStr)`: ISO calendar week for `back_to_back_ultra` same-week check
+  - `findSourceRace` signature updated to `(races, athlete)` — some achievements need athlete fields
+- **Achievement logic specifics:**
+  - `climb_crusher`: running races only, elevation ≥ 1500m
+  - `heat_warrior`: `race.weather.temp >= 30` (uses stored weather field)
+  - `night_runner`: `race.startTime` before 06:00 (wall-clock, local time)
+  - `negative_split_master`: `isNegativeSplit()` + running only
+  - `no_quit`: `hadCrisisAndRecovery()` + running only
+  - `sprint_specialist`: dist 4.9–5.1 km
+  - `half_collector`: dist 21.0–21.2 km (5+ races)
+  - `marathoner_plus`: dist 42.1–42.3 km (10+ races)
+  - `ultra_initiate`: dist ≥ 45 km, running only, non-empty sport required
+  - `ultra_elite`: dist ≥ 90 km, running only
+  - `hundred_miler`: dist ≥ 161 km, running only
+  - `iron_mind`: 70.3 triathlon (112–114 km), `isTriRace()` required
+  - `full_send`: IRONMAN (225–228 km), `isTriRace()` required
+  - `swim_survivor`: any swim race OR any tri finish
+  - `pacemaker`: `race.roleAtRace === 'pacer'`
+  - `first_timer_guide`: `race.roleAtRace === 'guide'`
+  - `club_loyalist`: `clubJoinDates[club]` ≥ 3 years ago
+  - `early_bird`: `race.startTime` before 06:00
+  - `back_to_back_ultra`: 2× 50 km+ running races in same ISO calendar week
+- **Achievements still `() => false`** (pending future data sources):
+  - `pain_cave` — needs wearable HR zone data
+  - `extreme_conditions` — needs geocoded altitude API
+  - `cutoff_survivor` — needs race catalog cutoff times
+  - `solo_warrior` — needs race tagging system (plan reviewed, not built)
+- **`roleAtRace` field on `Race`** — `'runner' | 'pacer' | 'guide'`. Selector added to ViewEditRaceModal after Notes field. Saves to patch with `isUpcoming ? undefined` guard.
+- **Desert + Coastal surface options** — added to ViewEditRaceModal surface dropdown (alongside road/trail/track).
+- **Sport required for ultra distances** — `handleSave()` in ViewEditRaceModal alerts and returns early if `dist > 42.3km && !sport` (past races only).
+- **Multi-club pills in EditProfileModal** — replaced single `<input>` with tag-input UI: pill row with `×` remove, per-club join date picker (`input[type=date]`), text input + `+` button (Enter/comma adds). Max 8 clubs. Migrates legacy `athlete.club` on first open (splits on ` / `). Save patch: `clubs[]`, `club` (joined for backward compat), `clubJoinDates` record.
+- **Injury break dates in EditProfileModal** — `injuryBreakStart` + `injuryBreakEnd` date pickers. Used by `comeback_run` achievement.
+- **New fields on `Athlete` type** — `clubs?: string[]`, `clubJoinDates?: Record<string, string>`, `injuryBreakStart?: string`, `injuryBreakEnd?: string`
+
+#### Key learnings
+- `isRunningRace()` must treat empty `sport` as running — legacy races saved before sport validation was enforced have `sport: ''`. Never `sport === 'Running'` alone.
+- Ultra achievements require `x.sport` to be non-empty so legacy empty-sport races don't accidentally unlock ultra badges without user categorising them — opposite pattern from `isRunningRace()`.
+- `isoWeek()` uses ISO week (Jan 4 anchor, not Jan 1) — correct for `back_to_back_ultra`. Rolling 7-day window would let Mon+Sun from different weeks pass.
+- When the same new fields exist on both HEAD and staging (from two parallel worktrees), `git merge origin/staging` produces duplicate-field conflicts in TypeScript interfaces — always check for duplicate property declarations after merge, they compile but are confusing.
+- `git worktree remove` mid-session kills the shell CWD — the kernel's `getcwd()` fails on every subsequent subprocess. No recovery possible without restarting from a valid directory. Always `cd` to main repo before any worktree cleanup.
+- PostToolUse linter hook can revert file edits made in the same session if the linter reformats aggressively — verify critical new fields persist after every hook run.
+
+---
+
 ## Skill routing
 
 When the user's request matches an available skill, ALWAYS invoke it using the Skill
