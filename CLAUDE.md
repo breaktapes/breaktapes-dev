@@ -1175,6 +1175,26 @@ Direct DB access (psql/psycopg2) is blocked from localhost — Supabase only exp
 
 ---
 
+### Session 28 (2026-04-28) — Edit Race modal polish + view panel overhaul (v0.6.7.0)
+
+**Branch:** `claude/jovial-pascal-d41213` → staging (PR #278) → main (PR #279)
+
+#### Changes shipped
+- **Start time input height fix** — `input[type="time"]` on iOS/Safari has intrinsic minimum height. Fixed with `WebkitAppearance: 'none'`, `appearance: 'none'`, explicit `height: 40`, `maxWidth: '100%'` on the input style.
+- **Weather auto-fill performance** — ERA5 archive API is slow (~3-5s) for all queries. Split on `daysAgo <= 92`: races within 92 days use the forecast API (`api.open-meteo.com`, CDN-cached, ~200ms). Older races still use the archive API. Threshold chosen because Open-Meteo forecast API supports up to 92 past days.
+- **All More Stats fields now persist** — Root cause was a stale closure in `Races.tsx`: `selectedRace` was stored as a full `Race` object in `useState`. After `updateRace()` updated the Zustand store, the modal still held the old snapshot, so `ViewEditRaceModal` received stale props and re-renders showed the pre-save values. Fix: store only `selectedRaceId: string | null`, derive `selectedRace` via `useMemo([selectedRaceId, races])`. Fields affected: start time, terrain, surface, role at race, avg heart rate, shoe, elevation, bib number, goal time, weather.
+- **Race Detail view panel overhaul** — stat cards trimmed to 3 (time, distance, pace only); overall/gender/age-group placing moved to info pills below; country names abbreviated via `COUNTRY_SHORT` lookup table (UAE, USA, UK, etc.); surface and terrain values capitalized via `capitalize()` helper; PB races get full-card golden glow (`boxShadow: inset 0 0 0 1px rgba(200,150,60,0.35)` + `background: rgba(200,150,60,0.03)`) plus a `⭐ PERSONAL BEST` banner.
+- **`COUNTRY_SHORT` lookup** — Added above `ViewPanel` in `ViewEditRaceModal.tsx`: maps lowercase country names to short forms (UAE, USA, UK, NZ, SA, S. Korea, KSA, Czechia, HK, Costa Rica, Puerto Rico). Falls back to full country name when no match.
+- **Cloudflare API token fix** — GitHub secret `CLOUDFLARE_API_TOKEN` was stale (token had been rolled). User rolled the token in Cloudflare dashboard and updated the secret. Re-ran workflow `gh run rerun 25036977169`.
+
+#### Key learnings
+- Zustand + React state anti-pattern: storing a full object from the store in local `useState` creates a stale snapshot — edits to the store won't flow to components that hold the old object. Always store the ID and derive the live object from the store via `useMemo`. This applies wherever a modal or sheet receives a record that can be edited in-place.
+- `input[type="time"]` iOS/Safari intrinsic height: opt out with `WebkitAppearance: 'none'` + `appearance: 'none'`; then set explicit `height` and `maxWidth: '100%'`. `width: 100%` alone does NOT constrain it.
+- Open-Meteo dual API strategy: `api.open-meteo.com/v1/forecast?past_days=92` serves CDN-cached data for recent dates (~200ms). `archive-api.open-meteo.com/v1/archive` is the slow path for older data. Split on `daysAgo <= 92` for best UX.
+- `git worktree remove` on the current worktree leaves the directory on disk but removes the git registration — the shell CWD still resolves to the directory but subsequent git commands may behave unexpectedly. Always `cd` to the main repo before removing the current worktree's registration.
+
+---
+
 ## Skill routing
 
 When the user's request matches an available skill, ALWAYS invoke it using the Skill
