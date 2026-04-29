@@ -1163,6 +1163,125 @@ function decodeJwtPayload(token) {
   }
 }
 
+// ── Admin helpers ────────────────────────────────────────────────────────────
+
+const ADMIN_CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+  'Content-Type': 'application/json',
+};
+
+function adminCors() {
+  return new Response(null, { headers: ADMIN_CORS });
+}
+
+/** Decode Clerk token and return userId if valid admin, else null. */
+function resolveAdminUserId(request, env) {
+  const authHeader = request.headers.get('Authorization') ?? '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  if (!token) return null;
+  const payload = decodeJwtPayload(token);
+  if (!payload || !payload.sub) return null;
+  if (payload.exp && Math.floor(Date.now() / 1000) > payload.exp) return null;
+  const iss = String(payload.iss ?? '');
+  if (!iss.includes('clerk') && !iss.includes('breaktapes')) return null;
+  const userId = payload.sub;
+  if (!userId.startsWith('user_')) return null;
+  // Check against ADMIN_USER_IDS env var (comma-separated Clerk IDs)
+  const adminIds = (env.ADMIN_USER_IDS ?? '').split(',').map(s => s.trim()).filter(Boolean);
+  if (!adminIds.includes(userId)) return null;
+  return userId;
+}
+
+async function handleAdminListContributions(request, env) {
+  if (request.method === 'OPTIONS') return adminCors();
+
+  const userId = resolveAdminUserId(request, env);
+  if (!userId) return new Response('Forbidden', { status: 403, headers: ADMIN_CORS });
+
+  const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceKey) return new Response('Service unavailable', { status: 503, headers: ADMIN_CORS });
+
+  const supabaseUrl = env.SUPABASE_URL || 'https://kmdpufauamadwavqsinj.supabase.co';
+  const res = await fetch(
+    `${supabaseUrl}/rest/v1/pending_catalog_contributions?status=eq.pending&order=contributor_count.desc,created_at.asc&limit=200`,
+    { headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` } }
+  );
+
+  if (!res.ok) {
+    return new Response(await res.text(), { status: 502, headers: ADMIN_CORS });
+  }
+  const data = await res.json();
+  return new Response(JSON.stringify(data), { headers: ADMIN_CORS });
+}
+
+async function handleAdminAction(request, env, id, action) {
+  if (request.method === 'OPTIONS') return adminCors();
+
+  const userId = resolveAdminUserId(request, env);
+  if (!userId) return new Response('Forbidden', { status: 403, headers: ADMIN_CORS });
+
+  const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceKey) return new Response('Service unavailable', { status: 503, headers: ADMIN_CORS });
+
+  const supabaseUrl = env.SUPABASE_URL || 'https://kmdpufauamadwavqsinj.supabase.co';
+  const svcHeaders = { apikey: serviceKey, Authorization: `Bearer ${serviceKey}`, 'Content-Type': 'application/json' };
+
+  if (action === 'approve') {
+    // Fetch the contribution row
+    const fetchRes = await fetch(
+      `${supabaseUrl}/rest/v1/pending_catalog_contributions?id=eq.${id}&limit=1`,
+      { headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` } }
+    );
+    if (!fetchRes.ok) return new Response('Fetch failed', { status: 502, headers: ADMIN_CORS });
+    const rows = await fetchRes.json();
+    if (!rows || rows.length === 0) return new Response('Not found', { status: 404, headers: ADMIN_CORS });
+    const c = rows[0];
+
+    // Map sport to catalog type code
+    const typeMap = { running: 'run', triathlon: 'tri', cycling: 'cycle', swimming: 'swim', hyrox: 'hyrox' };
+    const type = typeMap[(c.sport ?? '').toLowerCase()] ?? (c.sport ?? '').toLowerCase();
+
+    // Insert into race_catalog (idempotent via ON CONFLICT DO NOTHING)
+    const insertRes = await fetch(`${supabaseUrl}/rest/v1/race_catalog`, {
+      method: 'POST',
+      headers: { ...svcHeaders, Prefer: 'resolution=ignore-duplicates,return=minimal' },
+      body: JSON.stringify({
+        name:       c.name,
+        city:       c.city,
+        country:    c.country,
+        type,
+        dist:       c.dist_label ?? (c.dist_km ? String(c.dist_km) : null),
+        dist_km:    c.dist_km,
+        year:       c.year,
+        month:      c.month,
+        day:        c.day,
+        start_time: null,
+      }),
+    });
+    if (!insertRes.ok) {
+      const err = await insertRes.text();
+      return new Response(`Insert failed: ${err}`, { status: 502, headers: ADMIN_CORS });
+    }
+  }
+
+  // Mark as approved or rejected
+  const updateRes = await fetch(
+    `${supabaseUrl}/rest/v1/pending_catalog_contributions?id=eq.${id}`,
+    {
+      method: 'PATCH',
+      headers: { ...svcHeaders, Prefer: 'return=minimal' },
+      body: JSON.stringify({ status: action === 'approve' ? 'approved' : 'rejected' }),
+    }
+  );
+
+  if (!updateRes.ok) {
+    return new Response('Update failed', { status: 502, headers: ADMIN_CORS });
+  }
+  return new Response(null, { status: 204, headers: ADMIN_CORS });
+}
+
 async function handleApiSync(request, env) {
   // CORS preflight
   if (request.method === 'OPTIONS') {
@@ -1324,6 +1443,17 @@ export default {
     // POST /api/sync — profile state sync via service role (no Clerk-Supabase JWT needed)
     if ((request.method === 'POST' || request.method === 'OPTIONS') && path === '/api/sync') {
       return handleApiSync(request, env);
+    }
+
+    // Admin: GET /api/admin/contributions — list pending
+    if ((request.method === 'GET' || request.method === 'OPTIONS') && path === '/api/admin/contributions') {
+      return handleAdminListContributions(request, env);
+    }
+
+    // Admin: POST /api/admin/contributions/:id/approve|reject
+    const adminActionMatch = path.match(/^\/api\/admin\/contributions\/(\d+)\/(approve|reject)$/);
+    if (request.method === 'POST' && adminActionMatch) {
+      return handleAdminAction(request, env, Number(adminActionMatch[1]), adminActionMatch[2]);
     }
 
     // POST /api/error-report — client-side crash reporting (sendBeacon)
