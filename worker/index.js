@@ -965,12 +965,80 @@ async function handleApiSync(request, env) {
   });
 }
 
+async function handleApiState(request, env) {
+  if (request.method === 'OPTIONS') {
+    return new Response(null, {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, OPTIONS',
+        'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+      },
+    });
+  }
+
+  const authHeader = request.headers.get('Authorization') ?? '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  if (!token) return new Response('Unauthorized', { status: 401 });
+
+  const payload = decodeJwtPayload(token);
+  if (!payload || !payload.sub) return new Response('Invalid token', { status: 401 });
+
+  if (payload.exp && Math.floor(Date.now() / 1000) > payload.exp) {
+    return new Response('Token expired', { status: 401 });
+  }
+
+  const iss = String(payload.iss ?? '');
+  if (!iss.includes('clerk') && !iss.includes('breaktapes')) {
+    return new Response('Invalid issuer', { status: 401 });
+  }
+
+  const userId = payload.sub;
+  if (!userId.startsWith('user_')) return new Response('Invalid user ID format', { status: 401 });
+
+  const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceKey) return new Response('Service unavailable', { status: 503 });
+
+  const supabaseUrl = env.SUPABASE_URL || 'https://kmdpufauamadwavqsinj.supabase.co';
+  const res = await fetch(
+    `${supabaseUrl}/rest/v1/user_state?user_id=eq.${encodeURIComponent(userId)}&select=state_json&limit=1`,
+    {
+      headers: {
+        apikey: serviceKey,
+        Authorization: `Bearer ${serviceKey}`,
+        Accept: 'application/json',
+      },
+    }
+  );
+
+  if (!res.ok) {
+    return new Response(`Supabase error: ${res.status}`, {
+      status: 502,
+      headers: { 'Access-Control-Allow-Origin': '*' },
+    });
+  }
+
+  const rows = await res.json();
+  const stateJson = (rows && rows[0]?.state_json) ?? null;
+
+  return new Response(JSON.stringify({ state_json: stateJson }), {
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+    },
+  });
+}
+
 // ── Main handler ──────────────────────────────────────────────────────────────
 
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const path = url.pathname;
+
+    // GET /api/state — read user state via service role (no Clerk-Supabase JWT needed)
+    if ((request.method === 'GET' || request.method === 'OPTIONS') && path === '/api/state') {
+      return handleApiState(request, env);
+    }
 
     // POST /api/sync — profile state sync via service role (no Clerk-Supabase JWT needed)
     if ((request.method === 'POST' || request.method === 'OPTIONS') && path === '/api/sync') {
