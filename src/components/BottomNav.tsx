@@ -54,9 +54,9 @@ export function BottomNav() {
         flexShrink: 0,
         display: 'flex',
         borderTop: '1px solid var(--border2)',
-        background: 'linear-gradient(180deg, rgba(13,13,13,0.97) 0%, rgba(5,5,5,0.99) 100%)',
+        background: 'linear-gradient(180deg, var(--surface2) 0%, var(--surface) 100%)',
         backdropFilter: 'blur(20px)',
-        boxShadow: '0 -2px 24px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.04)',
+        boxShadow: '0 -2px 24px rgba(0,0,0,0.3), inset 0 1px 0 var(--border)',
       }}
     >
       {NAV_TABS.map(({ to, label, Icon }) => {
