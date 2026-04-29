@@ -479,6 +479,36 @@ export function Settings() {
             GitHub
           </a>
         </div>
+
+        {/* Legal + Help links */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.75rem' }}>
+          <a
+            href="/help"
+            style={{ ...card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', textDecoration: 'none', padding: '14px 16px' }}
+          >
+            <div>
+              <span style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', fontFamily: 'var(--body)', display: 'block' }}>Help & Contact</span>
+              <span style={{ fontSize: 11, color: 'var(--muted)', fontFamily: 'var(--body)' }}>Report an issue or request data deletion</span>
+            </div>
+            <span style={{ color: 'var(--muted)', fontSize: 12 }}>→</span>
+          </a>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+            <a
+              href="/privacy"
+              style={{ ...card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', textDecoration: 'none', padding: '14px 16px' }}
+            >
+              <span style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', fontFamily: 'var(--body)' }}>Privacy Policy</span>
+              <span style={{ color: 'var(--muted)', fontSize: 12 }}>→</span>
+            </a>
+            <a
+              href="/terms"
+              style={{ ...card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', textDecoration: 'none', padding: '14px 16px' }}
+            >
+              <span style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', fontFamily: 'var(--body)' }}>Terms & Conditions</span>
+              <span style={{ color: 'var(--muted)', fontSize: 12 }}>→</span>
+            </a>
+          </div>
+        </div>
       </section>
     </div>
     {copyToast && createPortal(
