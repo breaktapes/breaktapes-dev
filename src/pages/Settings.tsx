@@ -271,8 +271,7 @@ export function Settings() {
                 { key: 'wearables', label: 'Activity feed',               desc: 'Strava & wearable workouts' },
               ] as const).map(({ key, label, desc }, i, arr) => {
                 const vis = athlete?.profileVisibility ?? {}
-                const defaultOn = key !== 'upcoming' && key !== 'wearables'
-                const enabled = vis[key] ?? defaultOn
+                const enabled = vis[key] === true
                 return (
                   <div key={key}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0' }}>
