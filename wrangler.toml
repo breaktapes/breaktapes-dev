@@ -16,6 +16,8 @@ SUPABASE_URL = "https://kmdpufauamadwavqsinj.supabase.co"
 
 # Secrets (set via `wrangler secret put`):
 #   SUPABASE_ANON_KEY
+#   ADMIN_USER_IDS  — comma-separated Clerk user IDs with admin access
+#                     e.g. "user_2abc...,user_2xyz..."
 
 # KV for profile view counts (optional — Worker works without it):
 #   1. wrangler kv:namespace create "profile-cache"
@@ -40,6 +42,7 @@ SUPABASE_URL = "https://yqzycwuyhvzkbofwkazr.supabase.co"
 
 # Secrets for staging (set via `wrangler secret put --env staging`):
 #   SUPABASE_ANON_KEY
+#   ADMIN_USER_IDS
 
 # [[env.staging.kv_namespaces]]
 # binding = "PROFILE_KV"

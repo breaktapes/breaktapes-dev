@@ -21,6 +21,7 @@ const Compare  = lazy(() => import('@/pages/Compare').then(m => ({ default: m.Co
 const PrivacyPolicy      = lazy(() => import('@/pages/PrivacyPolicy'))
 const TermsAndConditions = lazy(() => import('@/pages/TermsAndConditions'))
 const Help               = lazy(() => import('@/pages/Help'))
+const Admin              = lazy(() => import('@/pages/Admin').then(m => ({ default: m.Admin })))
 
 class RootErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
   state = { error: null }
@@ -85,6 +86,7 @@ function AnimatedRoutes() {
           <Route path="/settings" element={<Settings />} />
           <Route path="/discover" element={<Discover />} />
           <Route path="/compare"  element={<Compare />} />
+          <Route path="/admin"    element={<Admin />} />
           {/* Backwards compat aliases */}
           <Route path="/pace"    element={<Navigate to="/train" replace />} />
           <Route path="/history" element={<Navigate to="/races" replace />} />

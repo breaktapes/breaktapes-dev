@@ -11,6 +11,7 @@ import { THEMES } from '@/types'
 import type { ThemeId } from '@/types'
 import { useThemeStore } from '@/stores/useThemeStore'
 import { APP_URL } from '@/env'
+import { isAdminUser } from '@/pages/Admin'
 
 const btnMain: React.CSSProperties = {
   background: 'var(--orange)',
@@ -483,6 +484,20 @@ export function Settings() {
             GitHub
           </a>
         </div>
+
+        {/* Admin link — only visible to admin users */}
+        {isAdminUser(authUser?.id) && (
+          <a
+            href="/admin"
+            style={{ ...card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', textDecoration: 'none', padding: '14px 16px', marginTop: '0.75rem', border: '1px solid rgba(var(--orange-ch),0.35)' }}
+          >
+            <div>
+              <span style={{ fontSize: 'var(--text-sm)', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase' }}>Admin Panel</span>
+              <span style={{ fontSize: 11, color: 'var(--muted)', fontFamily: 'var(--body)', display: 'block', marginTop: '2px' }}>Review pending race catalog submissions</span>
+            </div>
+            <span style={{ color: 'var(--orange)', fontSize: 12 }}>→</span>
+          </a>
+        )}
 
         {/* Legal + Help links */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.75rem' }}>
