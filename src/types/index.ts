@@ -76,6 +76,7 @@ export interface Athlete {
   isPublic?: boolean
   imageUrl?: string              // Clerk profile photo URL — synced on login
   units?: 'metric' | 'imperial'  // distance + pace display preference (default: metric)
+  pbHiddenKeys?: string[]        // PB distance keys hidden via the ⚙ EDIT button on the You page
   profileVisibility?: {
     races?: boolean       // race history & finish times (default true)
     pbs?: boolean         // personal bests (default true)
