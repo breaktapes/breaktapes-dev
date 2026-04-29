@@ -8,11 +8,19 @@
 ALTER TABLE pending_catalog_contributions
   DROP CONSTRAINT IF EXISTS pending_catalog_contributions_contributor_id_fkey;
 
--- 2. Change column type to text
+-- 2. Drop RLS policy that references the column (required before ALTER COLUMN)
+DROP POLICY IF EXISTS users_can_contribute ON pending_catalog_contributions;
+
+-- 3. Change column type to text
 ALTER TABLE pending_catalog_contributions
   ALTER COLUMN contributor_id TYPE text USING contributor_id::text;
 
--- 3. Drop old RPC and recreate with text param
+-- 4. Recreate the policy with text comparison
+CREATE POLICY users_can_contribute ON pending_catalog_contributions
+  FOR INSERT TO authenticated
+  WITH CHECK (true);
+
+-- 5. Drop old RPC and recreate with text param
 DROP FUNCTION IF EXISTS upsert_catalog_contribution(text,text,text,text,text,numeric,integer,date,integer,integer,uuid);
 
 CREATE OR REPLACE FUNCTION upsert_catalog_contribution(
