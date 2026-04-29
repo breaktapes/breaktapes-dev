@@ -430,7 +430,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
   // Run search immediately (no debounce) whenever catalog arrives after user already typed.
   // Also re-open the dropdown so results appear even if the user blurred while catalog was loading.
   useEffect(() => {
-    if (catalog.length > 0 && query.length >= 2) {
+    if (catalog.length > 0 && query.length >= 2 && !showManualDate) {
       clearTimeout(debounceRef.current)
       setShowSuggest(true)
       runSearch(query, catalog)
@@ -780,7 +780,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
                 placeholder="Search a race or type your own..."
                 value={query}
                 onChange={e => { setQuery(e.target.value); setName(e.target.value); setShowSuggest(true); if (catalogYearRows.length > 0) setCatalogYearRows([]) }}
-                onFocus={() => { if (query.length >= 2) { setShowSuggest(true); if (!catalogLoading) runSearch(query, catalog) } }}
+                onFocus={() => { if (query.length >= 2 && !showManualDate) { setShowSuggest(true); if (!catalogLoading) runSearch(query, catalog) } }}
                 onBlur={() => setTimeout(() => setShowSuggest(false), 300)}
                 autoFocus
               />
