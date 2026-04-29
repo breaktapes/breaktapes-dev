@@ -236,6 +236,11 @@ const clerkAppearance = {
 function LandingScreen() {
   const [view, setView] = useState<AuthView | null>(null)
 
+  // Preserve the current URL so protected routes (e.g. /compare?b=username)
+  // redirect back correctly after sign-in / sign-up.
+  const returnTo = window.location.pathname + window.location.search
+  const redirectUrl = returnTo !== '/' ? returnTo : '/'
+
   return (
     <>
       <div id="landing-screen">
@@ -287,15 +292,15 @@ function LandingScreen() {
             <SignIn
               appearance={clerkAppearance}
               signUpUrl="#"
-              afterSignInUrl="/"
-              signUpForceRedirectUrl="/"
+              afterSignInUrl={redirectUrl}
+              signUpForceRedirectUrl={redirectUrl}
             />
           ) : (
             <SignUp
               appearance={clerkAppearance}
               signInUrl="#"
-              afterSignUpUrl="/"
-              signInForceRedirectUrl="/"
+              afterSignUpUrl={redirectUrl}
+              signInForceRedirectUrl={redirectUrl}
             />
           )}
           <button
