@@ -194,13 +194,19 @@ const PB_HIDDEN_LS_KEY = 'fl2_pb_hidden_keys'
 function readPBHiddenKeys(): Set<string> {
   try {
     const raw = localStorage.getItem(PB_HIDDEN_LS_KEY)
-    if (!raw) return new Set()
-    const arr = JSON.parse(raw)
-    return new Set(Array.isArray(arr) ? arr : [])
+    if (raw) {
+      const arr = JSON.parse(raw)
+      if (Array.isArray(arr)) return new Set(arr)
+    }
+    // Fallback: seed from synced athlete store (cross-device)
+    const stored = useAthleteStore.getState().athlete?.pbHiddenKeys
+    return new Set(Array.isArray(stored) ? stored : [])
   } catch { return new Set() }
 }
 function savePBHiddenKeys(s: Set<string>) {
   try { localStorage.setItem(PB_HIDDEN_LS_KEY, JSON.stringify([...s])) } catch {}
+  // Sync to athlete store so public profile Worker can read it
+  useAthleteStore.getState().updateAthlete({ pbHiddenKeys: [...s] })
 }
 
 // country full-name → ISO-2 code (covers the most common racing nations)

@@ -52,20 +52,31 @@ function fmtTime(t) {
 }
 
 function distLabel(d) {
+  if (!d) return '';
+  const lower = String(d).toLowerCase().trim();
+  if (lower === 'marathon' || lower === 'full marathon') return 'Marathon';
+  if (lower === 'half marathon' || lower === 'half') return 'Half Marathon';
+  if (lower === 'ironman' || lower === 'full ironman' || lower === 'full distance') return 'IRONMAN';
+  if (lower === '70.3' || lower === 'half ironman' || lower === 'ironman 70.3' || lower === 'middle distance') return '70.3';
+  if (lower === 'olympic' || lower === 'olympic triathlon') return 'Olympic';
+  if (lower === 'sprint' || lower === 'sprint triathlon') return 'Sprint';
+  if (lower === '5k' || lower === '5km') return '5K';
+  if (lower === '10k' || lower === '10km') return '10K';
+  if (lower === '10 mile' || lower === '10 miles' || lower === '10mi') return '10 Mile';
+  if (lower === 'ultra' || lower === 'ultramarathon') return 'Ultra';
+  if (lower === 'hyrox') return 'HYROX';
   const km = parseFloat(d);
-  if (isNaN(km)) return d || '';
-  const known = [
-    [226, 'IRONMAN'], [225.995, 'IRONMAN'],
-    [113, '70.3'], [112.654, '70.3'],
-    [51.5, 'Olympic'], [25.75, 'Sprint'],
-    [42.2, 'Marathon'], [42.195, 'Marathon'],
-    [21.1, 'Half Marathon'], [21.097, 'Half Marathon'],
-    [15, '15K'], [12, '12K'], [10, '10K'],
-    [8, '8K'], [5, '5K'], [3, '3K'],
-  ];
-  for (const [k, v] of known) {
-    if (Math.abs(km - k) < 0.15) return v;
-  }
+  if (isNaN(km)) return d;
+  if (km >= 225.9 && km <= 226.1) return 'IRONMAN';
+  if (km >= 112.9 && km <= 113.1) return '70.3';
+  if (km >= 51.4 && km <= 51.6) return 'Olympic';
+  if (km >= 25.7 && km <= 25.8) return 'Sprint';
+  if (km >= 42.0 && km <= 42.3) return 'Marathon';
+  if (km >= 21.0 && km <= 21.2) return 'Half Marathon';
+  if (km >= 16.0 && km <= 16.2) return '10 Mile';
+  if (km >= 10 && km <= 10.1) return '10K';
+  if (km >= 5 && km <= 5.1) return '5K';
+  if (km > 42.3) return 'Ultra';
   return `${km} km`;
 }
 
@@ -138,28 +149,76 @@ function timeToSecs(t) {
   return Infinity;
 }
 
-// Compute personal bests: { distance: { time, raceName, raceDate } }
+// Canonical PB distance definitions — mirrors Profile.tsx PB_DISTANCES exactly
+const PB_DISTANCES = [
+  // Running
+  { key: '5',      label: '5K',           sport: 'Running' },
+  { key: '10',     label: '10K',          sport: 'Running' },
+  { key: '16.09',  label: '10 Mile',      sport: 'Running' },
+  { key: '21.1',   label: 'Half Marathon',sport: 'Running' },
+  { key: '42.2',   label: 'Marathon',     sport: 'Running' },
+  { key: '42.195', label: 'Marathon',     sport: 'Running' },
+  { key: '50',     label: '50K',          sport: 'Running', sportMatch: 'run' },
+  { key: '100',    label: '100K',         sport: 'Running', sportMatch: 'run' },
+  { key: '160.93', label: '100 Mile',     sport: 'Running', sportMatch: 'run' },
+  // Triathlon
+  { key: '25.75',  label: 'Sprint',       sport: 'Triathlon' },
+  { key: '51.5',   label: 'Olympic',      sport: 'Triathlon' },
+  { key: '113',    label: '70.3',         sport: 'Triathlon' },
+  { key: '226',    label: 'IRONMAN',      sport: 'Triathlon' },
+  // Cycling
+  { key: '40|cy',     label: '40K TT',   sport: 'Cycling',  distValue: '40',     sportMatch: 'cycl' },
+  { key: '100|cy',    label: '100K',     sport: 'Cycling',  distValue: '100',    sportMatch: 'cycl' },
+  { key: '160.93|cy', label: '100 Mile', sport: 'Cycling',  distValue: '160.93', sportMatch: 'cycl' },
+  // Swimming
+  { key: '1.5|sw',    label: '1500m',    sport: 'Swimming', distValue: '1.5',    sportMatch: 'swim' },
+  { key: '3|sw',      label: '3K',       sport: 'Swimming', distValue: '3',      sportMatch: 'swim' },
+  { key: '10|sw',     label: '10K',      sport: 'Swimming', distValue: '10',     sportMatch: 'swim' },
+  // HYROX
+  { key: 'hyrox',     label: 'HYROX',    sport: 'HYROX',                         sportMatch: 'hyrox' },
+];
+
+const SPORT_ACCENT = {
+  Running:   { color: '#00FF88', bg: 'rgba(0,255,136,0.06)',   glow: 'rgba(0,255,136,0.08)' },
+  Triathlon: { color: '#7C3AED', bg: 'rgba(124,58,237,0.08)', glow: 'rgba(124,58,237,0.08)' },
+  Cycling:   { color: '#38BDF8', bg: 'rgba(56,189,248,0.07)', glow: 'rgba(56,189,248,0.08)' },
+  Swimming:  { color: '#22D3EE', bg: 'rgba(34,211,238,0.07)', glow: 'rgba(34,211,238,0.08)' },
+  HYROX:     { color: '#FB923C', bg: 'rgba(251,146,60,0.07)', glow: 'rgba(251,146,60,0.08)' },
+};
+
+// Compute personal bests using same logic as Profile.tsx buildPBByDist
 function computePBs(races) {
   const pb = {};
-  const PRIORITY = ['Marathon', 'Half Marathon', '70.3 / Half Ironman', 'Ironman / Full',
-    '10K', '5K', '21.1km', '42.2km', '10 Miles', 'Ultra'];
-  for (const r of races) {
-    if (!r.time || !r.distance) continue;
-    const secs = timeToSecs(r.time);
-    if (secs === Infinity) continue;
-    if (!pb[r.distance] || secs < pb[r.distance].secs) {
-      pb[r.distance] = { secs, time: r.time, raceName: r.name || '', raceDate: r.date || '' };
+  for (const entry of PB_DISTANCES) {
+    const distToMatch = entry.distValue ?? entry.key;
+    if (entry.key === 'hyrox') {
+      for (const r of races) {
+        if (!r.time) continue;
+        const rSport = (r.sport || '').toLowerCase();
+        if (!rSport.includes('hyrox')) continue;
+        const secs = timeToSecs(r.time);
+        if (!pb[entry.key] || secs < pb[entry.key].secs) {
+          pb[entry.key] = { secs, time: r.time, raceName: r.name || '', label: entry.label, sport: entry.sport };
+        }
+      }
+      continue;
+    }
+    for (const r of races) {
+      if (!r.time || !r.distance) continue;
+      if (r.distance !== distToMatch) continue;
+      if (entry.sportMatch) {
+        const rSport = (r.sport || '').toLowerCase();
+        const isRunMatch = entry.sportMatch === 'run' && (rSport === '' || rSport.includes('run'));
+        const isOtherMatch = entry.sportMatch !== 'run' && rSport.includes(entry.sportMatch);
+        if (!isRunMatch && !isOtherMatch) continue;
+      }
+      const secs = timeToSecs(r.time);
+      if (!pb[entry.key] || secs < pb[entry.key].secs) {
+        pb[entry.key] = { secs, time: r.time, raceName: r.name || '', label: entry.label, sport: entry.sport };
+      }
     }
   }
-  // Return sorted by PRIORITY then alphabetically
-  const ordered = {};
-  for (const dist of PRIORITY) {
-    if (pb[dist]) ordered[dist] = pb[dist];
-  }
-  for (const dist of Object.keys(pb)) {
-    if (!ordered[dist]) ordered[dist] = pb[dist];
-  }
-  return ordered;
+  return pb;
 }
 
 function countMedals(races) {
@@ -301,28 +360,34 @@ function renderProfile(row, username) {
     `<span class="club-pill">${escapeHtml(c)}</span>`
   ).join('');
 
-  // PB card grid
-  const RUN_DISTS = [['5K','5K'],['10K','10K'],['Half Marathon','HALF'],['Marathon','MARATHON'],['Ultra','ULTRA']];
-  const TRI_DISTS = [['Olympic','OLYMPIC'],['70.3 / Half Ironman','70.3'],['Ironman / Full','IRONMAN']];
+  // PB card grid — mirrors in-app PersonalBests component style
+  const pbHiddenKeys = new Set(Array.isArray(athlete.pbHiddenKeys) ? athlete.pbHiddenKeys : []);
 
-  function pbCardHtml(d, label, type) {
-    if (!pbs[d]) return '';
-    const time = escapeHtml(fmtTime(pbs[d].time));
-    const raceName = escapeHtml((pbs[d].raceName || '').replace(/\s+\d{4}$/, '').substring(0, 22));
-    const accent = type === 'run' ? '#00FF88' : '#7C3AED';
-    return `<div style="background:#141414;border:1px solid rgba(245,245,245,0.08);border-left:2px solid ${accent};border-radius:10px;padding:11px 10px 10px;min-width:0;">
-      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(232,224,213,0.40);margin-bottom:4px;line-height:1;">${label}</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;color:#E84E1B;line-height:1;letter-spacing:-0.02em;">${time}</div>
-      ${raceName ? `<div style="font-size:9px;color:rgba(232,224,213,0.35);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${raceName}</div>` : ''}
+  function pbCardHtml(key) {
+    if (!pbs[key] || pbHiddenKeys.has(key)) return '';
+    const entry = PB_DISTANCES.find(d => d.key === key);
+    if (!entry) return '';
+    const accent = SPORT_ACCENT[entry.sport] ?? SPORT_ACCENT.Running;
+    const time = escapeHtml(fmtTime(pbs[key].time));
+    const raceName = escapeHtml((pbs[key].raceName || '').replace(/\s+\d{4}$/, '').substring(0, 24));
+    return `<div style="background:linear-gradient(145deg,#141414 0%,${accent.bg} 100%);border:1px solid rgba(245,245,245,0.10);border-left:3px solid ${accent.color};border-radius:14px;padding:14px 14px 12px;min-width:0;box-shadow:inset 0 1px 0 ${accent.glow},0 4px 20px rgba(0,0,0,0.4);">
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:rgba(232,224,213,0.45);margin-bottom:6px;">${escapeHtml(entry.label)}</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:28px;color:${accent.color};line-height:1;letter-spacing:-0.01em;margin-bottom:8px;">${time}</div>
+      ${raceName ? `<div style="font-size:11px;color:rgba(232,224,213,0.40);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${raceName}</div>` : ''}
     </div>`;
   }
 
-  const runCards = RUN_DISTS.map(([d,l]) => pbCardHtml(d, l, 'run')).filter(Boolean).join('');
-  const triCards = TRI_DISTS.map(([d,l]) => pbCardHtml(d, l, 'tri')).filter(Boolean).join('');
-  const cardGrid = s => `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;">${s}</div>`;
+  const PB_SPORT_ORDER = ['Running', 'Triathlon', 'Cycling', 'Swimming', 'HYROX'];
   let pbSection = '';
-  if (runCards) pbSection += `<p class="pb-sport-label">Running</p>${cardGrid(runCards)}`;
-  if (triCards) pbSection += `<p class="pb-sport-label">Triathlon</p>${cardGrid(triCards)}`;
+  for (const sport of PB_SPORT_ORDER) {
+    const sportKeys = PB_DISTANCES.filter(d => d.sport === sport).map(d => d.key);
+    const cards = sportKeys.map(pbCardHtml).filter(Boolean).join('');
+    if (!cards) continue;
+    const accent = SPORT_ACCENT[sport] ?? SPORT_ACCENT.Running;
+    pbSection += `
+      <p style="font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:${accent.color};opacity:0.7;margin:0 0 8px 2px;">${escapeHtml(sport)}</p>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;margin-bottom:16px;min-width:0;">${cards}</div>`;
+  }
 
   // Recent races (last 5)
   const today = new Date().toISOString().slice(0, 10);
@@ -333,7 +398,7 @@ function renderProfile(row, username) {
 
   const raceRows = pastRaces.map(r => {
     const pb = isPB(r);
-    const medal = medalEmoji(r.medal);
+    const flag = r.country ? countryFlagEmoji(r.country) : '';
     const label = distLabel(r.distance);
     const time = r.time ? escapeHtml(fmtTime(r.time)) : 'DNF';
     const loc = [r.city, r.country ? escapeHtml(shortCountryName(r.country)) : ''].filter(Boolean).join(', ');
@@ -346,7 +411,7 @@ function renderProfile(row, username) {
     <div class="race-row" style="${pbStyle}">
       <div class="race-row-left">
         <div class="race-row-top">
-          ${medal ? `<span class="race-medal">${medal}</span>` : ''}
+          ${flag ? `<span class="race-medal">${flag}</span>` : ''}
           <span class="race-row-name">${escapeHtml(r.name || 'Race')}</span>
           ${pb ? '<span class="pb-badge">PB</span>' : ''}
         </div>
