@@ -52,7 +52,12 @@ function useClerkSync() {
         // Try the Supabase-scoped JWT template first; fall back to the raw
         // Clerk session token if the template isn't configured. Both tokens
         // contain sub=user_xxx and iss from Clerk, which is all /api/sync needs.
-        const t = await getToken({ template: JWT_TEMPLATE }) ?? await getToken()
+        // getToken({ template }) throws (not returns null) when template is
+        // unconfigured in Clerk. Catch that specifically so the raw session
+        // token fallback always runs.
+        let t: string | null = null
+        try { t = await getToken({ template: JWT_TEMPLATE }) } catch { /* template missing */ }
+        if (!t) t = await getToken()
         if (cancelled) return
         setClerkToken(t)
         setAuthUser({
