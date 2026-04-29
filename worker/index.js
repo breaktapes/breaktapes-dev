@@ -252,6 +252,14 @@ function renderProfile(row, username) {
   const location = [athlete.city, athlete.country].filter(Boolean).map(escapeHtml).join(', ');
   const sport = escapeHtml(athlete.mainSport || '');
 
+  // Profile visibility gates — all default OFF (must be explicitly enabled)
+  const pv = athlete.profileVisibility || {};
+  const showStats    = pv.stats     === true;
+  const showRaces    = pv.races     === true;
+  const showPBs      = pv.pbs       === true;
+  const showMedals   = pv.medals    === true;
+  const showUpcoming = pv.upcoming  === true;
+
   // Stats
   const totalRaces = races.length;
   const km = totalKm(races);
@@ -397,6 +405,7 @@ function renderProfile(row, username) {
     ${bioHtml}
     ${clubPills ? `<div class="clubs-row">${clubPills}</div>` : ''}
 
+    ${showStats ? `
     <section class="profile-section" style="margin-top:20px;">
       <div class="career-stats">
         <div class="stat-pill"><span class="stat-val">${totalRaces}</span><span class="stat-lbl">races</span></div>
@@ -405,22 +414,21 @@ function renderProfile(row, username) {
         ${years > 0 ? `<div class="stat-pill"><span class="stat-val">${years}</span><span class="stat-lbl">year${years === 1 ? '' : 's'}</span></div>` : ''}
       </div>
     </section>
+    ${countryPills ? `<div class="country-row">${countryPills}</div>` : ''}` : ''}
 
-    ${countryPills ? `<div class="country-row">${countryPills}</div>` : ''}
-
-    ${pbSection ? `
+    ${showPBs && pbSection ? `
     <section class="profile-section">
       <h2 class="section-title">PERSONAL BESTS</h2>
       ${pbSection}
     </section>` : ''}
 
-    ${raceRows ? `
+    ${showRaces && raceRows ? `
     <section class="profile-section">
       <h2 class="section-title">RECENT RACES</h2>
       <div class="race-list">${raceRows}</div>
     </section>` : ''}
 
-    ${upcomingHtml}
+    ${showUpcoming ? upcomingHtml : ''}
   `;
 
   const body = pageShell({
