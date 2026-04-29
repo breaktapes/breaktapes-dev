@@ -25,6 +25,7 @@ import {
   raceDensityWarnings, findCourseRepeats,
 } from '@/lib/raceFormulas'
 import { fetchStravaActivities } from '@/lib/strava'
+import { supabase } from '@/lib/supabase'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -815,6 +816,7 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
     return opts.some(o => o.value === race.distance) ? '' : (race.distance ?? '')
   })
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [startTime, setStartTime] = useState<string>(race.startTime ?? '')
 
   // Parse existing goalTime string (H:MM:SS) into HMS for the wheel
   const [goalHMS, setGoalHMS] = useState<HMS>(() => {
@@ -842,7 +844,22 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
       ? `${goalHMS.h}:${String(goalHMS.m).padStart(2,'0')}:${String(goalHMS.s).padStart(2,'0')}`
       : undefined
     const effectiveDist = distance === '__custom__' ? customDist : distance
-    updateRace(race.id, { priority: priority as Race['priority'], sport, goalTime, distance: effectiveDist || undefined })
+    const trimmedStart = startTime.trim() || undefined
+    updateRace(race.id, { priority: priority as Race['priority'], sport, goalTime, distance: effectiveDist || undefined, startTime: trimmedStart })
+
+    // Contribute start time to race_catalog when user sets it
+    if (trimmedStart && race.name && race.city && race.date) {
+      const year = parseInt(race.date.split('-')[0], 10)
+      if (!isNaN(year)) {
+        void supabase.rpc('contribute_race_start_time', {
+          p_name:       race.name,
+          p_city:       race.city,
+          p_year:       year,
+          p_start_time: trimmedStart,
+        })
+      }
+    }
+
     onClose()
   }
 
@@ -859,12 +876,12 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
 
   return createPortal((
     <div style={{ ...st.modalOverlay, zIndex }} onClick={onClose}>
-      <div style={{ ...st.customizeSheet, maxHeight: '85vh', paddingBottom: '0', overflowY: 'hidden' }} onClick={e => e.stopPropagation()}>
+      <div style={{ ...st.customizeSheet, maxHeight: '90vh', paddingTop: '12px', paddingBottom: '0', overflowY: 'hidden' }} onClick={e => e.stopPropagation()}>
         {/* Handle */}
-        <div style={{ width: '40px', height: '4px', background: 'var(--border2)', borderRadius: '2px', margin: '0 auto 20px', flexShrink: 0 }} />
+        <div style={{ width: '40px', height: '4px', background: 'var(--border2)', borderRadius: '2px', margin: '0 auto 28px', flexShrink: 0 }} />
 
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexShrink: 0 }}>
           <div>
             <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '18px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>
               {race.name ?? 'Upcoming Race'}
@@ -956,6 +973,36 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
             <TimePickerWheel value={goalHMS} onChange={setGoalHMS} maxHours={99} />
             <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '6px' }}>
               Scroll to set · Used by Gap To Goal widget
+            </div>
+          </div>
+
+          {/* Start time */}
+          <div>
+            <div style={{ fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '10px' }}>
+              RACE START TIME <span style={{ opacity: 0.5, fontWeight: 400, textTransform: 'lowercase', letterSpacing: 0 }}>(optional)</span>
+            </div>
+            <input
+              type="time"
+              value={startTime}
+              onChange={e => setStartTime(e.target.value)}
+              style={{
+                width: '100%',
+                background: 'var(--surface3)',
+                border: '1px solid var(--border2)',
+                borderRadius: '6px',
+                color: 'var(--white)',
+                fontSize: '14px',
+                padding: '0.6rem 0.75rem',
+                fontFamily: 'var(--body)',
+                boxSizing: 'border-box' as const,
+                WebkitAppearance: 'none' as any,
+                appearance: 'none' as any,
+                height: '40px',
+                maxWidth: '100%',
+              }}
+            />
+            <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '6px' }}>
+              Local race-city time · Shared to race catalog
             </div>
           </div>
 
