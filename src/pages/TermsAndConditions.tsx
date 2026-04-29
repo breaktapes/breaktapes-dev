@@ -198,17 +198,7 @@ export default function TermsAndConditions() {
           </P>
         </Section>
 
-        <Section title="9. Beta / Staging Access">
-          <P>
-            The staging environment at{' '}
-            <A href="https://dev.breaktapes.com">dev.breaktapes.com</A> is provided for
-            testing purposes and requires a valid beta invite code. Beta features may be
-            incomplete, change without notice, or be removed entirely. Data on the staging
-            environment may be reset at any time.
-          </P>
-        </Section>
-
-        <Section title="10. Intellectual Property">
+        <Section title="9. Intellectual Property">
           <P>
             All rights in the BREAKTAPES name, logo, design, software, and original content
             (excluding Your Content) are owned by or licensed to us. Nothing in these Terms
@@ -217,7 +207,7 @@ export default function TermsAndConditions() {
           </P>
         </Section>
 
-        <Section title="11. Privacy">
+        <Section title="10. Privacy">
           <P>
             Your use of the Service is also governed by our{' '}
             <a href="/privacy" style={{ color: 'var(--orange)', textDecoration: 'none' }}>
@@ -227,7 +217,7 @@ export default function TermsAndConditions() {
           </P>
         </Section>
 
-        <Section title="12. Disclaimer of Warranties">
+        <Section title="11. Disclaimer of Warranties">
           <P>
             THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY
             KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF
@@ -241,7 +231,7 @@ export default function TermsAndConditions() {
           </P>
         </Section>
 
-        <Section title="13. Limitation of Liability">
+        <Section title="12. Limitation of Liability">
           <P>
             TO THE FULLEST EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT SHALL WE BE
             LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE
@@ -256,7 +246,7 @@ export default function TermsAndConditions() {
           </P>
         </Section>
 
-        <Section title="14. Indemnification">
+        <Section title="13. Indemnification">
           <P>
             You agree to indemnify and hold harmless BREAKTAPES, its operators, affiliates,
             and service providers from any claims, damages, losses, liabilities, costs, and
@@ -266,7 +256,7 @@ export default function TermsAndConditions() {
           </P>
         </Section>
 
-        <Section title="15. Termination">
+        <Section title="14. Termination">
           <P>
             We may suspend or terminate your access to the Service at any time if we
             reasonably believe you have violated these Terms. You may terminate your account
@@ -274,11 +264,11 @@ export default function TermsAndConditions() {
           </P>
           <P>
             Upon termination, your right to use the Service ceases immediately. Sections 6.1
-            (ownership of Your Content), 10, 12, 13, 14, and 17 survive termination.
+            (ownership of Your Content), 9, 11, 12, 13, and 16 survive termination.
           </P>
         </Section>
 
-        <Section title="16. Changes to Terms">
+        <Section title="15. Changes to Terms">
           <P>
             We may update these Terms at any time. Material changes will be communicated
             via an in-app notice or email at least 14 days before they take effect.
@@ -288,7 +278,7 @@ export default function TermsAndConditions() {
           </P>
         </Section>
 
-        <Section title="17. Governing Law">
+        <Section title="16. Governing Law">
           <P>
             These Terms are governed by and construed in accordance with the laws of India,
             without regard to its conflict-of-law provisions. Any dispute arising under these
@@ -297,7 +287,7 @@ export default function TermsAndConditions() {
           </P>
         </Section>
 
-        <Section title="18. Contact">
+        <Section title="17. Contact">
           <P>
             For questions about these Terms, use our{' '}
             <a href="/help" style={{ color: 'var(--orange)', textDecoration: 'none' }}>contact form</a>.
