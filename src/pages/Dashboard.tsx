@@ -876,12 +876,12 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
 
   return createPortal((
     <div style={{ ...st.modalOverlay, zIndex }} onClick={onClose}>
-      <div style={{ ...st.customizeSheet, maxHeight: '90vh', paddingTop: '12px', paddingBottom: '0', overflowY: 'hidden' }} onClick={e => e.stopPropagation()}>
+      <div style={{ ...st.customizeSheet, paddingBottom: '0', overflowY: 'hidden' }} onClick={e => e.stopPropagation()}>
         {/* Handle */}
-        <div style={{ width: '40px', height: '4px', background: 'var(--border2)', borderRadius: '2px', margin: '0 auto 28px', flexShrink: 0 }} />
+        <div style={{ width: '40px', height: '4px', background: 'var(--border2)', borderRadius: '2px', margin: '0 auto 20px', flexShrink: 0 }} />
 
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', flexShrink: 0 }}>
           <div>
             <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '18px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>
               {race.name ?? 'Upcoming Race'}
@@ -894,7 +894,7 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
         </div>
 
         {/* Scrollable body */}
-        <div style={{ overflowY: 'auto', WebkitOverflowScrolling: 'touch' as any, flex: 1, display: 'flex', flexDirection: 'column', gap: '20px', padding: '20px 0 12px' }}>
+        <div style={{ overflowY: 'auto', WebkitOverflowScrolling: 'touch' as any, flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: '20px', padding: '20px 0 12px' }}>
 
           {/* Priority */}
           <div>
