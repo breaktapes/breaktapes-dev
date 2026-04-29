@@ -911,6 +911,33 @@ PR #164 was squash-merged to main; subsequent fixes commit `6b8debd` from worktr
 
 ---
 
+### Session 31 (2026-04-29) — Admin UI for race catalog contributions + contributor_id fix
+
+**Branch:** `fix/profile-visibility` → staging (PR #301) → main (PR #302)
+
+#### Changes shipped
+- **Admin UI** (`src/pages/Admin.tsx`) — new page at `/admin`. Fetches pending submissions from Worker `GET /api/admin/contributions`. Approve (POST `.../approve`) inserts into `race_catalog` + marks approved; Reject (POST `.../reject`) dismisses. Shows race name, city/country, sport, distance, year, submission count. Guard: only visible to admin users (`isAdminUser()` checks `VITE_ADMIN_USER_IDS` env var). Admin link in Settings About section.
+- **Worker admin routes** — `GET /api/admin/contributions` (service role, ordered by `contributor_count desc`), `POST /api/admin/contributions/:id/approve|reject`. Auth: `resolveAdminUserId()` decodes Clerk JWT, checks `sub` against `ADMIN_USER_IDS` Worker secret.
+- **`contributor_id` type fix** — Column was `uuid references auth.users(id)`. Clerk IDs are `user_2abc...` strings; `auth.users` is empty when using Clerk. Every `upsert_catalog_contribution` RPC call silently failed. Migration `20260429200000_fix_contributor_id_text.sql` drops RLS policy, alters column to `text`, recreates policy, updates RPC signature.
+- **Admin route in App.tsx** — lazy-loaded `Admin` component, `/admin` route added.
+- **`wrangler.toml`** — `ADMIN_USER_IDS` secret documented in both prod + staging comments.
+
+#### Key learnings
+- `ALTER COLUMN ... TYPE` fails with `0A000` if any RLS policy references the column. Must `DROP POLICY`, `ALTER COLUMN`, then `CREATE POLICY` in sequence — same transaction.
+- Clerk IDs (`user_2abc...`) are strings, not UUIDs. Any Supabase column that stores Clerk user IDs must be `text`, not `uuid`. `auth.users` is always empty when the app uses Clerk (not Supabase Auth).
+- Worker admin authorization: decode Clerk JWT (split on `.`, base64url-decode middle segment, parse JSON, read `sub`). Check `sub` against comma-separated `ADMIN_USER_IDS` env var. No external library needed.
+- `VITE_ADMIN_USER_IDS` must be set in Cloudflare Pages environment variables for the frontend admin link to appear. `ADMIN_USER_IDS` (no VITE prefix) must be set as a Worker secret for the API to authorize.
+
+#### Action required to activate admin access
+```bash
+# Get your Clerk user ID from Supabase user_state.user_id column, then:
+echo "user_YOUR_CLERK_ID" | wrangler secret put ADMIN_USER_IDS
+echo "user_YOUR_CLERK_ID" | wrangler secret put ADMIN_USER_IDS --env staging
+# Also set VITE_ADMIN_USER_IDS in Cloudflare Pages env vars (production + staging/preview)
+```
+
+---
+
 ### Session 14 (2026-04-15) — WHOOP OAuth fix + Apple Health 2GB streaming
 
 **Branch:** `claude/musing-bhabha` → staging (#91)
