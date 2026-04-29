@@ -49,7 +49,10 @@ function useClerkSync() {
     // the user manually triggers a write.
     const refresh = async () => {
       try {
-        const t = await getToken({ template: JWT_TEMPLATE })
+        // Try the Supabase-scoped JWT template first; fall back to the raw
+        // Clerk session token if the template isn't configured. Both tokens
+        // contain sub=user_xxx and iss from Clerk, which is all /api/sync needs.
+        const t = await getToken({ template: JWT_TEMPLATE }) ?? await getToken()
         if (cancelled) return
         setClerkToken(t)
         setAuthUser({
