@@ -6,11 +6,11 @@ export default function PrivacyPolicy() {
 
   return (
     <div style={{
-      minHeight: '100vh',
+      height: '100%',
+      overflowY: 'auto',
       background: 'var(--surface)',
       color: 'var(--white)',
       fontFamily: "'Barlow', sans-serif",
-      overflowX: 'hidden',
     }}>
       {/* Header */}
       <div style={{
