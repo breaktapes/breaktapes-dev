@@ -10,6 +10,7 @@ import { useWearableStore } from '@/stores/useWearableStore'
 
 vi.mock('@clerk/clerk-react', () => ({
   useClerk: () => ({ signOut: vi.fn(), openUserProfile: vi.fn() }),
+  useUser: () => ({ user: null }),
 }))
 
 vi.mock('@/lib/syncState', () => ({ syncStateToSupabase: vi.fn() }))

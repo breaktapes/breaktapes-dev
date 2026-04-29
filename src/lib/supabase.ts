@@ -20,6 +20,14 @@ export function getClerkToken(): string | null {
   return _clerkToken
 }
 
+const AUTH_OPTS = {
+  auth: {
+    persistSession: false,
+    autoRefreshToken: false,
+    detectSessionInUrl: false,
+  },
+}
+
 export const supabase = createClient(
   SUPABASE_URL || 'http://localhost:54321',
   SUPABASE_ANON_KEY || 'placeholder-key',
@@ -33,10 +41,16 @@ export const supabase = createClient(
         return fetch(url, { ...opts, headers })
       },
     },
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-      detectSessionInUrl: false,
-    },
+    ...AUTH_OPTS,
   },
+)
+
+// Anon-only client — no Clerk JWT override.
+// Use for public tables (race_catalog, etc.) where the raw anon key
+// is sufficient and injecting a Clerk JWT would cause PostgREST 401
+// if the Supabase JWT template is not configured in Clerk.
+export const supabaseAnon = createClient(
+  SUPABASE_URL || 'http://localhost:54321',
+  SUPABASE_ANON_KEY || 'placeholder-key',
+  AUTH_OPTS,
 )

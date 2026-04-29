@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
-import { supabase } from '@/lib/supabase'
+import { supabaseAnon } from '@/lib/supabase'
+
 
 export interface CatalogRace {
   id: number
@@ -25,7 +26,7 @@ const COLS = 'id, name, aliases, city, country, year, month, day, dist_km, dist,
 // Supabase PostgREST max-rows is 1,000 per request regardless of range size.
 // Fetch 10 pages of 1,000 in parallel to cover the full ~8,284-row catalog.
 const PAGE = 1000
-const TOTAL_PAGES = 10
+const TOTAL_PAGES = 25  // catalog has ~19k rows; 25 pages covers up to 25k
 
 /**
  * Loads the global race catalog (~8,284 rows) from Supabase.
@@ -39,7 +40,7 @@ export function useRaceCatalog() {
     queryFn: async () => {
       const pages = await Promise.all(
         Array.from({ length: TOTAL_PAGES }, (_, i) =>
-          supabase
+          supabaseAnon
             .from('race_catalog')
             .select(COLS)
             .order('name')
