@@ -142,13 +142,6 @@ export default function PrivacyPolicy() {
               tracking pixels.
             </P>
           </SubSection>
-          <SubSection title="2.6 Feedback (staging / beta)">
-            <P>
-              On our staging environment (<A href="https://dev.breaktapes.com">dev.breaktapes.com</A>)
-              beta testers may submit optional star ratings and text feedback. This is stored in
-              our database and used solely to improve the product.
-            </P>
-          </SubSection>
         </Section>
 
         <Section title="3. How We Use Your Information">
