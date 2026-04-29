@@ -74,6 +74,7 @@ export interface Athlete {
   injuryBreakEnd?: string    // YYYY-MM-DD — end of injury break (comeback_run unlocks for races after this)
   usernameSetAt?: string  // ISO timestamp — username locked for 1 year after this
   isPublic?: boolean
+  imageUrl?: string              // Clerk profile photo URL — synced on login
   units?: 'metric' | 'imperial'  // distance + pace display preference (default: metric)
   profileVisibility?: {
     races?: boolean       // race history & finish times (default true)
