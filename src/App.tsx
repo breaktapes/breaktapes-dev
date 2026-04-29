@@ -18,6 +18,9 @@ const Profile  = lazy(() => import('@/pages/Profile').then(m => ({ default: m.Pr
 const Settings = lazy(() => import('@/pages/Settings').then(m => ({ default: m.Settings })))
 const Discover = lazy(() => import('@/pages/Discover').then(m => ({ default: m.Discover })))
 const Compare  = lazy(() => import('@/pages/Compare').then(m => ({ default: m.Compare })))
+const PrivacyPolicy      = lazy(() => import('@/pages/PrivacyPolicy'))
+const TermsAndConditions = lazy(() => import('@/pages/TermsAndConditions'))
+const Help               = lazy(() => import('@/pages/Help'))
 
 class RootErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
   state = { error: null }
@@ -97,19 +100,30 @@ function AnimatedRoutes() {
 export function App() {
   return (
     <RootErrorBoundary>
-      <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
-        <BrowserRouter>
-          <ThemeProvider>
-            <QueryClientProvider client={queryClient}>
-              <AuthGate>
-                <Layout>
-                  <AnimatedRoutes />
-                </Layout>
-              </AuthGate>
-            </QueryClientProvider>
-          </ThemeProvider>
-        </BrowserRouter>
-      </ClerkProvider>
+      <BrowserRouter>
+        <ThemeProvider>
+          <Suspense fallback={<div style={{ minHeight: '100vh', background: '#0d0d0d' }} />}>
+            <Routes>
+              {/* Public pages — no Clerk, no auth gate, no layout chrome */}
+              <Route path="/privacy" element={<PrivacyPolicy />} />
+              <Route path="/terms"   element={<TermsAndConditions />} />
+              <Route path="/help"    element={<Help />} />
+              {/* All other routes go through Clerk + auth + layout */}
+              <Route path="*" element={
+                <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
+                  <QueryClientProvider client={queryClient}>
+                    <AuthGate>
+                      <Layout>
+                        <AnimatedRoutes />
+                      </Layout>
+                    </AuthGate>
+                  </QueryClientProvider>
+                </ClerkProvider>
+              } />
+            </Routes>
+          </Suspense>
+        </ThemeProvider>
+      </BrowserRouter>
     </RootErrorBoundary>
   )
 }

@@ -2,6 +2,16 @@
 
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+
+## [0.6.9.0] - 2026-04-29
+
+### Added
+- **Privacy Policy** (`/privacy`): Full 13-section privacy policy covering data collection, wearable integrations, public profiles, third-party services, and user rights. Accessible without authentication.
+- **Terms & Conditions** (`/terms`): Full 18-section T&C covering eligibility, permitted use, prohibited conduct, content ownership, wearable integrations, IP, warranty disclaimers, and governing law (India/Bangalore). Accessible without authentication.
+- **Help & Contact form** (`/help`): Contact form with Name, Email, Subject (5-option dropdown), and Message fields. Submits to Supabase `contact_submissions` table. Replaces any need to expose personal email addresses publicly. Accessible without authentication.
+- **Supabase migration `20260429100000`:** `contact_submissions` table with anon insert-only RLS and input length constraints (name ≤ 200, email ≤ 320, subject ≤ 200, message ≤ 5000).
+- **Settings — legal links:** About section now includes a "Help & Contact" card and a Privacy Policy / Terms & Conditions 2-column grid.
+
 ## [0.6.8.0] - 2026-04-29
 
 ### Added
