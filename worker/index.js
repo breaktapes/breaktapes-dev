@@ -39,14 +39,80 @@ function html(status, body, extraHeaders = {}) {
 
 function fmtTime(t) {
   if (!t) return '';
-  // Normalise "H:MM:SS" or "MM:SS" to something readable
   const parts = String(t).split(':').map(Number);
   if (parts.length === 3) {
     const [h, m, s] = parts;
-    if (h === 0) return `${m}:${String(s).padStart(2, '0')}`;
     return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   }
+  if (parts.length === 2) {
+    const [m, s] = parts;
+    return `0:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
   return t;
+}
+
+function distLabel(d) {
+  const km = parseFloat(d);
+  if (isNaN(km)) return d || '';
+  const known = [
+    [226, 'IRONMAN'], [225.995, 'IRONMAN'],
+    [113, '70.3'], [112.654, '70.3'],
+    [51.5, 'Olympic'], [25.75, 'Sprint'],
+    [42.2, 'Marathon'], [42.195, 'Marathon'],
+    [21.1, 'Half Marathon'], [21.097, 'Half Marathon'],
+    [15, '15K'], [12, '12K'], [10, '10K'],
+    [8, '8K'], [5, '5K'], [3, '3K'],
+  ];
+  for (const [k, v] of known) {
+    if (Math.abs(km - k) < 0.15) return v;
+  }
+  return `${km} km`;
+}
+
+function countryFlagEmoji(name) {
+  const map = {
+    'United Arab Emirates': '🇦🇪', 'India': '🇮🇳', 'United States': '🇺🇸',
+    'United Kingdom': '🇬🇧', 'Australia': '🇦🇺', 'Germany': '🇩🇪',
+    'France': '🇫🇷', 'Japan': '🇯🇵', 'Kenya': '🇰🇪', 'South Africa': '🇿🇦',
+    'Canada': '🇨🇦', 'New Zealand': '🇳🇿', 'Netherlands': '🇳🇱',
+    'Switzerland': '🇨🇭', 'Sweden': '🇸🇪', 'Norway': '🇳🇴',
+    'Spain': '🇪🇸', 'Italy': '🇮🇹', 'Portugal': '🇵🇹',
+    'Brazil': '🇧🇷', 'Singapore': '🇸🇬', 'Hong Kong': '🇭🇰',
+    'China': '🇨🇳', 'South Korea': '🇰🇷', 'Oman': '🇴🇲',
+    'Saudi Arabia': '🇸🇦', 'Bahrain': '🇧🇭', 'Qatar': '🇶🇦',
+  };
+  return map[name] || '🌍';
+}
+
+function shortCountryName(name) {
+  const map = {
+    'United Arab Emirates': 'UAE', 'United States': 'USA',
+    'United Kingdom': 'UK', 'New Zealand': 'NZ', 'South Africa': 'SA',
+    'South Korea': 'Korea', 'Saudi Arabia': 'KSA', 'Hong Kong': 'HK',
+  };
+  return map[name] || name;
+}
+
+function medalEmoji(medal) {
+  if (!medal || medal === 'none' || medal === '') return null;
+  if (medal === 'gold') return '🥇';
+  if (medal === 'silver') return '🥈';
+  if (medal === 'bronze') return '🥉';
+  return '🏅'; // finisher
+}
+
+function totalKm(races) {
+  return Math.round(races.reduce((s, r) => {
+    const k = parseFloat(r.distance);
+    return s + (isNaN(k) ? 0 : k);
+  }, 0));
+}
+
+function yearsRacing(races) {
+  if (!races.length) return 0;
+  const yrs = races.map(r => parseInt((r.date || '').slice(0, 4))).filter(y => y > 2000);
+  if (!yrs.length) return 0;
+  return new Date().getFullYear() - Math.min(...yrs) + 1;
 }
 
 function fmtDate(d) {
@@ -176,33 +242,67 @@ function notFoundPage(username) {
 function renderProfile(row, username) {
   const athlete = row.athlete || {};
   const races = Array.isArray(row.races) ? row.races : [];
-  const nextRace = row.next_race || null;
+  const upcomingRaces = Array.isArray(row.upcoming_races) ? row.upcoming_races : [];
+  const nextRace = row.next_race || upcomingRaces[0] || null;
 
-  // React app stores firstName/lastName separately; old index.html stored athlete.name
   const displayName = escapeHtml(
-    athlete.name ||
     [athlete.firstName, athlete.lastName].filter(Boolean).join(' ') ||
-    username
+    athlete.name || username
   );
   const location = [athlete.city, athlete.country].filter(Boolean).map(escapeHtml).join(', ');
-  const sport = escapeHtml(athlete.mainSport || athlete.primary || '');
+  const sport = escapeHtml(athlete.mainSport || '');
 
   // Stats
   const totalRaces = races.length;
-  const totalMedals = countMedals(races);
+  const km = totalKm(races);
   const countries = uniqueCountries(races);
+  const years = yearsRacing(races);
 
-  // PBs — sport-grouped card grid, ascending distance
+  // PBs — indexed by distance label for fast lookup
   const pbs = computePBs(races);
-  const RUN_DISTS = [['5K','5KM'],['10K','10KM'],['10 Miles','10 MI'],['Half Marathon','HALF'],['Marathon','MARATHON'],['Ultra','ULTRA']];
+
+  // Check if a race is a PB
+  function isPB(r) {
+    if (!r.time || !r.distance) return false;
+    const pb = pbs[r.distance];
+    return pb && pb.time === r.time;
+  }
+
+  // Avatar
+  const initials = escapeHtml(
+    ([athlete.firstName, athlete.lastName].filter(Boolean).join(' ') || username)
+      .slice(0, 2).toUpperCase()
+  );
+  const avatarHtml = athlete.imageUrl
+    ? `<img src="${escapeHtml(athlete.imageUrl)}" alt="${initials}" style="width:72px;height:72px;border-radius:50%;object-fit:cover;flex-shrink:0;">`
+    : `<div class="avatar-placeholder">${initials}</div>`;
+
+  // Country flags from all races
+  const countryMap = {};
+  for (const r of races) {
+    if (r.country && !countryMap[r.country]) countryMap[r.country] = true;
+  }
+  const countryPills = Object.keys(countryMap).map(c =>
+    `<div class="country-pill">${countryFlagEmoji(c)} <span class="country-abbr">${escapeHtml(shortCountryName(c))}</span></div>`
+  ).join('');
+
+  // Bio + clubs
+  const bioHtml = athlete.bio
+    ? `<div class="athlete-bio">"${escapeHtml(athlete.bio)}"</div>` : '';
+  const clubPills = (athlete.clubs || []).map(c =>
+    `<span class="club-pill">${escapeHtml(c)}</span>`
+  ).join('');
+
+  // PB card grid
+  const RUN_DISTS = [['5K','5K'],['10K','10K'],['Half Marathon','HALF'],['Marathon','MARATHON'],['Ultra','ULTRA']];
   const TRI_DISTS = [['Olympic','OLYMPIC'],['70.3 / Half Ironman','70.3'],['Ironman / Full','IRONMAN']];
 
   function pbCardHtml(d, label, type) {
     if (!pbs[d]) return '';
     const time = escapeHtml(fmtTime(pbs[d].time));
-    const raceName = escapeHtml((pbs[d].raceName || '').replace(/\s+\d{4}$/, '').substring(0, 24));
+    const raceName = escapeHtml((pbs[d].raceName || '').replace(/\s+\d{4}$/, '').substring(0, 22));
     const accent = type === 'run' ? '#00FF88' : '#7C3AED';
-    return `<div style="background:#141414;border:1px solid rgba(245,245,245,0.06);border-left:2px solid ${accent};border-radius:10px;padding:11px 10px 10px;min-width:0;">
+    return `<div style="background:#141414;border:1px solid rgba(245,245,245,0.08);border-left:2px solid ${accent};border-radius:10px;padding:11px 10px 10px;min-width:0;">
       <div style="font-family:'Barlow Condensed',sans-serif;font-weight:800;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(232,224,213,0.40);margin-bottom:4px;line-height:1;">${label}</div>
       <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:20px;color:#E84E1B;line-height:1;letter-spacing:-0.02em;">${time}</div>
       ${raceName ? `<div style="font-size:9px;color:rgba(232,224,213,0.35);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${raceName}</div>` : ''}
@@ -212,35 +312,52 @@ function renderProfile(row, username) {
   const runCards = RUN_DISTS.map(([d,l]) => pbCardHtml(d, l, 'run')).filter(Boolean).join('');
   const triCards = TRI_DISTS.map(([d,l]) => pbCardHtml(d, l, 'tri')).filter(Boolean).join('');
   const cardGrid = s => `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;">${s}</div>`;
+  let pbSection = '';
+  if (runCards) pbSection += `<p class="pb-sport-label">Running</p>${cardGrid(runCards)}`;
+  if (triCards) pbSection += `<p class="pb-sport-label">Triathlon</p>${cardGrid(triCards)}`;
 
-  let pbRows = '';
-  if (runCards) pbRows += `<p style="font-family:'Barlow Condensed',sans-serif;font-size:8px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:rgba(232,224,213,0.40);margin-bottom:6px;">Running</p>${cardGrid(runCards)}`;
-  if (triCards) pbRows += `<p style="font-family:'Barlow Condensed',sans-serif;font-size:8px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:rgba(232,224,213,0.40);margin-bottom:6px;">Triathlon</p>${cardGrid(triCards)}`;
-
-  // Recent races (last 5, sorted by date descending)
+  // Recent races (last 5)
+  const today = new Date().toISOString().slice(0, 10);
   const pastRaces = races
-    .filter(r => r.date && r.date <= new Date().toISOString().slice(0, 10))
+    .filter(r => r.date && r.date <= today)
     .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
     .slice(0, 5);
 
-  const raceRows = pastRaces.map(r => `
-    <div class="race-row">
-      <div class="race-row-main">
-        <span class="race-row-name">${escapeHtml(r.name || 'Race')}</span>
-        <span class="race-row-time">${r.time ? escapeHtml(fmtTime(r.time)) : 'DNF'}</span>
-      </div>
-      <div class="race-row-meta">
-        ${r.date ? `<span>${escapeHtml(fmtDate(r.date))}</span>` : ''}
-        ${r.city ? `<span>${escapeHtml(r.city)}${r.country ? ', ' + escapeHtml(r.country) : ''}</span>` : ''}
-        ${r.distance ? `<span>${escapeHtml(r.distance)}</span>` : ''}
-      </div>
-    </div>`).join('');
+  const raceRows = pastRaces.map(r => {
+    const pb = isPB(r);
+    const medal = medalEmoji(r.medal);
+    const label = distLabel(r.distance);
+    const time = r.time ? escapeHtml(fmtTime(r.time)) : 'DNF';
+    const loc = [r.city, r.country ? escapeHtml(shortCountryName(r.country)) : ''].filter(Boolean).join(', ');
 
-  // Upcoming race
+    const pbStyle = pb
+      ? 'border-color:rgba(200,160,40,0.45);background:rgba(200,150,40,0.04);box-shadow:inset 0 0 0 1px rgba(200,150,40,0.2);'
+      : '';
+
+    return `
+    <div class="race-row" style="${pbStyle}">
+      <div class="race-row-left">
+        <div class="race-row-top">
+          ${medal ? `<span class="race-medal">${medal}</span>` : ''}
+          <span class="race-row-name">${escapeHtml(r.name || 'Race')}</span>
+          ${pb ? '<span class="pb-badge">PB</span>' : ''}
+        </div>
+        <div class="race-row-meta">
+          ${r.date ? `<span>${escapeHtml(fmtDate(r.date))}</span>` : ''}
+          ${loc ? `<span>${loc}</span>` : ''}
+          ${label ? `<span>${escapeHtml(label)}</span>` : ''}
+        </div>
+      </div>
+      <div class="race-row-time">${time}</div>
+    </div>`;
+  }).join('');
+
+  // Upcoming / next race
   let upcomingHtml = '';
   if (nextRace && nextRace.date) {
     const days = daysUntil(nextRace.date);
     const daysLabel = days == null ? '' : days <= 0 ? 'Today!' : `${days} day${days === 1 ? '' : 's'} away`;
+    const upLabel = nextRace.distance ? distLabel(nextRace.distance) : '';
     upcomingHtml = `
       <section class="profile-section">
         <h2 class="section-title">NEXT RACE</h2>
@@ -249,26 +366,27 @@ function renderProfile(row, username) {
           <div class="upcoming-info">
             <div class="upcoming-name">${escapeHtml(nextRace.name || 'Upcoming race')}</div>
             <div class="upcoming-meta">
+              ${upLabel ? `<span class="upcoming-dist">${escapeHtml(upLabel)}</span> · ` : ''}
               ${nextRace.date ? escapeHtml(fmtDate(nextRace.date)) : ''}
-              ${daysLabel ? `· <strong>${escapeHtml(daysLabel)}</strong>` : ''}
+              ${daysLabel ? ` · <strong style="color:#E84E1B;">${escapeHtml(daysLabel)}</strong>` : ''}
             </div>
           </div>
         </div>
       </section>`;
   }
 
-  // og meta
+  // OG
   const pbMarathon = pbs['Marathon'];
   const ogDescription = [
     `${totalRaces} race${totalRaces !== 1 ? 's' : ''}`,
-    `${totalMedals} medal${totalMedals !== 1 ? 's' : ''}`,
+    km ? `${km} km` : null,
     pbMarathon ? `${fmtTime(pbMarathon.time)} marathon PB` : null,
     countries > 1 ? `${countries} countries` : null,
   ].filter(Boolean).join(' · ');
 
   const bodyContent = `
     <div class="profile-header">
-      <div class="avatar-placeholder">${escapeHtml((athlete.name || [athlete.firstName, athlete.lastName].filter(Boolean).join(' ') || username).slice(0, 2).toUpperCase())}</div>
+      ${avatarHtml}
       <div class="profile-identity">
         <h1 class="athlete-name">${displayName}</h1>
         ${location ? `<div class="athlete-location">📍 ${location}</div>` : ''}
@@ -276,27 +394,24 @@ function renderProfile(row, username) {
       </div>
     </div>
 
-    <section class="profile-section">
+    ${bioHtml}
+    ${clubPills ? `<div class="clubs-row">${clubPills}</div>` : ''}
+
+    <section class="profile-section" style="margin-top:20px;">
       <div class="career-stats">
-        <div class="stat-pill">
-          <span class="stat-val">${totalRaces}</span>
-          <span class="stat-lbl">races</span>
-        </div>
-        <div class="stat-pill">
-          <span class="stat-val">${totalMedals}</span>
-          <span class="stat-lbl">medals</span>
-        </div>
-        <div class="stat-pill">
-          <span class="stat-val">${countries}</span>
-          <span class="stat-lbl">countr${countries === 1 ? 'y' : 'ies'}</span>
-        </div>
+        <div class="stat-pill"><span class="stat-val">${totalRaces}</span><span class="stat-lbl">races</span></div>
+        <div class="stat-pill"><span class="stat-val">${km}</span><span class="stat-lbl">total km</span></div>
+        <div class="stat-pill"><span class="stat-val">${countries}</span><span class="stat-lbl">countr${countries === 1 ? 'y' : 'ies'}</span></div>
+        ${years > 0 ? `<div class="stat-pill"><span class="stat-val">${years}</span><span class="stat-lbl">year${years === 1 ? '' : 's'}</span></div>` : ''}
       </div>
     </section>
 
-    ${pbRows ? `
+    ${countryPills ? `<div class="country-row">${countryPills}</div>` : ''}
+
+    ${pbSection ? `
     <section class="profile-section">
       <h2 class="section-title">PERSONAL BESTS</h2>
-      ${pbRows}
+      ${pbSection}
     </section>` : ''}
 
     ${raceRows ? `
@@ -309,16 +424,16 @@ function renderProfile(row, username) {
   `;
 
   const body = pageShell({
-    title: `${athlete.name || [athlete.firstName, athlete.lastName].filter(Boolean).join(' ') || username}'s Race Profile | BREAKTAPES`,
-    description: ogDescription || `${athlete.name || [athlete.firstName, athlete.lastName].filter(Boolean).join(' ') || username} on BREAKTAPES`,
-    ogTitle: `${athlete.name || [athlete.firstName, athlete.lastName].filter(Boolean).join(' ') || username}'s Race Profile | BREAKTAPES`,
+    title: `${displayName}'s Race Profile | BREAKTAPES`,
+    description: ogDescription || `${displayName} on BREAKTAPES`,
+    ogTitle: `${displayName}'s Race Profile | BREAKTAPES`,
     ogDescription: ogDescription,
     ogImage: `https://health.breaktapes.com/og/u/${encodeURIComponent(username)}`,
     canonical: `https://app.breaktapes.com/u/${encodeURIComponent(username)}`,
     bodyContent,
     username,
     showJoinCta: true,
-    athleteName: athlete.name || [athlete.firstName, athlete.lastName].filter(Boolean).join(' ') || '',
+    athleteName: displayName,
   });
 
   return html(200, body, {
@@ -512,12 +627,12 @@ function pageShell({ title, description, ogTitle, ogDescription, ogImage, canoni
       display: flex;
       align-items: center;
       gap: 16px;
-      margin-bottom: 28px;
+      margin-bottom: 16px;
     }
 
     .avatar-placeholder {
-      width: 64px;
-      height: 64px;
+      width: 72px;
+      height: 72px;
       border-radius: 50%;
       background: var(--orange);
       display: flex;
@@ -525,7 +640,7 @@ function pageShell({ title, description, ogTitle, ogDescription, ogImage, canoni
       justify-content: center;
       font-family: 'Barlow Condensed', sans-serif;
       font-weight: 900;
-      font-size: 24px;
+      font-size: 26px;
       color: var(--white);
       flex-shrink: 0;
     }
@@ -546,17 +661,43 @@ function pageShell({ title, description, ogTitle, ogDescription, ogImage, canoni
 
     .athlete-sport {
       color: var(--orange);
-      font-weight: 600;
-      font-size: 13px;
+      font-weight: 700;
+      font-size: 12px;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-top: 4px;
+      letter-spacing: 0.1em;
+      margin-top: 5px;
+    }
+
+    .athlete-bio {
+      font-size: 14px;
+      color: rgba(232,224,213,0.65);
+      font-style: italic;
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+
+    .clubs-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 16px;
+    }
+
+    .club-pill {
+      background: rgba(0,255,136,0.08);
+      border: 1px solid rgba(0,255,136,0.25);
+      color: #00FF88;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+      letter-spacing: 0.02em;
     }
 
     /* Career stats */
     .career-stats {
       display: flex;
-      gap: 12px;
+      gap: 8px;
     }
 
     .stat-pill {
@@ -564,7 +705,7 @@ function pageShell({ title, description, ogTitle, ogDescription, ogImage, canoni
       background: var(--surface2);
       border: 1px solid var(--border2);
       border-radius: 10px;
-      padding: 14px 10px;
+      padding: 12px 8px;
       text-align: center;
     }
 
@@ -572,18 +713,54 @@ function pageShell({ title, description, ogTitle, ogDescription, ogImage, canoni
       display: block;
       font-family: 'Barlow Condensed', sans-serif;
       font-weight: 900;
-      font-size: 26px;
+      font-size: 24px;
       color: var(--white);
       line-height: 1;
     }
 
     .stat-lbl {
       display: block;
-      font-size: 11px;
+      font-size: 10px;
       color: var(--muted);
       text-transform: uppercase;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.07em;
       margin-top: 4px;
+    }
+
+    /* Country flags */
+    .country-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .country-pill {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      padding: 5px 10px;
+      font-size: 13px;
+    }
+
+    .country-abbr {
+      font-weight: 600;
+      color: var(--white);
+      font-size: 12px;
+      letter-spacing: 0.04em;
+    }
+
+    .pb-sport-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 8px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(232,224,213,0.40);
+      margin-bottom: 6px;
     }
 
     /* Sections */
@@ -643,14 +820,28 @@ function pageShell({ title, description, ogTitle, ogDescription, ogImage, canoni
       background: var(--surface2);
       border: 1px solid var(--border);
       border-radius: 10px;
-      padding: 12px 16px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
 
-    .race-row-main {
+    .race-row-left {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .race-row-top {
       display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: 8px;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+
+    .race-medal {
+      font-size: 16px;
+      flex-shrink: 0;
+      line-height: 1;
     }
 
     .race-row-name {
@@ -659,27 +850,44 @@ function pageShell({ title, description, ogTitle, ogDescription, ogImage, canoni
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      min-width: 0;
+    }
+
+    .pb-badge {
+      flex-shrink: 0;
+      background: rgba(200,150,40,0.15);
+      border: 1px solid rgba(200,150,40,0.4);
+      color: #C8960A;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 800;
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      padding: 1px 5px;
+      border-radius: 4px;
+      text-transform: uppercase;
     }
 
     .race-row-time {
       font-family: 'Barlow Condensed', sans-serif;
-      font-weight: 800;
-      font-size: 16px;
+      font-weight: 900;
+      font-size: 20px;
       color: var(--orange);
       flex-shrink: 0;
+      text-align: right;
+      line-height: 1;
     }
 
     .race-row-meta {
       display: flex;
-      gap: 10px;
-      margin-top: 4px;
+      gap: 8px;
       font-size: 12px;
       color: var(--muted);
+      flex-wrap: wrap;
     }
 
     .race-row-meta span + span::before {
       content: '·';
-      margin-right: 10px;
+      margin-right: 8px;
     }
 
     /* Upcoming */

@@ -32,11 +32,12 @@ function useClerkSync() {
       return
     }
 
-    // Sync Clerk username → athlete.username so public profile toggle works.
-    // Clerk is the source of truth for username; athlete store follows.
-    if (user.username) {
-      updateAthlete({ username: user.username })
-    }
+    // Sync Clerk username + photo → athlete store so public profile SSR has them.
+    // Clerk is the source of truth; athlete store follows.
+    const athleteUpdate: Record<string, string> = {}
+    if (user.username) athleteUpdate.username = user.username
+    if (user.imageUrl) athleteUpdate.imageUrl = user.imageUrl
+    if (Object.keys(athleteUpdate).length) updateAthlete(athleteUpdate)
 
     let cancelled = false
 
