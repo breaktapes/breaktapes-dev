@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
-import { useClerk } from '@clerk/clerk-react'
+import { useClerk, useUser } from '@clerk/clerk-react'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { useWearableStore } from '@/stores/useWearableStore'
@@ -59,6 +59,7 @@ const sectionLabel: React.CSSProperties = {
 
 export function Settings() {
   const { signOut, openUserProfile } = useClerk()
+  const { user: clerkUser } = useUser()
   const authUser = useAuthStore(s => s.authUser)
   const athlete = useAthleteStore(s => s.athlete)
   const updateAthlete = useAthleteStore(s => s.updateAthlete)
@@ -139,8 +140,11 @@ export function Settings() {
               fontSize: '15px', color: 'var(--black)',
               flexShrink: 0, letterSpacing: '0.04em',
             }}>
-              {[athlete?.firstName?.[0], athlete?.lastName?.[0]].filter(Boolean).join('').toUpperCase() ||
-               authUser?.email?.[0]?.toUpperCase() || '?'}
+              {clerkUser?.imageUrl
+                ? <img src={clerkUser.imageUrl} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                : ([clerkUser?.firstName?.[0], clerkUser?.lastName?.[0]].filter(Boolean).join('').toUpperCase() ||
+                   athlete?.firstName?.[0]?.toUpperCase() ||
+                   authUser?.email?.[0]?.toUpperCase() || '?')}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{
@@ -148,7 +152,8 @@ export function Settings() {
                 fontWeight: 600, lineHeight: 1.25,
                 overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
               }}>
-                {[athlete?.firstName, athlete?.lastName].filter(Boolean).join(' ') ||
+                {[clerkUser?.firstName, clerkUser?.lastName].filter(Boolean).join(' ') ||
+                 [athlete?.firstName, athlete?.lastName].filter(Boolean).join(' ') ||
                  authUser?.email || '—'}
               </div>
               <div style={{ color: 'var(--muted)', fontSize: '12px', marginTop: '2px' }}>

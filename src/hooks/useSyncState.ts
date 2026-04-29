@@ -1,9 +1,10 @@
 import { useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { supabase } from '@/lib/supabase'
+import { supabase, getClerkToken } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
+import { APP_URL } from '@/env'
 import type { Race, Athlete, SeasonPlan } from '@/types'
 
 interface RemoteState {
@@ -40,6 +41,35 @@ export function useSyncState() {
     queryFn: async () => {
       if (!authUser) return null
 
+      // Primary path: Worker GET /api/state (service role key, bypasses RLS).
+      // Works without Clerk-Supabase JWT template — same pattern as /api/sync writes.
+      const token = getClerkToken()
+      if (token) {
+        try {
+          const res = await fetch(`${APP_URL}/api/state`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+          if (res.ok) {
+            const json = await res.json()
+            if (json?.state_json) {
+              const remote: RemoteState = json.state_json
+              if (Array.isArray(remote.races)) setRaces(remote.races)
+              if (Array.isArray(remote.upcoming_races)) setUpcomingRaces(remote.upcoming_races)
+              if (Array.isArray(remote.wishlist_races)) setWishlistRaces(remote.wishlist_races)
+              promoteNextRace()
+              if ('focus_race_id' in remote) setFocusRaceId(remote.focus_race_id ?? null)
+              if (remote.athlete) setAthlete(remote.athlete)
+              if (Array.isArray(remote.season_plans)) setSeasonPlans(remote.season_plans)
+              return remote
+            }
+            return null  // no row yet — new user
+          }
+        } catch {
+          // fall through to direct Supabase
+        }
+      }
+
+      // Fallback: direct Supabase (works if Clerk-Supabase JWT template is configured)
       const { data, error } = await supabase
         .from('user_state')
         .select('state_json')
