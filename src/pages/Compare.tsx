@@ -8,6 +8,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
+import { useAthleteStore } from '@/stores/useAthleteStore'
 import { APP_URL } from '@/env'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -284,6 +285,20 @@ function SearchSheet({
 export function Compare() {
   const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
+  const myUsername = useAthleteStore(s => s.athlete?.username ?? '')
+
+  // When arriving from a public profile with only ?b=username, auto-fill
+  // slot A with the signed-in user's username so they compare against themselves.
+  useEffect(() => {
+    const b = searchParams.get('b')
+    const a = searchParams.get('a')
+    if (b && !a && myUsername && myUsername !== b) {
+      const params = new URLSearchParams(searchParams)
+      params.set('a', myUsername)
+      setSearchParams(params, { replace: true })
+    }
+  }, [myUsername, searchParams, setSearchParams])
+
   const usernameA = searchParams.get('a') ?? ''
   const usernameB = searchParams.get('b') ?? ''
 
