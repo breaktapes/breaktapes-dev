@@ -870,13 +870,44 @@ PR #164 was squash-merged to main; subsequent fixes commit `6b8debd` from worktr
 - `#pageTitleBar` is a mobile-only sticky element updated by `go()` — it must stay in sync with the `_pageNames` map in `go()` when new pages are added.
 - `initAuth()` races against a 4-second timeout. If Supabase is cold, the user sees the landing screen (not a blank page). The landing spinner (`#landing-auth-spinner`) shows during this window.
 - FIT file upload: `handleGarminFitImport()` guards against `FitParser` being undefined (CDN not yet loaded) and files > 100 MB. Both checks must stay in place.
-- Race catalog fetch (`useRaceCatalog`) takes 1-3s on cold load (8,284 rows, two parallel Supabase pages). `AddRaceModal` has a `useEffect([catalog])` that fires `runSearch()` when catalog arrives — do not remove this or searches typed before catalog loads will silently return nothing.
+- Race catalog fetch (`useRaceCatalog`) takes 1-3s on cold load (~19k rows, 25 parallel Supabase pages). `AddRaceModal` has a `useEffect([catalog])` that fires `runSearch()` when catalog arrives — do not remove this or searches typed before catalog loads will silently return nothing.
 - Race catalog stores `country` as full names ("Oman", "United States", "France") — NOT ISO codes. The tokenized search haystacks include `countryNameHaystack()` output for ISO-code entries too, but the primary catalog data is full names.
+- `supabaseAnon` client (`src/lib/supabase.ts`) must be used for public table reads (`race_catalog`). The default `supabase` client injects a Clerk JWT via `Authorization: Bearer`. If the Supabase JWT template is not configured in Clerk, PostgREST returns 401 for every catalog request — silently producing 0 results. `supabaseAnon` uses only the raw anon key, which is always sufficient for public tables.
+- `AddRaceModal` "Add manually" button: after clicking, `query` still contains the search text. The `onFocus` handler (`if (query.length >= 2) setShowSuggest(true)`) must be guarded with `&& !showManualDate` to prevent the dropdown re-appearing when focus briefly returns to the name input on mobile.
+- Profile visibility toggles (`profileVisibility` on `Athlete`) default to `false` (explicit opt-in). The Worker SSR gates each public profile section (`races`, `pbs`, `medals`, `stats`, `upcoming`) on `pv.xxx === true`. Never add default-ON logic.
+- `pbHiddenKeys` on `Athlete` must be synced to the athlete store (via `savePBHiddenKeys` in `Profile.tsx`) for the public profile Worker to respect them. localStorage-only storage is not enough — Worker reads from `state_json`.
+- `Settings.test.tsx` mocks `@clerk/clerk-react` — any new hooks used in Settings.tsx (`useUser`, `useClerk`, etc.) must be added to the `vi.mock` return object or all 9 Settings tests fail with "No X export defined on mock".
 - `updateRace` in `useRaceStore` patches `races`, `upcomingRaces`, AND `nextRace` — all three must be updated together. Missing the `nextRace` patch causes widgets like `GapToGoalWidget` to show stale data after an edit.
 - `Athlete.units` defaults to `'metric'` if unset. All distance/pace display code must use `useUnits()` and the helpers in `src/lib/units.ts` — never hardcode KM/MI labels.
 - Weather forecast uses `forecast_days=2` so the 5-hour strip always spans midnight. Do not revert to `forecast_days=1` — it leaves only 1 slot after ~9PM.
 - `IS_STAGING` from `src/env.ts` drives `proAccessGranted` in `useAuthStore` — all Pro features are unlocked on `dev.breaktapes.com`. Production (`app.breaktapes.com`) keeps `proAccessGranted: false`.
 - Dashboard test `YESTERDAY`/`FUTURE` constants use local-time date arithmetic (`localDateStr(n)` helper) — not `.toISOString()` which is UTC and drifts ±1 day in non-UTC timezones after midnight.
+
+---
+
+### Session 30 (2026-04-29) — Public profile, profile visibility, catalog auth fix, light mode nav
+
+**Branches:** `fix/profile-visibility` → staging (PR #297) → main (PR #298)
+
+#### Changes shipped
+
+- **Profile visibility — explicit opt-in** — `Settings.tsx` toggle changed from `vis[key] ?? defaultOn` (default ON for races/pbs/medals/stats) to `vis[key] === true`. All sections now off by default. Worker SSR gates each `bodyContent` section on the corresponding `profileVisibility` flag.
+- **Bottom nav light mode** — `BottomNav.tsx` background was hardcoded `rgba(13,13,13,0.97)`. Inactive icons (`rgba(26,26,26,0.5)`) were invisible on the dark nav in light mode. Fixed with `var(--surface2)` / `var(--surface)` / `var(--border)` theme tokens.
+- **Public profile PB cards** — Worker now renders PB cards matching in-app style: 28px time, sport-colored accent (`SPORT_ACCENT`), gradient bg, 3px left border, 2-col grid. `PB_DISTANCES` array mirrors `Profile.tsx` exactly (21 entries including 10 Mile, 50K, 100K, 100 Mile, HYROX).
+- **`pbHiddenKeys` sync** — `Athlete` type extended with `pbHiddenKeys?: string[]`. `savePBHiddenKeys()` in Profile.tsx now also calls `useAthleteStore.getState().updateAthlete({ pbHiddenKeys: [...s] })` so the setting propagates to Supabase and the Worker can filter PB cards.
+- **Race catalog auth fix** — Added `supabaseAnon` client to `src/lib/supabase.ts` (no Clerk JWT override). `useRaceCatalog` switched to `supabaseAnon`. Root cause: default `supabase` client injects Clerk JWT; without the Supabase JWT template configured in Clerk, PostgREST returns 401 → `catalog = []` → "No matches" for every search.
+- **Catalog row count fix** — `TOTAL_PAGES` bumped from 10 → 25. Catalog grew from ~8k to ~19k rows; 10 pages (10k rows) silently dropped all N–Z races (Boston, all 70.3 entries, etc.).
+- **"Add manually" dropdown re-appearing** — `onFocus` in AddRaceModal called `setShowSuggest(true)` when `query.length >= 2`. After tapping "Add manually", `query` wasn't cleared; focus briefly returning to the name input on mobile re-opened the dropdown, covering the date field. Fixed: added `&& !showManualDate` guard on both `onFocus` and the catalog-arrival `useEffect`.
+- **Country flag in race rows** — Worker renders flag emoji (`countryFlagEmoji()`) instead of medal emoji in race rows on public profile.
+- **`distLabel()` rewrite in Worker** — Handles `16.09` → `10 Mile` and all km→label mappings, matching `src/lib/utils.ts` exactly.
+- **Settings test mock** — `Settings.test.tsx` `vi.mock('@clerk/clerk-react')` now includes `useUser: () => ({ user: null })` to match the `useUser()` call added to Settings.tsx in the prior session.
+
+#### Key learnings
+- `supabase` client (`src/lib/supabase.ts`) injects Clerk JWT on every request via the `global.fetch` override. Public tables (race_catalog) don't need or want a JWT — and if the Supabase JWT template is not set up in Clerk, PostgREST returns 401 silently. Separate `supabaseAnon` client for public tables is mandatory.
+- Race catalog had 19k rows as of April 2026 but `TOTAL_PAGES = 10` only fetched 10k. Supabase REST hard-limits to 1000/page. Silent truncation — no error, just fewer results. Always set `TOTAL_PAGES` to `ceil(expected_rows / PAGE) + buffer`.
+- `onFocus` autocomplete re-trigger: `query` state is not cleared when "Add manually" is clicked. On mobile, focus briefly shifts and returns to the text input after a tap, triggering `onFocus`. Guard: `&& !showManualDate` prevents dropdown re-opening in manual mode. Same guard needed on the catalog-arrival `useEffect`.
+- Vitest mock completeness: if Settings.tsx calls `useUser()` from `@clerk/clerk-react` and the test mock only has `useClerk`, all tests in that file fail with "No useUser export defined on mock". Keep the clerk mock exhaustive — add every hook used in the component.
+- `pbHiddenKeys` localStorage-only storage doesn't reach the Worker SSR (which reads from Supabase `state_json`). Any setting that must appear on the public profile must be synced to the athlete store (which syncs to Supabase via `syncStateToSupabase()`).
 
 ---
 
