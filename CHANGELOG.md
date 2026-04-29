@@ -2,6 +2,16 @@
 
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+## [0.6.8.0] - 2026-04-29
+
+### Added
+- **Upcoming race edit — Race Start Time field:** Users can now set the wall-clock race start time directly from the upcoming race edit sheet. The value is saved to the race and automatically contributed to the race catalog (fills `start_time` on the matching catalog entry when currently unset).
+- **Supabase migration `20260429000000`:** New `contribute_race_start_time` SECURITY DEFINER RPC that lets authenticated users write start time knowledge back to the race catalog without direct table access.
+
+### Changed
+- **Upcoming race edit — header spacing:** Increased top padding, handle margin, and header bottom margin so the race name and subtitle are no longer cramped at the top of the sheet.
+- **Upcoming race edit — modal height:** Raised `maxHeight` from `85vh` to `90vh` to prevent content clipping on smaller screens.
+
 ## [0.6.7.0] - 2026-04-28
 
 ### Added
