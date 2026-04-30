@@ -4538,6 +4538,578 @@ var init_write_commands = __esm(() => {
   };
 });
 
+// browse/src/commands.ts
+function wrapUntrustedContent(result, url) {
+  const safeUrl = url.replace(/[\n\r]/g, "").slice(0, 200);
+  const safeResult = result.replace(/--- (BEGIN|END) UNTRUSTED EXTERNAL CONTENT/g, "--- $1 UNTRUSTED EXTERNAL C​ONTENT");
+  return `--- BEGIN UNTRUSTED EXTERNAL CONTENT (source: ${safeUrl}) ---
+${safeResult}
+--- END UNTRUSTED EXTERNAL CONTENT ---`;
+}
+function canonicalizeCommand(cmd) {
+  return COMMAND_ALIASES[cmd] ?? cmd;
+}
+function levenshtein(a, b) {
+  if (a === b)
+    return 0;
+  if (a.length === 0)
+    return b.length;
+  if (b.length === 0)
+    return a.length;
+  const m = [];
+  for (let i = 0;i <= a.length; i++)
+    m.push([i, ...Array(b.length).fill(0)]);
+  for (let j = 0;j <= b.length; j++)
+    m[0][j] = j;
+  for (let i = 1;i <= a.length; i++) {
+    for (let j = 1;j <= b.length; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      m[i][j] = Math.min(m[i - 1][j] + 1, m[i][j - 1] + 1, m[i - 1][j - 1] + cost);
+    }
+  }
+  return m[a.length][b.length];
+}
+function buildUnknownCommandError(command, commandSet, aliasMap = COMMAND_ALIASES, newInVersion = NEW_IN_VERSION) {
+  let msg = `Unknown command: '${command}'.`;
+  if (command.length >= 4) {
+    let best;
+    let bestDist = 3;
+    const candidates = [...commandSet, ...Object.keys(aliasMap)].sort();
+    for (const cand of candidates) {
+      const d = levenshtein(command, cand);
+      if (d <= 2 && d < bestDist) {
+        best = cand;
+        bestDist = d;
+      }
+    }
+    if (best)
+      msg += ` Did you mean '${best}'?`;
+  }
+  if (newInVersion[command]) {
+    msg += ` This command was added in browse v${newInVersion[command]}. Upgrade: cd ~/.claude/skills/gstack && git pull && bun run build.`;
+  }
+  return msg;
+}
+var READ_COMMANDS, WRITE_COMMANDS, META_COMMANDS, ALL_COMMANDS, PAGE_CONTENT_COMMANDS, DOM_CONTENT_COMMANDS, COMMAND_DESCRIPTIONS, allCmds, descKeys, COMMAND_ALIASES, NEW_IN_VERSION;
+var init_commands = __esm(() => {
+  READ_COMMANDS = new Set([
+    "text",
+    "html",
+    "links",
+    "forms",
+    "accessibility",
+    "js",
+    "eval",
+    "css",
+    "attrs",
+    "console",
+    "network",
+    "cookies",
+    "storage",
+    "perf",
+    "dialog",
+    "is",
+    "inspect",
+    "media",
+    "data"
+  ]);
+  WRITE_COMMANDS = new Set([
+    "goto",
+    "back",
+    "forward",
+    "reload",
+    "load-html",
+    "click",
+    "fill",
+    "select",
+    "hover",
+    "type",
+    "press",
+    "scroll",
+    "wait",
+    "viewport",
+    "cookie",
+    "cookie-import",
+    "cookie-import-browser",
+    "header",
+    "useragent",
+    "upload",
+    "dialog-accept",
+    "dialog-dismiss",
+    "style",
+    "cleanup",
+    "prettyscreenshot",
+    "download",
+    "scrape",
+    "archive"
+  ]);
+  META_COMMANDS = new Set([
+    "tabs",
+    "tab",
+    "tab-each",
+    "newtab",
+    "closetab",
+    "status",
+    "stop",
+    "restart",
+    "screenshot",
+    "pdf",
+    "responsive",
+    "chain",
+    "diff",
+    "url",
+    "snapshot",
+    "handoff",
+    "resume",
+    "connect",
+    "disconnect",
+    "focus",
+    "inbox",
+    "watch",
+    "state",
+    "frame",
+    "ux-audit",
+    "domain-skill",
+    "skill",
+    "cdp"
+  ]);
+  ALL_COMMANDS = new Set([...READ_COMMANDS, ...WRITE_COMMANDS, ...META_COMMANDS]);
+  PAGE_CONTENT_COMMANDS = new Set([
+    "text",
+    "html",
+    "links",
+    "forms",
+    "accessibility",
+    "attrs",
+    "console",
+    "dialog",
+    "media",
+    "data",
+    "ux-audit",
+    "snapshot"
+  ]);
+  DOM_CONTENT_COMMANDS = new Set([
+    "text",
+    "html",
+    "links",
+    "forms",
+    "accessibility",
+    "attrs",
+    "media",
+    "data",
+    "ux-audit"
+  ]);
+  COMMAND_DESCRIPTIONS = {
+    goto: { category: "Navigation", description: "Navigate to URL (http://, https://, or file:// scoped to cwd/TEMP_DIR)", usage: "goto <url>" },
+    "load-html": { category: "Navigation", description: 'Load HTML via setContent. Accepts a file path under safe-dirs (validated), OR --from-file <payload.json> with {"html":"...","waitUntil":"..."} for large inline HTML (Windows argv safe).', usage: "load-html <file> [--wait-until load|domcontentloaded|networkidle] [--tab-id <N>]  |  load-html --from-file <payload.json> [--tab-id <N>]" },
+    back: { category: "Navigation", description: "History back" },
+    forward: { category: "Navigation", description: "History forward" },
+    reload: { category: "Navigation", description: "Reload page" },
+    url: { category: "Navigation", description: "Print current URL" },
+    text: { category: "Reading", description: "Cleaned page text" },
+    html: { category: "Reading", description: "innerHTML of selector (throws if not found), or full page HTML if no selector given", usage: "html [selector]" },
+    links: { category: "Reading", description: 'All links as "text → href"' },
+    forms: { category: "Reading", description: "Form fields as JSON" },
+    accessibility: { category: "Reading", description: "Full ARIA tree" },
+    media: { category: "Reading", description: "All media elements (images, videos, audio) with URLs, dimensions, types", usage: "media [--images|--videos|--audio] [selector]" },
+    data: { category: "Reading", description: "Structured data: JSON-LD, Open Graph, Twitter Cards, meta tags", usage: "data [--jsonld|--og|--meta|--twitter]" },
+    js: { category: "Inspection", description: "Run inline JavaScript expression in the page context and return result as string. Same JS sandbox as eval; the only difference is js takes an inline expr while eval reads from a file.", usage: "js <expr>" },
+    eval: { category: "Inspection", description: "Run JavaScript from a file in the page context and return result as string. Path must resolve under /tmp or cwd (no traversal). Use eval for multi-line scripts; use js for one-liners.", usage: "eval <file>" },
+    css: { category: "Inspection", description: "Computed CSS value", usage: "css <sel> <prop>" },
+    attrs: { category: "Inspection", description: "Element attributes as JSON", usage: "attrs <sel|@ref>" },
+    is: { category: "Inspection", description: "State check on element. Valid <prop> values: visible, hidden, enabled, disabled, checked, editable, focused (case-sensitive). <sel> accepts a CSS selector OR an @ref token from a prior snapshot (e.g. @e3, @c1) — refs are interchangeable with selectors anywhere a selector is expected.", usage: "is <prop> <sel|@ref>" },
+    console: { category: "Inspection", description: "Console messages (--errors filters to error/warning)", usage: "console [--clear|--errors]" },
+    network: { category: "Inspection", description: "Network requests", usage: "network [--clear]" },
+    dialog: { category: "Inspection", description: "Dialog messages", usage: "dialog [--clear]" },
+    cookies: { category: "Inspection", description: "All cookies as JSON" },
+    storage: { category: "Inspection", description: 'Read both localStorage and sessionStorage as JSON. With "set <key> <value>", write to localStorage only (sessionStorage is read-only via this command — set it with `js sessionStorage.setItem(...)`).', usage: "storage  |  storage set <key> <value>" },
+    perf: { category: "Inspection", description: "Page load timings" },
+    click: { category: "Interaction", description: "Click element", usage: "click <sel>" },
+    fill: { category: "Interaction", description: "Fill input", usage: "fill <sel> <val>" },
+    select: { category: "Interaction", description: "Select dropdown option by value, label, or visible text", usage: "select <sel> <val>" },
+    hover: { category: "Interaction", description: "Hover element", usage: "hover <sel>" },
+    type: { category: "Interaction", description: "Type into focused element", usage: "type <text>" },
+    press: { category: "Interaction", description: "Press a Playwright keyboard key against the focused element. Names are case-sensitive: Enter, Tab, Escape, ArrowUp/Down/Left/Right, Backspace, Delete, Home, End, PageUp, PageDown. Modifiers combine with +: Shift+Enter, Control+A, Meta+K. Single printable chars (a, A, 1) work too. Full key list: https://playwright.dev/docs/api/class-keyboard#keyboard-press", usage: "press <key>" },
+    scroll: { category: "Interaction", description: "With a selector, smooth-scrolls the element into view. Without a selector, jumps to page bottom. No --by/--to amount option; for pixel-precise scrolling use `js window.scrollTo(0, N)`.", usage: "scroll [sel|@ref]" },
+    wait: { category: "Interaction", description: "Wait for element, network idle, or page load (timeout: 15s)", usage: "wait <sel|--networkidle|--load>" },
+    upload: { category: "Interaction", description: "Upload file(s)", usage: "upload <sel> <file> [file2...]" },
+    viewport: { category: "Interaction", description: "Set viewport size and optional deviceScaleFactor (1-3, for retina screenshots). --scale requires a context rebuild.", usage: "viewport [<WxH>] [--scale <n>]" },
+    cookie: { category: "Interaction", description: "Set cookie on current page domain", usage: "cookie <name>=<value>" },
+    "cookie-import": { category: "Interaction", description: "Import cookies from JSON file", usage: "cookie-import <json>" },
+    "cookie-import-browser": { category: "Interaction", description: "Import cookies from installed Chromium browsers (opens picker, or use --domain for direct import)", usage: "cookie-import-browser [browser] [--domain d]" },
+    header: { category: "Interaction", description: "Set custom request header (colon-separated, sensitive values auto-redacted)", usage: "header <name>:<value>" },
+    useragent: { category: "Interaction", description: "Set user agent", usage: "useragent <string>" },
+    "dialog-accept": { category: "Interaction", description: "Auto-accept next alert/confirm/prompt. Optional text is sent as the prompt response", usage: "dialog-accept [text]" },
+    "dialog-dismiss": { category: "Interaction", description: "Auto-dismiss next dialog" },
+    download: { category: "Extraction", description: "Download URL or media element to disk using browser cookies", usage: "download <url|@ref> [path] [--base64]" },
+    scrape: { category: "Extraction", description: "Bulk download all media from page. Writes manifest.json", usage: "scrape <images|videos|media> [--selector sel] [--dir path] [--limit N]" },
+    archive: { category: "Extraction", description: "Save complete page as MHTML via CDP", usage: "archive [path]" },
+    screenshot: { category: "Visual", description: "Save screenshot. --selector targets a specific element (explicit flag form). Positional selectors starting with ./#/@/[ still work.", usage: "screenshot [--selector <css>] [--viewport] [--clip x,y,w,h] [--base64] [selector|@ref] [path]" },
+    pdf: { category: "Visual", description: "Save the current page as PDF. Supports page layout (--format, --width, --height, --margins, --margin-*), structure (--toc waits for Paged.js), branding (--header-template, --footer-template, --page-numbers), accessibility (--tagged, --outline), and --from-file <payload.json> for large payloads. Use --tab-id <N> to target a specific tab.", usage: "pdf [path] [--format letter|a4|legal] [--width <dim> --height <dim>] [--margins <dim>] [--margin-top <dim> --margin-right <dim> --margin-bottom <dim> --margin-left <dim>] [--header-template <html>] [--footer-template <html>] [--page-numbers] [--tagged] [--outline] [--print-background] [--prefer-css-page-size] [--toc] [--tab-id <N>]  |  pdf --from-file <payload.json> [--tab-id <N>]" },
+    responsive: { category: "Visual", description: "Screenshots at mobile (375x812), tablet (768x1024), desktop (1280x720). Saves as {prefix}-mobile.png etc.", usage: "responsive [prefix]" },
+    diff: { category: "Visual", description: "Text diff between pages", usage: "diff <url1> <url2>" },
+    tabs: { category: "Tabs", description: "List open tabs" },
+    tab: { category: "Tabs", description: "Switch to tab", usage: "tab <id>" },
+    newtab: { category: "Tabs", description: 'Open new tab. With --json, returns {"tabId":N,"url":...} for programmatic use (make-pdf).', usage: "newtab [url] [--json]" },
+    closetab: { category: "Tabs", description: "Close tab", usage: "closetab [id]" },
+    "tab-each": { category: "Tabs", description: "Run a command on every open tab. Returns JSON with per-tab results.", usage: "tab-each <command> [args...]" },
+    status: { category: "Server", description: "Health check" },
+    stop: { category: "Server", description: "Shutdown server" },
+    restart: { category: "Server", description: "Restart server" },
+    snapshot: { category: "Snapshot", description: "Accessibility tree with @e refs for element selection. Flags: -i interactive only, -c compact, -d N depth limit, -s sel scope, -D diff vs previous, -a annotated screenshot, -o path output, -C cursor-interactive @c refs", usage: "snapshot [flags]" },
+    chain: { category: "Meta", description: 'Run a sequence of commands from JSON on stdin. One JSON array of arrays, each inner array is [cmd, ...args]. Output is one JSON result per command. Pipe a JSON array (e.g. `[["goto","https://example.com"],["text","h1"]]`) to `$B chain` and it runs the goto then the text command in order. Stops at the first error.', usage: "chain  (JSON via stdin)" },
+    handoff: { category: "Server", description: "Open visible Chrome at current page for user takeover", usage: "handoff [message]" },
+    resume: { category: "Server", description: "Re-snapshot after user takeover, return control to AI", usage: "resume" },
+    connect: { category: "Server", description: "Launch headed Chromium with Chrome extension", usage: "connect" },
+    disconnect: { category: "Server", description: "Disconnect headed browser, return to headless mode" },
+    focus: { category: "Server", description: "Bring headed browser window to foreground (macOS)", usage: "focus [@ref]" },
+    inbox: { category: "Meta", description: "List messages from sidebar scout inbox", usage: "inbox [--clear]" },
+    watch: { category: "Meta", description: "Passive observation — periodic snapshots while user browses", usage: "watch [stop]" },
+    state: { category: "Server", description: "Save/load browser state (cookies + URLs)", usage: "state save|load <name>" },
+    frame: { category: "Meta", description: "Switch to iframe context (or main to return)", usage: "frame <sel|@ref|--name n|--url pattern|main>" },
+    inspect: { category: "Inspection", description: "Deep CSS inspection via CDP — full rule cascade, box model, computed styles", usage: "inspect [selector] [--all] [--history]" },
+    style: { category: "Interaction", description: "Modify CSS property on element (with undo support)", usage: "style <sel> <prop> <value> | style --undo [N]" },
+    cleanup: { category: "Interaction", description: "Remove page clutter (ads, cookie banners, sticky elements, social widgets)", usage: "cleanup [--ads] [--cookies] [--sticky] [--social] [--all]" },
+    prettyscreenshot: { category: "Visual", description: "Clean screenshot with optional cleanup, scroll positioning, and element hiding", usage: "prettyscreenshot [--scroll-to sel|text] [--cleanup] [--hide sel...] [--width px] [path]" },
+    "ux-audit": { category: "Inspection", description: "Extract page structure for UX behavioral analysis — site ID, nav, headings, text blocks, interactive elements. Returns JSON for agent interpretation.", usage: "ux-audit" },
+    "domain-skill": { category: "Meta", description: 'Per-site notes the agent writes for itself. Host is derived from the active tab. Lifecycle: `save` adds a quarantined note → after N=3 successful uses without the prompt-injection classifier flagging it, the note auto-promotes to "active" → `promote-to-global` lifts it to the global tier (machine-wide, all projects). The classifier flag is set automatically by the L4 prompt-injection scan; agents do not set it manually. Use `list` / `show` to inspect, `edit` to revise, `rollback` to demote, `rm` to tombstone.', usage: "domain-skill save|list|show|edit|promote-to-global|rollback|rm <host?>" },
+    skill: { category: "Meta", description: "Run a browser-skill: deterministic Playwright script that drives the daemon over loopback HTTP. 3-tier lookup (project > global > bundled). Spawned scripts get a per-spawn scoped token (read+write only) — never the daemon root token.", usage: "skill list|show|run|test|rm <name?> [--arg k=v]... [--timeout=Ns]" },
+    cdp: { category: "Inspection", description: "Raw Chrome DevTools Protocol method dispatch. Deny-default: only methods enumerated in `browse/src/cdp-allowlist.ts` (CDP_ALLOWLIST const) are reachable; any other method 403s. Each allowlist entry declares scope (tab vs browser) and output (trusted vs untrusted) — untrusted methods (data-exfil-shaped, e.g. Network.getResponseBody) get UNTRUSTED-envelope wrapped output. To discover allowed methods: read `browse/src/cdp-allowlist.ts`. Example: `$B cdp Page.getLayoutMetrics`.", usage: "cdp <Domain.method> [json-params]" }
+  };
+  allCmds = new Set([...READ_COMMANDS, ...WRITE_COMMANDS, ...META_COMMANDS]);
+  descKeys = new Set(Object.keys(COMMAND_DESCRIPTIONS));
+  for (const cmd of allCmds) {
+    if (!descKeys.has(cmd))
+      throw new Error(`COMMAND_DESCRIPTIONS missing entry for: ${cmd}`);
+  }
+  for (const key of descKeys) {
+    if (!allCmds.has(key))
+      throw new Error(`COMMAND_DESCRIPTIONS has unknown command: ${key}`);
+  }
+  COMMAND_ALIASES = {
+    setcontent: "load-html",
+    "set-content": "load-html",
+    setContent: "load-html"
+  };
+  NEW_IN_VERSION = {
+    "load-html": "0.19.0.0"
+  };
+});
+
+// browse/src/telemetry.ts
+import { promises as fs7 } from "fs";
+import * as path8 from "path";
+import * as os6 from "os";
+function gstackHome2() {
+  return process.env.GSTACK_HOME || path8.join(os6.homedir(), ".gstack");
+}
+function analyticsDir() {
+  return path8.join(gstackHome2(), "analytics");
+}
+function telemetryFile() {
+  return path8.join(analyticsDir(), "browse-telemetry.jsonl");
+}
+async function ensureDir2() {
+  const dir = analyticsDir();
+  if (lastEnsuredDir === dir)
+    return;
+  await fs7.mkdir(dir, { recursive: true });
+  lastEnsuredDir = dir;
+}
+function isDisabled() {
+  if (telemetryDisabled !== null)
+    return telemetryDisabled;
+  if (process.env.GSTACK_TELEMETRY_OFF === "1") {
+    telemetryDisabled = true;
+    return true;
+  }
+  telemetryDisabled = false;
+  return false;
+}
+function logTelemetry(payload) {
+  if (isDisabled())
+    return;
+  const enriched = { ...payload, ts: new Date().toISOString() };
+  ensureDir2().then(() => fs7.appendFile(telemetryFile(), JSON.stringify(enriched) + `
+`, "utf8")).catch(() => {});
+}
+var lastEnsuredDir = null, telemetryDisabled = null;
+var init_telemetry = () => {};
+
+// browse/src/cdp-allowlist.ts
+function lookupCdpMethod(qualifiedName) {
+  return CDP_ALLOWLIST_INDEX.get(qualifiedName) ?? null;
+}
+var CDP_ALLOWLIST, CDP_ALLOWLIST_INDEX;
+var init_cdp_allowlist = __esm(() => {
+  CDP_ALLOWLIST = Object.freeze([
+    {
+      domain: "Accessibility",
+      method: "getFullAXTree",
+      scope: "tab",
+      output: "untrusted",
+      justification: "Read-only AX tree extraction. Output is third-party page content; wrap in UNTRUSTED."
+    },
+    {
+      domain: "Accessibility",
+      method: "getPartialAXTree",
+      scope: "tab",
+      output: "untrusted",
+      justification: "Read-only AX tree subtree by node. Output is third-party page content."
+    },
+    {
+      domain: "Accessibility",
+      method: "getRootAXNode",
+      scope: "tab",
+      output: "untrusted",
+      justification: "Read-only root AX node accessor."
+    },
+    {
+      domain: "DOM",
+      method: "describeNode",
+      scope: "tab",
+      output: "untrusted",
+      justification: "Inspect a DOM node by backend ID; pure read."
+    },
+    {
+      domain: "DOM",
+      method: "getBoxModel",
+      scope: "tab",
+      output: "trusted",
+      justification: "Pure geometric data (box dimensions). No page content leaks; safe trusted."
+    },
+    {
+      domain: "DOM",
+      method: "getNodeForLocation",
+      scope: "tab",
+      output: "trusted",
+      justification: "Pure coordinate→nodeId mapping; no content leak."
+    },
+    {
+      domain: "CSS",
+      method: "getMatchedStylesForNode",
+      scope: "tab",
+      output: "untrusted",
+      justification: "Read computed cascade for a node; output may contain attacker-controlled selectors."
+    },
+    {
+      domain: "CSS",
+      method: "getComputedStyleForNode",
+      scope: "tab",
+      output: "trusted",
+      justification: "Computed style values are bounded (CSS keywords/numbers); safe trusted."
+    },
+    {
+      domain: "CSS",
+      method: "getInlineStylesForNode",
+      scope: "tab",
+      output: "untrusted",
+      justification: "Inline style content may contain attacker-controlled custom-property values."
+    },
+    {
+      domain: "Performance",
+      method: "getMetrics",
+      scope: "tab",
+      output: "trusted",
+      justification: "Pure numeric metrics (timing, layout count); safe."
+    },
+    {
+      domain: "Performance",
+      method: "enable",
+      scope: "tab",
+      output: "trusted",
+      justification: "Domain enable; no content; required prerequisite for getMetrics."
+    },
+    {
+      domain: "Performance",
+      method: "disable",
+      scope: "tab",
+      output: "trusted",
+      justification: "Domain disable; no content."
+    },
+    {
+      domain: "Tracing",
+      method: "start",
+      scope: "browser",
+      output: "trusted",
+      justification: "Trace category capture. Browser-scoped to serialize against other CDP ops."
+    },
+    {
+      domain: "Tracing",
+      method: "end",
+      scope: "browser",
+      output: "untrusted",
+      justification: "Trace dump may contain URLs and page data; wrap."
+    },
+    {
+      domain: "Emulation",
+      method: "setDeviceMetricsOverride",
+      scope: "tab",
+      output: "trusted",
+      justification: "Viewport/scale override on the active tab."
+    },
+    {
+      domain: "Emulation",
+      method: "clearDeviceMetricsOverride",
+      scope: "tab",
+      output: "trusted",
+      justification: "Clear viewport override."
+    },
+    {
+      domain: "Emulation",
+      method: "setUserAgentOverride",
+      scope: "tab",
+      output: "trusted",
+      justification: "UA override on the active tab. NOTE: changes affect future requests; fine for tests."
+    },
+    {
+      domain: "Page",
+      method: "captureScreenshot",
+      scope: "tab",
+      output: "untrusted",
+      justification: "Screenshot bytes; output is bounded image data (no marker injection vector)."
+    },
+    {
+      domain: "Page",
+      method: "printToPDF",
+      scope: "tab",
+      output: "untrusted",
+      justification: "PDF bytes; bounded binary output."
+    },
+    {
+      domain: "Network",
+      method: "enable",
+      scope: "tab",
+      output: "trusted",
+      justification: "Domain enable; required prerequisite. Does not return data."
+    },
+    {
+      domain: "Network",
+      method: "disable",
+      scope: "tab",
+      output: "trusted",
+      justification: "Domain disable; mirrors Network.enable for cleanup symmetry."
+    },
+    {
+      domain: "Runtime",
+      method: "getProperties",
+      scope: "tab",
+      output: "untrusted",
+      justification: "Inspect properties of an existing remote object. Read-only; output may contain page data."
+    }
+  ]);
+  CDP_ALLOWLIST_INDEX = new Map(CDP_ALLOWLIST.map((e) => [`${e.domain}.${e.method}`, e]));
+});
+
+// browse/src/cdp-bridge.ts
+async function getCdpSession(page) {
+  let s = sessionCache.get(page);
+  if (s)
+    return s;
+  s = await page.context().newCDPSession(page);
+  sessionCache.set(page, s);
+  page.once("close", () => sessionCache.delete(page));
+  return s;
+}
+async function dispatchCdpCall(input) {
+  const qualified = `${input.domain}.${input.method}`;
+  const entry = lookupCdpMethod(qualified);
+  if (!entry) {
+    logTelemetry({ event: "cdp_method_denied", domain: input.domain, method: input.method });
+    throw new Error(`DENIED: ${qualified} is not on the CDP allowlist.
+` + `Cause: deny-default posture; method has not been audited and added to cdp-allowlist.ts.
+` + `Action: if this method is genuinely needed, open a PR adding it to CDP_ALLOWLIST with a one-line justification + scope (tab|browser) + output (trusted|untrusted).`);
+  }
+  const acquireStart = Date.now();
+  const release = entry.scope === "browser" ? await input.bm.acquireGlobalCdpLock(CDP_ACQUIRE_TIMEOUT_MS) : await input.bm.acquireTabLock(input.tabId, CDP_ACQUIRE_TIMEOUT_MS);
+  const acquireMs = Date.now() - acquireStart;
+  logTelemetry({ event: "cdp_method_lock_acquire_ms", domain: input.domain, method: input.method, ms: acquireMs });
+  logTelemetry({ event: "cdp_method_called", domain: input.domain, method: input.method, allowed: true, scope: entry.scope });
+  try {
+    const page = input.bm.getPageForTab(input.tabId);
+    if (!page) {
+      throw new Error(`Cannot dispatch: tab ${input.tabId} not found.
+` + `Cause: tab was closed between command queue and dispatch.
+` + "Action: $B tabs to list current tabs.");
+    }
+    let session;
+    try {
+      session = await getCdpSession(page);
+    } catch (e) {
+      throw new Error(`CDPSessionInvalidated: ${e.message}
+` + `Cause: Playwright context was recreated (e.g., viewport scale change) and the prior CDP session is stale.
+` + "Action: retry the command; the bridge will create a fresh session.");
+    }
+    const callPromise = session.send(qualified, input.params);
+    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error(`CDPBridgeTimeout: ${qualified} did not return within ${CDP_TIMEOUT_MS}ms`)), CDP_TIMEOUT_MS));
+    const raw = await Promise.race([callPromise, timeoutPromise]);
+    return { raw, entry };
+  } finally {
+    release();
+  }
+}
+var CDP_TIMEOUT_MS = 5000, CDP_ACQUIRE_TIMEOUT_MS = 5000, sessionCache;
+var init_cdp_bridge = __esm(() => {
+  init_cdp_allowlist();
+  init_telemetry();
+  sessionCache = new WeakMap;
+});
+
+// browse/src/cdp-commands.ts
+var exports_cdp_commands = {};
+__export(exports_cdp_commands, {
+  handleCdpCommand: () => handleCdpCommand
+});
+function parseQualified(name) {
+  const idx = name.indexOf(".");
+  if (idx <= 0 || idx === name.length - 1) {
+    throw new Error(`Usage: $B cdp <Domain.method> [json-params]
+` + `Cause: '${name}' is not in Domain.method format.
+` + "Action: e.g. $B cdp Accessibility.getFullAXTree {}");
+  }
+  return { domain: name.slice(0, idx), method: name.slice(idx + 1) };
+}
+async function handleCdpCommand(args, bm) {
+  if (args.length === 0 || args[0] === "help" || args[0] === "--help") {
+    return [
+      "$B cdp — raw CDP method dispatch (deny-default escape hatch)",
+      "",
+      "Usage: $B cdp <Domain.method> [json-params]",
+      "",
+      "Allowed methods are listed in browse/src/cdp-allowlist.ts. To add one,",
+      "open a PR with a one-line justification and the (scope, output) tags.",
+      "Examples:",
+      "  $B cdp Accessibility.getFullAXTree {}",
+      "  $B cdp Performance.getMetrics {}",
+      `  $B cdp DOM.describeNode '{"backendNodeId":42,"depth":3}'`
+    ].join(`
+`);
+  }
+  const qualified = args[0];
+  const { domain, method } = parseQualified(qualified);
+  let params = {};
+  if (args[1]) {
+    try {
+      params = JSON.parse(args[1]) ?? {};
+    } catch (e) {
+      throw new Error(`Cannot parse params as JSON: ${e.message}
+` + `Cause: argument '${args[1]}' is not valid JSON.
+` + `Action: pass a JSON object literal, e.g. '{"backendNodeId":42}'.`);
+    }
+  }
+  const tabId = bm.getActiveTabId();
+  const { raw, entry } = await dispatchCdpCall({ domain, method, params, tabId, bm });
+  const json = JSON.stringify(raw, null, 2);
+  if (entry.output === "untrusted") {
+    return wrapUntrustedContent(json, `cdp:${qualified}`);
+  }
+  return json;
+}
+var init_cdp_commands = __esm(() => {
+  init_cdp_bridge();
+  init_commands();
+});
+
 // browse/src/browser-manager.ts
 init_buffers();
 init_url_validation();
@@ -4637,7 +5209,7 @@ class TabSession {
 }
 
 // browse/src/browser-manager.ts
-var __dirname = "/Users/akrish/DEV/.claude/worktrees/serene-dirac-211abb/.claude/skills/gstack/browse/src";
+var __dirname = "/Users/akrish/DEV/.claude/worktrees/suspicious-montalcini-93a1f7/.claude/skills/gstack/browse/src";
 class BrowserManager {
   browser = null;
   context = null;
@@ -5112,10 +5684,8 @@ class BrowserManager {
   checkTabAccess(tabId, clientId, options = {}) {
     if (clientId === "root")
       return true;
-    const owner = this.tabOwnership.get(tabId);
-    if (options.ownOnly || options.isWrite) {
-      if (!owner)
-        return false;
+    if (options.ownOnly) {
+      const owner = this.tabOwnership.get(tabId);
       return owner === clientId;
     }
     return true;
@@ -5148,6 +5718,54 @@ class BrowserManager {
     if (!session)
       throw new Error(`Tab ${tabId} not found`);
     return session;
+  }
+  getPageForTab(tabId) {
+    return this.pages.get(tabId) ?? null;
+  }
+  tabLocks = new Map;
+  globalCdpLockTail = Promise.resolve();
+  async acquireTabLock(tabId, timeoutMs) {
+    const existing = this.tabLocks.get(tabId) ?? Promise.resolve();
+    const tail = Promise.all([existing, this.globalCdpLockTail]).then(() => {
+      return;
+    });
+    let release;
+    const next = new Promise((resolve3) => {
+      release = resolve3;
+    });
+    this.tabLocks.set(tabId, tail.then(() => next));
+    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error(`CDPMutexAcquireTimeout: tab ${tabId} lock not acquired within ${timeoutMs}ms.
+` + `Cause: a prior CDP or browser-scoped operation has held the lock too long.
+` + "Action: retry; if this repeats, the prior operation may be hung — file a bug.")), timeoutMs));
+    try {
+      await Promise.race([tail, timeoutPromise]);
+    } catch (e) {
+      release();
+      throw e;
+    }
+    return release;
+  }
+  async acquireGlobalCdpLock(timeoutMs) {
+    const allTabTails = Array.from(this.tabLocks.values());
+    const priorGlobal = this.globalCdpLockTail;
+    const allPrior = Promise.all([priorGlobal, ...allTabTails]).then(() => {
+      return;
+    });
+    let release;
+    const next = new Promise((resolve3) => {
+      release = resolve3;
+    });
+    this.globalCdpLockTail = allPrior.then(() => next);
+    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error(`CDPMutexAcquireTimeout: global CDP lock not acquired within ${timeoutMs}ms.
+` + `Cause: in-flight tab operations have not completed.
+` + "Action: retry; if this repeats, file a bug — a tab op may be hung.")), timeoutMs));
+    try {
+      await Promise.race([allPrior, timeoutPromise]);
+    } catch (e) {
+      release();
+      throw e;
+    }
+    return release;
   }
   getPage() {
     return this.getActiveSession().page;
@@ -6299,258 +6917,779 @@ async function handleSnapshot(args, session, securityOpts) {
 
 // browse/src/meta-commands.ts
 init_read_commands();
+init_commands();
 
-// browse/src/commands.ts
-var READ_COMMANDS = new Set([
-  "text",
-  "html",
-  "links",
-  "forms",
-  "accessibility",
-  "js",
-  "eval",
-  "css",
-  "attrs",
-  "console",
-  "network",
-  "cookies",
-  "storage",
-  "perf",
-  "dialog",
-  "is",
-  "inspect",
-  "media",
-  "data"
-]);
-var WRITE_COMMANDS = new Set([
-  "goto",
-  "back",
-  "forward",
-  "reload",
-  "load-html",
-  "click",
-  "fill",
-  "select",
-  "hover",
-  "type",
-  "press",
-  "scroll",
-  "wait",
-  "viewport",
-  "cookie",
-  "cookie-import",
-  "cookie-import-browser",
-  "header",
-  "useragent",
-  "upload",
-  "dialog-accept",
-  "dialog-dismiss",
-  "style",
-  "cleanup",
-  "prettyscreenshot",
-  "download",
-  "scrape",
-  "archive"
-]);
-var META_COMMANDS = new Set([
-  "tabs",
-  "tab",
-  "tab-each",
-  "newtab",
-  "closetab",
-  "status",
-  "stop",
-  "restart",
-  "screenshot",
-  "pdf",
-  "responsive",
-  "chain",
-  "diff",
-  "url",
-  "snapshot",
-  "handoff",
-  "resume",
-  "connect",
-  "disconnect",
-  "focus",
-  "inbox",
-  "watch",
-  "state",
-  "frame",
-  "ux-audit"
-]);
-var ALL_COMMANDS = new Set([...READ_COMMANDS, ...WRITE_COMMANDS, ...META_COMMANDS]);
-var PAGE_CONTENT_COMMANDS = new Set([
-  "text",
-  "html",
-  "links",
-  "forms",
-  "accessibility",
-  "attrs",
-  "console",
-  "dialog",
-  "media",
-  "data",
-  "ux-audit",
-  "snapshot"
-]);
-var DOM_CONTENT_COMMANDS = new Set([
-  "text",
-  "html",
-  "links",
-  "forms",
-  "accessibility",
-  "attrs",
-  "media",
-  "data",
-  "ux-audit"
-]);
-function wrapUntrustedContent(result, url) {
-  const safeUrl = url.replace(/[\n\r]/g, "").slice(0, 200);
-  const safeResult = result.replace(/--- (BEGIN|END) UNTRUSTED EXTERNAL CONTENT/g, "--- $1 UNTRUSTED EXTERNAL C​ONTENT");
-  return `--- BEGIN UNTRUSTED EXTERNAL CONTENT (source: ${safeUrl}) ---
-${safeResult}
---- END UNTRUSTED EXTERNAL CONTENT ---`;
+// browse/src/domain-skill-commands.ts
+import { promises as fs8 } from "fs";
+import * as path9 from "path";
+import * as os7 from "os";
+import { spawnSync } from "child_process";
+
+// browse/src/domain-skills.ts
+import { promises as fs6 } from "fs";
+import { open as fsOpen, constants as fsConstants } from "fs";
+import * as path6 from "path";
+import * as os4 from "os";
+import { createHash } from "crypto";
+var PROMOTE_THRESHOLD = 3;
+function gstackHome() {
+  return process.env.GSTACK_HOME || path6.join(os4.homedir(), ".gstack");
 }
-var COMMAND_DESCRIPTIONS = {
-  goto: { category: "Navigation", description: "Navigate to URL (http://, https://, or file:// scoped to cwd/TEMP_DIR)", usage: "goto <url>" },
-  "load-html": { category: "Navigation", description: 'Load HTML via setContent. Accepts a file path under safe-dirs (validated), OR --from-file <payload.json> with {"html":"...","waitUntil":"..."} for large inline HTML (Windows argv safe).', usage: "load-html <file> [--wait-until load|domcontentloaded|networkidle] [--tab-id <N>]  |  load-html --from-file <payload.json> [--tab-id <N>]" },
-  back: { category: "Navigation", description: "History back" },
-  forward: { category: "Navigation", description: "History forward" },
-  reload: { category: "Navigation", description: "Reload page" },
-  url: { category: "Navigation", description: "Print current URL" },
-  text: { category: "Reading", description: "Cleaned page text" },
-  html: { category: "Reading", description: "innerHTML of selector (throws if not found), or full page HTML if no selector given", usage: "html [selector]" },
-  links: { category: "Reading", description: 'All links as "text → href"' },
-  forms: { category: "Reading", description: "Form fields as JSON" },
-  accessibility: { category: "Reading", description: "Full ARIA tree" },
-  media: { category: "Reading", description: "All media elements (images, videos, audio) with URLs, dimensions, types", usage: "media [--images|--videos|--audio] [selector]" },
-  data: { category: "Reading", description: "Structured data: JSON-LD, Open Graph, Twitter Cards, meta tags", usage: "data [--jsonld|--og|--meta|--twitter]" },
-  js: { category: "Inspection", description: "Run JavaScript expression and return result as string", usage: "js <expr>" },
-  eval: { category: "Inspection", description: "Run JavaScript from file and return result as string (path must be under /tmp or cwd)", usage: "eval <file>" },
-  css: { category: "Inspection", description: "Computed CSS value", usage: "css <sel> <prop>" },
-  attrs: { category: "Inspection", description: "Element attributes as JSON", usage: "attrs <sel|@ref>" },
-  is: { category: "Inspection", description: "State check (visible/hidden/enabled/disabled/checked/editable/focused)", usage: "is <prop> <sel>" },
-  console: { category: "Inspection", description: "Console messages (--errors filters to error/warning)", usage: "console [--clear|--errors]" },
-  network: { category: "Inspection", description: "Network requests", usage: "network [--clear]" },
-  dialog: { category: "Inspection", description: "Dialog messages", usage: "dialog [--clear]" },
-  cookies: { category: "Inspection", description: "All cookies as JSON" },
-  storage: { category: "Inspection", description: "Read all localStorage + sessionStorage as JSON, or set <key> <value> to write localStorage", usage: "storage [set k v]" },
-  perf: { category: "Inspection", description: "Page load timings" },
-  click: { category: "Interaction", description: "Click element", usage: "click <sel>" },
-  fill: { category: "Interaction", description: "Fill input", usage: "fill <sel> <val>" },
-  select: { category: "Interaction", description: "Select dropdown option by value, label, or visible text", usage: "select <sel> <val>" },
-  hover: { category: "Interaction", description: "Hover element", usage: "hover <sel>" },
-  type: { category: "Interaction", description: "Type into focused element", usage: "type <text>" },
-  press: { category: "Interaction", description: "Press key — Enter, Tab, Escape, ArrowUp/Down/Left/Right, Backspace, Delete, Home, End, PageUp, PageDown, or modifiers like Shift+Enter", usage: "press <key>" },
-  scroll: { category: "Interaction", description: "Scroll element into view, or scroll to page bottom if no selector", usage: "scroll [sel]" },
-  wait: { category: "Interaction", description: "Wait for element, network idle, or page load (timeout: 15s)", usage: "wait <sel|--networkidle|--load>" },
-  upload: { category: "Interaction", description: "Upload file(s)", usage: "upload <sel> <file> [file2...]" },
-  viewport: { category: "Interaction", description: "Set viewport size and optional deviceScaleFactor (1-3, for retina screenshots). --scale requires a context rebuild.", usage: "viewport [<WxH>] [--scale <n>]" },
-  cookie: { category: "Interaction", description: "Set cookie on current page domain", usage: "cookie <name>=<value>" },
-  "cookie-import": { category: "Interaction", description: "Import cookies from JSON file", usage: "cookie-import <json>" },
-  "cookie-import-browser": { category: "Interaction", description: "Import cookies from installed Chromium browsers (opens picker, or use --domain for direct import)", usage: "cookie-import-browser [browser] [--domain d]" },
-  header: { category: "Interaction", description: "Set custom request header (colon-separated, sensitive values auto-redacted)", usage: "header <name>:<value>" },
-  useragent: { category: "Interaction", description: "Set user agent", usage: "useragent <string>" },
-  "dialog-accept": { category: "Interaction", description: "Auto-accept next alert/confirm/prompt. Optional text is sent as the prompt response", usage: "dialog-accept [text]" },
-  "dialog-dismiss": { category: "Interaction", description: "Auto-dismiss next dialog" },
-  download: { category: "Extraction", description: "Download URL or media element to disk using browser cookies", usage: "download <url|@ref> [path] [--base64]" },
-  scrape: { category: "Extraction", description: "Bulk download all media from page. Writes manifest.json", usage: "scrape <images|videos|media> [--selector sel] [--dir path] [--limit N]" },
-  archive: { category: "Extraction", description: "Save complete page as MHTML via CDP", usage: "archive [path]" },
-  screenshot: { category: "Visual", description: "Save screenshot. --selector targets a specific element (explicit flag form). Positional selectors starting with ./#/@/[ still work.", usage: "screenshot [--selector <css>] [--viewport] [--clip x,y,w,h] [--base64] [selector|@ref] [path]" },
-  pdf: { category: "Visual", description: "Save the current page as PDF. Supports page layout (--format, --width, --height, --margins, --margin-*), structure (--toc waits for Paged.js), branding (--header-template, --footer-template, --page-numbers), accessibility (--tagged, --outline), and --from-file <payload.json> for large payloads. Use --tab-id <N> to target a specific tab.", usage: "pdf [path] [--format letter|a4|legal] [--width <dim> --height <dim>] [--margins <dim>] [--margin-top <dim> --margin-right <dim> --margin-bottom <dim> --margin-left <dim>] [--header-template <html>] [--footer-template <html>] [--page-numbers] [--tagged] [--outline] [--print-background] [--prefer-css-page-size] [--toc] [--tab-id <N>]  |  pdf --from-file <payload.json> [--tab-id <N>]" },
-  responsive: { category: "Visual", description: "Screenshots at mobile (375x812), tablet (768x1024), desktop (1280x720). Saves as {prefix}-mobile.png etc.", usage: "responsive [prefix]" },
-  diff: { category: "Visual", description: "Text diff between pages", usage: "diff <url1> <url2>" },
-  tabs: { category: "Tabs", description: "List open tabs" },
-  tab: { category: "Tabs", description: "Switch to tab", usage: "tab <id>" },
-  newtab: { category: "Tabs", description: 'Open new tab. With --json, returns {"tabId":N,"url":...} for programmatic use (make-pdf).', usage: "newtab [url] [--json]" },
-  closetab: { category: "Tabs", description: "Close tab", usage: "closetab [id]" },
-  "tab-each": { category: "Tabs", description: "Run a command on every open tab. Returns JSON with per-tab results.", usage: "tab-each <command> [args...]" },
-  status: { category: "Server", description: "Health check" },
-  stop: { category: "Server", description: "Shutdown server" },
-  restart: { category: "Server", description: "Restart server" },
-  snapshot: { category: "Snapshot", description: "Accessibility tree with @e refs for element selection. Flags: -i interactive only, -c compact, -d N depth limit, -s sel scope, -D diff vs previous, -a annotated screenshot, -o path output, -C cursor-interactive @c refs", usage: "snapshot [flags]" },
-  chain: { category: "Meta", description: 'Run commands from JSON stdin. Format: [["cmd","arg1",...],...]' },
-  handoff: { category: "Server", description: "Open visible Chrome at current page for user takeover", usage: "handoff [message]" },
-  resume: { category: "Server", description: "Re-snapshot after user takeover, return control to AI", usage: "resume" },
-  connect: { category: "Server", description: "Launch headed Chromium with Chrome extension", usage: "connect" },
-  disconnect: { category: "Server", description: "Disconnect headed browser, return to headless mode" },
-  focus: { category: "Server", description: "Bring headed browser window to foreground (macOS)", usage: "focus [@ref]" },
-  inbox: { category: "Meta", description: "List messages from sidebar scout inbox", usage: "inbox [--clear]" },
-  watch: { category: "Meta", description: "Passive observation — periodic snapshots while user browses", usage: "watch [stop]" },
-  state: { category: "Server", description: "Save/load browser state (cookies + URLs)", usage: "state save|load <name>" },
-  frame: { category: "Meta", description: "Switch to iframe context (or main to return)", usage: "frame <sel|@ref|--name n|--url pattern|main>" },
-  inspect: { category: "Inspection", description: "Deep CSS inspection via CDP — full rule cascade, box model, computed styles", usage: "inspect [selector] [--all] [--history]" },
-  style: { category: "Interaction", description: "Modify CSS property on element (with undo support)", usage: "style <sel> <prop> <value> | style --undo [N]" },
-  cleanup: { category: "Interaction", description: "Remove page clutter (ads, cookie banners, sticky elements, social widgets)", usage: "cleanup [--ads] [--cookies] [--sticky] [--social] [--all]" },
-  prettyscreenshot: { category: "Visual", description: "Clean screenshot with optional cleanup, scroll positioning, and element hiding", usage: "prettyscreenshot [--scroll-to sel|text] [--cleanup] [--hide sel...] [--width px] [path]" },
-  "ux-audit": { category: "Inspection", description: "Extract page structure for UX behavioral analysis — site ID, nav, headings, text blocks, interactive elements. Returns JSON for agent interpretation.", usage: "ux-audit" }
-};
-var allCmds = new Set([...READ_COMMANDS, ...WRITE_COMMANDS, ...META_COMMANDS]);
-var descKeys = new Set(Object.keys(COMMAND_DESCRIPTIONS));
-for (const cmd of allCmds) {
-  if (!descKeys.has(cmd))
-    throw new Error(`COMMAND_DESCRIPTIONS missing entry for: ${cmd}`);
+function globalFile() {
+  return path6.join(gstackHome(), "global-domain-skills.jsonl");
 }
-for (const key of descKeys) {
-  if (!allCmds.has(key))
-    throw new Error(`COMMAND_DESCRIPTIONS has unknown command: ${key}`);
+function projectFile(slug) {
+  return path6.join(gstackHome(), "projects", slug, "learnings.jsonl");
 }
-var COMMAND_ALIASES = {
-  setcontent: "load-html",
-  "set-content": "load-html",
-  setContent: "load-html"
-};
-function canonicalizeCommand(cmd) {
-  return COMMAND_ALIASES[cmd] ?? cmd;
+function normalizeHost(input) {
+  let h = input.trim().toLowerCase();
+  h = h.replace(/^https?:\/\//, "");
+  h = h.split("/")[0].split("?")[0].split("#")[0];
+  h = h.split(":")[0];
+  h = h.replace(/^www\./, "");
+  return h;
 }
-var NEW_IN_VERSION = {
-  "load-html": "0.19.0.0"
-};
-function levenshtein(a, b) {
-  if (a === b)
-    return 0;
-  if (a.length === 0)
-    return b.length;
-  if (b.length === 0)
-    return a.length;
-  const m = [];
-  for (let i = 0;i <= a.length; i++)
-    m.push([i, ...Array(b.length).fill(0)]);
-  for (let j = 0;j <= b.length; j++)
-    m[0][j] = j;
-  for (let i = 1;i <= a.length; i++) {
-    for (let j = 1;j <= b.length; j++) {
-      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-      m[i][j] = Math.min(m[i - 1][j] + 1, m[i][j - 1] + 1, m[i - 1][j - 1] + cost);
+async function deriveHostFromActiveTab(page) {
+  const url = page.url();
+  if (!url || url === "about:blank" || url.startsWith("chrome://")) {
+    throw new Error(`Cannot save domain-skill: no top-level URL on active tab.
+` + `Cause: tab is empty or on chrome:// page.
+` + "Action: navigate to the target site first with $B goto <url>.");
+  }
+  return normalizeHost(url);
+}
+async function ensureDir(filePath) {
+  await fs6.mkdir(path6.dirname(filePath), { recursive: true });
+}
+async function appendRow(filePath, row) {
+  await ensureDir(filePath);
+  const line = JSON.stringify(row) + `
+`;
+  return new Promise((resolve4, reject) => {
+    fsOpen(filePath, fsConstants.O_WRONLY | fsConstants.O_CREAT | fsConstants.O_APPEND, 420, (err, fd) => {
+      if (err)
+        return reject(err);
+      const buf = Buffer.from(line, "utf8");
+      const writeAndSync = () => {
+        const fsSync = __require("fs");
+        try {
+          fsSync.writeSync(fd, buf, 0, buf.length);
+          fsSync.fsyncSync(fd);
+          fsSync.closeSync(fd);
+          resolve4();
+        } catch (e) {
+          try {
+            fsSync.closeSync(fd);
+          } catch {}
+          reject(e);
+        }
+      };
+      writeAndSync();
+    });
+  });
+}
+async function readRows(filePath) {
+  let raw;
+  try {
+    raw = await fs6.readFile(filePath, "utf8");
+  } catch (e) {
+    const err = e;
+    if (err.code === "ENOENT")
+      return [];
+    throw err;
+  }
+  const rows = [];
+  const lines = raw.split(`
+`);
+  for (const line of lines) {
+    if (!line)
+      continue;
+    try {
+      const parsed = JSON.parse(line);
+      if (parsed && parsed.type === "domain")
+        rows.push(parsed);
+    } catch {}
+  }
+  return rows;
+}
+function keyOf(row) {
+  return `${row.scope}::${row.host}`;
+}
+function resolveLatest(rows) {
+  const m = new Map;
+  for (const row of rows) {
+    const k = keyOf(row);
+    const prior = m.get(k);
+    if (!prior || row.version >= prior.version) {
+      m.set(k, row);
     }
   }
-  return m[a.length][b.length];
+  for (const [k, row] of m) {
+    if (row.tombstone)
+      m.delete(k);
+  }
+  return m;
 }
-function buildUnknownCommandError(command, commandSet, aliasMap = COMMAND_ALIASES, newInVersion = NEW_IN_VERSION) {
-  let msg = `Unknown command: '${command}'.`;
-  if (command.length >= 4) {
-    let best;
-    let bestDist = 3;
-    const candidates = [...commandSet, ...Object.keys(aliasMap)].sort();
-    for (const cand of candidates) {
-      const d = levenshtein(command, cand);
-      if (d <= 2 && d < bestDist) {
-        best = cand;
-        bestDist = d;
+async function readSkill(host, projectSlug) {
+  const normalized = normalizeHost(host);
+  const projectRows = await readRows(projectFile(projectSlug));
+  const projectLatest = resolveLatest(projectRows);
+  const projectHit = projectLatest.get(`project::${normalized}`);
+  if (projectHit && projectHit.state === "active") {
+    return { row: projectHit, source: "project" };
+  }
+  const globalRows = await readRows(globalFile());
+  const globalLatest = resolveLatest(globalRows);
+  const globalHit = globalLatest.get(`global::${normalized}`);
+  if (globalHit && globalHit.state === "global") {
+    return { row: globalHit, source: "global" };
+  }
+  return null;
+}
+async function writeSkill(input) {
+  if (input.classifierScore >= 0.85) {
+    throw new Error(`Save blocked: classifier flagged content as potential injection (score: ${input.classifierScore.toFixed(2)}).
+` + `Cause: skill body contains patterns the L4 classifier marks as risky.
+` + "Action: rewrite the skill content removing instruction-like prose, retry.");
+  }
+  const normalized = normalizeHost(input.host);
+  const body = input.body;
+  const now = new Date().toISOString();
+  const sha = createHash("sha256").update(body, "utf8").digest("hex");
+  const projectRows = await readRows(projectFile(input.projectSlug));
+  const projectLatest = resolveLatest(projectRows);
+  const prior = projectLatest.get(`project::${normalized}`);
+  const version = prior ? prior.version + 1 : 1;
+  const row = {
+    type: "domain",
+    host: normalized,
+    scope: "project",
+    state: "quarantined",
+    body,
+    version,
+    classifier_score: input.classifierScore,
+    source: input.source,
+    sha256: sha,
+    use_count: 0,
+    flag_count: 0,
+    created_ts: prior?.created_ts ?? now,
+    updated_ts: now
+  };
+  await appendRow(projectFile(input.projectSlug), row);
+  return row;
+}
+async function promoteToGlobal(host, projectSlug) {
+  const normalized = normalizeHost(host);
+  const rows = await readRows(projectFile(projectSlug));
+  const latest = resolveLatest(rows);
+  const current = latest.get(`project::${normalized}`);
+  if (!current) {
+    throw new Error(`Cannot promote: no skill for ${normalized} in project ${projectSlug}.
+` + `Cause: skill does not exist or is tombstoned.
+` + "Action: $B domain-skill list to see what exists in this project.");
+  }
+  if (current.state !== "active") {
+    throw new Error(`Cannot promote: skill for ${normalized} is in state "${current.state}", expected "active".
+` + `Cause: skill must be active in this project (used ${PROMOTE_THRESHOLD}+ times without flag) before global promotion.
+` + "Action: use the skill in this project until it auto-promotes to active.");
+  }
+  const now = new Date().toISOString();
+  const globalRow = {
+    ...current,
+    scope: "global",
+    state: "global",
+    version: 1,
+    use_count: 0,
+    flag_count: 0,
+    updated_ts: now
+  };
+  await appendRow(globalFile(), globalRow);
+  return globalRow;
+}
+async function rollbackSkill(host, projectSlug, scope = "project") {
+  const normalized = normalizeHost(host);
+  const file = scope === "project" ? projectFile(projectSlug) : globalFile();
+  const rows = await readRows(file);
+  const matching = rows.filter((r) => r.host === normalized && r.scope === scope && !r.tombstone);
+  if (matching.length < 2) {
+    throw new Error(`Cannot rollback: ${normalized} has fewer than 2 versions in ${scope} scope.
+` + `Cause: no prior version to roll back to.
+` + "Action: $B domain-skill rm to delete instead, or wait for a future revision to roll back from.");
+  }
+  matching.sort((a, b) => b.version - a.version);
+  const target = matching[1];
+  const newVersion = matching[0].version + 1;
+  const restored = {
+    ...target,
+    version: newVersion,
+    updated_ts: new Date().toISOString()
+  };
+  await appendRow(file, restored);
+  return restored;
+}
+async function listSkills(projectSlug) {
+  const projectRows = await readRows(projectFile(projectSlug));
+  const globalRows = await readRows(globalFile());
+  const projectLatest = Array.from(resolveLatest(projectRows).values());
+  const globalLatest = Array.from(resolveLatest(globalRows).values()).filter((r) => r.state === "global");
+  return { project: projectLatest, global: globalLatest };
+}
+async function deleteSkill(host, projectSlug, scope = "project") {
+  const normalized = normalizeHost(host);
+  const file = scope === "project" ? projectFile(projectSlug) : globalFile();
+  const rows = await readRows(file);
+  const latest = resolveLatest(rows);
+  const current = latest.get(`${scope}::${normalized}`);
+  if (!current) {
+    throw new Error(`Cannot delete: no skill for ${normalized} in ${scope} scope.
+` + `Cause: skill does not exist or is already tombstoned.
+` + "Action: $B domain-skill list to see what exists.");
+  }
+  const tombstone = {
+    ...current,
+    version: current.version + 1,
+    updated_ts: new Date().toISOString(),
+    tombstone: true
+  };
+  await appendRow(file, tombstone);
+}
+
+// browse/src/project-slug.ts
+import * as path7 from "path";
+import * as os5 from "os";
+import { execSync } from "child_process";
+var cachedSlug = null;
+function getCurrentProjectSlug() {
+  if (cachedSlug)
+    return cachedSlug;
+  const explicit = process.env.GSTACK_PROJECT_SLUG;
+  if (explicit) {
+    cachedSlug = explicit;
+    return explicit;
+  }
+  try {
+    const slugBin = path7.join(os5.homedir(), ".claude/skills/gstack/bin/gstack-slug");
+    const out = execSync(slugBin, { encoding: "utf8", timeout: 2000 }).trim();
+    const m = out.match(/SLUG="?([^"\n]+)"?/);
+    cachedSlug = m ? m[1] : out || "unknown";
+  } catch {
+    cachedSlug = "unknown";
+  }
+  return cachedSlug;
+}
+
+// browse/src/domain-skill-commands.ts
+init_telemetry();
+async function readBodyFromArgs(args) {
+  const fromFileIdx = args.indexOf("--from-file");
+  if (fromFileIdx >= 0 && fromFileIdx + 1 < args.length) {
+    const filePath = args[fromFileIdx + 1];
+    const body = await fs8.readFile(filePath, "utf8");
+    return body;
+  }
+  return new Promise((resolve4) => {
+    let data = "";
+    process.stdin.setEncoding("utf8");
+    process.stdin.on("data", (chunk) => data += chunk);
+    process.stdin.on("end", () => resolve4(data));
+    if (process.stdin.isTTY)
+      resolve4("");
+  });
+}
+function formatSavedOk(row, slug) {
+  return [
+    `Saved (state: ${row.state}, scope: ${row.scope}).`,
+    `Host: ${row.host}`,
+    `Bytes: ${row.body.length}`,
+    `Version: ${row.version}`,
+    `Stored at: ~/.gstack/projects/${slug}/learnings.jsonl`,
+    "",
+    `Next: skill is quarantined and won't fire in prompts until used 3 times`,
+    `      without classifier flags. Run $B domain-skill list to see state.`
+  ].join(`
+`);
+}
+function formatSkillListing(list) {
+  if (list.project.length === 0 && list.global.length === 0) {
+    return `No domain-skills yet.
+
+Next: navigate to a site, then $B domain-skill save with a markdown body to begin.`;
+  }
+  const lines = [];
+  if (list.project.length > 0) {
+    lines.push("Project (per-project):");
+    for (const r of list.project) {
+      lines.push(`  [${r.state}] ${r.host} — v${r.version}, ${r.body.length} bytes, used ${r.use_count}× (${r.flag_count} flags)`);
+    }
+  }
+  if (list.global.length > 0) {
+    if (lines.length > 0)
+      lines.push("");
+    lines.push("Global (cross-project):");
+    for (const r of list.global) {
+      lines.push(`  ${r.host} — v${r.version}, ${r.body.length} bytes`);
+    }
+  }
+  return lines.join(`
+`);
+}
+async function handleSave(args, bm) {
+  const page = bm.getPage();
+  const host = await deriveHostFromActiveTab(page);
+  const body = await readBodyFromArgs(args);
+  if (!body || !body.trim()) {
+    throw new Error(`Save failed: empty body.
+` + `Cause: no content provided via --from-file or stdin.
+` + "Action: pipe markdown into $B domain-skill save, or pass --from-file <path>.");
+  }
+  const filterResult = runContentFilters(body, page.url(), "domain-skill-save");
+  if (filterResult.blocked) {
+    logTelemetry({ event: "domain_skill_save_blocked", host, reason: filterResult.message });
+    throw new Error(`Save blocked: ${filterResult.message}
+` + `Cause: skill body trips L1-L3 content filters (likely contains URL blocklist match or ARIA injection patterns).
+` + "Action: review the body for suspicious instruction-like content; rewrite and retry.");
+  }
+  const slug = getCurrentProjectSlug();
+  const row = await writeSkill({
+    host,
+    body,
+    projectSlug: slug,
+    source: "agent",
+    classifierScore: 0
+  });
+  logTelemetry({ event: "domain_skill_saved", host, scope: row.scope, state: row.state, bytes: body.length });
+  return formatSavedOk(row, slug);
+}
+async function handleList(_args) {
+  const slug = getCurrentProjectSlug();
+  const list = await listSkills(slug);
+  return formatSkillListing(list);
+}
+async function handleShow(args) {
+  const host = args[0];
+  if (!host) {
+    throw new Error(`Usage: $B domain-skill show <host>
+` + `Cause: missing hostname argument.
+` + "Action: $B domain-skill list to see available hosts.");
+  }
+  const slug = getCurrentProjectSlug();
+  const result = await readSkill(host, slug);
+  if (!result) {
+    return `No active skill for ${host}.
+
+A quarantined skill may exist; run $B domain-skill list to see all states.`;
+  }
+  return [
+    `# ${result.row.host} (${result.source} scope, ${result.row.state})`,
+    `# version: ${result.row.version}, used: ${result.row.use_count}×, flags: ${result.row.flag_count}`,
+    "",
+    result.row.body
+  ].join(`
+`);
+}
+async function handleEdit(args) {
+  const host = args[0];
+  if (!host) {
+    throw new Error("Usage: $B domain-skill edit <host>");
+  }
+  const slug = getCurrentProjectSlug();
+  const list = await listSkills(slug);
+  const current = [...list.project, ...list.global].find((r) => r.host === host);
+  if (!current) {
+    throw new Error(`Cannot edit: no skill for ${host}.
+` + `Cause: skill does not exist in this project or global scope.
+` + "Action: $B domain-skill save to create one first.");
+  }
+  const editor = process.env.EDITOR || "vi";
+  const tmpFile = path9.join(os7.tmpdir(), `gstack-domain-skill-${process.pid}-${Date.now()}.md`);
+  await fs8.writeFile(tmpFile, current.body, "utf8");
+  const result = spawnSync(editor, [tmpFile], { stdio: "inherit" });
+  if (result.status !== 0) {
+    await fs8.unlink(tmpFile).catch(() => {});
+    throw new Error(`Editor exited with status ${result.status}; no changes saved.`);
+  }
+  const newBody = await fs8.readFile(tmpFile, "utf8");
+  await fs8.unlink(tmpFile).catch(() => {});
+  if (newBody === current.body) {
+    return `No changes for ${host}.`;
+  }
+  const page = global.__bm?.getPage?.();
+  const row = await writeSkill({
+    host: current.host,
+    body: newBody,
+    projectSlug: slug,
+    source: "human",
+    classifierScore: 0
+  });
+  return formatSavedOk(row, slug);
+}
+async function handlePromoteToGlobal(args) {
+  const host = args[0];
+  if (!host) {
+    throw new Error("Usage: $B domain-skill promote-to-global <host>");
+  }
+  const slug = getCurrentProjectSlug();
+  const row = await promoteToGlobal(host, slug);
+  return [
+    `Promoted ${row.host} to global scope (v${row.version}).`,
+    `Stored at: ~/.gstack/global-domain-skills.jsonl`,
+    "",
+    `This skill now fires for all projects unless they have a per-project skill for the same host.`
+  ].join(`
+`);
+}
+async function handleRollback(args) {
+  const host = args[0];
+  if (!host) {
+    throw new Error("Usage: $B domain-skill rollback <host>");
+  }
+  const scope = args.includes("--global") ? "global" : "project";
+  const slug = getCurrentProjectSlug();
+  const row = await rollbackSkill(host, slug, scope);
+  return [
+    `Rolled back ${row.host} (${scope} scope) to prior version.`,
+    `New version: ${row.version} (content from earlier revision)`
+  ].join(`
+`);
+}
+async function handleRm(args) {
+  const host = args[0];
+  if (!host) {
+    throw new Error("Usage: $B domain-skill rm <host> [--global]");
+  }
+  const scope = args.includes("--global") ? "global" : "project";
+  const slug = getCurrentProjectSlug();
+  await deleteSkill(host, slug, scope);
+  return `Tombstoned ${host} (${scope} scope). Use $B domain-skill rollback to restore.`;
+}
+async function handleDomainSkillCommand(args, bm) {
+  const sub = args[0];
+  const rest = args.slice(1);
+  switch (sub) {
+    case "save":
+      return handleSave(rest, bm);
+    case "list":
+      return handleList(rest);
+    case "show":
+      return handleShow(rest);
+    case "edit":
+      return handleEdit(rest);
+    case "promote-to-global":
+      return handlePromoteToGlobal(rest);
+    case "rollback":
+      return handleRollback(rest);
+    case "rm":
+    case "remove":
+    case "delete":
+      return handleRm(rest);
+    case undefined:
+    case "":
+    case "help":
+      return [
+        "$B domain-skill — agent-authored per-site notes",
+        "",
+        "Subcommands:",
+        "  save              save body from stdin or --from-file (host derived from active tab)",
+        "  list              list all skills visible to current project",
+        "  show <host>       print skill body",
+        "  edit <host>       open in $EDITOR",
+        "  promote-to-global <host>  promote active skill to global scope",
+        "  rollback <host> [--global]  restore prior version",
+        "  rm <host> [--global]  tombstone"
+      ].join(`
+`);
+    default:
+      throw new Error(`Unknown subcommand: ${sub}
+` + `Cause: not one of save|list|show|edit|promote-to-global|rollback|rm.
+` + "Action: $B domain-skill help for the full list.");
+  }
+}
+
+// browse/src/browser-skill-commands.ts
+import * as fs10 from "fs";
+import * as path11 from "path";
+
+// browse/src/browser-skills.ts
+import * as fs9 from "fs";
+import * as path10 from "path";
+import * as os8 from "os";
+import * as cp from "child_process";
+var __dirname = "/Users/akrish/DEV/.claude/worktrees/suspicious-montalcini-93a1f7/.claude/skills/gstack/browse/src";
+function defaultTierPaths(opts = {}) {
+  const home = opts.home ?? os8.homedir();
+  const projectRoot = opts.projectRoot ?? detectProjectRoot();
+  const bundledRoot = opts.bundledRoot ?? detectBundledRoot();
+  return {
+    project: projectRoot ? path10.join(projectRoot, ".gstack", "browser-skills") : null,
+    global: path10.join(home, ".gstack", "browser-skills"),
+    bundled: path10.join(bundledRoot, "browser-skills")
+  };
+}
+function detectProjectRoot() {
+  try {
+    const proc = cp.spawnSync("git", ["rev-parse", "--show-toplevel"], { encoding: "utf-8", timeout: 2000 });
+    if (proc.status === 0) {
+      const out = proc.stdout.trim();
+      return out || null;
+    }
+  } catch {}
+  return null;
+}
+function detectBundledRoot() {
+  try {
+    const exec = process.execPath;
+    if (exec && /\/browse\/dist\/browse$/.test(exec)) {
+      return path10.resolve(path10.dirname(exec), "..", "..");
+    }
+  } catch {}
+  return path10.resolve(__dirname, "..", "..");
+}
+function parseSkillFile(content, opts = {}) {
+  if (!content.startsWith(`---
+`)) {
+    throw new Error('SKILL.md missing frontmatter block (expected starting "---\\n")');
+  }
+  const fmEnd = content.indexOf(`
+---`, 4);
+  if (fmEnd === -1) {
+    throw new Error('SKILL.md frontmatter block not terminated (expected "\\n---")');
+  }
+  const fmText = content.slice(4, fmEnd);
+  const bodyMd = content.slice(fmEnd + 4).replace(/^\n+/, "");
+  const fm = parseFrontmatterFields(fmText);
+  const errors = [];
+  const name = fm.name ?? opts.skillName ?? "";
+  if (!name)
+    errors.push("missing required field: name (or skillName hint)");
+  if (!fm.host)
+    errors.push("missing required field: host");
+  if (errors.length > 0) {
+    throw new Error(`SKILL.md validation failed: ${errors.join("; ")}`);
+  }
+  const frontmatter = {
+    name,
+    description: fm.description,
+    host: fm.host,
+    triggers: Array.isArray(fm.triggers) ? fm.triggers : [],
+    args: Array.isArray(fm.args) ? fm.args : [],
+    trusted: fm.trusted === true,
+    version: typeof fm.version === "string" ? fm.version : undefined,
+    source: fm.source === "agent" || fm.source === "human" ? fm.source : undefined
+  };
+  return { frontmatter, bodyMd };
+}
+function parseFrontmatterFields(fm) {
+  const result = {};
+  const lines = fm.split(`
+`);
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    if (!line.trim() || line.trim().startsWith("#")) {
+      i++;
+      continue;
+    }
+    const scalar = line.match(/^([a-zA-Z_][a-zA-Z0-9_-]*):\s*(.*)$/);
+    if (scalar && !line.startsWith(" ")) {
+      const key = scalar[1];
+      const rawVal = scalar[2];
+      if (!rawVal) {
+        const nextNonBlank = findNextNonBlank(lines, i + 1);
+        if (nextNonBlank !== -1 && lines[nextNonBlank].match(/^\s+-\s/)) {
+          if (key === "args") {
+            const { items, consumed } = collectArgsList(lines, i + 1);
+            result[key] = items;
+            i += 1 + consumed;
+          } else {
+            const { items, consumed } = collectStringList(lines, i + 1);
+            result[key] = items;
+            i += 1 + consumed;
+          }
+          continue;
+        }
+        i++;
+        continue;
+      }
+      if (rawVal === "[]") {
+        result[key] = [];
+        i++;
+        continue;
+      }
+      result[key] = parseScalar(rawVal);
+      i++;
+      continue;
+    }
+    i++;
+  }
+  return result;
+}
+function findNextNonBlank(lines, from) {
+  for (let i = from;i < lines.length; i++) {
+    if (lines[i].trim())
+      return i;
+  }
+  return -1;
+}
+function collectStringList(lines, from) {
+  const items = [];
+  let i = from;
+  while (i < lines.length) {
+    const line = lines[i];
+    if (!line.trim()) {
+      i++;
+      continue;
+    }
+    const m = line.match(/^\s+-\s+(.*)$/);
+    if (!m)
+      break;
+    items.push(stripQuotes(m[1]));
+    i++;
+  }
+  return { items, consumed: i - from };
+}
+function collectArgsList(lines, from) {
+  const items = [];
+  let i = from;
+  while (i < lines.length) {
+    const line = lines[i];
+    if (!line.trim()) {
+      i++;
+      continue;
+    }
+    const itemStart = line.match(/^(\s+)-\s+(.+?):\s*(.*)$/);
+    if (!itemStart)
+      break;
+    const indent = itemStart[1] + "  ";
+    const arg = { name: "" };
+    if (itemStart[2] === "name") {
+      arg.name = stripQuotes(itemStart[3]);
+    } else if (itemStart[2] === "description") {
+      arg.description = stripQuotes(itemStart[3]);
+    }
+    i++;
+    while (i < lines.length) {
+      const cont = lines[i];
+      if (!cont.startsWith(indent) || !cont.trim())
+        break;
+      const kv = cont.match(/^\s+([a-zA-Z_][a-zA-Z0-9_-]*):\s*(.*)$/);
+      if (!kv)
+        break;
+      if (kv[1] === "name")
+        arg.name = stripQuotes(kv[2]);
+      else if (kv[1] === "description")
+        arg.description = stripQuotes(kv[2]);
+      i++;
+    }
+    items.push(arg);
+  }
+  return { items, consumed: i - from };
+}
+function parseScalar(raw) {
+  const v = raw.trim();
+  if (v === "true")
+    return true;
+  if (v === "false")
+    return false;
+  if (/^-?\d+$/.test(v))
+    return parseInt(v, 10);
+  return stripQuotes(v);
+}
+function stripQuotes(v) {
+  const trimmed = v.trim();
+  if (trimmed.startsWith('"') && trimmed.endsWith('"') || trimmed.startsWith("'") && trimmed.endsWith("'")) {
+    return trimmed.slice(1, -1);
+  }
+  return trimmed;
+}
+function listBrowserSkills(tiers) {
+  const t = tiers ?? defaultTierPaths();
+  const seen = new Map;
+  const order = [
+    { tier: "project", root: t.project },
+    { tier: "global", root: t.global },
+    { tier: "bundled", root: t.bundled }
+  ];
+  for (const { tier, root } of order) {
+    if (!root || !fs9.existsSync(root))
+      continue;
+    let entries;
+    try {
+      entries = fs9.readdirSync(root);
+    } catch {
+      continue;
+    }
+    for (const entry of entries) {
+      if (entry.startsWith(".") || entry === ".tombstones")
+        continue;
+      if (seen.has(entry))
+        continue;
+      const dir = path10.join(root, entry);
+      let stat;
+      try {
+        stat = fs9.statSync(dir);
+      } catch {
+        continue;
+      }
+      if (!stat.isDirectory())
+        continue;
+      const skillFile = path10.join(dir, "SKILL.md");
+      if (!fs9.existsSync(skillFile))
+        continue;
+      try {
+        const content = fs9.readFileSync(skillFile, "utf-8");
+        const { frontmatter, bodyMd } = parseSkillFile(content, { skillName: entry });
+        seen.set(entry, { name: entry, tier, dir, frontmatter, bodyMd });
+      } catch {
+        continue;
       }
     }
-    if (best)
-      msg += ` Did you mean '${best}'?`;
   }
-  if (newInVersion[command]) {
-    msg += ` This command was added in browse v${newInVersion[command]}. Upgrade: cd ~/.claude/skills/gstack && git pull && bun run build.`;
+  return Array.from(seen.values()).sort((a, b) => a.name.localeCompare(b.name));
+}
+function readBrowserSkill(name, tiers) {
+  const t = tiers ?? defaultTierPaths();
+  const order = [
+    { tier: "project", root: t.project },
+    { tier: "global", root: t.global },
+    { tier: "bundled", root: t.bundled }
+  ];
+  for (const { tier, root } of order) {
+    if (!root)
+      continue;
+    const dir = path10.join(root, name);
+    const skillFile = path10.join(dir, "SKILL.md");
+    if (!fs9.existsSync(skillFile))
+      continue;
+    try {
+      const content = fs9.readFileSync(skillFile, "utf-8");
+      const { frontmatter, bodyMd } = parseSkillFile(content, { skillName: name });
+      return { name, tier, dir, frontmatter, bodyMd };
+    } catch {
+      continue;
+    }
   }
-  return msg;
+  return null;
+}
+function tombstoneBrowserSkill(name, tier, tiers) {
+  const t = tiers ?? defaultTierPaths();
+  const root = tier === "project" ? t.project : t.global;
+  if (!root) {
+    throw new Error(`tombstoneBrowserSkill: tier "${tier}" has no resolved path`);
+  }
+  const src = path10.join(root, name);
+  if (!fs9.existsSync(src)) {
+    throw new Error(`tombstoneBrowserSkill: skill "${name}" not found in tier "${tier}" at ${src}`);
+  }
+  const tombstoneDir = path10.join(root, ".tombstones");
+  fs9.mkdirSync(tombstoneDir, { recursive: true });
+  const ts = new Date().toISOString().replace(/[:.]/g, "-");
+  const dst = path10.join(tombstoneDir, `${name}-${ts}`);
+  fs9.renameSync(src, dst);
+  return dst;
 }
 
-// browse/src/meta-commands.ts
-init_url_validation();
+// browse/src/skill-token.ts
+import * as crypto4 from "crypto";
 
 // browse/src/token-registry.ts
 import * as crypto3 from "crypto";
@@ -6868,17 +8007,342 @@ function checkConnectRateLimit() {
   return true;
 }
 
+// browse/src/skill-token.ts
+var TOKEN_TTL_SLACK = 30;
+var DEFAULT_SKILL_SCOPES = ["read", "write"];
+function generateSpawnId() {
+  return crypto4.randomBytes(8).toString("hex");
+}
+function skillClientId(skillName, spawnId) {
+  return `skill:${skillName}:${spawnId}`;
+}
+function mintSkillToken(opts) {
+  const clientId = skillClientId(opts.skillName, opts.spawnId);
+  return createToken({
+    clientId,
+    scopes: opts.scopes ?? DEFAULT_SKILL_SCOPES,
+    tabPolicy: "shared",
+    rateLimit: 0,
+    expiresSeconds: opts.spawnTimeoutSeconds + TOKEN_TTL_SLACK
+  });
+}
+function revokeSkillToken(skillName, spawnId) {
+  return revokeToken(skillClientId(skillName, spawnId));
+}
+
+// browse/src/browser-skill-commands.ts
+var DEFAULT_TIMEOUT_SECONDS = 60;
+var MAX_STDOUT_BYTES = 1024 * 1024;
+async function handleSkillCommand(args, ctx) {
+  const sub = args[0];
+  const rest = args.slice(1);
+  switch (sub) {
+    case undefined:
+    case "help":
+    case "--help":
+      return formatUsage();
+    case "list":
+      return handleList2(ctx);
+    case "show":
+      return handleShow2(rest, ctx);
+    case "run":
+      return handleRun(rest, ctx);
+    case "test":
+      return handleTest(rest, ctx);
+    case "rm":
+      return handleRm2(rest, ctx);
+    default:
+      throw new Error(`Unknown skill subcommand: "${sub}". Try: list, show, run, test, rm.`);
+  }
+}
+function formatUsage() {
+  return [
+    "Usage: $B skill <subcommand>",
+    "",
+    "  list                                  List all skills with resolved tier",
+    "  show <name>                           Print SKILL.md",
+    "  run <name> [--arg k=v]... [--timeout=Ns]   Run the skill script",
+    "  test <name>                           Run script.test.ts",
+    "  rm <name> [--global]                  Tombstone a user-tier skill"
+  ].join(`
+`);
+}
+function handleList2(ctx) {
+  const tiers = ctx.tiers ?? defaultTierPaths();
+  const skills = listBrowserSkills(tiers);
+  if (skills.length === 0) {
+    return `No browser-skills found.
+
+Try: $B skill show <name>  (none right now)
+`;
+  }
+  const lines = ["NAME                          TIER     HOST                        DESC"];
+  for (const s of skills) {
+    const desc = (s.frontmatter.description ?? "").slice(0, 40);
+    lines.push([
+      s.name.padEnd(30),
+      s.tier.padEnd(8),
+      s.frontmatter.host.padEnd(28),
+      desc
+    ].join(" "));
+  }
+  return lines.join(`
+`) + `
+`;
+}
+function handleShow2(args, ctx) {
+  const name = args[0];
+  if (!name)
+    throw new Error("Usage: $B skill show <name>");
+  const tiers = ctx.tiers ?? defaultTierPaths();
+  const skill = readBrowserSkill(name, tiers);
+  if (!skill)
+    throw new Error(`Skill "${name}" not found in any tier.`);
+  return readFile(path11.join(skill.dir, "SKILL.md"));
+}
+function readFile(p) {
+  return fs10.readFileSync(p, "utf-8");
+}
+function parseSkillRunArgs(args) {
+  const passthrough = [];
+  let timeoutSeconds = DEFAULT_TIMEOUT_SECONDS;
+  for (let i = 0;i < args.length; i++) {
+    const a = args[i];
+    if (a.startsWith("--timeout=")) {
+      const n = parseInt(a.slice("--timeout=".length), 10);
+      if (!isNaN(n) && n > 0)
+        timeoutSeconds = n;
+      continue;
+    }
+    passthrough.push(a);
+  }
+  return { passthrough, timeoutSeconds };
+}
+async function handleRun(args, ctx) {
+  const name = args[0];
+  if (!name)
+    throw new Error("Usage: $B skill run <name> [--arg k=v]... [--timeout=Ns]");
+  const tiers = ctx.tiers ?? defaultTierPaths();
+  const skill = readBrowserSkill(name, tiers);
+  if (!skill)
+    throw new Error(`Skill "${name}" not found.`);
+  const { passthrough, timeoutSeconds } = parseSkillRunArgs(args.slice(1));
+  const result = await spawnSkill({
+    skill,
+    skillArgs: passthrough,
+    trusted: skill.frontmatter.trusted,
+    timeoutSeconds,
+    port: ctx.port
+  });
+  if (result.exitCode !== 0 || result.timedOut || result.truncated) {
+    const summary = result.truncated ? `truncated stdout at ${MAX_STDOUT_BYTES} bytes` : result.timedOut ? `timed out after ${timeoutSeconds}s` : `exit ${result.exitCode}`;
+    const err = new Error(`Skill "${name}" failed: ${summary}
+--- stderr ---
+${result.stderr.slice(0, 4096)}`);
+    err.exitCode = result.exitCode || 1;
+    throw err;
+  }
+  return result.stdout;
+}
+async function handleTest(args, ctx) {
+  const name = args[0];
+  if (!name)
+    throw new Error("Usage: $B skill test <name>");
+  const tiers = ctx.tiers ?? defaultTierPaths();
+  const skill = readBrowserSkill(name, tiers);
+  if (!skill)
+    throw new Error(`Skill "${name}" not found.`);
+  const testFile = path11.join(skill.dir, "script.test.ts");
+  if (!fs10.existsSync(testFile)) {
+    throw new Error(`Skill "${name}" has no script.test.ts at ${testFile}`);
+  }
+  const proc = Bun.spawn(["bun", "test", testFile], {
+    cwd: skill.dir,
+    stdout: "pipe",
+    stderr: "pipe",
+    env: process.env
+  });
+  const exitCode = await proc.exited;
+  const stdout = proc.stdout ? await new Response(proc.stdout).text() : "";
+  const stderr = proc.stderr ? await new Response(proc.stderr).text() : "";
+  if (exitCode !== 0) {
+    throw new Error(`Skill "${name}" tests failed (exit ${exitCode}).
+${stderr}`);
+  }
+  return stderr || stdout || `tests passed for "${name}"`;
+}
+function handleRm2(args, ctx) {
+  const name = args[0];
+  if (!name)
+    throw new Error("Usage: $B skill rm <name> [--global]");
+  const isGlobal = args.includes("--global");
+  const tier = isGlobal ? "global" : "project";
+  const tiers = ctx.tiers ?? defaultTierPaths();
+  const effectiveTier = tier === "project" && !tiers.project ? "global" : tier;
+  const dst = tombstoneBrowserSkill(name, effectiveTier, tiers);
+  return `Tombstoned "${name}" (${effectiveTier} tier) → ${dst}
+`;
+}
+async function spawnSkill(opts) {
+  const spawnId = generateSpawnId();
+  const tokenInfo = mintSkillToken({
+    skillName: opts.skill.name,
+    spawnId,
+    spawnTimeoutSeconds: opts.timeoutSeconds
+  });
+  try {
+    const env = buildSpawnEnv({
+      trusted: opts.trusted,
+      port: opts.port,
+      skillToken: tokenInfo.token
+    });
+    const scriptPath = path11.join(opts.skill.dir, "script.ts");
+    if (!fs10.existsSync(scriptPath)) {
+      throw new Error(`Skill "${opts.skill.name}" missing script.ts at ${scriptPath}`);
+    }
+    const proc = Bun.spawn(["bun", "run", scriptPath, "--", ...opts.skillArgs], {
+      cwd: opts.skill.dir,
+      env,
+      stdout: "pipe",
+      stderr: "pipe"
+    });
+    let timedOut = false;
+    const killer = setTimeout(() => {
+      timedOut = true;
+      try {
+        proc.kill();
+      } catch {}
+    }, opts.timeoutSeconds * 1000);
+    const stdoutPromise = readCapped(proc.stdout, MAX_STDOUT_BYTES);
+    const stderrPromise = readCapped(proc.stderr, MAX_STDOUT_BYTES);
+    const exitCode = await proc.exited;
+    clearTimeout(killer);
+    const stdoutResult = await stdoutPromise;
+    const stderrResult = await stderrPromise;
+    return {
+      stdout: stdoutResult.text,
+      stderr: stderrResult.text,
+      exitCode: timedOut ? 124 : exitCode,
+      timedOut,
+      truncated: stdoutResult.truncated
+    };
+  } finally {
+    revokeSkillToken(opts.skill.name, spawnId);
+  }
+}
+async function readCapped(stream, capBytes) {
+  if (!stream)
+    return { text: "", truncated: false };
+  const reader = stream.getReader();
+  const chunks = [];
+  let total = 0;
+  let truncated = false;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done)
+        break;
+      if (!value)
+        continue;
+      total += value.length;
+      if (total > capBytes) {
+        truncated = true;
+        const fits = value.length - (total - capBytes);
+        if (fits > 0)
+          chunks.push(value.subarray(0, fits));
+        try {
+          await reader.cancel();
+        } catch {}
+        break;
+      }
+      chunks.push(value);
+    }
+  } finally {
+    try {
+      reader.releaseLock();
+    } catch {}
+  }
+  const buf = Buffer.concat(chunks.map((c) => Buffer.from(c)));
+  return { text: buf.toString("utf-8"), truncated };
+}
+var SECRET_KEY_PATTERNS = [
+  /TOKEN/i,
+  /KEY/i,
+  /SECRET/i,
+  /PASSWORD/i,
+  /CREDENTIAL/i,
+  /^AWS_/,
+  /^AZURE_/,
+  /^GCP_/,
+  /^GOOGLE_APPLICATION_/,
+  /^ANTHROPIC_/,
+  /^OPENAI_/,
+  /^GITHUB_/,
+  /^GH_/,
+  /^SSH_/,
+  /^GPG_/,
+  /^NPM_TOKEN/,
+  /^PYPI_/
+];
+var UNTRUSTED_ALLOWLIST = new Set([
+  "LANG",
+  "LC_ALL",
+  "LC_CTYPE",
+  "TERM",
+  "TZ"
+]);
+function buildSpawnEnv(opts) {
+  const out = {};
+  if (opts.trusted) {
+    for (const [k, v] of Object.entries(process.env)) {
+      if (v === undefined)
+        continue;
+      if (k === "GSTACK_TOKEN")
+        continue;
+      out[k] = v;
+    }
+    if (!out.PATH)
+      out.PATH = "/usr/local/bin:/usr/bin:/bin";
+  } else {
+    for (const k of UNTRUSTED_ALLOWLIST) {
+      const v = process.env[k];
+      if (v !== undefined)
+        out[k] = v;
+    }
+    out.PATH = resolveMinimalPath();
+  }
+  if (!opts.trusted) {
+    for (const k of Object.keys(out)) {
+      if (SECRET_KEY_PATTERNS.some((p) => p.test(k)))
+        delete out[k];
+    }
+  }
+  out.GSTACK_PORT = String(opts.port);
+  out.GSTACK_SKILL_TOKEN = opts.skillToken;
+  return out;
+}
+function resolveMinimalPath() {
+  const fallback = "/usr/local/bin:/usr/bin:/bin";
+  const bunPath = process.execPath;
+  if (bunPath && bunPath.includes("/bun")) {
+    const dir = path11.dirname(bunPath);
+    return `${dir}:${fallback}`;
+  }
+  return fallback;
+}
+
 // browse/src/meta-commands.ts
+init_url_validation();
 init_path_security();
 init_path_security();
 init_platform();
 import * as Diff2 from "diff";
-import * as fs7 from "fs";
-import * as path7 from "path";
+import * as fs12 from "fs";
+import * as path13 from "path";
 
 // browse/src/config.ts
-import * as fs6 from "fs";
-import * as path6 from "path";
+import * as fs11 from "fs";
+import * as path12 from "path";
 function getGitRoot() {
   try {
     const proc = Bun.spawnSync(["git", "rev-parse", "--show-toplevel"], {
@@ -6899,26 +8363,26 @@ function resolveConfig(env = process.env) {
   let projectDir;
   if (env.BROWSE_STATE_FILE) {
     stateFile = env.BROWSE_STATE_FILE;
-    stateDir = path6.dirname(stateFile);
-    projectDir = path6.dirname(stateDir);
+    stateDir = path12.dirname(stateFile);
+    projectDir = path12.dirname(stateDir);
   } else {
     projectDir = getGitRoot() || process.cwd();
-    stateDir = path6.join(projectDir, ".gstack");
-    stateFile = path6.join(stateDir, "browse.json");
+    stateDir = path12.join(projectDir, ".gstack");
+    stateFile = path12.join(stateDir, "browse.json");
   }
   return {
     projectDir,
     stateDir,
     stateFile,
-    consoleLog: path6.join(stateDir, "browse-console.log"),
-    networkLog: path6.join(stateDir, "browse-network.log"),
-    dialogLog: path6.join(stateDir, "browse-dialog.log"),
-    auditLog: path6.join(stateDir, "browse-audit.jsonl")
+    consoleLog: path12.join(stateDir, "browse-console.log"),
+    networkLog: path12.join(stateDir, "browse-network.log"),
+    dialogLog: path12.join(stateDir, "browse-dialog.log"),
+    auditLog: path12.join(stateDir, "browse-audit.jsonl")
   };
 }
 function ensureStateDir(config) {
   try {
-    fs6.mkdirSync(config.stateDir, { recursive: true, mode: 448 });
+    fs11.mkdirSync(config.stateDir, { recursive: true, mode: 448 });
   } catch (err) {
     if (err.code === "EACCES") {
       throw new Error(`Cannot create state directory ${config.stateDir}: permission denied`);
@@ -6928,21 +8392,21 @@ function ensureStateDir(config) {
     }
     throw err;
   }
-  const gitignorePath = path6.join(config.projectDir, ".gitignore");
+  const gitignorePath = path12.join(config.projectDir, ".gitignore");
   try {
-    const content = fs6.readFileSync(gitignorePath, "utf-8");
+    const content = fs11.readFileSync(gitignorePath, "utf-8");
     if (!content.match(/^\.gstack\/?$/m)) {
       const separator = content.endsWith(`
 `) ? "" : `
 `;
-      fs6.appendFileSync(gitignorePath, `${separator}.gstack/
+      fs11.appendFileSync(gitignorePath, `${separator}.gstack/
 `);
     }
   } catch (err) {
     if (err.code !== "ENOENT") {
-      const logPath = path6.join(config.stateDir, "browse-server.log");
+      const logPath = path12.join(config.stateDir, "browse-server.log");
       try {
-        fs6.appendFileSync(logPath, `[${new Date().toISOString()}] Warning: could not update .gitignore at ${gitignorePath}: ${err.message}
+        fs11.appendFileSync(logPath, `[${new Date().toISOString()}] Warning: could not update .gitignore at ${gitignorePath}: ${err.message}
 `);
       } catch {}
     }
@@ -6950,8 +8414,8 @@ function ensureStateDir(config) {
 }
 function readVersionHash(execPath = process.execPath) {
   try {
-    const versionFile = path6.resolve(path6.dirname(execPath), ".version");
-    return fs6.readFileSync(versionFile, "utf-8").trim() || null;
+    const versionFile = path12.resolve(path12.dirname(execPath), ".version");
+    return fs11.readFileSync(versionFile, "utf-8").trim() || null;
   } catch {
     return null;
   }
@@ -7053,11 +8517,11 @@ function parsePdfArgs(args) {
 }
 function parsePdfFromFile(payloadPath) {
   try {
-    validateReadPath(path7.resolve(payloadPath));
+    validateReadPath(path13.resolve(payloadPath));
   } catch {
     throw new Error(`pdf: --from-file ${payloadPath} must be under ${SAFE_DIRECTORIES.join(" or ")} (security policy). Copy the payload into the project tree or /tmp first.`);
   }
-  const raw = fs7.readFileSync(payloadPath, "utf8");
+  const raw = fs12.readFileSync(payloadPath, "utf8");
   const json = JSON.parse(raw);
   const out = {
     output: json.output || `${TEMP_DIR}/browse-page.pdf`,
@@ -7550,12 +9014,12 @@ ${wrapUntrustedContent(snapshot, bm.getCurrentUrl())}`;
         return "focus requires headed mode. Run `$B connect` first.";
       }
       try {
-        const { execSync } = await import("child_process");
+        const { execSync: execSync2 } = await import("child_process");
         const appNames = ["Comet", "Google Chrome", "Arc", "Brave Browser", "Microsoft Edge"];
         let activated = false;
         for (const appName of appNames) {
           try {
-            execSync(`osascript -e 'tell application "${appName}" to activate'`, { stdio: "pipe", timeout: 3000 });
+            execSync2(`osascript -e 'tell application "${appName}" to activate'`, { stdio: "pipe", timeout: 3000 });
             activated = true;
             break;
           } catch (err) {
@@ -7607,25 +9071,25 @@ ${wrapUntrustedContent(snapshot, bm.getCurrentUrl())}`;
       return "WATCHING — observing user browsing. Periodic snapshots every 5s.\nRun `$B watch stop` to stop and get summary.";
     }
     case "inbox": {
-      const { execSync } = await import("child_process");
+      const { execSync: execSync2 } = await import("child_process");
       let gitRoot;
       try {
-        gitRoot = execSync("git rev-parse --show-toplevel", { encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] }).trim();
+        gitRoot = execSync2("git rev-parse --show-toplevel", { encoding: "utf-8", stdio: ["pipe", "pipe", "pipe"] }).trim();
       } catch (err) {
         if (err?.status === undefined && !err?.message?.includes("Command failed"))
           throw err;
         return "Not in a git repository — cannot locate inbox.";
       }
-      const inboxDir = path7.join(gitRoot, ".context", "sidebar-inbox");
-      if (!fs7.existsSync(inboxDir))
+      const inboxDir = path13.join(gitRoot, ".context", "sidebar-inbox");
+      if (!fs12.existsSync(inboxDir))
         return "Inbox empty.";
-      const files = fs7.readdirSync(inboxDir).filter((f) => f.endsWith(".json") && !f.startsWith(".")).sort().reverse();
+      const files = fs12.readdirSync(inboxDir).filter((f) => f.endsWith(".json") && !f.startsWith(".")).sort().reverse();
       if (files.length === 0)
         return "Inbox empty.";
       const messages = [];
       for (const file of files) {
         try {
-          const data = JSON.parse(fs7.readFileSync(path7.join(inboxDir, file), "utf-8"));
+          const data = JSON.parse(fs12.readFileSync(path13.join(inboxDir, file), "utf-8"));
           messages.push({
             timestamp: data.timestamp || "",
             url: data.page?.url || "unknown",
@@ -7651,7 +9115,7 @@ ${wrapUntrustedContent(snapshot, bm.getCurrentUrl())}`;
       if (args.includes("--clear")) {
         for (const file of files) {
           try {
-            fs7.unlinkSync(path7.join(inboxDir, file));
+            fs12.unlinkSync(path13.join(inboxDir, file));
           } catch (err) {
             if (err?.code !== "ENOENT")
               throw err;
@@ -7670,9 +9134,9 @@ ${wrapUntrustedContent(snapshot, bm.getCurrentUrl())}`;
         throw new Error("State name must be alphanumeric (a-z, 0-9, _, -)");
       }
       const config = resolveConfig();
-      const stateDir = path7.join(config.stateDir, "browse-states");
-      fs7.mkdirSync(stateDir, { recursive: true });
-      const statePath = path7.join(stateDir, `${name}.json`);
+      const stateDir = path13.join(config.stateDir, "browse-states");
+      fs12.mkdirSync(stateDir, { recursive: true });
+      const statePath = path13.join(stateDir, `${name}.json`);
       if (action === "save") {
         const state = await bm.saveState();
         const saveData = {
@@ -7681,14 +9145,14 @@ ${wrapUntrustedContent(snapshot, bm.getCurrentUrl())}`;
           cookies: state.cookies,
           pages: state.pages.map((p) => ({ url: p.url, isActive: p.isActive }))
         };
-        fs7.writeFileSync(statePath, JSON.stringify(saveData, null, 2), { mode: 384 });
+        fs12.writeFileSync(statePath, JSON.stringify(saveData, null, 2), { mode: 384 });
         return `State saved: ${statePath} (${state.cookies.length} cookies, ${state.pages.length} pages)
 ⚠️  Cookies stored in plaintext. Delete when no longer needed.`;
       }
       if (action === "load") {
-        if (!fs7.existsSync(statePath))
+        if (!fs12.existsSync(statePath))
           throw new Error(`State not found: ${statePath}`);
-        const data = JSON.parse(fs7.readFileSync(statePath, "utf-8"));
+        const data = JSON.parse(fs12.readFileSync(statePath, "utf-8"));
         if (!Array.isArray(data.cookies) || !Array.isArray(data.pages)) {
           throw new Error("Invalid state file: expected cookies and pages arrays");
         }
@@ -7842,6 +9306,20 @@ ${wrapUntrustedContent(snapshot, bm.getCurrentUrl())}`;
       });
       return JSON.stringify(data, null, 2);
     }
+    case "domain-skill": {
+      return await handleDomainSkillCommand(args, bm);
+    }
+    case "skill": {
+      const port = opts?.daemonPort;
+      if (port === undefined) {
+        throw new Error("skill command requires daemonPort in MetaCommandOpts (server bug)");
+      }
+      return await handleSkillCommand(args, { port });
+    }
+    case "cdp": {
+      const { handleCdpCommand: handleCdpCommand2 } = await Promise.resolve().then(() => (init_cdp_commands(), exports_cdp_commands));
+      return await handleCdpCommand2(args, bm);
+    }
     default:
       throw new Error(`Unknown meta command: ${command}`);
   }
@@ -7849,26 +9327,27 @@ ${wrapUntrustedContent(snapshot, bm.getCurrentUrl())}`;
 
 // browse/src/server.ts
 init_cookie_picker_routes();
+init_commands();
 
 // browse/src/security.ts
-import * as fs8 from "fs";
-import * as path8 from "path";
-import * as os4 from "os";
-var SECURITY_DIR = path8.join(os4.homedir(), ".gstack", "security");
-var ATTEMPTS_LOG = path8.join(SECURITY_DIR, "attempts.jsonl");
-var SALT_FILE = path8.join(SECURITY_DIR, "device-salt");
+import * as fs13 from "fs";
+import * as path14 from "path";
+import * as os9 from "os";
+var SECURITY_DIR = path14.join(os9.homedir(), ".gstack", "security");
+var ATTEMPTS_LOG = path14.join(SECURITY_DIR, "attempts.jsonl");
+var SALT_FILE = path14.join(SECURITY_DIR, "device-salt");
 var MAX_LOG_BYTES = 10 * 1024 * 1024;
-var STATE_FILE = path8.join(SECURITY_DIR, "session-state.json");
+var STATE_FILE = path14.join(SECURITY_DIR, "session-state.json");
 function readSessionState() {
   try {
-    if (!fs8.existsSync(STATE_FILE))
+    if (!fs13.existsSync(STATE_FILE))
       return null;
-    return JSON.parse(fs8.readFileSync(STATE_FILE, "utf8"));
+    return JSON.parse(fs13.readFileSync(STATE_FILE, "utf8"));
   } catch {
     return null;
   }
 }
-var DECISIONS_DIR = path8.join(SECURITY_DIR, "decisions");
+var DECISIONS_DIR = path14.join(SECURITY_DIR, "decisions");
 function getStatus() {
   const state = readSessionState();
   const layers = state?.classifierStatus ?? {
@@ -8010,7 +9489,7 @@ function getSubscriberCount() {
 }
 
 // browse/src/audit.ts
-import * as fs9 from "fs";
+import * as fs14 from "fs";
 var MAX_ARGS_LENGTH = 200;
 var MAX_ERROR_LENGTH = 300;
 var auditPath = null;
@@ -8037,7 +9516,7 @@ function writeAuditEntry(entry) {
       record.aliasOf = entry.aliasOf;
     if (truncatedError)
       record.error = truncatedError;
-    fs9.appendFileSync(auditPath, JSON.stringify(record) + `
+    fs14.appendFileSync(auditPath, JSON.stringify(record) + `
 `);
   } catch {}
 }
@@ -8046,11 +9525,11 @@ function writeAuditEntry(entry) {
 init_cdp_inspector();
 
 // browse/src/error-handling.ts
-import * as fs10 from "fs";
+import * as fs15 from "fs";
 var IS_WINDOWS2 = process.platform === "win32";
 function safeUnlink(filePath) {
   try {
-    fs10.unlinkSync(filePath);
+    fs15.unlinkSync(filePath);
   } catch (err) {
     if (err?.code !== "ENOENT")
       throw err;
@@ -8058,22 +9537,22 @@ function safeUnlink(filePath) {
 }
 function safeUnlinkQuiet(filePath) {
   try {
-    fs10.unlinkSync(filePath);
+    fs15.unlinkSync(filePath);
   } catch {}
 }
 
 // browse/src/tunnel-denial-log.ts
 import { promises as fsp } from "fs";
-import * as path9 from "path";
-import * as os5 from "os";
-var LOG_DIR = path9.join(os5.homedir(), ".gstack", "security");
-var LOG_PATH = path9.join(LOG_DIR, "attempts.jsonl");
+import * as path15 from "path";
+import * as os10 from "os";
+var LOG_DIR = path15.join(os10.homedir(), ".gstack", "security");
+var LOG_PATH = path15.join(LOG_DIR, "attempts.jsonl");
 var RATE_CAP = 60;
 var WINDOW_MS = 60000;
 var writeTimestamps = [];
 var droppedSinceLastWrite = 0;
 var dirEnsured = false;
-async function ensureDir() {
+async function ensureDir3() {
   if (dirEnsured)
     return;
   try {
@@ -8106,7 +9585,7 @@ function logTunnelDenial(req, url, reason) {
   }
   (async () => {
     try {
-      await ensureDir();
+      await ensureDir3();
       await fsp.appendFile(LOG_PATH, JSON.stringify(entry) + `
 `);
     } catch {}
@@ -8114,13 +9593,13 @@ function logTunnelDenial(req, url, reason) {
 }
 
 // browse/src/sse-session-cookie.ts
-import * as crypto4 from "crypto";
+import * as crypto5 from "crypto";
 var TTL_MS = 30 * 60 * 1000;
 var MAX_SESSIONS = 1e4;
 var sessions = new Map;
 var SSE_COOKIE_NAME = "gstack_sse";
 function mintSseSessionToken() {
-  const token = crypto4.randomBytes(32).toString("base64url");
+  const token = crypto5.randomBytes(32).toString("base64url");
   const now = Date.now();
   const expiresAt = now + TTL_MS;
   sessions.set(token, { createdAt: now, expiresAt });
@@ -8175,13 +9654,13 @@ function pruneExpired(now) {
 }
 
 // browse/src/pty-session-cookie.ts
-import * as crypto5 from "crypto";
+import * as crypto6 from "crypto";
 var TTL_MS2 = 30 * 60 * 1000;
 var MAX_SESSIONS2 = 1e4;
 var sessions2 = new Map;
 var PTY_COOKIE_NAME = "gstack_pty";
 function mintPtySessionToken() {
-  const token = crypto5.randomBytes(32).toString("base64url");
+  const token = crypto6.randomBytes(32).toString("base64url");
   const now = Date.now();
   const expiresAt = now + TTL_MS2;
   sessions2.set(token, { createdAt: now, expiresAt });
@@ -8215,17 +9694,19 @@ function pruneExpired2(now) {
 
 // browse/src/server.ts
 init_buffers();
-import * as fs11 from "fs";
+init_commands();
+import * as fs16 from "fs";
 import * as net from "net";
-import * as path10 from "path";
-import * as crypto6 from "crypto";
+import * as path16 from "path";
+import * as crypto7 from "crypto";
 var config = resolveConfig();
 ensureStateDir(config);
 initAuditLog(config.auditLog);
-var AUTH_TOKEN = crypto6.randomUUID();
+var AUTH_TOKEN = crypto7.randomUUID();
 initRegistry(AUTH_TOKEN);
 var BROWSE_PORT = parseInt(process.env.BROWSE_PORT || "0", 10);
 var IDLE_TIMEOUT_MS = parseInt(process.env.BROWSE_IDLE_TIMEOUT || "1800000", 10);
+var LOCAL_LISTEN_PORT = 0;
 var tunnelActive = false;
 var tunnelUrl = null;
 var tunnelListener = null;
@@ -8274,23 +9755,23 @@ function resolveNgrokAuthtoken() {
   if (authtoken)
     return authtoken;
   const home = process.env.HOME || "";
-  const ngrokEnvPath = path10.join(home, ".gstack", "ngrok.env");
-  if (fs11.existsSync(ngrokEnvPath)) {
+  const ngrokEnvPath = path16.join(home, ".gstack", "ngrok.env");
+  if (fs16.existsSync(ngrokEnvPath)) {
     try {
-      const envContent = fs11.readFileSync(ngrokEnvPath, "utf-8");
+      const envContent = fs16.readFileSync(ngrokEnvPath, "utf-8");
       const match = envContent.match(/^NGROK_AUTHTOKEN=(.+)$/m);
       if (match)
         return match[1].trim();
     } catch {}
   }
   const ngrokConfigs = [
-    path10.join(home, "Library", "Application Support", "ngrok", "ngrok.yml"),
-    path10.join(home, ".config", "ngrok", "ngrok.yml"),
-    path10.join(home, ".ngrok2", "ngrok.yml")
+    path16.join(home, "Library", "Application Support", "ngrok", "ngrok.yml"),
+    path16.join(home, ".config", "ngrok", "ngrok.yml"),
+    path16.join(home, ".ngrok2", "ngrok.yml")
   ];
   for (const conf of ngrokConfigs) {
     try {
-      const content = fs11.readFileSync(conf, "utf-8");
+      const content = fs16.readFileSync(conf, "utf-8");
       const match = content.match(/authtoken:\s*(.+)/);
       if (match)
         return match[1].trim();
@@ -8318,8 +9799,8 @@ function validateAuth(req) {
 }
 function readTerminalPort() {
   try {
-    const f = path10.join(path10.dirname(config.stateFile), "terminal-port");
-    const v = parseInt(fs11.readFileSync(f, "utf-8").trim(), 10);
+    const f = path16.join(path16.dirname(config.stateFile), "terminal-port");
+    const v = parseInt(fs16.readFileSync(f, "utf-8").trim(), 10);
     return Number.isFinite(v) && v > 0 ? v : null;
   } catch {
     return null;
@@ -8327,8 +9808,8 @@ function readTerminalPort() {
 }
 function readTerminalInternalToken() {
   try {
-    const f = path10.join(path10.dirname(config.stateFile), "terminal-internal-token");
-    const t = fs11.readFileSync(f, "utf-8").trim();
+    const f = path16.join(path16.dirname(config.stateFile), "terminal-internal-token");
+    const t = fs16.readFileSync(f, "utf-8").trim();
     return t.length > 16 ? t : null;
   } catch {
     return null;
@@ -8428,7 +9909,7 @@ async function flushBuffers() {
       const lines = entries.map((e) => `[${new Date(e.timestamp).toISOString()}] [${e.level}] ${e.text}`).join(`
 `) + `
 `;
-      fs11.appendFileSync(CONSOLE_LOG_PATH, lines);
+      fs16.appendFileSync(CONSOLE_LOG_PATH, lines);
       lastConsoleFlushed = consoleBuffer.totalAdded;
     }
     const newNetworkCount = networkBuffer.totalAdded - lastNetworkFlushed;
@@ -8437,7 +9918,7 @@ async function flushBuffers() {
       const lines = entries.map((e) => `[${new Date(e.timestamp).toISOString()}] ${e.method} ${e.url} → ${e.status || "pending"} (${e.duration || "?"}ms, ${e.size || "?"}B)`).join(`
 `) + `
 `;
-      fs11.appendFileSync(NETWORK_LOG_PATH, lines);
+      fs16.appendFileSync(NETWORK_LOG_PATH, lines);
       lastNetworkFlushed = networkBuffer.totalAdded;
     }
     const newDialogCount = dialogBuffer.totalAdded - lastDialogFlushed;
@@ -8446,7 +9927,7 @@ async function flushBuffers() {
       const lines = entries.map((e) => `[${new Date(e.timestamp).toISOString()}] [${e.type}] "${e.message}" → ${e.action}${e.response ? ` "${e.response}"` : ""}`).join(`
 `) + `
 `;
-      fs11.appendFileSync(DIALOG_LOG_PATH, lines);
+      fs16.appendFileSync(DIALOG_LOG_PATH, lines);
       lastDialogFlushed = dialogBuffer.totalAdded;
     }
   } catch (err) {
@@ -8513,11 +9994,11 @@ var browserManager = new BrowserManager;
 browserManager.onDisconnect = () => shutdown(2);
 var isShuttingDown = false;
 function isPortAvailable(port, hostname = "127.0.0.1") {
-  return new Promise((resolve8) => {
+  return new Promise((resolve9) => {
     const srv = net.createServer();
-    srv.once("error", () => resolve8(false));
+    srv.once("error", () => resolve9(false));
     srv.listen(port, hostname, () => {
-      srv.close(() => resolve8(true));
+      srv.close(() => resolve9(true));
     });
   });
 }
@@ -8616,9 +10097,9 @@ async function handleCommandInternal(body, tokenInfo, opts) {
       console.warn("[browse] Failed to pin tab", tabId, ":", err.message);
     }
   }
-  if (command !== "newtab" && tokenInfo && tokenInfo.clientId !== "root" && (WRITE_COMMANDS.has(command) || tokenInfo.tabPolicy === "own-only")) {
+  if (command !== "newtab" && tokenInfo && tokenInfo.clientId !== "root" && tokenInfo.tabPolicy === "own-only") {
     const targetTab = tabId ?? browserManager.getActiveTabId();
-    if (!browserManager.checkTabAccess(targetTab, tokenInfo.clientId, { isWrite: WRITE_COMMANDS.has(command), ownOnly: tokenInfo.tabPolicy === "own-only" })) {
+    if (!browserManager.checkTabAccess(targetTab, tokenInfo.clientId, { isWrite: WRITE_COMMANDS.has(command), ownOnly: true })) {
       return {
         status: 403,
         json: true,
@@ -8695,6 +10176,7 @@ async function handleCommandInternal(body, tokenInfo, opts) {
       const chainDepth = opts?.chainDepth ?? 0;
       result = await handleMetaCommand(command, args, browserManager, shutdown, tokenInfo, {
         chainDepth,
+        daemonPort: LOCAL_LISTEN_PORT,
         executeCommand: (body2, ti) => handleCommandInternal(body2, ti, {
           skipRateCheck: true,
           skipActivity: true,
@@ -8836,16 +10318,16 @@ async function shutdown(exitCode = 0) {
   isShuttingDown = true;
   console.log("[browse] Shutting down...");
   try {
-    const { spawnSync } = __require("child_process");
-    spawnSync("pkill", ["-f", "terminal-agent\\.ts"], { stdio: "ignore", timeout: 3000 });
+    const { spawnSync: spawnSync3 } = __require("child_process");
+    spawnSync3("pkill", ["-f", "terminal-agent\\.ts"], { stdio: "ignore", timeout: 3000 });
   } catch (err) {
     console.warn("[browse] Failed to kill terminal-agent:", err.message);
   }
   try {
-    safeUnlinkQuiet(path10.join(path10.dirname(config.stateFile), "terminal-port"));
+    safeUnlinkQuiet(path16.join(path16.dirname(config.stateFile), "terminal-port"));
   } catch {}
   try {
-    safeUnlinkQuiet(path10.join(path10.dirname(config.stateFile), "terminal-internal-token"));
+    safeUnlinkQuiet(path16.join(path16.dirname(config.stateFile), "terminal-internal-token"));
   } catch {}
   try {
     detachSession();
@@ -8859,9 +10341,9 @@ async function shutdown(exitCode = 0) {
   clearInterval(idleCheckInterval);
   await flushBuffers();
   await browserManager.close();
-  const profileDir = path10.join(process.env.HOME || "/tmp", ".gstack", "chromium-profile");
+  const profileDir = path16.join(process.env.HOME || "/tmp", ".gstack", "chromium-profile");
   for (const lockFile of ["SingletonLock", "SingletonSocket", "SingletonCookie"]) {
-    safeUnlinkQuiet(path10.join(profileDir, lockFile));
+    safeUnlinkQuiet(path16.join(profileDir, lockFile));
   }
   safeUnlinkQuiet(config.stateFile);
   process.exit(exitCode);
@@ -8889,9 +10371,9 @@ function emergencyCleanup() {
   if (isShuttingDown)
     return;
   isShuttingDown = true;
-  const profileDir = path10.join(process.env.HOME || "/tmp", ".gstack", "chromium-profile");
+  const profileDir = path16.join(process.env.HOME || "/tmp", ".gstack", "chromium-profile");
   for (const lockFile of ["SingletonLock", "SingletonSocket", "SingletonCookie"]) {
-    safeUnlinkQuiet(path10.join(profileDir, lockFile));
+    safeUnlinkQuiet(path16.join(profileDir, lockFile));
   }
   safeUnlinkQuiet(config.stateFile);
 }
@@ -8910,6 +10392,7 @@ async function start() {
   safeUnlink(NETWORK_LOG_PATH);
   safeUnlink(DIALOG_LOG_PATH);
   const port = await findPort();
+  LOCAL_LISTEN_PORT = port;
   const skipBrowser = process.env.BROWSE_HEADLESS_SKIP === "1";
   if (!skipBrowser) {
     const headed = process.env.BROWSE_HEADED === "1";
@@ -8969,13 +10452,13 @@ async function start() {
         const slug = /^[a-z0-9_-]+$/.test(rawSlug) ? rawSlug : "unknown";
         const homeDir = process.env.HOME || process.env.USERPROFILE || "/tmp";
         const projectWelcome = `${homeDir}/.gstack/projects/${slug}/designs/welcome-page-20260331/finalized.html`;
-        if (fs11.existsSync(projectWelcome))
+        if (fs16.existsSync(projectWelcome))
           return projectWelcome;
         const rawSkillRoot = process.env.GSTACK_SKILL_ROOT || `${homeDir}/.claude/skills/gstack`;
         if (rawSkillRoot.includes(".."))
           return null;
         const builtinWelcome = `${rawSkillRoot}/browse/src/welcome.html`;
-        if (fs11.existsSync(builtinWelcome))
+        if (fs16.existsSync(builtinWelcome))
           return builtinWelcome;
         return null;
       })();
@@ -9255,11 +10738,11 @@ async function start() {
         tunnelServer = boundTunnel;
         tunnelActive = true;
         console.log(`[browse] Tunnel listener bound on 127.0.0.1:${tunnelPort}, ngrok → ${tunnelUrl}`);
-        const stateContent = JSON.parse(fs11.readFileSync(config.stateFile, "utf-8"));
+        const stateContent = JSON.parse(fs16.readFileSync(config.stateFile, "utf-8"));
         stateContent.tunnel = { url: tunnelUrl, domain: domain || null, startedAt: new Date().toISOString() };
         const tmpState = config.stateFile + ".tmp";
-        fs11.writeFileSync(tmpState, JSON.stringify(stateContent, null, 2), { mode: 384 });
-        fs11.renameSync(tmpState, config.stateFile);
+        fs16.writeFileSync(tmpState, JSON.stringify(stateContent, null, 2), { mode: 384 });
+        fs16.renameSync(tmpState, config.stateFile);
         return new Response(JSON.stringify({ url: tunnelUrl }), {
           status: 200,
           headers: { "Content-Type": "application/json" }
@@ -9492,20 +10975,20 @@ data: ${JSON.stringify(entry)}
           headers: { "Content-Type": "application/json" }
         });
       }
-      if (!fs11.existsSync(filePath)) {
+      if (!fs16.existsSync(filePath)) {
         return new Response(JSON.stringify({ error: "File not found" }), {
           status: 404,
           headers: { "Content-Type": "application/json" }
         });
       }
-      const stat = fs11.statSync(filePath);
+      const stat = fs16.statSync(filePath);
       if (stat.size > 209715200) {
         return new Response(JSON.stringify({ error: "File too large (max 200MB)" }), {
           status: 413,
           headers: { "Content-Type": "application/json" }
         });
       }
-      const ext = path10.extname(filePath).toLowerCase();
+      const ext = path16.extname(filePath).toLowerCase();
       const MIME_MAP = {
         ".png": "image/png",
         ".jpg": "image/jpeg",
@@ -9532,7 +11015,7 @@ data: ${JSON.stringify(entry)}
         headers: {
           "Content-Type": contentType,
           "Content-Length": String(stat.size),
-          "Content-Disposition": `inline; filename="${path10.basename(filePath)}"`,
+          "Content-Disposition": `inline; filename="${path16.basename(filePath)}"`,
           "Cache-Control": "no-cache"
         }
       });
@@ -9720,13 +11203,13 @@ data: ${JSON.stringify(event)}
     port,
     token: AUTH_TOKEN,
     startedAt: new Date().toISOString(),
-    serverPath: path10.resolve(__browseNodeSrcDir, "server.ts"),
+    serverPath: path16.resolve(__browseNodeSrcDir, "server.ts"),
     binaryVersion: readVersionHash() || undefined,
     mode: browserManager.getConnectionMode()
   };
   const tmpFile = config.stateFile + ".tmp";
-  fs11.writeFileSync(tmpFile, JSON.stringify(state, null, 2), { mode: 384 });
-  fs11.renameSync(tmpFile, config.stateFile);
+  fs16.writeFileSync(tmpFile, JSON.stringify(state, null, 2), { mode: 384 });
+  fs16.renameSync(tmpFile, config.stateFile);
   browserManager.serverPort = port;
   if (browserManager.getConnectionMode() === "headed") {
     try {
@@ -9742,14 +11225,14 @@ data: ${JSON.stringify(event)}
     }
   }
   try {
-    const stateDir = path10.join(config.stateDir, "browse-states");
-    if (fs11.existsSync(stateDir)) {
+    const stateDir = path16.join(config.stateDir, "browse-states");
+    if (fs16.existsSync(stateDir)) {
       const SEVEN_DAYS = 604800000;
-      for (const file of fs11.readdirSync(stateDir)) {
-        const filePath = path10.join(stateDir, file);
-        const stat = fs11.statSync(filePath);
+      for (const file of fs16.readdirSync(stateDir)) {
+        const filePath = path16.join(stateDir, file);
+        const stat = fs16.statSync(filePath);
         if (Date.now() - stat.mtimeMs > SEVEN_DAYS) {
-          fs11.unlinkSync(filePath);
+          fs16.unlinkSync(filePath);
           console.log(`[browse] Deleted stale state file: ${file}`);
         }
       }
@@ -9783,11 +11266,11 @@ data: ${JSON.stringify(event)}
         tunnelServer = boundTunnel;
         tunnelActive = true;
         console.log(`[browse] Tunnel listener bound on 127.0.0.1:${tunnelPort}, ngrok → ${tunnelUrl}`);
-        const stateContent = JSON.parse(fs11.readFileSync(config.stateFile, "utf-8"));
+        const stateContent = JSON.parse(fs16.readFileSync(config.stateFile, "utf-8"));
         stateContent.tunnel = { url: tunnelUrl, domain: domain || null, startedAt: new Date().toISOString() };
         const tmpState = config.stateFile + ".tmp";
-        fs11.writeFileSync(tmpState, JSON.stringify(stateContent, null, 2), { mode: 384 });
-        fs11.renameSync(tmpState, config.stateFile);
+        fs16.writeFileSync(tmpState, JSON.stringify(stateContent, null, 2), { mode: 384 });
+        fs16.renameSync(tmpState, config.stateFile);
       } catch (err) {
         console.error(`[browse] Failed to start tunnel: ${err.message}`);
         try {
@@ -9812,11 +11295,11 @@ data: ${JSON.stringify(event)}
       tunnelActive = true;
       const tunnelPort = boundTunnel.port;
       console.log(`[browse] Tunnel listener bound (local-only test mode) on 127.0.0.1:${tunnelPort}`);
-      const stateContent = JSON.parse(fs11.readFileSync(config.stateFile, "utf-8"));
+      const stateContent = JSON.parse(fs16.readFileSync(config.stateFile, "utf-8"));
       stateContent.tunnelLocalPort = tunnelPort;
       const tmpState = config.stateFile + ".tmp";
-      fs11.writeFileSync(tmpState, JSON.stringify(stateContent, null, 2), { mode: 384 });
-      fs11.renameSync(tmpState, config.stateFile);
+      fs16.writeFileSync(tmpState, JSON.stringify(stateContent, null, 2), { mode: 384 });
+      fs16.renameSync(tmpState, config.stateFile);
     } catch (err) {
       console.error(`[browse] BROWSE_TUNNEL_LOCAL_ONLY=1 listener bind failed: ${err.message}`);
     }
@@ -9825,9 +11308,9 @@ data: ${JSON.stringify(event)}
 start().catch((err) => {
   console.error(`[browse] Failed to start: ${err.message}`);
   try {
-    const errorLogPath = path10.join(config.stateDir, "browse-startup-error.log");
-    fs11.mkdirSync(config.stateDir, { recursive: true, mode: 448 });
-    fs11.writeFileSync(errorLogPath, `${new Date().toISOString()} ${err.message}
+    const errorLogPath = path16.join(config.stateDir, "browse-startup-error.log");
+    fs16.mkdirSync(config.stateDir, { recursive: true, mode: 448 });
+    fs16.writeFileSync(errorLogPath, `${new Date().toISOString()} ${err.message}
 ${err.stack || ""}
 `, { mode: 384 });
   } catch {}

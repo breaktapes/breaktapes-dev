@@ -1,0 +1,1 @@
+/Users/akrish/DEV/.claude/worktrees/suspicious-montalcini-93a1f7/.claude/skills/gstack/skillify/SKILL.md
