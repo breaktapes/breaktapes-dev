@@ -1356,7 +1356,7 @@ function MedalWall() {
   return (
     <div style={st.section}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-        <div style={st.sectionTitle}>MEDALS</div>
+        <h2 style={st.sectionTitle}>MEDALS</h2>
         <div style={{ height: '1px', flex: 1, background: 'var(--border)', marginLeft: '16px' }} />
       </div>
 
@@ -1745,7 +1745,7 @@ function PersonalBests() {
   if (allPbs.length === 0) {
     return (
       <div style={st.section}>
-        <div style={st.sectionTitle}>PERSONAL BESTS</div>
+        <h2 style={st.sectionTitle}>PERSONAL BESTS</h2>
         <div style={st.emptyState}>
           <div style={st.emptyIcon}>⏱</div>
           <div style={st.emptyText}>No PBs yet. Log a timed race to start tracking.</div>
@@ -1758,7 +1758,7 @@ function PersonalBests() {
     <div style={st.section}>
       {/* Header row with settings icon */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-        <div style={st.sectionTitle}>PERSONAL BESTS</div>
+        <h2 style={st.sectionTitle}>PERSONAL BESTS</h2>
         <button
           onClick={() => setShowConfig(true)}
           style={{
@@ -1919,7 +1919,7 @@ function SignatureDistances() {
   if (top.length === 0) {
     return (
       <div style={st.section}>
-        <div style={st.sectionTitle}>SIGNATURE DISTANCES</div>
+        <h2 style={st.sectionTitle}>SIGNATURE DISTANCES</h2>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', padding: '8px 0', lineHeight: 1.6 }}>
           Log a few more timed races to see which distances are becoming your signature.
         </div>
@@ -1932,7 +1932,7 @@ function SignatureDistances() {
   return (
     <div style={st.section}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
-        <div style={st.sectionTitle}>SIGNATURE DISTANCES</div>
+        <h2 style={st.sectionTitle}>SIGNATURE DISTANCES</h2>
         <div style={{ height: '1px', flex: 1, background: 'var(--border)' }} />
       </div>
       <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '12px', fontFamily: 'var(--headline)', fontWeight: 600, letterSpacing: '0.06em' }}>
@@ -2007,7 +2007,7 @@ function AgeGradeTrajectory() {
   if (!hasProfile) {
     return (
       <div style={st.section}>
-        <div style={st.sectionTitle}>AGE-GRADE TRAJECTORY</div>
+        <h2 style={st.sectionTitle}>AGE-GRADE TRAJECTORY</h2>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', padding: '8px 0', lineHeight: 1.6 }}>
           Add your date of birth and gender in profile to unlock age-grade scoring.
         </div>
@@ -2018,7 +2018,7 @@ function AgeGradeTrajectory() {
   if (history.length < 2) {
     return (
       <div style={st.section}>
-        <div style={st.sectionTitle}>AGE-GRADE TRAJECTORY</div>
+        <h2 style={st.sectionTitle}>AGE-GRADE TRAJECTORY</h2>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', padding: '8px 0', lineHeight: 1.6 }}>
           Log at least two 5K / 10K / Half / Marathon results to see your age-grade trend.
         </div>
@@ -2041,7 +2041,7 @@ function AgeGradeTrajectory() {
   return (
     <div style={st.section}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
-        <div style={st.sectionTitle}>AGE-GRADE</div>
+        <h2 style={st.sectionTitle}>AGE-GRADE</h2>
         <div style={{ height: '1px', flex: 1, background: 'var(--border)' }} />
         <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', color: 'var(--orange)', letterSpacing: '0.02em' }}>
           {latestPct.toFixed(1)}%
@@ -2149,7 +2149,7 @@ function PerformanceTimeline() {
   if (timeline.length < 2) {
     return (
       <div style={st.section}>
-        <div style={st.sectionTitle}>PERFORMANCE TIMELINE</div>
+        <h2 style={st.sectionTitle}>PERFORMANCE TIMELINE</h2>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', padding: '8px 0', lineHeight: 1.6 }}>
           Log races across two or more seasons to unlock your season-by-season story.
         </div>
@@ -2160,7 +2160,7 @@ function PerformanceTimeline() {
   return (
     <div style={st.section}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-        <div style={st.sectionTitle}>PERFORMANCE TIMELINE</div>
+        <h2 style={st.sectionTitle}>PERFORMANCE TIMELINE</h2>
         <div style={{ height: '1px', flex: 1, background: 'var(--border)' }} />
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -2575,7 +2575,7 @@ function GoalsSection() {
   return (
     <div style={st.section}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-        <div style={st.sectionTitle}>GOALS</div>
+        <h2 style={st.sectionTitle}>GOALS</h2>
         <div style={{ height: '1px', flex: 1, background: 'var(--border)', marginLeft: '16px' }} />
       </div>
 
@@ -2855,7 +2855,7 @@ export function Profile() {
   // can guard themselves.
 
   return (
-    <div style={st.page}>
+    <main role="main" aria-label="Athlete profile" style={st.page}>
       {showEdit && <EditProfileModal onClose={() => setShowEdit(false)} />}
       <OnboardingBanner onEdit={() => { localStorage.setItem('bt_modal_shown', '1'); setShowEdit(true) }} />
       <AthleteHero onEdit={() => setShowEdit(true)} />
@@ -2869,7 +2869,7 @@ export function Profile() {
       <MajorsQualifiers />
       <RacePersonality />
       <GoalsSection />
-    </div>
+    </main>
   )
 }
 
@@ -3175,6 +3175,7 @@ const st = {
     letterSpacing: '0.04em',
     textTransform: 'uppercase',
     color: 'var(--white)',
+    margin: 0,
   } as React.CSSProperties,
 
   // ── PB cards
