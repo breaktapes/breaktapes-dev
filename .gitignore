@@ -30,3 +30,4 @@ clerk-nextjs/
 
 # Scrape outputs (transient — large JSON dumps)
 scripts/out/
+.omx/
