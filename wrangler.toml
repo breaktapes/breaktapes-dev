@@ -1,6 +1,7 @@
 name = "breaktapes-app"
 main = "worker/index.js"
 compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
 account_id = "b09f233e618dc7f23bcb247c947eb303"
 
 assets = { directory = "dist", html_handling = "auto-trailing-slash", binding = "ASSETS" }
@@ -13,11 +14,13 @@ routes = [
 
 [vars]
 SUPABASE_URL = "https://kmdpufauamadwavqsinj.supabase.co"
+POSTHOG_HOST = "https://us.i.posthog.com"
 
 # Secrets (set via `wrangler secret put`):
 #   SUPABASE_ANON_KEY
-#   ADMIN_USER_IDS  — comma-separated Clerk user IDs with admin access
-#                     e.g. "user_2abc...,user_2xyz..."
+#   ADMIN_USER_IDS      — comma-separated Clerk user IDs with admin access
+#                         e.g. "user_2abc...,user_2xyz..."
+#   POSTHOG_API_KEY     — PostHog public project token
 
 # KV for profile view counts (optional — Worker works without it):
 #   1. wrangler kv:namespace create "profile-cache"
@@ -39,6 +42,7 @@ routes = [
 
 [env.staging.vars]
 SUPABASE_URL = "https://yqzycwuyhvzkbofwkazr.supabase.co"
+POSTHOG_HOST = "https://us.i.posthog.com"
 
 # Secrets for staging (set via `wrangler secret put --env staging`):
 #   SUPABASE_ANON_KEY

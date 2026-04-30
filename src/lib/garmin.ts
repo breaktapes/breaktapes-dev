@@ -3,6 +3,7 @@ import { saveWearableToken, removeWearableToken } from '@/lib/wearableUtils'
 import { GARMIN_CLIENT_ID } from '@/env'
 import type { WearableToken } from '@/types'
 import type { GarminActivity } from '@/types/wearables'
+import { posthog } from '@/lib/posthog'
 
 export { GARMIN_CLIENT_ID }
 
@@ -56,7 +57,11 @@ export async function handleGarminCallback(code: string, returnedState: string):
   const redirectUri = `${window.location.origin}/train`
   const res = await fetch(`${HEALTH_PROXY}/garmin/token`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'X-POSTHOG-DISTINCT-ID': posthog.get_distinct_id() ?? '',
+      'X-POSTHOG-SESSION-ID': posthog.get_session_id() ?? '',
+    },
     body: JSON.stringify({ code, redirect_uri: redirectUri, code_verifier: verifier }),
   })
   if (!res.ok) throw new Error('Garmin token exchange failed')

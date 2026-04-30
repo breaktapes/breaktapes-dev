@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { parseDistKm } from '@/lib/raceFormulas'
 import { fmtDateDDMM } from '@/lib/utils'
+import { posthog } from '@/lib/posthog'
 import type { Race } from '@/types'
 
 const HEALTH_PROXY = 'https://health.breaktapes.com'
@@ -159,8 +160,16 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
       }
       addRace(race)
     }
+    const imported = selected.size - skipped
     setSkippedCount(skipped)
     setImporting(false)
+    if (imported > 0) {
+      posthog.capture('race import completed', {
+        imported_count: imported,
+        skipped_count: skipped,
+        selected_count: selected.size,
+      })
+    }
     if (skipped < selected.size) onClose()
   }
 
