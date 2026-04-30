@@ -1632,7 +1632,7 @@ function AchievementsSection() {
       {/* Achievement popup — portal so it renders above bottom nav */}
       {popup && createPortal(
         <div
-          style={{ position: 'fixed', inset: 0, zIndex: 1500, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'flex-end' }}
+          style={{ position: 'fixed', inset: 0, zIndex: 1500, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'flex-end' }}
           onClick={() => setPopup(null)}
         >
           <div
@@ -1822,7 +1822,7 @@ function PersonalBests() {
       {/* Config popup */}
       {showConfig && createPortal(
         <div
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 2000, display: 'flex', alignItems: 'flex-end' }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)', zIndex: 2000, display: 'flex', alignItems: 'flex-end' }}
           onClick={() => setShowConfig(false)}
         >
           <div

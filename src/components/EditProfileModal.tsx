@@ -273,7 +273,8 @@ const st = {
   overlay: {
     position: 'fixed',
     inset: 0,
-    background: 'rgba(0,0,0,0.7)',
+    background: 'rgba(0,0,0,0.75)',
+    backdropFilter: 'blur(8px)',
     zIndex: 950,
     display: 'flex',
     alignItems: 'flex-end',

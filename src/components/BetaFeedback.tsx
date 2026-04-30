@@ -85,7 +85,8 @@ export function BetaFeedback() {
             position: 'fixed',
             inset: 0,
             zIndex: 1000,
-            background: 'rgba(0,0,0,0.7)',
+            background: 'rgba(0,0,0,0.75)',
+            backdropFilter: 'blur(8px)',
             display: 'flex',
             alignItems: 'flex-end',
             justifyContent: 'center',
@@ -93,7 +94,7 @@ export function BetaFeedback() {
         >
           <div style={{
             background: 'var(--surface2)',
-            border: '1px solid var(--border2)',
+            borderTop: '2px solid var(--orange)',
             borderRadius: '16px 16px 0 0',
             padding: '1.5rem 1rem',
             width: '100%',

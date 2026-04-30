@@ -48,6 +48,7 @@
   --mono: 'Geist Mono', 'Courier New', monospace;
   /* error states */
   --error:      #ff5555;
+  --error-ch:   255, 85, 85;
   --error-dim:  #ff7070;
   /* flatlay marketplace — fully distinct zone, warm cream tiles */
   --flatlay-tile: #F2EDE6;

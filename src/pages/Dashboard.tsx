@@ -1036,7 +1036,7 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
                 <button onClick={() => setConfirmDelete(false)} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid var(--border2)', background: 'var(--surface3)', color: 'var(--white)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '13px', cursor: 'pointer', letterSpacing: '0.06em' }}>
                   CANCEL
                 </button>
-                <button onClick={handleDelete} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: '#ff4444', color: '#fff', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', cursor: 'pointer', letterSpacing: '0.06em' }}>
+                <button onClick={handleDelete} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: 'var(--error)', color: '#fff', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', cursor: 'pointer', letterSpacing: '0.06em' }}>
                   YES, REMOVE
                 </button>
               </div>
@@ -4611,7 +4611,7 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
 
       {/* Link sheet rendered via portal — inset:0 covers header+nav fully */}
       {showLinkSheet && createPortal(
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 1500, display: 'flex', alignItems: 'flex-end' }} onClick={() => setShowLinkSheet(false)}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 1500, display: 'flex', alignItems: 'flex-end' }} onClick={() => setShowLinkSheet(false)}>
           <div style={{ ...st.customizeSheet, maxHeight: '60vh' }} onClick={e => e.stopPropagation()}>
             <div style={{ width: '40px', height: '4px', background: 'var(--border2)', borderRadius: '2px', margin: '0 auto 16px' }} />
             <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '15px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)', marginBottom: '4px' }}>
@@ -4649,9 +4649,9 @@ function VdotSparkline({ history }: { history: { vdot: number }[] }) {
   return (
     <svg width={W} height={H} style={{ display: 'block' }}>
       <polyline points={xs.map((x, i) => `${x.toFixed(1)},${ys[i].toFixed(1)}`).join(' ')}
-        fill="none" stroke="rgba(255,77,0,0.5)" strokeWidth="1.5" strokeLinejoin="round" />
+        fill="none" stroke="rgba(var(--orange-ch),0.5)" strokeWidth="1.5" strokeLinejoin="round" />
       <path d={`${d} L${xs[xs.length-1].toFixed(1)},${H} L${xs[0].toFixed(1)},${H} Z`}
-        fill="rgba(255,77,0,0.1)" />
+        fill="rgba(var(--orange-ch),0.1)" />
       <circle cx={xs[xs.length-1].toFixed(1)} cy={ys[ys.length-1].toFixed(1)} r="3" fill="var(--orange)" />
     </svg>
   )
@@ -6179,11 +6179,9 @@ const st = {
   // ── Customize modal
   modalOverlay: {
     position: 'fixed' as const,
-    top: 'calc(var(--header-base-height) + var(--safe-top))',
-    left: 0,
-    right: 0,
-    bottom: 'calc(var(--bottom-nav-base-height) + var(--safe-bottom))',
+    inset: 0,
     background: 'rgba(0,0,0,0.75)',
+    backdropFilter: 'blur(8px)',
     zIndex: 900,
     display: 'flex',
     alignItems: 'flex-end',

@@ -1199,6 +1199,7 @@ const st = {
     position: 'fixed',
     inset: 0,
     background: 'rgba(0,0,0,0.75)',
+    backdropFilter: 'blur(8px)',
     zIndex: 950,
     display: 'flex',
     alignItems: 'flex-end',
@@ -1319,7 +1320,7 @@ const st = {
   } as React.CSSProperties,
 
   fieldLabel: {
-    fontSize: '11px',
+    fontSize: 'var(--text-xs)',
     fontFamily: 'var(--headline)',
     fontWeight: 700,
     letterSpacing: '0.08em',
@@ -1410,8 +1411,8 @@ const st = {
   } as React.CSSProperties,
 
   tabBtnActiveGreen: {
-    background: 'rgba(0,255,136,0.1)',
-    border: '1px solid rgba(0,255,136,0.35)',
+    background: 'rgba(var(--green-ch),0.1)',
+    border: '1px solid rgba(var(--green-ch),0.35)',
     color: 'var(--green)',
   } as React.CSSProperties,
 }
