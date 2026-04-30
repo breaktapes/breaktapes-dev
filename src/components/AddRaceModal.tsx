@@ -8,7 +8,7 @@ import { CustomDistInput } from '@/components/CustomDistInput'
 import { CityPicker } from '@/components/CityPicker'
 import { countryNameHaystack } from '@/lib/countries'
 import { normalizeName, resolveDistKm, isAlreadyInCatalog, findSportDistMatch, distLabel as distLabelUtil } from '@/lib/utils'
-import { supabase } from '@/lib/supabase'
+import { supabaseAnon } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/useAuthStore'
 import type { Race, Split } from '@/types'
 
@@ -529,6 +529,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
   }, [query, catalog, pastRaces, upcomingRaces, catalogLoading])
 
   function selectSuggestion(s: typeof suggestions[0]) {
+    clearTimeout(debounceRef.current)
     const TYPE_MAP: Record<string, string> = {
       run: 'Running', running: 'Running',
       tri: 'Triathlon', triathlon: 'Triathlon',
@@ -539,6 +540,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
 
     if (s.myRace) {
       // Autofill from user's own past/upcoming race
+      clearTimeout(debounceRef.current)
       const r = s.myRace
       setQuery(r.name); setName(r.name)
       if (r.country) { setCountry(r.country); setCitySelect(''); setCityText('') }
@@ -552,6 +554,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
         if (matched) { setDistance(matched); setCustomDist('') }
         else { setDistance('__custom__'); setCustomDist(r.distance) }
       }
+      if (r.date) setDate(r.date)
       setShowSuggest(false)
       return
     }
@@ -635,7 +638,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
     const [year, month, day] = race.date.split('-').map(Number)
     const distKm = race.distance ? resolveDistKm(race.distance) : null
 
-    void supabase.rpc('upsert_catalog_contribution', {
+    void supabaseAnon.rpc('upsert_catalog_contribution', {
       p_name:           race.name,
       p_city:           race.city,
       p_country:        race.country,
@@ -815,7 +818,11 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
                   if (s.myRace.city)     metaParts.push(s.myRace.city)
                   if (s.myRace.country)  metaParts.push(s.myRace.country)
                   if (s.myRace.distance) metaParts.push(distLabelUtil(s.myRace.distance))
-                  if (s.myRace.date)     metaParts.push(s.myRace.date)
+                  if (s.myRace.date) {
+                    const [y, m, d] = s.myRace.date.split('-').map(Number)
+                    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+                    metaParts.push(`${months[m - 1]} ${d} ${y}`)
+                  }
                 } else if (s.data) {
                   if (s.data.city)    metaParts.push(s.data.city)
                   if (s.data.country) metaParts.push(s.data.country)
@@ -1047,7 +1054,12 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
           {/* ── Race Outcome (past only) ── */}
           {mode === 'past' && (
             <Field label="Race Outcome">
-              <select style={st.input} value={outcome} onChange={e => setOutcome(e.target.value)}>
+              <select style={st.input} value={outcome} onChange={e => {
+                const v = e.target.value
+                setOutcome(v)
+                if (v === 'Finished' && !medal) setMedal('Finisher')
+                if (v !== 'Finished') setMedal('')
+              }}>
                 {RACE_OUTCOMES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </Field>

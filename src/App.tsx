@@ -25,7 +25,18 @@ const Admin              = lazy(() => import('@/pages/Admin').then(m => ({ defau
 
 class RootErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
   state = { error: null }
-  static getDerivedStateFromError(error: Error) { return { error } }
+  static getDerivedStateFromError(error: Error) {
+    // Stale chunk after deploy — auto-reload once instead of showing crash screen
+    if (error?.message?.includes('Failed to fetch dynamically imported module') ||
+        error?.message?.includes('Importing a module script failed')) {
+      const key = 'bt_chunk_reload'
+      if (!sessionStorage.getItem(key)) {
+        sessionStorage.setItem(key, '1')
+        window.location.reload()
+      }
+    }
+    return { error }
+  }
 
   componentDidCatch(error: Error, info: { componentStack: string }) {
     // Always log to console
