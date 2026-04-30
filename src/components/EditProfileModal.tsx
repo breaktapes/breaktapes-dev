@@ -248,7 +248,7 @@ export function EditProfileModal({ onClose }: Props) {
           </Field>
 
           {error && (
-            <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: '#ff6b6b' }}>{error}</p>
+            <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: 'var(--error)' }}>{error}</p>
           )}
 
           <button className="btn-v3 btn-primary-v3" style={st.saveBtn} onClick={handleSave} disabled={saving}>

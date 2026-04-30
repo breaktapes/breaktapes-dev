@@ -258,7 +258,7 @@ function TriathlonSplits({ splits, onChange }: {
           </div>
         )
       })}
-      <div style={{ display: 'flex', alignItems: 'center', padding: '12px', borderTop: '1px solid var(--border2)', background: 'rgba(0,255,136,0.05)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', padding: '12px', borderTop: '1px solid var(--border2)', background: 'rgba(var(--green-ch),0.05)' }}>
         <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', letterSpacing: '0.1em', color: 'var(--green)', flex: 1 }}>TOTAL</span>
         <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '18px', color: 'var(--green)', letterSpacing: '0.04em' }}>
           {Math.floor(total / 3600)}:{pad2(Math.floor((total % 3600) / 60))}:{pad2(total % 60)}
@@ -1173,7 +1173,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
           )}
 
           {error && (
-            <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: '#ff6b6b', fontFamily: 'var(--body)' }}>
+            <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: 'var(--error)', fontFamily: 'var(--body)' }}>
               {error}
             </p>
           )}

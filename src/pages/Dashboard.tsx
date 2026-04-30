@@ -611,9 +611,9 @@ function RaceMorningBrief({ race, onEditRace, onComplete }: { race: Race; onEdit
                   onClick={() => togglePacked(item)}
                   aria-pressed={packed}
                   style={{
-                    background: packed ? 'rgba(0,255,136,0.12)' : 'var(--surface3)',
+                    background: packed ? 'rgba(var(--green-ch),0.12)' : 'var(--surface3)',
                     color: packed ? 'var(--green)' : 'var(--muted)',
-                    border: `1px solid ${packed ? 'rgba(0,255,136,0.3)' : 'var(--border2)'}`,
+                    border: `1px solid ${packed ? 'rgba(var(--green-ch),0.3)' : 'var(--border2)'}`,
                     borderRadius: '6px', padding: '6px 12px',
                     fontFamily: 'var(--headline)', fontWeight: 700,
                     fontSize: '10px', letterSpacing: '0.06em',
@@ -2753,7 +2753,7 @@ function RaceDensityWidget() {
           <div style={st.widgetTitle}>RACE SPACING</div>
         </div>
         {result && (
-          <span style={{ ...st.badgePill, background: result.tightCount > 0 ? 'rgba(var(--orange-ch),0.12)' : 'rgba(0,255,136,0.1)', color: result.tightCount > 0 ? 'var(--orange)' : 'var(--green)', border: `1px solid ${result.tightCount > 0 ? 'rgba(var(--orange-ch),0.3)' : 'rgba(0,255,136,0.3)'}`, flexShrink: 0 }}>
+          <span style={{ ...st.badgePill, background: result.tightCount > 0 ? 'rgba(var(--orange-ch),0.12)' : 'rgba(0,255,136,0.1)', color: result.tightCount > 0 ? 'var(--orange)' : 'var(--green)', border: `1px solid ${result.tightCount > 0 ? 'rgba(var(--orange-ch),0.3)' : 'rgba(var(--green-ch),0.3)'}`, flexShrink: 0 }}>
             {result.tightCount > 0 ? 'TIGHT' : 'SPACED'}
           </span>
         )}
@@ -4575,7 +4575,7 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
                   display: 'flex', flexDirection: 'column',
                   padding: '8px 10px', borderRadius: '6px',
                   background: row.isSameAsInput ? 'rgba(var(--orange-ch),0.1)' : 'var(--surface3)',
-                  border: `1px solid ${row.isSameAsInput ? 'rgba(var(--orange-ch),0.3)' : hasGoal ? 'rgba(0,255,136,0.3)' : 'var(--border)'}`,
+                  border: `1px solid ${row.isSameAsInput ? 'rgba(var(--orange-ch),0.3)' : hasGoal ? 'rgba(var(--green-ch),0.3)' : 'var(--border)'}`,
                   gap: '4px',
                   cursor: row.isSameAsInput ? 'default' : 'pointer',
                 }}
@@ -5071,7 +5071,7 @@ function UpcomingDensityWidget() {
       {upcoming.length < 2 ? (
         <p style={{ fontSize: '13px', color: 'var(--muted)', margin: 0 }}>Add 2+ upcoming races to check for scheduling conflicts.</p>
       ) : warnings.length === 0 ? (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', background: 'rgba(0,255,136,0.06)', borderRadius: '8px', border: '1px solid rgba(0,255,136,0.2)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', background: 'rgba(var(--green-ch),0.06)', borderRadius: '8px', border: '1px solid rgba(var(--green-ch),0.2)' }}>
           <span style={{ fontSize: '20px' }}>✅</span>
           <div>
             <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '13px', color: 'var(--green)' }}>ALL CLEAR</div>

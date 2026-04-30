@@ -971,7 +971,7 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
                 </button>
               </div>
               {weatherFetchMsg && (
-                <p style={{ margin: '-8px 0 0', fontSize: '11px', color: weatherFetchMsg.ok ? 'var(--green)' : '#ff6b6b' }}>
+                <p style={{ margin: '-8px 0 0', fontSize: '11px', color: weatherFetchMsg.ok ? 'var(--green)' : 'var(--error)' }}>
                   {weatherFetchMsg.msg}
                 </p>
               )}

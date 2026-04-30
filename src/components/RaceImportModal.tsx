@@ -239,7 +239,7 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
                     {[sourceErrors.ultrasignup && 'UltraSignup', sourceErrors.marathonview && 'MarathonView'].filter(Boolean).join(' & ')} failed to respond.
                   </p>
                   <button
-                    style={{ background: 'none', border: '1px solid rgba(255,107,107,0.4)', color: '#ff6b6b', fontSize: '11px', padding: '3px 8px', borderRadius: '4px', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', flexShrink: 0 }}
+                    style={{ background: 'none', border: '1px solid rgba(var(--error-ch),0.4)', color: 'var(--error)', fontSize: '11px', padding: '3px 8px', borderRadius: '4px', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', flexShrink: 0 }}
                     onClick={() => { setStep('search'); }}
                     type="button"
                   >
@@ -376,5 +376,5 @@ const st = {
   resultRow:  { width: '100%', borderRadius: '8px', padding: '12px', cursor: 'pointer', textAlign: 'left' as const, transition: 'background 0.15s' } as React.CSSProperties,
   saveBtn:    { width: '100%', padding: '14px' } as React.CSSProperties,
   cancelBtn:  { background: 'transparent', color: 'var(--muted)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '14px', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, cursor: 'pointer', width: '100%' } as React.CSSProperties,
-  errorText:  { margin: 0, fontSize: '12px', color: '#ff6b6b' } as React.CSSProperties,
+  errorText:  { margin: 0, fontSize: '12px', color: 'var(--error)' } as React.CSSProperties,
 }
