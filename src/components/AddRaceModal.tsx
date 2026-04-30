@@ -380,6 +380,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
 
   const debounceRef      = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const justSelectedRef  = useRef(false)
+  const manualModeRef    = useRef(false)
   const nameWrapRef      = useRef<HTMLDivElement>(null)
   const [dropRect, setDropRect] = useState<{ top: number; left: number; width: number } | null>(null)
 
@@ -513,8 +514,9 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
   useEffect(() => {
     clearTimeout(debounceRef.current)
     if (query.length < 2) { setSuggestions([]); setShowSuggest(false); return }
-    // User just picked a suggestion — skip the re-search that would re-open the dropdown
+    // User picked a suggestion or tapped "Add manually" — skip re-search
     if (justSelectedRef.current) { justSelectedRef.current = false; return }
+    if (manualModeRef.current) { setShowSuggest(false); return }
     // While catalog is loading, show the dropdown with a loading placeholder
     if (catalogLoading) {
       setSuggestions([])
@@ -792,7 +794,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
                 style={st.input}
                 placeholder="Search a race or type your own..."
                 value={query}
-                onChange={e => { setQuery(e.target.value); setName(e.target.value); setShowSuggest(true); if (catalogYearRows.length > 0) setCatalogYearRows([]) }}
+                onChange={e => { manualModeRef.current = false; setQuery(e.target.value); setName(e.target.value); setShowSuggest(true); if (catalogYearRows.length > 0) setCatalogYearRows([]) }}
                 onFocus={() => { if (query.length >= 2 && !showManualDate) { setShowSuggest(true); if (!catalogLoading) runSearch(query, catalog) } }}
                 onBlur={() => setTimeout(() => setShowSuggest(false), 300)}
                 autoFocus
@@ -905,8 +907,8 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
                   fontStyle: 'italic',
                   borderTop: suggestions.length > 0 ? '1px solid var(--border2)' : 'none',
                 }}
-                onMouseDown={e => { e.preventDefault(); setName(query.trim()); setShowSuggest(false); setCatalogYearRows([]); setShowManualDate(true) }}
-                onTouchEnd={e => { e.preventDefault(); setName(query.trim()); setShowSuggest(false); setCatalogYearRows([]); setShowManualDate(true) }}
+                onMouseDown={e => { e.preventDefault(); justSelectedRef.current = true; manualModeRef.current = true; setName(query.trim()); setShowSuggest(false); setCatalogYearRows([]); setShowManualDate(true) }}
+                onTouchEnd={e => { e.preventDefault(); justSelectedRef.current = true; manualModeRef.current = true; setName(query.trim()); setShowSuggest(false); setCatalogYearRows([]); setShowManualDate(true) }}
               >
                 + Add &ldquo;{query}&rdquo; manually →
               </button>
