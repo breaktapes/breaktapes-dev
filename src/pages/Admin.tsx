@@ -170,7 +170,7 @@ const st = {
     borderRadius: '8px',
     padding: '12px 16px',
     fontSize: '13px',
-    color: '#ff6b6b',
+    color: 'var(--error)',
     marginBottom: '16px',
   } as React.CSSProperties,
   sectionLabel: {

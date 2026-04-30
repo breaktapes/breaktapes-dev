@@ -103,6 +103,15 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
   'ship-idempotency-pty':        ['ship/**', 'bin/gstack-next-version', 'lib/worktree.ts', 'test/helpers/claude-pty-runner.ts'],
   'autoplan-chain-pty':          ['autoplan/**', 'plan-ceo-review/**', 'plan-design-review/**', 'plan-eng-review/**', 'plan-devex-review/**', 'test/fixtures/plans/ui-heavy-feature.md', 'test/helpers/claude-pty-runner.ts'],
   'e2e-harness-audit':            ['plan-ceo-review/**', 'plan-eng-review/**', 'plan-design-review/**', 'plan-devex-review/**', 'scripts/resolvers/preamble/generate-completion-status.ts', 'test/helpers/agent-sdk-runner.ts', 'test/helpers/claude-pty-runner.ts'],
+
+  // Per-finding AskUserQuestion count + review-report-at-bottom assertion.
+  // Each test drives its skill end-to-end; touchfiles include preamble +
+  // completion-status resolvers because they affect question cadence and
+  // terminal output (the regression surface this test catches).
+  'plan-ceo-finding-count':      ['plan-ceo-review/**', 'scripts/resolvers/preamble.ts', 'scripts/resolvers/preamble/generate-ask-user-format.ts', 'scripts/resolvers/preamble/generate-completion-status.ts', 'test/helpers/claude-pty-runner.ts', 'test/skill-e2e-plan-ceo-finding-count.test.ts'],
+  'plan-eng-finding-count':      ['plan-eng-review/**', 'scripts/resolvers/preamble.ts', 'scripts/resolvers/preamble/generate-ask-user-format.ts', 'scripts/resolvers/preamble/generate-completion-status.ts', 'test/helpers/claude-pty-runner.ts', 'test/skill-e2e-plan-eng-finding-count.test.ts'],
+  'plan-design-finding-count':   ['plan-design-review/**', 'scripts/resolvers/preamble.ts', 'scripts/resolvers/preamble/generate-ask-user-format.ts', 'scripts/resolvers/preamble/generate-completion-status.ts', 'test/helpers/claude-pty-runner.ts', 'test/skill-e2e-plan-design-finding-count.test.ts'],
+  'plan-devex-finding-count':    ['plan-devex-review/**', 'scripts/resolvers/preamble.ts', 'scripts/resolvers/preamble/generate-ask-user-format.ts', 'scripts/resolvers/preamble/generate-completion-status.ts', 'test/helpers/claude-pty-runner.ts', 'test/skill-e2e-plan-devex-finding-count.test.ts'],
   'brain-privacy-gate':           ['scripts/resolvers/preamble/generate-brain-sync-block.ts', 'scripts/resolvers/preamble.ts', 'bin/gstack-brain-sync', 'bin/gstack-brain-init', 'bin/gstack-config', 'test/helpers/agent-sdk-runner.ts'],
 
   // AskUserQuestion format regression (RECOMMENDATION + Completeness: N/10)
@@ -242,6 +251,29 @@ export const E2E_TOUCHFILES: Record<string, string[]> = {
   // Multi-provider benchmark adapters — live API smoke against real claude/codex/gemini CLIs
   'benchmark-providers-live': ['bin/gstack-model-benchmark', 'test/helpers/providers/**', 'test/helpers/benchmark-runner.ts', 'test/helpers/pricing.ts'],
 
+  // Browser-skills Phase 2a — /scrape + /skillify (v1.19.0.0). Gate-tier
+  // E2E covers the D1 (provenance guard), D3 (atomic write) contracts plus
+  // the basic loop. Shared deps: both skill templates, the D3 helper, the
+  // Phase 1 runtime, and the bundled hackernews-frontpage reference (the
+  // match-path test relies on it).
+  'scrape-match-path': [
+    'scrape/**', 'browse/src/browser-skills.ts', 'browse/src/browser-skill-commands.ts',
+    'browser-skills/hackernews-frontpage/**',
+  ],
+  'scrape-prototype-path': [
+    'scrape/**', 'browse/src/browser-skills.ts', 'browse/src/browser-skill-commands.ts',
+  ],
+  'skillify-happy-path': [
+    'skillify/**', 'scrape/**', 'browse/src/browser-skill-write.ts',
+    'browse/src/browser-skills.ts', 'browse/src/browser-skill-commands.ts',
+  ],
+  'skillify-provenance-refusal': [
+    'skillify/**', 'browse/src/browser-skill-write.ts',
+  ],
+  'skillify-approval-reject': [
+    'skillify/**', 'scrape/**', 'browse/src/browser-skill-write.ts',
+  ],
+
   // Skill routing — journey-stage tests (depend on ALL skill descriptions)
   'journey-ideation':       ['*/SKILL.md.tmpl', 'SKILL.md.tmpl', 'scripts/gen-skill-docs.ts'],
   'journey-plan-eng':       ['*/SKILL.md.tmpl', 'SKILL.md.tmpl', 'scripts/gen-skill-docs.ts'],
@@ -357,6 +389,15 @@ export const E2E_TIERS: Record<string, 'gate' | 'periodic'> = {
   'budget-regression-pty':     'gate',       // free, library-only assertion
   'ship-idempotency-pty':      'periodic',   // ~$3/run, real /ship in plan mode
   'autoplan-chain-pty':        'periodic',   // ~$8/run, all 3 phases sequential
+
+  // Per-finding count + review-report-at-bottom — periodic because each
+  // run drives a full skill end-to-end (~25 min, ~$5/run). Sequential
+  // execution during calibration; concurrent opt-in only after measured
+  // comparison agrees (plan §D15).
+  'plan-ceo-finding-count':    'periodic',
+  'plan-eng-finding-count':    'periodic',
+  'plan-design-finding-count': 'periodic',
+  'plan-devex-finding-count':  'periodic',
 
   // Privacy gate for gstack-brain-sync — periodic (non-deterministic LLM call,
   // costs ~$0.30-$0.50 per run, not needed on every commit)
@@ -477,6 +518,13 @@ export const E2E_TIERS: Record<string, 'gate' | 'periodic'> = {
 
   // Multi-provider benchmark — periodic (requires external CLIs + auth, paid)
   'benchmark-providers-live': 'periodic',
+
+  // Browser-skills Phase 2a — gate (D1/D3 contracts must not silently break)
+  'scrape-match-path': 'gate',
+  'scrape-prototype-path': 'gate',
+  'skillify-happy-path': 'gate',
+  'skillify-provenance-refusal': 'gate',
+  'skillify-approval-reject': 'gate',
 
   // Skill routing — periodic (LLM routing is non-deterministic)
   'journey-ideation': 'periodic',

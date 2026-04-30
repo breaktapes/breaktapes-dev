@@ -611,9 +611,9 @@ function RaceMorningBrief({ race, onEditRace, onComplete }: { race: Race; onEdit
                   onClick={() => togglePacked(item)}
                   aria-pressed={packed}
                   style={{
-                    background: packed ? 'rgba(0,255,136,0.12)' : 'var(--surface3)',
+                    background: packed ? 'rgba(var(--green-ch),0.12)' : 'var(--surface3)',
                     color: packed ? 'var(--green)' : 'var(--muted)',
-                    border: `1px solid ${packed ? 'rgba(0,255,136,0.3)' : 'var(--border2)'}`,
+                    border: `1px solid ${packed ? 'rgba(var(--green-ch),0.3)' : 'var(--border2)'}`,
                     borderRadius: '6px', padding: '6px 12px',
                     fontFamily: 'var(--headline)', fontWeight: 700,
                     fontSize: '10px', letterSpacing: '0.06em',
@@ -1014,7 +1014,7 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
                 background: 'transparent',
                 border: '1.5px solid rgba(255,80,80,0.35)',
                 borderRadius: '10px',
-                color: '#ff6b6b',
+                color: 'var(--error)',
                 fontFamily: 'var(--headline)',
                 fontWeight: 700,
                 fontSize: '13px',
@@ -1029,14 +1029,14 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
             </button>
           ) : (
             <div style={{ background: 'rgba(255,80,80,0.08)', border: '1.5px solid rgba(255,80,80,0.35)', borderRadius: '10px', padding: '14px' }}>
-              <div style={{ fontSize: '13px', color: '#ff6b6b', marginBottom: '12px', fontWeight: 600 }}>
+              <div style={{ fontSize: '13px', color: 'var(--error)', marginBottom: '12px', fontWeight: 600 }}>
                 Remove {race.name ?? 'this race'} from your calendar?
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button onClick={() => setConfirmDelete(false)} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid var(--border2)', background: 'var(--surface3)', color: 'var(--white)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '13px', cursor: 'pointer', letterSpacing: '0.06em' }}>
                   CANCEL
                 </button>
-                <button onClick={handleDelete} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: '#ff4444', color: '#fff', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', cursor: 'pointer', letterSpacing: '0.06em' }}>
+                <button onClick={handleDelete} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: 'var(--error)', color: '#fff', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', cursor: 'pointer', letterSpacing: '0.06em' }}>
                   YES, REMOVE
                 </button>
               </div>
@@ -1375,7 +1375,7 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
       <WidgetCard id="recent-races" style={st.glowCard}>
         <div style={st.widgetLabel}>RECENT RACES</div>
         <div style={st.emptyState}>
-          <div style={{ fontSize: '28px' }}>🏁</div>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ color: 'var(--muted)' }} aria-hidden="true"><path d="M4 4h16v8H4z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/><path d="M4 4v16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/><path d="M4 8h16" stroke="currentColor" strokeWidth="1.5"/><path d="M4 4h4v4H4zM12 4h4v4h-4zM8 8h4v4H8zM16 8h4v4h-4z" fill="currentColor" opacity="0.2"/></svg>
           <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', maxWidth: '240px', lineHeight: 1.5, textAlign: 'center' }}>No races logged yet.</div>
           <button style={st.ctaOutline} onClick={onAddRace}>+ Log a Race</button>
         </div>
@@ -1416,7 +1416,7 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
                     {r.name ?? 'Untitled'}
                   </span>
                   {isPB && (
-                    <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: '#C8963C', background: 'rgba(200,150,60,0.12)', border: '1px solid rgba(200,150,60,0.3)', borderRadius: '4px', padding: '2px 6px', flexShrink: 0 }}>PB</span>
+                    <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--gold)', background: 'rgba(var(--gold-ch),0.12)', border: '1px solid rgba(var(--gold-ch),0.3)', borderRadius: '4px', padding: '2px 6px', flexShrink: 0 }}>PB</span>
                   )}
                 </div>
                 <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>
@@ -1425,7 +1425,7 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
               </div>
               {/* Right: time — monospace for alignment */}
               {r.time && (
-                <div style={{ fontFamily: 'var(--mono)', fontWeight: 700, fontSize: '15px', color: isPB ? '#C8963C' : 'var(--orange)', flexShrink: 0, letterSpacing: '0.02em' }}>
+                <div style={{ fontFamily: 'var(--mono)', fontWeight: 700, fontSize: '15px', color: isPB ? 'var(--gold)' : 'var(--orange)', flexShrink: 0, letterSpacing: '0.02em' }}>
                   {toHHMMSS(r.time)}
                 </div>
               )}
@@ -2192,12 +2192,12 @@ const WHOOP_SPORT_NAMES: Record<number, string> = {
 
 function stravaIcon(type: string): string {
   const t = type.toLowerCase()
-  if (t.includes('run')) return '🏃'
-  if (t.includes('ride') || t.includes('cycling')) return '🚴'
-  if (t.includes('swim')) return '🏊'
-  if (t.includes('walk')) return '🚶'
-  if (t.includes('weight') || t.includes('strength')) return '🏋'
-  return '⚡'
+  if (t.includes('run')) return 'RUN'
+  if (t.includes('ride') || t.includes('cycling')) return 'BIKE'
+  if (t.includes('swim')) return 'SWIM'
+  if (t.includes('walk')) return 'WALK'
+  if (t.includes('weight') || t.includes('strength')) return 'STR'
+  return 'ACT'
 }
 
 function ActivityPreviewWidget() {
@@ -2240,7 +2240,7 @@ function ActivityPreviewWidget() {
     for (const a of whoopActs) {
       const mins = a.end ? Math.round((new Date(a.end).getTime() - new Date(a.start).getTime()) / 60000) : 0
       merged.push({
-        icon: '💚',
+        icon: 'W',
         name: WHOOP_SPORT_NAMES[a.sport_id] ?? 'Activity',
         meta: mins > 0 ? `${mins} min` : '',
         date: a.start.slice(0, 10),
@@ -2269,7 +2269,7 @@ function ActivityPreviewWidget() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
         {items.map((a, i) => (
           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingBottom: i < items.length - 1 ? '6px' : 0, borderBottom: i < items.length - 1 ? '1px solid var(--border)' : 'none' }}>
-            <span style={{ fontSize: '18px', lineHeight: 1, flexShrink: 0 }}>{a.icon}</span>
+            <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '9px', letterSpacing: '0.06em', color: 'var(--orange)', background: 'rgba(var(--orange-ch),0.12)', borderRadius: '4px', padding: '2px 5px', flexShrink: 0, minWidth: '28px', textAlign: 'center' }}>{a.icon}</span>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: '13px', color: 'var(--white)', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.name}</div>
               <div style={{ fontSize: '11px', color: 'var(--muted)' }}>{[a.date, a.meta].filter(Boolean).join(' · ')}</div>
@@ -2302,7 +2302,7 @@ function OnThisDayWidget() {
 
   return (
     <WidgetCard id="on-this-day" className="" style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: '12px', padding: '14px', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-      <span style={{ fontSize: '22px', lineHeight: 1, flexShrink: 0 }}>📅</span>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ color: 'var(--orange)', flexShrink: 0 }} aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M3 9h18" stroke="currentColor" strokeWidth="1.5"/><path d="M8 2v4M16 2v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
       <div style={{ minWidth: 0 }}>
         <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '4px' }}>
           On This Day
@@ -2467,7 +2467,7 @@ function GapToGoalWidget({ race }: { race: Race | null }) {
           )}
         </div>
         <span style={{ ...st.badgePill, background: 'rgba(var(--orange-ch),0.12)', color: 'var(--orange)', border: '1px solid rgba(var(--orange-ch),0.3)', flexShrink: 0 }}>
-          🎯
+          TARGET
         </span>
       </div>
 
@@ -2672,7 +2672,7 @@ function TravelLoadWidget() {
           <div style={st.widgetLabel}>TRAVEL LOAD</div>
           <div style={st.widgetTitle}>HOME vs AWAY</div>
         </div>
-        <span style={{ fontSize: '18px', flexShrink: 0 }}>✈️</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ color: 'var(--muted)', flexShrink: 0 }} aria-hidden="true"><path d="M21 16v-2l-8-5V3.5A1.5 1.5 0 0 0 11.5 2a1.5 1.5 0 0 0-1.5 1.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/></svg>
       </div>
 
       {!result ? (
@@ -2753,7 +2753,7 @@ function RaceDensityWidget() {
           <div style={st.widgetTitle}>RACE SPACING</div>
         </div>
         {result && (
-          <span style={{ ...st.badgePill, background: result.tightCount > 0 ? 'rgba(var(--orange-ch),0.12)' : 'rgba(0,255,136,0.1)', color: result.tightCount > 0 ? 'var(--orange)' : 'var(--green)', border: `1px solid ${result.tightCount > 0 ? 'rgba(var(--orange-ch),0.3)' : 'rgba(0,255,136,0.3)'}`, flexShrink: 0 }}>
+          <span style={{ ...st.badgePill, background: result.tightCount > 0 ? 'rgba(var(--orange-ch),0.12)' : 'rgba(0,255,136,0.1)', color: result.tightCount > 0 ? 'var(--orange)' : 'var(--green)', border: `1px solid ${result.tightCount > 0 ? 'rgba(var(--orange-ch),0.3)' : 'rgba(var(--green-ch),0.3)'}`, flexShrink: 0 }}>
             {result.tightCount > 0 ? 'TIGHT' : 'SPACED'}
           </span>
         )}
@@ -2845,7 +2845,7 @@ function BestConditionsWidget() {
           <div style={st.widgetLabel}>BEST CONDITIONS</div>
           <div style={st.widgetTitle}>YOUR OPTIMAL RACE</div>
         </div>
-        <span style={{ fontSize: '18px', flexShrink: 0 }}>☀️</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ color: 'var(--muted)', flexShrink: 0 }} aria-hidden="true"><circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M19.07 4.93l-1.41 1.41M6.34 17.66l-1.41 1.41" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
       </div>
 
       {!result ? (
@@ -3230,11 +3230,11 @@ function WeatherFitWidget({ race }: { race: Race | null }) {
 
     // Bucket performance by temp
     const buckets: { label: string; min: number; max: number; pcts: number[]; emoji: string }[] = [
-      { label: 'Cold (<5°C)',  min: -99, max:  5, pcts: [], emoji: '🥶' },
-      { label: 'Cool (5–12)', min:   5, max: 12, pcts: [], emoji: '🌤' },
-      { label: 'Mild (12–18)',min:  12, max: 18, pcts: [], emoji: '☀️' },
-      { label: 'Warm (18–24)',min:  18, max: 24, pcts: [], emoji: '🌡' },
-      { label: 'Hot (>24°C)', min:  24, max: 99, pcts: [], emoji: '🔥' },
+      { label: 'Cold (<5°C)',  min: -99, max:  5, pcts: [], emoji: '<5°' },
+      { label: 'Cool (5–12)', min:   5, max: 12, pcts: [], emoji: '5–12°' },
+      { label: 'Mild (12–18)',min:  12, max: 18, pcts: [], emoji: '12–18°' },
+      { label: 'Warm (18–24)',min:  18, max: 24, pcts: [], emoji: '18–24°' },
+      { label: 'Hot (>24°C)', min:  24, max: 99, pcts: [], emoji: '>24°' },
     ]
 
     for (const r of past) {
@@ -3426,24 +3426,23 @@ function WhyPRdWidget() {
           <div style={st.widgetLabel}>WHY YOU PR'D</div>
           <div style={st.widgetTitle}>{pbRaces.length} PERSONAL BEST{pbRaces.length !== 1 ? 'S' : ''}</div>
         </div>
-        <span style={{ fontSize: '20px', flexShrink: 0 }}>🏆</span>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '7px', marginTop: '10px' }}>
         {insights?.topSurface && (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '12px', color: 'var(--muted)' }}>🏃 Best surface</span>
+            <span style={{ fontSize: '12px', color: 'var(--muted)' }}>Best surface</span>
             <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--white)' }}>{insights.topSurface}</span>
           </div>
         )}
         {insights?.topMonth && (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '12px', color: 'var(--muted)' }}>📅 Peak month</span>
+            <span style={{ fontSize: '12px', color: 'var(--muted)' }}>Peak month</span>
             <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--white)' }}>{insights.topMonth}</span>
           </div>
         )}
         {insights?.avgTemp != null && (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '12px', color: 'var(--muted)' }}>🌡 Avg race temp</span>
+            <span style={{ fontSize: '12px', color: 'var(--muted)' }}>Avg race temp</span>
             <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--white)' }}>{insights.avgTemp}°C</span>
           </div>
         )}
@@ -3451,7 +3450,7 @@ function WhyPRdWidget() {
         {pbRaces.slice(0, 3).map(r => (
           <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
             <span style={{ color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '60%' }}>{r.name ?? r.date}</span>
-            <span style={{ color: '#C8963C', fontFamily: 'var(--mono)', flexShrink: 0 }}>{r.time}</span>
+            <span style={{ color: 'var(--gold)', fontFamily: 'var(--mono)', flexShrink: 0 }}>{r.time}</span>
           </div>
         ))}
       </div>
@@ -3488,7 +3487,7 @@ function WhyFadedWidget() {
           <div style={st.widgetLabel}>WHY YOU FADED</div>
           <div style={st.widgetTitle}>{fadedRaces.length > 0 ? `${fadedRaces.length} FADE${fadedRaces.length !== 1 ? 'S' : ''} DETECTED` : 'NO FADES DETECTED'}</div>
         </div>
-        <span style={{ fontSize: '20px', flexShrink: 0 }}>📉</span>
+        <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', color: 'var(--muted)', flexShrink: 0, letterSpacing: '0.04em' }}>↓</span>
       </div>
       {fadedRaces.length === 0 ? (
         <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>
@@ -3613,7 +3612,7 @@ function RaceStackWidget({ race }: { race: Race | null }) {
     if (dist >= 21)  nutrition.push('Gels × ' + Math.ceil(dist / 10), 'Electrolyte tabs')
     if (dist >= 42)  nutrition.push('Real food / bars', 'Hydration vest or belt')
     if (isUltra)     nutrition.push('Drop bags packed', 'Headtorch + spare batteries')
-    if (nutrition.length) categories.push({ label: 'NUTRITION', emoji: '⚡', items: nutrition })
+    if (nutrition.length) categories.push({ label: 'NUTRITION', emoji: '', items: nutrition })
 
     // Triathlon-specific
     if (isTri) {
@@ -3622,7 +3621,7 @@ function RaceStackWidget({ race }: { race: Race | null }) {
         'Transition bag', 'Helmet (must)', 'Cycling shoes + cleats',
         'Race number belt', 'Flat kit (tube, CO2, tyre levers)',
       ]
-      categories.push({ label: 'TRIATHLON', emoji: '🏊', items: triItems })
+      categories.push({ label: 'TRIATHLON', emoji: '', items: triItems })
     }
 
     // Trail-specific
@@ -3807,7 +3806,7 @@ function BreakTapeWidget() {
 
   const milestones = useMemo(() => {
     const m: { icon: string; label: string; detail: string }[] = []
-    if (past.length > 0) m.push({ icon: '🏁', label: 'FIRST RACE', detail: past[0].name ?? past[0].date })
+    if (past.length > 0) m.push({ icon: '→', label: 'FIRST RACE', detail: past[0].name ?? past[0].date })
 
     const distanceSeen = new Set<string>()
     for (const r of past) {
@@ -3815,7 +3814,7 @@ function BreakTapeWidget() {
       const badge = distBadge(r.distance)
       if (key && badge && !distanceSeen.has(key) && badge !== `${distanceToKm(r.distance)}K`) {
         distanceSeen.add(key)
-        if (m.length < 6) m.push({ icon: '⭐', label: `FIRST ${badge.toUpperCase()}`, detail: r.name ?? r.date })
+        if (m.length < 6) m.push({ icon: '★', label: `FIRST ${badge.toUpperCase()}`, detail: r.name ?? r.date })
       }
     }
 
@@ -3840,7 +3839,7 @@ function BreakTapeWidget() {
       }
     }
     if (biggestDrop && m.length < 6) {
-      m.push({ icon: '📉', label: `BIGGEST DROP — ${biggestDrop.label}`, detail: `-${secsToHMS(biggestDrop.drop)} · ${biggestDrop.race.name ?? biggestDrop.race.date}` })
+      m.push({ icon: '↓', label: `BIGGEST DROP — ${biggestDrop.label}`, detail: `-${secsToHMS(biggestDrop.drop)} · ${biggestDrop.race.name ?? biggestDrop.race.date}` })
     }
 
     return m
@@ -3865,12 +3864,12 @@ function BreakTapeWidget() {
           <div style={st.widgetLabel}>BREAK TAPE MOMENTS</div>
           <div style={st.widgetTitle}>{milestones.length} MILESTONE{milestones.length !== 1 ? 'S' : ''}</div>
         </div>
-        <span style={{ fontSize: '20px', flexShrink: 0 }}>🎖</span>
+        <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', color: 'var(--orange)', flexShrink: 0, letterSpacing: '0.04em' }}>★</span>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', marginTop: '8px' }}>
         {milestones.map((m, i) => (
           <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', padding: '7px 0', borderBottom: '1px solid var(--border)' }}>
-            <span style={{ fontSize: '16px', flexShrink: 0 }}>{m.icon}</span>
+            <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', color: 'var(--orange)', flexShrink: 0, width: '16px', textAlign: 'center' }}>{m.icon}</span>
             <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--orange)', textTransform: 'uppercase' }}>{m.label}</div>
               <div style={{ fontSize: '12px', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: '1px' }}>{m.detail}</div>
@@ -3917,7 +3916,6 @@ function WhatToRaceNextWidget() {
           <div style={st.widgetLabel}>WHAT TO RACE NEXT</div>
           <div style={st.widgetTitle}>{upcoming.length} RACE{upcoming.length !== 1 ? 'S' : ''} UPCOMING</div>
         </div>
-        <span style={{ fontSize: '20px', flexShrink: 0 }}>🎯</span>
       </div>
       {recommendation && (
         <div style={{ padding: '8px', background: 'rgba(var(--green-ch),0.08)', border: '1px solid rgba(var(--green-ch),0.2)', borderRadius: '8px', marginTop: '8px' }}>
@@ -4003,9 +4001,8 @@ function StoryModeWidget() {
       </div>
       {story.podium > 0 && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '6px 10px', background: 'rgba(255,215,0,0.08)', border: '1px solid rgba(255,215,0,0.25)', borderRadius: '6px' }}>
-          <span style={{ fontSize: 14 }}>🏆</span>
-          <span style={{ fontSize: '11px', color: '#FFD770', fontFamily: 'var(--headline)', fontWeight: 700 }}>
-            {story.podium} PODIUM FINISH{story.podium !== 1 ? 'ES' : ''} THIS YEAR
+          <span style={{ fontSize: '11px', color: 'var(--gold)', fontFamily: 'var(--headline)', fontWeight: 700 }}>
+            ★ {story.podium} PODIUM FINISH{story.podium !== 1 ? 'ES' : ''} THIS YEAR
           </span>
         </div>
       )}
@@ -4142,8 +4139,8 @@ function PersonalBestsWidget() {
     return {
       allDists: collectedDists,
       groups: [
-        ...(runFiltered.length ? [{ sport: 'Running',   dot: '#00FF88', dotGlow: 'rgba(0,255,136,0.6)',    entries: runFiltered.sort(sortFn) }] : []),
-        ...(triFiltered.length ? [{ sport: 'Triathlon', dot: '#7C3AED', dotGlow: 'rgba(124,58,237,0.6)',   entries: triFiltered.sort(sortFn) }] : []),
+        ...(runFiltered.length ? [{ sport: 'Running',   dot: 'var(--green)', dotGlow: 'rgba(var(--green-ch),0.6)',    entries: runFiltered.sort(sortFn) }] : []),
+        ...(triFiltered.length ? [{ sport: 'Triathlon', dot: 'var(--purple)', dotGlow: 'rgba(var(--purple-ch),0.6)',   entries: triFiltered.sort(sortFn) }] : []),
         ...(otherFiltered.length ? [{ sport: 'Other', dot: 'var(--orange)', dotGlow: 'rgba(232,78,27,0.6)', entries: otherFiltered.sort(sortFn) }] : []),
       ],
     }
@@ -4202,9 +4199,9 @@ function PersonalBestsWidget() {
           <div style={{ display: 'flex', gap: '14px', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' as any }}>
             {g.entries.map(({ key, r }) => {
               const isTri = g.sport === 'Triathlon'
-              const accentColor = isTri ? '#7C3AED' : '#00FF88'
-              const accentBg = isTri ? 'rgba(124,58,237,0.08)' : 'rgba(0,255,136,0.06)'
-              const accentGlow = isTri ? 'rgba(124,58,237,0.10)' : 'rgba(0,255,136,0.10)'
+              const accentColor = isTri ? 'var(--purple)' : 'var(--green)'
+              const accentBg = isTri ? 'rgba(var(--purple-ch),0.08)' : 'rgba(var(--green-ch),0.06)'
+              const accentGlow = isTri ? 'rgba(var(--purple-ch),0.10)' : 'rgba(var(--green-ch),0.10)'
               const displayKey = distBadge(r.distance) || key.toUpperCase()
               return (
                 <div
@@ -4356,7 +4353,7 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                           {[r.city, r.country].filter(Boolean).join(', ')}
                           {r.distance ? ` · ${distBadge(r.distance)}` : ''}
                           {' · '}{fmtDateIntl(r.date)}
-                          {r.goalTime ? <span style={{ color: 'var(--orange)', marginLeft: '6px' }}>🎯 {r.goalTime}</span> : ''}
+                          {r.goalTime ? <span style={{ color: 'var(--orange)', marginLeft: '6px' }}>Goal {r.goalTime}</span> : ''}
                         </div>
                         <div style={{ marginTop: '10px' }}>
                           <span style={{ display: 'inline-block', background: d === 0 ? 'var(--orange)' : 'rgba(var(--orange-ch),0.2)', color: d === 0 ? '#000' : 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', letterSpacing: '0.06em', padding: '4px 12px', borderRadius: '6px' }}>
@@ -4377,7 +4374,7 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                           {[r.city, r.country].filter(Boolean).join(', ')}
                           {r.distance ? ` · ${distBadge(r.distance)}` : ''}
                           {' · '}{fmtDateIntl(r.date)}
-                          {r.goalTime ? <span style={{ color: 'var(--muted)', marginLeft: '4px' }}>· 🎯 {r.goalTime}</span> : ''}
+                          {r.goalTime ? <span style={{ color: 'var(--muted)', marginLeft: '4px' }}>· Goal {r.goalTime}</span> : ''}
                         </div>
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px', flexShrink: 0 }}>
@@ -4432,7 +4429,7 @@ function ExpiredRacePrompts({ onLogResult }: { onLogResult: () => void }) {
         }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '13px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--orange)', marginBottom: '2px' }}>
-              🏁 Race passed — log your result?
+              Race passed — log your result?
             </div>
             <div style={{ fontSize: '13px', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {race.name ?? 'Unnamed Race'} · {fmtDateIntl(race.date)}
@@ -4473,7 +4470,7 @@ function NoUpcomingRaceCTA({ onAddRace }: { onAddRace: () => void }) {
       gap: '14px',
       textAlign: 'center',
     }}>
-      <div style={{ fontSize: '32px', lineHeight: 1 }}>📅</div>
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" style={{ color: 'var(--orange)', opacity: 0.7 }} aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M3 9h18" stroke="currentColor" strokeWidth="1.5"/><path d="M8 2v4M16 2v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
       <div>
         <div style={{
           fontFamily: 'var(--headline)',
@@ -4578,7 +4575,7 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
                   display: 'flex', flexDirection: 'column',
                   padding: '8px 10px', borderRadius: '6px',
                   background: row.isSameAsInput ? 'rgba(var(--orange-ch),0.1)' : 'var(--surface3)',
-                  border: `1px solid ${row.isSameAsInput ? 'rgba(var(--orange-ch),0.3)' : hasGoal ? 'rgba(0,255,136,0.3)' : 'var(--border)'}`,
+                  border: `1px solid ${row.isSameAsInput ? 'rgba(var(--orange-ch),0.3)' : hasGoal ? 'rgba(var(--green-ch),0.3)' : 'var(--border)'}`,
                   gap: '4px',
                   cursor: row.isSameAsInput ? 'default' : 'pointer',
                 }}
@@ -4614,7 +4611,7 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
 
       {/* Link sheet rendered via portal — inset:0 covers header+nav fully */}
       {showLinkSheet && createPortal(
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 1500, display: 'flex', alignItems: 'flex-end' }} onClick={() => setShowLinkSheet(false)}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 1500, display: 'flex', alignItems: 'flex-end' }} onClick={() => setShowLinkSheet(false)}>
           <div style={{ ...st.customizeSheet, maxHeight: '60vh' }} onClick={e => e.stopPropagation()}>
             <div style={{ width: '40px', height: '4px', background: 'var(--border2)', borderRadius: '2px', margin: '0 auto 16px' }} />
             <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '15px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)', marginBottom: '4px' }}>
@@ -4652,9 +4649,9 @@ function VdotSparkline({ history }: { history: { vdot: number }[] }) {
   return (
     <svg width={W} height={H} style={{ display: 'block' }}>
       <polyline points={xs.map((x, i) => `${x.toFixed(1)},${ys[i].toFixed(1)}`).join(' ')}
-        fill="none" stroke="rgba(255,77,0,0.5)" strokeWidth="1.5" strokeLinejoin="round" />
+        fill="none" stroke="rgba(var(--orange-ch),0.5)" strokeWidth="1.5" strokeLinejoin="round" />
       <path d={`${d} L${xs[xs.length-1].toFixed(1)},${H} L${xs[0].toFixed(1)},${H} Z`}
-        fill="rgba(255,77,0,0.1)" />
+        fill="rgba(var(--orange-ch),0.1)" />
       <circle cx={xs[xs.length-1].toFixed(1)} cy={ys[ys.length-1].toFixed(1)} r="3" fill="var(--orange)" />
     </svg>
   )
@@ -4674,17 +4671,17 @@ function VDOTScoreWidget() {
 
   if (!displayPt) return (
     <WidgetCard id="vdot-score" style={st.glowCard}>
-      <div style={st.widgetLabel}>⚡ VDOT SCORE</div>
+      <div style={st.widgetLabel}>VDOT SCORE</div>
       <div style={st.widgetTitle}>VDOT FITNESS</div>
       <p style={{ fontSize: '13px', color: 'var(--muted)', margin: 0 }}>Log a running race with a finish time to compute your VDOT.</p>
     </WidgetCard>
   )
 
-  const vdotColor = displayPt.vdot >= 55 ? '#00FF88' : displayPt.vdot >= 45 ? 'var(--orange)' : 'var(--white)'
+  const vdotColor = displayPt.vdot >= 55 ? 'var(--green)' : displayPt.vdot >= 45 ? 'var(--orange)' : 'var(--white)'
 
   return (
     <WidgetCard id="vdot-score" style={st.glowCard}>
-      <div style={st.widgetLabel}>⚡ VDOT SCORE</div>
+      <div style={st.widgetLabel}>VDOT SCORE</div>
 
       {/* Current + Peak row */}
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '10px' }}>
@@ -4777,7 +4774,7 @@ function GoalPaceWidget({ race }: { race: Race | null }) {
 
   if (!result) return (
     <WidgetCard id="goal-pace" style={st.glowCard}>
-      <div style={st.widgetLabel}>🎯 GOAL PACE</div>
+      <div style={st.widgetLabel}>GOAL PACE</div>
       <div style={st.widgetTitle}>GOAL PACE</div>
       <p style={{ fontSize: '13px', color: 'var(--muted)', margin: 0 }}>
         Set a goal time on {focusRace.name} to see your pace breakdown.
@@ -4791,11 +4788,11 @@ function GoalPaceWidget({ race }: { race: Race | null }) {
       : `${fSecsToHMS(Math.abs(result.vsCurrentVDOT))} within current reach`
     : null
 
-  const gapColor = result.vsCurrentVDOT !== null && result.vsCurrentVDOT > 0 ? '#ff6b6b' : 'var(--green)'
+  const gapColor = result.vsCurrentVDOT !== null && result.vsCurrentVDOT > 0 ? 'var(--error)' : 'var(--green)'
 
   return (
     <WidgetCard id="goal-pace" style={st.glowCard}>
-      <div style={st.widgetLabel}>🎯 GOAL PACE</div>
+      <div style={st.widgetLabel}>GOAL PACE</div>
       <div style={st.widgetTitle}>GOAL PACE</div>
       <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '-4px' }}>{focusRace.name}</div>
 
@@ -4922,7 +4919,7 @@ function WeatherImpactWidget() {
   )
 
   const { race, impact } = result
-  const impactColor = impact.improvementSecs > 300 ? '#ff6b6b'
+  const impactColor = impact.improvementSecs > 300 ? 'var(--error)'
     : impact.improvementSecs > 120 ? 'var(--orange)'
     : 'var(--green)'
 
@@ -4968,7 +4965,7 @@ function DistanceMilestonesWidget() {
 
   return (
     <WidgetCard id="distance-milestones" style={st.glowCard}>
-      <div style={st.widgetLabel}>🏅 MILESTONES</div>
+      <div style={st.widgetLabel}>MILESTONES</div>
       <div style={st.widgetTitle}>DISTANCE TOTAL</div>
 
       {/* Hero number */}
@@ -5016,7 +5013,7 @@ function EquivPerfWidget() {
 
   if (!vdotPt) return (
     <WidgetCard id="equiv-perf" style={st.glowCard}>
-      <div style={st.widgetLabel}>🎯 EQUIVALENTS</div>
+      <div style={st.widgetLabel}>EQUIVALENTS</div>
       <div style={st.widgetTitle}>EQUIV PERFORMANCES</div>
       <p style={{ fontSize: '13px', color: 'var(--muted)', margin: 0 }}>Log a race to see equivalent performances across distances.</p>
     </WidgetCard>
@@ -5026,7 +5023,7 @@ function EquivPerfWidget() {
 
   return (
     <WidgetCard id="equiv-perf" style={st.glowCard}>
-      <div style={st.widgetLabel}>🎯 EQUIVALENTS</div>
+      <div style={st.widgetLabel}>EQUIVALENTS</div>
       <div style={st.widgetTitle}>EQUIV PERFORMANCES</div>
       <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '-4px' }}>VDOT {vdotPt.vdot} · {vdotPt.raceName}</div>
 
@@ -5074,7 +5071,7 @@ function UpcomingDensityWidget() {
       {upcoming.length < 2 ? (
         <p style={{ fontSize: '13px', color: 'var(--muted)', margin: 0 }}>Add 2+ upcoming races to check for scheduling conflicts.</p>
       ) : warnings.length === 0 ? (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', background: 'rgba(0,255,136,0.06)', borderRadius: '8px', border: '1px solid rgba(0,255,136,0.2)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', background: 'rgba(var(--green-ch),0.06)', borderRadius: '8px', border: '1px solid rgba(var(--green-ch),0.2)' }}>
           <span style={{ fontSize: '20px' }}>✅</span>
           <div>
             <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '13px', color: 'var(--green)' }}>ALL CLEAR</div>
@@ -5089,7 +5086,7 @@ function UpcomingDensityWidget() {
               background: w.severity === 'danger' ? 'rgba(255,60,60,0.08)' : 'rgba(var(--orange-ch),0.08)',
               border: `1px solid ${w.severity === 'danger' ? 'rgba(255,60,60,0.3)' : 'rgba(var(--orange-ch),0.3)'}`,
             }}>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px', color: w.severity === 'danger' ? '#ff6b6b' : 'var(--orange)', letterSpacing: '0.08em', marginBottom: '4px' }}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px', color: w.severity === 'danger' ? 'var(--error)' : 'var(--orange)', letterSpacing: '0.08em', marginBottom: '4px' }}>
                 {w.severity === 'danger' ? '🚨 DANGER' : '⚠ WARNING'} · {w.windowDays}d gap
               </div>
               <div style={{ fontSize: '12px', color: 'var(--white)', lineHeight: 1.4 }}>{w.message}</div>
@@ -5168,7 +5165,7 @@ function CourseRepeatsWidget() {
                 )}
                 <div style={{ fontSize: '12px', marginTop: '2px' }}>
                   {c.trend === 'improving' && <span style={{ color: 'var(--green)' }}>▲ FASTER</span>}
-                  {c.trend === 'declining' && <span style={{ color: '#ff6b6b' }}>▼ SLOWER</span>}
+                  {c.trend === 'declining' && <span style={{ color: 'var(--error)' }}>▼ SLOWER</span>}
                   {c.trend === 'flat'      && <span style={{ color: 'var(--muted)' }}>— FLAT</span>}
                 </div>
               </div>
@@ -5187,7 +5184,7 @@ function CourseRepeatsWidget() {
                         <div style={{ fontSize: '10px', color: 'var(--muted2)' }}>{fmtDateDDMM(r.date)}</div>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        {isPB && <span style={{ fontSize: '9px', color: '#FFD770', fontFamily: 'var(--headline)', fontWeight: 700 }}>PB</span>}
+                        {isPB && <span style={{ fontSize: '9px', color: 'var(--gold-a)', fontFamily: 'var(--headline)', fontWeight: 700 }}>PB</span>}
                         <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', color: isPB ? 'var(--orange)' : 'var(--white)' }}>{r.time}</span>
                       </div>
                     </div>
@@ -6182,11 +6179,9 @@ const st = {
   // ── Customize modal
   modalOverlay: {
     position: 'fixed' as const,
-    top: 'calc(var(--header-base-height) + var(--safe-top))',
-    left: 0,
-    right: 0,
-    bottom: 'calc(var(--bottom-nav-base-height) + var(--safe-bottom))',
+    inset: 0,
     background: 'rgba(0,0,0,0.75)',
+    backdropFilter: 'blur(8px)',
     zIndex: 900,
     display: 'flex',
     alignItems: 'flex-end',

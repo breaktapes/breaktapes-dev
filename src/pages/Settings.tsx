@@ -341,7 +341,7 @@ export function Settings() {
                     }}
                   >
                     <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', letterSpacing: '0.08em', textTransform: 'uppercase', color: active ? 'var(--orange)' : 'var(--white)' }}>
-                      {u === 'metric' ? '🌍 Metric' : '🇺🇸 Imperial'}
+                      {u === 'metric' ? 'Metric' : 'Imperial'}
                     </div>
                     <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '3px' }}>
                       {u === 'metric' ? 'km · min/km' : 'mi · min/mi'}

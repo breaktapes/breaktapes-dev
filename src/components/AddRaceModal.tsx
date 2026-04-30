@@ -17,11 +17,11 @@ type Mode = 'past' | 'upcoming'
 // ─── Sport / Distance / Option config ───────────────────────────────────────
 
 const SPORTS = [
-  { id: 'Running',   label: '🏃 Running' },
-  { id: 'Cycling',   label: '🚴 Cycling' },
-  { id: 'Swimming',  label: '🏊 Swimming' },
-  { id: 'Triathlon', label: '🏆 Triathlon' },
-  { id: 'HYROX',     label: '💪 HYROX' },
+  { id: 'Running',   label: 'Running' },
+  { id: 'Cycling',   label: 'Cycling' },
+  { id: 'Swimming',  label: 'Swimming' },
+  { id: 'Triathlon', label: 'Triathlon' },
+  { id: 'HYROX',     label: 'HYROX' },
 ]
 
 const DISTANCES_BY_SPORT: Record<string, { label: string; value: string }[]> = {
@@ -82,9 +82,9 @@ const RACE_OUTCOMES = [
 
 const RACE_PRIORITIES = [
   { value: '',  label: '— Unset —' },
-  { value: 'A', label: '🎯 A Race — Goal Event' },
-  { value: 'B', label: '⭐ B Race — Important' },
-  { value: 'C', label: '🏃 C Race — Training / Fun' },
+  { value: 'A', label: 'A Race — Goal Event' },
+  { value: 'B', label: 'B Race — Important' },
+  { value: 'C', label: 'C Race — Training / Fun' },
 ]
 
 const MEDALS = [
@@ -97,11 +97,11 @@ const MEDALS = [
 ]
 
 const TRI_SEGMENTS = [
-  { label: 'SWIM', emoji: '🏊', key: 'swim' },
-  { label: 'T1',   emoji: '⚡', key: 't1' },
-  { label: 'BIKE', emoji: '🚴', key: 'bike' },
-  { label: 'T2',   emoji: '⚡', key: 't2' },
-  { label: 'RUN',  emoji: '🏃', key: 'run' },
+  { label: 'SWIM', emoji: '', key: 'swim' },
+  { label: 'T1',   emoji: '', key: 't1' },
+  { label: 'BIKE', emoji: '', key: 'bike' },
+  { label: 'T2',   emoji: '', key: 't2' },
+  { label: 'RUN',  emoji: '', key: 'run' },
 ]
 
 // Aliases by preset value — every synonym / common variant catalog rows
@@ -258,7 +258,7 @@ function TriathlonSplits({ splits, onChange }: {
           </div>
         )
       })}
-      <div style={{ display: 'flex', alignItems: 'center', padding: '12px', borderTop: '1px solid var(--border2)', background: 'rgba(0,255,136,0.05)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', padding: '12px', borderTop: '1px solid var(--border2)', background: 'rgba(var(--green-ch),0.05)' }}>
         <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', letterSpacing: '0.1em', color: 'var(--green)', flex: 1 }}>TOTAL</span>
         <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '18px', color: 'var(--green)', letterSpacing: '0.04em' }}>
           {Math.floor(total / 3600)}:{pad2(Math.floor((total % 3600) / 60))}:{pad2(total % 60)}
@@ -773,14 +773,14 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
             onClick={() => setMode('past')}
             type="button"
           >
-            🏁 LOG A RACE
+            LOG A RACE
           </button>
           <button
             style={{ ...st.tabBtn, ...(mode === 'upcoming' ? st.tabBtnActiveGreen : {}) }}
             onClick={() => setMode('upcoming')}
             type="button"
           >
-            📅 ADD UPCOMING
+            ADD UPCOMING
           </button>
         </div>
 
@@ -878,7 +878,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
                         fontWeight: 700,
                         flexShrink: 0,
                       }}>
-                        {s.source === 'past' ? '★' : '⚡'}
+                        {s.source === 'past' ? '★' : '+'}
                       </span>
                       <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600 }}>
                         {s.label}
@@ -1173,7 +1173,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
           )}
 
           {error && (
-            <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: '#ff6b6b', fontFamily: 'var(--body)' }}>
+            <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: 'var(--error)', fontFamily: 'var(--body)' }}>
               {error}
             </p>
           )}
@@ -1199,6 +1199,7 @@ const st = {
     position: 'fixed',
     inset: 0,
     background: 'rgba(0,0,0,0.75)',
+    backdropFilter: 'blur(8px)',
     zIndex: 950,
     display: 'flex',
     alignItems: 'flex-end',
@@ -1319,7 +1320,7 @@ const st = {
   } as React.CSSProperties,
 
   fieldLabel: {
-    fontSize: '11px',
+    fontSize: 'var(--text-xs)',
     fontFamily: 'var(--headline)',
     fontWeight: 700,
     letterSpacing: '0.08em',
@@ -1410,8 +1411,8 @@ const st = {
   } as React.CSSProperties,
 
   tabBtnActiveGreen: {
-    background: 'rgba(0,255,136,0.1)',
-    border: '1px solid rgba(0,255,136,0.35)',
+    background: 'rgba(var(--green-ch),0.1)',
+    border: '1px solid rgba(var(--green-ch),0.35)',
     color: 'var(--green)',
   } as React.CSSProperties,
 }

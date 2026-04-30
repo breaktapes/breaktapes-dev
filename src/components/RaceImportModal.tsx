@@ -234,12 +234,12 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
           {step === 'results' && (
             <>
               {(sourceErrors.ultrasignup || sourceErrors.marathonview) && (
-                <div style={{ padding: '8px 12px', background: 'rgba(255,107,107,0.08)', border: '1px solid rgba(255,107,107,0.25)', borderRadius: '8px', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
-                  <p style={{ margin: 0, fontSize: '12px', color: '#ff6b6b' }}>
+                <div style={{ padding: '8px 12px', background: 'rgba(var(--error-ch),0.08)', border: '1px solid rgba(var(--error-ch),0.25)', borderRadius: '8px', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                  <p style={{ margin: 0, fontSize: '12px', color: 'var(--error)' }}>
                     {[sourceErrors.ultrasignup && 'UltraSignup', sourceErrors.marathonview && 'MarathonView'].filter(Boolean).join(' & ')} failed to respond.
                   </p>
                   <button
-                    style={{ background: 'none', border: '1px solid rgba(255,107,107,0.4)', color: '#ff6b6b', fontSize: '11px', padding: '3px 8px', borderRadius: '4px', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', flexShrink: 0 }}
+                    style={{ background: 'none', border: '1px solid rgba(var(--error-ch),0.4)', color: 'var(--error)', fontSize: '11px', padding: '3px 8px', borderRadius: '4px', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', flexShrink: 0 }}
                     onClick={() => { setStep('search'); }}
                     type="button"
                   >
@@ -362,7 +362,7 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
 }
 
 const st = {
-  overlay:    { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 960, display: 'flex', alignItems: 'flex-end' } as React.CSSProperties,
+  overlay:    { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)', zIndex: 960, display: 'flex', alignItems: 'flex-end' } as React.CSSProperties,
   sheet:      { width: '100%', maxHeight: '85dvh', background: 'var(--surface2)', borderTop: '2px solid var(--orange)', borderRadius: '16px 16px 0 0', display: 'flex', flexDirection: 'column', overflow: 'hidden' } as React.CSSProperties,
   handle:     { width: '36px', height: '4px', background: 'var(--border2)', borderRadius: '2px', margin: '12px auto 0', flexShrink: 0 } as React.CSSProperties,
   header:     { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 0', flexShrink: 0 } as React.CSSProperties,
@@ -376,5 +376,5 @@ const st = {
   resultRow:  { width: '100%', borderRadius: '8px', padding: '12px', cursor: 'pointer', textAlign: 'left' as const, transition: 'background 0.15s' } as React.CSSProperties,
   saveBtn:    { width: '100%', padding: '14px' } as React.CSSProperties,
   cancelBtn:  { background: 'transparent', color: 'var(--muted)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '14px', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, cursor: 'pointer', width: '100%' } as React.CSSProperties,
-  errorText:  { margin: 0, fontSize: '12px', color: '#ff6b6b' } as React.CSSProperties,
+  errorText:  { margin: 0, fontSize: '12px', color: 'var(--error)' } as React.CSSProperties,
 }

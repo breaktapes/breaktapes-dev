@@ -3,6 +3,16 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.6.9.1] - 2026-04-30
+
+### Changed
+- **Design system: CSS variable sweep** — all hardcoded RGBA colours across every page and component replaced with CSS custom properties (`--orange-ch`, `--green-ch`, `--gold-ch`, `--purple-ch`, `--error-ch`). Theme switching now correctly retints modal borders, PB badges, sport accents, error states, and sparklines across all 9 themes.
+- **Modal polish** — all popups and bottom-sheet modals now share a consistent `backdrop-filter: blur(8px)` frosted glass overlay, `border-top: 2px solid var(--orange)` header edge, and `border-radius: 16px 16px 0 0`. Applies to AddRaceModal, ViewEditRaceModal, EditProfileModal, RaceImportModal, BetaFeedback, DashCustomizeModal, AllUpcomingModal, Compare search sheet, and all Profile achievement/config popups.
+- **Font scale tokens** — `10px` / `11px` field labels now use `var(--text-xs)` everywhere (AddRaceModal, ViewEditRaceModal, EditProfileModal). Base body font bumped 14px → 16px; `--text-xs` 10px → 11px; `--text-sm` 12px → 13px for improved legibility on mobile.
+- **SVG icon system** — decorative emoji (landing page icons, sport icons, proof-strip icons) replaced with purpose-built inline SVGs and text labels. Eliminates emoji rendering inconsistency across Android/iOS/Windows.
+- **Accessibility** — Profile page root promoted to `<main role="main" aria-label="Athlete profile">`. All 11 section headings promoted from `<div>` to `<h2>` for correct landmark/heading hierarchy.
+- **1024px breakpoint** — desktop layout breakpoint raised from 768px to 1024px; grid proof strip uses `1fr` columns with `flex-wrap: wrap` for resilient overflow on mid-size screens.
+
 ## [0.6.9.0] - 2026-04-29
 
 ### Added

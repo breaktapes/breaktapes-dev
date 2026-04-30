@@ -1,1 +1,1 @@
-/Users/akrish/DEV/.claude/worktrees/serene-dirac-211abb/.claude/skills/gstack/canary/SKILL.md
+/Users/akrish/DEV/.claude/worktrees/suspicious-montalcini-93a1f7/.claude/skills/gstack/canary/SKILL.md

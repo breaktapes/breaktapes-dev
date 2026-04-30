@@ -265,21 +265,11 @@ function LandingScreen() {
           </button>
         </div>
         <div className="landing-proof">
-          <div className="landing-proof-item">
-            <div className="landing-proof-icon">🏅</div>
-            <div className="landing-proof-title">Medal Wall</div>
-            <div className="landing-proof-desc">Photo-first medal display</div>
-          </div>
-          <div className="landing-proof-item">
-            <div className="landing-proof-icon">⚡</div>
-            <div className="landing-proof-title">Live PRs</div>
-            <div className="landing-proof-desc">Auto-calculated personal bests</div>
-          </div>
-          <div className="landing-proof-item">
-            <div className="landing-proof-icon">🗺️</div>
-            <div className="landing-proof-title">Race Map</div>
-            <div className="landing-proof-desc">Countries and routes mapped</div>
-          </div>
+          <span className="landing-proof-stat"><strong>Race history</strong> · every finish line</span>
+          <span className="landing-proof-dot" aria-hidden="true">·</span>
+          <span className="landing-proof-stat"><strong>Auto PRs</strong> · all distances</span>
+          <span className="landing-proof-dot" aria-hidden="true">·</span>
+          <span className="landing-proof-stat"><strong>Medal wall</strong> · photo-first</span>
         </div>
       </div>
 

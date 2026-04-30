@@ -1304,7 +1304,7 @@ function useCommunityMedals(raceKeys: string[]): Record<string, string> {
 // ─── Medal Wall ───────────────────────────────────────────────────────────────
 
 const MEDAL_COLORS: Record<string, { bg: string; border: string; text: string; label: string }> = {
-  gold:     { bg: 'rgba(255,215,112,0.12)', border: 'rgba(255,215,112,0.35)', text: '#FFD770', label: 'GOLD' },
+  gold:     { bg: 'rgba(var(--gold-ch),0.12)', border: 'rgba(var(--gold-ch),0.35)', text: 'var(--gold-a)', label: 'GOLD' },
   silver:   { bg: 'rgba(200,212,220,0.12)', border: 'rgba(200,212,220,0.35)', text: '#C8D4DC', label: 'SILVER' },
   bronze:   { bg: 'rgba(205,140,90,0.12)',  border: 'rgba(205,140,90,0.35)',  text: '#CD8C5A', label: 'BRONZE' },
   finisher: { bg: 'rgba(var(--orange-ch),0.10)', border: 'rgba(var(--orange-ch),0.3)', text: 'var(--orange)', label: 'FINISHER' },
@@ -1356,13 +1356,13 @@ function MedalWall() {
   return (
     <div style={st.section}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-        <div style={st.sectionTitle}>MEDALS</div>
+        <h2 style={st.sectionTitle}>MEDALS</h2>
         <div style={{ height: '1px', flex: 1, background: 'var(--border)', marginLeft: '16px' }} />
       </div>
 
       {medalRaces.length === 0 ? (
         <div style={st.emptyState}>
-          <div style={st.emptyIcon}>🥇</div>
+          <div style={st.emptyIcon}>★</div>
           <div style={st.emptyText}>Your medal wall is empty. Log a race with a medal to start your collection.</div>
         </div>
       ) : (
@@ -1548,7 +1548,6 @@ function AchievementsSection() {
       {/* Special achievements grid */}
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 0 10px', borderBottom: '1px solid var(--border)' }}>
-          <span style={{ fontSize: '14px' }}>⭐</span>
           <span style={{ fontFamily: 'var(--headline)', fontSize: '11px', fontWeight: 700, letterSpacing: '0.14em', color: 'var(--muted)', textTransform: 'uppercase' }}>
             SPECIAL ACHIEVEMENTS
           </span>
@@ -1579,7 +1578,6 @@ function AchievementsSection() {
       {/* Performance Ladders */}
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 0 10px', borderBottom: '1px solid var(--border)' }}>
-          <span style={{ fontSize: '14px' }}>🏆</span>
           <span style={{ fontFamily: 'var(--headline)', fontSize: '11px', fontWeight: 700, letterSpacing: '0.14em', color: 'var(--muted)', textTransform: 'uppercase' }}>
             PERFORMANCE LADDERS
           </span>
@@ -1634,7 +1632,7 @@ function AchievementsSection() {
       {/* Achievement popup — portal so it renders above bottom nav */}
       {popup && createPortal(
         <div
-          style={{ position: 'fixed', inset: 0, zIndex: 1500, background: 'rgba(0,0,0,0.8)', display: 'flex', alignItems: 'flex-end' }}
+          style={{ position: 'fixed', inset: 0, zIndex: 1500, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'flex-end' }}
           onClick={() => setPopup(null)}
         >
           <div
@@ -1694,8 +1692,8 @@ function AchievementsSection() {
 // ─── Personal Bests ───────────────────────────────────────────────────────────
 
 const SPORT_ACCENT: Record<string, { color: string; bg: string; glow: string }> = {
-  Running:   { color: '#00FF88', bg: 'rgba(0,255,136,0.06)',   glow: 'rgba(0,255,136,0.10)' },
-  Triathlon: { color: '#7C3AED', bg: 'rgba(124,58,237,0.08)',  glow: 'rgba(124,58,237,0.10)' },
+  Running:   { color: 'var(--green)', bg: 'rgba(var(--green-ch),0.06)',   glow: 'rgba(var(--green-ch),0.10)' },
+  Triathlon: { color: 'var(--purple)', bg: 'rgba(var(--purple-ch),0.08)',  glow: 'rgba(var(--purple-ch),0.10)' },
   Cycling:   { color: '#38BDF8', bg: 'rgba(56,189,248,0.07)',  glow: 'rgba(56,189,248,0.10)' },
   Swimming:  { color: '#22D3EE', bg: 'rgba(34,211,238,0.07)',  glow: 'rgba(34,211,238,0.10)' },
   HYROX:     { color: '#FB923C', bg: 'rgba(251,146,60,0.07)',  glow: 'rgba(251,146,60,0.10)' },
@@ -1747,7 +1745,7 @@ function PersonalBests() {
   if (allPbs.length === 0) {
     return (
       <div style={st.section}>
-        <div style={st.sectionTitle}>PERSONAL BESTS</div>
+        <h2 style={st.sectionTitle}>PERSONAL BESTS</h2>
         <div style={st.emptyState}>
           <div style={st.emptyIcon}>⏱</div>
           <div style={st.emptyText}>No PBs yet. Log a timed race to start tracking.</div>
@@ -1760,7 +1758,7 @@ function PersonalBests() {
     <div style={st.section}>
       {/* Header row with settings icon */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-        <div style={st.sectionTitle}>PERSONAL BESTS</div>
+        <h2 style={st.sectionTitle}>PERSONAL BESTS</h2>
         <button
           onClick={() => setShowConfig(true)}
           style={{
@@ -1824,7 +1822,7 @@ function PersonalBests() {
       {/* Config popup */}
       {showConfig && createPortal(
         <div
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 2000, display: 'flex', alignItems: 'flex-end' }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)', zIndex: 2000, display: 'flex', alignItems: 'flex-end' }}
           onClick={() => setShowConfig(false)}
         >
           <div
@@ -1921,7 +1919,7 @@ function SignatureDistances() {
   if (top.length === 0) {
     return (
       <div style={st.section}>
-        <div style={st.sectionTitle}>SIGNATURE DISTANCES</div>
+        <h2 style={st.sectionTitle}>SIGNATURE DISTANCES</h2>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', padding: '8px 0', lineHeight: 1.6 }}>
           Log a few more timed races to see which distances are becoming your signature.
         </div>
@@ -1934,7 +1932,7 @@ function SignatureDistances() {
   return (
     <div style={st.section}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
-        <div style={st.sectionTitle}>SIGNATURE DISTANCES</div>
+        <h2 style={st.sectionTitle}>SIGNATURE DISTANCES</h2>
         <div style={{ height: '1px', flex: 1, background: 'var(--border)' }} />
       </div>
       <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '12px', fontFamily: 'var(--headline)', fontWeight: 600, letterSpacing: '0.06em' }}>
@@ -2009,7 +2007,7 @@ function AgeGradeTrajectory() {
   if (!hasProfile) {
     return (
       <div style={st.section}>
-        <div style={st.sectionTitle}>AGE-GRADE TRAJECTORY</div>
+        <h2 style={st.sectionTitle}>AGE-GRADE TRAJECTORY</h2>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', padding: '8px 0', lineHeight: 1.6 }}>
           Add your date of birth and gender in profile to unlock age-grade scoring.
         </div>
@@ -2020,7 +2018,7 @@ function AgeGradeTrajectory() {
   if (history.length < 2) {
     return (
       <div style={st.section}>
-        <div style={st.sectionTitle}>AGE-GRADE TRAJECTORY</div>
+        <h2 style={st.sectionTitle}>AGE-GRADE TRAJECTORY</h2>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', padding: '8px 0', lineHeight: 1.6 }}>
           Log at least two 5K / 10K / Half / Marathon results to see your age-grade trend.
         </div>
@@ -2043,7 +2041,7 @@ function AgeGradeTrajectory() {
   return (
     <div style={st.section}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
-        <div style={st.sectionTitle}>AGE-GRADE</div>
+        <h2 style={st.sectionTitle}>AGE-GRADE</h2>
         <div style={{ height: '1px', flex: 1, background: 'var(--border)' }} />
         <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', color: 'var(--orange)', letterSpacing: '0.02em' }}>
           {latestPct.toFixed(1)}%
@@ -2151,7 +2149,7 @@ function PerformanceTimeline() {
   if (timeline.length < 2) {
     return (
       <div style={st.section}>
-        <div style={st.sectionTitle}>PERFORMANCE TIMELINE</div>
+        <h2 style={st.sectionTitle}>PERFORMANCE TIMELINE</h2>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', padding: '8px 0', lineHeight: 1.6 }}>
           Log races across two or more seasons to unlock your season-by-season story.
         </div>
@@ -2162,7 +2160,7 @@ function PerformanceTimeline() {
   return (
     <div style={st.section}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-        <div style={st.sectionTitle}>PERFORMANCE TIMELINE</div>
+        <h2 style={st.sectionTitle}>PERFORMANCE TIMELINE</h2>
         <div style={{ height: '1px', flex: 1, background: 'var(--border)' }} />
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -2577,7 +2575,7 @@ function GoalsSection() {
   return (
     <div style={st.section}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-        <div style={st.sectionTitle}>GOALS</div>
+        <h2 style={st.sectionTitle}>GOALS</h2>
         <div style={{ height: '1px', flex: 1, background: 'var(--border)', marginLeft: '16px' }} />
       </div>
 
@@ -2626,7 +2624,7 @@ function GoalsSection() {
             const done = pb !== undefined && pb <= g.targetSecs
             return (
               <div key={g.id} style={{ display: 'flex', alignItems: 'center', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '10px 12px', gap: '10px' }}>
-                <span style={{ fontSize: '18px' }}>🎯</span>
+                <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '12px', color: 'var(--orange)' }}>SUB</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: '13px', color: 'var(--white)', fontWeight: 600, lineHeight: 1.2 }}>{g.dist}</div>
                   <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>
@@ -2857,7 +2855,7 @@ export function Profile() {
   // can guard themselves.
 
   return (
-    <div style={st.page}>
+    <main role="main" aria-label="Athlete profile" style={st.page}>
       {showEdit && <EditProfileModal onClose={() => setShowEdit(false)} />}
       <OnboardingBanner onEdit={() => { localStorage.setItem('bt_modal_shown', '1'); setShowEdit(true) }} />
       <AthleteHero onEdit={() => setShowEdit(true)} />
@@ -2871,7 +2869,7 @@ export function Profile() {
       <MajorsQualifiers />
       <RacePersonality />
       <GoalsSection />
-    </div>
+    </main>
   )
 }
 
@@ -3177,6 +3175,7 @@ const st = {
     letterSpacing: '0.04em',
     textTransform: 'uppercase',
     color: 'var(--white)',
+    margin: 0,
   } as React.CSSProperties,
 
   // ── PB cards
