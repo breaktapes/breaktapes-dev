@@ -529,6 +529,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
   }, [query, catalog, pastRaces, upcomingRaces, catalogLoading])
 
   function selectSuggestion(s: typeof suggestions[0]) {
+    clearTimeout(debounceRef.current)
     const TYPE_MAP: Record<string, string> = {
       run: 'Running', running: 'Running',
       tri: 'Triathlon', triathlon: 'Triathlon',
@@ -539,6 +540,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
 
     if (s.myRace) {
       // Autofill from user's own past/upcoming race
+      clearTimeout(debounceRef.current)
       const r = s.myRace
       setQuery(r.name); setName(r.name)
       if (r.country) { setCountry(r.country); setCitySelect(''); setCityText('') }
@@ -552,6 +554,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
         if (matched) { setDistance(matched); setCustomDist('') }
         else { setDistance('__custom__'); setCustomDist(r.distance) }
       }
+      if (r.date) setDate(r.date)
       setShowSuggest(false)
       return
     }
@@ -815,7 +818,11 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
                   if (s.myRace.city)     metaParts.push(s.myRace.city)
                   if (s.myRace.country)  metaParts.push(s.myRace.country)
                   if (s.myRace.distance) metaParts.push(distLabelUtil(s.myRace.distance))
-                  if (s.myRace.date)     metaParts.push(s.myRace.date)
+                  if (s.myRace.date) {
+                    const [y, m, d] = s.myRace.date.split('-').map(Number)
+                    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+                    metaParts.push(`${months[m - 1]} ${d} ${y}`)
+                  }
                 } else if (s.data) {
                   if (s.data.city)    metaParts.push(s.data.city)
                   if (s.data.country) metaParts.push(s.data.country)
