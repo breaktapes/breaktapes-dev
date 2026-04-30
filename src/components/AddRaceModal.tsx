@@ -8,7 +8,7 @@ import { CustomDistInput } from '@/components/CustomDistInput'
 import { CityPicker } from '@/components/CityPicker'
 import { countryNameHaystack } from '@/lib/countries'
 import { normalizeName, resolveDistKm, isAlreadyInCatalog, findSportDistMatch, distLabel as distLabelUtil } from '@/lib/utils'
-import { supabase } from '@/lib/supabase'
+import { supabaseAnon } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/useAuthStore'
 import type { Race, Split } from '@/types'
 
@@ -638,7 +638,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
     const [year, month, day] = race.date.split('-').map(Number)
     const distKm = race.distance ? resolveDistKm(race.distance) : null
 
-    void supabase.rpc('upsert_catalog_contribution', {
+    void supabaseAnon.rpc('upsert_catalog_contribution', {
       p_name:           race.name,
       p_city:           race.city,
       p_country:        race.country,
@@ -1054,7 +1054,12 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
           {/* ── Race Outcome (past only) ── */}
           {mode === 'past' && (
             <Field label="Race Outcome">
-              <select style={st.input} value={outcome} onChange={e => setOutcome(e.target.value)}>
+              <select style={st.input} value={outcome} onChange={e => {
+                const v = e.target.value
+                setOutcome(v)
+                if (v === 'Finished' && !medal) setMedal('Finisher')
+                if (v !== 'Finished') setMedal('')
+              }}>
                 {RACE_OUTCOMES.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </Field>
