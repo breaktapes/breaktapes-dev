@@ -38,6 +38,7 @@ jobs:
           VITE_SUPABASE_ANON_KEY: sb_publishable_XiI5lGzh_3rWoA2TxrKnWg_gPtPKSRp
           VITE_IS_STAGING: 'true'
           VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
+          VITE_ADMIN_USER_IDS: ${{ vars.VITE_ADMIN_USER_IDS }}
 
       # ── 2. Push Supabase migrations → staging ────────────────────────────
       - name: Setup Supabase CLI
