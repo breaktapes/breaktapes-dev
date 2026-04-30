@@ -367,6 +367,19 @@ function WishlistRow({ race, onPlan, onRemove }: {
 
 // ── Races sheet ───────────────────────────────────────────────────────────────
 
+function YearDivider({ year }: { year: string }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 16px 6px' }}>
+      <span style={{
+        fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '11px',
+        letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)',
+        whiteSpace: 'nowrap',
+      }}>{year}</span>
+      <div style={{ flex: 1, height: '1px', background: 'var(--border2)' }} />
+    </div>
+  )
+}
+
 type ViewMode = 'compact' | 'detailed' | 'wishlist'
 
 function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport, onDiscover }: { races: Race[]; onAddRace: () => void; onImportRace: () => void; onOpenPassport: (year: string) => void; onDiscover: () => void }) {
@@ -532,9 +545,21 @@ function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport, onDiscover
           </div>
         ) : viewMode === 'compact' ? (
           <>
-            {sorted.slice(0, visibleCount).map(r => (
-              <CompactRow key={r.id} race={r} isPB={pbMap[normKey(r.distance)]?.id === r.id} onClick={() => { setSelectedRaceId(r.id); setExpanded(true) }} />
-            ))}
+            {(() => {
+              const visible = sorted.slice(0, visibleCount)
+              let lastYear = ''
+              return visible.map(r => {
+                const yr = r.date.slice(0, 4)
+                const showDivider = yearFilter === 'all' && yr !== lastYear
+                lastYear = yr
+                return (
+                  <div key={r.id}>
+                    {showDivider && <YearDivider year={yr} />}
+                    <CompactRow race={r} isPB={pbMap[normKey(r.distance)]?.id === r.id} onClick={() => { setSelectedRaceId(r.id); setExpanded(true) }} />
+                  </div>
+                )
+              })
+            })()}
             {sorted.length > visibleCount && (
               <button
                 onClick={() => setVisibleCount(c => c + 20)}
@@ -546,9 +571,21 @@ function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport, onDiscover
           </>
         ) : (
           <>
-            {sorted.slice(0, visibleCount).map(r => (
-              <DetailedRow key={r.id} race={r} isPB={pbMap[normKey(r.distance)]?.id === r.id} onClick={() => { setSelectedRaceId(r.id); setExpanded(true) }} />
-            ))}
+            {(() => {
+              const visible = sorted.slice(0, visibleCount)
+              let lastYear = ''
+              return visible.map(r => {
+                const yr = r.date.slice(0, 4)
+                const showDivider = yearFilter === 'all' && yr !== lastYear
+                lastYear = yr
+                return (
+                  <div key={r.id}>
+                    {showDivider && <YearDivider year={yr} />}
+                    <DetailedRow race={r} isPB={pbMap[normKey(r.distance)]?.id === r.id} onClick={() => { setSelectedRaceId(r.id); setExpanded(true) }} />
+                  </div>
+                )
+              })
+            })()}
             {sorted.length > visibleCount && (
               <button
                 onClick={() => setVisibleCount(c => c + 20)}
