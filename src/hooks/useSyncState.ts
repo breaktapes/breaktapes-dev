@@ -4,8 +4,10 @@ import { supabase, getClerkToken } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
-import { APP_URL } from '@/env'
+import { APP_URL, IS_STAGING } from '@/env'
 import type { Race, Athlete, SeasonPlan } from '@/types'
+
+const PROD_URL = 'https://app.breaktapes.com'
 
 interface RemoteState {
   races?: Race[]
@@ -80,6 +82,40 @@ export function useSyncState() {
               const remote: RemoteState = json.state_json
               applyRemoteSafe(remote)
               return remote
+            }
+            // No staging row yet — bootstrap from prod on first login.
+            // Reads prod state (read-only), writes it into staging Supabase.
+            // Flag prevents re-seeding on subsequent logins so staging data
+            // stays independent after the initial copy.
+            if (IS_STAGING) {
+              const bootstrapKey = `bt_staging_bootstrapped_${authUser.id}`
+              if (!localStorage.getItem(bootstrapKey)) {
+                try {
+                  const prodRes = await fetch(`${PROD_URL}/api/state`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                  })
+                  if (prodRes.ok) {
+                    const prodJson = await prodRes.json()
+                    if (prodJson?.state_json) {
+                      // Seed staging Supabase with prod state
+                      await fetch(`${APP_URL}/api/sync`, {
+                        method: 'POST',
+                        headers: {
+                          Authorization: `Bearer ${token}`,
+                          'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ state_json: prodJson.state_json }),
+                      })
+                      localStorage.setItem(bootstrapKey, '1')
+                      const remote: RemoteState = prodJson.state_json
+                      applyRemoteSafe(remote)
+                      return remote
+                    }
+                  }
+                } catch {
+                  // bootstrap failed silently — user sees empty state, not an error
+                }
+              }
             }
             return null  // no row yet — new user
           }
