@@ -41,16 +41,17 @@ export function useSyncState() {
   // This prevents a stale Supabase snapshot from silently deleting locally-added races.
   // Explicit user deletes write to Supabase immediately so they propagate correctly.
   function applyRemoteSafe(remote: RemoteState) {
-    const { races: localRaces, upcomingRaces: localUpcoming } = useRaceStore.getState()
+    const { races: localRaces, upcomingRaces: localUpcoming, _pendingDeleteIds } = useRaceStore.getState()
+    const pendingDeletes = new Set(_pendingDeleteIds)
 
     if (Array.isArray(remote.races)) {
       const localIds = new Set(localRaces.map(r => r.id))
-      const merged = [...localRaces, ...remote.races.filter(r => !localIds.has(r.id))]
+      const merged = [...localRaces, ...remote.races.filter(r => !localIds.has(r.id) && !pendingDeletes.has(r.id))]
       setRaces(merged)
     }
     if (Array.isArray(remote.upcoming_races)) {
       const localIds = new Set(localUpcoming.map(r => r.id))
-      const merged = [...localUpcoming, ...remote.upcoming_races.filter(r => !localIds.has(r.id))]
+      const merged = [...localUpcoming, ...remote.upcoming_races.filter(r => !localIds.has(r.id) && !pendingDeletes.has(r.id))]
       setUpcomingRaces(merged)
     }
     if (Array.isArray(remote.wishlist_races)) setWishlistRaces(remote.wishlist_races)
