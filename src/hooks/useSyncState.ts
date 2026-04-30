@@ -36,6 +36,30 @@ export function useSyncState() {
   const setAthlete = useAthleteStore(s => s.setAthlete)
   const setSeasonPlans = useAthleteStore(s => s.setSeasonPlans)
 
+  // Merge remote state without clobbering races added locally while sync was broken.
+  // Union by race ID: keep all local races + add remote races not present locally.
+  // This prevents a stale Supabase snapshot from silently deleting locally-added races.
+  // Explicit user deletes write to Supabase immediately so they propagate correctly.
+  function applyRemoteSafe(remote: RemoteState) {
+    const { races: localRaces, upcomingRaces: localUpcoming } = useRaceStore.getState()
+
+    if (Array.isArray(remote.races)) {
+      const localIds = new Set(localRaces.map(r => r.id))
+      const merged = [...localRaces, ...remote.races.filter(r => !localIds.has(r.id))]
+      setRaces(merged)
+    }
+    if (Array.isArray(remote.upcoming_races)) {
+      const localIds = new Set(localUpcoming.map(r => r.id))
+      const merged = [...localUpcoming, ...remote.upcoming_races.filter(r => !localIds.has(r.id))]
+      setUpcomingRaces(merged)
+    }
+    if (Array.isArray(remote.wishlist_races)) setWishlistRaces(remote.wishlist_races)
+    promoteNextRace()
+    if ('focus_race_id' in remote) setFocusRaceId(remote.focus_race_id ?? null)
+    if (remote.athlete) setAthlete(remote.athlete)
+    if (Array.isArray(remote.season_plans)) setSeasonPlans(remote.season_plans)
+  }
+
   return useQuery({
     queryKey: ['sync-state', authUser?.id],
     queryFn: async () => {
@@ -53,13 +77,7 @@ export function useSyncState() {
             const json = await res.json()
             if (json?.state_json) {
               const remote: RemoteState = json.state_json
-              if (Array.isArray(remote.races)) setRaces(remote.races)
-              if (Array.isArray(remote.upcoming_races)) setUpcomingRaces(remote.upcoming_races)
-              if (Array.isArray(remote.wishlist_races)) setWishlistRaces(remote.wishlist_races)
-              promoteNextRace()
-              if ('focus_race_id' in remote) setFocusRaceId(remote.focus_race_id ?? null)
-              if (remote.athlete) setAthlete(remote.athlete)
-              if (Array.isArray(remote.season_plans)) setSeasonPlans(remote.season_plans)
+              applyRemoteSafe(remote)
               return remote
             }
             return null  // no row yet — new user
@@ -80,22 +98,7 @@ export function useSyncState() {
       if (!data) return null
 
       const remote: RemoteState = data.state_json ?? {}
-
-      // Apply remote state to stores. setX setters intentionally do NOT
-      // call syncStateToSupabase, so applying remote state never echoes
-      // back to the server.
-      if (Array.isArray(remote.races)) setRaces(remote.races)
-      if (Array.isArray(remote.upcoming_races)) setUpcomingRaces(remote.upcoming_races)
-      if (Array.isArray(remote.wishlist_races)) setWishlistRaces(remote.wishlist_races)
-      // Regression fix (Session 13): if nextRace is null/past, auto-promote
-      promoteNextRace()
-
-      // focus_race_id may be explicitly null (user un-pinned) — apply it as-is
-      if ('focus_race_id' in remote) setFocusRaceId(remote.focus_race_id ?? null)
-
-      if (remote.athlete) setAthlete(remote.athlete)
-      if (Array.isArray(remote.season_plans)) setSeasonPlans(remote.season_plans)
-
+      applyRemoteSafe(remote)
       return remote
     },
     enabled: !!authUser,

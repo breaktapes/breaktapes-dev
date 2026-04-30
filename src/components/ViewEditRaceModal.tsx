@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
+import { useAuthStore } from '@/stores/useAuthStore'
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@/env'
 import { RaceShareCard } from '@/components/RaceShareCard'
 import { DateInput } from '@/components/DateInput'
 import { CustomDistInput } from '@/components/CustomDistInput'
@@ -201,8 +203,40 @@ interface Props {
 
 function ViewPanel({ race, isPB, onEdit, onDelete, onShare }: { race: Race; isPB: boolean; onEdit: () => void; onDelete: () => void; onShare: () => void }) {
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [resubmitting, setResubmitting]   = useState(false)
+  const [resubmitDone, setResubmitDone]   = useState(false)
   const medalColor = race.medal ? (MEDAL_COLORS[race.medal] ?? 'var(--orange)') : null
   const units = useUnits()
+  const authUser = useAuthStore(s => s.authUser)
+
+  async function handleResubmit() {
+    if (!authUser || resubmitting) return
+    setResubmitting(true)
+    try {
+      const [year, month, day] = (race.date ?? '').split('-').map(Number)
+      const distKm = race.distance ? parseFloat(resolveDistKm(race.distance).km) || null : null
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/upsert_catalog_contribution`, {
+        method: 'POST',
+        headers: { 'apikey': SUPABASE_ANON_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          p_name:           race.name        ?? '',
+          p_city:           race.city        ?? '',
+          p_country:        race.country     ?? '',
+          p_sport:          race.sport       ?? '',
+          p_dist_label:     race.distance    ?? '',
+          p_dist_km:        distKm,
+          p_year:           year   || null,
+          p_event_date:     race.date        ?? null,
+          p_month:          month  || null,
+          p_day:            day    || null,
+          p_contributor_id: authUser.id,
+        }),
+      })
+      if (res.ok) setResubmitDone(true)
+    } finally {
+      setResubmitting(false)
+    }
+  }
 
   return (
     <div style={st.body}>
@@ -374,6 +408,23 @@ function ViewPanel({ race, isPB, onEdit, onDelete, onShare }: { race: Race; isPB
           <button style={st.deleteBtn} onClick={() => setConfirmDelete(true)}>Delete</button>
         )}
       </div>
+      {/* Re-submit to catalog */}
+      {race.name && (
+        <button
+          style={{
+            width: '100%', marginTop: '0.5rem', padding: '10px',
+            background: resubmitDone ? 'rgba(0,255,136,0.08)' : 'transparent',
+            border: `1px solid ${resubmitDone ? 'rgba(0,255,136,0.3)' : 'var(--border2)'}`,
+            borderRadius: 8, color: resubmitDone ? 'var(--green)' : 'var(--muted)',
+            fontSize: '12px', cursor: resubmitting ? 'default' : 'pointer',
+            fontFamily: 'var(--headline)', letterSpacing: '0.05em',
+          }}
+          onClick={handleResubmit}
+          disabled={resubmitting || resubmitDone}
+        >
+          {resubmitDone ? '✓ Sent for re-approval' : resubmitting ? 'Submitting…' : '↑ Send for re-approval'}
+        </button>
+      )}
     </div>
   )
 }
