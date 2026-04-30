@@ -266,17 +266,32 @@ function LandingScreen() {
         </div>
         <div className="landing-proof">
           <div className="landing-proof-item">
-            <div className="landing-proof-icon">🏅</div>
+            <div className="landing-proof-icon">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+                <circle cx="9" cy="7" r="5" stroke="currentColor" strokeWidth="1.5"/>
+                <path d="M6 11.5L4 16M12 11.5L14 16M6.5 16h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+            </div>
             <div className="landing-proof-title">Medal Wall</div>
             <div className="landing-proof-desc">Photo-first medal display</div>
           </div>
           <div className="landing-proof-item">
-            <div className="landing-proof-icon">⚡</div>
+            <div className="landing-proof-icon">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+                <path d="M3 13L7 8L10 11L14 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M14 5H11M14 5V8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
+            </div>
             <div className="landing-proof-title">Live PRs</div>
             <div className="landing-proof-desc">Auto-calculated personal bests</div>
           </div>
           <div className="landing-proof-item">
-            <div className="landing-proof-icon">🗺️</div>
+            <div className="landing-proof-icon">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
+                <circle cx="9" cy="8" r="3" stroke="currentColor" strokeWidth="1.5"/>
+                <path d="M9 2C6.24 2 4 4.24 4 7c0 4.25 5 9 5 9s5-4.75 5-9c0-2.76-2.24-5-5-5z" stroke="currentColor" strokeWidth="1.5"/>
+              </svg>
+            </div>
             <div className="landing-proof-title">Race Map</div>
             <div className="landing-proof-desc">Countries and routes mapped</div>
           </div>
