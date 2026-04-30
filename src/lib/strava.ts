@@ -2,6 +2,7 @@ import { useWearableStore } from '@/stores/useWearableStore'
 import { saveWearableToken } from '@/lib/wearableUtils'
 import { STRAVA_CLIENT_ID } from '@/env'
 import type { WearableToken, Race } from '@/types'
+import { posthog } from '@/lib/posthog'
 
 export { STRAVA_CLIENT_ID }
 
@@ -203,7 +204,11 @@ export async function handleStravaCallback(code: string, returnedState: string):
   }
   const res = await fetch(`${HEALTH_PROXY}/strava/token`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'X-POSTHOG-DISTINCT-ID': posthog.get_distinct_id() ?? '',
+      'X-POSTHOG-SESSION-ID': posthog.get_session_id() ?? '',
+    },
     body: JSON.stringify({ code }),
   })
   const tokenData = await res.json().catch(() => ({} as any))

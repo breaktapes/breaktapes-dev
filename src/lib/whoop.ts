@@ -3,6 +3,7 @@ import { saveWearableToken } from '@/lib/wearableUtils'
 import { WHOOP_CLIENT_ID } from '@/env'
 import type { WearableToken } from '@/types'
 import type { WhoopActivity, WhoopRecovery } from '@/types/wearables'
+import { posthog } from '@/lib/posthog'
 
 // Module-level timer — cancels previous before scheduling new to prevent accumulation
 let _refreshTimer: ReturnType<typeof setTimeout> | null = null
@@ -40,7 +41,11 @@ export async function handleWhoopCallback(code: string, returnedState: string): 
   const redirectUri = `${window.location.origin}/train`
   const res = await fetch(`${HEALTH_PROXY}/whoop/token`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'X-POSTHOG-DISTINCT-ID': posthog.get_distinct_id() ?? '',
+      'X-POSTHOG-SESSION-ID': posthog.get_session_id() ?? '',
+    },
     body: JSON.stringify({ code, redirect_uri: redirectUri }),
   })
   if (!res.ok) throw new Error('WHOOP token exchange failed')

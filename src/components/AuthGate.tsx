@@ -6,6 +6,7 @@ import { useAthleteStore } from '@/stores/useAthleteStore'
 import { setClerkToken } from '@/lib/supabase'
 import { syncStateToSupabase } from '@/lib/syncState'
 import { IS_STAGING } from '@/env'
+import { posthog } from '@/lib/posthog'
 
 type AuthView = 'signin' | 'signup'
 
@@ -29,6 +30,7 @@ function useClerkSync() {
       setAuthUser(null)
       setClerkToken(null)
       didBootstrapSync.current = false
+      posthog.reset()
       return
     }
 
@@ -66,6 +68,11 @@ function useClerkSync() {
           email: user.primaryEmailAddress?.emailAddress ?? null,
         })
         setProAccess(IS_STAGING)
+        posthog.identify(user.id, {
+          email: user.primaryEmailAddress?.emailAddress ?? undefined,
+          username: user.username ?? undefined,
+          name: user.fullName ?? undefined,
+        })
 
         // Bootstrap sync — fires exactly once per session after the JWT
         // is installed. Backfills the user_state row for users whose

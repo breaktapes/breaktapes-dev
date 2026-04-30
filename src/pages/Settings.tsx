@@ -12,6 +12,7 @@ import type { ThemeId } from '@/types'
 import { useThemeStore } from '@/stores/useThemeStore'
 import { APP_URL } from '@/env'
 import { isAdminUser } from '@/pages/Admin'
+import { posthog } from '@/lib/posthog'
 
 const btnMain: React.CSSProperties = {
   background: 'var(--orange)',
@@ -92,10 +93,12 @@ export function Settings() {
     // Fire an explicit sync so the public-profile Worker sees the change
     // immediately regardless of any debounce in the store.
     await syncStateToSupabase()
+    posthog.capture('public profile toggled', { enabled: val })
   }
 
   function applyTheme(themeId: ThemeId) {
     storeSetTheme(themeId)
+    posthog.capture('theme changed', { theme_id: themeId })
   }
 
   async function handleSignOut() {
@@ -431,7 +434,7 @@ export function Settings() {
             {stravaToken ? (
               <button
                 style={{ ...btnGhost, padding: '0.5rem 1rem', whiteSpace: 'nowrap', flexShrink: 0, fontSize: '12px' }}
-                onClick={async () => { await removeWearableToken('strava'); clearToken('strava') }}
+                onClick={async () => { await removeWearableToken('strava'); clearToken('strava'); posthog.capture('wearable disconnected', { provider: 'strava' }) }}
               >Disconnect</button>
             ) : (
               <button

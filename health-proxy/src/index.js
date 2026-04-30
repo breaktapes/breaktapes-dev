@@ -27,6 +27,8 @@
  *   GET  /*               — OW API proxy (legacy)
  */
 
+import { PostHog } from 'posthog-node';
+
 const ALLOWED_ORIGINS = new Set([
   'https://app.breaktapes.com',
   'https://dev.breaktapes.com',
@@ -38,9 +40,19 @@ function corsHeaders(origin) {
   return {
     'Access-Control-Allow-Origin': origin,
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, X-OW-User-ID',
+    'Access-Control-Allow-Headers': 'Content-Type, X-OW-User-ID, X-POSTHOG-DISTINCT-ID, X-POSTHOG-SESSION-ID',
     'Access-Control-Max-Age': '86400',
   };
+}
+
+function makePostHog(env) {
+  if (!env.POSTHOG_API_KEY) return null;
+  return new PostHog(env.POSTHOG_API_KEY, {
+    host: env.POSTHOG_HOST || 'https://us.i.posthog.com',
+    flushAt: 1,
+    flushInterval: 0,
+    enableExceptionAutocapture: true,
+  });
 }
 
 function json(data, status = 200, origin = '') {
@@ -52,9 +64,12 @@ function json(data, status = 200, origin = '') {
 
 export default {
   async fetch(request, env) {
-    const origin = request.headers.get('Origin') || '';
-    const url    = new URL(request.url);
-    const path   = url.pathname;
+    const origin     = request.headers.get('Origin') || '';
+    const url        = new URL(request.url);
+    const path       = url.pathname;
+    const distinctId = request.headers.get('X-POSTHOG-DISTINCT-ID') || 'anonymous';
+    const sessionId  = request.headers.get('X-POSTHOG-SESSION-ID') || undefined;
+    const posthog    = makePostHog(env);
 
     if (!ALLOWED_ORIGINS.has(origin)) {
       return new Response('Forbidden', { status: 403 });
@@ -82,7 +97,20 @@ export default {
           grant_type: 'authorization_code',
         }),
       });
-      return json(await resp.json(), resp.status, origin);
+      const data = await resp.json();
+      if (resp.ok && posthog) {
+        posthog.capture({
+          distinctId,
+          event: 'wearable connected',
+          properties: {
+            provider: 'strava',
+            athlete_id: data.athlete?.id ?? null,
+            ...(sessionId && { $session_id: sessionId }),
+          },
+        });
+        await posthog.shutdown();
+      }
+      return json(data, resp.status, origin);
     }
 
     // ── POST /strava/refresh ──────────────────────────────────────────────
@@ -103,7 +131,19 @@ export default {
           grant_type: 'refresh_token',
         }),
       });
-      return json(await resp.json(), resp.status, origin);
+      const data = await resp.json();
+      if (resp.ok && posthog) {
+        posthog.capture({
+          distinctId,
+          event: 'wearable token refreshed',
+          properties: {
+            provider: 'strava',
+            ...(sessionId && { $session_id: sessionId }),
+          },
+        });
+        await posthog.shutdown();
+      }
+      return json(data, resp.status, origin);
     }
 
     // ── POST /whoop/token ─────────────────────────────────────────────────
@@ -138,6 +178,18 @@ export default {
         if (profileResp.ok) profile = await profileResp.json();
       } catch (_) {}
 
+      if (posthog) {
+        posthog.capture({
+          distinctId,
+          event: 'wearable connected',
+          properties: {
+            provider: 'whoop',
+            whoop_user_id: profile.user_id ?? null,
+            ...(sessionId && { $session_id: sessionId }),
+          },
+        });
+        await posthog.shutdown();
+      }
       return json({ ...data, profile }, resp.status, origin);
     }
 
@@ -160,7 +212,19 @@ export default {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body:    body.toString(),
       });
-      return json(await resp.json(), resp.status, origin);
+      const data = await resp.json();
+      if (resp.ok && posthog) {
+        posthog.capture({
+          distinctId,
+          event: 'wearable token refreshed',
+          properties: {
+            provider: 'whoop',
+            ...(sessionId && { $session_id: sessionId }),
+          },
+        });
+        await posthog.shutdown();
+      }
+      return json(data, resp.status, origin);
     }
 
     // ── POST /garmin/token ────────────────────────────────────────────────
@@ -198,6 +262,18 @@ export default {
         if (profileResp.ok) profile = await profileResp.json();
       } catch (_) {}
 
+      if (posthog) {
+        posthog.capture({
+          distinctId,
+          event: 'wearable connected',
+          properties: {
+            provider: 'garmin',
+            garmin_user_id: profile.userId ?? null,
+            ...(sessionId && { $session_id: sessionId }),
+          },
+        });
+        await posthog.shutdown();
+      }
       return json({ ...data, profile }, resp.status, origin);
     }
 
@@ -220,7 +296,19 @@ export default {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         body:    body.toString(),
       });
-      return json(await resp.json(), resp.status, origin);
+      const data = await resp.json();
+      if (resp.ok && posthog) {
+        posthog.capture({
+          distinctId,
+          event: 'wearable token refreshed',
+          properties: {
+            provider: 'garmin',
+            ...(sessionId && { $session_id: sessionId }),
+          },
+        });
+        await posthog.shutdown();
+      }
+      return json(data, resp.status, origin);
     }
 
     // ── Race Import: UltraSignup ──────────────────────────────────────────
@@ -258,8 +346,24 @@ export default {
             });
           }
         }
+        if (posthog) {
+          posthog.capture({
+            distinctId,
+            event: 'race import searched',
+            properties: {
+              provider: 'ultrasignup',
+              result_count: results.length,
+              ...(sessionId && { $session_id: sessionId }),
+            },
+          });
+          await posthog.shutdown();
+        }
         return json({ results, status: 'ok' }, 200, origin);
       } catch (e) {
+        if (posthog) {
+          posthog.captureException(e, distinctId);
+          await posthog.shutdown();
+        }
         return json({ results: [], status: 'error', message: e.message }, 502, origin);
       }
     }
@@ -336,8 +440,24 @@ export default {
           raw:        [r.event_name, r.date, fmtTime(Number(r.result))],
         }));
 
+        if (posthog) {
+          posthog.capture({
+            distinctId,
+            event: 'race import searched',
+            properties: {
+              provider: 'marathonview',
+              result_count: results.length,
+              ...(sessionId && { $session_id: sessionId }),
+            },
+          });
+          await posthog.shutdown();
+        }
         return json({ results, status: 'ok' }, 200, origin);
       } catch (e) {
+        if (posthog) {
+          posthog.captureException(e, distinctId);
+          await posthog.shutdown();
+        }
         return json({ results: [], status: 'error', message: e.message }, 502, origin);
       }
     }

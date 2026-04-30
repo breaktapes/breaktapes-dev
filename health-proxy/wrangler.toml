@@ -1,6 +1,7 @@
 name = "breaktapes-health"
 main = "src/index.js"
 compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
 account_id = "b09f233e618dc7f23bcb247c947eb303"
 
 # Production route: health.breaktapes.com
@@ -9,6 +10,10 @@ routes = [
   { pattern = "health.breaktapes.com", custom_domain = true }
 ]
 
+[vars]
+POSTHOG_HOST = "https://us.i.posthog.com"
+
 # Secrets (set via wrangler secret put — never commit values here):
-#   wrangler secret put OW_BASE_URL   → paste Railway OW URL
-#   wrangler secret put OW_API_KEY    → paste OW admin API key
+#   wrangler secret put OW_BASE_URL      → paste Railway OW URL
+#   wrangler secret put OW_API_KEY       → paste OW admin API key
+#   wrangler secret put POSTHOG_API_KEY  → PostHog public project token

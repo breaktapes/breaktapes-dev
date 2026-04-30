@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { getClerkToken } from '@/lib/supabase'
+import { posthog } from '@/lib/posthog'
 
 // Comma-separated Clerk user IDs granted admin access.
 // Set VITE_ADMIN_USER_IDS in .env.local / Cloudflare Pages env vars.
@@ -235,9 +236,17 @@ export function Admin() {
   async function handleAction(id: number, action: 'approve' | 'reject') {
     setActioning(id)
     try {
+      const contribution = contributions.find(c => c.id === id)
       await apiRequest(`/api/admin/contributions/${id}/${action}`, 'POST')
       setContributions(prev => prev.filter(c => c.id !== id))
       showToast(action === 'approve' ? '✓ Added to race catalog' : 'Dismissed')
+      posthog.capture('catalog contribution reviewed', {
+        action,
+        race_name: contribution?.name ?? null,
+        race_sport: contribution?.sport ?? null,
+        race_country: contribution?.country ?? null,
+        contributor_count: contribution?.contributor_count ?? null,
+      })
     } catch (e: unknown) {
       setError(String(e))
     } finally {

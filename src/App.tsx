@@ -1,12 +1,14 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { Component, lazy, Suspense } from 'react'
+import { Component, lazy, Suspense, useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { ClerkProvider } from '@clerk/clerk-react'
+import { PostHogProvider } from 'posthog-js/react'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import { AuthGate } from '@/components/AuthGate'
 import { Layout } from '@/components/Layout'
-import { CLERK_PUBLISHABLE_KEY } from '@/env'
+import { CLERK_PUBLISHABLE_KEY, POSTHOG_KEY, POSTHOG_HOST } from '@/env'
+import { posthog } from '@/lib/posthog'
 
 // Lazy-loaded pages — each is a separate JS chunk.
 // Dashboard loads eagerly (it's the default route, always shown first).
@@ -79,9 +81,17 @@ const queryClient = new QueryClient({
   },
 })
 
+function usePostHogPageView() {
+  const location = useLocation()
+  useEffect(() => {
+    posthog.capture('$pageview', { $current_url: window.location.href })
+  }, [location.pathname])
+}
+
 /** Page fade wrapper — opacity 0→1, 150ms, ease-out. No slides. */
 function AnimatedRoutes() {
   const location = useLocation()
+  usePostHogPageView()
   return (
     <div
       key={location.pathname}
@@ -112,6 +122,7 @@ function AnimatedRoutes() {
 
 export function App() {
   return (
+    <PostHogProvider apiKey={POSTHOG_KEY} options={{ api_host: POSTHOG_HOST, person_profiles: 'identified_only' }}>
     <RootErrorBoundary>
       <BrowserRouter>
         <ThemeProvider>
@@ -138,5 +149,6 @@ export function App() {
         </ThemeProvider>
       </BrowserRouter>
     </RootErrorBoundary>
+    </PostHogProvider>
   )
 }
