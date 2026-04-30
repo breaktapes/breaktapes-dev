@@ -1362,7 +1362,7 @@ function MedalWall() {
 
       {medalRaces.length === 0 ? (
         <div style={st.emptyState}>
-          <div style={st.emptyIcon}>🥇</div>
+          <div style={st.emptyIcon}>★</div>
           <div style={st.emptyText}>Your medal wall is empty. Log a race with a medal to start your collection.</div>
         </div>
       ) : (
@@ -1548,7 +1548,6 @@ function AchievementsSection() {
       {/* Special achievements grid */}
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 0 10px', borderBottom: '1px solid var(--border)' }}>
-          <span style={{ fontSize: '14px' }}>⭐</span>
           <span style={{ fontFamily: 'var(--headline)', fontSize: '11px', fontWeight: 700, letterSpacing: '0.14em', color: 'var(--muted)', textTransform: 'uppercase' }}>
             SPECIAL ACHIEVEMENTS
           </span>
@@ -1579,7 +1578,6 @@ function AchievementsSection() {
       {/* Performance Ladders */}
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 0 10px', borderBottom: '1px solid var(--border)' }}>
-          <span style={{ fontSize: '14px' }}>🏆</span>
           <span style={{ fontFamily: 'var(--headline)', fontSize: '11px', fontWeight: 700, letterSpacing: '0.14em', color: 'var(--muted)', textTransform: 'uppercase' }}>
             PERFORMANCE LADDERS
           </span>
@@ -2626,7 +2624,7 @@ function GoalsSection() {
             const done = pb !== undefined && pb <= g.targetSecs
             return (
               <div key={g.id} style={{ display: 'flex', alignItems: 'center', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '10px 12px', gap: '10px' }}>
-                <span style={{ fontSize: '18px' }}>🎯</span>
+                <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '12px', color: 'var(--orange)' }}>SUB</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: '13px', color: 'var(--white)', fontWeight: 600, lineHeight: 1.2 }}>{g.dist}</div>
                   <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>

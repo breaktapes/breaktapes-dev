@@ -17,11 +17,11 @@ type Mode = 'past' | 'upcoming'
 // ─── Sport / Distance / Option config ───────────────────────────────────────
 
 const SPORTS = [
-  { id: 'Running',   label: '🏃 Running' },
-  { id: 'Cycling',   label: '🚴 Cycling' },
-  { id: 'Swimming',  label: '🏊 Swimming' },
-  { id: 'Triathlon', label: '🏆 Triathlon' },
-  { id: 'HYROX',     label: '💪 HYROX' },
+  { id: 'Running',   label: 'Running' },
+  { id: 'Cycling',   label: 'Cycling' },
+  { id: 'Swimming',  label: 'Swimming' },
+  { id: 'Triathlon', label: 'Triathlon' },
+  { id: 'HYROX',     label: 'HYROX' },
 ]
 
 const DISTANCES_BY_SPORT: Record<string, { label: string; value: string }[]> = {
@@ -82,9 +82,9 @@ const RACE_OUTCOMES = [
 
 const RACE_PRIORITIES = [
   { value: '',  label: '— Unset —' },
-  { value: 'A', label: '🎯 A Race — Goal Event' },
-  { value: 'B', label: '⭐ B Race — Important' },
-  { value: 'C', label: '🏃 C Race — Training / Fun' },
+  { value: 'A', label: 'A Race — Goal Event' },
+  { value: 'B', label: 'B Race — Important' },
+  { value: 'C', label: 'C Race — Training / Fun' },
 ]
 
 const MEDALS = [
@@ -97,11 +97,11 @@ const MEDALS = [
 ]
 
 const TRI_SEGMENTS = [
-  { label: 'SWIM', emoji: '🏊', key: 'swim' },
-  { label: 'T1',   emoji: '⚡', key: 't1' },
-  { label: 'BIKE', emoji: '🚴', key: 'bike' },
-  { label: 'T2',   emoji: '⚡', key: 't2' },
-  { label: 'RUN',  emoji: '🏃', key: 'run' },
+  { label: 'SWIM', emoji: '', key: 'swim' },
+  { label: 'T1',   emoji: '', key: 't1' },
+  { label: 'BIKE', emoji: '', key: 'bike' },
+  { label: 'T2',   emoji: '', key: 't2' },
+  { label: 'RUN',  emoji: '', key: 'run' },
 ]
 
 // Aliases by preset value — every synonym / common variant catalog rows
@@ -773,14 +773,14 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
             onClick={() => setMode('past')}
             type="button"
           >
-            🏁 LOG A RACE
+            LOG A RACE
           </button>
           <button
             style={{ ...st.tabBtn, ...(mode === 'upcoming' ? st.tabBtnActiveGreen : {}) }}
             onClick={() => setMode('upcoming')}
             type="button"
           >
-            📅 ADD UPCOMING
+            ADD UPCOMING
           </button>
         </div>
 
@@ -878,7 +878,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
                         fontWeight: 700,
                         flexShrink: 0,
                       }}>
-                        {s.source === 'past' ? '★' : '⚡'}
+                        {s.source === 'past' ? '★' : '+'}
                       </span>
                       <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontWeight: 600 }}>
                         {s.label}

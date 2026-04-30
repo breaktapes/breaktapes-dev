@@ -17,11 +17,11 @@ import { findSportDistMatch, distLabel as distLabelUtil, fmtDateDDMM } from '@/l
 // ─── Config (mirrors AddRaceModal) ──────────────────────────────────────────
 
 const SPORTS = [
-  { id: 'Running',   label: '🏃 Running' },
-  { id: 'Cycling',   label: '🚴 Cycling' },
-  { id: 'Swimming',  label: '🏊 Swimming' },
-  { id: 'Triathlon', label: '🏆 Triathlon' },
-  { id: 'HYROX',     label: '💪 HYROX' },
+  { id: 'Running',   label: 'Running' },
+  { id: 'Cycling',   label: 'Cycling' },
+  { id: 'Swimming',  label: 'Swimming' },
+  { id: 'Triathlon', label: 'Triathlon' },
+  { id: 'HYROX',     label: 'HYROX' },
 ]
 
 const DISTANCES_BY_SPORT: Record<string, { label: string; value: string }[]> = {
@@ -81,16 +81,16 @@ const RACE_OUTCOMES = [
 
 const RACE_PRIORITIES = [
   { value: '',  label: '— Unset —' },
-  { value: 'A', label: '🎯 A Race — Goal Event' },
-  { value: 'B', label: '⭐ B Race — Important' },
-  { value: 'C', label: '🏃 C Race — Training / Fun' },
+  { value: 'A', label: 'A Race — Goal Event' },
+  { value: 'B', label: 'B Race — Important' },
+  { value: 'C', label: 'C Race — Training / Fun' },
 ]
 
 const MEDALS = [
   { value: '',         label: 'None' },
-  { value: 'gold',     label: '🥇 Gold' },
-  { value: 'silver',   label: '🥈 Silver' },
-  { value: 'bronze',   label: '🥉 Bronze' },
+  { value: 'gold',     label: 'Gold' },
+  { value: 'silver',   label: 'Silver' },
+  { value: 'bronze',   label: 'Bronze' },
   { value: 'finisher', label: 'Finisher' },
   { value: '__custom__', label: 'Custom...' },
 ]
@@ -252,7 +252,7 @@ function ViewPanel({ race, isPB, onEdit, onDelete, onShare }: { race: Race; isPB
           <div style={{ ...st.statBox, ...(isPB ? { borderColor: 'rgba(200,150,60,0.45)', background: 'rgba(200,150,60,0.07)' } : {}) }}>
             <div style={{ ...st.statVal, color: isPB ? '#C8963C' : 'var(--orange)' }}>{race.time}</div>
             <div style={{ ...st.statLabel, ...(isPB ? { color: 'rgba(200,150,60,0.7)' } : {}) }}>
-              {isPB ? '⭐ PERSONAL BEST' : 'FINISH TIME'}
+              {isPB ? '★ PERSONAL BEST' : 'FINISH TIME'}
             </div>
           </div>
         )}
@@ -309,17 +309,16 @@ function ViewPanel({ race, isPB, onEdit, onDelete, onShare }: { race: Race; isPB
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
           {(race.city || race.country) && (
             <span style={st.infoPill}>
-              📍 {[race.city, race.country].filter(Boolean).join(', ')}
+              {[race.city, race.country].filter(Boolean).join(', ')}
             </span>
           )}
           {race.priority && (
             <span style={{ ...st.infoPill, ...(race.priority === 'A' ? { borderColor: 'rgba(var(--orange-ch),0.4)', color: 'var(--orange)' } : {}) }}>
-              {race.priority === 'A' ? '🎯 A Race' : race.priority === 'B' ? '⭐ B Race' : '🏃 C Race'}
+              {race.priority === 'A' ? 'A Race' : race.priority === 'B' ? 'B Race' : 'C Race'}
             </span>
           )}
           {race.medal && (
             <span style={{ ...st.infoPill, borderColor: `${medalColor}55`, color: medalColor ?? 'var(--white)' }}>
-              {race.medal === 'gold' ? '🥇' : race.medal === 'silver' ? '🥈' : race.medal === 'bronze' ? '🥉' : '🏅'}{' '}
               {race.medal === '__custom__' ? 'Custom' : race.medal.charAt(0).toUpperCase() + race.medal.slice(1)}
             </span>
           )}
@@ -968,12 +967,12 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
                     cursor: (!lat || !lng || !date) ? 'not-allowed' : 'pointer',
                   }}
                 >
-                  {weatherFetching ? '⏳ Fetching…' : '⚡ Auto-fill'}
+                  {weatherFetching ? 'Fetching…' : 'Auto-fill'}
                 </button>
               </div>
               {weatherFetchMsg && (
                 <p style={{ margin: '-8px 0 0', fontSize: '11px', color: weatherFetchMsg.ok ? 'var(--green)' : '#ff6b6b' }}>
-                  {weatherFetchMsg.ok ? '✓ ' : '✗ '}{weatherFetchMsg.msg}
+                  {weatherFetchMsg.msg}
                 </p>
               )}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
