@@ -10,6 +10,8 @@ export interface RaceState {
   wishlistRaces: Race[]
   nextRace: Race | null
   focusRaceId: string | null
+  // IDs deleted in this session — prevents realtime re-adding them before sync completes
+  _pendingDeleteIds: string[]
   addRace: (race: Race) => void
   addUpcomingRace: (race: Race) => void
   autoMoveExpiredUpcoming: () => void
@@ -59,6 +61,7 @@ export const useRaceStore = create<RaceState>()(
       wishlistRaces: [],
       nextRace: null,
       focusRaceId: null,
+      _pendingDeleteIds: [],
 
       addRace: (race) => {
         set(s => ({ races: [...s.races, race] }))
@@ -129,6 +132,7 @@ export const useRaceStore = create<RaceState>()(
             upcomingRaces: newUpcoming,
             nextRace: newNextRace,
             focusRaceId: s.focusRaceId === id ? null : s.focusRaceId,
+            _pendingDeleteIds: [...s._pendingDeleteIds, id],
           }
         })
         void syncStateToSupabase()
@@ -190,6 +194,14 @@ export const useRaceStore = create<RaceState>()(
     }),
     {
       name: 'fl2_races',  // must match existing localStorage key
+      partialize: (s) => ({
+        races: s.races,
+        upcomingRaces: s.upcomingRaces,
+        wishlistRaces: s.wishlistRaces,
+        nextRace: s.nextRace,
+        focusRaceId: s.focusRaceId,
+        // _pendingDeleteIds intentionally excluded — session-only, not persisted
+      }),
       // Migrate old SPA format: raw array stored directly, not wrapped in {state:{...}}
       onRehydrateStorage: () => (state) => {
         if (!state) return
