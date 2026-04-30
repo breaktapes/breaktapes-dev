@@ -4202,9 +4202,9 @@ function PersonalBestsWidget() {
           <div style={{ display: 'flex', gap: '14px', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' as any }}>
             {g.entries.map(({ key, r }) => {
               const isTri = g.sport === 'Triathlon'
-              const accentColor = isTri ? '#7C3AED' : '#00FF88'
-              const accentBg = isTri ? 'rgba(124,58,237,0.08)' : 'rgba(0,255,136,0.06)'
-              const accentGlow = isTri ? 'rgba(124,58,237,0.10)' : 'rgba(0,255,136,0.10)'
+              const accentColor = isTri ? 'var(--purple)' : 'var(--green)'
+              const accentBg = isTri ? 'rgba(var(--purple-ch),0.08)' : 'rgba(var(--green-ch),0.06)'
+              const accentGlow = isTri ? 'rgba(var(--purple-ch),0.10)' : 'rgba(var(--green-ch),0.10)'
               const displayKey = distBadge(r.distance) || key.toUpperCase()
               return (
                 <div
