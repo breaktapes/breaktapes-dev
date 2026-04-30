@@ -53,10 +53,10 @@
   --flatlay-tile: #F2EDE6;
   --flatlay-text: #111111;
   /* text scale */
-  --text-xs:    10px;
-  --text-sm:    12px;
-  --text-base:  14px;
-  --text-md:    16px;
+  --text-xs:    11px;
+  --text-sm:    13px;
+  --text-base:  16px;
+  --text-md:    18px;
   /* spacing */
   --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px;
   --sp-5: 20px; --sp-6: 24px; --sp-8: 32px;
