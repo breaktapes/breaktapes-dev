@@ -159,7 +159,7 @@ export default function Help() {
               </Field>
 
               {errorMsg && (
-                <p style={{ color: '#ff6b6b', fontSize: 13, margin: 0 }}>{errorMsg}</p>
+                <p style={{ color: 'var(--error)', fontSize: 13, margin: 0 }}>{errorMsg}</p>
               )}
 
               <button
@@ -198,8 +198,8 @@ function SuccessState({ onBack }: { onBack: () => void }) {
         width: 64,
         height: 64,
         borderRadius: '50%',
-        background: 'rgba(0,255,136,0.12)',
-        border: '1px solid rgba(0,255,136,0.3)',
+        background: 'rgba(var(--green-ch),0.12)',
+        border: '1px solid rgba(var(--green-ch),0.3)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',

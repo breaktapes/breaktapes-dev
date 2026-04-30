@@ -17,11 +17,11 @@ import { findSportDistMatch, distLabel as distLabelUtil, fmtDateDDMM } from '@/l
 // ─── Config (mirrors AddRaceModal) ──────────────────────────────────────────
 
 const SPORTS = [
-  { id: 'Running',   label: '🏃 Running' },
-  { id: 'Cycling',   label: '🚴 Cycling' },
-  { id: 'Swimming',  label: '🏊 Swimming' },
-  { id: 'Triathlon', label: '🏆 Triathlon' },
-  { id: 'HYROX',     label: '💪 HYROX' },
+  { id: 'Running',   label: 'Running' },
+  { id: 'Cycling',   label: 'Cycling' },
+  { id: 'Swimming',  label: 'Swimming' },
+  { id: 'Triathlon', label: 'Triathlon' },
+  { id: 'HYROX',     label: 'HYROX' },
 ]
 
 const DISTANCES_BY_SPORT: Record<string, { label: string; value: string }[]> = {
@@ -81,16 +81,16 @@ const RACE_OUTCOMES = [
 
 const RACE_PRIORITIES = [
   { value: '',  label: '— Unset —' },
-  { value: 'A', label: '🎯 A Race — Goal Event' },
-  { value: 'B', label: '⭐ B Race — Important' },
-  { value: 'C', label: '🏃 C Race — Training / Fun' },
+  { value: 'A', label: 'A Race — Goal Event' },
+  { value: 'B', label: 'B Race — Important' },
+  { value: 'C', label: 'C Race — Training / Fun' },
 ]
 
 const MEDALS = [
   { value: '',         label: 'None' },
-  { value: 'gold',     label: '🥇 Gold' },
-  { value: 'silver',   label: '🥈 Silver' },
-  { value: 'bronze',   label: '🥉 Bronze' },
+  { value: 'gold',     label: 'Gold' },
+  { value: 'silver',   label: 'Silver' },
+  { value: 'bronze',   label: 'Bronze' },
   { value: 'finisher', label: 'Finisher' },
   { value: '__custom__', label: 'Custom...' },
 ]
@@ -249,10 +249,10 @@ function ViewPanel({ race, isPB, onEdit, onDelete, onShare }: { race: Race; isPB
       {/* Key stats row */}
       <div style={st.statsRow}>
         {race.time && (
-          <div style={{ ...st.statBox, ...(isPB ? { borderColor: 'rgba(200,150,60,0.45)', background: 'rgba(200,150,60,0.07)' } : {}) }}>
-            <div style={{ ...st.statVal, color: isPB ? '#C8963C' : 'var(--orange)' }}>{race.time}</div>
-            <div style={{ ...st.statLabel, ...(isPB ? { color: 'rgba(200,150,60,0.7)' } : {}) }}>
-              {isPB ? '⭐ PERSONAL BEST' : 'FINISH TIME'}
+          <div style={{ ...st.statBox, ...(isPB ? { borderColor: 'rgba(var(--gold-ch),0.45)', background: 'rgba(var(--gold-ch),0.07)' } : {}) }}>
+            <div style={{ ...st.statVal, color: isPB ? 'var(--gold)' : 'var(--orange)' }}>{race.time}</div>
+            <div style={{ ...st.statLabel, ...(isPB ? { color: 'rgba(var(--gold-ch),0.7)' } : {}) }}>
+              {isPB ? '★ PERSONAL BEST' : 'FINISH TIME'}
             </div>
           </div>
         )}
@@ -309,17 +309,16 @@ function ViewPanel({ race, isPB, onEdit, onDelete, onShare }: { race: Race; isPB
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
           {(race.city || race.country) && (
             <span style={st.infoPill}>
-              📍 {[race.city, race.country].filter(Boolean).join(', ')}
+              {[race.city, race.country].filter(Boolean).join(', ')}
             </span>
           )}
           {race.priority && (
             <span style={{ ...st.infoPill, ...(race.priority === 'A' ? { borderColor: 'rgba(var(--orange-ch),0.4)', color: 'var(--orange)' } : {}) }}>
-              {race.priority === 'A' ? '🎯 A Race' : race.priority === 'B' ? '⭐ B Race' : '🏃 C Race'}
+              {race.priority === 'A' ? 'A Race' : race.priority === 'B' ? 'B Race' : 'C Race'}
             </span>
           )}
           {race.medal && (
             <span style={{ ...st.infoPill, borderColor: `${medalColor}55`, color: medalColor ?? 'var(--white)' }}>
-              {race.medal === 'gold' ? '🥇' : race.medal === 'silver' ? '🥈' : race.medal === 'bronze' ? '🥉' : '🏅'}{' '}
               {race.medal === '__custom__' ? 'Custom' : race.medal.charAt(0).toUpperCase() + race.medal.slice(1)}
             </span>
           )}
@@ -413,8 +412,8 @@ function ViewPanel({ race, isPB, onEdit, onDelete, onShare }: { race: Race; isPB
         <button
           style={{
             width: '100%', marginTop: '0.5rem', padding: '10px',
-            background: resubmitDone ? 'rgba(0,255,136,0.08)' : 'transparent',
-            border: `1px solid ${resubmitDone ? 'rgba(0,255,136,0.3)' : 'var(--border2)'}`,
+            background: resubmitDone ? 'rgba(var(--green-ch),0.08)' : 'transparent',
+            border: `1px solid ${resubmitDone ? 'rgba(var(--green-ch),0.3)' : 'var(--border2)'}`,
             borderRadius: 8, color: resubmitDone ? 'var(--green)' : 'var(--muted)',
             fontSize: '12px', cursor: resubmitting ? 'default' : 'pointer',
             fontFamily: 'var(--headline)', letterSpacing: '0.05em',
@@ -968,12 +967,12 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
                     cursor: (!lat || !lng || !date) ? 'not-allowed' : 'pointer',
                   }}
                 >
-                  {weatherFetching ? '⏳ Fetching…' : '⚡ Auto-fill'}
+                  {weatherFetching ? 'Fetching…' : 'Auto-fill'}
                 </button>
               </div>
               {weatherFetchMsg && (
-                <p style={{ margin: '-8px 0 0', fontSize: '11px', color: weatherFetchMsg.ok ? 'var(--green)' : '#ff6b6b' }}>
-                  {weatherFetchMsg.ok ? '✓ ' : '✗ '}{weatherFetchMsg.msg}
+                <p style={{ margin: '-8px 0 0', fontSize: '11px', color: weatherFetchMsg.ok ? 'var(--green)' : 'var(--error)' }}>
+                  {weatherFetchMsg.msg}
                 </p>
               )}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
@@ -1101,6 +1100,7 @@ const st = {
     position: 'fixed',
     inset: 0,
     background: 'rgba(0,0,0,0.75)',
+    backdropFilter: 'blur(8px)',
     zIndex: 900,
     display: 'flex',
     alignItems: 'flex-end',
@@ -1244,7 +1244,7 @@ const st = {
 
   sectionLabel: {
     margin: '0 0 8px',
-    fontSize: '10px',
+    fontSize: 'var(--text-xs)',
     fontFamily: 'var(--headline)',
     fontWeight: 700,
     letterSpacing: '0.12em',
@@ -1269,8 +1269,8 @@ const st = {
 
   deleteBtn: {
     background: 'transparent',
-    color: '#ff6b6b',
-    border: '1px solid rgba(255,107,107,0.4)',
+    color: 'var(--error)',
+    border: '1px solid rgba(var(--error-ch),0.4)',
     borderRadius: '8px',
     padding: '13px 16px',
     fontFamily: 'var(--headline)',
@@ -1282,7 +1282,7 @@ const st = {
   } as React.CSSProperties,
 
   deleteConfirmBtn: {
-    background: '#ff6b6b',
+    background: 'var(--error)',
     color: '#000',
     border: 'none',
     borderRadius: '8px',
@@ -1314,7 +1314,7 @@ const st = {
   } as React.CSSProperties,
 
   fieldLabel: {
-    fontSize: '10px',
+    fontSize: 'var(--text-xs)',
     fontFamily: 'var(--headline)',
     fontWeight: 700,
     letterSpacing: '0.08em',

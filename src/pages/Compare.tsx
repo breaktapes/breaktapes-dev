@@ -231,7 +231,7 @@ function SearchSheet({
 
   return createPortal((
     <div style={{
-      position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)',
+      position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)',
       zIndex: 1000, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
     }} onClick={onClose}>
       <div

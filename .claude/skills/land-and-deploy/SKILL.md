@@ -1,1 +1,1 @@
-/Users/akrish/DEV/.claude/worktrees/serene-dirac-211abb/.claude/skills/gstack/land-and-deploy/SKILL.md
+/Users/akrish/DEV/.claude/worktrees/suspicious-montalcini-93a1f7/.claude/skills/gstack/land-and-deploy/SKILL.md

@@ -565,7 +565,7 @@ export function Train() {
                   transition: 'all 0.15s',
                 }}
               >
-                {s === 'running' ? '🏃 Running' : '🏊 Triathlon'}
+                {s === 'running' ? 'Running' : 'Triathlon'}
               </button>
             ))}
           </div>
@@ -961,8 +961,9 @@ export function Train() {
                       borderBottom: isLast ? 'none' : '1px solid var(--border)',
                     }}>
                       <div style={{ minWidth: 0 }}>
-                        <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', color: 'var(--white)', letterSpacing: '0.04em' }}>
-                          {emoji} {label}
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', color: 'var(--white)', letterSpacing: '0.04em' }}>
+                          <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '8px', letterSpacing: '0.06em', color: 'var(--orange)', background: 'rgba(var(--orange-ch),0.12)', borderRadius: '3px', padding: '1px 4px' }}>{emoji}</span>
+                          {label}
                         </span>
                         {sub && <span style={{ fontSize: '11px', color: 'var(--muted)', marginLeft: '6px' }}>{sub}</span>}
                         <div style={{ fontSize: '10px', color: 'var(--muted)', letterSpacing: '0.04em', marginTop: '1px' }}>{unit}</div>
@@ -1007,17 +1008,17 @@ export function Train() {
                       </div>
 
                       {triMode === 'pace' ? (<>
-                        {row('🏊', 'Swim', swimDistLabel, <>{numInput(swimM,setSwimM,1,10)}{sep}{numInput(swimS,setSwimS,0,59)}</>, 'min / 100m', triResult?.swimSec ?? null)}
-                        {row('↔', 'T1', '', <>{numInput(t1M,setT1M,0,15)}{sep}{numInput(t1S,setT1S,0,59)}</>, 'mm : ss', triResult?.t1Sec ?? null)}
-                        {row('🚴', 'Bike', `${dist.bikeKm}km`, numInput(bikeKmh,setBikeKmh,10,60,52), 'km / h', triResult?.bikeSec ?? null)}
-                        {row('↔', 'T2', '', <>{numInput(t2M,setT2M,0,15)}{sep}{numInput(t2S,setT2S,0,59)}</>, 'mm : ss', triResult?.t2Sec ?? null)}
-                        {row('🏃', 'Run', `${dist.runKm}km`, <>{numInput(runM,setRunM,3,20)}{sep}{numInput(runS,setRunS,0,59)}</>, 'min / km', triResult?.runSec ?? null, true)}
+                        {row('SW', 'Swim', swimDistLabel, <>{numInput(swimM,setSwimM,1,10)}{sep}{numInput(swimS,setSwimS,0,59)}</>, 'min / 100m', triResult?.swimSec ?? null)}
+                        {row('T1', 'T1', '', <>{numInput(t1M,setT1M,0,15)}{sep}{numInput(t1S,setT1S,0,59)}</>, 'mm : ss', triResult?.t1Sec ?? null)}
+                        {row('BK', 'Bike', `${dist.bikeKm}km`, numInput(bikeKmh,setBikeKmh,10,60,52), 'km / h', triResult?.bikeSec ?? null)}
+                        {row('T2', 'T2', '', <>{numInput(t2M,setT2M,0,15)}{sep}{numInput(t2S,setT2S,0,59)}</>, 'mm : ss', triResult?.t2Sec ?? null)}
+                        {row('RN', 'Run', `${dist.runKm}km`, <>{numInput(runM,setRunM,3,20)}{sep}{numInput(runS,setRunS,0,59)}</>, 'min / km', triResult?.runSec ?? null, true)}
                       </>) : (<>
-                        {row('🏊', 'Swim', swimDistLabel, <>{numInput(swimTM,setSwimTM,0,59)}{sep}{numInput(swimTS,setSwimTS,0,59)}</>, 'mm : ss', null, false, estPace(swimPaceLabel))}
-                        {row('↔', 'T1', '', <>{numInput(t1M,setT1M,0,15)}{sep}{numInput(t1S,setT1S,0,59)}</>, 'mm : ss', triResult?.t1Sec ?? null)}
-                        {row('🚴', 'Bike', `${dist.bikeKm}km`, <>{numInput(bikeTH,setBikeTH,0,9,32)}h{' '}{numInput(bikeTM2,setBikeTM2,0,59)}</>, 'h : mm', null, false, estPace(bikeSpeedLabel))}
-                        {row('↔', 'T2', '', <>{numInput(t2M,setT2M,0,15)}{sep}{numInput(t2S,setT2S,0,59)}</>, 'mm : ss', triResult?.t2Sec ?? null)}
-                        {row('🏃', 'Run', `${dist.runKm}km`, <>{numInput(runTH,setRunTH,0,9,32)}h{' '}{numInput(runTM2,setRunTM2,0,59)}{sep}{numInput(runTS,setRunTS,0,59)}</>, 'h : mm : ss', null, true, estPace(runPaceLabel))}
+                        {row('SW', 'Swim', swimDistLabel, <>{numInput(swimTM,setSwimTM,0,59)}{sep}{numInput(swimTS,setSwimTS,0,59)}</>, 'mm : ss', null, false, estPace(swimPaceLabel))}
+                        {row('T1', 'T1', '', <>{numInput(t1M,setT1M,0,15)}{sep}{numInput(t1S,setT1S,0,59)}</>, 'mm : ss', triResult?.t1Sec ?? null)}
+                        {row('BK', 'Bike', `${dist.bikeKm}km`, <>{numInput(bikeTH,setBikeTH,0,9,32)}h{' '}{numInput(bikeTM2,setBikeTM2,0,59)}</>, 'h : mm', null, false, estPace(bikeSpeedLabel))}
+                        {row('T2', 'T2', '', <>{numInput(t2M,setT2M,0,15)}{sep}{numInput(t2S,setT2S,0,59)}</>, 'mm : ss', triResult?.t2Sec ?? null)}
+                        {row('RN', 'Run', `${dist.runKm}km`, <>{numInput(runTH,setRunTH,0,9,32)}h{' '}{numInput(runTM2,setRunTM2,0,59)}{sep}{numInput(runTS,setRunTS,0,59)}</>, 'h : mm : ss', null, true, estPace(runPaceLabel))}
                       </>)}
 
                       {/* Total row */}

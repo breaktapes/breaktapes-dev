@@ -269,7 +269,7 @@ function RaceCard({
           style={{
             background: 'var(--surface3)',
             color: 'var(--green)',
-            border: '1px solid rgba(0,255,136,0.25)',
+            border: '1px solid rgba(var(--green-ch),0.25)',
             borderRadius: '6px',
             padding: '4px 10px',
             fontFamily: 'var(--headline)',
