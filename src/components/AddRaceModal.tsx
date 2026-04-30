@@ -8,7 +8,7 @@ import { CustomDistInput } from '@/components/CustomDistInput'
 import { CityPicker } from '@/components/CityPicker'
 import { countryNameHaystack } from '@/lib/countries'
 import { normalizeName, resolveDistKm, isAlreadyInCatalog, findSportDistMatch, distLabel as distLabelUtil } from '@/lib/utils'
-import { supabaseAnon } from '@/lib/supabase'
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@/env'
 import { useAuthStore } from '@/stores/useAuthStore'
 import type { Race, Split } from '@/types'
 
@@ -378,8 +378,9 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
   const [error, setError]           = useState('')
   const [saving, setSaving]         = useState(false)
 
-  const debounceRef  = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-  const nameWrapRef  = useRef<HTMLDivElement>(null)
+  const debounceRef      = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const justSelectedRef  = useRef(false)
+  const nameWrapRef      = useRef<HTMLDivElement>(null)
   const [dropRect, setDropRect] = useState<{ top: number; left: number; width: number } | null>(null)
 
   // Final city value — kept for save payload + catalog contribution logic
@@ -401,7 +402,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
   function recalcDropRect() {
     // Show dropdown whenever query is active — even with 0 results, so the
     // "Add manually" escape hatch is always reachable.
-    const shouldShow = showSuggest && query.length >= 2 && !catalogLoading && nameWrapRef.current
+    const shouldShow = showSuggest && query.length >= 2 && nameWrapRef.current
     if (shouldShow) {
       const r   = nameWrapRef.current!.getBoundingClientRect()
       const vv  = typeof window !== 'undefined' ? window.visualViewport : null
@@ -512,10 +513,12 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
   useEffect(() => {
     clearTimeout(debounceRef.current)
     if (query.length < 2) { setSuggestions([]); setShowSuggest(false); return }
-    // While catalog is still loading show a hint so user knows search is coming
+    // User just picked a suggestion — skip the re-search that would re-open the dropdown
+    if (justSelectedRef.current) { justSelectedRef.current = false; return }
+    // While catalog is loading, show the dropdown with a loading placeholder
     if (catalogLoading) {
       setSuggestions([])
-      setShowSuggest(false)
+      setShowSuggest(true)
       return
     }
     debounceRef.current = setTimeout(() => {
@@ -527,6 +530,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
 
   function selectSuggestion(s: typeof suggestions[0]) {
     clearTimeout(debounceRef.current)
+    justSelectedRef.current = true
     const TYPE_MAP: Record<string, string> = {
       run: 'Running', running: 'Running',
       tri: 'Triathlon', triathlon: 'Triathlon',
@@ -635,18 +639,26 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
     const [year, month, day] = race.date.split('-').map(Number)
     const distKm = race.distance ? resolveDistKm(race.distance) : null
 
-    void supabaseAnon.rpc('upsert_catalog_contribution', {
-      p_name:           race.name,
-      p_city:           race.city,
-      p_country:        race.country,
-      p_sport:          race.sport,
-      p_dist_label:     race.distance,
-      p_dist_km:        distKm,
-      p_year:           year || null,
-      p_event_date:     race.date || null,
-      p_month:          month || null,
-      p_day:            day || null,
-      p_contributor_id: authUser.id,
+    // Direct fetch bypasses the supabase-js client stack entirely — same as a curl call.
+    void fetch(`${SUPABASE_URL}/rest/v1/rpc/upsert_catalog_contribution`, {
+      method: 'POST',
+      headers: {
+        'apikey':       SUPABASE_ANON_KEY,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        p_name:           race.name,
+        p_city:           race.city  || '',
+        p_country:        race.country || '',
+        p_sport:          race.sport  || '',
+        p_dist_label:     race.distance || '',
+        p_dist_km:        distKm,
+        p_year:           year || null,
+        p_event_date:     race.date || null,
+        p_month:          month || null,
+        p_day:            day || null,
+        p_contributor_id: authUser.id,
+      }),
     })
   }
 
@@ -786,12 +798,6 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
                 autoFocus
               />
             </Field>
-            {/* Loading hint — shown inline while catalog is still fetching */}
-            {catalogLoading && query.length >= 2 && (
-              <div style={{ fontSize: '11px', color: 'var(--muted)', padding: '4px 2px', letterSpacing: '0.05em' }}>
-                Searching race catalog…
-              </div>
-            )}
           </div>
 
           {/* Dropdown rendered via portal so it escapes overflow:hidden on the sheet */}
@@ -804,6 +810,11 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
               width: dropRect.width,
               zIndex: 1200,
             }}>
+              {catalogLoading && (
+                <div style={{ padding: '12px', fontSize: '12px', color: 'var(--muted)', textAlign: 'center', fontFamily: 'var(--body)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                  <span style={{ opacity: 0.6 }}>⏳</span> Searching race catalog…
+                </div>
+              )}
               {suggestions.length === 0 && !catalogLoading && (
                 <div style={{ padding: '12px', fontSize: '12px', color: 'var(--muted)', textAlign: 'center', fontFamily: 'var(--body)' }}>
                   No matches in catalog for &ldquo;{query}&rdquo;
