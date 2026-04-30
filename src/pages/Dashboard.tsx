@@ -1014,7 +1014,7 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
                 background: 'transparent',
                 border: '1.5px solid rgba(255,80,80,0.35)',
                 borderRadius: '10px',
-                color: '#ff6b6b',
+                color: 'var(--error)',
                 fontFamily: 'var(--headline)',
                 fontWeight: 700,
                 fontSize: '13px',
@@ -1029,7 +1029,7 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
             </button>
           ) : (
             <div style={{ background: 'rgba(255,80,80,0.08)', border: '1.5px solid rgba(255,80,80,0.35)', borderRadius: '10px', padding: '14px' }}>
-              <div style={{ fontSize: '13px', color: '#ff6b6b', marginBottom: '12px', fontWeight: 600 }}>
+              <div style={{ fontSize: '13px', color: 'var(--error)', marginBottom: '12px', fontWeight: 600 }}>
                 Remove {race.name ?? 'this race'} from your calendar?
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
@@ -1416,7 +1416,7 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
                     {r.name ?? 'Untitled'}
                   </span>
                   {isPB && (
-                    <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: '#C8963C', background: 'rgba(200,150,60,0.12)', border: '1px solid rgba(200,150,60,0.3)', borderRadius: '4px', padding: '2px 6px', flexShrink: 0 }}>PB</span>
+                    <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--gold)', background: 'rgba(var(--gold-ch),0.12)', border: '1px solid rgba(200,150,60,0.3)', borderRadius: '4px', padding: '2px 6px', flexShrink: 0 }}>PB</span>
                   )}
                 </div>
                 <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>
@@ -1425,7 +1425,7 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
               </div>
               {/* Right: time — monospace for alignment */}
               {r.time && (
-                <div style={{ fontFamily: 'var(--mono)', fontWeight: 700, fontSize: '15px', color: isPB ? '#C8963C' : 'var(--orange)', flexShrink: 0, letterSpacing: '0.02em' }}>
+                <div style={{ fontFamily: 'var(--mono)', fontWeight: 700, fontSize: '15px', color: isPB ? 'var(--gold)' : 'var(--orange)', flexShrink: 0, letterSpacing: '0.02em' }}>
                   {toHHMMSS(r.time)}
                 </div>
               )}
@@ -3450,7 +3450,7 @@ function WhyPRdWidget() {
         {pbRaces.slice(0, 3).map(r => (
           <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
             <span style={{ color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '60%' }}>{r.name ?? r.date}</span>
-            <span style={{ color: '#C8963C', fontFamily: 'var(--mono)', flexShrink: 0 }}>{r.time}</span>
+            <span style={{ color: 'var(--gold)', fontFamily: 'var(--mono)', flexShrink: 0 }}>{r.time}</span>
           </div>
         ))}
       </div>
@@ -4139,8 +4139,8 @@ function PersonalBestsWidget() {
     return {
       allDists: collectedDists,
       groups: [
-        ...(runFiltered.length ? [{ sport: 'Running',   dot: '#00FF88', dotGlow: 'rgba(0,255,136,0.6)',    entries: runFiltered.sort(sortFn) }] : []),
-        ...(triFiltered.length ? [{ sport: 'Triathlon', dot: '#7C3AED', dotGlow: 'rgba(124,58,237,0.6)',   entries: triFiltered.sort(sortFn) }] : []),
+        ...(runFiltered.length ? [{ sport: 'Running',   dot: 'var(--green)', dotGlow: 'rgba(var(--green-ch),0.6)',    entries: runFiltered.sort(sortFn) }] : []),
+        ...(triFiltered.length ? [{ sport: 'Triathlon', dot: 'var(--purple)', dotGlow: 'rgba(var(--purple-ch),0.6)',   entries: triFiltered.sort(sortFn) }] : []),
         ...(otherFiltered.length ? [{ sport: 'Other', dot: 'var(--orange)', dotGlow: 'rgba(232,78,27,0.6)', entries: otherFiltered.sort(sortFn) }] : []),
       ],
     }
@@ -4677,7 +4677,7 @@ function VDOTScoreWidget() {
     </WidgetCard>
   )
 
-  const vdotColor = displayPt.vdot >= 55 ? '#00FF88' : displayPt.vdot >= 45 ? 'var(--orange)' : 'var(--white)'
+  const vdotColor = displayPt.vdot >= 55 ? 'var(--green)' : displayPt.vdot >= 45 ? 'var(--orange)' : 'var(--white)'
 
   return (
     <WidgetCard id="vdot-score" style={st.glowCard}>
@@ -4919,7 +4919,7 @@ function WeatherImpactWidget() {
   )
 
   const { race, impact } = result
-  const impactColor = impact.improvementSecs > 300 ? '#ff6b6b'
+  const impactColor = impact.improvementSecs > 300 ? 'var(--error)'
     : impact.improvementSecs > 120 ? 'var(--orange)'
     : 'var(--green)'
 
@@ -5086,7 +5086,7 @@ function UpcomingDensityWidget() {
               background: w.severity === 'danger' ? 'rgba(255,60,60,0.08)' : 'rgba(var(--orange-ch),0.08)',
               border: `1px solid ${w.severity === 'danger' ? 'rgba(255,60,60,0.3)' : 'rgba(var(--orange-ch),0.3)'}`,
             }}>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px', color: w.severity === 'danger' ? '#ff6b6b' : 'var(--orange)', letterSpacing: '0.08em', marginBottom: '4px' }}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px', color: w.severity === 'danger' ? 'var(--error)' : 'var(--orange)', letterSpacing: '0.08em', marginBottom: '4px' }}>
                 {w.severity === 'danger' ? '🚨 DANGER' : '⚠ WARNING'} · {w.windowDays}d gap
               </div>
               <div style={{ fontSize: '12px', color: 'var(--white)', lineHeight: 1.4 }}>{w.message}</div>
@@ -5165,7 +5165,7 @@ function CourseRepeatsWidget() {
                 )}
                 <div style={{ fontSize: '12px', marginTop: '2px' }}>
                   {c.trend === 'improving' && <span style={{ color: 'var(--green)' }}>▲ FASTER</span>}
-                  {c.trend === 'declining' && <span style={{ color: '#ff6b6b' }}>▼ SLOWER</span>}
+                  {c.trend === 'declining' && <span style={{ color: 'var(--error)' }}>▼ SLOWER</span>}
                   {c.trend === 'flat'      && <span style={{ color: 'var(--muted)' }}>— FLAT</span>}
                 </div>
               </div>
@@ -5184,7 +5184,7 @@ function CourseRepeatsWidget() {
                         <div style={{ fontSize: '10px', color: 'var(--muted2)' }}>{fmtDateDDMM(r.date)}</div>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        {isPB && <span style={{ fontSize: '9px', color: '#FFD770', fontFamily: 'var(--headline)', fontWeight: 700 }}>PB</span>}
+                        {isPB && <span style={{ fontSize: '9px', color: 'var(--gold-a)', fontFamily: 'var(--headline)', fontWeight: 700 }}>PB</span>}
                         <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', color: isPB ? 'var(--orange)' : 'var(--white)' }}>{r.time}</span>
                       </div>
                     </div>

@@ -1304,7 +1304,7 @@ function useCommunityMedals(raceKeys: string[]): Record<string, string> {
 // ─── Medal Wall ───────────────────────────────────────────────────────────────
 
 const MEDAL_COLORS: Record<string, { bg: string; border: string; text: string; label: string }> = {
-  gold:     { bg: 'rgba(255,215,112,0.12)', border: 'rgba(255,215,112,0.35)', text: '#FFD770', label: 'GOLD' },
+  gold:     { bg: 'rgba(var(--gold-ch),0.12)', border: 'rgba(var(--gold-ch),0.35)', text: 'var(--gold-a)', label: 'GOLD' },
   silver:   { bg: 'rgba(200,212,220,0.12)', border: 'rgba(200,212,220,0.35)', text: '#C8D4DC', label: 'SILVER' },
   bronze:   { bg: 'rgba(205,140,90,0.12)',  border: 'rgba(205,140,90,0.35)',  text: '#CD8C5A', label: 'BRONZE' },
   finisher: { bg: 'rgba(var(--orange-ch),0.10)', border: 'rgba(var(--orange-ch),0.3)', text: 'var(--orange)', label: 'FINISHER' },
@@ -1692,8 +1692,8 @@ function AchievementsSection() {
 // ─── Personal Bests ───────────────────────────────────────────────────────────
 
 const SPORT_ACCENT: Record<string, { color: string; bg: string; glow: string }> = {
-  Running:   { color: '#00FF88', bg: 'rgba(0,255,136,0.06)',   glow: 'rgba(0,255,136,0.10)' },
-  Triathlon: { color: '#7C3AED', bg: 'rgba(124,58,237,0.08)',  glow: 'rgba(124,58,237,0.10)' },
+  Running:   { color: 'var(--green)', bg: 'rgba(var(--green-ch),0.06)',   glow: 'rgba(var(--green-ch),0.10)' },
+  Triathlon: { color: 'var(--purple)', bg: 'rgba(var(--purple-ch),0.08)',  glow: 'rgba(var(--purple-ch),0.10)' },
   Cycling:   { color: '#38BDF8', bg: 'rgba(56,189,248,0.07)',  glow: 'rgba(56,189,248,0.10)' },
   Swimming:  { color: '#22D3EE', bg: 'rgba(34,211,238,0.07)',  glow: 'rgba(34,211,238,0.10)' },
   HYROX:     { color: '#FB923C', bg: 'rgba(251,146,60,0.07)',  glow: 'rgba(251,146,60,0.10)' },
