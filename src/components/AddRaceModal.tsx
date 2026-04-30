@@ -350,8 +350,8 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
 
   // Core fields
   const [name, setName]             = useState('')
-  const [sport, setSport]           = useState('Running')
-  const [distance, setDistance]     = useState('42.2')
+  const [sport, setSport]           = useState('')
+  const [distance, setDistance]     = useState('')
   const [customDist, setCustomDist] = useState('')
   const [outcome, setOutcome]       = useState('Finished')
   const [time, setTime]             = useState<HMS>({ h: 0, m: 0, s: 0 })
@@ -388,13 +388,10 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
   // Reset distance preset when sport changes — but only if current distance
   // isn't valid for the new sport (prevents catalog suggestion from being overwritten).
   useEffect(() => {
+    if (!sport) { setDistance(''); setCustomDist(''); return }
     const presets = DISTANCES_BY_SPORT[sport] ?? []
     const isValid = presets.some(p => p.value === distance) || CUSTOM_DIST_VALUES.includes(distance)
-    if (!isValid) {
-      const first = presets.find(p => !CUSTOM_DIST_VALUES.includes(p.value))
-      setDistance(first?.value ?? '__custom__')
-      setCustomDist('')
-    }
+    if (!isValid) { setDistance(''); setCustomDist('') }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sport])
 
@@ -661,6 +658,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
   function validate() {
     if (!name.trim())  { setError('Race name is required'); return false }
     if (!date)         { setError('Date is required'); return false }
+    if (!sport)        { setError('Sport is required'); return false }
     if (!finalDist)    { setError('Distance is required'); return false }
     setError('')
     return true
@@ -1034,15 +1032,22 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
             </Field>
           </div>
 
-          {/* ── Race Type + Distance side by side ── */}
+          {/* ── Sport + Distance side by side ── */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-            <Field label="Race Type">
+            <Field label="Sport *">
               <select style={st.input} value={sport} onChange={e => setSport(e.target.value)}>
+                <option value="" disabled>Choose sport…</option>
                 {SPORTS.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
               </select>
             </Field>
             <Field label="Distance *">
-              <select style={st.input} value={distance} onChange={e => { setDistance(e.target.value); setCustomDist('') }}>
+              <select
+                style={{ ...st.input, opacity: sport ? 1 : 0.45, cursor: sport ? 'pointer' : 'not-allowed' }}
+                value={distance}
+                disabled={!sport}
+                onChange={e => { setDistance(e.target.value); setCustomDist('') }}
+              >
+                <option value="" disabled>{sport ? 'Choose distance…' : 'Choose sport first'}</option>
                 {distancePresets.map(p => <option key={p.label} value={p.value}>{p.label}</option>)}
               </select>
             </Field>
