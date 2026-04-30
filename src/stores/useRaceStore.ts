@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Race } from '@/types'
 import { syncStateToSupabase } from '@/lib/syncState'
+import { posthog } from '@/lib/posthog'
 
 export interface RaceState {
   races: Race[]
@@ -62,12 +63,22 @@ export const useRaceStore = create<RaceState>()(
       addRace: (race) => {
         set(s => ({ races: [...s.races, race] }))
         void syncStateToSupabase()
+        posthog.capture('race_logged', {
+          sport: race.sport,
+          distance: race.distance,
+          has_time: !!race.time,
+          has_placing: !!race.placing,
+        })
       },
 
       addUpcomingRace: (race) => {
         set(s => ({ upcomingRaces: [...s.upcomingRaces, race] }))
         get().promoteNextRace()
         void syncStateToSupabase()
+        posthog.capture('race_planned', {
+          sport: race.sport,
+          distance: race.distance,
+        })
       },
 
       autoMoveExpiredUpcoming: () => {
@@ -109,6 +120,7 @@ export const useRaceStore = create<RaceState>()(
       },
 
       deleteRace: (id) => {
+        const isPast = get().races.some(r => r.id === id)
         set(s => {
           const newUpcoming = s.upcomingRaces.filter(r => r.id !== id)
           const newNextRace = s.nextRace?.id === id ? findNextRace(newUpcoming) : s.nextRace
@@ -120,6 +132,7 @@ export const useRaceStore = create<RaceState>()(
           }
         })
         void syncStateToSupabase()
+        posthog.capture('race_deleted', { type: isPast ? 'past' : 'upcoming' })
       },
 
       setFocusRaceId: (id) => set({ focusRaceId: id }),

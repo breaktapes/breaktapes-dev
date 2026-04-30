@@ -3,6 +3,7 @@ import { useRaceCatalog } from '@/hooks/useRaceCatalog'
 import type { CatalogRace } from '@/hooks/useRaceCatalog'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { AddRaceModal } from '@/components/AddRaceModal'
+import { posthog } from '@/lib/posthog'
 import type { Race } from '@/types'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -353,6 +354,12 @@ export function Discover() {
       if (match) removeFromWishlist(match.id)
     } else {
       addToWishlist(catalogToRace(r))
+      posthog.capture('race wishlisted', {
+        race_name: r.name,
+        race_type: r.type ?? null,
+        race_country: r.country ?? null,
+        race_distance: distDisplay(r),
+      })
     }
   }
 

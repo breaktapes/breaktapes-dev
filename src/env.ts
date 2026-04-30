@@ -9,3 +9,5 @@ export const WHOOP_CLIENT_ID = import.meta.env.VITE_WHOOP_CLIENT_ID as string ??
 export const GARMIN_CLIENT_ID = import.meta.env.VITE_GARMIN_CLIENT_ID as string ?? ''
 export const STRAVA_CLIENT_ID = import.meta.env.VITE_STRAVA_CLIENT_ID as string ?? ''
 export const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string
+export const POSTHOG_KEY  = import.meta.env.VITE_POSTHOG_KEY  as string ?? ''
+export const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST as string ?? 'https://us.i.posthog.com'

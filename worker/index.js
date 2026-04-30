@@ -14,7 +14,19 @@
  *   PROFILE_KV         — view counts + og:image cache keys
  */
 
+import { PostHog } from 'posthog-node';
+
 // ── Utilities ────────────────────────────────────────────────────────────────
+
+function makePostHog(env) {
+  if (!env.POSTHOG_API_KEY) return null;
+  return new PostHog(env.POSTHOG_API_KEY, {
+    host: env.POSTHOG_HOST || 'https://us.i.posthog.com',
+    flushAt: 1,
+    flushInterval: 0,
+    enableExceptionAutocapture: true,
+  });
+}
 
 function escapeHtml(str) {
   if (str == null) return '';
@@ -1492,6 +1504,18 @@ export default {
         const row = await fetchProfile(username, env);
         if (!row) return notFoundPage(username);
         incrementViewCount(username, env);
+        const posthog = makePostHog(env);
+        if (posthog) {
+          posthog.capture({
+            distinctId: `profile_${username}`,
+            event: 'public profile viewed',
+            properties: {
+              profile_username: username,
+              referrer: request.headers.get('Referer') || null,
+            },
+          });
+          await posthog.shutdown();
+        }
         return renderProfile(row, username);
       }
 
@@ -1503,6 +1527,19 @@ export default {
         const row = await fetchProfile(username, env);
         if (!row) return notFoundPage(username);
         incrementViewCount(username, env);
+        const posthog = makePostHog(env);
+        if (posthog) {
+          posthog.capture({
+            distinctId: `profile_${username}`,
+            event: 'race card viewed',
+            properties: {
+              profile_username: username,
+              race_id: raceId,
+              referrer: request.headers.get('Referer') || null,
+            },
+          });
+          await posthog.shutdown();
+        }
         return renderRaceCard(row, username, raceId);
       }
     }
