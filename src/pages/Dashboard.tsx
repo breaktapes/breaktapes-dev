@@ -1416,7 +1416,7 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
                     {r.name ?? 'Untitled'}
                   </span>
                   {isPB && (
-                    <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--gold)', background: 'rgba(var(--gold-ch),0.12)', border: '1px solid rgba(200,150,60,0.3)', borderRadius: '4px', padding: '2px 6px', flexShrink: 0 }}>PB</span>
+                    <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--gold)', background: 'rgba(var(--gold-ch),0.12)', border: '1px solid rgba(var(--gold-ch),0.3)', borderRadius: '4px', padding: '2px 6px', flexShrink: 0 }}>PB</span>
                   )}
                 </div>
                 <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>
