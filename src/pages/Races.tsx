@@ -635,14 +635,14 @@ function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport, onDiscover
           }}
           onClick={onDiscover}
         >
-          🔍 Discover
+          Discover
         </button>
         <button
           className="passport-dossier-btn"
           onClick={() => onOpenPassport(yearFilter)}
           title="Export Race Log Passport"
         >
-          ⬛ DOSSIER
+          DOSSIER
         </button>
       </div>
 

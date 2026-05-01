@@ -3,6 +3,15 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.6.10.0] - 2026-04-30
+
+### Changed
+- **Emoji-free UI** — all decorative emoji removed app-wide and replaced with styled text codes, ASCII punctuation, and inline SVG. Affects widget icon boxes, achievement tiles, gear empty states, race stack headers, story mode labels, weather impact face icons, and scheduling conflict indicators. Eliminates rendering inconsistency across Android/iOS/Windows.
+- **Widget icon system** — all 51 dashboard widget `icon` fields changed from emoji to 2-3 char text codes (e.g., `CD` for countdown, `WX` for weather, `DNA` for Race DNA). Icons render at 9px in the widget customize modal with headline font for a consistent, branded look.
+- **Achievement display** — achievement emoji icons removed from tile headers, inline pills, and the 52px popup badge. Popup now renders a styled `ACHV` badge at 64px.
+- **BetaFeedback star rating** — `⭐` replaced with `★` (Unicode star) styled with CSS font weight and colour so it matches the app's design system.
+- **WHOOP card empty state** — `💚` heart emoji replaced with `WHOOP` text label in headline font.
+
 ## [0.6.9.1] - 2026-04-30
 
 ### Changed
