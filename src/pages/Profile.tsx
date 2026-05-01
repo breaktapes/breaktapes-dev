@@ -873,12 +873,12 @@ const ACHIEVEMENTS: Achievement[] = [
 ]
 
 const LADDER_FAMILIES: Array<{ key: string; label: string; icon: string }> = [
-  { key: '10k',      label: '10K',          icon: '🏁' },
-  { key: 'half',     label: 'HALF MARATHON',icon: '🌓' },
-  { key: 'marathon', label: 'MARATHON',     icon: '🏛️' },
-  { key: 'ultra',    label: 'ULTRA',        icon: '🏔️' },
-  { key: 'tri703',   label: '70.3',         icon: '🔱' },
-  { key: 'iron',     label: 'FULL IRONMAN', icon: '🛡️' },
+  { key: '10k',      label: '10K',          icon: '10K' },
+  { key: 'half',     label: 'HALF MARATHON',icon: 'HM' },
+  { key: 'marathon', label: 'MARATHON',     icon: 'M' },
+  { key: 'ultra',    label: 'ULTRA',        icon: 'U' },
+  { key: 'tri703',   label: '70.3',         icon: '70.3' },
+  { key: 'iron',     label: 'FULL IRONMAN', icon: 'IM' },
 ]
 
 // World Marathon Majors
@@ -1538,7 +1538,7 @@ function AchievementsSection() {
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             {recentPills.map(a => (
               <div key={a.id} style={st.achievementPill}>
-                <span>{a.icon} {a.name}</span>
+                <span>{a.name}</span>
               </div>
             ))}
           </div>
@@ -1564,7 +1564,6 @@ function AchievementsSection() {
                 onClick={() => setPopup(a)}
                 style={{ ...st.achievementTile, cursor: 'pointer', opacity: isUnlocked ? 1 : 0.5, borderColor: isUnlocked ? 'rgba(var(--green-ch),0.35)' : 'var(--border)', borderTopWidth: isUnlocked ? '2px' : '1px' }}
               >
-                <div style={{ fontSize: '18px', marginBottom: '6px' }}>{a.icon}</div>
                 <div style={st.achievementName}>{a.name}</div>
                 <div style={{ ...st.achievementStatus, background: isUnlocked ? 'rgba(var(--green-ch), 0.1)' : 'var(--surface)', color: isUnlocked ? 'var(--green)' : 'var(--muted)' }}>
                   {isUnlocked ? 'UNLOCKED' : 'LOCKED'}
@@ -1590,7 +1589,7 @@ function AchievementsSection() {
               <div key={fam.key} style={{ background: 'var(--surface2)', borderRadius: '10px', padding: '14px', border: '1px solid var(--border)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '16px' }}>{fam.icon}</span>
+                    <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--orange)', background: 'rgba(var(--orange-ch),0.12)', border: '1px solid rgba(var(--orange-ch),0.25)', borderRadius: '4px', padding: '2px 5px' }}>{fam.icon}</span>
                     <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>
                       {fam.label}
                     </span>
@@ -1644,7 +1643,9 @@ function AchievementsSection() {
             {/* Header — centered */}
             <div style={{ textAlign: 'center', marginBottom: '20px', position: 'relative' }}>
               <button onClick={() => setPopup(null)} style={{ position: 'absolute', right: 0, top: 0, background: 'none', border: 'none', color: 'var(--muted)', fontSize: '24px', cursor: 'pointer', padding: '4px', lineHeight: 1 }}>×</button>
-              <div style={{ fontSize: '52px', lineHeight: 1, marginBottom: '12px' }}>{popup.icon}</div>
+              <div style={{ width: '64px', height: '64px', margin: '0 auto 16px', background: 'rgba(var(--orange-ch),0.12)', border: '2px solid rgba(var(--orange-ch),0.4)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '11px', letterSpacing: '0.06em', color: 'var(--orange)', textAlign: 'center' }}>ACHV</span>
+              </div>
               <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)', marginBottom: '6px' }}>
                 {popup.name}
               </div>
@@ -1677,7 +1678,7 @@ function AchievementsSection() {
             ) : (
               <div style={{ background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: '10px', padding: '14px 16px', textAlign: 'center' }}>
                 <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '12px', letterSpacing: '0.1em', color: 'var(--muted)' }}>
-                  🔒 NOT YET UNLOCKED
+                  NOT YET UNLOCKED
                 </div>
               </div>
             )}
@@ -1770,7 +1771,6 @@ function PersonalBests() {
             display: 'flex', alignItems: 'center', gap: '4px',
           }}
         >
-          <span style={{ fontSize: '12px' }}>⚙</span>
           EDIT
         </button>
       </div>
