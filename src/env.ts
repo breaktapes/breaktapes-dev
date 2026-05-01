@@ -11,3 +11,4 @@ export const STRAVA_CLIENT_ID = import.meta.env.VITE_STRAVA_CLIENT_ID as string 
 export const CLERK_PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY as string
 export const POSTHOG_KEY  = import.meta.env.VITE_POSTHOG_KEY  as string ?? ''
 export const POSTHOG_HOST = import.meta.env.VITE_POSTHOG_HOST as string ?? 'https://us.i.posthog.com'
+export const APP_VERSION  = import.meta.env.VITE_APP_VERSION  as string ?? '0.6.11.0'

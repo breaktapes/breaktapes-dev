@@ -10,7 +10,7 @@ import { removeWearableToken } from '@/lib/wearableUtils'
 import { THEMES } from '@/types'
 import type { ThemeId } from '@/types'
 import { useThemeStore } from '@/stores/useThemeStore'
-import { APP_URL } from '@/env'
+import { APP_URL, APP_VERSION } from '@/env'
 import { isAdminUser } from '@/pages/Admin'
 import { posthog } from '@/lib/posthog'
 
@@ -466,21 +466,9 @@ export function Settings() {
             )}
           </div>
 
-          {/* Coming soon placeholder */}
-          <div style={{
-            background: 'var(--surface2)',
-            border: '1px solid var(--border2)',
-            borderRadius: '12px',
-            padding: '32px 24px',
-            textAlign: 'center',
-          }}>
-            <p style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', letterSpacing: '0.08em', color: 'var(--muted)', textTransform: 'uppercase', margin: 0 }}>
-              Wearable Integrations
-            </p>
-            <p style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '8px', fontFamily: 'var(--body)' }}>
-              WHOOP · Garmin · Apple Health — coming soon
-            </p>
-          </div>
+          <p style={{ margin: '4px 0 0', fontSize: '12px', color: 'var(--muted)', fontFamily: 'var(--body)' }}>
+            More integrations (WHOOP, Garmin, Apple Health) coming soon.
+          </p>
 
         </div>
       </section>
@@ -494,7 +482,7 @@ export function Settings() {
               Version
             </p>
             <p style={{ margin: '2px 0 0', fontSize: 'var(--text-sm)', color: 'var(--white)', fontFamily: 'var(--headline)', fontWeight: 700 }}>
-              v1.0.0
+              v{APP_VERSION}
             </p>
           </div>
           <a
