@@ -14,7 +14,7 @@ interface ImportResult {
   raceName: string
   date: string
   time?: string
-  source: 'ultrasignup' | 'marathonview'
+  source: 'ultrasignup' | 'marathonview' | 'athlinks'
   distance_m?: number
   country?: string
   raw?: string[]
@@ -52,13 +52,14 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
   const [step, setStep]               = useState<Step>('search')
   const [firstName, setFirstName]     = useState('')
   const [lastName, setLastName]       = useState('')
+  const [athlinksUrl, setAthlinksUrl] = useState('')
   const [searching, setSearching]     = useState(false)
   const [results, setResults]         = useState<ImportResult[]>([])
   const [selected, setSelected]       = useState<Set<number>>(new Set())
   const [importing, setImporting]     = useState(false)
   const [error, setError]             = useState('')
   const [skippedCount, setSkippedCount] = useState(0)
-  const [sourceErrors, setSourceErrors] = useState<{ ultrasignup?: boolean; marathonview?: boolean }>({})
+  const [sourceErrors, setSourceErrors] = useState<{ ultrasignup?: boolean; marathonview?: boolean; athlinks?: boolean }>({})
 
 
   useEffect(() => {
@@ -70,33 +71,44 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
     if (!firstName.trim() && !lastName.trim()) { setError('Enter at least a first or last name'); return }
     setSearching(true); setError(''); setResults([]); setSourceErrors({})
 
-    const [us, mv] = await Promise.allSettled([
-      fetch(`${HEALTH_PROXY}/import/ultrasignup`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ firstName: firstName.trim(), lastName: lastName.trim() }),
-      }).then(r => r.json()),
-      fetch(`${HEALTH_PROXY}/import/marathonview`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: `${firstName.trim()} ${lastName.trim()}`.trim() }),
-      }).then(r => r.json()),
-    ])
+    const fetches: Promise<PromiseSettledResult<{ status: string; results?: ImportResult[] }>>[] = [
+      Promise.allSettled([
+        fetch(`${HEALTH_PROXY}/import/ultrasignup`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ firstName: firstName.trim(), lastName: lastName.trim() }),
+        }).then(r => r.json()),
+      ]).then(([r]) => r),
+      Promise.allSettled([
+        fetch(`${HEALTH_PROXY}/import/marathonview`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: `${firstName.trim()} ${lastName.trim()}`.trim() }),
+        }).then(r => r.json()),
+      ]).then(([r]) => r),
+    ]
+
+    const athlinksPromise = athlinksUrl.trim()
+      ? Promise.allSettled([
+          fetch(`${HEALTH_PROXY}/import/athlinks`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ profileUrl: athlinksUrl.trim() }),
+          }).then(r => r.json()),
+        ]).then(([r]) => r)
+      : Promise.resolve({ status: 'fulfilled', value: { status: 'skipped', results: [] } } as PromiseSettledResult<{ status: string; results?: ImportResult[] }>)
+
+    const [us, mv, al] = await Promise.all([...fetches, athlinksPromise])
 
     const all: ImportResult[] = []
-    const errs: { ultrasignup?: boolean; marathonview?: boolean } = {}
+    const errs: { ultrasignup?: boolean; marathonview?: boolean; athlinks?: boolean } = {}
 
     if (us.status === 'fulfilled' && us.value.status === 'ok') {
       for (const r of (us.value.results ?? [])) {
         if (!r.raceName || r.raceName.length < 3) continue
-        all.push({
-          raceName: r.raceName,
-          date:     r.date ?? '',
-          time:     r.time || undefined,
-          source:   'ultrasignup',
-        })
+        all.push({ raceName: r.raceName, date: r.date ?? '', time: r.time || undefined, source: 'ultrasignup' })
       }
-    } else if (us.status === 'rejected' || us.value?.status === 'error') {
+    } else if (us.status === 'rejected' || (us.status === 'fulfilled' && us.value?.status === 'error')) {
       errs.ultrasignup = true
     }
 
@@ -105,8 +117,17 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
         if (!r.raceName || r.raceName.length < 3) continue
         all.push({ ...r, date: normalizeDateStr(r.date ?? ''), source: 'marathonview' })
       }
-    } else if (mv.status === 'rejected' || mv.value?.status === 'error') {
+    } else if (mv.status === 'rejected' || (mv.status === 'fulfilled' && mv.value?.status === 'error')) {
       errs.marathonview = true
+    }
+
+    if (al.status === 'fulfilled' && al.value.status === 'ok') {
+      for (const r of (al.value.results ?? [])) {
+        if (!r.raceName || r.raceName.length < 3) continue
+        all.push({ ...r, date: normalizeDateStr(r.date ?? ''), source: 'athlinks' })
+      }
+    } else if (al.status === 'rejected' || (al.status === 'fulfilled' && al.value?.status === 'error')) {
+      if (athlinksUrl.trim()) errs.athlinks = true
     }
 
     setSourceErrors(errs)
@@ -210,10 +231,27 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
                   />
                 </div>
               </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <label style={st.fieldLabel}>
+                  Athlinks Profile URL <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: 'var(--muted)' }}>(optional)</span>
+                </label>
+                <input
+                  style={st.input}
+                  placeholder="athlinks.com/athletes/12345678"
+                  value={athlinksUrl}
+                  onChange={e => setAthlinksUrl(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleSearch()}
+                  inputMode="url"
+                  autoComplete="off"
+                />
+                <p style={{ margin: 0, fontSize: '11px', color: 'var(--muted)', lineHeight: 1.4 }}>
+                  Find your ID: athlinks.com → My Profile → copy the URL
+                </p>
+              </div>
               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                 <span style={st.sourcePill}>✓ UltraSignup</span>
                 <span style={st.sourcePill}>✓ MarathonView</span>
-                <span style={st.sourcePill}>✓ Athlinks <span style={{ fontSize: '9px', color: 'var(--muted)', fontWeight: 400, letterSpacing: '0.02em', textTransform: 'none', fontFamily: 'var(--body)' }}>— pending API access</span></span>
+                <span style={{ ...st.sourcePill, opacity: athlinksUrl.trim() ? 1 : 0.45 }}>✓ Athlinks</span>
               </div>
               {error && <p style={st.errorText}>{error}</p>}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '0.75rem' }}>
@@ -233,10 +271,10 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
 
           {step === 'results' && (
             <>
-              {(sourceErrors.ultrasignup || sourceErrors.marathonview) && (
+              {(sourceErrors.ultrasignup || sourceErrors.marathonview || sourceErrors.athlinks) && (
                 <div style={{ padding: '8px 12px', background: 'rgba(var(--error-ch),0.08)', border: '1px solid rgba(var(--error-ch),0.25)', borderRadius: '8px', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
                   <p style={{ margin: 0, fontSize: '12px', color: 'var(--error)' }}>
-                    {[sourceErrors.ultrasignup && 'UltraSignup', sourceErrors.marathonview && 'MarathonView'].filter(Boolean).join(' & ')} failed to respond.
+                    {[sourceErrors.ultrasignup && 'UltraSignup', sourceErrors.marathonview && 'MarathonView', sourceErrors.athlinks && 'Athlinks'].filter(Boolean).join(' & ')} failed to respond.
                   </p>
                   <button
                     style={{ background: 'none', border: '1px solid rgba(var(--error-ch),0.4)', color: 'var(--error)', fontSize: '11px', padding: '3px 8px', borderRadius: '4px', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', flexShrink: 0 }}

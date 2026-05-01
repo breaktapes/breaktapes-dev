@@ -368,13 +368,92 @@ export default {
       }
     }
 
-    // ── Race Import: Athlinks (stubbed — key pending) ─────────────────────
+    // ── Race Import: Athlinks (public profile scrape via __NEXT_DATA__) ──────
     if (path === '/import/athlinks' && request.method === 'POST') {
-      if (!env.ATHLINKS_API_KEY) {
-        return json({ results: [], status: 'pending_api_key' }, 200, origin);
+      try {
+        const { profileUrl } = await request.json();
+        const trimmed = (profileUrl || '').trim();
+        if (!trimmed) return json({ results: [], status: 'ok' }, 200, origin);
+
+        // Accept full URLs or bare numeric IDs
+        const match = trimmed.match(/(?:athlinks\.com\/[Aa]thletes?\/|^)(\d+)/i);
+        const athleteId = match?.[1];
+        if (!athleteId) return json({ results: [], status: 'error', message: 'Could not find athlete ID in URL' }, 200, origin);
+
+        const pageUrl = `https://www.athlinks.com/athletes/${athleteId}/results`;
+        const resp = await fetch(pageUrl, {
+          headers: {
+            'Accept': 'text/html,application/xhtml+xml',
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
+            'Accept-Language': 'en-US,en;q=0.9',
+          },
+        });
+        if (!resp.ok) throw new Error(`Athlinks ${resp.status}`);
+        const html = await resp.text();
+
+        // Next.js embeds SSR data in a <script id="__NEXT_DATA__"> tag
+        const ndMatch = html.match(/<script id="__NEXT_DATA__"[^>]*>([^<]+)<\/script>/);
+        if (!ndMatch) return json({ results: [], status: 'ok', message: 'no_data' }, 200, origin);
+
+        const nextData = JSON.parse(ndMatch[1]);
+        const pp = nextData?.props?.pageProps ?? {};
+
+        // Athlinks has used several field names across versions — try all known paths
+        const rawResults = pp.athleteResults ?? pp.racerResults ?? pp.results
+          ?? pp.data?.results ?? pp.data?.racerResults ?? [];
+
+        const normDate = (s) => {
+          if (!s) return '';
+          const iso = String(s).match(/^(\d{4})-(\d{2})-(\d{2})/);
+          if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+          const mdy = String(s).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+          if (mdy) return `${mdy[3]}-${mdy[1].padStart(2,'0')}-${mdy[2].padStart(2,'0')}`;
+          return '';
+        };
+
+        const secsToHMS = (secs) => {
+          const h = Math.floor(secs / 3600);
+          const m = Math.floor((secs % 3600) / 60);
+          const s = Math.floor(secs % 60);
+          return h > 0
+            ? `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
+            : `${m}:${String(s).padStart(2,'0')}`;
+        };
+
+        const results = [];
+        for (const r of (Array.isArray(rawResults) ? rawResults : [])) {
+          const name = r.eventName ?? r.raceName ?? r.name ?? r.eventCourseName ?? r.courseName ?? '';
+          if (!name || name.length < 3) continue;
+
+          const date = normDate(r.eventDate ?? r.startDate ?? r.raceDate ?? r.date ?? '');
+
+          const rawTime = r.chipTime ?? r.clockTime ?? r.finishTime ?? r.time ?? r.netTime ?? '';
+          let time = '';
+          if (rawTime) {
+            if (typeof rawTime === 'number' && rawTime > 0) {
+              time = secsToHMS(rawTime);
+            } else if (String(rawTime).match(/^\d+:\d{2}/)) {
+              time = String(rawTime);
+            }
+          }
+
+          const rawDist = r.distance ?? r.eventDistance ?? r.distanceInMeters ?? r.courseDistance ?? 0;
+          const distance_m = typeof rawDist === 'number' && rawDist > 0 ? rawDist : 0;
+
+          results.push({
+            raceName: name,
+            date,
+            time: time || undefined,
+            source: 'athlinks',
+            distance_m,
+            country: r.eventCountry ?? r.country ?? r.location ?? '',
+          });
+        }
+
+        return json({ results, status: 'ok' }, 200, origin);
+      } catch (e) {
+        return json({ results: [], status: 'error', message: e.message }, 502, origin);
       }
-      // TODO: implement when key arrives
-      return json({ results: [], status: 'pending_api_key' }, 200, origin);
     }
 
     // ── Race Import: MarathonView ─────────────────────────────────────────
