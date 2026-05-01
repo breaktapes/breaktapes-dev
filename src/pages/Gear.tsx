@@ -338,7 +338,7 @@ function AuthGate() {
       gap: '1rem',
       padding: '4rem 1.5rem',
     }}>
-      <span style={{ fontSize: '32px', opacity: 0.4 }}>🎒</span>
+      <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '11px', letterSpacing: '0.08em', color: 'var(--muted)', opacity: 0.6 }}>GEAR</span>
       <p style={{
         margin: 0,
         fontFamily: 'var(--headline)',
@@ -699,7 +699,7 @@ export function Gear() {
                   {/* Custom items first */}
                   {customGear.map(item => (
                     <div key={item.id} style={{ ...card, display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: 'var(--surface3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0 }}>🎒</div>
+                      <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: 'var(--surface3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--muted)', flexShrink: 0 }}>GEAR</div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--orange)' }}>{item.brand}</div>
                         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', fontWeight: 600 }}>{item.name}</div>
@@ -917,7 +917,7 @@ export function Gear() {
                           <div>
                             <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>{stack.name}</div>
                             <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>
-                              {linkedRace ? `📍 ${linkedRace.name ?? 'Race'} · ${fmtDateDDMM(linkedRace.date)}` : stack.template ? `Template: ${stack.template}` : 'Custom stack'} · {stack.itemIds.length} items
+                              {linkedRace ? `${linkedRace.name ?? 'Race'} · ${fmtDateDDMM(linkedRace.date)}` : stack.template ? `Template: ${stack.template}` : 'Custom stack'} · {stack.itemIds.length} items
                             </div>
                           </div>
                           <div style={{ display: 'flex', gap: '6px' }}>

@@ -137,9 +137,12 @@ export function BetaFeedback() {
                       padding: '2px',
                       opacity: rating >= n ? 1 : 0.3,
                       transition: 'opacity 0.1s',
+                      fontFamily: 'var(--headline)',
+                      fontWeight: 900,
+                      color: rating >= n ? 'var(--orange)' : 'var(--muted)',
                     }}
                   >
-                    ⭐
+                    ★
                   </button>
                 ))}
               </div>

@@ -179,7 +179,7 @@ function ProfileColumn({ profile }: { profile: AthleteRow | 'private' | 'not_fou
   if (profile === 'private') {
     return (
       <div style={{ flex: 1, padding: '1rem', textAlign: 'center', color: 'var(--muted)', fontFamily: 'var(--body)', fontSize: '13px' }}>
-        🔒 Profile is private
+        Profile is private
       </div>
     )
   }

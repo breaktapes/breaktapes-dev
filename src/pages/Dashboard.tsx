@@ -489,7 +489,7 @@ function GreetingCard({ onCustomize }: { onCustomize: () => void }) {
             onClick={requestWeather}
             style={{ marginTop: '8px', background: 'rgba(var(--orange-ch),0.12)', border: '1px solid rgba(var(--orange-ch),0.35)', borderRadius: '8px', padding: '8px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '12px', letterSpacing: '0.06em', textTransform: 'uppercase' }}
           >
-            📍 Tap to show local weather
+            Tap to show local weather
           </button>
         ) : geoState === 'loading' ? (
           <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--muted)' }}>Getting your weather…</div>
@@ -1025,7 +1025,7 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
                 width: '100%',
               }}
             >
-              🗑 Remove Race
+              Remove Race
             </button>
           ) : (
             <div style={{ background: 'rgba(255,80,80,0.08)', border: '1.5px solid rgba(255,80,80,0.35)', borderRadius: '10px', padding: '14px' }}>
@@ -1945,7 +1945,7 @@ function PacingIQWidget() {
           <div style={st.widgetLabel}>PACING IQ</div>
           <div style={st.widgetTitle}>RACE RHYTHM</div>
         </div>
-        <span style={st.iconBox}>🧠</span>
+        <span style={st.iconBox}>IQ</span>
       </div>
 
       {!analysis ? (
@@ -3183,7 +3183,7 @@ function AdvancedRaceDNAWidget() {
           <div style={st.widgetLabel}>ADVANCED RACE DNA</div>
           <div style={st.widgetTitle}>CONDITION ANALYSIS</div>
         </div>
-        <span style={{ fontSize: '20px', flexShrink: 0 }}>🧬</span>
+        <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--muted)', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px', padding: '3px 6px', flexShrink: 0 }}>DNA</span>
       </div>
       {past.length < 2 ? (
         <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>
@@ -3282,7 +3282,7 @@ function WeatherFitWidget({ race }: { race: Race | null }) {
             {result ? result.fitLabel : 'YOUR CLIMATE PROFILE'}
           </div>
         </div>
-        <span style={{ fontSize: '20px', flexShrink: 0 }}>🌤</span>
+        <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--muted)', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px', padding: '3px 6px', flexShrink: 0 }}>WX</span>
       </div>
 
       {!result ? (
@@ -3354,7 +3354,7 @@ function RaceGapAnalysisWidget() {
           <div style={st.widgetLabel}>RACE GAP / RECOVERY</div>
           <div style={st.widgetTitle}>{gapData ? `AVG ${gapData.avgGap}d BETWEEN RACES` : 'RECOVERY ANALYSIS'}</div>
         </div>
-        <span style={{ fontSize: '20px', flexShrink: 0 }}>⏱</span>
+        <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--muted)', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px', padding: '3px 6px', flexShrink: 0 }}>GAP</span>
       </div>
       {!gapData ? (
         <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>
@@ -3605,7 +3605,7 @@ function RaceStackWidget({ race }: { race: Race | null }) {
     ]
     if (isHot)  core.push('Cap / visor', 'Sunscreen SPF50+', 'Extra electrolytes')
     if (isCold) core.push('Arm warmers', 'Gloves', 'Throwaway top for start')
-    categories.push({ label: 'RACE KIT', emoji: '👟', items: core })
+    categories.push({ label: 'RACE KIT', emoji: '', items: core })
 
     // Nutrition
     const nutrition: string[] = []
@@ -3628,13 +3628,13 @@ function RaceStackWidget({ race }: { race: Race | null }) {
     if (isTrail && !isTri) {
       const trailItems = ['Poles (check rules)', 'Mandatory kit bag', 'Buff / beanie']
       if (dist >= 42) trailItems.push('Emergency blanket', 'Whistle')
-      categories.push({ label: 'TRAIL EXTRAS', emoji: '⛰', items: trailItems })
+      categories.push({ label: 'TRAIL EXTRAS', emoji: '', items: trailItems })
     }
 
     // Day-before / travel
     const prep = ['Lay out kit tonight', 'Charge all devices', 'Check bib pickup time']
     if (nextRace.city) prep.push('Route to venue saved offline')
-    categories.push({ label: 'DAY BEFORE', emoji: '📋', items: prep })
+    categories.push({ label: 'DAY BEFORE', emoji: '', items: prep })
 
     return categories
   }, [nextRace])
@@ -3663,7 +3663,7 @@ function RaceStackWidget({ race }: { race: Race | null }) {
             {nextRace ? (nextRace.name ?? 'RACE DAY').toUpperCase() : 'ADD A RACE'}
           </div>
         </div>
-        <span style={{ fontSize: '20px', flexShrink: 0 }}>🎒</span>
+        <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--muted)', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px', padding: '3px 6px', flexShrink: 0 }}>KIT</span>
       </div>
 
       {!checklist ? (
@@ -3984,7 +3984,7 @@ function StoryModeWidget() {
           <div style={st.widgetLabel}>STORY MODE</div>
           <div style={st.widgetTitle}>{year} RECAP</div>
         </div>
-        <span style={{ fontSize: 22 }}>📖</span>
+        <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--muted)', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px', padding: '3px 6px', flexShrink: 0 }}>STY</span>
       </div>
       <div style={{ fontSize: '13px', color: 'var(--white)', lineHeight: 1.5, marginTop: 6 }}>{story.headline}</div>
       <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
@@ -4520,7 +4520,7 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
 
   if (!result) return (
     <WidgetCard id="riegel-predictor" style={st.glowCard}>
-      <div style={st.widgetLabel}>🔮 RACE PREDICTOR</div>
+      <div style={st.widgetLabel}>RACE PREDICTOR</div>
       <div style={st.widgetTitle}>RIEGEL PREDICTOR</div>
       <p style={{ fontSize: '13px', color: 'var(--muted)', margin: 0 }}>Log a race with a finish time to see predictions.</p>
     </WidgetCard>
@@ -4557,7 +4557,7 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
       <WidgetCard id="riegel-predictor" style={st.glowCard}>
         {/* data-no-widget-detail on the wrapper prevents any click inside from opening the widget detail popup */}
         <div data-no-widget-detail style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <div style={st.widgetLabel}>🔮 RACE PREDICTOR</div>
+        <div style={st.widgetLabel}>RACE PREDICTOR</div>
         <div style={st.widgetTitle}>RIEGEL PREDICTOR</div>
         <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '-4px' }}>
           Based on {race.name} · {fmtDateDDMM(race.date)}
@@ -4596,7 +4596,7 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
                 </div>
                 {matched.length > 0 && (
                   <div style={{ fontSize: '10px', color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    📅 {matched.map(r => r.name ?? 'Upcoming Race').join(' · ')}
+                    {matched.map(r => r.name ?? 'Upcoming Race').join(' · ')}
                   </div>
                 )}
               </div>
@@ -4912,7 +4912,7 @@ function WeatherImpactWidget() {
 
   if (!result) return (
     <WidgetCard id="weather-impact" style={st.glowCard}>
-      <div style={st.widgetLabel}>🌡 WEATHER IMPACT</div>
+      <div style={st.widgetLabel}>WEATHER IMPACT</div>
       <div style={st.widgetTitle}>WEATHER IMPACT</div>
       <p style={{ fontSize: '13px', color: 'var(--muted)', margin: 0 }}>Races with weather data will show adjusted performance.</p>
     </WidgetCard>
@@ -4925,7 +4925,7 @@ function WeatherImpactWidget() {
 
   return (
     <WidgetCard id="weather-impact" style={st.glowCard}>
-      <div style={st.widgetLabel}>🌡 WEATHER IMPACT</div>
+      <div style={st.widgetLabel}>WEATHER IMPACT</div>
       <div style={st.widgetTitle}>WEATHER IMPACT</div>
       <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '-4px' }}>{race.name} · {fmtDateDDMM(race.date)}</div>
 
@@ -4943,8 +4943,8 @@ function WeatherImpactWidget() {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px', background: 'var(--surface3)', borderRadius: '6px', border: `1px solid ${impactColor}33` }}>
-        <span style={{ fontSize: '20px' }}>
-          {impact.improvementSecs > 300 ? '🥵' : impact.improvementSecs > 120 ? '😓' : '😊'}
+        <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '11px', color: impactColor }}>
+          {impact.improvementSecs > 300 ? 'HOT' : impact.improvementSecs > 120 ? 'WARM' : 'OK'}
         </span>
         <div>
           <div style={{ fontSize: '12px', color: 'var(--white)', fontWeight: 500 }}>{impact.label}</div>
@@ -5065,14 +5065,14 @@ function UpcomingDensityWidget() {
 
   return (
     <WidgetCard id="upcoming-density" style={st.glowCard}>
-      <div style={st.widgetLabel}>📆 SCHEDULING</div>
+      <div style={st.widgetLabel}>SCHEDULING</div>
       <div style={st.widgetTitle}>RACE CONFLICTS</div>
 
       {upcoming.length < 2 ? (
         <p style={{ fontSize: '13px', color: 'var(--muted)', margin: 0 }}>Add 2+ upcoming races to check for scheduling conflicts.</p>
       ) : warnings.length === 0 ? (
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', background: 'rgba(var(--green-ch),0.06)', borderRadius: '8px', border: '1px solid rgba(var(--green-ch),0.2)' }}>
-          <span style={{ fontSize: '20px' }}>✅</span>
+          <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', color: 'var(--green)' }}>✓</span>
           <div>
             <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '13px', color: 'var(--green)' }}>ALL CLEAR</div>
             <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>No scheduling conflicts in {upcoming.length} upcoming races.</div>
@@ -5137,7 +5137,7 @@ function CourseRepeatsWidget() {
 
   if (!courses.length) return (
     <WidgetCard id="course-repeats" style={st.glowCard}>
-      <div style={st.widgetLabel}>🔄 REPEATS</div>
+      <div style={st.widgetLabel}>REPEATS</div>
       <div style={st.widgetTitle}>COURSE REPEATS</div>
       <p style={{ fontSize: '13px', color: 'var(--muted)', margin: 0 }}>Run the same race 3+ times to see your course repeat history.</p>
     </WidgetCard>
@@ -5145,7 +5145,7 @@ function CourseRepeatsWidget() {
 
   return (
     <WidgetCard id="course-repeats" style={st.glowCard}>
-      <div style={st.widgetLabel}>🔄 REPEATS</div>
+      <div style={st.widgetLabel}>REPEATS</div>
       <div style={st.widgetTitle}>COURSE REPEATS</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {courses.slice(0, 4).map(c => (
@@ -5274,7 +5274,7 @@ function DashCustomizeModal({ onClose }: { onClose: () => void }) {
                 {zWidgets.map((w, idx) => (
                   <div key={w.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 0', borderBottom: '1px solid var(--border)', minWidth: 0 }}>
                     {/* Icon box */}
-                    <div style={{ width: '38px', height: '38px', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0 }}>
+                    <div style={{ width: '38px', height: '38px', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--muted)', flexShrink: 0 }}>
                       {w.icon}
                     </div>
                     {/* Label + PRO badge */}

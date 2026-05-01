@@ -1201,7 +1201,7 @@ export function Train() {
           {!whoopToken ? (
             <div style={card}>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', padding: '2rem 1rem', textAlign: 'center' }}>
-                <div style={{ fontSize: '36px', opacity: 0.5 }}>💚</div>
+                <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '11px', letterSpacing: '0.08em', color: 'var(--muted)', opacity: 0.5 }}>WHOOP</div>
                 <p style={{ margin: 0, fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '15px', color: 'var(--white)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Connect WHOOP</p>
                 <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--muted)', maxWidth: '260px', lineHeight: 1.5 }}>
                   Link your WHOOP to see recovery scores, HRV, and resting heart rate trends.
