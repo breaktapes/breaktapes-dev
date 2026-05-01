@@ -17,9 +17,10 @@ import { useAthleteStore } from '@/stores/useAthleteStore'
 import { APP_URL } from '@/env'
 
 export async function syncStateToSupabase() {
-  const authUser = useAuthStore.getState().authUser
+  const { authUser, setSyncStatus } = useAuthStore.getState()
   if (!authUser) return
 
+  setSyncStatus('syncing')
   const token = getClerkToken()
 
   const { races, upcomingRaces, wishlistRaces, nextRace, focusRaceId } = useRaceStore.getState()
@@ -53,7 +54,10 @@ export async function syncStateToSupabase() {
           state_json: stateJson,
         }),
       })
-      if (res.ok) return  // success — done
+      if (res.ok) {
+        setSyncStatus('ok')
+        return
+      }
       console.warn('[syncState] Worker sync failed', res.status, await res.text().catch(() => ''))
     } catch (e) {
       console.warn('[syncState] Worker sync error', e)
@@ -73,8 +77,14 @@ export async function syncStateToSupabase() {
       },
       { onConflict: 'user_id' },
     )
-    if (writeErr) console.warn('[syncState] fallback upsert failed', writeErr)
+    if (writeErr) {
+      console.warn('[syncState] fallback upsert failed', writeErr)
+      setSyncStatus('error')
+    } else {
+      setSyncStatus('ok')
+    }
   } catch (e) {
     console.warn('[syncState] fallback unexpected error', e)
+    setSyncStatus('error')
   }
 }

@@ -63,6 +63,7 @@ export function Settings() {
   const { signOut, openUserProfile } = useClerk()
   const { user: clerkUser } = useUser()
   const authUser = useAuthStore(s => s.authUser)
+  const syncStatus = useAuthStore(s => s.syncStatus)
   const athlete = useAthleteStore(s => s.athlete)
   const updateAthlete = useAthleteStore(s => s.updateAthlete)
 
@@ -111,17 +112,38 @@ export function Settings() {
     <>
     <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       {/* Page heading */}
-      <h1 style={{
-        fontFamily: 'var(--headline)',
-        fontSize: '22px',
-        fontWeight: 900,
-        letterSpacing: '0.1em',
-        textTransform: 'uppercase',
-        color: 'var(--white)',
-        margin: 0,
-      }}>
-        Settings
-      </h1>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <h1 style={{
+          fontFamily: 'var(--headline)',
+          fontSize: '22px',
+          fontWeight: 900,
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase',
+          color: 'var(--white)',
+          margin: 0,
+        }}>
+          Settings
+        </h1>
+        {authUser && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{
+              width: '7px', height: '7px', borderRadius: '50%',
+              background: syncStatus === 'ok' ? '#00FF88'
+                : syncStatus === 'error' ? '#FF4444'
+                : syncStatus === 'syncing' ? 'var(--orange)'
+                : 'var(--muted2)',
+              boxShadow: syncStatus === 'ok' ? '0 0 6px rgba(0,255,136,0.5)'
+                : syncStatus === 'error' ? '0 0 6px rgba(255,68,68,0.5)'
+                : syncStatus === 'syncing' ? '0 0 6px rgba(var(--orange-ch),0.5)'
+                : 'none',
+              transition: 'background 0.4s, box-shadow 0.4s',
+            }} />
+            <span style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', color: 'var(--muted)', textTransform: 'uppercase' }}>
+              {syncStatus === 'ok' ? 'Synced' : syncStatus === 'error' ? 'Sync failed' : syncStatus === 'syncing' ? 'Syncing…' : 'Not synced'}
+            </span>
+          </div>
+        )}
+      </div>
 
       {/* ── Auth section ── */}
       <section>
