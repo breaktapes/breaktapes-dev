@@ -5277,16 +5277,9 @@ function DashCustomizeModal({ onClose }: { onClose: () => void }) {
                     <div style={{ width: '38px', height: '38px', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--muted)', flexShrink: 0 }}>
                       {w.icon}
                     </div>
-                    {/* Label + PRO badge */}
+                    {/* Label */}
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
-                        <span style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', fontFamily: 'var(--body)', fontWeight: 500 }}>{w.label}</span>
-                        {w.pro && (
-                          <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.08em', color: 'var(--orange)', border: '1px solid rgba(var(--orange-ch), 0.5)', borderRadius: '100px', padding: '2px 6px', flexShrink: 0 }}>
-                            PRO
-                          </span>
-                        )}
-                      </div>
+                      <span style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', fontFamily: 'var(--body)', fontWeight: 500 }}>{w.label}</span>
                     </div>
                     {/* Reorder buttons */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', flexShrink: 0 }}>
