@@ -22,7 +22,7 @@ import {
   bestVDOT, latestPBVDOT, equivalentPerformances, paceZones, vdotHistory,
   goalPaceCalc, parseTimeSecs as fParseTimeSecs, parseDistKm as fParseDistKm,
   bestWeatherImpact, distanceMilestones, secsToHMS as fSecsToHMS,
-  raceDensityWarnings, findCourseRepeats,
+  raceDensityWarnings, findCourseRepeats, personalLeagueTable,
 } from '@/lib/raceFormulas'
 import { fetchStravaActivities } from '@/lib/strava'
 import { supabase } from '@/lib/supabase'
@@ -2013,7 +2013,13 @@ function CareerMomentumWidget() {
 
 function AgeGradeWidget() {
   const athlete = useAthleteStore(selectAthlete)
+  const races   = useRaceStore(selectRaces)
   const hasProfile = !!(athlete?.dob && athlete?.gender)
+
+  const entries = useMemo(() => {
+    if (!hasProfile || !athlete) return []
+    return personalLeagueTable(races, athlete)
+  }, [races, athlete, hasProfile])
 
   return (
     <WidgetCard id="age-grade" style={st.glowCard}>
@@ -2030,8 +2036,21 @@ function AgeGradeWidget() {
           <div style={st.lockedTitle}>PROFILE NEEDED</div>
           <div style={st.lockedText}>Add your date of birth and gender in athlete profile to unlock age-grade scoring.</div>
         </div>
+      ) : entries.length === 0 ? (
+        <div style={{ fontSize: '13px', color: 'var(--muted)' }}>Log races with finish times at 5K, 10K, Half Marathon, or Marathon distances to see your age-grade score.</div>
       ) : (
-        <div style={{ fontSize: '13px', color: 'var(--muted)' }}>Age-grade analysis requires race times. Keep logging!</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px' }}>
+          {entries.slice(0, 5).map((e, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '11px', color: 'var(--muted)', minWidth: '16px' }}>#{e.rank}</div>
+              <div style={{ flex: 1, overflow: 'hidden' }}>
+                <div style={{ fontSize: '12px', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.race.name ?? e.race.distance}</div>
+                <div style={{ fontSize: '11px', color: 'var(--muted)' }}>{e.race.distance} · {e.race.time}</div>
+              </div>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', color: e.ageGrade >= 70 ? 'var(--orange)' : 'var(--white)', minWidth: '44px', textAlign: 'right' }}>{e.ageGrade.toFixed(1)}%</div>
+            </div>
+          ))}
+        </div>
       )}
     </WidgetCard>
   )
@@ -3364,7 +3383,7 @@ function RaceGapAnalysisWidget() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' }}>
           {gapData.tightCount > 0 && (
             <div style={{ padding: '8px', background: 'rgba(var(--orange-ch),0.1)', border: '1px solid rgba(var(--orange-ch),0.25)', borderRadius: '8px' }}>
-              <div style={{ fontSize: '12px', color: 'var(--orange)' }}>⚠️ {gapData.tightCount} tight stack{gapData.tightCount !== 1 ? 's' : ''} — races within 14 days</div>
+              <div style={{ fontSize: '12px', color: 'var(--orange)' }}>[!] {gapData.tightCount} tight stack{gapData.tightCount !== 1 ? 's' : ''} — races within 14 days</div>
             </div>
           )}
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '10px', letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase' }}>RECENT GAPS</div>
