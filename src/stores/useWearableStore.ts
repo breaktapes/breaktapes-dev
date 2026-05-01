@@ -43,11 +43,13 @@ interface WearableState {
   whoopToken: WearableToken | null
   garminToken: WearableToken | null
   stravaToken: WearableToken | null
+  stravaExpired: boolean
   whoopActivities: WhoopActivity[]
   whoopRecovery: WhoopRecovery[]
   garminActivities: GarminActivity[]
   appleHealthSummary: AppleHealthSummary | null
   setToken: (provider: WearableToken['provider'], token: WearableToken | null) => void
+  setStravaExpired: (expired: boolean) => void
   setWhoopActivities: (activities: WhoopActivity[]) => void
   setWhoopRecovery: (recovery: WhoopRecovery[]) => void
   setGarminActivities: (activities: GarminActivity[]) => void
@@ -61,6 +63,7 @@ export const useWearableStore = create<WearableState>()(
       whoopToken: null,
       garminToken: null,
       stravaToken: null,
+      stravaExpired: false,
       whoopActivities: [],
       whoopRecovery: [],
       garminActivities: [],
@@ -69,8 +72,10 @@ export const useWearableStore = create<WearableState>()(
       setToken: (provider, token) => {
         if (provider === 'whoop')  set({ whoopToken: token })
         if (provider === 'garmin') set({ garminToken: token })
-        if (provider === 'strava') set({ stravaToken: token })
+        if (provider === 'strava') set({ stravaToken: token, stravaExpired: false })
       },
+
+      setStravaExpired: (expired) => set({ stravaExpired: expired }),
 
       setWhoopActivities: (whoopActivities) => set({ whoopActivities }),
       setWhoopRecovery: (whoopRecovery) => set({ whoopRecovery }),
