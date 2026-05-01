@@ -5312,6 +5312,61 @@ function DashCustomizeModal({ onClose }: { onClose: () => void }) {
   ), document.body)
 }
 
+// ─── New-user onboarding ──────────────────────────────────────────────────────
+
+function NewUserOnboarding({ onLogRace, onAddUpcoming, onDiscover }: { onLogRace: () => void; onAddUpcoming: () => void; onDiscover: () => void }) {
+  const races          = useRaceStore(selectRaces)
+  const upcomingRaces  = useRaceStore(selectUpcomingRaces)
+  if (races.length > 0 || upcomingRaces.length > 0) return null
+
+  return (
+    <div style={{
+      background: 'linear-gradient(135deg, rgba(var(--orange-ch),0.08) 0%, var(--surface2) 100%)',
+      border: '1px solid rgba(var(--orange-ch),0.25)',
+      borderRadius: '16px',
+      padding: '24px 20px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '16px',
+    }}>
+      <div>
+        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '11px', letterSpacing: '0.14em', color: 'var(--orange)', textTransform: 'uppercase', marginBottom: '6px' }}>
+          GET STARTED
+        </div>
+        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '20px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', lineHeight: 1.1 }}>
+          Your race history<br />starts here
+        </div>
+        <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '8px', lineHeight: 1.5 }}>
+          Log a past race to see your PRs, medal wall, and training insights — or plan an upcoming race to get a race-day countdown and forecast.
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <button
+          onClick={onLogRace}
+          style={{ width: '100%', background: 'var(--orange)', color: '#000', border: 'none', borderRadius: '10px', padding: '14px', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer' }}
+        >
+          Log a Past Race
+        </button>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+          <button
+            onClick={onAddUpcoming}
+            style={{ background: 'var(--surface3)', color: 'var(--white)', border: '1px solid var(--border2)', borderRadius: '10px', padding: '12px', fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '12px', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer' }}
+          >
+            Plan a Race
+          </button>
+          <button
+            onClick={onDiscover}
+            style={{ background: 'var(--surface3)', color: 'var(--white)', border: '1px solid var(--border2)', borderRadius: '10px', padding: '12px', fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '12px', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer' }}
+          >
+            Discover Races
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 
 function isEnabled(widgets: ReturnType<typeof useDashStore.getState>['widgets'], id: string) {
@@ -5319,6 +5374,7 @@ function isEnabled(widgets: ReturnType<typeof useDashStore.getState>['widgets'],
 }
 
 export function Dashboard() {
+  const navigate = useNavigate()
   const [showCustomize,     setShowCustomize]     = useState(false)
   const [showAddRace,       setShowAddRace]       = useState(false)
   const [addRaceMode,       setAddRaceMode]       = useState<'past' | 'upcoming'>('past')
@@ -5390,6 +5446,13 @@ export function Dashboard() {
         onAddRace={openAddRace}
         onEditRace={(race) => { setEditRaceMode('view'); setEditRace(race) }}
         onComplete={(race) => { dismissExpiredRace(race.id); setEditRaceMode('edit'); setEditRace(race) }}
+      />
+
+      {/* First-time user onboarding — shown only when no races and no upcoming races */}
+      <NewUserOnboarding
+        onLogRace={openAddRace}
+        onAddUpcoming={openAddUpcomingRace}
+        onDiscover={() => navigate('/discover')}
       />
 
       {/* Expired upcoming race prompts */}

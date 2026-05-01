@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Component, lazy, Suspense, useEffect } from 'react'
 import type { ReactNode } from 'react'
@@ -75,6 +75,26 @@ class RootErrorBoundary extends Component<{ children: ReactNode }, { error: Erro
   }
 }
 
+function NotFound() {
+  const navigate = useNavigate()
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'var(--black)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '24px', padding: '2rem', textAlign: 'center' }}>
+      <span style={{ fontFamily: 'var(--headline)', fontSize: '13px', fontWeight: 900, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--muted)' }}>BREAKTAPES</span>
+      <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'clamp(64px, 16vw, 96px)', letterSpacing: '0.04em', color: 'var(--orange)', lineHeight: 1 }}>404</div>
+      <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'clamp(20px, 5vw, 28px)', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--white)' }}>Page not found</div>
+      <p style={{ color: 'var(--muted)', fontSize: '14px', maxWidth: '320px', lineHeight: 1.5, margin: 0 }}>
+        The page you're looking for doesn't exist or has moved.
+      </p>
+      <button
+        onClick={() => navigate('/')}
+        style={{ background: 'var(--orange)', color: '#000', border: 'none', borderRadius: '8px', padding: '12px 28px', fontFamily: 'var(--headline)', fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer', fontSize: '14px' }}
+      >
+        Go Home
+      </button>
+    </div>
+  )
+}
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: { retry: 1, refetchOnWindowFocus: false },
@@ -113,7 +133,7 @@ function AnimatedRoutes() {
           <Route path="/history" element={<Navigate to="/races" replace />} />
           <Route path="/map"     element={<Navigate to="/races" replace />} />
           {/* Catch-all */}
-          <Route path="*"        element={<Navigate to="/" replace />} />
+          <Route path="*"        element={<NotFound />} />
         </Routes>
       </Suspense>
     </div>
