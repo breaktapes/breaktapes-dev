@@ -1,5 +1,33 @@
-import React, { createContext, useContext, useCallback, useEffect, useRef, useState } from 'react'
+import React, { Component, createContext, useContext, useCallback, useEffect, useRef, useState } from 'react'
 import type { WidgetDynamicContext } from '@/lib/widgetContent'
+
+class WidgetBoundary extends Component<
+  { id: string; children: React.ReactNode },
+  { error: Error | null }
+> {
+  state = { error: null as Error | null }
+  static getDerivedStateFromError(error: Error) { return { error } }
+  componentDidCatch(error: Error, info: React.ErrorInfo) {
+    console.error(`[Widget:${this.props.id}]`, error, info.componentStack)
+  }
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)' }}>Widget error</div>
+          <div style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: 1.4, wordBreak: 'break-word' }}>{this.state.error.message}</div>
+          <button
+            onClick={() => this.setState({ error: null })}
+            style={{ alignSelf: 'flex-start', background: 'none', border: '1px solid var(--border2)', color: 'var(--muted)', borderRadius: '6px', padding: '5px 12px', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px', letterSpacing: '0.08em', cursor: 'pointer' }}
+          >
+            RETRY
+          </button>
+        </div>
+      )
+    }
+    return this.props.children
+  }
+}
 
 export interface WidgetCardActions {
   openAddRace?: () => void
@@ -110,7 +138,9 @@ export function WidgetCard({
       onKeyDown={ctx ? handleKey : undefined}
       data-widget-id={id}
     >
-      {children}
+      <WidgetBoundary id={id}>
+        {children}
+      </WidgetBoundary>
       {showHint && (
         <span
           aria-hidden="true"

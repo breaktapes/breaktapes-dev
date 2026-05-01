@@ -49,6 +49,7 @@ export async function fetchStravaActivities(limit = 100): Promise<StravaActivity
         console.error('[strava] refresh failed', res.status, await res.text().catch(() => ''))
         if (res.status === 400 || res.status === 401) {
           useWearableStore.getState().clearToken('strava')
+          useWearableStore.getState().setStravaExpired(true)
         }
         return []
       }
@@ -88,6 +89,7 @@ export async function fetchStravaActivities(limit = 100): Promise<StravaActivity
       console.error('[strava] activities fetch failed', res.status, await res.text().catch(() => ''))
       if (res.status === 401) {
         useWearableStore.getState().clearToken('strava')
+        useWearableStore.getState().setStravaExpired(true)
       }
       break
     }

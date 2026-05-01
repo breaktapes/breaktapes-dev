@@ -24,7 +24,7 @@ import {
   bestWeatherImpact, distanceMilestones, secsToHMS as fSecsToHMS,
   raceDensityWarnings, findCourseRepeats, personalLeagueTable,
 } from '@/lib/raceFormulas'
-import { fetchStravaActivities } from '@/lib/strava'
+import { fetchStravaActivities, startStravaOAuth } from '@/lib/strava'
 import { supabase } from '@/lib/supabase'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -1671,8 +1671,9 @@ function RecoveryIntelWidget() {
 // ─── Training Correlation Widget ─────────────────────────────────────────────
 
 function TrainingCorrelWidget() {
-  const stravaToken = useWearableStore(s => s.stravaToken)
-  const races       = useRaceStore(selectRaces)
+  const stravaToken   = useWearableStore(s => s.stravaToken)
+  const stravaExpired = useWearableStore(s => s.stravaExpired)
+  const races         = useRaceStore(selectRaces)
   const [activities, setActivities] = useState<Awaited<ReturnType<typeof fetchStravaActivities>>>([])
 
   useEffect(() => {
@@ -1685,9 +1686,23 @@ function TrainingCorrelWidget() {
       <WidgetCard id="training-correl" style={st.glowCard}>
         <div style={st.widgetLabel}>TRAINING CORRELATION</div>
         <div style={st.widgetTitle}>LOAD VS RESULT</div>
-        <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.6, marginTop: '6px' }}>
-          Connect Strava and build a few matched race windows to see how load tracks with outcomes.
-        </div>
+        {stravaExpired ? (
+          <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5 }}>
+              Strava connection expired. Reconnect to restore training data.
+            </div>
+            <button
+              onClick={startStravaOAuth}
+              style={{ alignSelf: 'flex-start', background: 'var(--orange)', color: '#000', border: 'none', borderRadius: '8px', padding: '8px 16px', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '12px', letterSpacing: '0.08em', cursor: 'pointer' }}
+            >
+              RECONNECT STRAVA
+            </button>
+          </div>
+        ) : (
+          <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.6, marginTop: '6px' }}>
+            Connect Strava and build a few matched race windows to see how load tracks with outcomes.
+          </div>
+        )}
       </WidgetCard>
     )
   }
@@ -2220,10 +2235,11 @@ function stravaIcon(type: string): string {
 }
 
 function ActivityPreviewWidget() {
-  const stravaToken = useWearableStore(s => s.stravaToken)
-  const garminToken = useWearableStore(s => s.garminToken)
-  const whoopToken  = useWearableStore(s => s.whoopToken)
-  const whoopActs   = useWearableStore(s => s.whoopActivities)
+  const stravaToken   = useWearableStore(s => s.stravaToken)
+  const stravaExpired = useWearableStore(s => s.stravaExpired)
+  const garminToken   = useWearableStore(s => s.garminToken)
+  const whoopToken    = useWearableStore(s => s.whoopToken)
+  const whoopActs     = useWearableStore(s => s.whoopActivities)
 
   const [stravaActs, setStravaActs] = useState<Awaited<ReturnType<typeof fetchStravaActivities>>>([])
 
@@ -2238,7 +2254,19 @@ function ActivityPreviewWidget() {
         <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '8px' }}>
           Activity Feed
         </div>
-        <div style={{ fontSize: '12px', color: 'var(--muted)' }}>Connect Strava, Garmin, or WHOOP to see recent training.</div>
+        {stravaExpired ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ fontSize: '12px', color: 'var(--muted)' }}>Strava connection expired.</div>
+            <button
+              onClick={startStravaOAuth}
+              style={{ alignSelf: 'flex-start', background: 'var(--orange)', color: '#000', border: 'none', borderRadius: '8px', padding: '6px 14px', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '11px', letterSpacing: '0.08em', cursor: 'pointer' }}
+            >
+              RECONNECT STRAVA
+            </button>
+          </div>
+        ) : (
+          <div style={{ fontSize: '12px', color: 'var(--muted)' }}>Connect Strava, Garmin, or WHOOP to see recent training.</div>
+        )}
       </WidgetCard>
     )
   }
