@@ -58,6 +58,7 @@ const DISTANCES_BY_SPORT: Record<string, { label: string; value: string }[]> = {
     { label: 'Sprint',   value: '25.75' },
     { label: 'Olympic',  value: '51.5' },
     { label: '70.3',     value: '113' },
+    { label: 'PTO T100', value: '112' },
     { label: 'IRONMAN',  value: '226' },
     { label: 'Custom...',          value: '__custom__' },
   ],

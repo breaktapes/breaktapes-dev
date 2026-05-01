@@ -486,7 +486,9 @@ export function Settings() {
             </p>
           </div>
           <a
-            href="#"
+            href="https://breaktapes.com"
+            target="_blank"
+            rel="noopener noreferrer"
             style={{
               ...btnGhost,
               textDecoration: 'none',
@@ -494,7 +496,7 @@ export function Settings() {
               fontSize: 'var(--text-xs)',
             }}
           >
-            GitHub
+            breaktapes.com
           </a>
         </div>
 
