@@ -541,6 +541,73 @@ export default {
       }
     }
 
+    // ── RunSignup race results search ─────────────────────────────────────
+    if (path === '/import/runsignup' && request.method === 'POST') {
+      const distinctId = request.headers.get('X-POSTHOG-DISTINCT-ID') || 'anon';
+      const posthog = makePostHog(env);
+      try {
+        const body = await request.json().catch(() => ({}));
+        const firstName = (body.firstName || '').trim();
+        const lastName  = (body.lastName  || '').trim();
+        if (!firstName || !lastName) {
+          return json({ results: [], status: 'error', message: 'firstName and lastName required' }, 400, origin);
+        }
+
+        // RunSignup requires race_id for result lookup, but we can search for a participant
+        // across races using their public participant search API.
+        const searchUrl = `https://runsignup.com/Rest/race/results/search-participants?format=json&tmp=1&search_word=${encodeURIComponent(firstName + ' ' + lastName)}&results_per_page=50`;
+        const searchRes = await fetch(searchUrl, { headers: { 'Accept': 'application/json' } });
+        if (!searchRes.ok) {
+          return json({ results: [], status: 'error', message: `RunSignup returned ${searchRes.status}` }, 502, origin);
+        }
+        const data = await searchRes.json().catch(() => null);
+
+        // Try multiple response shapes
+        const participants = data?.participants ?? data?.race_results ?? data?.results ?? [];
+        const results = [];
+        for (const p of Array.isArray(participants) ? participants : []) {
+          // Each participant may have multiple race results
+          const entries = Array.isArray(p.results) ? p.results : [p];
+          for (const e of entries) {
+            const raceName = e.race_name || e.event_name || p.race_name || '';
+            const dateRaw  = e.start_time || e.race_date || p.start_time || '';
+            const timeRaw  = e.chip_time  || e.clock_time || e.finish_time || '';
+            if (!raceName) continue;
+            // Normalize date
+            let date = '';
+            if (dateRaw) {
+              const d = new Date(dateRaw);
+              if (!isNaN(d.getTime())) date = d.toISOString().slice(0, 10);
+            }
+            // Normalize time HH:MM:SS
+            let time = '';
+            if (timeRaw) {
+              const m = String(timeRaw).match(/(\d+):(\d{2}):(\d{2})/);
+              if (m) time = `${m[1]}:${m[2]}:${m[3]}`;
+            }
+            const distM = e.distance_meters || e.distance_m || null;
+            results.push({ raceName, date, time, distance_m: distM, source: 'runsignup' });
+          }
+        }
+
+        if (posthog) {
+          posthog.capture({
+            distinctId,
+            event: 'race import searched',
+            properties: { provider: 'runsignup', result_count: results.length },
+          });
+          await posthog.shutdown();
+        }
+        return json({ results, status: 'ok' }, 200, origin);
+      } catch (e) {
+        if (posthog) {
+          posthog.captureException(e, distinctId);
+          await posthog.shutdown();
+        }
+        return json({ results: [], status: 'error', message: e.message }, 502, origin);
+      }
+    }
+
     // ── OW API proxy (GET only, legacy) ───────────────────────────────────
     if (request.method !== 'GET') {
       return json({ error: 'Method not allowed' }, 405, origin);

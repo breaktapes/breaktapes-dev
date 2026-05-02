@@ -814,7 +814,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
             }}>
               {catalogLoading && (
                 <div style={{ padding: '12px', fontSize: '12px', color: 'var(--muted)', textAlign: 'center', fontFamily: 'var(--body)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-                  <span style={{ opacity: 0.6 }}>⏳</span> Searching race catalog…
+                  <span style={{ opacity: 0.6, fontFamily: 'var(--mono, var(--body))', fontSize: '10px', letterSpacing: '0.08em' }}>...</span> Searching race catalog…
                 </div>
               )}
               {suggestions.length === 0 && !catalogLoading && (

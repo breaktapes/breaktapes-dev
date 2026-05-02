@@ -14,7 +14,7 @@ interface ImportResult {
   raceName: string
   date: string
   time?: string
-  source: 'ultrasignup' | 'marathonview' | 'athlinks'
+  source: 'ultrasignup' | 'marathonview' | 'athlinks' | 'runsignup'
   distance_m?: number
   country?: string
   raw?: string[]
@@ -59,7 +59,7 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
   const [importing, setImporting]     = useState(false)
   const [error, setError]             = useState('')
   const [skippedCount, setSkippedCount] = useState(0)
-  const [sourceErrors, setSourceErrors] = useState<{ ultrasignup?: boolean; marathonview?: boolean; athlinks?: boolean }>({})
+  const [sourceErrors, setSourceErrors] = useState<{ ultrasignup?: boolean; marathonview?: boolean; athlinks?: boolean; runsignup?: boolean }>({})
 
 
   useEffect(() => {
@@ -71,37 +71,32 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
     if (!firstName.trim() && !lastName.trim()) { setError('Enter at least a first or last name'); return }
     setSearching(true); setError(''); setResults([]); setSourceErrors({})
 
-    const fetches: Promise<PromiseSettledResult<{ status: string; results?: ImportResult[] }>>[] = [
-      Promise.allSettled([
-        fetch(`${HEALTH_PROXY}/import/ultrasignup`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ firstName: firstName.trim(), lastName: lastName.trim() }),
-        }).then(r => r.json()),
-      ]).then(([r]) => r),
-      Promise.allSettled([
-        fetch(`${HEALTH_PROXY}/import/marathonview`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: `${firstName.trim()} ${lastName.trim()}`.trim() }),
-        }).then(r => r.json()),
-      ]).then(([r]) => r),
-    ]
+    const settle = <T,>(p: Promise<T>): Promise<PromiseSettledResult<T>> =>
+      Promise.allSettled([p]).then(([r]) => r)
 
-    const athlinksPromise = athlinksUrl.trim()
-      ? Promise.allSettled([
-          fetch(`${HEALTH_PROXY}/import/athlinks`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+    const [us, mv, al, rs] = await Promise.all([
+      settle(fetch(`${HEALTH_PROXY}/import/ultrasignup`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ firstName: firstName.trim(), lastName: lastName.trim() }),
+      }).then(r => r.json())),
+      settle(fetch(`${HEALTH_PROXY}/import/marathonview`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: `${firstName.trim()} ${lastName.trim()}`.trim() }),
+      }).then(r => r.json())),
+      athlinksUrl.trim()
+        ? settle(fetch(`${HEALTH_PROXY}/import/athlinks`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ profileUrl: athlinksUrl.trim() }),
-          }).then(r => r.json()),
-        ]).then(([r]) => r)
-      : Promise.resolve({ status: 'fulfilled', value: { status: 'skipped', results: [] } } as PromiseSettledResult<{ status: string; results?: ImportResult[] }>)
-
-    const [us, mv, al] = await Promise.all([...fetches, athlinksPromise])
+          }).then(r => r.json()))
+        : Promise.resolve({ status: 'fulfilled', value: { status: 'skipped', results: [] } } as PromiseSettledResult<{ status: string; results?: ImportResult[] }>),
+      settle(fetch(`${HEALTH_PROXY}/import/runsignup`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ firstName: firstName.trim(), lastName: lastName.trim() }),
+      }).then(r => r.json())),
+    ])
 
     const all: ImportResult[] = []
-    const errs: { ultrasignup?: boolean; marathonview?: boolean; athlinks?: boolean } = {}
+    const errs: { ultrasignup?: boolean; marathonview?: boolean; athlinks?: boolean; runsignup?: boolean } = {}
 
     if (us.status === 'fulfilled' && us.value.status === 'ok') {
       for (const r of (us.value.results ?? [])) {
@@ -128,6 +123,15 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
       }
     } else if (al.status === 'rejected' || (al.status === 'fulfilled' && al.value?.status === 'error')) {
       if (athlinksUrl.trim()) errs.athlinks = true
+    }
+
+    if (rs.status === 'fulfilled' && rs.value.status === 'ok') {
+      for (const r of (rs.value.results ?? [])) {
+        if (!r.raceName || r.raceName.length < 3) continue
+        all.push({ ...r, date: normalizeDateStr(r.date ?? ''), source: 'runsignup' })
+      }
+    } else if (rs.status === 'rejected' || (rs.status === 'fulfilled' && rs.value?.status === 'error')) {
+      errs.runsignup = true
     }
 
     setSourceErrors(errs)
@@ -208,7 +212,7 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
         <div style={st.body}>
           {step === 'search' && (
             <>
-              <p style={st.hint}>Search UltraSignup and MarathonView for races you've run.</p>
+              <p style={st.hint}>Search UltraSignup, MarathonView, and RunSignup for races you've run.</p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <label style={st.fieldLabel}>First Name</label>
@@ -251,6 +255,7 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
               <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                 <span style={st.sourcePill}>✓ UltraSignup</span>
                 <span style={st.sourcePill}>✓ MarathonView</span>
+                <span style={st.sourcePill}>✓ RunSignup</span>
                 <span style={{ ...st.sourcePill, opacity: athlinksUrl.trim() ? 1 : 0.45 }}>✓ Athlinks</span>
               </div>
               {error && <p style={st.errorText}>{error}</p>}
@@ -271,10 +276,10 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
 
           {step === 'results' && (
             <>
-              {(sourceErrors.ultrasignup || sourceErrors.marathonview || sourceErrors.athlinks) && (
+              {(sourceErrors.ultrasignup || sourceErrors.marathonview || sourceErrors.athlinks || sourceErrors.runsignup) && (
                 <div style={{ padding: '8px 12px', background: 'rgba(var(--error-ch),0.08)', border: '1px solid rgba(var(--error-ch),0.25)', borderRadius: '8px', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
                   <p style={{ margin: 0, fontSize: '12px', color: 'var(--error)' }}>
-                    {[sourceErrors.ultrasignup && 'UltraSignup', sourceErrors.marathonview && 'MarathonView', sourceErrors.athlinks && 'Athlinks'].filter(Boolean).join(' & ')} failed to respond.
+                    {[sourceErrors.ultrasignup && 'UltraSignup', sourceErrors.marathonview && 'MarathonView', sourceErrors.runsignup && 'RunSignup', sourceErrors.athlinks && 'Athlinks'].filter(Boolean).join(' & ')} failed to respond.
                   </p>
                   <button
                     style={{ background: 'none', border: '1px solid rgba(var(--error-ch),0.4)', color: 'var(--error)', fontSize: '11px', padding: '3px 8px', borderRadius: '4px', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', flexShrink: 0 }}
