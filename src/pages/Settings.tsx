@@ -5,12 +5,13 @@ import { useAuthStore } from '@/stores/useAuthStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { useWearableStore } from '@/stores/useWearableStore'
 import { syncStateToSupabase } from '@/lib/syncState'
+import { getClerkToken } from '@/lib/supabase'
 import { startStravaOAuth } from '@/lib/strava'
 import { removeWearableToken } from '@/lib/wearableUtils'
 import { THEMES } from '@/types'
 import type { ThemeId } from '@/types'
 import { useThemeStore } from '@/stores/useThemeStore'
-import { APP_URL, APP_VERSION } from '@/env'
+import { APP_URL, APP_VERSION, IS_STAGING } from '@/env'
 import { isAdminUser } from '@/pages/Admin'
 import { posthog } from '@/lib/posthog'
 
@@ -70,8 +71,27 @@ export function Settings() {
   const stravaToken = useWearableStore(s => s.stravaToken)
   const clearToken  = useWearableStore(s => s.clearToken)
 
+  const proAccessGranted = useAuthStore(s => s.proAccessGranted)
+  const [stripeLoading, setStripeLoading] = useState(false)
   const [accountExpanded, setAccountExpanded] = useState(false)
   const [copyToast, setCopyToast] = useState(false)
+
+  // Handle Stripe redirect back to /settings?stripe=success|cancel
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('stripe') === 'success') {
+      window.history.replaceState({}, '', '/settings')
+      // Re-fetch pro status after successful checkout
+      const token = getClerkToken()
+      if (token) {
+        void fetch(`${APP_URL}/api/stripe/status`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }).then(r => r.json()).then((data: { pro?: boolean }) => {
+          useAuthStore.getState().setProAccess(data.pro === true)
+        }).catch(() => {})
+      }
+    }
+  }, [])
   function showCopyToast() { setCopyToast(true); setTimeout(() => setCopyToast(false), 2500) }
 
   const activeTheme = useThemeStore(s => s.theme)
@@ -95,6 +115,25 @@ export function Settings() {
     // immediately regardless of any debounce in the store.
     await syncStateToSupabase()
     posthog.capture('public profile toggled', { enabled: val })
+  }
+
+  async function handleGoProClick() {
+    if (!authUser) return
+    setStripeLoading(true)
+    try {
+      const token = getClerkToken()
+      const res = await fetch(`${APP_URL}/api/stripe/checkout`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      })
+      const data = await res.json()
+      if (data.url) window.location.href = data.url
+      else alert(data.error ?? 'Could not create checkout session')
+    } catch (e) {
+      console.error('[stripe] checkout error', e)
+    } finally {
+      setStripeLoading(false)
+    }
   }
 
   function applyTheme(themeId: ThemeId) {
@@ -472,6 +511,43 @@ export function Settings() {
 
         </div>
       </section>
+
+      {/* ── Pro subscription section ── */}
+      {!IS_STAGING && (
+        <section>
+          <p style={sectionLabel}>Subscription</p>
+          <div style={{ ...card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+            <div>
+              <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: proAccessGranted ? '#00FF88' : 'var(--white)', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                {proAccessGranted ? 'PRO — Active' : 'Breaktapes Free'}
+              </p>
+              <p style={{ margin: '4px 0 0', fontSize: '12px', color: 'var(--muted)', fontFamily: 'var(--body)', lineHeight: 1.4 }}>
+                {proAccessGranted
+                  ? 'All pro widgets and themes unlocked.'
+                  : 'Unlock all widgets, themes, and future pro features.'}
+              </p>
+            </div>
+            {proAccessGranted ? (
+              <a
+                href="https://billing.stripe.com/p/login/test_manage"
+                target="_blank" rel="noopener noreferrer"
+                style={{ ...btnGhost, fontSize: '11px', padding: '6px 14px', whiteSpace: 'nowrap', textDecoration: 'none' }}
+              >
+                Manage
+              </a>
+            ) : (
+              <button
+                style={{ ...btnMain, fontSize: '12px', padding: '8px 16px', whiteSpace: 'nowrap', opacity: stripeLoading ? 0.7 : 1 }}
+                onClick={handleGoProClick}
+                disabled={stripeLoading}
+                type="button"
+              >
+                {stripeLoading ? '…' : 'GO PRO'}
+              </button>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* ── About section ── */}
       <section>

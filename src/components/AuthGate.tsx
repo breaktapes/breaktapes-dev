@@ -5,7 +5,7 @@ import { useAuthStore } from '@/stores/useAuthStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { setClerkToken } from '@/lib/supabase'
 import { syncStateToSupabase } from '@/lib/syncState'
-import { IS_STAGING } from '@/env'
+import { IS_STAGING, APP_URL } from '@/env'
 import { posthog } from '@/lib/posthog'
 
 type AuthView = 'signin' | 'signup'
@@ -67,7 +67,17 @@ function useClerkSync() {
           id: user.id,
           email: user.primaryEmailAddress?.emailAddress ?? null,
         })
-        setProAccess(IS_STAGING)
+        // On staging, grant pro to all users. On prod, check Stripe subscription.
+        if (IS_STAGING) {
+          setProAccess(true)
+        } else {
+          // Fetch real pro status from Worker (reads Supabase pro_access column)
+          void fetch(`${APP_URL}/api/stripe/status`, {
+            headers: { Authorization: `Bearer ${t}` },
+          }).then(r => r.json()).then((data: { pro?: boolean }) => {
+            setProAccess(data.pro === true)
+          }).catch(() => {/* network error — leave proAccess as false */})
+        }
         posthog.identify(user.id, {
           email: user.primaryEmailAddress?.emailAddress ?? undefined,
           username: user.username ?? undefined,

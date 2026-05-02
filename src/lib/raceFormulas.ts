@@ -461,14 +461,26 @@ export function findPriorResult(upcoming: Race, allRaces: Race[]): Race | null {
 // ─── Personal League Table ────────────────────────────────────────────────────
 
 const AGE_GRADE_STANDARDS: Record<string, Record<string, number>> = {
-  M: { '5K': 780, '10K': 1628, 'Half Marathon': 3600, Marathon: 7377 },
-  F: { '5K': 891, '10K': 1856, 'Half Marathon': 4104, Marathon: 8417 },
+  M: {
+    '5K': 780, '10K': 1628, '15K': 2490, '10 Mile': 2620,
+    '25K': 4425, '30K': 5370,
+    'Half Marathon': 3600, 'Marathon': 7377,
+  },
+  F: {
+    '5K': 891, '10K': 1856, '15K': 2839, '10 Mile': 2990,
+    '25K': 5052, '30K': 6132,
+    'Half Marathon': 4104, 'Marathon': 8417,
+  },
 }
 
 function distLabel(distKm: number): string | null {
-  if (distKm >= 4.9 && distKm <= 5.1) return '5K'
-  if (distKm >= 9.9 && distKm <= 10.1) return '10K'
+  if (distKm >= 4.9  && distKm <= 5.1)  return '5K'
+  if (distKm >= 9.9  && distKm <= 10.1) return '10K'
+  if (distKm >= 14.9 && distKm <= 15.1) return '15K'
+  if (distKm >= 16.0 && distKm <= 16.2) return '10 Mile'
   if (distKm >= 21.0 && distKm <= 21.2) return 'Half Marathon'
+  if (distKm >= 24.9 && distKm <= 25.1) return '25K'
+  if (distKm >= 29.9 && distKm <= 30.1) return '30K'
   if (distKm >= 42.0 && distKm <= 42.4) return 'Marathon'
   return null
 }
