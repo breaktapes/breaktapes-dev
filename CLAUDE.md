@@ -4,10 +4,8 @@
 
 | Task | Command |
 |------|---------|
-| Local dev server | `npm run dev` (Vite, http://localhost:5173) |
-| Legacy tests | `npm test` (Jest, SPA snapshot) |
-| React component tests | `npm run test:react` (vitest) |
-| Both test suites | `npm test && npm run test:react` |
+| Local dev server | `npm run dev -- --port 3000` (Vite, port 3000 — required for preview tool) |
+| Tests | `npm test` (vitest, 475 tests) |
 | Build for deploy | `npm run build` |
 | Deploy to staging | `git push origin staging` (auto-deploy via GitHub Actions) |
 | Deploy to prod | `git push origin main` |
@@ -82,7 +80,7 @@ cd .claude/skills/gstack && ./setup
   - Assets served from `public/` directory (contains only `index.html`)
 - **Production Supabase:** `https://kmdpufauamadwavqsinj.supabase.co` (project: `breaktapes-prod`)
 - **Staging Supabase:** `https://yqzycwuyhvzkbofwkazr.supabase.co` (project: `breaktapes-dev`)
-- **Local preview:** `python3 -m http.server 3000` (serves from root; access `index.html` directly)
+- **Local preview:** `npm run dev -- --port 3000` (Vite on port 3000 — Claude Preview MCP tool is locked to this port)
 
 ### Release pipeline (automated via GitHub Actions)
 
@@ -1304,6 +1302,33 @@ Direct DB access (psql/psycopg2) is blocked from localhost — Supabase only exp
 - When the same new fields exist on both HEAD and staging (from two parallel worktrees), `git merge origin/staging` produces duplicate-field conflicts in TypeScript interfaces — always check for duplicate property declarations after merge, they compile but are confusing.
 - `git worktree remove` mid-session kills the shell CWD — the kernel's `getcwd()` fails on every subsequent subprocess. No recovery possible without restarting from a valid directory. Always `cd` to main repo before any worktree cleanup.
 - PostToolUse linter hook can revert file edits made in the same session if the linter reformats aggressively — verify critical new fields persist after every hook run.
+
+---
+
+### Session 32 (2026-05-15) — Migration rollback, env key storage, preview tool fix
+
+**Branch:** `claude/nostalgic-pike-53306c` → main (PR #327)
+
+#### Changes shipped
+- **Migration rollback** `supabase/migrations/20260515000000_remove_stripe_billing.sql` — drops `stripe_customer_id`, `stripe_subscription_id`, `stripe_price_id`, `pro_expires_at` columns and `user_state_stripe_customer_idx` from `user_state`. Root cause: Stripe migration `20260501120000` was applied to prod DB but its file was deleted by revert PR #326. Every deploy since 2026-05-03 failed at `supabase db push` with schema history mismatch. Fix: deleted orphaned record from `supabase_migrations.schema_migrations` on prod via Supabase MCP, then added this rollback migration to realign schema. Staging DB did not have the column (never applied) so migration is `DROP COLUMN IF EXISTS` — idempotent.
+- **Night Runner achievement description fix** — changed "after 8 PM or before 6 AM" → "after sunset" in `src/pages/Profile.tsx` to match canonical spec.
+- **Environment keys saved** — all Clerk + Supabase keys stored in `~/breaktapes-setup-env.sh` (outside git). Run `bash ~/breaktapes-setup-env.sh` in any new worktree to create `.env.local`. Staging variant: `bash ~/breaktapes-setup-env.sh staging`.
+- **Preview tool fix** — `.claude/launch.json` updated to run Vite (`npm run dev -- --port 3000`) instead of `python3 -m http.server 3000`. Claude Preview MCP browser is locked to port 3000; Vite is the actual dev server.
+
+#### Key learnings
+- When a migration file is deleted (e.g. in a revert PR) but was already applied to a DB, `supabase db push` in CI errors permanently — the fix is to (1) delete the orphaned record from `supabase_migrations.schema_migrations` via Supabase MCP `execute_sql`, then (2) add a new rollback migration that `DROP COLUMN IF EXISTS` the columns it added. Never manually delete a migration file from the filesystem without also providing a rollback.
+- `pk_live_` Clerk keys are domain-locked to `breaktapes.com` and fail on `localhost`. Use `pk_test_` (dev Clerk instance) for local development. The two instances have separate user databases.
+- Claude Preview MCP browser is hardcoded to port 3000. If the local server runs on any other port, the preview shows a black/blank screen. Always start Vite with `--port 3000` in worktrees.
+- `supabase_migrations.schema_migrations` stores `(version text)` — the version is the migration filename prefix (e.g. `20260501120000`). Delete the orphaned row with `DELETE FROM supabase_migrations.schema_migrations WHERE version = '20260501120000'`.
+- Environment keys (Clerk + Supabase) for both prod and staging are now in `~/breaktapes-setup-env.sh` — see reference memory `reference_env_keys.md` for full table.
+
+#### Keys reference (for `.env.local`)
+| Config | VITE_CLERK_PUBLISHABLE_KEY | VITE_SUPABASE_URL |
+|---|---|---|
+| local dev | `pk_test_ZWxlZ2FudC1zbmlwZS02Mi5jbGVyay5hY2NvdW50cy5kZXYk` | `https://kmdpufauamadwavqsinj.supabase.co` |
+| staging | `pk_live_Y2xlcmsuYnJlYWt0YXBlcy5jb20k` | `https://yqzycwuyhvzkbofwkazr.supabase.co` |
+
+Anon keys and full setup script: `~/breaktapes-setup-env.sh`
 
 ---
 

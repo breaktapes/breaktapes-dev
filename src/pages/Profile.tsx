@@ -534,7 +534,7 @@ const ACHIEVEMENTS: Achievement[] = [
   },
   {
     id: 'night_runner', icon: '🌙', name: 'NIGHT RUNNER', group: 'special',
-    description: 'Completed a race starting after 8 PM or before 6 AM.',
+    description: 'Completed a race starting after sunset.',
     check: r => r.some(x => {
       if (!x.startTime) return false
       const h = parseInt(x.startTime.split(':')[0] ?? '12', 10)

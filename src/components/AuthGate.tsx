@@ -289,14 +289,14 @@ function LandingScreen() {
             <SignIn
               appearance={clerkAppearance}
               signUpUrl="#"
-              afterSignInUrl={redirectUrl}
+              forceRedirectUrl={redirectUrl}
               signUpForceRedirectUrl={redirectUrl}
             />
           ) : (
             <SignUp
               appearance={clerkAppearance}
               signInUrl="#"
-              afterSignUpUrl={redirectUrl}
+              forceRedirectUrl={redirectUrl}
               signInForceRedirectUrl={redirectUrl}
             />
           )}
