@@ -289,15 +289,15 @@ function LandingScreen() {
             <SignIn
               appearance={clerkAppearance}
               signUpUrl="#"
-              forceRedirectUrl={redirectUrl}
-              signUpForceRedirectUrl={redirectUrl}
+              fallbackRedirectUrl={redirectUrl}
+              signUpFallbackRedirectUrl={redirectUrl}
             />
           ) : (
             <SignUp
               appearance={clerkAppearance}
               signInUrl="#"
-              forceRedirectUrl={redirectUrl}
-              signInForceRedirectUrl={redirectUrl}
+              fallbackRedirectUrl={redirectUrl}
+              signInFallbackRedirectUrl={redirectUrl}
             />
           )}
           <button
