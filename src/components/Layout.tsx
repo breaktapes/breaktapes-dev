@@ -21,8 +21,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const onSettings = location.pathname === '/settings'
 
   return (
-    <div style={{ position: 'fixed', inset: 0, display: 'flex', flexDirection: 'column', background: 'var(--black)' }}>
+    <div style={{ position: 'fixed', inset: 0, background: 'var(--black)' }}>
       <DataSync />
+      <div className="content-shell">
 
       <header style={{
         height: 'calc(var(--header-base-height) + var(--safe-top, 0px))',
@@ -56,12 +57,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </header>
 
       <main style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', position: 'relative', WebkitOverflowScrolling: 'touch' as any }}>
-        <div className="page-center">
-          {children}
-        </div>
+        {children}
       </main>
 
       <BottomNav />
+      </div>
     </div>
   )
 }

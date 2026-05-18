@@ -1026,13 +1026,15 @@ body::after {
 
 
 /* ── DESKTOP (≥768px) — centered responsive column ───────────────────────── */
-.page-center {
+.content-shell {
   width: 100%;
-  min-height: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 @media (min-width: 768px) {
-  .page-center {
+  .content-shell {
     max-width: 680px;
     margin: 0 auto;
   }
