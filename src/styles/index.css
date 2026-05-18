@@ -1025,33 +1025,15 @@ body::after {
 }
 
 
-/* ── DESKTOP SIDEBAR — hidden on mobile ─────────────────────────────────────── */
-.app-sidebar { display: none; }
+/* ── DESKTOP (≥768px) — centered responsive column ───────────────────────── */
+.page-center {
+  width: 100%;
+  min-height: 100%;
+}
 
-/* ── DESKTOP (≥1024px) ─────────────────────────────────────────────────────── */
-@media (min-width: 1024px) {
-  /* Sidebar layout: app-shell becomes row, sidebar replaces header + bottom nav */
-  .app-shell {
-    flex-direction: row !important;
-  }
-  .app-header-mobile { display: none !important; }
-  .app-bottom-nav   { display: none !important; }
-  .app-sidebar {
-    display: flex !important;
-    flex-direction: column;
-    width: 200px;
-    flex-shrink: 0;
-    height: 100%;
-    border-right: 1px solid var(--border);
-    background: var(--surface);
-    padding: 0;
-    overflow: hidden;
-  }
-  .app-main {
-    padding-bottom: 0 !important;
-  }
-  /* Widen content: single-column grid pages use up to 800px in the center */
-  .app-main > * {
-    max-width: 800px;
+@media (min-width: 768px) {
+  .page-center {
+    max-width: 680px;
+    margin: 0 auto;
   }
 }
