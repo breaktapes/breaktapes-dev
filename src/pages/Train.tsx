@@ -9,13 +9,34 @@ import { TimePickerWheel } from '@/components/TimePickerWheel'
 import type { HMS } from '@/components/TimePickerWheel'
 import type { Race } from '@/types'
 
-// WA age-grading factor: 1.0 at peak (≤30), increases with age
-// Based on WA masters athletics 2023 tables (polynomial approximation)
+// WA age-grading factors — lookup table with linear interpolation
+// Source: WA Masters Athletics 2023 (marathon, representative for road running)
+// Factor > 1.0 means that age is slower than peak; 1.0 = peak performance age (~25–30)
+const WA_FACTORS_M: [number, number][] = [
+  [15, 1.150], [20, 1.030], [25, 1.000], [30, 1.000],
+  [35, 1.021], [40, 1.060], [45, 1.111], [50, 1.177],
+  [55, 1.259], [60, 1.369], [65, 1.508], [70, 1.683],
+  [75, 1.903], [80, 2.174], [85, 2.505],
+]
+const WA_FACTORS_F: [number, number][] = [
+  [15, 1.120], [20, 1.020], [25, 1.000], [30, 1.000],
+  [35, 1.016], [40, 1.054], [45, 1.107], [50, 1.179],
+  [55, 1.274], [60, 1.394], [65, 1.550], [70, 1.742],
+  [75, 1.979], [80, 2.271], [85, 2.629],
+]
+
 function waAgeFactor(age: number, gender: 'M' | 'F' | string): number {
-  const clamped = Math.min(Math.max(age, 15), 90)
-  if (clamped <= 30) return 1.0
-  const k = gender === 'F' ? 0.00215 : 0.00248
-  return 1.0 + Math.pow(clamped - 30, 1.52) * k
+  const table = gender === 'F' ? WA_FACTORS_F : WA_FACTORS_M
+  const clamped = Math.min(Math.max(age, 15), 85)
+  for (let i = 0; i < table.length - 1; i++) {
+    const [a0, f0] = table[i]
+    const [a1, f1] = table[i + 1]
+    if (clamped >= a0 && clamped <= a1) {
+      const t = (clamped - a0) / (a1 - a0)
+      return f0 + t * (f1 - f0)
+    }
+  }
+  return table[table.length - 1][1]
 }
 
 const btnMain: React.CSSProperties = {
