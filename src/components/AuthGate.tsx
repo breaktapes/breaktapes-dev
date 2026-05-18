@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useUser, useAuth, SignIn, SignUp } from '@clerk/clerk-react'
+import { useUser, useAuth, useSignIn, SignUp } from '@clerk/clerk-react'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { setClerkToken } from '@/lib/supabase'
@@ -240,6 +240,123 @@ const clerkAppearance = {
   },
 }
 
+const _inputSt: React.CSSProperties = {
+  background: '#1A1A1A',
+  border: '1px solid rgba(245,245,245,0.12)',
+  borderRadius: '6px',
+  color: '#F5F5F5',
+  padding: '0.7rem 0.875rem',
+  fontSize: '15px',
+  fontFamily: 'Barlow, sans-serif',
+  width: '100%',
+  boxSizing: 'border-box',
+  outline: 'none',
+  WebkitAppearance: 'none',
+}
+
+function CustomSignInForm({ onClose: _onClose }: { onClose: () => void }) {
+  const { signIn, setActive, isLoaded } = useSignIn()
+  const emailRef = useRef<HTMLInputElement>(null)
+  const passwordRef = useRef<HTMLInputElement>(null)
+  const resetEmailRef = useRef<HTMLInputElement>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [showReset, setShowReset] = useState(false)
+  const [resetSent, setResetSent] = useState(false)
+
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!isLoaded) return
+    // Read from DOM ref — works with iOS autofill that bypasses React onChange
+    const email = emailRef.current?.value ?? ''
+    const password = passwordRef.current?.value ?? ''
+    if (!email || !password) { setError('Please enter your email and password.'); return }
+    setLoading(true); setError('')
+    try {
+      const result = await signIn.create({ identifier: email, password })
+      if (result.status === 'complete') {
+        await setActive({ session: result.createdSessionId })
+      }
+    } catch (err: unknown) {
+      const clerkErr = err as { errors?: Array<{ message: string }> }
+      setError(clerkErr.errors?.[0]?.message ?? 'Sign in failed. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleReset = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!isLoaded) return
+    const email = resetEmailRef.current?.value ?? ''
+    if (!email) { setError('Enter your email address.'); return }
+    setLoading(true); setError('')
+    try {
+      await signIn.create({ strategy: 'reset_password_email_code', identifier: email })
+      setResetSent(true)
+    } catch (err: unknown) {
+      const clerkErr = err as { errors?: Array<{ message: string }> }
+      setError(clerkErr.errors?.[0]?.message ?? 'Failed to send reset email.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const cardSt: React.CSSProperties = {
+    background: '#141414',
+    border: '1px solid rgba(245,245,245,0.08)',
+    boxShadow: '0 24px 48px rgba(0,0,0,0.6)',
+    borderRadius: '6px',
+    padding: '2rem',
+    width: '100%',
+    maxWidth: '420px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '1rem',
+  }
+
+  if (showReset) {
+    return (
+      <div style={cardSt}>
+        <h2 style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#F5F5F5', fontSize: '20px', margin: 0, textAlign: 'center' }}>Reset Password</h2>
+        {resetSent ? (
+          <p style={{ color: 'rgba(245,245,245,0.7)', fontSize: '14px', textAlign: 'center', margin: 0 }}>
+            Check your email for a reset link.
+          </p>
+        ) : (
+          <form onSubmit={handleReset} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <input ref={resetEmailRef} type="email" autoComplete="email" placeholder="Email address" style={_inputSt} />
+            {error && <p style={{ color: '#E84E1B', fontSize: '13px', margin: 0 }}>{error}</p>}
+            <button type="submit" disabled={loading} style={{ background: loading ? 'rgba(232,78,27,0.6)' : '#E84E1B', color: '#fff', border: 'none', borderRadius: '6px', padding: '0.75rem', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: loading ? 'not-allowed' : 'pointer', fontSize: '14px' }}>
+              {loading ? 'Sending…' : 'Send Reset Link'}
+            </button>
+          </form>
+        )}
+        <button onClick={() => { setShowReset(false); setResetSent(false); setError('') }} style={{ background: 'transparent', border: 'none', color: 'rgba(245,245,245,0.45)', fontSize: '13px', cursor: 'pointer', textAlign: 'center' }}>
+          ← Back to sign in
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div style={cardSt}>
+      <h2 style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#F5F5F5', fontSize: '20px', margin: 0, textAlign: 'center' }}>Sign In</h2>
+      <form onSubmit={handleSignIn} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        <input ref={emailRef} type="email" autoComplete="email" placeholder="Email address" style={_inputSt} />
+        <input ref={passwordRef} type="password" autoComplete="current-password" placeholder="Password" style={_inputSt} />
+        {error && <p style={{ color: '#E84E1B', fontSize: '13px', margin: 0 }}>{error}</p>}
+        <button type="submit" disabled={loading} style={{ background: loading ? 'rgba(232,78,27,0.6)' : '#E84E1B', color: '#fff', border: 'none', borderRadius: '6px', padding: '0.75rem', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: loading ? 'not-allowed' : 'pointer', fontSize: '14px', marginTop: '0.25rem' }}>
+          {loading ? 'Signing in…' : 'Continue'}
+        </button>
+      </form>
+      <button onClick={() => { setShowReset(true); setError('') }} style={{ background: 'transparent', border: 'none', color: 'rgba(245,245,245,0.45)', fontSize: '13px', cursor: 'pointer', textAlign: 'center' }}>
+        Forgot password?
+      </button>
+    </div>
+  )
+}
+
 function LandingScreen() {
   const [view, setView] = useState<AuthView | null>(null)
 
@@ -286,11 +403,7 @@ function LandingScreen() {
           onClick={e => { if (e.target === e.currentTarget) setView(null) }}
         >
           {view === 'signin' ? (
-            <SignIn
-              appearance={clerkAppearance}
-              fallbackRedirectUrl={redirectUrl}
-              signUpFallbackRedirectUrl={redirectUrl}
-            />
+            <CustomSignInForm onClose={() => setView(null)} />
           ) : (
             <SignUp
               appearance={clerkAppearance}
