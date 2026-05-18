@@ -273,9 +273,15 @@ function CustomSignInForm({ onClose: _onClose }: { onClose: () => void }) {
     if (!email || !password) { setError('Please enter your email and password.'); return }
     setLoading(true); setError('')
     try {
-      const result = await signIn.create({ identifier: email, password })
+      // Two-step: create (identify) then attemptFirstFactor (password).
+      // signIn.create() without strategy only discovers factors — password is ignored
+      // and status returns needs_first_factor, causing a silent no-op.
+      await signIn.create({ identifier: email })
+      const result = await signIn.attemptFirstFactor({ strategy: 'password', password })
       if (result.status === 'complete') {
         await setActive({ session: result.createdSessionId })
+      } else {
+        setError('Sign in incomplete. Please try again.')
       }
     } catch (err: unknown) {
       const clerkErr = err as { errors?: Array<{ message: string }> }
