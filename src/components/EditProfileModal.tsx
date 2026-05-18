@@ -278,10 +278,12 @@ const st = {
     zIndex: 950,
     display: 'flex',
     alignItems: 'flex-end',
+    justifyContent: 'center',
   } as React.CSSProperties,
 
   sheet: {
     width: '100%',
+    maxWidth: '680px',
     maxHeight: '90vh',
     background: 'var(--surface2)',
     borderTop: '1px solid var(--border2)',

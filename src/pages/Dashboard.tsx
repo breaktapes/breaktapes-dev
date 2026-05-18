@@ -4658,7 +4658,7 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
 
       {/* Link sheet rendered via portal — inset:0 covers header+nav fully */}
       {showLinkSheet && createPortal(
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 1500, display: 'flex', alignItems: 'flex-end' }} onClick={() => setShowLinkSheet(false)}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 1500, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={() => setShowLinkSheet(false)}>
           <div style={{ ...st.customizeSheet, maxHeight: '60vh' }} onClick={e => e.stopPropagation()}>
             <div style={{ width: '40px', height: '4px', background: 'var(--border2)', borderRadius: '2px', margin: '0 auto 16px' }} />
             <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '15px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)', marginBottom: '4px' }}>
@@ -6288,10 +6288,12 @@ const st = {
     zIndex: 900,
     display: 'flex',
     alignItems: 'flex-end',
+    justifyContent: 'center',
   } as React.CSSProperties,
 
   customizeSheet: {
     width: '100%',
+    maxWidth: '680px',
     maxHeight: '100%',
     background: 'var(--surface2)',
     borderTop: '1px solid var(--border2)',
