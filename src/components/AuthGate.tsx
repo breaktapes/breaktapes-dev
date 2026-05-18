@@ -288,14 +288,12 @@ function LandingScreen() {
           {view === 'signin' ? (
             <SignIn
               appearance={clerkAppearance}
-              signUpUrl="#"
               fallbackRedirectUrl={redirectUrl}
               signUpFallbackRedirectUrl={redirectUrl}
             />
           ) : (
             <SignUp
               appearance={clerkAppearance}
-              signInUrl="#"
               fallbackRedirectUrl={redirectUrl}
               signInFallbackRedirectUrl={redirectUrl}
             />
