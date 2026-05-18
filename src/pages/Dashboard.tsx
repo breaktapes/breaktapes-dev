@@ -3864,32 +3864,40 @@ function PersonalBestsWidget() {
   }, [])
 
   // Group PBs by sport
-  const { groups, allDists } = useMemo(() => {
+  const { groups, pillGroups } = useMemo(() => {
     const run: { key: string; r: Race }[] = []
     const tri: { key: string; r: Race }[] = []
     const other: { key: string; r: Race }[] = []
-    const collectedDists: string[] = []
 
-    const distOrder: Record<string, number> = {
-      '5K': 1, '10K': 2, '10 Mile': 3, 'Half Marathon': 4, 'Marathon': 5, 'Ultra': 6,
+    const runDistOrder: Record<string, number> = {
+      '5K': 1, '10K': 2, '10 Mile': 3, 'Half Marathon': 4, 'Marathon': 5,
+      '50K': 6, '100K': 7, '100 Mile': 8, 'Ultra': 9,
+    }
+    const triDistOrder: Record<string, number> = {
       'Super Sprint': 1, 'Sprint': 2, 'Olympic': 3, '70.3': 4, 'IRONMAN': 5,
     }
 
     for (const [key, r] of Object.entries(pbMap)) {
       const sport = (r.sport ?? 'Running').toLowerCase()
-      const label = distBadge(r.distance) || key
-      if (!collectedDists.includes(label)) collectedDists.push(label)
       const entry = { key, r }
       if (sport.includes('tri') || sport.includes('iron')) tri.push(entry)
-      else if (sport.includes('run') || sport.includes('cycling') || sport.includes('swim')) run.push(entry)
+      else if (sport.includes('run') || !r.sport) run.push(entry)
       else other.push(entry)
     }
 
-    const sortFn = (a: { key: string; r: Race }, b: { key: string; r: Race }) => {
-      const aLabel = distBadge(a.r.distance) || a.key
-      const bLabel = distBadge(b.r.distance) || b.key
-      return (distOrder[aLabel] ?? 99) - (distOrder[bLabel] ?? 99)
+    const runSortFn = (a: { key: string; r: Race }, b: { key: string; r: Race }) => {
+      const aL = distBadge(a.r.distance) || a.key
+      const bL = distBadge(b.r.distance) || b.key
+      return (runDistOrder[aL] ?? 99) - (runDistOrder[bL] ?? 99)
     }
+    const triSortFn = (a: { key: string; r: Race }, b: { key: string; r: Race }) => {
+      const aL = distBadge(a.r.distance) || a.key
+      const bL = distBadge(b.r.distance) || b.key
+      return (triDistOrder[aL] ?? 99) - (triDistOrder[bL] ?? 99)
+    }
+
+    run.sort(runSortFn)
+    tri.sort(triSortFn)
 
     const filterVis = (entries: { key: string; r: Race }[]) =>
       hiddenDists.size === 0 ? entries : entries.filter(e => !hiddenDists.has(distBadge(e.r.distance) || e.key))
@@ -3898,16 +3906,23 @@ function PersonalBestsWidget() {
     const triFiltered = filterVis(tri)
     const otherFiltered = filterVis(other)
 
+    // Pills grouped by sport so they render in ascending distance order per sport
+    const pillGroups: { sport: string; labels: string[] }[] = []
+    if (run.length) pillGroups.push({ sport: 'Running',   labels: run.map(e => distBadge(e.r.distance) || e.key) })
+    if (tri.length) pillGroups.push({ sport: 'Triathlon', labels: tri.map(e => distBadge(e.r.distance) || e.key) })
+    if (other.length) pillGroups.push({ sport: 'Other',   labels: other.map(e => distBadge(e.r.distance) || e.key) })
+
     return {
-      allDists: collectedDists,
+      pillGroups,
       groups: [
-        ...(runFiltered.length ? [{ sport: 'Running',   dot: 'var(--green)', dotGlow: 'rgba(var(--green-ch),0.6)',    entries: runFiltered.sort(sortFn) }] : []),
-        ...(triFiltered.length ? [{ sport: 'Triathlon', dot: 'var(--purple)', dotGlow: 'rgba(var(--purple-ch),0.6)',   entries: triFiltered.sort(sortFn) }] : []),
-        ...(otherFiltered.length ? [{ sport: 'Other', dot: 'var(--orange)', dotGlow: 'rgba(232,78,27,0.6)', entries: otherFiltered.sort(sortFn) }] : []),
+        ...(runFiltered.length ? [{ sport: 'Running',   dot: 'var(--green)',  dotGlow: 'rgba(var(--green-ch),0.6)',   entries: runFiltered }] : []),
+        ...(triFiltered.length ? [{ sport: 'Triathlon', dot: 'var(--purple)', dotGlow: 'rgba(var(--purple-ch),0.6)',  entries: triFiltered }] : []),
+        ...(otherFiltered.length ? [{ sport: 'Other',   dot: 'var(--orange)', dotGlow: 'rgba(232,78,27,0.6)',          entries: otherFiltered }] : []),
       ],
     }
   }, [pbMap, hiddenDists])
 
+  const allDists = pillGroups.flatMap(g => g.labels)
   if (!allDists.length) {
     return (
       <WidgetCard id="personal-bests" style={st.glowCard}>
@@ -3922,31 +3937,40 @@ function PersonalBestsWidget() {
   return (
     <WidgetCard id="personal-bests" style={st.glowCard}>
       <div style={st.widgetTitle}>PERSONAL BESTS</div>
-      {/* Distance chip filter */}
+      {/* Distance chip filter — grouped by sport, ascending distance order */}
       {allDists.length > 1 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px', marginBottom: '4px' }}>
-          {allDists.map(label => {
-            const hidden = hiddenDists.has(label)
-            return (
-              <button
-                key={label}
-                onClick={e => { e.stopPropagation(); toggleDist(label) }}
-                data-no-widget-detail
-                style={{
-                  background: hidden ? 'var(--surface3)' : 'rgba(var(--orange-ch),0.12)',
-                  color: hidden ? 'var(--muted2)' : 'var(--orange)',
-                  border: `1px solid ${hidden ? 'var(--border)' : 'rgba(var(--orange-ch),0.35)'}`,
-                  borderRadius: '20px', padding: '3px 10px',
-                  fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em',
-                  cursor: 'pointer', flexShrink: 0,
-                  textDecoration: hidden ? 'line-through' : 'none',
-                  opacity: hidden ? 0.5 : 1,
-                }}
-              >
-                {label}
-              </button>
-            )
-          })}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px', marginBottom: '4px' }}>
+          {pillGroups.map(pg => (
+            <div key={pg.sport} style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
+              {pillGroups.length > 1 && (
+                <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted2)', marginRight: '2px', flexShrink: 0 }}>
+                  {pg.sport}
+                </span>
+              )}
+              {pg.labels.map(label => {
+                const hidden = hiddenDists.has(label)
+                return (
+                  <button
+                    key={label}
+                    onClick={e => { e.stopPropagation(); toggleDist(label) }}
+                    data-no-widget-detail
+                    style={{
+                      background: hidden ? 'var(--surface3)' : 'rgba(var(--orange-ch),0.12)',
+                      color: hidden ? 'var(--muted2)' : 'var(--orange)',
+                      border: `1px solid ${hidden ? 'var(--border)' : 'rgba(var(--orange-ch),0.35)'}`,
+                      borderRadius: '20px', padding: '3px 10px',
+                      fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em',
+                      cursor: 'pointer', flexShrink: 0,
+                      textDecoration: hidden ? 'line-through' : 'none',
+                      opacity: hidden ? 0.5 : 1,
+                    }}
+                  >
+                    {label}
+                  </button>
+                )
+              })}
+            </div>
+          ))}
         </div>
       )}
       {groups.map(g => (

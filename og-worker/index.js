@@ -85,7 +85,7 @@ async function fetchProfile(username, env) {
   const url = new URL(`${env.SUPABASE_URL}/rest/v1/user_state`);
   url.searchParams.set('username', `eq.${username}`);
   url.searchParams.set('is_public', 'eq.true');
-  url.searchParams.set('select', 'races,athlete,next_race');
+  url.searchParams.set('select', 'state_json,races,athlete');
   url.searchParams.set('limit', '1');
 
   const res = await fetch(url.toString(), {
@@ -362,9 +362,12 @@ export default {
       return Response.redirect(fallbackUrl, 302);
     }
 
-    // Build card data
-    const athlete = row.athlete || {};
-    const races = Array.isArray(row.races) ? row.races : [];
+    // Build card data — prefer state_json (post-Clerk migration), fall back to legacy columns
+    const stateJson = row.state_json || {};
+    const athlete = stateJson.athlete || row.athlete || {};
+    const races = Array.isArray(stateJson.races) ? stateJson.races
+                : Array.isArray(row.races)        ? row.races
+                : [];
 
     const cardData = {
       username,
