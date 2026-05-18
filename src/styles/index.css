@@ -1025,14 +1025,33 @@ body::after {
 }
 
 
+/* ── DESKTOP SIDEBAR — hidden on mobile ─────────────────────────────────────── */
+.app-sidebar { display: none; }
+
 /* ── DESKTOP (≥1024px) ─────────────────────────────────────────────────────── */
 @media (min-width: 1024px) {
-  #root {
-    display: flex;
-    justify-content: center;
+  /* Sidebar layout: app-shell becomes row, sidebar replaces header + bottom nav */
+  .app-shell {
+    flex-direction: row !important;
   }
-  #root > * {
-    width: 100%;
-    max-width: 480px;
+  .app-header-mobile { display: none !important; }
+  .app-bottom-nav   { display: none !important; }
+  .app-sidebar {
+    display: flex !important;
+    flex-direction: column;
+    width: 200px;
+    flex-shrink: 0;
+    height: 100%;
+    border-right: 1px solid var(--border);
+    background: var(--surface);
+    padding: 0;
+    overflow: hidden;
+  }
+  .app-main {
+    padding-bottom: 0 !important;
+  }
+  /* Widen content: single-column grid pages use up to 800px in the center */
+  .app-main > * {
+    max-width: 800px;
   }
 }
