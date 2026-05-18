@@ -902,6 +902,31 @@ export function Train() {
                               </div>
                             )
                           })}
+
+                          {/* How it works */}
+                          <div style={{ marginTop: '14px', padding: '12px', borderRadius: '8px', background: 'var(--surface3)', border: '1px solid var(--border)' }}>
+                            <p style={{ margin: '0 0 8px', fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)' }}>How it works</p>
+                            <p style={{ margin: '0 0 6px', fontSize: '12px', color: 'var(--muted)', lineHeight: 1.5 }}>
+                              Formula: <span style={{ color: 'var(--white)', fontFamily: 'monospace', fontSize: '11px' }}>projected = current × (factor_target / factor_current)</span>
+                            </p>
+                            <p style={{ margin: '0 0 10px', fontSize: '12px', color: 'var(--muted)', lineHeight: 1.5 }}>
+                              Age factors are from the <strong style={{ color: 'var(--white)' }}>World Athletics Masters Age-Grading Tables 2023</strong>. Factor 1.000 = peak performance zone (ages 25–30). Values above 1.0 reflect natural physiological changes from that peak.
+                            </p>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '4px', marginBottom: '10px' }}>
+                              {([15,20,25,35,40,45,50,55,60,65] as number[]).map(a => {
+                                const f = waAgeFactor(a, gender)
+                                return (
+                                  <div key={a} style={{ textAlign: 'center', padding: '5px 2px', borderRadius: '5px', background: f <= 1.0 ? 'rgba(0,255,136,0.08)' : 'var(--surface2)', border: `1px solid ${f <= 1.0 ? 'rgba(0,255,136,0.2)' : 'var(--border)'}` }}>
+                                    <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700 }}>Age {a}</div>
+                                    <div style={{ fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 900, color: f <= 1.0 ? 'var(--green)' : 'var(--white)' }}>{f.toFixed(3)}</div>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                            <p style={{ margin: 0, fontSize: '11px', color: 'var(--muted)', lineHeight: 1.4 }}>
+                              Note: ages 25–30 are all 1.000 (identical peak zone) — no change between these ages is correct per the WA standard. Source: <a href="https://worldathletics.org/masters/masters-age-grading" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--orange)', textDecoration: 'none' }}>worldathletics.org/masters</a>
+                            </p>
+                          </div>
                         </>
                       )
                     })()}
