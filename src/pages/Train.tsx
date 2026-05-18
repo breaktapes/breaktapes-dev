@@ -1,10 +1,7 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { useRaceStore } from '@/stores/useRaceStore'
-import { useWearableStore } from '@/stores/useWearableStore'
-import { handleWhoopCallback, fetchWhoopActivities, fetchWhoopRecovery } from '@/lib/whoop'
-import { handleGarminCallback, fetchGarminActivities } from '@/lib/garmin'
-import { handleStravaCallback, fetchStravaActivities, stravaActivitiesToRaces } from '@/lib/strava'
+import { handleGarminCallback } from '@/lib/garmin'
 import { computeVDOT, paceZones, parseDistKm, parseTimeSecs, secsToHMS } from '@/lib/raceFormulas'
 import { useUnits } from '@/lib/units'
 import { TimePickerWheel } from '@/components/TimePickerWheel'
@@ -156,29 +153,6 @@ const TAB_LABELS: { id: Tab; label: string }[] = [
   { id: 'readiness',  label: 'Readiness' },
 ]
 
-// ── Activity feed types ────────────────────────────────────────────────────
-
-interface ActivityItem {
-  id: string
-  source: 'WHOOP' | 'Garmin' | 'Strava'
-  name: string
-  date: string
-  distanceKm?: number
-  durationMin?: number
-  avgHR?: number
-  strain?: number
-}
-
-
-function whoopSportName(id: number): string {
-  const names: Record<number, string> = {
-    0: 'Activity', 1: 'Running', 2: 'Cycling', 3: 'Swimming',
-    44: 'Weightlifting', 45: 'Yoga', 63: 'Hiking', 71: 'Triathlon',
-    72: 'Rowing', 73: 'Walking', 74: 'HIIT',
-  }
-  return names[id] ?? 'Activity'
-}
-
 // ─── Triathlon result type ────────────────────────────────────────────────────
 
 interface TriResult {
@@ -191,11 +165,9 @@ interface TriResult {
 }
 
 export function Train() {
-  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [activeTab, setActiveTab] = useState<Tab>('pace')
   const units = useUnits()
-  const [oauthStatus, setOauthStatus] = useState<string | null>(null)
 
   // ── Pace tab: sport selector ───────────────────────────────────────────────
   const [sport, setSport] = useState<'running' | 'triathlon'>('running')
@@ -223,23 +195,9 @@ export function Train() {
   const [bikeTH, setBikeTH] = useState(2);   const [bikeTM2, setBikeTM2] = useState(30)
   const [runTH,  setRunTH]  = useState(1);   const [runTM2, setRunTM2]   = useState(45);  const [runTS, setRunTS] = useState(0)
 
-  // Activity feed state
-  const [activities, setActivities] = useState<ActivityItem[]>([])
-  const [feedLoading, setFeedLoading] = useState(false)
-  const [stravaRaceCount, setStravaRaceCount] = useState(0)
-  const [importingRaces, setImportingRaces] = useState(false)
-  const [importDone, setImportDone] = useState<string | null>(null)
-  const [recoveryData, setRecoveryData] = useState<Array<{ date: string; score: number; hrv?: number; rhr?: number }>>([])
-  const [recoveryLoading, setRecoveryLoading] = useState(false)
-
   const races = useRaceStore(s => s.races)
-  const addRace = useRaceStore(s => s.addRace)
-  const whoopToken  = useWearableStore(s => s.whoopToken)
-  const garminToken = useWearableStore(s => s.garminToken)
-  const stravaToken = useWearableStore(s => s.stravaToken)
-  const hasAnyWearable = !!(whoopToken || garminToken || stravaToken)
 
-  // Handle OAuth callbacks
+  // Handle Garmin OAuth callback
   useEffect(() => {
     const state    = searchParams.get('state')
     const code     = searchParams.get('code')
@@ -252,7 +210,7 @@ export function Train() {
     if (oauthErr) {
       const provider = state.split(':')[0]
       const desc = searchParams.get('error_description') ?? oauthErr
-      setOauthStatus(`Failed to connect ${provider}: ${desc}`)
+      console.error(`Failed to connect ${provider}: ${desc}`)
       return
     }
 
@@ -261,123 +219,18 @@ export function Train() {
     async function finish() {
       try {
         const provider = state?.split(':')[0]
-        if (provider === 'whoop')  await handleWhoopCallback(code!, state!)
         if (provider === 'garmin') await handleGarminCallback(code!, state!)
-        if (provider === 'strava') await handleStravaCallback(code!, state!)
-        if (!provider || !['whoop', 'garmin', 'strava'].includes(provider)) return
-        setOauthStatus(`${provider.charAt(0).toUpperCase() + provider.slice(1)} connected! ✓`)
+        if (!provider || provider !== 'garmin') return
         setActiveTab('activities')
       } catch (err) {
         const provider = state?.split(':')[0] ?? state
         console.error('OAuth callback failed:', err)
         const msg = err instanceof Error ? err.message : String(err)
-        setOauthStatus(`Failed to connect ${provider}: ${msg}`)
+        console.error(`Failed to connect ${provider}: ${msg}`)
       }
     }
     finish()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Load activity feed
-  useEffect(() => {
-    if (activeTab !== 'activities' || !hasAnyWearable) return
-    let cancelled = false
-    async function load() {
-      setFeedLoading(true)
-      try {
-        const [whoopActs, garminActs, stravaActs] = await Promise.all([
-          whoopToken  ? fetchWhoopActivities(20)    : Promise.resolve([]),
-          garminToken ? fetchGarminActivities(20)   : Promise.resolve([]),
-          stravaToken ? fetchStravaActivities(100)  : Promise.resolve([]),
-        ])
-        if (cancelled) return
-
-        const newRaces = stravaActivitiesToRaces(stravaActs, races)
-        setStravaRaceCount(newRaces.length)
-
-        const merged: ActivityItem[] = [
-          ...whoopActs.map(a => ({
-            id: String(a.id),
-            source: 'WHOOP' as const,
-            name: whoopSportName(a.sport_id),
-            date: a.start,
-            durationMin: a.end ? Math.round((new Date(a.end).getTime() - new Date(a.start).getTime()) / 60000) : undefined,
-            strain: a.strain,
-          })),
-          ...garminActs.map(a => ({
-            id: String(a.activityId),
-            source: 'Garmin' as const,
-            name: a.activityName || a.activityType?.typeKey || 'Activity',
-            date: a.startTimeGmt,
-            distanceKm: a.distance ? a.distance / 1000 : undefined,
-            durationMin: a.duration ? Math.round(a.duration / 60) : undefined,
-            avgHR: a.averageHR,
-          })),
-          ...stravaActs.map(a => ({
-            id: `strava-${a.id}`,
-            source: 'Strava' as const,
-            name: a.name,
-            date: a.start_date_local ?? '',
-            distanceKm: a.distance ? Math.round(a.distance / 100) / 10 : undefined,
-            durationMin: a.elapsed_time ? Math.round(a.elapsed_time / 60) : undefined,
-          })),
-        ]
-        merged.sort((a, b) => b.date.localeCompare(a.date))
-        setActivities(merged)
-      } finally {
-        if (!cancelled) setFeedLoading(false)
-      }
-    }
-    load()
-    return () => { cancelled = true }
-  }, [activeTab, hasAnyWearable, whoopToken, garminToken, stravaToken]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  async function handleImportStravaRaces() {
-    setImportingRaces(true)
-    setImportDone(null)
-    try {
-      const stravaActs = await fetchStravaActivities(100)
-      const newRaces = stravaActivitiesToRaces(stravaActs, races)
-      for (const r of newRaces) {
-        addRace({ ...r, id: crypto.randomUUID() } as import('@/types').Race)
-      }
-      setStravaRaceCount(0)
-      setImportDone(
-        newRaces.length > 0
-          ? `${newRaces.length} race${newRaces.length > 1 ? 's' : ''} imported from Strava`
-          : 'No new races to import'
-      )
-    } catch {
-      setImportDone('Import failed — try again')
-    } finally {
-      setImportingRaces(false)
-    }
-  }
-
-  useEffect(() => {
-    if (activeTab !== 'readiness' || !whoopToken) return
-    let cancelled = false
-    async function loadRecovery() {
-      setRecoveryLoading(true)
-      try {
-        const records = await fetchWhoopRecovery(30)
-        if (cancelled) return
-        const parsed = records
-          .map(r => ({
-            date: r.created_at?.slice(0, 10) ?? '',
-            score: r.score?.recovery_score ?? 0,
-            hrv: r.score?.hrv_rmssd_milli,
-            rhr: r.score?.resting_heart_rate,
-          }))
-          .filter(r => r.date && r.score > 0)
-          .sort((a, b) => b.date.localeCompare(a.date))
-        setRecoveryData(parsed)
-      } finally {
-        if (!cancelled) setRecoveryLoading(false)
-      }
-    }
-    loadRecovery()
-    return () => { cancelled = true }
-  }, [activeTab, whoopToken]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Running calculation ────────────────────────────────────────────────────
 
@@ -1080,212 +933,18 @@ export function Train() {
 
       {/* ══════════════════════ ACTIVITIES TAB ════════════════════════════════ */}
       {activeTab === 'activities' && (
-        <>
-          {oauthStatus && (
-            <div style={{
-              background: oauthStatus.includes('Failed') ? 'rgba(255,80,80,0.12)' : 'rgba(var(--green-ch),0.12)',
-              border: `1px solid ${oauthStatus.includes('Failed') ? 'rgba(255,80,80,0.3)' : 'rgba(var(--green-ch),0.3)'}`,
-              borderRadius: '6px', padding: '0.75rem 1rem',
-              fontSize: 'var(--text-sm)',
-              color: oauthStatus.includes('Failed') ? '#ff8080' : 'var(--green)',
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            }}>
-              <span>{oauthStatus}</span>
-              <button onClick={() => setOauthStatus(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontSize: '16px', padding: '0 0 0 8px' }}>✕</button>
-            </div>
-          )}
-
-          {stravaToken && stravaRaceCount > 0 && (
-            <div style={{
-              background: 'rgba(252,76,2,0.08)',
-              border: '1px solid rgba(252,76,2,0.3)',
-              borderRadius: '8px',
-              padding: '0.85rem 1rem',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '0.75rem',
-            }}>
-              <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--white)', lineHeight: 1.4 }}>
-                <span style={{ color: '#fc4c02', fontWeight: 700 }}>Strava</span>{' '}
-                found {stravaRaceCount} race{stravaRaceCount > 1 ? 's' : ''} not in BREAKTAPES
-              </p>
-              <button
-                onClick={handleImportStravaRaces}
-                disabled={importingRaces}
-                style={{ ...btnMain, padding: '0.5rem 0.85rem', fontSize: '11px', flexShrink: 0, opacity: importingRaces ? 0.6 : 1 }}
-              >
-                {importingRaces ? 'Importing…' : `Import ${stravaRaceCount}`}
-              </button>
-            </div>
-          )}
-          {importDone && (
-            <div style={{
-              background: importDone.includes('failed') ? 'rgba(255,80,80,0.12)' : 'rgba(var(--green-ch),0.12)',
-              border: `1px solid ${importDone.includes('failed') ? 'rgba(255,80,80,0.3)' : 'rgba(var(--green-ch),0.3)'}`,
-              borderRadius: '6px', padding: '0.75rem 1rem',
-              fontSize: 'var(--text-sm)',
-              color: importDone.includes('failed') ? '#ff8080' : 'var(--green)',
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            }}>
-              <span>{importDone}</span>
-              <button onClick={() => setImportDone(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontSize: '16px', padding: '0 0 0 8px' }}>✕</button>
-            </div>
-          )}
-
-          {!hasAnyWearable ? (
-            <div style={card}>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', padding: '2rem 1rem', textAlign: 'center' }}>
-                <div style={{ display: 'flex', gap: '1rem', opacity: 0.5 }}>
-                  {['W', 'G', 'S'].map((l, i) => (
-                    <div key={i} style={{ width: '40px', height: '40px', borderRadius: '8px', background: 'var(--surface3)', border: '1px solid var(--border2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', color: 'var(--muted)' }}>
-                      {l}
-                    </div>
-                  ))}
-                </div>
-                <p style={{ margin: 0, fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '15px', color: 'var(--white)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                  Connect a wearable
-                </p>
-                <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--muted)', maxWidth: '260px', lineHeight: 1.5 }}>
-                  Link WHOOP, Garmin, or Strava to see your activity feed here.
-                </p>
-                <button style={btnMain} onClick={() => navigate('/settings')}>
-                  Go to Settings → Wearables
-                </button>
-              </div>
-            </div>
-          ) : feedLoading ? (
-            <div style={{ ...card, textAlign: 'center', padding: '2rem', color: 'var(--muted)', fontSize: '13px', fontFamily: 'var(--headline)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-              Loading activities…
-            </div>
-          ) : activities.length === 0 ? (
-            <div style={{ ...card, textAlign: 'center', padding: '2rem', color: 'var(--muted)', fontSize: '13px', fontFamily: 'var(--headline)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-              No recent activities found
-            </div>
-          ) : (
-            <div style={card}>
-              <p style={sectionLabel}>Recent Activities</p>
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                {activities.slice(0, 20).map(a => {
-                  const d = new Date(a.date)
-                  const dateStr = isNaN(d.getTime()) ? '' : d.toLocaleDateString('en', { month: 'short', day: 'numeric' })
-                  return (
-                    <div key={a.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.6rem 0', borderBottom: '1px solid var(--border)' }}>
-                      <div style={{ minWidth: 0 }}>
-                        <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--white)', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {a.name}
-                        </p>
-                        <p style={{ margin: '2px 0 0', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
-                          {a.source} · {dateStr}
-                          {a.durationMin ? ` · ${a.durationMin}min` : ''}
-                          {a.distanceKm ? ` · ${a.distanceKm.toFixed(1)}km` : ''}
-                        </p>
-                      </div>
-                      {(a.avgHR || a.strain) && (
-                        <p style={{ margin: 0, fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', color: 'var(--orange)', flexShrink: 0, marginLeft: '0.5rem' }}>
-                          {a.strain ? `${a.strain.toFixed(1)} strain` : `${a.avgHR} bpm`}
-                        </p>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          )}
-        </>
+        <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--muted)', fontSize: '14px' }}>
+          <p style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)', marginBottom: '8px' }}>Activity Sync</p>
+          <p style={{ margin: 0 }}>Strava, WHOOP, Garmin and more — coming soon</p>
+        </div>
       )}
 
       {/* ══════════════════════ READINESS TAB ═════════════════════════════════ */}
       {activeTab === 'readiness' && (
-        <>
-          {!whoopToken ? (
-            <div style={card}>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', padding: '2rem 1rem', textAlign: 'center' }}>
-                <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '11px', letterSpacing: '0.08em', color: 'var(--muted)', opacity: 0.5 }}>WHOOP</div>
-                <p style={{ margin: 0, fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '15px', color: 'var(--white)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Connect WHOOP</p>
-                <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--muted)', maxWidth: '260px', lineHeight: 1.5 }}>
-                  Link your WHOOP to see recovery scores, HRV, and resting heart rate trends.
-                </p>
-                <button style={btnMain} onClick={() => navigate('/settings')}>Go to Settings → Wearables</button>
-              </div>
-            </div>
-          ) : recoveryLoading ? (
-            <div style={{ ...card, textAlign: 'center', padding: '2rem', color: 'var(--muted)', fontSize: '13px', fontFamily: 'var(--headline)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-              Loading recovery data…
-            </div>
-          ) : recoveryData.length === 0 ? (
-            <div style={{ ...card, textAlign: 'center', padding: '2rem', color: 'var(--muted)', fontSize: '13px', fontFamily: 'var(--headline)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-              No recovery data found
-            </div>
-          ) : (
-            <>
-              {(() => {
-                const today = recoveryData[0]
-                const score = today.score
-                const color = score >= 67 ? 'var(--green)' : score >= 34 ? '#FFD770' : '#ff8080'
-                const label = score >= 67 ? 'READY' : score >= 34 ? 'MODERATE' : 'RECOVER'
-                return (
-                  <div style={{ ...card, display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                    <div style={{ position: 'relative', flexShrink: 0 }}>
-                      <svg width="80" height="80" viewBox="0 0 80 80">
-                        <circle cx="40" cy="40" r="33" fill="none" stroke="var(--surface3)" strokeWidth="8" />
-                        <circle
-                          cx="40" cy="40" r="33" fill="none"
-                          stroke={color} strokeWidth="8"
-                          strokeDasharray={`${2 * Math.PI * 33 * score / 100} ${2 * Math.PI * 33}`}
-                          strokeLinecap="round"
-                          transform="rotate(-90 40 40)"
-                        />
-                      </svg>
-                      <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }}>
-                        <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', color, lineHeight: 1 }}>{score}</span>
-                      </div>
-                    </div>
-                    <div>
-                      <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '11px', letterSpacing: '0.12em', textTransform: 'uppercase', color, marginBottom: '4px' }}>
-                        {label}
-                      </div>
-                      <div style={{ fontSize: '13px', color: 'var(--white)', fontWeight: 600 }}>Today's Recovery</div>
-                      <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '4px', display: 'flex', gap: '10px' }}>
-                        {today.hrv !== undefined && <span>HRV {Math.round(today.hrv)}ms</span>}
-                        {today.rhr !== undefined && <span>RHR {Math.round(today.rhr)}bpm</span>}
-                      </div>
-                    </div>
-                  </div>
-                )
-              })()}
-
-              <div style={card}>
-                <p style={sectionLabel}>Recovery History (30 days)</p>
-                <div style={{ display: 'flex', alignItems: 'flex-end', gap: '3px', height: '56px', marginBottom: '8px' }}>
-                  {recoveryData.slice(0, 30).reverse().map((r, i) => {
-                    const h = Math.max(4, Math.round(r.score * 0.54))
-                    const c = r.score >= 67 ? 'var(--green)' : r.score >= 34 ? '#FFD770' : '#ff8080'
-                    return (
-                      <div key={i} style={{ flex: 1, height: `${h}px`, background: c, borderRadius: '2px 2px 0 0', opacity: 0.85, minWidth: 0 }} title={`${r.date}: ${r.score}%`} />
-                    )
-                  })}
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginTop: '4px' }}>
-                  {recoveryData.slice(0, 7).map(r => {
-                    const d = new Date(r.date + 'T00:00:00')
-                    const dateStr = isNaN(d.getTime()) ? r.date : d.toLocaleDateString('en', { month: 'short', day: 'numeric' })
-                    const color = r.score >= 67 ? 'var(--green)' : r.score >= 34 ? '#FFD770' : '#ff8080'
-                    return (
-                      <div key={r.date} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.4rem 0', borderBottom: '1px solid var(--border)' }}>
-                        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>{dateStr}</div>
-                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                          {r.hrv !== undefined && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{Math.round(r.hrv)}ms HRV</span>}
-                          <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', color }}>{r.score}%</span>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
-            </>
-          )}
-        </>
+        <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--muted)', fontSize: '14px' }}>
+          <p style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)', marginBottom: '8px' }}>Readiness Sync</p>
+          <p style={{ margin: 0 }}>WHOOP, Garmin and more — coming soon</p>
+        </div>
       )}
     </div>
   )

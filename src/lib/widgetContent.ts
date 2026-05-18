@@ -153,7 +153,7 @@ export const WIDGET_CONTENT: Record<string, WidgetContent> = {
     id: 'activity-preview',
     title: 'ACTIVITY FEED',
     tagline: 'Your latest training sessions.',
-    whatItIs: 'A merged feed of your most recent activities from Strava and WHOOP. Shows sport, name, duration, and distance. Sorted newest first.',
+    whatItIs: 'Your recent training activity. Wearable sync coming soon.',
     howToRead: 'Use the feed to spot weekly rhythm: three easy + one quality is a canonical week. Gaps longer than 4 days without a run deserve a reason (rest, sickness, travel).',
     howItImpactsPerformance: 'Consistency beats volume. The feed is the scoreboard that tells you whether your week actually matched the plan.',
     relatedActions: [
@@ -214,7 +214,7 @@ export const WIDGET_CONTENT: Record<string, WidgetContent> = {
     id: 'recovery-intel',
     title: 'RECOVERY INTELLIGENCE',
     tagline: 'How recovered you are from your last race.',
-    whatItIs: 'A post-race recovery tracker. Uses distance and effort of your last race to estimate recovery days needed. With wearable data connected, adjusts to live recovery and load numbers.',
+    whatItIs: 'A post-race recovery tracker. Uses distance and effort of your last race to estimate recovery days needed.',
     howToRead: 'The top number is days remaining on your recovery clock. When it hits zero, you are cleared for full training again. If you are training hard before zero, expect reduced adaptation.',
     howItImpactsPerformance: 'Recovery is where fitness is made, not lost. Skipping the window compresses progress and raises injury risk. Respecting it is the single cheapest performance decision.',
     relatedActions: [
@@ -244,7 +244,7 @@ export const WIDGET_CONTENT: Record<string, WidgetContent> = {
     id: 'training-correl',
     title: 'TRAINING CORRELATION',
     tagline: 'How training volume maps to race results.',
-    whatItIs: 'Correlates your 42-day pre-race training load (from Strava) against each race’s performance delta vs. PB. Needs at least 3 data points.',
+    whatItIs: "Training load vs race performance. Coming soon with Strava.",
     howToRead: 'A positive slope means more volume leads to better results for you. A flat line means volume is not the bottleneck — look at quality, recovery, or race selection.',
     howItImpactsPerformance: 'Volume is not a universal lever. This widget answers whether, for you specifically, adding kilometers in a build actually translates to faster races.',
     relatedActions: [

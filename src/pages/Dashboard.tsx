@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { useDashStore } from '@/stores/useDashStore'
-import { useWearableStore } from '@/stores/useWearableStore'
 import { selectRaces, selectNextRace, selectAthlete, selectDashZoneCollapse, selectUpcomingRaces, selectFocusRaceId } from '@/stores/selectors'
 import { AddRaceModal } from '@/components/AddRaceModal'
 import { ViewEditRaceModal } from '@/components/ViewEditRaceModal'
@@ -24,7 +23,6 @@ import {
   bestWeatherImpact, distanceMilestones, secsToHMS as fSecsToHMS,
   raceDensityWarnings, findCourseRepeats, personalLeagueTable,
 } from '@/lib/raceFormulas'
-import { fetchStravaActivities, startStravaOAuth } from '@/lib/strava'
 import { supabase } from '@/lib/supabase'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -1549,88 +1547,26 @@ function SeasonPlannerWidget({ onAddRace }: { onAddRace: () => void }) {
 // ─── Recovery Intelligence Widget ────────────────────────────────────────────
 
 function RecoveryIntelWidget() {
-  const races       = useRaceStore(selectRaces)
-  const stravaToken = useWearableStore(s => s.stravaToken)
-  const today       = todayStr()
-
-  const [stravaActs, setStravaActs] = useState<Awaited<ReturnType<typeof fetchStravaActivities>>>([])
-
-  useEffect(() => {
-    if (!stravaToken?.access_token) return
-    fetchStravaActivities(50).then(setStravaActs)
-  }, [stravaToken])
+  const races = useRaceStore(selectRaces)
+  const today = todayStr()
 
   const lastRace = useMemo(
     () => races.filter(r => r.date <= today).sort((a, b) => b.date.localeCompare(a.date))[0],
     [races, today],
   )
 
-  // Strava-based recovery when no race data
-  const stravaRecovery = useMemo(() => {
-    if (!stravaToken?.access_token || stravaActs.length === 0) return null
-    const sorted = [...stravaActs].sort((a, b) => b.start_date_local.localeCompare(a.start_date_local))
-    const lastAct = sorted[0]
-    if (!lastAct) return null
-    const daysSinceAct = daysAgo(lastAct.start_date_local.slice(0, 10))
-
-    // Load ratio: last 7d vs avg of prior 3 weeks
-    const now = Date.now()
-    const week7 = 7 * 86400000
-    const last7km  = stravaActs.filter(a => now - new Date(a.start_date_local).getTime() < week7)
-      .reduce((s, a) => s + (a.distance ?? 0) / 1000, 0)
-    const prior3wk = stravaActs.filter(a => {
-      const age = now - new Date(a.start_date_local).getTime()
-      return age >= week7 && age < 4 * week7
-    }).reduce((s, a) => s + (a.distance ?? 0) / 1000, 0)
-    const avgWeekKm = prior3wk / 3
-    const loadRatio = avgWeekKm > 0 ? Math.round((last7km / avgWeekKm) * 10) / 10 : null
-
-    return { daysSinceAct, loadRatio, lastActName: lastAct.name || lastAct.type }
-  }, [stravaActs, stravaToken])
-
-  if (!lastRace && !stravaRecovery) {
+  if (!lastRace) {
     return (
       <WidgetCard id="recovery-intel" style={st.glowCard}>
         <div style={st.widgetLabel}>RECOVERY INTELLIGENCE</div>
-        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '6px' }}>Log your first race or connect Strava to track recovery.</div>
+        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '6px' }}>Log your first race to track recovery.</div>
       </WidgetCard>
     )
   }
 
-  // Strava-based view (no race logged yet, or use as primary signal)
-  if (!lastRace && stravaRecovery) {
-    const { daysSinceAct, loadRatio } = stravaRecovery
-    const badge = daysSinceAct >= 2 ? 'RESTED' : 'ACTIVE'
-    const bc = badge === 'RESTED' ? 'var(--green)' : 'var(--orange)'
-    return (
-      <WidgetCard id="recovery-intel" style={st.glowCard}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
-          <div style={st.widgetLabel}>RECOVERY INTELLIGENCE</div>
-          <span style={{ ...st.badgePill, background: `${bc}22`, color: bc, border: `1px solid ${bc}55`, flexShrink: 0 }}>{badge}</span>
-        </div>
-        <div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '68px', lineHeight: 1, color: 'var(--white)', letterSpacing: '-0.02em' }}>
-            {daysSinceAct}d
-          </div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '10px', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
-            DAYS SINCE LAST ACTIVITY
-          </div>
-        </div>
-        {loadRatio !== null && (
-          <>
-            <div style={st.widgetDivider} />
-            <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.55 }}>
-              LOAD: {loadRatio}× normal — {loadRatio > 1.2 ? 'above baseline, consider recovery' : loadRatio < 0.8 ? 'below baseline, building back' : 'on target'}
-            </div>
-          </>
-        )}
-      </WidgetCard>
-    )
-  }
-
-  const dist = distanceToKm(lastRace!.distance)
+  const dist = distanceToKm(lastRace.distance)
   const recoveryDays = dist >= 42 ? 14 : dist >= 21 ? 7 : dist >= 10 ? 3 : 2
-  const daysSince = daysAgo(lastRace!.date)
+  const daysSince = daysAgo(lastRace.date)
   const daysLeft = Math.max(0, recoveryDays - daysSince)
   const loadScore = Math.min(100, Math.round(dist * 2))
   const badge = recoveryDays >= 14 ? 'HIGH' : recoveryDays >= 7 ? 'MEDIUM' : 'LOW'
@@ -1641,7 +1577,7 @@ function RecoveryIntelWidget() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>RECOVERY INTELLIGENCE</div>
-          <div style={st.widgetTitle}>{(lastRace!.name ?? '').toUpperCase()}</div>
+          <div style={st.widgetTitle}>{(lastRace.name ?? '').toUpperCase()}</div>
         </div>
         <span style={{ ...st.badgePill, background: `${bc}22`, color: bc, border: `1px solid ${bc}55`, flexShrink: 0 }}>{badge}</span>
       </div>
@@ -1658,11 +1594,7 @@ function RecoveryIntelWidget() {
       <div style={st.widgetDivider} />
 
       <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.55 }}>
-        {stravaRecovery ? (
-          <>Last activity {stravaRecovery.daysSinceAct}d ago{stravaRecovery.loadRatio !== null ? ` · LOAD: ${stravaRecovery.loadRatio}× normal` : ''}. Race load score: {loadScore}.</>
-        ) : (
-          <>Recent race load score: {loadScore}. Use this to avoid stacking hard events too closely.</>
-        )}
+        Recent race load score: {loadScore}. Use this to avoid stacking hard events too closely.
       </div>
     </WidgetCard>
   )
@@ -1671,117 +1603,13 @@ function RecoveryIntelWidget() {
 // ─── Training Correlation Widget ─────────────────────────────────────────────
 
 function TrainingCorrelWidget() {
-  const stravaToken   = useWearableStore(s => s.stravaToken)
-  const stravaExpired = useWearableStore(s => s.stravaExpired)
-  const races         = useRaceStore(selectRaces)
-  const [activities, setActivities] = useState<Awaited<ReturnType<typeof fetchStravaActivities>>>([])
-
-  useEffect(() => {
-    if (!stravaToken?.access_token) return
-    fetchStravaActivities(200).then(setActivities)
-  }, [stravaToken])
-
-  if (!stravaToken?.access_token) {
-    return (
-      <WidgetCard id="training-correl" style={st.glowCard}>
-        <div style={st.widgetLabel}>TRAINING CORRELATION</div>
-        <div style={st.widgetTitle}>LOAD VS RESULT</div>
-        {stravaExpired ? (
-          <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5 }}>
-              Strava connection expired. Reconnect to restore training data.
-            </div>
-            <button
-              onClick={startStravaOAuth}
-              style={{ alignSelf: 'flex-start', background: 'var(--orange)', color: '#000', border: 'none', borderRadius: '8px', padding: '8px 16px', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '12px', letterSpacing: '0.08em', cursor: 'pointer' }}
-            >
-              RECONNECT STRAVA
-            </button>
-          </div>
-        ) : (
-          <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.6, marginTop: '6px' }}>
-            Connect Strava and build a few matched race windows to see how load tracks with outcomes.
-          </div>
-        )}
-      </WidgetCard>
-    )
-  }
-
-  const pbMap = useMemo(() => buildPBMap(races), [races])
-
-  const dataPoints = useMemo(() => {
-    const timedRaces = races
-      .filter(r => r.time && r.date && r.distance)
-      .sort((a, b) => b.date.localeCompare(a.date))
-
-    return timedRaces.map(r => {
-      const raceTs   = new Date(r.date + 'T00:00:00').getTime()
-      const windowEnd   = raceTs - 7 * 86400000
-      const windowStart = raceTs - 49 * 86400000
-      const loadKm = activities
-        .filter(a => {
-          const t = new Date(a.start_date_local).getTime()
-          return t >= windowStart && t <= windowEnd
-        })
-        .reduce((s, a) => s + (a.distance ?? 0) / 1000, 0)
-      const raceSecs = parseHMS(r.time!)
-      const pb = pbMap[r.distance ?? '']
-      const pbSecs = pb ? parseHMS(pb.time!) : null
-      const delta = (raceSecs && pbSecs && pbSecs > 0)
-        ? Math.round((pbSecs - raceSecs) / pbSecs * 100)
-        : null
-      return { name: r.name ?? r.date, loadKm: Math.round(loadKm), delta }
-    }).filter(p => p.loadKm > 0 && p.delta !== null) as { name: string; loadKm: number; delta: number }[]
-  }, [races, activities, pbMap])
-
-  if (dataPoints.length < 3) {
-    const need = 3 - dataPoints.length
-    return (
-      <WidgetCard id="training-correl" style={st.glowCard}>
-        <div style={st.widgetLabel}>TRAINING CORRELATION</div>
-        <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.6, marginTop: '6px' }}>
-          Need more data — log {need} more race{need !== 1 ? 's' : ''} with times to see your training correlation.
-        </div>
-      </WidgetCard>
-    )
-  }
-
-  const sorted   = [...dataPoints].sort((a, b) => b.delta - a.delta)
-  const best     = sorted[0]
-  const worst    = sorted[sorted.length - 1]
-  const recent   = dataPoints[0]
-  const maxLoad  = Math.max(best.loadKm, worst.loadKm, recent.loadKm, 1)
-
-  const Row = ({ label, point }: { label: string; point: typeof best }) => {
-    const barW = Math.round(point.loadKm / maxLoad * 100)
-    const aboveAvg = point.delta >= 0
-    const deltaColor = aboveAvg ? 'var(--green)' : 'var(--orange)'
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-          <span style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted)', textTransform: 'uppercase' }}>{label}</span>
-          <span style={{ fontSize: '10px', color: deltaColor, fontWeight: 700, fontFamily: 'var(--headline)' }}>{point.delta >= 0 ? '+' : ''}{point.delta}% vs PB pace</span>
-        </div>
-        <div style={{ fontSize: '11px', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{point.name}</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ flex: 1, height: '6px', background: 'var(--surface)', borderRadius: '3px' }}>
-            <div style={{ width: `${barW}%`, height: '100%', background: 'var(--orange)', borderRadius: '3px', opacity: 0.7 }} />
-          </div>
-          <span style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, flexShrink: 0 }}>{point.loadKm}km load</span>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <WidgetCard id="training-correl" style={st.glowCard}>
       <div style={st.widgetLabel}>TRAINING CORRELATION</div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '10px' }}>
-        <Row label="Best result" point={best} />
-        <div style={st.widgetDivider} />
-        <Row label="Worst result" point={worst} />
-        <div style={st.widgetDivider} />
-        <Row label="Most recent" point={recent} />
+      <div style={st.widgetTitle}>LOAD VS RESULT</div>
+      <div style={{ padding: '16px 0', textAlign: 'center', color: 'var(--muted)', fontSize: '13px' }}>
+        <p style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '13px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--muted)', margin: '0 0 6px' }}>Coming Soon</p>
+        <p style={{ margin: 0, fontSize: '12px' }}>Connect Strava to see training load vs race performance</p>
       </div>
     </WidgetCard>
   )
@@ -2217,112 +2045,15 @@ function WhyResultWidget() {
 
 // ─── Activity Feed Preview Widget ────────────────────────────────────────────
 
-
-const WHOOP_SPORT_NAMES: Record<number, string> = {
-  0: 'Activity', 1: 'Running', 2: 'Cycling', 3: 'Swimming',
-  44: 'Weightlifting', 45: 'Yoga', 63: 'Hiking', 71: 'Triathlon',
-  72: 'Rowing', 73: 'Walking', 74: 'HIIT',
-}
-
-function stravaIcon(type: string): string {
-  const t = type.toLowerCase()
-  if (t.includes('run')) return 'RUN'
-  if (t.includes('ride') || t.includes('cycling')) return 'BIKE'
-  if (t.includes('swim')) return 'SWIM'
-  if (t.includes('walk')) return 'WALK'
-  if (t.includes('weight') || t.includes('strength')) return 'STR'
-  return 'ACT'
-}
-
 function ActivityPreviewWidget() {
-  const stravaToken   = useWearableStore(s => s.stravaToken)
-  const stravaExpired = useWearableStore(s => s.stravaExpired)
-  const garminToken   = useWearableStore(s => s.garminToken)
-  const whoopToken    = useWearableStore(s => s.whoopToken)
-  const whoopActs     = useWearableStore(s => s.whoopActivities)
-
-  const [stravaActs, setStravaActs] = useState<Awaited<ReturnType<typeof fetchStravaActivities>>>([])
-
-  useEffect(() => {
-    if (!stravaToken?.access_token) return
-    fetchStravaActivities(10).then(setStravaActs)
-  }, [stravaToken])
-
-  if (!stravaToken && !garminToken && !whoopToken) {
-    return (
-      <WidgetCard id="activity-preview" className="" style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: '12px', padding: '14px' }}>
-        <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '8px' }}>
-          Activity Feed
-        </div>
-        {stravaExpired ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <div style={{ fontSize: '12px', color: 'var(--muted)' }}>Strava connection expired.</div>
-            <button
-              onClick={startStravaOAuth}
-              style={{ alignSelf: 'flex-start', background: 'var(--orange)', color: '#000', border: 'none', borderRadius: '8px', padding: '6px 14px', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '11px', letterSpacing: '0.08em', cursor: 'pointer' }}
-            >
-              RECONNECT STRAVA
-            </button>
-          </div>
-        ) : (
-          <div style={{ fontSize: '12px', color: 'var(--muted)' }}>Connect Strava, Garmin, or WHOOP to see recent training.</div>
-        )}
-      </WidgetCard>
-    )
-  }
-
-  const items = useMemo(() => {
-    const merged: Array<{ icon: string; name: string; meta: string; date: string; sortKey: string }> = []
-    for (const a of stravaActs) {
-      const km = Math.round((a.distance ?? 0) / 100) / 10
-      const mins = Math.round((a.elapsed_time ?? 0) / 60)
-      merged.push({
-        icon: stravaIcon(a.type),
-        name: a.name || a.type,
-        meta: [km > 0 ? `${km} km` : '', mins > 0 ? `${mins} min` : ''].filter(Boolean).join(' · '),
-        date: (a.start_date_local ?? '').slice(0, 10),
-        sortKey: a.start_date_local ?? '',
-      })
-    }
-    for (const a of whoopActs) {
-      const mins = a.end ? Math.round((new Date(a.end).getTime() - new Date(a.start).getTime()) / 60000) : 0
-      merged.push({
-        icon: 'W',
-        name: WHOOP_SPORT_NAMES[a.sport_id] ?? 'Activity',
-        meta: mins > 0 ? `${mins} min` : '',
-        date: a.start.slice(0, 10),
-        sortKey: a.start,
-      })
-    }
-    return merged.sort((a, b) => b.sortKey.localeCompare(a.sortKey)).slice(0, 5)
-  }, [stravaActs, whoopActs])
-
-  if (!items.length) {
-    return (
-      <WidgetCard id="activity-preview" className="" style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: '12px', padding: '14px' }}>
-        <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '8px' }}>
-          Recent Training
-        </div>
-        <div style={{ fontSize: '12px', color: 'var(--muted)' }}>No activities yet — sync your wearable to see recent training.</div>
-      </WidgetCard>
-    )
-  }
-
   return (
     <WidgetCard id="activity-preview" className="" style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: '12px', padding: '14px' }}>
       <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '8px' }}>
-        Recent Training
+        Activity Feed
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-        {items.map((a, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingBottom: i < items.length - 1 ? '6px' : 0, borderBottom: i < items.length - 1 ? '1px solid var(--border)' : 'none' }}>
-            <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '9px', letterSpacing: '0.06em', color: 'var(--orange)', background: 'rgba(var(--orange-ch),0.12)', borderRadius: '4px', padding: '2px 5px', flexShrink: 0, minWidth: '28px', textAlign: 'center' }}>{a.icon}</span>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: '13px', color: 'var(--white)', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.name}</div>
-              <div style={{ fontSize: '11px', color: 'var(--muted)' }}>{[a.date, a.meta].filter(Boolean).join(' · ')}</div>
-            </div>
-          </div>
-        ))}
+      <div style={{ padding: '8px 0', textAlign: 'center', color: 'var(--muted)', fontSize: '13px' }}>
+        <p style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '13px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--muted)', margin: '0 0 6px' }}>Coming Soon</p>
+        <p style={{ margin: 0, fontSize: '12px' }}>Connect Strava to see training load vs race performance</p>
       </div>
     </WidgetCard>
   )
@@ -2373,18 +2104,10 @@ function OnThisDayWidget() {
 // ─── Race Readiness Widget ────────────────────────────────────────────────────
 
 function RaceReadinessWidget() {
-  const races        = useRaceStore(selectRaces)
-  const whoopRecovery = useWearableStore(s => s.whoopRecovery)
-  const today        = todayStr()
+  const races = useRaceStore(selectRaces)
+  const today = todayStr()
 
   const { signal, score, detail } = useMemo(() => {
-    // WHOOP-based recovery
-    if (whoopRecovery.length > 0) {
-      const latest = whoopRecovery.sort((a, b) => b.created_at.localeCompare(a.created_at))[0]
-      const s = latest?.score?.recovery_score ?? 50
-      const signal = s >= 67 ? 'READY' : s >= 34 ? 'BUILDING' : 'UNDERCOOKED'
-      return { signal, score: s, detail: `WHOOP recovery score: ${s}%` }
-    }
     // Derive from days since last race
     const past = races.filter(r => r.date <= today).sort((a, b) => b.date.localeCompare(a.date))
     const last = past[0]
@@ -2396,7 +2119,7 @@ function RaceReadinessWidget() {
     const s = Math.round(ratio * 100)
     const signal = s >= 85 ? 'READY' : s >= 50 ? 'BUILDING' : 'UNDERCOOKED'
     return { signal, score: s, detail: `${daysSince}d since ${distBadge(last.distance)} · recovery window: ${recoveryDays}d` }
-  }, [races, whoopRecovery, today])
+  }, [races, today])
 
   const sigColor = signal === 'READY' ? 'var(--green)' : signal === 'BUILDING' ? 'var(--gold)' : 'var(--orange)'
 
@@ -3112,21 +2835,13 @@ function PBProbabilityWidget({ race }: { race: Race | null }) {
 // ─── Streak Risk Widget ───────────────────────────────────────────────────────
 
 function StreakRiskWidget() {
-  const garminActivities = useWearableStore(s => s.garminActivities)
-  const whoopActivities  = useWearableStore(s => s.whoopActivities)
   const races = useRaceStore(selectRaces)
   const today = todayStr()
 
   const result = useMemo(() => {
-    // Build a set of active days from wearables or recent races
+    // Build a set of active days from recent races
     const activeDays = new Set<string>()
-    garminActivities.forEach(a => { if (a.startTimeGmt) activeDays.add(a.startTimeGmt.split('T')[0].split(' ')[0]) })
-    whoopActivities.forEach(a => { if (a.start) activeDays.add(a.start.split('T')[0]) })
-
-    // Fallback to recent races if no wearable data
-    if (activeDays.size === 0) {
-      races.filter(r => r.date <= today).forEach(r => activeDays.add(r.date))
-    }
+    races.filter(r => r.date <= today).forEach(r => activeDays.add(r.date))
 
     if (activeDays.size === 0) return null
 
@@ -3152,7 +2867,7 @@ function StreakRiskWidget() {
       : 'No recent activity streak detected.'
 
     return { streak, label, color, note }
-  }, [garminActivities, whoopActivities, races, today])
+  }, [races, today])
 
   return (
     <WidgetCard id="streak-risk" style={st.glowCard}>

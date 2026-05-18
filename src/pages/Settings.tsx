@@ -3,30 +3,13 @@ import { createPortal } from 'react-dom'
 import { useClerk, useUser } from '@clerk/clerk-react'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
-import { useWearableStore } from '@/stores/useWearableStore'
 import { syncStateToSupabase } from '@/lib/syncState'
-import { startStravaOAuth } from '@/lib/strava'
-import { removeWearableToken } from '@/lib/wearableUtils'
 import { THEMES } from '@/types'
 import type { ThemeId } from '@/types'
 import { useThemeStore } from '@/stores/useThemeStore'
 import { APP_URL, APP_VERSION } from '@/env'
 import { isAdminUser } from '@/pages/Admin'
 import { posthog } from '@/lib/posthog'
-
-const btnMain: React.CSSProperties = {
-  background: 'var(--orange)',
-  color: 'var(--black)',
-  border: 'none',
-  borderRadius: '4px',
-  padding: '0.8rem 1.25rem',
-  fontFamily: 'var(--headline)',
-  fontWeight: 900,
-  letterSpacing: '0.1em',
-  textTransform: 'uppercase',
-  cursor: 'pointer',
-  fontSize: '13px',
-}
 
 const btnGhost: React.CSSProperties = {
   background: 'transparent',
@@ -66,9 +49,6 @@ export function Settings() {
   const syncStatus = useAuthStore(s => s.syncStatus)
   const athlete = useAthleteStore(s => s.athlete)
   const updateAthlete = useAthleteStore(s => s.updateAthlete)
-
-  const stravaToken = useWearableStore(s => s.stravaToken)
-  const clearToken  = useWearableStore(s => s.clearToken)
 
   const [accountExpanded, setAccountExpanded] = useState(false)
   const [copyToast, setCopyToast] = useState(false)
@@ -443,33 +423,9 @@ export function Settings() {
       {/* ── Wearables section ── */}
       <section>
         <p style={sectionLabel}>Wearables</p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-
-          {/* Strava */}
-          <div style={{ ...card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ margin: 0, fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>Strava</p>
-              <p style={{ margin: '3px 0 0', fontSize: 'var(--text-xs)', color: stravaToken ? 'var(--green)' : 'var(--muted)' }}>
-                {stravaToken ? '● Connected' : 'Activities & segment data'}
-              </p>
-            </div>
-            {stravaToken ? (
-              <button
-                style={{ ...btnGhost, padding: '0.5rem 1rem', whiteSpace: 'nowrap', flexShrink: 0, fontSize: '12px' }}
-                onClick={async () => { await removeWearableToken('strava'); clearToken('strava'); posthog.capture('wearable disconnected', { provider: 'strava' }) }}
-              >Disconnect</button>
-            ) : (
-              <button
-                style={{ ...btnMain, padding: '0.5rem 1rem', whiteSpace: 'nowrap', flexShrink: 0 }}
-                onClick={startStravaOAuth}
-              >Connect</button>
-            )}
-          </div>
-
-          <p style={{ margin: '4px 0 0', fontSize: '12px', color: 'var(--muted)', fontFamily: 'var(--body)' }}>
-            More integrations (WHOOP, Garmin, Apple Health) coming soon.
-          </p>
-
+        <div style={card}>
+          <p style={{ margin: 0, fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>Wearable Sync</p>
+          <p style={{ margin: '4px 0 0', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Strava, WHOOP, Garmin and more — coming soon</p>
         </div>
       </section>
 
