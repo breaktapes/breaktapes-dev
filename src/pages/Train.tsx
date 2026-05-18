@@ -861,7 +861,7 @@ export function Train() {
                           </div>
 
                           {/* PB projection table */}
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: '4px', padding: '4px 0 8px', borderBottom: '1px solid var(--border2)' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', padding: '4px 0 8px', borderBottom: '1px solid var(--border2)' }}>
                             {['Distance', `Age ${resolvedCurrentAge}`, `Age ${targetAge}`].map(h => (
                               <span key={h} style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)' }}>{h}</span>
                             ))}
@@ -871,12 +871,12 @@ export function Train() {
                             const projStr  = secsToHMS(Math.round(projSecs))
                             const projPaceKm = secsToMMSS(projSecs / row.km)
                             return (
-                              <div key={row.label} style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: '4px', padding: '7px 0', borderBottom: '1px solid var(--border)', alignItems: 'center' }}>
+                              <div key={row.label} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', padding: '10px 0', borderBottom: '1px solid var(--border)', alignItems: 'center' }}>
                                 <span style={{ fontSize: '12px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', fontFamily: 'var(--headline)', fontWeight: 700 }}>{row.label}</span>
-                                <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', color: 'var(--white)' }}>{row.timeStr}</span>
-                                <div style={{ textAlign: 'right' }}>
-                                  <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', color: ratio < 1 ? 'var(--green)' : ratio > 1 ? '#f97316' : 'var(--white)' }}>{projStr}</div>
-                                  <div style={{ fontSize: '10px', color: 'var(--muted)' }}>{projPaceKm}/km</div>
+                                <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', color: 'var(--white)' }}>{row.timeStr}</span>
+                                <div>
+                                  <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', color: ratio < 1 ? 'var(--green)' : ratio > 1 ? '#f97316' : 'var(--white)' }}>{projStr}</div>
+                                  <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '2px' }}>{projPaceKm}/km</div>
                                 </div>
                               </div>
                             )
