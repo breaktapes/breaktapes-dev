@@ -1,12 +1,22 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useRaceStore } from '@/stores/useRaceStore'
+import { useAthleteStore } from '@/stores/useAthleteStore'
 import { handleGarminCallback } from '@/lib/garmin'
 import { computeVDOT, paceZones, parseDistKm, parseTimeSecs, secsToHMS } from '@/lib/raceFormulas'
 import { useUnits } from '@/lib/units'
 import { TimePickerWheel } from '@/components/TimePickerWheel'
 import type { HMS } from '@/components/TimePickerWheel'
 import type { Race } from '@/types'
+
+// WA age-grading factor: 1.0 at peak (≤30), increases with age
+// Based on WA masters athletics 2023 tables (polynomial approximation)
+function waAgeFactor(age: number, gender: 'M' | 'F' | string): number {
+  const clamped = Math.min(Math.max(age, 15), 90)
+  if (clamped <= 30) return 1.0
+  const k = gender === 'F' ? 0.00215 : 0.00248
+  return 1.0 + Math.pow(clamped - 30, 1.52) * k
+}
 
 const btnMain: React.CSSProperties = {
   background: 'var(--orange)',
@@ -178,8 +188,23 @@ export function Train() {
   const [customUnit, setCustomUnit]   = useState<'km' | 'mi'>('km')
   const [goalHMS, setGoalHMS]         = useState<HMS>({ h: 0, m: 0, s: 0 })
   const [splitsTab, setSplitsTab]     = useState<'km' | 'mile' | 'race'>('race')
+  const [splitStrategy, setSplitStrategy] = useState<'even' | 'negative' | 'positive'>('even')
+  const [splitVariancePct, setSplitVariancePct] = useState(3)
   const [runResult, setRunResult]     = useState<{ km: string; mi: string } | null>(null)
   const [runZones, setRunZones]       = useState<ReturnType<typeof paceZones> | null>(null)
+
+  // Age-grade pace projection
+  const athlete = useAthleteStore(s => s.athlete)
+  const currentAge = useMemo(() => {
+    if (!athlete?.dob) return null
+    const dob = new Date(athlete.dob)
+    const today = new Date()
+    let age = today.getFullYear() - dob.getFullYear()
+    if (today.getMonth() < dob.getMonth() || (today.getMonth() === dob.getMonth() && today.getDate() < dob.getDate())) age--
+    return age
+  }, [athlete?.dob])
+  const [ageCalcCurrentAge, setAgeCalcCurrentAge] = useState<string>('')
+  const [ageCalcTargetAge, setAgeCalcTargetAge]   = useState<string>('30')
 
   // ── Triathlon calculator state ─────────────────────────────────────────────
   const [triDistId, setTriDistId]     = useState<TriDistId>('olympic')
@@ -577,34 +602,68 @@ export function Train() {
                 const totalSecs = hmsToSecs(goalHMS)
                 const km = getRunKm()
                 if (!totalSecs || !km) return null
-                const pacePerKm   = totalSecs / km
-                const milesTotal  = km / 1.60934
-                const pacePerMile = totalSecs / milesTotal
+                const avgPacePerKm = totalSecs / km
+                const milesTotal   = km / 1.60934
 
-                type SplitRow = { marker: string; split: string; cumulative: string }
+                // Pace per km for each half based on strategy
+                // even:     all same
+                // negative: first half slower, second half faster (runner's negative split)
+                // positive: first half faster, second half slower (positive split / fade)
+                const halfKm = km / 2
+                const variance = splitStrategy === 'even' ? 0 : splitVariancePct / 100
+                // firstFactor/secondFactor preserve total time
+                const firstFactor  = splitStrategy === 'negative' ? 1 + variance : splitStrategy === 'positive' ? 1 - variance : 1
+                const secondFactor = splitStrategy === 'negative' ? 1 - variance : splitStrategy === 'positive' ? 1 + variance : 1
+
+                function paceAtKm(distFromStart: number): number {
+                  if (splitStrategy === 'even') return avgPacePerKm
+                  return distFromStart <= halfKm ? avgPacePerKm * firstFactor : avgPacePerKm * secondFactor
+                }
+
+                function cumulativeSecsAt(distKm: number): number {
+                  if (splitStrategy === 'even') return avgPacePerKm * distKm
+                  if (distKm <= halfKm) return avgPacePerKm * firstFactor * distKm
+                  return avgPacePerKm * firstFactor * halfKm + avgPacePerKm * secondFactor * (distKm - halfKm)
+                }
+
+                type SplitRow = { marker: string; split: string; cumulative: string; isFast?: boolean; isSlow?: boolean }
                 const rows: SplitRow[] = []
 
                 if (splitsTab === 'km') {
                   const full = Math.floor(km)
                   for (let i = 1; i <= full; i++) {
-                    rows.push({ marker: `${i} km`, split: secsToMMSS(pacePerKm), cumulative: secsToHMS(Math.round(pacePerKm * i)) })
+                    const p = paceAtKm(i - 0.5)
+                    const isFast = splitStrategy !== 'even' && p < avgPacePerKm
+                    const isSlow = splitStrategy !== 'even' && p > avgPacePerKm
+                    rows.push({ marker: `${i} km`, split: secsToMMSS(p), cumulative: secsToHMS(Math.round(cumulativeSecsAt(i))), isFast, isSlow })
                   }
                   const rem = km - full
-                  if (rem > 0.01) rows.push({ marker: `${km % 1 === 0 ? km : km.toFixed(3).replace(/0+$/, '')} km`, split: secsToMMSS(pacePerKm * rem), cumulative: secsToHMS(totalSecs) })
+                  if (rem > 0.01) {
+                    const p = paceAtKm(km - rem / 2)
+                    rows.push({ marker: `${km % 1 === 0 ? km : km.toFixed(3).replace(/0+$/, '')} km`, split: secsToMMSS(p * rem), cumulative: secsToHMS(totalSecs) })
+                  }
                 } else if (splitsTab === 'mile') {
                   const full = Math.floor(milesTotal)
                   for (let i = 1; i <= full; i++) {
-                    rows.push({ marker: `${i} mi`, split: secsToMMSS(pacePerMile), cumulative: secsToHMS(Math.round(pacePerMile * i)) })
+                    const midKm = (i - 0.5) * 1.60934
+                    const p = paceAtKm(midKm) * 1.60934
+                    const isFast = splitStrategy !== 'even' && paceAtKm(midKm) < avgPacePerKm
+                    const isSlow = splitStrategy !== 'even' && paceAtKm(midKm) > avgPacePerKm
+                    rows.push({ marker: `${i} mi`, split: secsToMMSS(p), cumulative: secsToHMS(Math.round(cumulativeSecsAt(i * 1.60934))), isFast, isSlow })
                   }
                   const rem = milesTotal - full
-                  if (rem > 0.01) rows.push({ marker: `${milesTotal.toFixed(2)} mi`, split: secsToMMSS(pacePerMile * rem), cumulative: secsToHMS(totalSecs) })
+                  if (rem > 0.01) rows.push({ marker: `${milesTotal.toFixed(2)} mi`, split: secsToMMSS(paceAtKm(km) * 1.60934 * rem), cumulative: secsToHMS(totalSecs) })
                 } else {
                   const full5 = Math.floor(km / 5)
                   for (let i = 1; i <= full5; i++) {
-                    rows.push({ marker: `${i * 5} km`, split: secsToMMSS(pacePerKm * 5), cumulative: secsToHMS(Math.round(pacePerKm * i * 5)) })
+                    const midKm = (i - 0.5) * 5
+                    const p = paceAtKm(midKm) * 5
+                    const isFast = splitStrategy !== 'even' && paceAtKm(midKm) < avgPacePerKm
+                    const isSlow = splitStrategy !== 'even' && paceAtKm(midKm) > avgPacePerKm
+                    rows.push({ marker: `${i * 5} km`, split: secsToMMSS(p), cumulative: secsToHMS(Math.round(cumulativeSecsAt(i * 5))), isFast, isSlow })
                   }
                   const rem = km - full5 * 5
-                  if (rem > 0.01) rows.push({ marker: `${km % 1 === 0 ? km : km.toFixed(1)} km`, split: secsToMMSS(pacePerKm * rem), cumulative: secsToHMS(totalSecs) })
+                  if (rem > 0.01) rows.push({ marker: `${km % 1 === 0 ? km : km.toFixed(1)} km`, split: secsToMMSS(paceAtKm(km) * rem), cumulative: secsToHMS(totalSecs) })
                 }
 
                 const SPLIT_TABS: { id: typeof splitsTab; label: string }[] = [
@@ -616,6 +675,39 @@ export function Train() {
                 return (
                   <div style={card}>
                     <p style={sectionLabel}>Splits</p>
+
+                    {/* Split strategy selector */}
+                    <div style={{ display: 'flex', gap: '4px', marginBottom: '10px' }}>
+                      {(['even', 'negative', 'positive'] as const).map(s => (
+                        <button key={s} onClick={() => setSplitStrategy(s)} style={{
+                          flex: 1, padding: '5px 4px',
+                          background: splitStrategy === s ? 'rgba(var(--orange-ch),0.12)' : 'var(--surface3)',
+                          border: `1px solid ${splitStrategy === s ? 'rgba(var(--orange-ch),0.4)' : 'var(--border2)'}`,
+                          borderRadius: '6px',
+                          color: splitStrategy === s ? 'var(--orange)' : 'var(--muted)',
+                          fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '10px',
+                          letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer',
+                        }}>
+                          {s === 'even' ? 'Even' : s === 'negative' ? '↗ Neg Split' : '↘ Pos Split'}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Variance % input for pos/neg */}
+                    {splitStrategy !== 'even' && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                        <span style={{ fontSize: '11px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                          {splitStrategy === 'negative' ? 'Second half faster by' : 'Second half slower by'}
+                        </span>
+                        <input
+                          type="number" min={1} max={15} value={splitVariancePct}
+                          onChange={e => setSplitVariancePct(Math.min(15, Math.max(1, parseInt(e.target.value) || 1)))}
+                          style={{ width: '48px', textAlign: 'center', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', padding: '4px' }}
+                        />
+                        <span style={{ fontSize: '11px', color: 'var(--muted)' }}>%</span>
+                      </div>
+                    )}
+
                     <div style={{ display: 'flex', gap: '4px', marginBottom: '12px' }}>
                       {SPLIT_TABS.map(t => (
                         <button
@@ -652,7 +744,7 @@ export function Train() {
                       {rows.map((row, i) => (
                         <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px', padding: '6px 0', borderBottom: '1px solid var(--border)', alignItems: 'center' }}>
                           <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', color: 'var(--white)' }}>{row.marker}</span>
-                          <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '13px', color: 'var(--muted)' }}>{row.split}</span>
+                          <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '13px', color: row.isFast ? 'var(--green)' : row.isSlow ? '#f97316' : 'var(--muted)' }}>{row.split}</span>
                           <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', color: i === rows.length - 1 ? 'var(--orange)' : 'var(--white)' }}>{row.cumulative}</span>
                         </div>
                       ))}
@@ -691,6 +783,117 @@ export function Train() {
                   </div>
                 </div>
               )}
+              {/* Age-Grade Pace Projection */}
+              {(() => {
+                const resolvedCurrentAge = ageCalcCurrentAge !== '' ? parseInt(ageCalcCurrentAge) : currentAge
+                const targetAge = parseInt(ageCalcTargetAge)
+                const gender = athlete?.gender ?? 'M'
+
+                // Find PBs at standard distances from logged races
+                const PB_DISTS = [
+                  { label: '5K',           km: 5 },
+                  { label: '10K',          km: 10 },
+                  { label: 'Half Marathon',km: 21.0975 },
+                  { label: 'Marathon',     km: 42.195 },
+                ]
+                const pbRows = PB_DISTS.map(d => {
+                  const pb = findRunPB(races, d.km)
+                  if (!pb?.time) return null
+                  const timeSecs = parseTimeSecs(pb.time)
+                  if (!timeSecs) return null
+                  return { label: d.label, km: d.km, timeSecs, timeStr: pb.time }
+                }).filter(Boolean) as { label: string; km: number; timeSecs: number; timeStr: string }[]
+
+                if (!pbRows.length && !resolvedCurrentAge) return null
+
+                const canProject = resolvedCurrentAge && !isNaN(targetAge) && targetAge >= 15 && targetAge <= 90
+
+                return (
+                  <div style={card}>
+                    <p style={sectionLabel}>Age-Grade Pace Projection</p>
+                    <p style={{ margin: '0 0 12px', fontSize: '12px', color: 'var(--muted)' }}>
+                      See what your PB paces would look like at a different age, based on WA masters age-grading factors.
+                    </p>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '12px' }}>
+                      <div>
+                        <label style={fieldLabel}>Current Age</label>
+                        <input
+                          type="number" min={15} max={90}
+                          placeholder={currentAge ? String(currentAge) : 'e.g. 32'}
+                          value={ageCalcCurrentAge}
+                          onChange={e => setAgeCalcCurrentAge(e.target.value)}
+                          style={{ ...textInput, fontSize: '15px' }}
+                        />
+                        {currentAge && !ageCalcCurrentAge && (
+                          <p style={{ margin: '3px 0 0', fontSize: '10px', color: 'var(--muted)' }}>From your profile</p>
+                        )}
+                      </div>
+                      <div>
+                        <label style={fieldLabel}>Target Age</label>
+                        <input
+                          type="number" min={15} max={90}
+                          value={ageCalcTargetAge}
+                          onChange={e => setAgeCalcTargetAge(e.target.value)}
+                          style={{ ...textInput, fontSize: '15px' }}
+                        />
+                      </div>
+                    </div>
+
+                    {canProject && pbRows.length > 0 && (() => {
+                      const fromFactor = waAgeFactor(resolvedCurrentAge!, gender)
+                      const toFactor   = waAgeFactor(targetAge, gender)
+                      const ratio = toFactor / fromFactor
+                      const direction = targetAge < resolvedCurrentAge! ? '↑ faster' : targetAge > resolvedCurrentAge! ? '↓ slower' : '= same'
+                      const pctChange = Math.abs((ratio - 1) * 100)
+
+                      return (
+                        <>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px', padding: '7px 10px', borderRadius: '6px', background: ratio < 1 ? 'rgba(0,255,136,0.06)' : ratio > 1 ? 'rgba(249,115,22,0.06)' : 'var(--surface3)', border: `1px solid ${ratio < 1 ? 'rgba(0,255,136,0.2)' : ratio > 1 ? 'rgba(249,115,22,0.2)' : 'var(--border)'}` }}>
+                            <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', color: ratio < 1 ? 'var(--green)' : ratio > 1 ? '#f97316' : 'var(--muted)' }}>
+                              {direction}
+                            </span>
+                            {pctChange > 0.1 && (
+                              <span style={{ fontSize: '12px', color: 'var(--muted)' }}>
+                                ~{pctChange.toFixed(1)}% {targetAge < resolvedCurrentAge! ? 'improvement' : 'slower'} at age {targetAge}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* PB projection table */}
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: '4px', padding: '4px 0 8px', borderBottom: '1px solid var(--border2)' }}>
+                            {['Distance', `Age ${resolvedCurrentAge}`, `Age ${targetAge}`].map(h => (
+                              <span key={h} style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)' }}>{h}</span>
+                            ))}
+                          </div>
+                          {pbRows.map(row => {
+                            const projSecs = row.timeSecs * ratio
+                            const projStr  = secsToHMS(Math.round(projSecs))
+                            const projPaceKm = secsToMMSS(projSecs / row.km)
+                            return (
+                              <div key={row.label} style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: '4px', padding: '7px 0', borderBottom: '1px solid var(--border)', alignItems: 'center' }}>
+                                <span style={{ fontSize: '12px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', fontFamily: 'var(--headline)', fontWeight: 700 }}>{row.label}</span>
+                                <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', color: 'var(--white)' }}>{row.timeStr}</span>
+                                <div style={{ textAlign: 'right' }}>
+                                  <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', color: ratio < 1 ? 'var(--green)' : ratio > 1 ? '#f97316' : 'var(--white)' }}>{projStr}</div>
+                                  <div style={{ fontSize: '10px', color: 'var(--muted)' }}>{projPaceKm}/km</div>
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </>
+                      )
+                    })()}
+
+                    {canProject && pbRows.length === 0 && (
+                      <p style={{ margin: 0, fontSize: '12px', color: 'var(--muted)' }}>Log timed races at 5K–Marathon distances to see pace projections.</p>
+                    )}
+                    {!canProject && (
+                      <p style={{ margin: 0, fontSize: '12px', color: 'var(--muted)' }}>Enter your current and target age above.</p>
+                    )}
+                  </div>
+                )
+              })()}
             </>
           )}
 
