@@ -520,6 +520,62 @@ function isoWeek(dateStr: string): string {
   return `${d.getFullYear()}-W${week}`
 }
 
+// Maps achievement id → short text badge shown in the popup icon tile (no emojis)
+const ACHIEVEMENT_BADGE: Record<string, string> = {
+  // Ladder families
+  '10k':     '10K',
+  'half':    'HM',
+  'marathon':'M',
+  'ultra':   'UL',
+  'tri703':  '703',
+  'iron':    'IM',
+  // Special achievements
+  'climb_crusher':             'CLB',
+  'heat_warrior':              'HTW',
+  'night_runner':              'NR',
+  'negative_split_master':     'NEG',
+  'no_quit':                   'NQ',
+  'pain_cave':                 'PC',
+  'comeback_run':              'CB',
+  'cutoff_survivor':           'CUT',
+  'solo_warrior':              'SOL',
+  'desert_runner':             'DST',
+  'mountain_goat':             'MTN',
+  'sea_level_sprinter':        'SEA',
+  'stamp_collector':           'STM',
+  'continental':               'CON',
+  'race_tourist':              'RT',
+  'season_finisher':           'SZN',
+  'double_trouble':            'DBL',
+  'sprint_specialist':         'SPR',
+  'half_collector':            'HC',
+  'marathoner_plus':           'M+',
+  'ultra_initiate':            'UI',
+  'ultra_elite':               'UE',
+  'hundred_miler':             '100M',
+  'iron_mind':                 'TRI',
+  'full_send':                 'FS',
+  'swim_survivor':             'SWM',
+  'pacemaker':                 'PCE',
+  'first_timer_guide':         'GDE',
+  'club_loyalist':             'CL',
+  'photo_finish':              'PHO',
+  'early_bird':                'EB',
+  'bib_collector':             'BIB',
+  'medal_wall':                'MDL',
+  'lucky_number':              'LCK',
+  'back_to_back_ultra':        'B2B',
+  'comrades_marathon_finisher':'COM',
+  'six_star_journey_started':  '6ST',
+  'six_star_marathon_finisher':'6FM',
+  'extreme_conditions':        'XTR',
+}
+
+function achievementBadgeText(a: Achievement): string {
+  if (a.family && ACHIEVEMENT_BADGE[a.family]) return ACHIEVEMENT_BADGE[a.family]
+  return ACHIEVEMENT_BADGE[a.id] ?? a.name.slice(0, 3).toUpperCase()
+}
+
 const ACHIEVEMENTS: Achievement[] = [
   // ── Special singles (39) ──────────────────────────────────────────────────
   {
@@ -1667,7 +1723,15 @@ function AchievementsSection() {
             <div style={{ textAlign: 'center', marginBottom: '20px', position: 'relative' }}>
               <button onClick={() => setPopup(null)} style={{ position: 'absolute', right: 0, top: 0, background: 'none', border: 'none', color: 'var(--muted)', fontSize: '24px', cursor: 'pointer', padding: '4px', lineHeight: 1 }}>×</button>
               <div style={{ width: '72px', height: '72px', margin: '0 auto 16px', background: 'rgba(var(--orange-ch),0.12)', border: '2px solid rgba(var(--orange-ch),0.4)', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <span style={{ fontSize: '34px', lineHeight: 1 }}>{popup.icon}</span>
+                {(() => {
+                  const badge = achievementBadgeText(popup)
+                  const fs = badge.length <= 2 ? '22px' : badge.length === 3 ? '18px' : '14px'
+                  return (
+                    <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: fs, letterSpacing: '0.04em', color: 'var(--orange)', lineHeight: 1, textTransform: 'uppercase' }}>
+                      {badge}
+                    </span>
+                  )
+                })()}
               </div>
               <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)', marginBottom: '6px' }}>
                 {popup.name}
