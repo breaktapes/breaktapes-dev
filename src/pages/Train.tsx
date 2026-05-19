@@ -119,7 +119,7 @@ interface TriDist { id: TriDistId; label: string; swimM: number; bikeKm: number;
 const TRI_DISTANCES: TriDist[] = [
   { id: 'sprint',  label: 'Sprint Triathlon',       swimM: 750,  bikeKm: 20,  runKm: 5,    totalKm: 25.75 },
   { id: 'olympic', label: 'Olympic Triathlon',      swimM: 1500, bikeKm: 40,  runKm: 10,   totalKm: 51.5  },
-  { id: 'ptot100', label: 'PTO T100',               swimM: 2000, bikeKm: 80,  runKm: 18,   totalKm: 100   },
+  { id: 'ptot100', label: 'PTO 100',                swimM: 2000, bikeKm: 80,  runKm: 18,   totalKm: 100   },
   { id: '703',     label: '70.3 / Middle Distance', swimM: 1900, bikeKm: 90,  runKm: 21.1, totalKm: 113   },
   { id: 'ironman', label: 'IRONMAN / Full Distance', swimM: 3800, bikeKm: 180, runKm: 42.2, totalKm: 226  },
 ]

@@ -16,6 +16,7 @@ export interface RaceState {
   addUpcomingRace: (race: Race) => void
   autoMoveExpiredUpcoming: () => void
   dismissExpiredRace: (id: string) => void
+  removeUpcomingRace: (id: string) => void
   updateRace: (id: string, patch: Partial<Race>) => void
   deleteRace: (id: string) => void
   setRaces: (races: Race[]) => void
@@ -92,6 +93,17 @@ export const useRaceStore = create<RaceState>()(
         set({
           races: [...races, ...expired],
           upcomingRaces: upcomingRaces.filter(r => r.date >= today),
+        })
+        get().promoteNextRace()
+        void syncStateToSupabase()
+      },
+
+      // Remove an upcoming race entirely (no move to past — e.g. replaced by an alternative)
+      removeUpcomingRace: (id) => {
+        const { upcomingRaces } = get()
+        set({
+          upcomingRaces: upcomingRaces.filter(r => r.id !== id),
+          focusRaceId: get().focusRaceId === id ? null : get().focusRaceId,
         })
         get().promoteNextRace()
         void syncStateToSupabase()

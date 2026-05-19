@@ -31,10 +31,12 @@ const GOAL_DISTANCES: Record<string, { label: string; value: string }[]> = {
     { label: '100 Mile',     value: '160.93' },
   ],
   Triathlon: [
+    { label: 'Super Sprint', value: '13' },
     { label: 'Sprint',       value: '25.75' },
     { label: 'Olympic',      value: '51.5' },
-    { label: '70.3',         value: '113' },
-    { label: 'IRONMAN',      value: '226' },
+    { label: 'PTO 100',      value: '100' },
+    { label: '70.3 / Middle Distance', value: '113' },
+    { label: 'IRONMAN / Full Distance', value: '226' },
   ],
   Cycling:   [
     { label: '50K',          value: '50' },

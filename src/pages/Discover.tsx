@@ -28,12 +28,13 @@ const RUN_DIST_FILTERS: { label: string; match: (r: CatalogRace) => boolean }[] 
 ]
 
 const TRI_DIST_FILTERS: { label: string; match: (r: CatalogRace) => boolean }[] = [
-  { label: 'All Distances',            match: () => true },
-  { label: 'Sprint',                 match: r => r.dist_km != null && r.dist_km >= 24 && r.dist_km <= 27 },
-  { label: 'Olympic',                match: r => r.dist_km != null && r.dist_km >= 50 && r.dist_km <= 53 },
-  { label: 'PTO T100',               match: r => r.dist_km != null && r.dist_km >= 99 && r.dist_km <= 101 },
-  { label: '70.3 / Middle Distance', match: r => r.dist_km != null && r.dist_km >= 112 && r.dist_km <= 114 },
-  { label: 'IRONMAN',                match: r => r.dist_km != null && r.dist_km >= 225 && r.dist_km <= 227 },
+  { label: 'All Distances',              match: () => true },
+  { label: 'Super Sprint',               match: r => r.dist_km != null && r.dist_km >= 10 && r.dist_km <= 16 },
+  { label: 'Sprint',                     match: r => r.dist_km != null && r.dist_km >= 24 && r.dist_km <= 27 },
+  { label: 'Olympic',                    match: r => r.dist_km != null && r.dist_km >= 50 && r.dist_km <= 53 },
+  { label: 'PTO 100',                    match: r => r.dist_km != null && r.dist_km >= 99 && r.dist_km <= 101 },
+  { label: '70.3 / Middle Distance',     match: r => r.dist_km != null && r.dist_km >= 112 && r.dist_km <= 114 },
+  { label: 'IRONMAN / Full Distance',    match: r => r.dist_km != null && r.dist_km >= 225 && r.dist_km <= 227 },
 ]
 
 const GENERIC_DIST_FILTERS: { label: string; match: (r: CatalogRace) => boolean }[] = [
@@ -105,11 +106,12 @@ function distDisplay(r: CatalogRace): string {
   if (km >= 4.5 && km <= 5.5) return '5K'
   if (km > 42.3 && km < 99) return 'Ultra'
   // Triathlon
-  if (km >= 225 && km <= 227) return 'IRONMAN'
+  if (km >= 225 && km <= 227) return 'IRONMAN / Full Distance'
   if (km >= 112 && km <= 114) return '70.3 / Middle Distance'
-  if (km >= 99 && km <= 101) return 'PTO T100'
+  if (km >= 99 && km <= 101) return 'PTO 100'
   if (km >= 50 && km <= 53) return 'Olympic'
   if (km >= 24 && km <= 27) return 'Sprint'
+  if (km >= 10 && km <= 16) return 'Super Sprint'
   return r.dist ?? `${km}km`
 }
 

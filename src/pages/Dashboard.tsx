@@ -785,8 +785,8 @@ const UPCOMING_DISTANCES: Record<string, { label: string; value: string }[]> = {
     { label: '50KM', value: '50' }, { label: '100KM', value: '100' }, { label: '100 Mile', value: '160.93' },
   ],
   Triathlon:  [
-    { label: 'Sprint', value: '25.75' }, { label: 'Olympic', value: '51.5' },
-    { label: 'PTO T100', value: '100' }, { label: '70.3 / Middle Distance', value: '113' }, { label: 'IRONMAN', value: '226' },
+    { label: 'Super Sprint', value: '13' }, { label: 'Sprint', value: '25.75' }, { label: 'Olympic', value: '51.5' },
+    { label: 'PTO 100', value: '100' }, { label: '70.3 / Middle Distance', value: '113' }, { label: 'IRONMAN / Full Distance', value: '226' },
   ],
   Cycling:    [
     { label: 'Gran Fondo (100km)', value: '100' }, { label: 'Century (161km)', value: '161' },
@@ -3875,7 +3875,7 @@ function PersonalBestsWidget() {
       '50K': 10, '100K': 11, '100 Mile': 12, 'Ultra': 13,
     }
     const triDistOrder: Record<string, number> = {
-      'Super Sprint': 1, 'Sprint': 2, 'Olympic': 3, 'PTO T100': 4, '70.3 / Middle Distance': 5, 'IRONMAN': 6,
+      'Super Sprint': 1, 'Sprint': 2, 'Olympic': 3, 'PTO 100': 4, '70.3 / Middle Distance': 5, 'IRONMAN / Full Distance': 6,
     }
 
     for (const [key, r] of Object.entries(pbMap)) {
@@ -4051,28 +4051,40 @@ function PersonalBestsWidget() {
 
 // ─── All Upcoming Races Modal ─────────────────────────────────────────────────
 
-function AllUpcomingModal({ onClose, onAddRace, onPlanFromCatalog }: { onClose: () => void; onAddRace: () => void; onPlanFromCatalog: (prefill: Partial<Race>) => void }) {
-  const upcoming        = useRaceStore(selectUpcomingRaces)
-  const focusRaceId     = useRaceStore(selectFocusRaceId)
-  const pinFocusRace    = useRaceStore(s => s.pinFocusRace)
-  const today           = todayStr()
-  const [editingId, setEditingId]     = useState<string | null>(null)
-  const [altsOpenId, setAltsOpenId]   = useState<string | null>(null)
-  const { data: catalog = [] }        = useRaceCatalog()
+function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRace: () => void }) {
+  const upcoming           = useRaceStore(selectUpcomingRaces)
+  const focusRaceId        = useRaceStore(selectFocusRaceId)
+  const pinFocusRace       = useRaceStore(s => s.pinFocusRace)
+  const addUpcomingRace    = useRaceStore(s => s.addUpcomingRace)
+  const removeUpcomingRace = useRaceStore(s => s.removeUpcomingRace)
+  const today              = todayStr()
+  const [editingId, setEditingId]         = useState<string | null>(null)
+  const [altsOpenId, setAltsOpenId]       = useState<string | null>(null)
+  const [confirmAlt, setConfirmAlt]       = useState<{ altKey: string; prefill: Partial<Race>; sourceId: string } | null>(null)
+  const { data: catalog = [] }            = useRaceCatalog()
 
   function selectFocus(id: string) {
     pinFocusRace(focusRaceId === id ? null : id)  // tap again to deselect
     onClose()
   }
 
-  // Find catalog alternatives for an upcoming race: same dist_km range, ±21-day window
+  // Find catalog alternatives for an upcoming race: same sport family, same dist_km range, ±21-day window
   function getAlternatives(r: Race): CatalogRace[] {
     const raceKm = distanceToKm(r.distance)
     const raceDate = new Date(r.date + 'T00:00:00')
     const windowMs = 21 * 86400000
     const alreadyPlanned = new Set(upcoming.map(u => normalizeName(u.name ?? '')))
+    const raceSport = (r.sport ?? '').toLowerCase()
+    const isTri = raceSport.includes('tri') || raceSport.includes('iron')
+    const isRun = !isTri && (raceSport === '' || raceSport.includes('run'))
 
     return catalog.filter(c => {
+      // sport-family match: triathlon only with triathlon, running only with running
+      const catType = (c.type ?? '').toLowerCase()
+      const catIsTri = catType.includes('tri') || catType.includes('iron')
+      if (isTri && !catIsTri) return false
+      if (isRun && catIsTri) return false
+
       // distance match: same label OR within 15% of km
       const kmMatch = raceKm > 0 && c.dist_km != null
         ? Math.abs(c.dist_km - raceKm) / raceKm <= 0.15
@@ -4095,7 +4107,7 @@ function AllUpcomingModal({ onClose, onAddRace, onPlanFromCatalog }: { onClose: 
       const dB = new Date(b.year!, b.month! - 1, b.day ?? 15).getTime()
       return Math.abs(dA - raceDate.getTime()) - Math.abs(dB - raceDate.getTime())
     })
-    .slice(0, 5)
+    .slice(0, 10)
   }
 
   const sorted = useMemo(
@@ -4240,35 +4252,78 @@ function AllUpcomingModal({ onClose, onAddRace, onPlanFromCatalog }: { onClose: 
                               const altDate = alt.year && alt.month
                                 ? `${String(alt.day ?? 1).padStart(2, '0')}/${String(alt.month).padStart(2, '0')}/${alt.year}`
                                 : `${alt.month ?? '?'}/${alt.year ?? '?'}`
-                              return (
-                                <div key={alt.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', padding: '10px 12px', background: 'var(--surface2)', borderRadius: '8px', border: '1px solid var(--border)' }}>
-                                  <div style={{ minWidth: 0, flex: 1 }}>
-                                    <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '13px', color: 'var(--white)', letterSpacing: '0.03em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{alt.name}</div>
-                                    <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>
-                                      {[alt.city, alt.country].filter(Boolean).join(', ')}
-                                      {alt.dist_km != null ? ` · ${distLabelUtil(alt.dist ?? String(alt.dist_km))}` : ''}
-                                      {' · '}{altDate}
+                              {
+                                const altKey = String(alt.id)
+                                const isConfirming = confirmAlt?.altKey === altKey
+                                const altPrefill: Partial<Race> = {
+                                  name: alt.name,
+                                  city: alt.city ?? '',
+                                  country: alt.country ?? '',
+                                  distance: alt.dist ?? (alt.dist_km != null ? String(alt.dist_km) : r.distance),
+                                  sport: r.sport,
+                                  date: alt.year && alt.month
+                                    ? `${alt.year}-${String(alt.month).padStart(2, '0')}-${String(alt.day ?? 1).padStart(2, '0')}`
+                                    : '',
+                                }
+                                const doAddAlongside = () => {
+                                  addUpcomingRace({ id: crypto.randomUUID(), name: altPrefill.name ?? '', date: altPrefill.date ?? '', city: altPrefill.city ?? '', country: altPrefill.country ?? '', distance: altPrefill.distance ?? '', sport: altPrefill.sport ?? '' })
+                                  setConfirmAlt(null)
+                                  setAltsOpenId(null)
+                                }
+                                const doReplace = () => {
+                                  removeUpcomingRace(r.id)
+                                  addUpcomingRace({ id: crypto.randomUUID(), name: altPrefill.name ?? '', date: altPrefill.date ?? '', city: altPrefill.city ?? '', country: altPrefill.country ?? '', distance: altPrefill.distance ?? '', sport: altPrefill.sport ?? '' })
+                                  setConfirmAlt(null)
+                                  setAltsOpenId(null)
+                                }
+                                return (
+                                  <div key={alt.id} style={{ background: 'var(--surface2)', borderRadius: '8px', border: isConfirming ? '1px solid rgba(var(--orange-ch),0.4)' : '1px solid var(--border)', overflow: 'hidden' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', padding: '10px 12px' }}>
+                                      <div style={{ minWidth: 0, flex: 1 }}>
+                                        <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '13px', color: 'var(--white)', letterSpacing: '0.03em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{alt.name}</div>
+                                        <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>
+                                          {[alt.city, alt.country].filter(Boolean).join(', ')}
+                                          {alt.dist_km != null ? ` · ${distLabelUtil(alt.dist ?? String(alt.dist_km))}` : ''}
+                                          {' · '}{altDate}
+                                        </div>
+                                      </div>
+                                      {!isConfirming && (
+                                        <button
+                                          onClick={e => { e.stopPropagation(); setConfirmAlt({ altKey, prefill: altPrefill, sourceId: r.id }) }}
+                                          style={{ background: 'rgba(var(--orange-ch),0.15)', border: '1px solid rgba(var(--orange-ch),0.4)', borderRadius: '6px', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px', letterSpacing: '0.06em', padding: '6px 10px', cursor: 'pointer', flexShrink: 0 }}
+                                        >
+                                          + PLAN
+                                        </button>
+                                      )}
                                     </div>
+                                    {isConfirming && (
+                                      <div style={{ padding: '10px 12px', borderTop: '1px solid var(--border)', background: 'rgba(var(--orange-ch),0.04)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        <div style={{ fontSize: '11px', color: 'var(--muted)', fontFamily: 'var(--body)', letterSpacing: '0.02em' }}>
+                                          What do you want to do with <span style={{ color: 'var(--white)', fontWeight: 600 }}>{r.name ?? 'this race'}</span>?
+                                        </div>
+                                        <div style={{ display: 'flex', gap: '6px' }}>
+                                          <button
+                                            onClick={e => { e.stopPropagation(); doReplace() }}
+                                            style={{ flex: 1, background: 'var(--orange)', border: 'none', borderRadius: '6px', color: '#000', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '11px', letterSpacing: '0.06em', padding: '7px 8px', cursor: 'pointer', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                                          >
+                                            REPLACE {r.name ? r.name.toUpperCase().slice(0, 20) : 'THIS RACE'}
+                                          </button>
+                                          <button
+                                            onClick={e => { e.stopPropagation(); doAddAlongside() }}
+                                            style={{ flex: 1, background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px', color: 'var(--white)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px', letterSpacing: '0.06em', padding: '7px 8px', cursor: 'pointer', textTransform: 'uppercase' }}
+                                          >
+                                            ADD ALONGSIDE
+                                          </button>
+                                          <button
+                                            onClick={e => { e.stopPropagation(); setConfirmAlt(null) }}
+                                            style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '16px', padding: '0 4px', cursor: 'pointer', lineHeight: 1 }}
+                                          >✕</button>
+                                        </div>
+                                      </div>
+                                    )}
                                   </div>
-                                  <button
-                                    onClick={e => {
-                                      e.stopPropagation()
-                                      onPlanFromCatalog({
-                                        name: alt.name,
-                                        city: alt.city ?? '',
-                                        country: alt.country ?? '',
-                                        distance: alt.dist ?? (alt.dist_km != null ? String(alt.dist_km) : r.distance),
-                                        date: alt.year && alt.month
-                                          ? `${alt.year}-${String(alt.month).padStart(2, '0')}-${String(alt.day ?? 1).padStart(2, '0')}`
-                                          : '',
-                                      })
-                                    }}
-                                    style={{ background: 'rgba(var(--orange-ch),0.15)', border: '1px solid rgba(var(--orange-ch),0.4)', borderRadius: '6px', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px', letterSpacing: '0.06em', padding: '6px 10px', cursor: 'pointer', flexShrink: 0 }}
-                                  >
-                                    + PLAN
-                                  </button>
-                                </div>
-                              )
+                                )
+                              }
                             })}
                           </div>
                         )}
@@ -5292,7 +5347,7 @@ export function Dashboard() {
   const openAddRace          = () => { setAddRaceMode('past');     setRiegelPrefillDist(undefined); setCatalogPrefill(undefined); setShowAddRace(true) }
   const openAddUpcomingRace  = () => { setAddRaceMode('upcoming'); setRiegelPrefillDist(undefined); setCatalogPrefill(undefined); setShowAddRace(true) }
   const openRiegelGoal = (dist: string) => { setAddRaceMode('upcoming'); setRiegelPrefillDist(dist); setCatalogPrefill(undefined); setShowAddRace(true) }
-  const openPlanFromCatalog  = (prefill: Partial<Race>) => { setAddRaceMode('upcoming'); setRiegelPrefillDist(undefined); setCatalogPrefill(prefill); setShowAllUpcoming(false); setShowAddRace(true) }
+
   const en = (id: string) => isEnabled(widgets, id)
 
   const widgetActions: WidgetCardActions = useMemo(() => ({
@@ -5327,7 +5382,7 @@ export function Dashboard() {
     <div style={st.page}>
       {showCustomize    && <DashCustomizeModal onClose={() => setShowCustomize(false)} />}
       {showAddRace      && <AddRaceModal defaultMode={addRaceMode} prefillDistance={riegelPrefillDist} prefill={catalogPrefill} onClose={() => { setShowAddRace(false); setRiegelPrefillDist(undefined); setCatalogPrefill(undefined) }} />}
-      {showAllUpcoming  && <AllUpcomingModal onClose={() => setShowAllUpcoming(false)} onAddRace={openAddUpcomingRace} onPlanFromCatalog={openPlanFromCatalog} />}
+      {showAllUpcoming  && <AllUpcomingModal onClose={() => setShowAllUpcoming(false)} onAddRace={openAddUpcomingRace} />}
       {editRace         && <ViewEditRaceModal race={editRace} initialMode={editRaceMode} onClose={() => { setEditRace(null); setEditRaceMode('view') }} />}
       {detailWidget     && <WidgetDetailModal widget={detailWidget} preview={detailPreview} dynamicContext={detailCtx} actions={widgetActions} onClose={closeDetail} />}
 
