@@ -16,6 +16,7 @@ import type { WidgetDynamicContext } from '@/lib/widgetContent'
 import type { Race, DashWidget } from '@/types'
 import { useUnits, distUnit } from '@/lib/units'
 import { fmtDateDDMM, distLabel as distLabelUtil, normalizeName } from '@/lib/utils'
+import { useRaceCatalog, type CatalogRace } from '@/hooks/useRaceCatalog'
 import {
   bestRiegelTable,
   bestVDOT, latestPBVDOT, equivalentPerformances, paceZones, vdotHistory,
@@ -1482,9 +1483,8 @@ function StatsStrip() {
 
 // ─── Season Planner Widget ────────────────────────────────────────────────────
 
-function SeasonPlannerWidget({ onAddRace }: { onAddRace: () => void }) {
+function SeasonPlannerWidget({ onAddRace, onOpenPlanner }: { onAddRace: () => void; onOpenPlanner: () => void }) {
   const upcoming = useRaceStore(selectUpcomingRaces)
-  const navigate = useNavigate()
   const today = todayStr()
 
   const upcoming90 = useMemo(() => {
@@ -1537,7 +1537,7 @@ function SeasonPlannerWidget({ onAddRace }: { onAddRace: () => void }) {
             })}
           </div>
           <div style={st.widgetDivider} />
-          <button style={st.ghostOutlineBtn} onClick={() => navigate('/races')}>OPEN PLANNER</button>
+          <button style={st.ghostOutlineBtn} onClick={onOpenPlanner}>OPEN PLANNER</button>
         </>
       )}
     </WidgetCard>
@@ -4051,16 +4051,51 @@ function PersonalBestsWidget() {
 
 // ─── All Upcoming Races Modal ─────────────────────────────────────────────────
 
-function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRace: () => void }) {
+function AllUpcomingModal({ onClose, onAddRace, onPlanFromCatalog }: { onClose: () => void; onAddRace: () => void; onPlanFromCatalog: (prefill: Partial<Race>) => void }) {
   const upcoming        = useRaceStore(selectUpcomingRaces)
   const focusRaceId     = useRaceStore(selectFocusRaceId)
   const pinFocusRace    = useRaceStore(s => s.pinFocusRace)
   const today           = todayStr()
-  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editingId, setEditingId]     = useState<string | null>(null)
+  const [altsOpenId, setAltsOpenId]   = useState<string | null>(null)
+  const { data: catalog = [] }        = useRaceCatalog()
 
   function selectFocus(id: string) {
     pinFocusRace(focusRaceId === id ? null : id)  // tap again to deselect
     onClose()
+  }
+
+  // Find catalog alternatives for an upcoming race: same dist_km range, ±21-day window
+  function getAlternatives(r: Race): CatalogRace[] {
+    const raceKm = distanceToKm(r.distance)
+    const raceDate = new Date(r.date + 'T00:00:00')
+    const windowMs = 21 * 86400000
+    const alreadyPlanned = new Set(upcoming.map(u => normalizeName(u.name ?? '')))
+
+    return catalog.filter(c => {
+      // distance match: same label OR within 15% of km
+      const kmMatch = raceKm > 0 && c.dist_km != null
+        ? Math.abs(c.dist_km - raceKm) / raceKm <= 0.15
+        : distLabelUtil(r.distance) === distLabelUtil(c.dist ?? '')
+      if (!kmMatch) return false
+
+      // must have a date
+      if (!c.year || !c.month) return false
+      const cDate = new Date(c.year, c.month - 1, c.day ?? 15)
+      const diff = Math.abs(cDate.getTime() - raceDate.getTime())
+      if (diff > windowMs || diff === 0) return false
+
+      // not already planned or the same race
+      if (alreadyPlanned.has(normalizeName(c.name))) return false
+
+      return true
+    })
+    .sort((a, b) => {
+      const dA = new Date(a.year!, a.month! - 1, a.day ?? 15).getTime()
+      const dB = new Date(b.year!, b.month! - 1, b.day ?? 15).getTime()
+      return Math.abs(dA - raceDate.getTime()) - Math.abs(dB - raceDate.getTime())
+    })
+    .slice(0, 5)
   }
 
   const sorted = useMemo(
@@ -4181,6 +4216,65 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                       </div>
                     </div>
                   )}
+
+                  {/* Alternatives toggle */}
+                  {r.distance && (() => {
+                    const isOpen = altsOpenId === r.id
+                    const alts = isOpen ? getAlternatives(r) : []
+                    return (
+                      <div style={{ marginTop: '6px' }}>
+                        <button
+                          onClick={e => { e.stopPropagation(); setAltsOpenId(isOpen ? null : r.id) }}
+                          style={{ background: 'none', border: 'none', padding: '4px 0', cursor: 'pointer', fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '4px' }}
+                        >
+                          <span style={{ fontSize: '9px' }}>{isOpen ? '▲' : '▼'}</span>
+                          {isOpen ? 'HIDE ALTERNATIVES' : 'FIND ALTERNATIVES'}
+                        </button>
+                        {isOpen && (
+                          <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                            {alts.length === 0 ? (
+                              <div style={{ fontSize: '12px', color: 'var(--muted)', padding: '8px 0' }}>
+                                No catalog matches within ±21 days for this distance.
+                              </div>
+                            ) : alts.map(alt => {
+                              const altDate = alt.year && alt.month
+                                ? `${String(alt.day ?? 1).padStart(2, '0')}/${String(alt.month).padStart(2, '0')}/${alt.year}`
+                                : `${alt.month ?? '?'}/${alt.year ?? '?'}`
+                              return (
+                                <div key={alt.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', padding: '10px 12px', background: 'var(--surface2)', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                                  <div style={{ minWidth: 0, flex: 1 }}>
+                                    <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '13px', color: 'var(--white)', letterSpacing: '0.03em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{alt.name}</div>
+                                    <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>
+                                      {[alt.city, alt.country].filter(Boolean).join(', ')}
+                                      {alt.dist_km != null ? ` · ${distLabelUtil(alt.dist ?? String(alt.dist_km))}` : ''}
+                                      {' · '}{altDate}
+                                    </div>
+                                  </div>
+                                  <button
+                                    onClick={e => {
+                                      e.stopPropagation()
+                                      onPlanFromCatalog({
+                                        name: alt.name,
+                                        city: alt.city ?? '',
+                                        country: alt.country ?? '',
+                                        distance: alt.dist ?? (alt.dist_km != null ? String(alt.dist_km) : r.distance),
+                                        date: alt.year && alt.month
+                                          ? `${alt.year}-${String(alt.month).padStart(2, '0')}-${String(alt.day ?? 1).padStart(2, '0')}`
+                                          : '',
+                                      })
+                                    }}
+                                    style={{ background: 'rgba(var(--orange-ch),0.15)', border: '1px solid rgba(var(--orange-ch),0.4)', borderRadius: '6px', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px', letterSpacing: '0.06em', padding: '6px 10px', cursor: 'pointer', flexShrink: 0 }}
+                                  >
+                                    + PLAN
+                                  </button>
+                                </div>
+                              )
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })()}
                 </div>
               )
             })}
@@ -5194,9 +5288,11 @@ export function Dashboard() {
   const widgets       = useMemo(() => getDashLayout(), [storeWidgets, getDashLayout])
 
   const [riegelPrefillDist, setRiegelPrefillDist] = useState<string | undefined>()
-  const openAddRace          = () => { setAddRaceMode('past');     setRiegelPrefillDist(undefined); setShowAddRace(true) }
-  const openAddUpcomingRace  = () => { setAddRaceMode('upcoming'); setRiegelPrefillDist(undefined); setShowAddRace(true) }
-  const openRiegelGoal = (dist: string) => { setAddRaceMode('upcoming'); setRiegelPrefillDist(dist); setShowAddRace(true) }
+  const [catalogPrefill,    setCatalogPrefill]    = useState<Partial<Race> | undefined>()
+  const openAddRace          = () => { setAddRaceMode('past');     setRiegelPrefillDist(undefined); setCatalogPrefill(undefined); setShowAddRace(true) }
+  const openAddUpcomingRace  = () => { setAddRaceMode('upcoming'); setRiegelPrefillDist(undefined); setCatalogPrefill(undefined); setShowAddRace(true) }
+  const openRiegelGoal = (dist: string) => { setAddRaceMode('upcoming'); setRiegelPrefillDist(dist); setCatalogPrefill(undefined); setShowAddRace(true) }
+  const openPlanFromCatalog  = (prefill: Partial<Race>) => { setAddRaceMode('upcoming'); setRiegelPrefillDist(undefined); setCatalogPrefill(prefill); setShowAllUpcoming(false); setShowAddRace(true) }
   const en = (id: string) => isEnabled(widgets, id)
 
   const widgetActions: WidgetCardActions = useMemo(() => ({
@@ -5230,8 +5326,8 @@ export function Dashboard() {
     <WidgetCardContext.Provider value={widgetCtxValue}>
     <div style={st.page}>
       {showCustomize    && <DashCustomizeModal onClose={() => setShowCustomize(false)} />}
-      {showAddRace      && <AddRaceModal defaultMode={addRaceMode} prefillDistance={riegelPrefillDist} onClose={() => { setShowAddRace(false); setRiegelPrefillDist(undefined) }} />}
-      {showAllUpcoming  && <AllUpcomingModal onClose={() => setShowAllUpcoming(false)} onAddRace={openAddUpcomingRace} />}
+      {showAddRace      && <AddRaceModal defaultMode={addRaceMode} prefillDistance={riegelPrefillDist} prefill={catalogPrefill} onClose={() => { setShowAddRace(false); setRiegelPrefillDist(undefined); setCatalogPrefill(undefined) }} />}
+      {showAllUpcoming  && <AllUpcomingModal onClose={() => setShowAllUpcoming(false)} onAddRace={openAddUpcomingRace} onPlanFromCatalog={openPlanFromCatalog} />}
       {editRace         && <ViewEditRaceModal race={editRace} initialMode={editRaceMode} onClose={() => { setEditRace(null); setEditRaceMode('view') }} />}
       {detailWidget     && <WidgetDetailModal widget={detailWidget} preview={detailPreview} dynamicContext={detailCtx} actions={widgetActions} onClose={closeDetail} />}
 
@@ -5286,7 +5382,7 @@ export function Dashboard() {
 
       {/* CONSISTENCY — BUILD */}
       <DashZone id="trending" tag="CONSISTENCY" label="BUILD">
-        {en('season-planner')    && <SeasonPlannerWidget onAddRace={openAddUpcomingRace} />}
+        {en('season-planner')    && <SeasonPlannerWidget onAddRace={openAddUpcomingRace} onOpenPlanner={() => setShowAllUpcoming(true)} />}
         {en('recovery-intel')    && <RecoveryIntelWidget />}
         {en('race-density')      && <RaceDensityWidget />}
         {en('upcoming-density')  && <UpcomingDensityWidget />}
