@@ -1305,6 +1305,41 @@ Direct DB access (psql/psycopg2) is blocked from localhost — Supabase only exp
 
 ---
 
+### Session 33 (2026-05-19) — Race DNA/Pattern Scan graphic redesign + weather autofill fixes
+
+**Branch:** `claude/nostalgic-pike-53306c` → direct push to staging + main
+
+#### Changes shipped
+
+- **Race DNA widget graphic redesign** — replaced text rows with:
+  - Temp bars: color-coded cold/cool/warm/hot buckets (blue/green/amber/red), bar width = relative pace, best bucket starred
+  - Pacing persona: `FADER` / `NEGATIVE SPLITTER` / `EVEN PACER` badge with description + dot-count breakdown; locked state when no splits
+  - Surface breakdown: proportional horizontal bars, dominant surface in orange
+  - Country clusters: pill badges with race count, "+N more" overflow
+- **Pattern Scan widget graphic redesign** — replaced text rows with:
+  - Season performance: horizontal bars (best = 100%), best season highlighted in header
+  - Distance breakdown: proportional bars, top distance bold orange
+  - Stats triptych: YoY Volume %, Finish Rate %, Top 25% rate as big-numeral colored cards
+- **Weather auto-fill — works without stored coords** — button was `disabled` when `!lat || !lng`. Races entered manually / AI-parsed / imported never stored coords. Fix: auto-geocode city via `geocodeCity()` on click, store result in state. Button now only disabled if no date AND no city at all.
+- **Weather auto-fill — uses forecast API for recent races** — all queries went to archive API (~3-5s). Now uses forecast API (`api.open-meteo.com`) for races ≤92 days ago (~200ms), archive for older.
+- **WMO weather code mapping fixed** — codes 1/2/3 all mapped to "Partly cloudy". Expanded: 0=Clear sky, 1=Mainly clear, 2=Partly cloudy, 3=Overcast, plus granular drizzle/rain/snow/shower/thunderstorm tiers.
+- **dominantCode uses mode not middle** — was `codes[midpoint]` (arbitrary). Now frequency map → most common code in the race window.
+
+#### Key learnings
+- `geocodeCity()` returns `{ lat, lng } | null` (not `{ results: [] }`). Always check for null before accessing fields.
+- `autoFillWeather` disabled condition: `!lat && !lng && !city` is the right guard — not `!lat || !lng`. City alone is enough to geocode.
+- Open-Meteo forecast API supports `past_days=92` param and is CDN-cached (~200ms). Archive API is always slow. Always split on `daysAgo <= 92`.
+- WMO weather codes: 0=clear, 1=mainly clear, 2=partly cloudy, 3=overcast. Never collapse 1–3 to the same label.
+
+#### Cleanup
+- Deleted 5 stale local branches: `claude/nifty-jackson-b9e460`, `claude/objective-mccarthy-eeaee8`, `claude/posthog-integration`, `claude/suspicious-montalcini-93a1f7`, `fix/race-delete-sync`, `promote-emoji-sweep`
+- Removed 4 stale worktrees: `cranky-lalande-ffab35`, `nifty-jackson-b9e460`, `objective-mccarthy-eeaee8`, `suspicious-montalcini-93a1f7`
+- Deleted remote branches: `claude/nifty-jackson-b9e460`, `fix/race-delete-sync`
+- Main repo (`/Users/akrish/DEV`) switched to `staging` branch, reset to `origin/staging`
+- Remaining: 2 worktrees (`/DEV` on staging, `nostalgic-pike-53306c` on main), both at `892ff4e`
+
+---
+
 ### Session 32 (2026-05-15) — Migration rollback, env key storage, preview tool fix
 
 **Branch:** `claude/nostalgic-pike-53306c` → main (PR #327)
