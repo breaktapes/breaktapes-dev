@@ -842,7 +842,21 @@ const ACHIEVEMENTS: Achievement[] = [
   { id: 'ultra_50k_ultra_control',   icon: '🏔️', name: 'ULTRA CONTROL',     group: 'ladder', family: 'ultra', tier: 3, description: '50K running under 5:00.',       check: r => { const pb = getPBSecsForDist(r.filter(isRunningRace), 45, 65); return pb !== null && pb < 18000 } },
   { id: 'ultra_50k_ultra_strong',    icon: '🏔️', name: 'ULTRA STRONG',      group: 'ladder', family: 'ultra', tier: 4, description: '50K running under 4:30.',       check: r => { const pb = getPBSecsForDist(r.filter(isRunningRace), 45, 65); return pb !== null && pb < 16200 } },
   { id: 'ultra_50k_ultra_elite',     icon: '🏔️', name: 'ULTRA ELITE',       group: 'ladder', family: 'ultra', tier: 5, description: '50K running under 4:00.',       check: r => { const pb = getPBSecsForDist(r.filter(isRunningRace), 45, 65); return pb !== null && pb < 14400 } },
-  { id: 'ultra_100k_century_runner', icon: '🏔️', name: 'CENTURY RUNNER',    group: 'ladder', family: 'ultra', tier: 6, description: '100K running under 12:00.',     check: r => { const pb = getPBSecsForDist(r.filter(isRunningRace), 80, 130); return pb !== null && pb < 43200 } },
+  { id: 'ultra_100k_century_runner', icon: '🏔️', name: 'CENTURY RUNNER',    group: 'ladder', family: 'ultra', tier: 6, description: '100K running under 12:00 (race or 100K split in longer race).',     check: r => {
+    const running = r.filter(isRunningRace)
+    // Direct 100K race: distance 99–101 km under 12h
+    const pb = getPBSecsForDist(running, 99, 101)
+    if (pb !== null && pb < 43200) return true
+    // 100K split recorded in a race longer than 100K, cumulative time under 12h
+    return running.some(race => {
+      const distKm = parseFloat(race.distance)
+      if (!isFinite(distKm) || distKm <= 101) return false
+      const split100k = race.splits?.find(s => (s.label ?? '').toUpperCase() === '100K')
+      if (!split100k) return false
+      const cumSecs = parseHMS(split100k.cumulative ?? '')
+      return cumSecs !== null && cumSecs < 43200
+    })
+  } },
   { id: 'ultra_100m_hundred_legend', icon: '🏔️', name: 'HUNDRED LEGEND',    group: 'ladder', family: 'ultra', tier: 7, description: '100 Mile running under 24:00.', check: r => { const pb = getPBSecsForDist(r.filter(isRunningRace), 140, 180); return pb !== null && pb < 86400 } },
 
   // ── 70.3 Ladder (7 tiers) ─────────────────────────────────────────────────
