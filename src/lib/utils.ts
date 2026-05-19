@@ -67,11 +67,11 @@ export function distLabel(d: string | undefined, sport?: string): string {
   if (lower === 'hyrox') return 'HYROX'
   const n = parseFloat(d)
   if (isNaN(n)) return d
-  if (n >= 225.9 && n <= 226.1) return 'IRONMAN / Full Distance'
-  if (n >= 112.9 && n <= 113.1) return '70.3 / Middle Distance'
+  if (n >= 220 && n <= 230) return 'IRONMAN / Full Distance'
+  if (n >= 108 && n <= 116) return '70.3 / Middle Distance'
   if (n >= 99.5 && n <= 100.5) return 'PTO 100'
-  if (n >= 51.4 && n <= 51.6) return 'Olympic'
-  if (n >= 25.7 && n <= 25.8) return 'Sprint'
+  if (n >= 50 && n <= 53) return 'Olympic'
+  if (n >= 24 && n <= 27) return 'Sprint'
   if (n >= 12.5 && n <= 13.5) return 'Super Sprint'
   if (n >= 42.0 && n <= 42.3) return 'Marathon'
   if (n >= 21.0 && n <= 21.2) return 'Half Marathon'
