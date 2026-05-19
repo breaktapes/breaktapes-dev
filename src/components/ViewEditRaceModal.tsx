@@ -10,7 +10,7 @@ import { CustomDistInput } from '@/components/CustomDistInput'
 import { CityPicker } from '@/components/CityPicker'
 import { TimePickerWheel, type HMS } from '@/components/TimePickerWheel'
 import type { Race, Split } from '@/types'
-import { useUnits, fmtDistKm, distUnit, fmtPaceSecPerKm, computePaceSecPerKm } from '@/lib/units'
+import { useUnits, fmtDistKm, distUnit, fmtPaceSecPerKm, computePaceSecPerKm, fmtSpeedKmh } from '@/lib/units'
 import { removeMedalBackground } from '@/lib/removeBg'
 import { findSportDistMatch, distLabel as distLabelUtil, fmtDateDDMM, RACE_PRIORITY_OPTIONS, racePriorityLabel } from '@/lib/utils'
 
@@ -266,10 +266,55 @@ function ViewPanel({ race, isPB, onEdit, onDelete, onShare }: { race: Race; isPB
             </div>
           )
         })()}
-        {/* Pace stat — computed from time + distance */}
+        {/* Speed/pace stat — sport-aware */}
         {race.time && race.distance && (() => {
-          const { isNumeric } = resolveDistKm(race.distance)
+          const sportLower = (race.sport ?? '').toLowerCase()
+          const isTri = sportLower.includes('tri') || sportLower.includes('iron')
+          const isCycle = sportLower.includes('cycl') || sportLower.includes('bike') || sportLower.includes('bik')
+          const isSwim = sportLower.includes('swim')
+
+          // Triathlon: no pace/speed stat
+          if (isTri) return null
+
+          const { isNumeric, km: kmStr } = resolveDistKm(race.distance)
           if (!isNumeric) return null
+          const kmNum = parseFloat(kmStr)
+          if (!kmNum) return null
+
+          // Cycling: average speed km/h or mph
+          if (isCycle) {
+            const [h = 0, m = 0, s = 0] = race.time.split(':').map(Number)
+            const totalHrs = h + m / 60 + s / 3600
+            if (!totalHrs) return null
+            const kmh = kmNum / totalHrs
+            const [speedVal, speedUnit] = fmtSpeedKmh(kmh, units).split(' ')
+            return (
+              <div style={st.statBox}>
+                <div style={st.statVal}>{speedVal}</div>
+                <div style={st.statLabel}>AVG {speedUnit}</div>
+              </div>
+            )
+          }
+
+          // Swimming: pace per 100m (or 100yd imperial)
+          if (isSwim) {
+            const [h = 0, m = 0, s = 0] = race.time.split(':').map(Number)
+            const totalSecs = h * 3600 + m * 60 + s
+            const distM = kmNum * 1000
+            if (!distM) return null
+            const secPer100 = (totalSecs / distM) * 100
+            const mm = Math.floor(secPer100 / 60)
+            const ss = Math.round(secPer100 % 60)
+            const label = units === 'imperial' ? '/100yd' : '/100m'
+            return (
+              <div style={st.statBox}>
+                <div style={st.statVal}>{mm}:{String(ss).padStart(2, '0')}</div>
+                <div style={st.statLabel}>PACE {label}</div>
+              </div>
+            )
+          }
+
+          // Running (default): pace /km or /mi
           const secPerKm = computePaceSecPerKm(race.distance, race.time)
           if (!secPerKm) return null
           const paceStr = fmtPaceSecPerKm(secPerKm, units)
