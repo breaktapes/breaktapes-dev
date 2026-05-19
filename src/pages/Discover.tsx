@@ -20,8 +20,8 @@ const SPORTS: { value: string; label: string }[] = [
 // Distance chips per sport type
 const RUN_DIST_FILTERS: { label: string; match: (r: CatalogRace) => boolean }[] = [
   { label: 'All Distances', match: () => true },
-  { label: '5KM',           match: r => r.dist_km != null && r.dist_km >= 4.5 && r.dist_km <= 5.5 },
-  { label: '10KM',          match: r => r.dist_km != null && r.dist_km >= 9.5 && r.dist_km <= 10.5 },
+  { label: '5K',           match: r => r.dist_km != null && r.dist_km >= 4.5 && r.dist_km <= 5.5 },
+  { label: '10K',          match: r => r.dist_km != null && r.dist_km >= 9.5 && r.dist_km <= 10.5 },
   { label: 'Half Marathon', match: r => r.dist_km != null && r.dist_km >= 20.5 && r.dist_km <= 21.5 },
   { label: 'Marathon',      match: r => r.dist_km != null && r.dist_km >= 42.1 && r.dist_km <= 42.3 },
   { label: 'Ultra',         match: r => r.dist_km != null && r.dist_km > 42.3 && r.dist_km < 113 },
@@ -100,8 +100,8 @@ function distDisplay(r: CatalogRace): string {
   // Running
   if (km >= 42.1 && km <= 42.3) return 'Marathon'
   if (km >= 20.5 && km <= 21.5) return 'Half Marathon'
-  if (km >= 9.5 && km <= 10.5) return '10KM'
-  if (km >= 4.5 && km <= 5.5) return '5KM'
+  if (km >= 9.5 && km <= 10.5) return '10K'
+  if (km >= 4.5 && km <= 5.5) return '5K'
   if (km > 42.3 && km < 113) return 'Ultra'
   // Triathlon
   if (km >= 225 && km <= 227) return 'IRONMAN'

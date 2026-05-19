@@ -55,6 +55,10 @@ export function distLabel(d: string | undefined): string {
   if (lower === '70.3' || lower === 'half ironman' || lower === 'ironman 70.3' || lower === 'middle distance') return '70.3'
   if (lower === 'olympic' || lower === 'olympic triathlon') return 'Olympic'
   if (lower === 'sprint' || lower === 'sprint triathlon') return 'Sprint'
+  if (lower === '1k' || lower === '1km') return '1K'
+  if (lower === '2k' || lower === '2km') return '2K'
+  if (lower === '3k' || lower === '3km') return '3K'
+  if (lower === '4k' || lower === '4km') return '4K'
   if (lower === '5k' || lower === '5km') return '5K'
   if (lower === '10k' || lower === '10km') return '10K'
   if (lower === '10 mile' || lower === '10 miles' || lower === '10mi') return '10 Mile'
@@ -72,6 +76,8 @@ export function distLabel(d: string | undefined): string {
   if (n >= 10 && n <= 10.1) return '10K'
   if (n >= 5 && n <= 5.1) return '5K'
   if (n > 42.3) return 'Ultra'
+  // Short distances: show as "3K", "1K" etc (whole km values)
+  if (n >= 1 && n < 5 && Number.isInteger(n)) return `${n}K`
   return `${n} km`
 }
 

@@ -779,7 +779,7 @@ function PreRaceBriefing({ onAddRace, onEditRace, onComplete }: { onAddRace: () 
 
 const UPCOMING_DISTANCES: Record<string, { label: string; value: string }[]> = {
   Running:    [
-    { label: '5KM', value: '5' }, { label: '10KM', value: '10' }, { label: '10 Mile', value: '16.09' },
+    { label: '5K', value: '5' }, { label: '10K', value: '10' }, { label: '10 Mile', value: '16.09' },
     { label: 'Half Marathon', value: '21.1' }, { label: 'Marathon', value: '42.2' },
     { label: '50KM', value: '50' }, { label: '100KM', value: '100' }, { label: '100 Mile', value: '160.93' },
   ],
@@ -791,7 +791,7 @@ const UPCOMING_DISTANCES: Record<string, { label: string; value: string }[]> = {
     { label: 'Gran Fondo (100km)', value: '100' }, { label: 'Century (161km)', value: '161' },
   ],
   Swimming:   [
-    { label: '1KM', value: '1' }, { label: '3KM', value: '3' }, { label: '5KM', value: '5' }, { label: '10KM', value: '10' },
+    { label: '1K', value: '1' }, { label: '3K', value: '3' }, { label: '5K', value: '5' }, { label: '10K', value: '10' },
   ],
   HYROX:      [
     { label: 'Solo Open', value: 'Solo Open' }, { label: 'Solo Pro', value: 'Solo Pro' },
@@ -3870,8 +3870,9 @@ function PersonalBestsWidget() {
     const other: { key: string; r: Race }[] = []
 
     const runDistOrder: Record<string, number> = {
-      '5K': 1, '10K': 2, '10 Mile': 3, 'Half Marathon': 4, 'Marathon': 5,
-      '50K': 6, '100K': 7, '100 Mile': 8, 'Ultra': 9,
+      '1K': 1, '2K': 2, '3K': 3, '4K': 4, '5K': 5, '10K': 6,
+      '10 Mile': 7, 'Half Marathon': 8, 'Marathon': 9,
+      '50K': 10, '100K': 11, '100 Mile': 12, 'Ultra': 13,
     }
     const triDistOrder: Record<string, number> = {
       'Super Sprint': 1, 'Sprint': 2, 'Olympic': 3, '70.3': 4, 'IRONMAN': 5,

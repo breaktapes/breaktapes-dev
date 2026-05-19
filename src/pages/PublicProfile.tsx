@@ -138,7 +138,7 @@ export function PublicProfile({ profile }: PublicProfileProps) {
       {/* Personal Bests — sport-grouped card grid */}
       {Object.keys(pbMap).length > 0 && (() => {
         const RUN_DISTS: [string, string][] = [
-          ['5K', '5KM'], ['10K', '10KM'], ['10 Miles', '10 MI'],
+          ['5K', '5K'], ['10K', '10K'], ['10 Miles', '10 MI'],
           ['Half Marathon', 'HALF'], ['Marathon', 'MARATHON'], ['Ultra', 'ULTRA'],
         ]
         const TRI_DISTS: [string, string][] = [

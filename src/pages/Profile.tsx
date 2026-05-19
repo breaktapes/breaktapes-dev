@@ -2500,8 +2500,8 @@ function GoalsSection() {
   const yrKm = yrRaces.reduce((sum, r) => {
     // resolve distance to km
     const KM_MAP: Record<string, number> = {
-      '5KM': 5, '10KM': 10, '10 Mile': 16.1, 'Half Marathon': 21.1, 'Marathon': 42.2,
-      '50KM': 50, '50 Mile': 80.5, '100KM': 100, '100 Mile': 161,
+      '5K': 5, '10K': 10, '10 Mile': 16.1, 'Half Marathon': 21.1, 'Marathon': 42.2,
+      '50K': 50, '50 Mile': 80.5, '100K': 100, '100 Mile': 161,
     }
     return sum + (KM_MAP[r.distance] ?? parseFloat(r.distance) ?? 0)
   }, 0)

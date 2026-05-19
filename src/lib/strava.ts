@@ -110,11 +110,11 @@ export async function fetchStravaActivities(limit = 100): Promise<StravaActivity
 
 // ─── Race import helpers ──────────────────────────────────────────────────────
 
-const DIST_LABELS_RUN  = ['5KM','10KM','10 Mile','Half Marathon','Marathon','50KM','50 Mile','100KM','100 Mile']
+const DIST_LABELS_RUN  = ['5K','10K','10 Mile','Half Marathon','Marathon','50K','50 Mile','100K','100 Mile']
 const DIST_KM_RUN      = [5, 10, 16.1, 21.1, 42.2, 50, 80.5, 100, 161]
 const DIST_LABELS_CYCLE = ['Gran Fondo','Century','Randonneuring','Time Trial','Track Cycling']
 const DIST_KM_CYCLE     = [120, 160.9, 200, 40, 50]
-const DIST_LABELS_SWIM  = ['1KM','3KM','5KM','10KM','15KM','25KM']
+const DIST_LABELS_SWIM  = ['1K','3K','5K','10K','15K','25K']
 const DIST_KM_SWIM      = [1, 3, 5, 10, 15, 25]
 const DIST_LABELS_TRI   = ['Sprint','Olympic','70.3','IRONMAN']
 const DIST_KM_TRI       = [20.4, 51.5, 113, 226]

@@ -26,8 +26,8 @@ const SPORTS = [
 
 const DISTANCES_BY_SPORT: Record<string, { label: string; value: string }[]> = {
   Running: [
-    { label: '5KM',           value: '5' },
-    { label: '10KM',          value: '10' },
+    { label: '5K',           value: '5' },
+    { label: '10K',          value: '10' },
     { label: '10 Mile',       value: '16.09' },
     { label: 'Half Marathon', value: '21.1' },
     { label: 'Marathon',      value: '42.2' },
@@ -46,12 +46,12 @@ const DISTANCES_BY_SPORT: Record<string, { label: string; value: string }[]> = {
     { label: 'Custom...',          value: '__custom__' },
   ],
   Swimming: [
-    { label: '1KM',      value: '1' },
-    { label: '3KM',      value: '3' },
-    { label: '5KM',      value: '5' },
-    { label: '10KM',     value: '10' },
-    { label: '15KM',     value: '15' },
-    { label: '25KM',     value: '25' },
+    { label: '1K',      value: '1' },
+    { label: '3K',      value: '3' },
+    { label: '5K',      value: '5' },
+    { label: '10K',     value: '10' },
+    { label: '15K',     value: '15' },
+    { label: '25K',     value: '25' },
     { label: 'Custom...', value: '__custom__' },
   ],
   Triathlon: [
