@@ -83,7 +83,7 @@ function normDistKey(d: string): string {
   const lower = d.toLowerCase().trim()
   if (lower === 'marathon') return 'marathon'
   if (lower === 'half marathon') return 'half'
-  if (lower === '70.3' || lower === 'half ironman') return '70.3'
+  if (lower === '70.3' || lower === 'half ironman') return '70.3 / Middle Distance'
   if (lower === 'ironman' || lower === 'full distance') return 'ironman'
   if (lower === 'olympic') return 'olympic'
   if (lower === 'sprint') return 'sprint'
@@ -94,7 +94,7 @@ function normDistKey(d: string): string {
   if (!isNaN(km)) {
     if (km >= 42.0 && km <= 42.3) return 'marathon'
     if (km >= 21.0 && km <= 21.2) return 'half'
-    if (km >= 112.9 && km <= 113.1) return '70.3'
+    if (km >= 112.9 && km <= 113.1) return '70.3 / Middle Distance'
     if (km >= 225.9 && km <= 226.1) return 'ironman'
     if (km === 51.5) return 'olympic'
     if (km === 25.75) return 'sprint'
@@ -109,7 +109,7 @@ function normDistKey(d: string): string {
 const DIST_LABELS: Record<string, string> = {
   marathon: 'MARATHON',
   half: 'HALF MARATHON',
-  '70.3': '70.3',
+  '70.3': '70.3 / Middle Distance',
   ironman: 'IRONMAN',
   olympic: 'OLYMPIC',
   sprint: 'SPRINT',

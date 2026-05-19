@@ -57,7 +57,7 @@ const DISTANCES_BY_SPORT: Record<string, { label: string; value: string }[]> = {
   Triathlon: [
     { label: 'Sprint',   value: '25.75' },
     { label: 'Olympic',  value: '51.5' },
-    { label: '70.3',     value: '113' },
+    { label: '70.3 / Middle Distance', value: '113' },
     { label: 'PTO T100', value: '112' },
     { label: 'IRONMAN',  value: '226' },
     { label: 'Custom...',          value: '__custom__' },
@@ -168,7 +168,7 @@ function _normKey(d: string): string {
   const km = parseFloat(d)
   if (!isNaN(km)) {
     if (km >= 225.9 && km <= 226.1) return 'ironman'
-    if (km >= 112.9 && km <= 113.1) return '70.3'
+    if (km >= 112.9 && km <= 113.1) return '70.3 / Middle Distance'
     if (km >= 51.4 && km <= 51.6) return 'olympic'
     if (km >= 42.1 && km <= 42.3) return 'marathon'
     if (km >= 21.0 && km <= 21.2) return 'half'

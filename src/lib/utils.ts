@@ -52,7 +52,7 @@ export function distLabel(d: string | undefined): string {
   if (lower === 'marathon' || lower === 'full marathon') return 'Marathon'
   if (lower === 'half marathon' || lower === 'half') return 'Half Marathon'
   if (lower === 'ironman' || lower === 'full ironman' || lower === 'full distance') return 'IRONMAN'
-  if (lower === '70.3' || lower === 'half ironman' || lower === 'ironman 70.3' || lower === 'middle distance') return '70.3'
+  if (lower === '70.3' || lower === 'half ironman' || lower === 'ironman 70.3' || lower === 'middle distance') return '70.3 / Middle Distance'
   if (lower === 'olympic' || lower === 'olympic triathlon') return 'Olympic'
   if (lower === 'sprint' || lower === 'sprint triathlon') return 'Sprint'
   if (lower === '1k' || lower === '1km') return '1K'
@@ -67,7 +67,7 @@ export function distLabel(d: string | undefined): string {
   const n = parseFloat(d)
   if (isNaN(n)) return d
   if (n >= 225.9 && n <= 226.1) return 'IRONMAN'
-  if (n >= 112.9 && n <= 113.1) return '70.3'
+  if (n >= 112.9 && n <= 113.1) return '70.3 / Middle Distance'
   if (n >= 51.4 && n <= 51.6) return 'Olympic'
   if (n >= 25.7 && n <= 25.8) return 'Sprint'
   if (n >= 42.0 && n <= 42.3) return 'Marathon'

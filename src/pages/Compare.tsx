@@ -69,7 +69,7 @@ function normDist(d: string | undefined): string {
   if (!km) return d?.toLowerCase() ?? ''
   if (km >= 42 && km <= 42.3) return 'marathon'
   if (km >= 21 && km <= 21.2) return 'half'
-  if (km >= 113 && km <= 114) return '70.3'
+  if (km >= 113 && km <= 114) return '70.3 / Middle Distance'
   if (km >= 225 && km <= 227) return 'ironman'
   if (km >= 4.9 && km <= 5.1) return '5k'
   if (km >= 9.9 && km <= 10.1) return '10k'
@@ -133,7 +133,7 @@ const COMPARE_DISTS = [
   { label: 'Half', norm: 'half' },
   { label: '10K', norm: '10k' },
   { label: '5K', norm: '5k' },
-  { label: '70.3', norm: '70.3' },
+  { label: '70.3 / Middle Distance', norm: '70.3 / Middle Distance' },
   { label: 'Ironman', norm: 'ironman' },
 ]
 

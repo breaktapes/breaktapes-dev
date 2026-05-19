@@ -31,7 +31,7 @@ const TRI_DIST_FILTERS: { label: string; match: (r: CatalogRace) => boolean }[] 
   { label: 'All Distances',            match: () => true },
   { label: 'Sprint',                   match: r => r.dist_km != null && r.dist_km >= 24 && r.dist_km <= 27 },
   { label: 'Olympic',                  match: r => r.dist_km != null && r.dist_km >= 50 && r.dist_km <= 53 },
-  { label: '70.3',    match: r => r.dist_km != null && r.dist_km >= 112 && r.dist_km <= 114 },
+  { label: '70.3 / Middle Distance', match: r => r.dist_km != null && r.dist_km >= 112 && r.dist_km <= 114 },
   { label: 'IRONMAN', match: r => r.dist_km != null && r.dist_km >= 225 && r.dist_km <= 227 },
 ]
 
@@ -105,7 +105,7 @@ function distDisplay(r: CatalogRace): string {
   if (km > 42.3 && km < 113) return 'Ultra'
   // Triathlon
   if (km >= 225 && km <= 227) return 'IRONMAN'
-  if (km >= 112 && km <= 114) return '70.3'
+  if (km >= 112 && km <= 114) return '70.3 / Middle Distance'
   if (km >= 50 && km <= 53) return 'Olympic'
   if (km >= 24 && km <= 27) return 'Sprint'
   return r.dist ?? `${km}km`

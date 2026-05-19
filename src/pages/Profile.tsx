@@ -170,7 +170,7 @@ const PB_DISTANCES: Array<{ key: string; label: string; sport: string; distValue
   { key: '17.65',  label: 'Super Sprint',  sport: 'Triathlon' },
   { key: '25.75',  label: 'Sprint',        sport: 'Triathlon' },
   { key: '51.5',   label: 'Olympic',       sport: 'Triathlon' },
-  { key: '113',    label: '70.3',          sport: 'Triathlon' },
+  { key: '113', label: '70.3 / Middle Distance', sport: 'Triathlon' },
   { key: '226',    label: 'Ironman',       sport: 'Triathlon' },
   // Cycling (key=composite so won't clash; distValue=actual race distance)
   { key: '40|cy',     label: '40K TT',    sport: 'Cycling',  distValue: '40',     sportMatch: 'cycl' },
@@ -877,7 +877,7 @@ const LADDER_FAMILIES: Array<{ key: string; label: string; icon: string }> = [
   { key: 'half',     label: 'HALF MARATHON',icon: 'HM' },
   { key: 'marathon', label: 'MARATHON',     icon: 'M' },
   { key: 'ultra',    label: 'ULTRA',        icon: 'U' },
-  { key: 'tri703',   label: '70.3',         icon: '70.3' },
+  { key: 'tri703', label: '70.3 / Middle Distance', icon: '70.3' },
   { key: 'iron',     label: 'FULL IRONMAN', icon: 'IM' },
 ]
 

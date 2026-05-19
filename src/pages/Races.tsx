@@ -110,7 +110,7 @@ function normKey(d: string | undefined): string {
   if (km <= 0) return (d ?? '').toLowerCase().trim()
   if (km >= 42.1 && km <= 42.3) return 'marathon'
   if (km >= 21.0 && km <= 21.2) return 'half marathon'
-  if (km >= 112.9 && km <= 113.1) return '70.3'
+  if (km >= 112.9 && km <= 113.1) return '70.3 / Middle Distance'
   if (km >= 225.9 && km <= 226.1) return 'ironman'
   return `${km}`
 }

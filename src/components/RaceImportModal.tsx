@@ -25,7 +25,7 @@ function kmToDistLabel(km: number): string {
   if (Math.abs(km - 42.195) < 0.1) return 'Marathon'
   if (Math.abs(km - 21.0975) < 0.1) return 'Half Marathon'
   if (Math.abs(km - 226) < 1) return 'IRONMAN'
-  if (Math.abs(km - 113) < 1) return '70.3'
+  if (Math.abs(km - 113) < 1) return '70.3 / Middle Distance'
   if (Math.abs(km - 51.5) < 1) return 'Olympic Tri'
   if (Math.abs(km - 5) < 0.1) return '5K'
   if (Math.abs(km - 10) < 0.1) return '10K'
