@@ -888,11 +888,11 @@ const ACHIEVEMENTS: Achievement[] = [
 
 const LADDER_FAMILIES: Array<{ key: string; label: string; icon: string }> = [
   { key: '10k',      label: '10K',          icon: '10K' },
-  { key: 'half',     label: 'HALF MARATHON',icon: 'HM' },
-  { key: 'marathon', label: 'MARATHON',     icon: 'M' },
-  { key: 'ultra',    label: 'ULTRA',        icon: 'U' },
+  { key: 'half',     label: 'HALF MARATHON',icon: '21.1K' },
+  { key: 'marathon', label: 'MARATHON',     icon: '42.2K' },
+  { key: 'ultra',    label: 'ULTRA',        icon: '42.2K+' },
   { key: 'tri703', label: '70.3 / Middle Distance', icon: '70.3' },
-  { key: 'iron',     label: 'FULL IRONMAN', icon: 'IM' },
+  { key: 'iron',     label: 'FULL IRONMAN', icon: '140.6' },
 ]
 
 // World Marathon Majors
@@ -1603,7 +1603,7 @@ function AchievementsSection() {
               <div key={fam.key} style={{ background: 'var(--surface2)', borderRadius: '10px', padding: '14px', border: '1px solid var(--border)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--orange)', background: 'rgba(var(--orange-ch),0.12)', border: '1px solid rgba(var(--orange-ch),0.25)', borderRadius: '4px', padding: '2px 5px' }}>{fam.icon}</span>
+                    <span style={{ fontSize: '8px', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--orange)', background: 'rgba(var(--orange-ch),0.12)', border: '1px solid rgba(var(--orange-ch),0.25)', borderRadius: '4px', padding: '2px 6px', whiteSpace: 'nowrap' }}>{fam.icon}</span>
                     <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>
                       {fam.label}
                     </span>
