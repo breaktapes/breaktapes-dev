@@ -1631,7 +1631,7 @@ function AchievementsSection() {
                         title={t.name}
                         style={{
                           flex: 1, height: '6px', borderRadius: '3px', cursor: 'pointer',
-                          background: isHighest ? 'var(--orange)' : isUnlocked ? 'rgba(var(--orange-ch),0.45)' : 'var(--surface3)',
+                          background: isHighest ? 'var(--orange)' : isUnlocked ? 'rgba(var(--orange-ch),0.65)' : 'var(--surface3)',
                           transition: 'background 0.2s',
                         }}
                       />
