@@ -836,15 +836,16 @@ const ACHIEVEMENTS: Achievement[] = [
   { id: 'marathon_sub_elite',        icon: '🏛️', name: 'SUB-ELITE',        group: 'ladder', family: 'marathon', tier: 14, description: 'Marathon under 2:25.',  check: r => { const pb = getPBSecsForDist(r, 40, 45); return pb !== null && pb < 8700 } },
   { id: 'marathon_world_class',      icon: '🏛️', name: 'WORLD CLASS',      group: 'ladder', family: 'marathon', tier: 15, description: 'Marathon under 2:20.',  check: r => { const pb = getPBSecsForDist(r, 40, 45); return pb !== null && pb < 8400 } },
 
-  // ── Ultra Ladder (9 tiers — finisher-based, distance milestones) ────────────
-  { id: 'ultra_50k_initiate',      icon: '🏔️', name: 'ULTRA INITIATE',  group: 'ladder', family: 'ultra', tier: 1, description: '50K running finisher (45–65 km).',
-    check: r => getPBSecsForDist(r.filter(isRunningRace), 45, 65) !== null },
-  { id: 'ultra_50m_iron_legs',     icon: '🏔️', name: 'IRON LEGS',       group: 'ladder', family: 'ultra', tier: 2, description: '50 Mile running finisher (~80 km).',
-    check: r => getPBSecsForDist(r.filter(isRunningRace), 75, 90) !== null },
-  { id: 'ultra_100k_century',      icon: '🏔️', name: 'CENTURY RUNNER',  group: 'ladder', family: 'ultra', tier: 3, description: '100K running finisher (race 99–101 km, or 100K split in a longer race).',
+  // ── Ultra Ladder (9 tiers — finisher-based, cumulative: higher distance unlocks all lower tiers) ──
+  { id: 'ultra_50k_initiate',      icon: '🏔️', name: 'ULTRA INITIATE',  group: 'ladder', family: 'ultra', tier: 1, description: 'Any running finish ≥ 50K (45 km+).',
+    check: r => getPBSecsForDist(r.filter(isRunningRace), 45, 99999) !== null },
+  { id: 'ultra_50m_iron_legs',     icon: '🏔️', name: 'IRON LEGS',       group: 'ladder', family: 'ultra', tier: 2, description: 'Any running finish ≥ 50 Miles (75 km+).',
+    check: r => getPBSecsForDist(r.filter(isRunningRace), 75, 99999) !== null },
+  { id: 'ultra_100k_century',      icon: '🏔️', name: 'CENTURY RUNNER',  group: 'ladder', family: 'ultra', tier: 3, description: 'Any running finish ≥ 100K (99 km+), or 100K cumulative split in a longer race.',
     check: r => {
       const running = r.filter(isRunningRace)
-      if (getPBSecsForDist(running, 99, 101) !== null) return true
+      if (getPBSecsForDist(running, 99, 99999) !== null) return true
+      // 100K split recorded in a longer race (cumulative time present)
       return running.some(race => {
         const distKm = parseFloat(race.distance)
         if (!isFinite(distKm) || distKm <= 101) return false
@@ -852,18 +853,18 @@ const ACHIEVEMENTS: Achievement[] = [
         return !!split100k?.cumulative && parseHMS(split100k.cumulative) !== null
       })
     } },
-  { id: 'ultra_100m_centurion',    icon: '🏔️', name: 'CENTURION',       group: 'ladder', family: 'ultra', tier: 4, description: '100 Mile running finisher (~161 km).',
-    check: r => getPBSecsForDist(r.filter(isRunningRace), 155, 170) !== null },
-  { id: 'ultra_135m_desert_soul',  icon: '🏔️', name: 'DESERT SOUL',     group: 'ladder', family: 'ultra', tier: 5, description: '135 Mile running finisher (~217 km). Badwater territory.',
-    check: r => getPBSecsForDist(r.filter(isRunningRace), 212, 222) !== null },
-  { id: 'ultra_200m_double_century',icon:'🏔️', name: 'DOUBLE CENTURY',  group: 'ladder', family: 'ultra', tier: 6, description: '200 Mile running finisher (~322 km).',
-    check: r => getPBSecsForDist(r.filter(isRunningRace), 316, 328) !== null },
-  { id: 'ultra_240m_spine_walker', icon: '🏔️', name: 'SPINE WALKER',    group: 'ladder', family: 'ultra', tier: 7, description: '240 Mile running finisher (~386 km).',
-    check: r => getPBSecsForDist(r.filter(isRunningRace), 380, 393) !== null },
-  { id: 'ultra_250m_iron_will',    icon: '🏔️', name: 'IRON WILL',       group: 'ladder', family: 'ultra', tier: 8, description: '250 Mile running finisher (~402 km).',
-    check: r => getPBSecsForDist(r.filter(isRunningRace), 396, 410) !== null },
-  { id: 'ultra_300m_transcendent', icon: '🏔️', name: 'TRANSCENDENT',    group: 'ladder', family: 'ultra', tier: 9, description: '300 Mile running finisher (~483 km). Beyond what most humans consider possible.',
-    check: r => getPBSecsForDist(r.filter(isRunningRace), 476, 490) !== null },
+  { id: 'ultra_100m_centurion',    icon: '🏔️', name: 'CENTURION',       group: 'ladder', family: 'ultra', tier: 4, description: 'Any running finish ≥ 100 Miles (155 km+).',
+    check: r => getPBSecsForDist(r.filter(isRunningRace), 155, 99999) !== null },
+  { id: 'ultra_135m_desert_soul',  icon: '🏔️', name: 'DESERT SOUL',     group: 'ladder', family: 'ultra', tier: 5, description: 'Any running finish ≥ 135 Miles (212 km+). Badwater territory.',
+    check: r => getPBSecsForDist(r.filter(isRunningRace), 212, 99999) !== null },
+  { id: 'ultra_200m_double_century',icon:'🏔️', name: 'DOUBLE CENTURY',  group: 'ladder', family: 'ultra', tier: 6, description: 'Any running finish ≥ 200 Miles (316 km+).',
+    check: r => getPBSecsForDist(r.filter(isRunningRace), 316, 99999) !== null },
+  { id: 'ultra_240m_spine_walker', icon: '🏔️', name: 'SPINE WALKER',    group: 'ladder', family: 'ultra', tier: 7, description: 'Any running finish ≥ 240 Miles (380 km+).',
+    check: r => getPBSecsForDist(r.filter(isRunningRace), 380, 99999) !== null },
+  { id: 'ultra_250m_iron_will',    icon: '🏔️', name: 'IRON WILL',       group: 'ladder', family: 'ultra', tier: 8, description: 'Any running finish ≥ 250 Miles (396 km+).',
+    check: r => getPBSecsForDist(r.filter(isRunningRace), 396, 99999) !== null },
+  { id: 'ultra_300m_transcendent', icon: '🏔️', name: 'TRANSCENDENT',    group: 'ladder', family: 'ultra', tier: 9, description: 'Any running finish ≥ 300 Miles (476 km+). Beyond what most humans consider possible.',
+    check: r => getPBSecsForDist(r.filter(isRunningRace), 476, 99999) !== null },
 
   // ── 70.3 Ladder (7 tiers) ─────────────────────────────────────────────────
   { id: 'tri703_finisher',         icon: '🔱', name: '70.3 FINISHER',    group: 'ladder', family: 'tri703', tier: 0, description: 'Completed a 70.3 triathlon (113 km).',
