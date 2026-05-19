@@ -836,28 +836,34 @@ const ACHIEVEMENTS: Achievement[] = [
   { id: 'marathon_sub_elite',        icon: '🏛️', name: 'SUB-ELITE',        group: 'ladder', family: 'marathon', tier: 14, description: 'Marathon under 2:25.',  check: r => { const pb = getPBSecsForDist(r, 40, 45); return pb !== null && pb < 8700 } },
   { id: 'marathon_world_class',      icon: '🏛️', name: 'WORLD CLASS',      group: 'ladder', family: 'marathon', tier: 15, description: 'Marathon under 2:20.',  check: r => { const pb = getPBSecsForDist(r, 40, 45); return pb !== null && pb < 8400 } },
 
-  // ── Ultra Ladder (7 tiers) ────────────────────────────────────────────────
-  { id: 'ultra_50k_entry',           icon: '🏔️', name: 'ULTRA ENTRY',       group: 'ladder', family: 'ultra', tier: 1, description: '50K running under 6:00.',       check: r => { const pb = getPBSecsForDist(r.filter(isRunningRace), 45, 65); return pb !== null && pb < 21600 } },
-  { id: 'ultra_50k_endurance_builder',icon:'🏔️', name: 'ENDURANCE BUILDER', group: 'ladder', family: 'ultra', tier: 2, description: '50K running under 5:30.',       check: r => { const pb = getPBSecsForDist(r.filter(isRunningRace), 45, 65); return pb !== null && pb < 19800 } },
-  { id: 'ultra_50k_ultra_control',   icon: '🏔️', name: 'ULTRA CONTROL',     group: 'ladder', family: 'ultra', tier: 3, description: '50K running under 5:00.',       check: r => { const pb = getPBSecsForDist(r.filter(isRunningRace), 45, 65); return pb !== null && pb < 18000 } },
-  { id: 'ultra_50k_ultra_strong',    icon: '🏔️', name: 'ULTRA STRONG',      group: 'ladder', family: 'ultra', tier: 4, description: '50K running under 4:30.',       check: r => { const pb = getPBSecsForDist(r.filter(isRunningRace), 45, 65); return pb !== null && pb < 16200 } },
-  { id: 'ultra_50k_ultra_elite',     icon: '🏔️', name: 'ULTRA ELITE',       group: 'ladder', family: 'ultra', tier: 5, description: '50K running under 4:00.',       check: r => { const pb = getPBSecsForDist(r.filter(isRunningRace), 45, 65); return pb !== null && pb < 14400 } },
-  { id: 'ultra_100k_century_runner', icon: '🏔️', name: 'CENTURY RUNNER',    group: 'ladder', family: 'ultra', tier: 6, description: '100K running under 12:00 (race or 100K split in longer race).',     check: r => {
-    const running = r.filter(isRunningRace)
-    // Direct 100K race: distance 99–101 km under 12h
-    const pb = getPBSecsForDist(running, 99, 101)
-    if (pb !== null && pb < 43200) return true
-    // 100K split recorded in a race longer than 100K, cumulative time under 12h
-    return running.some(race => {
-      const distKm = parseFloat(race.distance)
-      if (!isFinite(distKm) || distKm <= 101) return false
-      const split100k = race.splits?.find(s => (s.label ?? '').toUpperCase() === '100K')
-      if (!split100k) return false
-      const cumSecs = parseHMS(split100k.cumulative ?? '')
-      return cumSecs !== null && cumSecs < 43200
-    })
-  } },
-  { id: 'ultra_100m_hundred_legend', icon: '🏔️', name: 'HUNDRED LEGEND',    group: 'ladder', family: 'ultra', tier: 7, description: '100 Mile running under 24:00.', check: r => { const pb = getPBSecsForDist(r.filter(isRunningRace), 140, 180); return pb !== null && pb < 86400 } },
+  // ── Ultra Ladder (9 tiers — finisher-based, distance milestones) ────────────
+  { id: 'ultra_50k_initiate',      icon: '🏔️', name: 'ULTRA INITIATE',  group: 'ladder', family: 'ultra', tier: 1, description: '50K running finisher (45–65 km).',
+    check: r => getPBSecsForDist(r.filter(isRunningRace), 45, 65) !== null },
+  { id: 'ultra_50m_iron_legs',     icon: '🏔️', name: 'IRON LEGS',       group: 'ladder', family: 'ultra', tier: 2, description: '50 Mile running finisher (~80 km).',
+    check: r => getPBSecsForDist(r.filter(isRunningRace), 75, 90) !== null },
+  { id: 'ultra_100k_century',      icon: '🏔️', name: 'CENTURY RUNNER',  group: 'ladder', family: 'ultra', tier: 3, description: '100K running finisher (race 99–101 km, or 100K split in a longer race).',
+    check: r => {
+      const running = r.filter(isRunningRace)
+      if (getPBSecsForDist(running, 99, 101) !== null) return true
+      return running.some(race => {
+        const distKm = parseFloat(race.distance)
+        if (!isFinite(distKm) || distKm <= 101) return false
+        const split100k = race.splits?.find(s => (s.label ?? '').toUpperCase() === '100K')
+        return !!split100k?.cumulative && parseHMS(split100k.cumulative) !== null
+      })
+    } },
+  { id: 'ultra_100m_centurion',    icon: '🏔️', name: 'CENTURION',       group: 'ladder', family: 'ultra', tier: 4, description: '100 Mile running finisher (~161 km).',
+    check: r => getPBSecsForDist(r.filter(isRunningRace), 155, 170) !== null },
+  { id: 'ultra_135m_desert_soul',  icon: '🏔️', name: 'DESERT SOUL',     group: 'ladder', family: 'ultra', tier: 5, description: '135 Mile running finisher (~217 km). Badwater territory.',
+    check: r => getPBSecsForDist(r.filter(isRunningRace), 212, 222) !== null },
+  { id: 'ultra_200m_double_century',icon:'🏔️', name: 'DOUBLE CENTURY',  group: 'ladder', family: 'ultra', tier: 6, description: '200 Mile running finisher (~322 km).',
+    check: r => getPBSecsForDist(r.filter(isRunningRace), 316, 328) !== null },
+  { id: 'ultra_240m_spine_walker', icon: '🏔️', name: 'SPINE WALKER',    group: 'ladder', family: 'ultra', tier: 7, description: '240 Mile running finisher (~386 km).',
+    check: r => getPBSecsForDist(r.filter(isRunningRace), 380, 393) !== null },
+  { id: 'ultra_250m_iron_will',    icon: '🏔️', name: 'IRON WILL',       group: 'ladder', family: 'ultra', tier: 8, description: '250 Mile running finisher (~402 km).',
+    check: r => getPBSecsForDist(r.filter(isRunningRace), 396, 410) !== null },
+  { id: 'ultra_300m_transcendent', icon: '🏔️', name: 'TRANSCENDENT',    group: 'ladder', family: 'ultra', tier: 9, description: '300 Mile running finisher (~483 km). Beyond what most humans consider possible.',
+    check: r => getPBSecsForDist(r.filter(isRunningRace), 476, 490) !== null },
 
   // ── 70.3 Ladder (7 tiers) ─────────────────────────────────────────────────
   { id: 'tri703_finisher',         icon: '🔱', name: '70.3 FINISHER',    group: 'ladder', family: 'tri703', tier: 0, description: 'Completed a 70.3 triathlon (113 km).',
@@ -890,7 +896,7 @@ const LADDER_FAMILIES: Array<{ key: string; label: string; icon: string }> = [
   { key: '10k',      label: '10K',          icon: '10K' },
   { key: 'half',     label: 'HALF MARATHON',icon: '21.1K' },
   { key: 'marathon', label: 'MARATHON',     icon: '42.2K' },
-  { key: 'ultra',    label: 'ULTRA',        icon: '42.2K+' },
+  { key: 'ultra',    label: 'ULTRA',        icon: '50K+' },
   { key: 'tri703', label: '70.3 / Middle Distance', icon: '70.3' },
   { key: 'iron',     label: 'FULL IRONMAN', icon: '140.6' },
 ]
