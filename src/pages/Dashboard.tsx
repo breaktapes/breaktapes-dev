@@ -4103,7 +4103,7 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
       // distance match: same label OR within 15% of km
       const kmMatch = raceKm > 0 && c.dist_km != null
         ? Math.abs(c.dist_km - raceKm) / raceKm <= 0.15
-        : distLabelUtil(r.distance) === distLabelUtil(c.dist ?? '')
+        : distLabelUtil(r.distance, r.sport ?? '') === distLabelUtil(c.dist ?? '', c.type ?? '')
       if (!kmMatch) return false
 
       // must have a date
@@ -4298,7 +4298,7 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                                         <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '13px', color: 'var(--white)', letterSpacing: '0.03em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{alt.name}</div>
                                         <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>
                                           {[alt.city, alt.country].filter(Boolean).join(', ')}
-                                          {alt.dist_km != null ? ` · ${distLabelUtil(alt.dist ?? String(alt.dist_km))}` : ''}
+                                          {alt.dist_km != null ? ` · ${distLabelUtil(alt.dist ?? String(alt.dist_km), alt.type ?? '')}` : ''}
                                           {' · '}{altDate}
                                         </div>
                                       </div>
