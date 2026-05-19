@@ -1888,7 +1888,7 @@ function AgeGradeWidget() {
               <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '11px', color: 'var(--muted)', minWidth: '16px' }}>#{e.rank}</div>
               <div style={{ flex: 1, overflow: 'hidden' }}>
                 <div style={{ fontSize: '12px', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.race.name ?? e.race.distance}</div>
-                <div style={{ fontSize: '11px', color: 'var(--muted)' }}>{e.race.distance} · {e.race.time}</div>
+                <div style={{ fontSize: '11px', color: 'var(--muted)' }}>{distBadge(e.race.distance, e.race.sport)} · {e.race.time}</div>
               </div>
               <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', color: e.ageGrade >= 70 ? 'var(--orange)' : 'var(--white)', minWidth: '44px', textAlign: 'right' }}>{e.ageGrade.toFixed(1)}%</div>
             </div>
