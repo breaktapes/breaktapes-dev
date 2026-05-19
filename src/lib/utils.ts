@@ -1,3 +1,18 @@
+// ── Race priority labels ──────────────────────────────────────────────────────
+
+export const RACE_PRIORITY_OPTIONS = [
+  { value: '',  label: '— Unset —' },
+  { value: 'A', label: 'A Race — Goal Race' },
+  { value: 'B', label: 'B Race — Training' },
+  { value: 'C', label: 'C Race — Fun / Pacing' },
+] as const
+
+/** Short display label for a priority letter, e.g. 'A' → 'A Race — Goal Race' */
+export function racePriorityLabel(p: string | undefined): string {
+  const found = RACE_PRIORITY_OPTIONS.find(o => o.value === p)
+  return found ? found.label : ''
+}
+
 /**
  * Convert any date string the app stores ("YYYY-MM-DD") into the canonical
  * display format DD-MM-YYYY. Pass-through for empty / unparseable input.

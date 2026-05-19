@@ -7,7 +7,7 @@ import { TimePickerWheel, type HMS } from '@/components/TimePickerWheel'
 import { CustomDistInput } from '@/components/CustomDistInput'
 import { CityPicker } from '@/components/CityPicker'
 import { countryNameHaystack } from '@/lib/countries'
-import { normalizeName, resolveDistKm, isAlreadyInCatalog, findSportDistMatch, distLabel as distLabelUtil } from '@/lib/utils'
+import { normalizeName, resolveDistKm, isAlreadyInCatalog, findSportDistMatch, distLabel as distLabelUtil, RACE_PRIORITY_OPTIONS } from '@/lib/utils'
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@/env'
 import { useAuthStore } from '@/stores/useAuthStore'
 import type { Race, Split } from '@/types'
@@ -81,12 +81,7 @@ const RACE_OUTCOMES = [
   { value: 'DNS',      label: 'DNS — Did Not Start' },
 ]
 
-const RACE_PRIORITIES = [
-  { value: '',  label: '— Unset —' },
-  { value: 'A', label: 'A Race — Goal Race' },
-  { value: 'B', label: 'B Race — Training' },
-  { value: 'C', label: 'C Race — Fun / Pacing' },
-]
+const RACE_PRIORITIES = RACE_PRIORITY_OPTIONS
 
 const MEDALS = [
   { value: '',           label: 'None' },

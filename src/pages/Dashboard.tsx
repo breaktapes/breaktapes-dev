@@ -15,7 +15,7 @@ import { WidgetDetailModal } from '@/components/WidgetDetailModal'
 import type { WidgetDynamicContext } from '@/lib/widgetContent'
 import type { Race, DashWidget } from '@/types'
 import { useUnits, distUnit } from '@/lib/units'
-import { fmtDateDDMM, distLabel as distLabelUtil, normalizeName } from '@/lib/utils'
+import { fmtDateDDMM, distLabel as distLabelUtil, normalizeName, racePriorityLabel } from '@/lib/utils'
 import { useRaceCatalog, type CatalogRace } from '@/hooks/useRaceCatalog'
 import {
   bestRiegelTable,
@@ -1084,7 +1084,7 @@ function CountdownCard({ race, onShowAll, upcomingRaces, onSelectRace }: { race:
           <div style={st.countdownHeaderLeft}>
             <span style={st.countdownDash}>—</span>
             <span style={st.aBadge}>{priority}</span>
-            <span style={st.aRaceLabel}>{priority} RACE</span>
+            <span style={st.aRaceLabel}>{racePriorityLabel(priority)}</span>
           </div>
           <button style={st.editBtn} onClick={() => setShowEdit(true)}>
             <IconEdit />
@@ -3694,7 +3694,7 @@ function WhatToRaceNextWidget() {
             </div>
             {r.priority && (
               <span style={{ fontSize: '10px', color: r.priority === 'A' ? 'var(--orange)' : 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, flexShrink: 0, marginLeft: '8px' }}>
-                {r.priority}-RACE
+                {racePriorityLabel(r.priority)}
               </span>
             )}
           </div>
@@ -4198,7 +4198,7 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                       <div style={{ paddingLeft: '10px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '6px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
-                            <span style={{ background: 'var(--orange)', color: '#000', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '10px', letterSpacing: '0.08em', padding: '2px 7px', borderRadius: '4px', flexShrink: 0 }}>A RACE</span>
+                            <span style={{ background: 'var(--orange)', color: '#000', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '10px', letterSpacing: '0.08em', padding: '2px 7px', borderRadius: '4px', flexShrink: 0 }}>{racePriorityLabel(r.priority)}</span>
                             <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>{r.name ?? 'Unnamed race'}</span>
                           </div>
                           <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>

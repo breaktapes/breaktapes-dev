@@ -12,7 +12,7 @@ import { TimePickerWheel, type HMS } from '@/components/TimePickerWheel'
 import type { Race, Split } from '@/types'
 import { useUnits, fmtDistKm, distUnit, fmtPaceSecPerKm, computePaceSecPerKm } from '@/lib/units'
 import { removeMedalBackground } from '@/lib/removeBg'
-import { findSportDistMatch, distLabel as distLabelUtil, fmtDateDDMM } from '@/lib/utils'
+import { findSportDistMatch, distLabel as distLabelUtil, fmtDateDDMM, RACE_PRIORITY_OPTIONS, racePriorityLabel } from '@/lib/utils'
 
 // ─── Config (mirrors AddRaceModal) ──────────────────────────────────────────
 
@@ -81,12 +81,7 @@ const RACE_OUTCOMES = [
   { value: 'DNS',      label: 'DNS — Did Not Start' },
 ]
 
-const RACE_PRIORITIES = [
-  { value: '',  label: '— Unset —' },
-  { value: 'A', label: 'A Race — Goal Race' },
-  { value: 'B', label: 'B Race — Training' },
-  { value: 'C', label: 'C Race — Fun / Pacing' },
-]
+const RACE_PRIORITIES = RACE_PRIORITY_OPTIONS
 
 const MEDALS = [
   { value: '',         label: 'None' },
@@ -316,7 +311,7 @@ function ViewPanel({ race, isPB, onEdit, onDelete, onShare }: { race: Race; isPB
           )}
           {race.priority && (
             <span style={{ ...st.infoPill, ...(race.priority === 'A' ? { borderColor: 'rgba(var(--orange-ch),0.4)', color: 'var(--orange)' } : {}) }}>
-              {race.priority === 'A' ? 'A Race' : race.priority === 'B' ? 'B Race' : 'C Race'}
+              {racePriorityLabel(race.priority)}
             </span>
           )}
           {race.medal && (
