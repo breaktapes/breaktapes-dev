@@ -14,7 +14,7 @@ import { WidgetCard, WidgetCardContext, type WidgetCardActions } from '@/compone
 import { WidgetDetailModal } from '@/components/WidgetDetailModal'
 import type { WidgetDynamicContext } from '@/lib/widgetContent'
 import type { Race, DashWidget } from '@/types'
-import { useUnits, distUnit } from '@/lib/units'
+import { useUnits, distUnit, computePaceSecPerKm as computePaceSecPerKmFn } from '@/lib/units'
 import { fmtDateDDMM, distLabel as distLabelUtil, normalizeName, racePriorityLabel } from '@/lib/utils'
 import { useRaceCatalog, type CatalogRace } from '@/hooks/useRaceCatalog'
 import {
@@ -1906,49 +1906,118 @@ function RaceDNAWidget() {
   const today  = todayStr()
   const past   = useMemo(() => races.filter(r => r.date <= today), [races, today])
 
-  const { fadeRate, travelCount } = useMemo(() => {
+  const dna = useMemo(() => {
+    if (past.length === 0) return null
+
+    // ── Temperature analysis ──────────────────────────────────────────────
+    const withTemp = past.filter(r => r.weather?.temp != null && r.time)
+    type TempBucket = { label: string; races: Race[] }
+    const buckets: TempBucket[] = [
+      { label: 'Cold (<10°C)',  races: withTemp.filter(r => r.weather!.temp! <  10) },
+      { label: 'Cool (10–20°C)', races: withTemp.filter(r => r.weather!.temp! >= 10 && r.weather!.temp! < 20) },
+      { label: 'Warm (20–28°C)', races: withTemp.filter(r => r.weather!.temp! >= 20 && r.weather!.temp! < 28) },
+      { label: 'Hot (28°C+)',   races: withTemp.filter(r => r.weather!.temp! >= 28) },
+    ].filter(b => b.races.length > 0)
+
+    // Best bucket = lowest avg finishing time relative to distance (use pace proxy)
+    const bucketWithPace = buckets.map(b => {
+      const paces = b.races
+        .map(r => computePaceSecPerKmFn(r.distance, r.time!))
+        .filter((p): p is number => p != null)
+      const avgPace = paces.length ? paces.reduce((a, x) => a + x, 0) / paces.length : null
+      return { ...b, avgPace, count: b.races.length }
+    }).filter(b => b.avgPace != null)
+
+    const bestBucket = bucketWithPace.length
+      ? bucketWithPace.reduce((a, b) => (b.avgPace! < a.avgPace! ? b : a))
+      : null
+
+    // ── Surface breakdown ─────────────────────────────────────────────────
+    const surfMap: Record<string, number> = {}
+    for (const r of past) {
+      const s = (r.surface ?? 'road').toLowerCase()
+      surfMap[s] = (surfMap[s] ?? 0) + 1
+    }
+    const surfaces = Object.entries(surfMap)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([s, n]) => ({ label: s.charAt(0).toUpperCase() + s.slice(1), pct: Math.round((n / past.length) * 100) }))
+
+    // ── Countries / travel ────────────────────────────────────────────────
+    const countrySet = new Set(past.map(r => r.country).filter(Boolean))
+    const travelCount = countrySet.size
+
+    // ── Pacing (from splits where available) ─────────────────────────────
     const withSplits = past.filter(r => (r.splits ?? []).length >= 2)
     let faded = 0
     for (const r of withSplits) {
-      const splits = (r.splits ?? []).filter(s => s.split)
-      if (splits.length < 2) continue
-      const first = parseHMS(splits[0].split!) ?? 0
-      const last  = parseHMS(splits[splits.length - 1].split!) ?? 0
+      const s = (r.splits ?? []).filter(x => x.split)
+      if (s.length < 2) continue
+      const first = parseHMS(s[0].split!) ?? 0
+      const last  = parseHMS(s[s.length - 1].split!) ?? 0
       if (last > first * 1.02) faded++
     }
-    const fr = withSplits.length > 0 ? Math.round((faded / withSplits.length) * 100) : 0
-    const tc = past.filter(r => r.country && r.country !== (past[0]?.country ?? '')).length
-    return { fadeRate: fr, travelCount: tc }
+    const fadeRate = withSplits.length > 0 ? Math.round((faded / withSplits.length) * 100) : null
+
+    return { bestBucket, bucketWithPace, surfaces, travelCount, fadeRate, tempRaceCount: withTemp.length }
   }, [past])
+
+  const statRow = (label: string, value: string, highlight?: boolean) => (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 0', borderBottom: '1px solid var(--border)' }}>
+      <span style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--headline)', fontWeight: 700 }}>{label}</span>
+      <span style={{ fontSize: '13px', fontWeight: 600, color: highlight ? 'var(--orange)' : 'var(--white)' }}>{value}</span>
+    </div>
+  )
 
   return (
     <WidgetCard id="race-dna" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
         <div>
           <div style={st.widgetLabel}>RACE DNA</div>
-          <div style={st.widgetTitle}>TEMPERATURE FIT</div>
+          <div style={st.widgetTitle}>CONDITIONS PROFILE</div>
         </div>
         <span style={{ ...st.badgePill, background: 'rgba(var(--orange-ch), 0.12)', color: 'var(--orange)', border: '1px solid rgba(var(--orange-ch), 0.3)', flexShrink: 0 }}>{past.length} RACES</span>
       </div>
 
-      {past.length === 0 ? (
+      {!dna ? (
         <div style={st.lockedBox}>
           <div style={st.lockedTitle}>NO DATA YET</div>
           <div style={st.lockedText}>Log your first race to start building your race DNA profile.</div>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.6 }}>
-            Negative split rate: {100 - fadeRate}%<br />
-            Fade rate: {fadeRate}%<br />
-            {travelCount > 0 && <>{travelCount} travel races<br /></>}
-            No hot-weather baseline
-          </div>
-          <div style={st.widgetDivider} />
-          <div style={{ fontSize: '13px', color: 'var(--muted)' }}>
-            {past.length < 5 ? `Log ${5 - past.length} more races to unlock temperature fit analysis.` : 'No comeback tags yet.'}
-          </div>
-          <button style={st.ghostOutlineBtn}>EXPLAIN WITH AI</button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginTop: '10px' }}>
+          {/* Temperature */}
+          {dna.bestBucket
+            ? statRow('Best temp range', dna.bestBucket.label, true)
+            : statRow('Temp data', 'Add weather to races', false)
+          }
+          {dna.tempRaceCount > 0 && statRow('Races with weather', `${dna.tempRaceCount} of ${past.length}`, false)}
+
+          {/* Surface */}
+          {dna.surfaces.length > 0 && (
+            <>
+              <div style={{ height: '8px' }} />
+              {dna.surfaces.map(s => statRow(s.label, `${s.pct}%`, false))}
+            </>
+          )}
+
+          {/* Countries */}
+          <div style={{ height: '8px' }} />
+          {statRow('Countries raced', String(dna.travelCount), dna.travelCount >= 5)}
+
+          {/* Pacing — only if splits exist */}
+          {dna.fadeRate !== null && (
+            <>
+              <div style={{ height: '8px' }} />
+              {statRow('Negative split rate', `${100 - dna.fadeRate}%`, (100 - dna.fadeRate) > 50)}
+              {statRow('Fade rate', `${dna.fadeRate}%`, false)}
+            </>
+          )}
+          {dna.fadeRate === null && (
+            <div style={{ fontSize: '11px', color: 'var(--muted2)', marginTop: '8px' }}>
+              Add splits to your races to unlock pacing analysis.
+            </div>
+          )}
         </div>
       )}
     </WidgetCard>
@@ -1958,22 +2027,65 @@ function RaceDNAWidget() {
 // ─── Pattern Scan Widget ──────────────────────────────────────────────────────
 
 function PatternScanWidget() {
-  const races = useRaceStore(selectRaces)
-  const today = todayStr()
-  const past  = useMemo(() => races.filter(r => r.date <= today), [races, today])
+  const races   = useRaceStore(selectRaces)
+  const today   = todayStr()
+  const past    = useMemo(() => races.filter(r => r.date <= today), [races, today])
+  const units   = useUnits()
 
-  const negSplitRate = useMemo(() => {
-    const w = past.filter(r => (r.splits ?? []).length >= 2)
-    if (!w.length) return 0
-    const neg = w.filter(r => {
-      const s = (r.splits ?? []).filter(x => x.split)
-      if (s.length < 2) return false
-      const first = parseHMS(s[0].split!) ?? 0
-      const last  = parseHMS(s[s.length - 1].split!) ?? 0
-      return last < first * 0.98
-    })
-    return Math.round((neg.length / w.length) * 100)
-  }, [past])
+  const scan = useMemo(() => {
+    if (past.length < 3) return null
+
+    // ── Season pattern: best month bucket ────────────────────────────────
+    const monthPerf: Record<number, number[]> = {}
+    for (const r of past) {
+      if (!r.date || !r.time) continue
+      const mo = parseInt(r.date.split('-')[1], 10)
+      const pace = computePaceSecPerKmFn(r.distance, r.time)
+      if (pace) { monthPerf[mo] = [...(monthPerf[mo] ?? []), pace] }
+    }
+    const SEASON: Record<string, number[]> = { Spring: [3,4,5], Summer: [6,7,8], Autumn: [9,10,11], Winter: [12,1,2] }
+    const seasonPace: { season: string; avg: number; count: number }[] = []
+    for (const [season, months] of Object.entries(SEASON)) {
+      const paces = months.flatMap(m => monthPerf[m] ?? [])
+      if (paces.length) seasonPace.push({ season, avg: paces.reduce((a,b) => a+b,0)/paces.length, count: paces.length })
+    }
+    const bestSeason = seasonPace.length ? seasonPace.reduce((a,b) => b.avg < a.avg ? b : a) : null
+    const worstSeason = seasonPace.length > 1 ? seasonPace.reduce((a,b) => b.avg > a.avg ? b : a) : null
+
+    // ── Finish rate / outcome breakdown ───────────────────────────────────
+    const dnfCount  = past.filter(r => ['dnf','dsq','dns'].includes((r.outcome ?? '').toLowerCase())).length
+    const finishRate = Math.round(((past.length - dnfCount) / past.length) * 100)
+
+    // ── Distance spread ───────────────────────────────────────────────────
+    const distMap: Record<string, number> = {}
+    for (const r of past) {
+      const label = distLabelUtil(r.distance, r.sport) || 'Other'
+      distMap[label] = (distMap[label] ?? 0) + 1
+    }
+    const topDist = Object.entries(distMap).sort((a,b) => b[1]-a[1]).slice(0,3)
+
+    // ── Podium / top-25% rate ─────────────────────────────────────────────
+    const withPlacing = past.filter(r => r.placing)
+    const top25 = withPlacing.filter(r => (parsePlacing(r.placing)?.percentile ?? 0) >= 75)
+    const podiumRate = withPlacing.length ? Math.round((top25.length / withPlacing.length) * 100) : null
+
+    // ── Year-over-year volume ─────────────────────────────────────────────
+    const thisYear = new Date().getFullYear()
+    const countThisYear = past.filter(r => r.date.startsWith(String(thisYear))).length
+    const countLastYear = past.filter(r => r.date.startsWith(String(thisYear - 1))).length
+    const volumeTrend = countLastYear > 0
+      ? Math.round(((countThisYear - countLastYear) / countLastYear) * 100)
+      : null
+
+    return { bestSeason, worstSeason, finishRate, dnfCount, topDist, podiumRate, top25Count: top25.length, withPlacingCount: withPlacing.length, countThisYear, countLastYear, volumeTrend }
+  }, [past, units])
+
+  const row = (label: string, value: string, highlight?: boolean) => (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 0', borderBottom: '1px solid var(--border)' }}>
+      <span style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--headline)', fontWeight: 700 }}>{label}</span>
+      <span style={{ fontSize: '13px', fontWeight: 600, color: highlight ? 'var(--orange)' : 'var(--white)' }}>{value}</span>
+    </div>
+  )
 
   return (
     <WidgetCard id="pattern-scan" style={st.glowCard}>
@@ -1985,19 +2097,38 @@ function PatternScanWidget() {
         <span style={{ ...st.badgePill, background: 'rgba(var(--orange-ch), 0.12)', color: 'var(--orange)', border: '1px solid rgba(var(--orange-ch), 0.3)', flexShrink: 0 }}>{past.length}</span>
       </div>
 
-      <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.7 }}>
-        Negative split rate: {negSplitRate}%<br />
-        Fade rate: {100 - negSplitRate}%<br />
-        {past.length} total races logged<br />
-        No hot-weather baseline
-      </div>
+      {!scan ? (
+        <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '8px' }}>Log 3+ races to unlock pattern analysis.</div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginTop: '10px' }}>
+          {/* Season */}
+          {scan.bestSeason && row('Peak season', scan.bestSeason.season, true)}
+          {scan.worstSeason && scan.worstSeason.season !== scan.bestSeason?.season && row('Toughest season', scan.worstSeason.season, false)}
 
-      <div style={st.widgetDivider} />
+          {/* Volume YoY */}
+          <div style={{ height: '6px' }} />
+          {row(`Races ${new Date().getFullYear()}`, String(scan.countThisYear), false)}
+          {row(`Races ${new Date().getFullYear() - 1}`, String(scan.countLastYear), false)}
+          {scan.volumeTrend !== null && row('YoY volume', `${scan.volumeTrend >= 0 ? '+' : ''}${scan.volumeTrend}%`, scan.volumeTrend > 0)}
 
-      <div style={{ fontSize: '13px', color: 'var(--muted)', marginBottom: '10px' }}>
-        {past.length < 3 ? 'Log more races to see deep pattern analysis.' : 'No comeback tags yet.'}
-      </div>
-      <button style={st.ghostOutlineBtn}>EXPLAIN WITH AI</button>
+          {/* Finish rate */}
+          <div style={{ height: '6px' }} />
+          {row('Finish rate', `${scan.finishRate}%`, scan.finishRate >= 95)}
+          {scan.dnfCount > 0 && row('DNF / DNS / DSQ', String(scan.dnfCount), false)}
+
+          {/* Podium */}
+          {scan.podiumRate !== null && (
+            <>
+              <div style={{ height: '6px' }} />
+              {row('Top 25% finishes', `${scan.top25Count} of ${scan.withPlacingCount}`, scan.podiumRate >= 30)}
+            </>
+          )}
+
+          {/* Top distances */}
+          <div style={{ height: '6px' }} />
+          {scan.topDist.map(([d, n]) => row(d, `${n} race${n > 1 ? 's' : ''}`, false))}
+        </div>
+      )}
     </WidgetCard>
   )
 }
