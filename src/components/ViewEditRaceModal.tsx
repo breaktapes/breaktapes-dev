@@ -13,6 +13,7 @@ import type { Race, Split } from '@/types'
 import { useUnits, fmtDistKm, distUnit, fmtPaceSecPerKm, computePaceSecPerKm, fmtSpeedKmh } from '@/lib/units'
 import { removeMedalBackground } from '@/lib/removeBg'
 import { findSportDistMatch, distLabel as distLabelUtil, fmtDateDDMM, RACE_PRIORITY_OPTIONS, racePriorityLabel } from '@/lib/utils'
+import { geocodeCity } from '@/lib/geocode'
 
 // ─── Config (mirrors AddRaceModal) ──────────────────────────────────────────
 
@@ -632,14 +633,40 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
   }
 
   async function autoFillWeather() {
-    if (!lat || !lng || !date) {
-      setWeatherFetchMsg({ ok: false, msg: 'Need city + date first' })
+    if (!date) {
+      setWeatherFetchMsg({ ok: false, msg: 'Need a date first' })
       return
     }
     setWeatherFetching(true)
     setWeatherFetchMsg(null)
     try {
-      const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lng}&start_date=${date}&end_date=${date}&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&wind_speed_unit=kmh&timezone=auto`
+      // Resolve coords — use stored lat/lng, or geocode city on-the-fly
+      let resolvedLat = lat
+      let resolvedLng = lng
+      if ((!resolvedLat || !resolvedLng) && city) {
+        setWeatherFetchMsg({ ok: true, msg: 'Geocoding city…' })
+        const geo = await geocodeCity(city, country || undefined)
+        if (!geo) {
+          setWeatherFetchMsg({ ok: false, msg: `Could not locate "${city}". Try manually.` })
+          setWeatherFetching(false)
+          return
+        }
+        resolvedLat = geo.lat
+        resolvedLng = geo.lng
+        setLat(resolvedLat)
+        setLng(resolvedLng)
+      }
+      if (!resolvedLat || !resolvedLng) {
+        setWeatherFetchMsg({ ok: false, msg: 'Need city + date first' })
+        setWeatherFetching(false)
+        return
+      }
+      setWeatherFetchMsg(null)
+      // Use forecast API for recent dates (≤92 days ago), archive for older
+      const daysAgo = Math.floor((Date.now() - new Date(date).getTime()) / 86400000)
+      const url = daysAgo <= 92
+        ? `https://api.open-meteo.com/v1/forecast?latitude=${resolvedLat}&longitude=${resolvedLng}&start_date=${date}&end_date=${date}&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&wind_speed_unit=kmh&timezone=auto&past_days=92`
+        : `https://archive-api.open-meteo.com/v1/archive?latitude=${resolvedLat}&longitude=${resolvedLng}&start_date=${date}&end_date=${date}&hourly=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&wind_speed_unit=kmh&timezone=auto`
       const res = await fetch(url)
       if (!res.ok) throw new Error('API error')
       const data = await res.json()
@@ -1049,7 +1076,7 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
                 <button
                   type="button"
                   onClick={autoFillWeather}
-                  disabled={weatherFetching || !lat || !lng || !date}
+                  disabled={weatherFetching || !date || (!lat && !lng && !city)}
                   style={{
                     background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px',
                     color: (!lat || !lng || !date) ? 'var(--muted2)' : 'var(--orange)',
