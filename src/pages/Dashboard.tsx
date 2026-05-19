@@ -3885,10 +3885,17 @@ function PersonalBestsWidget() {
       else other.push(entry)
     }
 
+    const runSortKey = (label: string): number => {
+      if (runDistOrder[label] != null) return runDistOrder[label]
+      // "N km" custom distances — sort by actual km value (< 5K → before slot 1)
+      const kmMatch = label.match(/^([\d.]+)\s*km$/i)
+      if (kmMatch) return parseFloat(kmMatch[1]) / 5 // 3km → 0.6, below 5K=1
+      return 99
+    }
     const runSortFn = (a: { key: string; r: Race }, b: { key: string; r: Race }) => {
       const aL = distBadge(a.r.distance) || a.key
       const bL = distBadge(b.r.distance) || b.key
-      return (runDistOrder[aL] ?? 99) - (runDistOrder[bL] ?? 99)
+      return runSortKey(aL) - runSortKey(bL)
     }
     const triSortFn = (a: { key: string; r: Race }, b: { key: string; r: Race }) => {
       const aL = distBadge(a.r.distance) || a.key
