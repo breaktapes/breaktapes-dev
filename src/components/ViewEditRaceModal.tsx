@@ -476,7 +476,7 @@ function InfoRow({ label, value, valueColor }: { label: string; value: string; v
       <span style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--headline)', fontWeight: 700 }}>
         {label}
       </span>
-      <span style={{ fontSize: '13px', color: valueColor ?? 'var(--white)', fontWeight: 500 }}>
+      <span style={{ fontSize: '13px', color: valueColor ?? 'var(--white)', fontWeight: 500, textTransform: 'capitalize' }}>
         {value}
       </span>
     </div>
