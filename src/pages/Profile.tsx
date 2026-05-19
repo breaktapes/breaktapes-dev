@@ -520,60 +520,71 @@ function isoWeek(dateStr: string): string {
   return `${d.getFullYear()}-W${week}`
 }
 
-// Maps achievement id → short text badge shown in the popup icon tile (no emojis)
-const ACHIEVEMENT_BADGE: Record<string, string> = {
-  // Ladder families
-  '10k':     '10K',
-  'half':    'HM',
-  'marathon':'M',
-  'ultra':   'UL',
-  'tri703':  '703',
-  'iron':    'IM',
-  // Special achievements
-  'climb_crusher':             'CLB',
-  'heat_warrior':              'HTW',
-  'night_runner':              'NR',
-  'negative_split_master':     'NEG',
-  'no_quit':                   'NQ',
-  'pain_cave':                 'PC',
-  'comeback_run':              'CB',
-  'cutoff_survivor':           'CUT',
-  'solo_warrior':              'SOL',
-  'desert_runner':             'DST',
-  'mountain_goat':             'MTN',
-  'sea_level_sprinter':        'SEA',
-  'stamp_collector':           'STM',
-  'continental':               'CON',
-  'race_tourist':              'RT',
-  'season_finisher':           'SZN',
-  'double_trouble':            'DBL',
-  'sprint_specialist':         'SPR',
-  'half_collector':            'HC',
-  'marathoner_plus':           'M+',
-  'ultra_initiate':            'UI',
-  'ultra_elite':               'UE',
-  'hundred_miler':             '100M',
-  'iron_mind':                 'TRI',
-  'full_send':                 'FS',
-  'swim_survivor':             'SWM',
-  'pacemaker':                 'PCE',
-  'first_timer_guide':         'GDE',
-  'club_loyalist':             'CL',
-  'photo_finish':              'PHO',
-  'early_bird':                'EB',
-  'bib_collector':             'BIB',
-  'medal_wall':                'MDL',
-  'lucky_number':              'LCK',
-  'back_to_back_ultra':        'B2B',
-  'comrades_marathon_finisher':'COM',
-  'six_star_journey_started':  '6ST',
-  'six_star_marathon_finisher':'6FM',
-  'extreme_conditions':        'XTR',
+// ── Inline SVG icon paths (24×24 viewBox, stroke-only, no fill) ──────────────
+type SvgKey =
+  | 'mountain' | 'moon'   | 'lightning' | 'heart'   | 'shield'
+  | 'wave'     | 'globe'  | 'stopwatch' | 'camera'  | 'star'
+  | 'map_pin'  | 'flag'   | 'users'     | 'medal'   | 'run'
+  | 'calendar' | 'flame'
+
+const SVG_PATHS: Record<SvgKey, string | string[]> = {
+  mountain:  'M3 20h18L12 4 3 20z M9 13h6',
+  moon:      'M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z',
+  lightning: 'M13 2 3 14h9l-1 8 10-12h-9l1-8z',
+  heart:     'M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z',
+  shield:    'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z',
+  wave:      ['M2 12c1.5-3 3-3 4.5 0s3 3 4.5 0 3-3 4.5 0 3 3 4.5 0','M2 17c1.5-3 3-3 4.5 0s3 3 4.5 0 3-3 4.5 0 3 3 4.5 0','M2 7c1.5-3 3-3 4.5 0s3 3 4.5 0 3-3 4.5 0 3 3 4.5 0'],
+  globe:     ['M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z','M2 12h20','M12 2c-2.76 3.45-4 7-4 10s1.24 6.55 4 10M12 2c2.76 3.45 4 7 4 10s-1.24 6.55-4 10'],
+  stopwatch: ['M12 22a9 9 0 1 0 0-18 9 9 0 0 0 0 18z','M12 13V9','M10 2h4','M12 2v2'],
+  camera:    ['M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z','M12 17a4 4 0 1 0 0-8 4 4 0 0 0 0 8z'],
+  star:      'M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z',
+  map_pin:   ['M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z','M12 13a3 3 0 1 0 0-6 3 3 0 0 0 0 6z'],
+  flag:      ['M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z','M4 22v-7'],
+  users:     ['M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2','M23 21v-2a4 4 0 0 0-3-3.87','M16 3.13a4 4 0 0 1 0 7.75','M9 7a4 4 0 1 0 0 8 4 4 0 1 0 0-8z'],
+  medal:     ['M7.21 13.89 7 23l5-3 5 3-.21-9.12','M12 15a7 7 0 1 0 0-14 7 7 0 0 0 0 14z'],
+  run:       ['M13 4a1 1 0 1 0 2 0 1 1 0 0 0-2 0','M7.5 17.5l2.5-4 2.5 2 2.5-4','M6 13l2-3 4 1 2-3'],
+  calendar:  ['M19 4H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z','M16 2v4','M8 2v4','M3 10h18'],
+  flame:     'M12 2c0 6-6 8-6 14a6 6 0 0 0 12 0c0-6-6-8-6-14z M9 17.5c.5-2 2-3 3-5',
 }
 
-function achievementBadgeText(a: Achievement): string {
-  if (a.family && ACHIEVEMENT_BADGE[a.family]) return ACHIEVEMENT_BADGE[a.family]
-  return ACHIEVEMENT_BADGE[a.id] ?? a.name.slice(0, 3).toUpperCase()
+// Maps achievement id / ladder family → SVG icon key
+const ACHIEVEMENT_ICON: Record<string, SvgKey> = {
+  // Ladder families
+  '10k':      'lightning', 'half':    'flag', 'marathon': 'flag',
+  'ultra':    'mountain',  'tri703':  'wave', 'iron':     'shield',
+  // Special
+  'climb_crusher':             'mountain', 'heat_warrior':              'flame',
+  'night_runner':              'moon',     'negative_split_master':     'lightning',
+  'no_quit':                   'heart',    'pain_cave':                 'heart',
+  'comeback_run':              'run',      'cutoff_survivor':           'stopwatch',
+  'solo_warrior':              'shield',   'desert_runner':             'flame',
+  'mountain_goat':             'mountain', 'sea_level_sprinter':        'wave',
+  'stamp_collector':           'globe',    'continental':               'globe',
+  'race_tourist':              'map_pin',  'season_finisher':           'calendar',
+  'double_trouble':            'flag',     'sprint_specialist':         'lightning',
+  'half_collector':            'flag',     'marathoner_plus':           'flag',
+  'ultra_initiate':            'mountain', 'ultra_elite':               'mountain',
+  'hundred_miler':             'mountain', 'iron_mind':                 'wave',
+  'full_send':                 'shield',   'swim_survivor':             'wave',
+  'pacemaker':                 'stopwatch','first_timer_guide':         'users',
+  'club_loyalist':             'users',    'photo_finish':              'camera',
+  'early_bird':                'moon',     'bib_collector':             'flag',
+  'medal_wall':                'medal',    'lucky_number':              'star',
+  'back_to_back_ultra':        'mountain', 'comrades_marathon_finisher':'star',
+  'six_star_journey_started':  'star',     'six_star_marathon_finisher':'star',
+  'extreme_conditions':        'mountain',
+}
+
+function AchievementSVGIcon({ a, size = 28, color = 'var(--orange)' }: { a: Achievement; size?: number; color?: string }) {
+  const key: SvgKey = (a.family && ACHIEVEMENT_ICON[a.family]) ? ACHIEVEMENT_ICON[a.family] as SvgKey
+    : (ACHIEVEMENT_ICON[a.id] ?? 'star') as SvgKey
+  const paths = SVG_PATHS[key]
+  const pathArr = Array.isArray(paths) ? paths : [paths]
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {pathArr.map((d, i) => <path key={i} d={d} />)}
+    </svg>
+  )
 }
 
 const ACHIEVEMENTS: Achievement[] = [
@@ -1723,15 +1734,7 @@ function AchievementsSection() {
             <div style={{ textAlign: 'center', marginBottom: '20px', position: 'relative' }}>
               <button onClick={() => setPopup(null)} style={{ position: 'absolute', right: 0, top: 0, background: 'none', border: 'none', color: 'var(--muted)', fontSize: '24px', cursor: 'pointer', padding: '4px', lineHeight: 1 }}>×</button>
               <div style={{ width: '72px', height: '72px', margin: '0 auto 16px', background: 'rgba(var(--orange-ch),0.12)', border: '2px solid rgba(var(--orange-ch),0.4)', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {(() => {
-                  const badge = achievementBadgeText(popup)
-                  const fs = badge.length <= 2 ? '22px' : badge.length === 3 ? '18px' : '14px'
-                  return (
-                    <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: fs, letterSpacing: '0.04em', color: 'var(--orange)', lineHeight: 1, textTransform: 'uppercase' }}>
-                      {badge}
-                    </span>
-                  )
-                })()}
+                <AchievementSVGIcon a={popup} size={32} />
               </div>
               <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)', marginBottom: '6px' }}>
                 {popup.name}
