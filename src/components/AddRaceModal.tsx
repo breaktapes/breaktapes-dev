@@ -83,9 +83,9 @@ const RACE_OUTCOMES = [
 
 const RACE_PRIORITIES = [
   { value: '',  label: '— Unset —' },
-  { value: 'A', label: 'A Race — Goal Event' },
-  { value: 'B', label: 'B Race — Important' },
-  { value: 'C', label: 'C Race — Training / Fun' },
+  { value: 'A', label: 'A Race — Goal Race' },
+  { value: 'B', label: 'B Race — Training' },
+  { value: 'C', label: 'C Race — Fun / Pacing' },
 ]
 
 const MEDALS = [
