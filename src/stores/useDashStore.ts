@@ -17,7 +17,7 @@ const DEFAULT_WIDGETS: DashWidget[] = [
   { id: 'on-this-day',      label: 'On This Day',               icon: 'OTD', zone: 'now',     enabled: true,  pro: false },
   // RECENTLY — YOUR RACING
   { id: 'recent-races',     label: 'Recent Races',              icon: 'RC', zone: 'recently', enabled: true,  pro: false },
-  { id: 'activity-preview', label: 'Activity Feed Preview',     icon: 'ACT', zone: 'recently',enabled: true,  pro: false },
+  { id: 'activity-preview', label: 'Activity Feed Preview',     icon: 'ACT', zone: 'recently',enabled: false, pro: false }, // re-enable when Strava integration ships
   { id: 'personal-bests',   label: 'Personal Bests',            icon: 'PB', zone: 'recently', enabled: true,  pro: false },
   { id: 'why-prd',          label: "Why You PR'd",              icon: 'PR', zone: 'recently', enabled: false, pro: false },
   { id: 'why-faded',        label: 'Why You Faded',             icon: 'FD', zone: 'recently', enabled: false, pro: false },
@@ -27,7 +27,7 @@ const DEFAULT_WIDGETS: DashWidget[] = [
   { id: 'recovery-intel',   label: 'Recovery Intelligence',     icon: 'REC', zone: 'trending',enabled: true,  pro: false },
   { id: 'race-density',     label: 'Race Density',              icon: 'DNS', zone: 'trending', enabled: true,  pro: false },
   { id: 'streak-risk',      label: 'Streak Risk',               icon: 'STR', zone: 'trending',enabled: true,  pro: false },
-  { id: 'training-correl',  label: 'Training Correlation',      icon: 'TRN', zone: 'trending',enabled: true,  pro: false },
+  { id: 'training-correl',  label: 'Training Correlation',      icon: 'TRN', zone: 'trending',enabled: false, pro: false }, // re-enable when Strava integration ships
   { id: 'race-gap-analysis',label: 'Race Gap / Recovery',       icon: 'GAP', zone: 'trending',enabled: false, pro: false },
   { id: 'adaptive-goals',   label: 'Adaptive Goals',            icon: 'AG', zone: 'trending', enabled: false, pro: false },
   // PATTERNS — ANALYSIS
@@ -93,11 +93,18 @@ export const useDashStore = create<DashState>()(
         // Merge any new default widgets not yet in the stored list.
         // IMPORTANT: write the merged list back to the store so operations like
         // setWidgetEnabled / reorderWidget find the new widgets in s.widgets.
+        // Widgets disabled until Strava integration ships — always force off
+        const STRAVA_PENDING = new Set(['training-correl', 'activity-preview'])
+
         const storedIds = new Set(widgets.map((w: DashWidget) => w.id))
         const newDefaults = DEFAULT_WIDGETS.filter(w => !storedIds.has(w.id))
-        if (newDefaults.length === 0) return widgets
-        const merged = [...widgets, ...newDefaults]
-        set({ widgets: merged })
+        const base = newDefaults.length > 0 ? [...widgets, ...newDefaults] : widgets
+        const merged = base.map((w: DashWidget) =>
+          STRAVA_PENDING.has(w.id) ? { ...w, enabled: false } : w
+        )
+        const changed = merged.some((w: DashWidget, i: number) => w.enabled !== base[i]?.enabled)
+        if (newDefaults.length > 0 || changed) set({ widgets: merged })
+        if (newDefaults.length === 0 && !changed) return widgets
         return merged
       },
 
