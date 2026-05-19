@@ -2749,7 +2749,22 @@ function PBProbabilityWidget({ race }: { race: Race | null }) {
 
     const key = normalizeDistKey(nextRace.distance)
     const pbMap = buildPBMap(past)
-    const pb = pbMap[key]
+    let pb = pbMap[key]
+
+    // Fallback: same-race-name PB — catches recurring ultras/events where
+    // course distance varies year-to-year (e.g. Comrades up 87km vs down 89km).
+    // Use normalizeName to strip year + sponsor, pick fastest time among matches.
+    if (!pb && nextRace.name) {
+      const nextNorm = normalizeName(nextRace.name)
+      const sameRacePast = past.filter(r =>
+        r.name && normalizeName(r.name) === nextNorm && r.time
+      )
+      if (sameRacePast.length > 0) {
+        pb = sameRacePast.reduce((best, r) =>
+          !best || (r.time! < best.time!) ? r : best
+        , sameRacePast[0])
+      }
+    }
 
     // Form trend (30%)
     const { score: momentumScore } = computeMomentum(past)
@@ -2783,7 +2798,8 @@ function PBProbabilityWidget({ race }: { race: Race | null }) {
     const label = clamped >= 65 ? 'HIGH' : clamped >= 40 ? 'MODERATE' : 'LOW'
     const color = clamped >= 65 ? 'var(--green)' : clamped >= 40 ? 'var(--gold)' : 'var(--orange)'
 
-    return { probability: clamped, label, color, hasPBForDist }
+    const pbIsNameMatch = hasPBForDist && !pbMap[key] // came from name fallback
+    return { probability: clamped, label, color, hasPBForDist, pbIsNameMatch }
   }, [races, nextRace, today])
 
   if (!nextRace) {
@@ -2824,7 +2840,9 @@ function PBProbabilityWidget({ race }: { race: Race | null }) {
           <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.55 }}>
             {!result.hasPBForDist
               ? 'No PB logged for this distance — every finish is a new PB.'
-              : 'Based on form trend, surface fit, and recent recovery.'}
+              : result.pbIsNameMatch
+                ? 'Compared against your best prior result at this event (course distance varies year to year).'
+                : 'Based on form trend, surface fit, and recent recovery.'}
           </div>
         </>
       )}
