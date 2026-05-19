@@ -786,7 +786,7 @@ const UPCOMING_DISTANCES: Record<string, { label: string; value: string }[]> = {
   ],
   Triathlon:  [
     { label: 'Sprint', value: '25.75' }, { label: 'Olympic', value: '51.5' },
-    { label: '70.3 / Middle Distance', value: '113' }, { label: 'IRONMAN', value: '226' },
+    { label: 'PTO T100', value: '100' }, { label: '70.3 / Middle Distance', value: '113' }, { label: 'IRONMAN', value: '226' },
   ],
   Cycling:    [
     { label: 'Gran Fondo (100km)', value: '100' }, { label: 'Century (161km)', value: '161' },
@@ -3875,7 +3875,7 @@ function PersonalBestsWidget() {
       '50K': 10, '100K': 11, '100 Mile': 12, 'Ultra': 13,
     }
     const triDistOrder: Record<string, number> = {
-      'Super Sprint': 1, 'Sprint': 2, 'Olympic': 3, '70.3 / Middle Distance': 4, 'IRONMAN': 5,
+      'Super Sprint': 1, 'Sprint': 2, 'Olympic': 3, 'PTO T100': 4, '70.3 / Middle Distance': 5, 'IRONMAN': 6,
     }
 
     for (const [key, r] of Object.entries(pbMap)) {

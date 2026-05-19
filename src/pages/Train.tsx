@@ -112,13 +112,14 @@ const RUN_DISTANCES: RunDist[] = [
 
 // ─── Triathlon distances ──────────────────────────────────────────────────────
 
-type TriDistId = 'sprint' | 'olympic' | '703' | 'ironman'
+type TriDistId = 'sprint' | 'olympic' | 'ptot100' | '703' | 'ironman'
 
 interface TriDist { id: TriDistId; label: string; swimM: number; bikeKm: number; runKm: number; totalKm: number }
 
 const TRI_DISTANCES: TriDist[] = [
   { id: 'sprint',  label: 'Sprint Triathlon',       swimM: 750,  bikeKm: 20,  runKm: 5,    totalKm: 25.75 },
   { id: 'olympic', label: 'Olympic Triathlon',      swimM: 1500, bikeKm: 40,  runKm: 10,   totalKm: 51.5  },
+  { id: 'ptot100', label: 'PTO T100',               swimM: 2000, bikeKm: 80,  runKm: 18,   totalKm: 100   },
   { id: '703',     label: '70.3 / Middle Distance', swimM: 1900, bikeKm: 90,  runKm: 21.1, totalKm: 113   },
   { id: 'ironman', label: 'IRONMAN / Full Distance', swimM: 3800, bikeKm: 180, runKm: 42.2, totalKm: 226  },
 ]
@@ -314,10 +315,11 @@ export function Train() {
     if (!totalSec) return
     // Approximate split percentages per distance
     const splits: Record<TriDistId, { swim: number; t1: number; bike: number; t2: number; run: number }> = {
-      sprint:  { swim: 0.11, t1: 0.03, bike: 0.48, t2: 0.02, run: 0.36 },
-      olympic: { swim: 0.12, t1: 0.03, bike: 0.46, t2: 0.02, run: 0.37 },
-      '703':   { swim: 0.11, t1: 0.03, bike: 0.50, t2: 0.02, run: 0.34 },
-      ironman: { swim: 0.10, t1: 0.02, bike: 0.51, t2: 0.01, run: 0.36 },
+      sprint:   { swim: 0.11, t1: 0.03, bike: 0.48, t2: 0.02, run: 0.36 },
+      olympic:  { swim: 0.12, t1: 0.03, bike: 0.46, t2: 0.02, run: 0.37 },
+      ptot100:  { swim: 0.04, t1: 0.02, bike: 0.52, t2: 0.02, run: 0.40 },
+      '703':    { swim: 0.11, t1: 0.03, bike: 0.50, t2: 0.02, run: 0.34 },
+      ironman:  { swim: 0.10, t1: 0.02, bike: 0.51, t2: 0.01, run: 0.36 },
     }
     const pct = splits[dist.id]
     const swimSec  = totalSec * pct.swim
@@ -386,10 +388,11 @@ export function Train() {
   useEffect(() => {
     type Def = { swimM: number; swimS: number; bike: number; runM: number; runS: number; t1M: number; t1S: number; t2M: number; t2S: number }
     const defaults: Record<TriDistId, Def> = {
-      sprint:  { swimM: 2,   swimS: 0,  bike: 28, runM: 5, runS: 30, t1M: 1, t1S: 30, t2M: 1, t2S: 0  },
-      olympic: { swimM: 2,   swimS: 0,  bike: 30, runM: 5, runS: 15, t1M: 2, t1S: 0,  t2M: 1, t2S: 30 },
-      '703':   { swimM: 1,   swimS: 55, bike: 32, runM: 5, runS: 0,  t1M: 4, t1S: 0,  t2M: 3, t2S: 0  },
-      ironman: { swimM: 1,   swimS: 50, bike: 33, runM: 5, runS: 30, t1M: 6, t1S: 0,  t2M: 4, t2S: 0  },
+      sprint:   { swimM: 2,   swimS: 0,  bike: 28, runM: 5, runS: 30, t1M: 1, t1S: 30, t2M: 1, t2S: 0  },
+      olympic:  { swimM: 2,   swimS: 0,  bike: 30, runM: 5, runS: 15, t1M: 2, t1S: 0,  t2M: 1, t2S: 30 },
+      ptot100:  { swimM: 1,   swimS: 55, bike: 34, runM: 4, runS: 45, t1M: 3, t1S: 0,  t2M: 2, t2S: 0  },
+      '703':    { swimM: 1,   swimS: 55, bike: 32, runM: 5, runS: 0,  t1M: 4, t1S: 0,  t2M: 3, t2S: 0  },
+      ironman:  { swimM: 1,   swimS: 50, bike: 33, runM: 5, runS: 30, t1M: 6, t1S: 0,  t2M: 4, t2S: 0  },
     }
     const d = defaults[triDistId]
     setSwimM(d.swimM); setSwimS(d.swimS)

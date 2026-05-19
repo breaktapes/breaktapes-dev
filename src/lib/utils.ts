@@ -63,11 +63,13 @@ export function distLabel(d: string | undefined): string {
   if (lower === '10k' || lower === '10km') return '10K'
   if (lower === '10 mile' || lower === '10 miles' || lower === '10mi') return '10 Mile'
   if (lower === 'ultra' || lower === 'ultramarathon') return 'Ultra'
+  if (lower === 'pto t100' || lower === 'pto 100' || lower === 't100') return 'PTO T100'
   if (lower === 'hyrox') return 'HYROX'
   const n = parseFloat(d)
   if (isNaN(n)) return d
   if (n >= 225.9 && n <= 226.1) return 'IRONMAN'
   if (n >= 112.9 && n <= 113.1) return '70.3 / Middle Distance'
+  if (n >= 99.5 && n <= 100.5) return 'PTO T100'
   if (n >= 51.4 && n <= 51.6) return 'Olympic'
   if (n >= 25.7 && n <= 25.8) return 'Sprint'
   if (n >= 42.0 && n <= 42.3) return 'Marathon'
