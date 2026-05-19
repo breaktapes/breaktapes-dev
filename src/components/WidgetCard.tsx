@@ -81,6 +81,7 @@ interface WidgetCardProps {
   style?: React.CSSProperties
   hint?: boolean
   ariaLabel?: string
+  noDetailPreview?: boolean  // when true, detail modal shows explanatory text only, not the live widget content
 }
 
 export function WidgetCard({
@@ -91,6 +92,7 @@ export function WidgetCard({
   style,
   hint = true,
   ariaLabel,
+  noDetailPreview = false,
 }: WidgetCardProps) {
   const ctx = useWidgetCardContext()
   const cardRef = useRef<HTMLDivElement>(null)
@@ -98,8 +100,8 @@ export function WidgetCard({
 
   const trigger = useCallback(() => {
     if (!ctx) return
-    ctx.openDetail(id, children, dynamicContext)
-  }, [ctx, id, children, dynamicContext])
+    ctx.openDetail(id, noDetailPreview ? undefined : children, dynamicContext)
+  }, [ctx, id, children, dynamicContext, noDetailPreview])
 
   const handleClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement

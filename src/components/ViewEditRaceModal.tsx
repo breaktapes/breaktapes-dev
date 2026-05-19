@@ -502,6 +502,13 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
   const [surface, setSurface]   = useState(race.surface ?? '')
   const [roleAtRace, setRoleAtRace] = useState<'' | 'runner' | 'pacer' | 'guide'>(race.roleAtRace ?? '')
   const [splits]                = useState<Split[]>(race.splits ?? [])
+  // Triathlon discipline splits (Swim · T1 · Bike · T2 · Run)
+  const findTriSplit = (label: string) => (race.splits ?? []).find(s => s.label.toLowerCase() === label.toLowerCase())?.split ?? ''
+  const [triSwim, setTriSwim] = useState(() => findTriSplit('Swim'))
+  const [triT1,   setTriT1]   = useState(() => findTriSplit('T1'))
+  const [triBike, setTriBike] = useState(() => findTriSplit('Bike'))
+  const [triT2,   setTriT2]   = useState(() => findTriSplit('T2'))
+  const [triRun,  setTriRun]  = useState(() => findTriSplit('Run'))
   // More Stats
   const [moreOpen, setMoreOpen]           = useState(false)
   const [startTime, setStartTime]         = useState(race.startTime ?? '')
@@ -668,7 +675,20 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
       elevation: isUpcoming ? undefined : elevation ? Number(elevation) : undefined,
       surface: isUpcoming ? undefined : surface || undefined,
       roleAtRace: isUpcoming ? undefined : (roleAtRace || undefined) as 'runner' | 'pacer' | 'guide' | undefined,
-      splits: isUpcoming ? undefined : splits.length > 0 ? splits : undefined,
+      splits: isUpcoming ? undefined : (() => {
+        // Triathlon: structured discipline splits take precedence over generic split table
+        if (sport === 'Triathlon') {
+          const triSplits: Split[] = [
+            { label: 'Swim', split: triSwim.trim() || undefined },
+            { label: 'T1',   split: triT1.trim()   || undefined },
+            { label: 'Bike', split: triBike.trim()  || undefined },
+            { label: 'T2',   split: triT2.trim()   || undefined },
+            { label: 'Run',  split: triRun.trim()   || undefined },
+          ].filter(s => !!s.split) as Split[]
+          return triSplits.length > 0 ? triSplits : (splits.length > 0 ? splits : undefined)
+        }
+        return splits.length > 0 ? splits : undefined
+      })(),
       medalPhoto: isUpcoming ? undefined : medalPhoto ?? undefined,
       photos: isUpcoming ? undefined : photos.length > 0 ? photos : undefined,
       startTime: isUpcoming ? undefined : startTime.trim() || undefined,
@@ -867,6 +887,35 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
           <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '6px' }}>Scroll to set · Used by Gap To Goal widget</div>
         </Field>
       ) : null}
+
+      {/* Triathlon discipline splits */}
+      {sport === 'Triathlon' && !isUpcoming && (
+        <div>
+          <div style={{ fontFamily: 'var(--headline)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '10px' }}>SPLITS</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+            {([
+              { label: 'Swim',      val: triSwim,  set: setTriSwim,  ph: '0:28:00' },
+              { label: 'T1',        val: triT1,    set: setTriT1,    ph: '0:03:30' },
+              { label: 'Bike',      val: triBike,  set: setTriBike,  ph: '2:35:00' },
+              { label: 'T2',        val: triT2,    set: setTriT2,    ph: '0:02:15' },
+              { label: 'Run',       val: triRun,   set: setTriRun,   ph: '1:55:00' },
+            ] as { label: string; val: string; set: (v: string) => void; ph: string }[]).map(seg => (
+              <div key={seg.label} style={seg.label === 'Run' ? { gridColumn: '1 / -1' } : undefined}>
+                <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '4px' }}>{seg.label}</div>
+                <input
+                  style={st.input}
+                  type="text"
+                  inputMode="numeric"
+                  placeholder={seg.ph}
+                  value={seg.val}
+                  onChange={e => seg.set(e.target.value)}
+                />
+              </div>
+            ))}
+          </div>
+          <div style={{ fontSize: '11px', color: 'var(--muted2)', marginTop: '8px' }}>Format: H:MM:SS or MM:SS</div>
+        </div>
+      )}
 
       <Field label="Notes">
         <textarea

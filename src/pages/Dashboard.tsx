@@ -102,8 +102,8 @@ function normalizeDistKey(d: string | undefined): string {
   return `${km}`
 }
 
-function distBadge(d: string | undefined): string {
-  return distLabelUtil(d)
+function distBadge(d: string | undefined, sport?: string): string {
+  return distLabelUtil(d, sport)
 }
 
 function buildPBMap(races: Race[]): Record<string, Race> {
@@ -868,9 +868,9 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
   }
 
   const PRIORITIES = [
-    { key: 'A', label: 'A RACE', desc: 'Season goal' },
-    { key: 'B', label: 'B RACE', desc: 'Strong effort' },
-    { key: 'C', label: 'C RACE', desc: 'Training run' },
+    { key: 'A', label: 'A RACE', desc: 'Goal Race' },
+    { key: 'B', label: 'B RACE', desc: 'Training' },
+    { key: 'C', label: 'C RACE', desc: 'Fun / Pacing' },
   ]
 
   return createPortal((
@@ -1401,7 +1401,7 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
           const isPB = !!r.time && pbMap[normalizeDistKey(r.distance)]?.id === r.id
           const dateStr = fmtDateDDMM(r.date)
           const flag = countryToFlag(r.country)
-          const cityMeta = [flag && r.city ? `${flag} ${r.city}` : r.city, distBadge(r.distance)].filter(Boolean).join(' · ')
+          const cityMeta = [flag && r.city ? `${flag} ${r.city}` : r.city, distBadge(r.distance, r.sport)].filter(Boolean).join(' · ')
           return (
             <div key={r.id} style={{
               display: 'flex', alignItems: 'center', gap: '12px',
@@ -1731,7 +1731,7 @@ function BostonQualWidget() {
                   <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 10px', background: 'var(--surface)', borderRadius: '7px', gap: '10px' }}>
                     <div style={{ minWidth: 0 }}>
                       <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {r.name || distBadge(r.distance)}
+                        {r.name || distBadge(r.distance, r.sport)}
                       </div>
                       <div style={{ fontSize: '10px', color: 'var(--muted2)', marginTop: '1px' }}>{fmtDateDDMM(r.date)}</div>
                     </div>
@@ -3539,7 +3539,7 @@ function AdaptiveGoalsWidget() {
           const color = gap == null ? 'var(--muted)' : gap <= 0 ? 'var(--green)' : 'var(--orange)'
           return (
             <div key={r.id} style={{ padding: '8px', background: 'var(--surface3)', borderRadius: '8px' }}>
-              <div style={{ fontSize: '11px', color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: '4px' }}>{r.name ?? distBadge(r.distance)}</div>
+              <div style={{ fontSize: '11px', color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: '4px' }}>{r.name ?? distBadge(r.distance, r.sport)}</div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '15px', color: 'var(--white)' }}>{r.goalTime}</span>
@@ -3573,7 +3573,7 @@ function BreakTapeWidget() {
     const distanceSeen = new Set<string>()
     for (const r of past) {
       const key = normalizeDistKey(r.distance)
-      const badge = distBadge(r.distance)
+      const badge = distBadge(r.distance, r.sport)
       if (key && badge && !distanceSeen.has(key) && badge !== `${distanceToKm(r.distance)}K`) {
         distanceSeen.add(key)
         if (m.length < 6) m.push({ icon: '★', label: `FIRST ${badge.toUpperCase()}`, detail: r.name ?? r.date })
@@ -3690,7 +3690,7 @@ function WhatToRaceNextWidget() {
           <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
             <div style={{ minWidth: 0, flex: 1 }}>
               <div style={{ fontSize: '12px', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name ?? 'Unnamed Race'}</div>
-              <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '1px' }}>{fmtDateDDMM(r.date)} · {distBadge(r.distance)}</div>
+              <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '1px' }}>{fmtDateDDMM(r.date)} · {distBadge(r.distance, r.sport)}</div>
             </div>
             {r.priority && (
               <span style={{ fontSize: '10px', color: r.priority === 'A' ? 'var(--orange)' : 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, flexShrink: 0, marginLeft: '8px' }}>
@@ -3849,16 +3849,31 @@ function DashZone({ id, tag, label, children }: ZoneProps) {
 // ─── Personal Bests Widget ────────────────────────────────────────────────────
 
 
+const PB_HIDDEN_LS_KEY = 'fl2_pb_hidden_keys'
+function readPBHiddenKeys(): Set<string> {
+  try {
+    const raw = localStorage.getItem(PB_HIDDEN_LS_KEY)
+    if (raw) { const arr = JSON.parse(raw); if (Array.isArray(arr)) return new Set(arr) }
+    const stored = useAthleteStore.getState().athlete?.pbHiddenKeys
+    return new Set(Array.isArray(stored) ? stored : [])
+  } catch { return new Set() }
+}
+function savePBHiddenKeys(s: Set<string>) {
+  try { localStorage.setItem(PB_HIDDEN_LS_KEY, JSON.stringify([...s])) } catch {}
+  useAthleteStore.getState().updateAthlete({ pbHiddenKeys: [...s] })
+}
+
 function PersonalBestsWidget() {
   const races = useRaceStore(selectRaces)
   const pbMap = useMemo(() => buildPBMap(races), [races])
   const [selectedRace, setSelectedRace] = useState<Race | null>(null)
-  const [hiddenDists, setHiddenDists] = useState<Set<string>>(new Set())
+  const [hiddenDists, setHiddenDists] = useState<Set<string>>(() => readPBHiddenKeys())
 
   const toggleDist = useCallback((label: string) => {
     setHiddenDists(prev => {
       const next = new Set(prev)
       if (next.has(label)) next.delete(label); else next.add(label)
+      savePBHiddenKeys(next)
       return next
     })
   }, [])
@@ -3943,7 +3958,7 @@ function PersonalBestsWidget() {
   }
 
   return (
-    <WidgetCard id="personal-bests" style={st.glowCard}>
+    <WidgetCard id="personal-bests" style={st.glowCard} noDetailPreview>
       <div style={st.widgetTitle}>PERSONAL BESTS</div>
       {/* Distance chip filter — grouped by sport, ascending distance order */}
       {allDists.length > 1 && (
@@ -3996,7 +4011,7 @@ function PersonalBestsWidget() {
               const accentColor = isTri ? 'var(--purple)' : 'var(--green)'
               const accentBg = isTri ? 'rgba(var(--purple-ch),0.08)' : 'rgba(var(--green-ch),0.06)'
               const accentGlow = isTri ? 'rgba(var(--purple-ch),0.10)' : 'rgba(var(--green-ch),0.10)'
-              const displayKey = distBadge(r.distance) || key.toUpperCase()
+              const displayKey = distBadge(r.distance, r.sport) || key.toUpperCase()
               return (
                 <div
                   key={key}
@@ -4192,7 +4207,7 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                         </div>
                         <div style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: 1.5 }}>
                           {[r.city, r.country].filter(Boolean).join(', ')}
-                          {r.distance ? ` · ${distBadge(r.distance)}` : ''}
+                          {r.distance ? ` · ${distBadge(r.distance, r.sport)}` : ''}
                           {' · '}{fmtDateIntl(r.date)}
                           {r.goalTime ? <span style={{ color: 'var(--orange)', marginLeft: '6px' }}>Goal {r.goalTime}</span> : ''}
                         </div>
@@ -4213,7 +4228,7 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                         </div>
                         <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '3px' }}>
                           {[r.city, r.country].filter(Boolean).join(', ')}
-                          {r.distance ? ` · ${distBadge(r.distance)}` : ''}
+                          {r.distance ? ` · ${distBadge(r.distance, r.sport)}` : ''}
                           {' · '}{fmtDateIntl(r.date)}
                           {r.goalTime ? <span style={{ color: 'var(--muted)', marginLeft: '4px' }}>· Goal {r.goalTime}</span> : ''}
                         </div>
@@ -4481,7 +4496,7 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
 
   // For each predicted distance, find upcoming races that match
   function matchingUpcoming(distance: string): typeof upcomingRaces {
-    return upcomingRaces.filter(r => distBadge(r.distance) === distance)
+    return upcomingRaces.filter(r => distBadge(r.distance, r.sport) === distance)
   }
 
   function handleSetGoal(distance: string) {

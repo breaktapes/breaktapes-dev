@@ -46,7 +46,7 @@ export function similarity(a: string, b: string): number {
  * Convert any stored race.distance value (text label OR numeric km string)
  * to a human-readable display label.  Single source of truth used app-wide.
  */
-export function distLabel(d: string | undefined): string {
+export function distLabel(d: string | undefined, sport?: string): string {
   if (!d) return ''
   const lower = d.toLowerCase().trim()
   if (lower === 'marathon' || lower === 'full marathon') return 'Marathon'
@@ -78,7 +78,13 @@ export function distLabel(d: string | undefined): string {
   if (n >= 16.0 && n <= 16.2) return '10 Mile'
   if (n >= 10 && n <= 10.1) return '10K'
   if (n >= 5 && n <= 5.1) return '5K'
-  if (n > 42.3) return 'Ultra'
+  if (n > 42.3) {
+    // Only label as Ultra for running — triathlon/cycling/swim custom distances are not ultra runs
+    const s = (sport ?? '').toLowerCase()
+    const isTri = s.includes('tri') || s.includes('iron') || s === 'cycling' || s === 'swimming'
+    if (!isTri) return 'Ultra'
+    return `${n} km`
+  }
   // Short distances: show as "3K", "1K" etc (whole km values)
   if (n >= 1 && n < 5 && Number.isInteger(n)) return `${n}K`
   return `${n} km`
