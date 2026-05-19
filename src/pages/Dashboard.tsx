@@ -1911,26 +1911,31 @@ function RaceDNAWidget() {
 
     // ── Temperature analysis ──────────────────────────────────────────────
     const withTemp = past.filter(r => r.weather?.temp != null && r.time)
-    type TempBucket = { label: string; races: Race[] }
-    const buckets: TempBucket[] = [
-      { label: 'Cold (<10°C)',  races: withTemp.filter(r => r.weather!.temp! <  10) },
-      { label: 'Cool (10–20°C)', races: withTemp.filter(r => r.weather!.temp! >= 10 && r.weather!.temp! < 20) },
-      { label: 'Warm (20–28°C)', races: withTemp.filter(r => r.weather!.temp! >= 20 && r.weather!.temp! < 28) },
-      { label: 'Hot (28°C+)',   races: withTemp.filter(r => r.weather!.temp! >= 28) },
-    ].filter(b => b.races.length > 0)
-
-    // Best bucket = lowest avg finishing time relative to distance (use pace proxy)
-    const bucketWithPace = buckets.map(b => {
+    type TempBucket = { label: string; short: string; color: string; races: Race[]; avgPace: number | null }
+    const rawBuckets = [
+      { label: 'Cold',  short: '<10°', color: '#60A5FA', races: withTemp.filter(r => r.weather!.temp! <  10) },
+      { label: 'Cool',  short: '10–20°', color: '#34D399', races: withTemp.filter(r => r.weather!.temp! >= 10 && r.weather!.temp! < 20) },
+      { label: 'Warm',  short: '20–28°', color: '#FBBF24', races: withTemp.filter(r => r.weather!.temp! >= 20 && r.weather!.temp! < 28) },
+      { label: 'Hot',   short: '28°+',  color: '#F87171', races: withTemp.filter(r => r.weather!.temp! >= 28) },
+    ]
+    const bucketWithPace: TempBucket[] = rawBuckets.map(b => {
       const paces = b.races
         .map(r => computePaceSecPerKmFn(r.distance, r.time!))
         .filter((p): p is number => p != null)
       const avgPace = paces.length ? paces.reduce((a, x) => a + x, 0) / paces.length : null
-      return { ...b, avgPace, count: b.races.length }
-    }).filter(b => b.avgPace != null)
+      return { ...b, avgPace, count: b.races.length } as TempBucket & { count: number }
+    }).filter(b => b.races.length > 0)
 
-    const bestBucket = bucketWithPace.length
-      ? bucketWithPace.reduce((a, b) => (b.avgPace! < a.avgPace! ? b : a))
+    const bestTempBucket = bucketWithPace.filter(b => b.avgPace != null).length
+      ? bucketWithPace.filter(b => b.avgPace != null).reduce((a, b) => (b.avgPace! < a.avgPace! ? b : a))
       : null
+    // Compute pace delta % relative to best
+    const bestPace = bestTempBucket?.avgPace ?? null
+    const tempBarsData = bucketWithPace.map(b => ({
+      ...b,
+      delta: bestPace && b.avgPace ? Math.round(((b.avgPace - bestPace) / bestPace) * 100) : 0,
+      isBest: bestTempBucket?.label === b.label,
+    }))
 
     // ── Surface breakdown ─────────────────────────────────────────────────
     const surfMap: Record<string, number> = {}
@@ -1940,38 +1945,57 @@ function RaceDNAWidget() {
     }
     const surfaces = Object.entries(surfMap)
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 3)
-      .map(([s, n]) => ({ label: s.charAt(0).toUpperCase() + s.slice(1), pct: Math.round((n / past.length) * 100) }))
+      .slice(0, 4)
+      .map(([s, n]) => ({
+        label: s.charAt(0).toUpperCase() + s.slice(1),
+        count: n,
+        pct: Math.round((n / past.length) * 100),
+      }))
 
     // ── Countries / travel ────────────────────────────────────────────────
-    const countrySet = new Set(past.map(r => r.country).filter(Boolean))
-    const travelCount = countrySet.size
+    const countryMap: Record<string, number> = {}
+    for (const r of past) {
+      if (r.country) countryMap[r.country] = (countryMap[r.country] ?? 0) + 1
+    }
+    const countryList = Object.entries(countryMap)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+    const travelCount = Object.keys(countryMap).length
 
     // ── Pacing (from splits where available) ─────────────────────────────
-    const withSplits = past.filter(r => (r.splits ?? []).length >= 2)
-    let faded = 0
+    const withSplits = past.filter(r => (r.splits ?? []).filter(x => x.split).length >= 2)
+    let faded = 0, negSplit = 0
     for (const r of withSplits) {
       const s = (r.splits ?? []).filter(x => x.split)
-      if (s.length < 2) continue
-      const first = parseHMS(s[0].split!) ?? 0
-      const last  = parseHMS(s[s.length - 1].split!) ?? 0
-      if (last > first * 1.02) faded++
+      const half = Math.floor(s.length / 2)
+      const firstHalf = s.slice(0, half).map(x => parseHMS(x.split!) ?? 0)
+      const secondHalf = s.slice(half).map(x => parseHMS(x.split!) ?? 0)
+      const avgFirst = firstHalf.reduce((a, b) => a + b, 0) / (firstHalf.length || 1)
+      const avgSecond = secondHalf.reduce((a, b) => a + b, 0) / (secondHalf.length || 1)
+      if (avgSecond > avgFirst * 1.03) faded++
+      if (avgSecond < avgFirst * 0.97) negSplit++
     }
-    const fadeRate = withSplits.length > 0 ? Math.round((faded / withSplits.length) * 100) : null
+    const even = withSplits.length - faded - negSplit
+    const pacingPersona = withSplits.length === 0 ? null
+      : faded > negSplit && faded > even ? 'FADER'
+      : negSplit > faded && negSplit > even ? 'NEGATIVE SPLITTER'
+      : 'EVEN PACER'
+    const pacingPersonaColor = pacingPersona === 'NEGATIVE SPLITTER' ? '#34D399'
+      : pacingPersona === 'FADER' ? '#F87171'
+      : 'var(--orange)'
+    const pacingPersonaDesc = pacingPersona === 'FADER'
+      ? `Go out too fast in ${faded} of ${withSplits.length} races`
+      : pacingPersona === 'NEGATIVE SPLITTER'
+      ? `Finish strong in ${negSplit} of ${withSplits.length} races`
+      : `Consistent pacing in ${even} of ${withSplits.length} races`
 
-    return { bestBucket, bucketWithPace, surfaces, travelCount, fadeRate, tempRaceCount: withTemp.length }
+    return { bucketWithPace: tempBarsData, surfaces, countryList, travelCount, withSplitsCount: withSplits.length, pacingPersona, pacingPersonaColor, pacingPersonaDesc, faded, negSplit, even, tempRaceCount: withTemp.length }
   }, [past])
-
-  const statRow = (label: string, value: string, highlight?: boolean) => (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 0', borderBottom: '1px solid var(--border)' }}>
-      <span style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--headline)', fontWeight: 700 }}>{label}</span>
-      <span style={{ fontSize: '13px', fontWeight: 600, color: highlight ? 'var(--orange)' : 'var(--white)' }}>{value}</span>
-    </div>
-  )
 
   return (
     <WidgetCard id="race-dna" style={st.glowCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', marginBottom: '14px' }}>
         <div>
           <div style={st.widgetLabel}>RACE DNA</div>
           <div style={st.widgetTitle}>CONDITIONS PROFILE</div>
@@ -1985,39 +2009,140 @@ function RaceDNAWidget() {
           <div style={st.lockedText}>Log your first race to start building your race DNA profile.</div>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginTop: '10px' }}>
-          {/* Temperature */}
-          {dna.bestBucket
-            ? statRow('Best temp range', dna.bestBucket.label, true)
-            : statRow('Temp data', 'Add weather to races', false)
-          }
-          {dna.tempRaceCount > 0 && statRow('Races with weather', `${dna.tempRaceCount} of ${past.length}`, false)}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
 
-          {/* Surface */}
-          {dna.surfaces.length > 0 && (
-            <>
-              <div style={{ height: '8px' }} />
-              {dna.surfaces.map(s => statRow(s.label, `${s.pct}%`, false))}
-            </>
-          )}
-
-          {/* Countries */}
-          <div style={{ height: '8px' }} />
-          {statRow('Countries raced', String(dna.travelCount), dna.travelCount >= 5)}
-
-          {/* Pacing — only if splits exist */}
-          {dna.fadeRate !== null && (
-            <>
-              <div style={{ height: '8px' }} />
-              {statRow('Negative split rate', `${100 - dna.fadeRate}%`, (100 - dna.fadeRate) > 50)}
-              {statRow('Fade rate', `${dna.fadeRate}%`, false)}
-            </>
-          )}
-          {dna.fadeRate === null && (
-            <div style={{ fontSize: '11px', color: 'var(--muted2)', marginTop: '8px' }}>
-              Add splits to your races to unlock pacing analysis.
+          {/* ── TEMP PERFORMANCE BARS ────────────────────────────────── */}
+          {dna.bucketWithPace.length > 0 ? (
+            <div>
+              <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
+                🌡 Temp Performance
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {dna.bucketWithPace.map(b => (
+                  <div key={b.label} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '42px', fontSize: '10px', color: b.isBest ? b.color : 'var(--muted)', fontWeight: b.isBest ? 700 : 500, flexShrink: 0, fontFamily: 'var(--headline)' }}>{b.short}</div>
+                    <div style={{ flex: 1, height: '6px', background: 'var(--surface3)', borderRadius: '3px', overflow: 'hidden' }}>
+                      <div style={{
+                        height: '100%',
+                        width: b.isBest ? '100%' : `${Math.max(15, 100 - b.delta * 8)}%`,
+                        background: b.color,
+                        borderRadius: '3px',
+                        opacity: b.isBest ? 1 : 0.45,
+                        transition: 'width 0.4s ease',
+                      }} />
+                    </div>
+                    <div style={{ width: '36px', fontSize: '11px', color: b.isBest ? b.color : 'var(--muted)', fontWeight: b.isBest ? 700 : 400, textAlign: 'right', flexShrink: 0 }}>
+                      {b.isBest ? '★ BEST' : `+${b.delta}%`}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {dna.tempRaceCount < past.length && (
+                <div style={{ fontSize: '10px', color: 'var(--muted2)', marginTop: '6px' }}>
+                  {dna.tempRaceCount}/{past.length} races have weather data
+                </div>
+              )}
+            </div>
+          ) : (
+            <div style={{ fontSize: '11px', color: 'var(--muted2)', padding: '8px 0' }}>
+              Open a past race → fetch weather to unlock temp analysis.
             </div>
           )}
+
+          {/* ── PACING PERSONA ───────────────────────────────────────── */}
+          {dna.pacingPersona ? (
+            <div style={{ background: 'var(--surface3)', borderRadius: '10px', padding: '10px 12px' }}>
+              <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '6px' }}>
+                ⚡ Pacing Pattern
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                <div>
+                  <div style={{ fontSize: '16px', fontFamily: 'var(--headline)', fontWeight: 900, letterSpacing: '0.04em', color: dna.pacingPersonaColor }}>
+                    {dna.pacingPersona}
+                  </div>
+                  <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>{dna.pacingPersonaDesc}</div>
+                </div>
+                {/* Mini pie-style split breakdown */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', flexShrink: 0 }}>
+                  {[
+                    { label: 'Neg', count: dna.negSplit, color: '#34D399' },
+                    { label: 'Even', count: dna.even, color: 'var(--orange)' },
+                    { label: 'Fade', count: dna.faded, color: '#F87171' },
+                  ].filter(x => x.count > 0).map(x => (
+                    <div key={x.label} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: x.color, flexShrink: 0 }} />
+                      <div style={{ fontSize: '10px', color: 'var(--muted)', width: '26px' }}>{x.label}</div>
+                      <div style={{ fontSize: '10px', color: x.color, fontWeight: 700 }}>{x.count}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'var(--surface3)', borderRadius: '10px', padding: '10px 12px' }}>
+              <div style={{ fontSize: '18px' }}>⚡</div>
+              <div>
+                <div style={{ fontSize: '12px', fontFamily: 'var(--headline)', fontWeight: 800, color: 'var(--muted)' }}>PACING LOCKED</div>
+                <div style={{ fontSize: '10px', color: 'var(--muted2)', marginTop: '2px' }}>Add splits to 2+ races to reveal your pacing pattern</div>
+              </div>
+            </div>
+          )}
+
+          {/* ── SURFACE BARS ─────────────────────────────────────────── */}
+          {dna.surfaces.length > 0 && (
+            <div>
+              <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
+                🏁 Surface Breakdown
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {dna.surfaces.map((s, i) => (
+                  <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '44px', fontSize: '11px', color: i === 0 ? 'var(--white)' : 'var(--muted)', fontWeight: i === 0 ? 600 : 400, flexShrink: 0 }}>{s.label}</div>
+                    <div style={{ flex: 1, height: '6px', background: 'var(--surface3)', borderRadius: '3px', overflow: 'hidden' }}>
+                      <div style={{
+                        height: '100%',
+                        width: `${s.pct}%`,
+                        background: i === 0 ? 'var(--orange)' : 'rgba(var(--orange-ch), 0.4)',
+                        borderRadius: '3px',
+                        transition: 'width 0.4s ease',
+                      }} />
+                    </div>
+                    <div style={{ width: '32px', fontSize: '11px', color: i === 0 ? 'var(--orange)' : 'var(--muted)', fontWeight: i === 0 ? 700 : 400, textAlign: 'right', flexShrink: 0 }}>
+                      {s.pct}%
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ── COUNTRY CLUSTERS ─────────────────────────────────────── */}
+          {dna.travelCount > 0 && (
+            <div>
+              <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
+                🌍 {dna.travelCount} {dna.travelCount === 1 ? 'Country' : 'Countries'}
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                {dna.countryList.map(([country, count]) => (
+                  <div key={country} style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '4px',
+                    background: 'var(--surface3)', border: '1px solid var(--border)',
+                    borderRadius: '20px', padding: '3px 9px',
+                    fontSize: '11px', color: 'var(--white)',
+                  }}>
+                    <span>{country}</span>
+                    <span style={{ color: 'var(--muted)', fontSize: '10px' }}>{count}</span>
+                  </div>
+                ))}
+                {dna.travelCount > 5 && (
+                  <div style={{ display: 'inline-flex', alignItems: 'center', background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: '20px', padding: '3px 9px', fontSize: '11px', color: 'var(--muted)' }}>
+                    +{dna.travelCount - 5} more
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
         </div>
       )}
     </WidgetCard>
@@ -2030,12 +2155,11 @@ function PatternScanWidget() {
   const races   = useRaceStore(selectRaces)
   const today   = todayStr()
   const past    = useMemo(() => races.filter(r => r.date <= today), [races, today])
-  const units   = useUnits()
 
   const scan = useMemo(() => {
     if (past.length < 3) return null
 
-    // ── Season pattern: best month bucket ────────────────────────────────
+    // ── Season pattern ────────────────────────────────────────────────────
     const monthPerf: Record<number, number[]> = {}
     for (const r of past) {
       if (!r.date || !r.time) continue
@@ -2043,16 +2167,26 @@ function PatternScanWidget() {
       const pace = computePaceSecPerKmFn(r.distance, r.time)
       if (pace) { monthPerf[mo] = [...(monthPerf[mo] ?? []), pace] }
     }
+    const SEASON_EMOJI: Record<string, string> = { Spring: '🌸', Summer: '☀️', Autumn: '🍂', Winter: '❄️' }
     const SEASON: Record<string, number[]> = { Spring: [3,4,5], Summer: [6,7,8], Autumn: [9,10,11], Winter: [12,1,2] }
-    const seasonPace: { season: string; avg: number; count: number }[] = []
+    const seasonPace: { season: string; emoji: string; avg: number; count: number }[] = []
     for (const [season, months] of Object.entries(SEASON)) {
       const paces = months.flatMap(m => monthPerf[m] ?? [])
-      if (paces.length) seasonPace.push({ season, avg: paces.reduce((a,b) => a+b,0)/paces.length, count: paces.length })
+      if (paces.length) seasonPace.push({ season, emoji: SEASON_EMOJI[season], avg: paces.reduce((a,b) => a+b,0)/paces.length, count: paces.length })
     }
     const bestSeason = seasonPace.length ? seasonPace.reduce((a,b) => b.avg < a.avg ? b : a) : null
     const worstSeason = seasonPace.length > 1 ? seasonPace.reduce((a,b) => b.avg > a.avg ? b : a) : null
+    // Compute normalized bar widths
+    const maxSeasonPace = seasonPace.length ? Math.max(...seasonPace.map(s => s.avg)) : 1
+    const minSeasonPace = seasonPace.length ? Math.min(...seasonPace.map(s => s.avg)) : 1
+    const seasonRange = maxSeasonPace - minSeasonPace || 1
+    const seasonBars = seasonPace.map(s => ({
+      ...s,
+      barPct: Math.round(100 - ((s.avg - minSeasonPace) / seasonRange) * 60), // best = 100%
+      isBest: bestSeason?.season === s.season,
+    }))
 
-    // ── Finish rate / outcome breakdown ───────────────────────────────────
+    // ── Finish rate ───────────────────────────────────────────────────────
     const dnfCount  = past.filter(r => ['dnf','dsq','dns'].includes((r.outcome ?? '').toLowerCase())).length
     const finishRate = Math.round(((past.length - dnfCount) / past.length) * 100)
 
@@ -2062,12 +2196,8 @@ function PatternScanWidget() {
       const label = distLabelUtil(r.distance, r.sport) || 'Other'
       distMap[label] = (distMap[label] ?? 0) + 1
     }
-    const topDist = Object.entries(distMap).sort((a,b) => b[1]-a[1]).slice(0,3)
-
-    // ── Podium / top-25% rate ─────────────────────────────────────────────
-    const withPlacing = past.filter(r => r.placing)
-    const top25 = withPlacing.filter(r => (parsePlacing(r.placing)?.percentile ?? 0) >= 75)
-    const podiumRate = withPlacing.length ? Math.round((top25.length / withPlacing.length) * 100) : null
+    const topDist = Object.entries(distMap).sort((a,b) => b[1]-a[1]).slice(0,4)
+    const maxDistCount = topDist[0]?.[1] ?? 1
 
     // ── Year-over-year volume ─────────────────────────────────────────────
     const thisYear = new Date().getFullYear()
@@ -2076,57 +2206,125 @@ function PatternScanWidget() {
     const volumeTrend = countLastYear > 0
       ? Math.round(((countThisYear - countLastYear) / countLastYear) * 100)
       : null
+    const volumeColor = volumeTrend === null ? 'var(--muted)' : volumeTrend > 0 ? '#34D399' : volumeTrend < 0 ? '#F87171' : 'var(--orange)'
 
-    return { bestSeason, worstSeason, finishRate, dnfCount, topDist, podiumRate, top25Count: top25.length, withPlacingCount: withPlacing.length, countThisYear, countLastYear, volumeTrend }
-  }, [past, units])
+    // ── Podium / top-25% rate ─────────────────────────────────────────────
+    const withPlacing = past.filter(r => r.placing)
+    const top25 = withPlacing.filter(r => (parsePlacing(r.placing)?.percentile ?? 0) >= 75)
+    const podiumRate = withPlacing.length ? Math.round((top25.length / withPlacing.length) * 100) : null
 
-  const row = (label: string, value: string, highlight?: boolean) => (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 0', borderBottom: '1px solid var(--border)' }}>
-      <span style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.07em', fontFamily: 'var(--headline)', fontWeight: 700 }}>{label}</span>
-      <span style={{ fontSize: '13px', fontWeight: 600, color: highlight ? 'var(--orange)' : 'var(--white)' }}>{value}</span>
-    </div>
-  )
+    return { seasonBars, bestSeason, worstSeason, finishRate, dnfCount, topDist, maxDistCount, podiumRate, top25Count: top25.length, withPlacingCount: withPlacing.length, countThisYear, countLastYear, volumeTrend, volumeColor }
+  }, [past])
 
   return (
     <WidgetCard id="pattern-scan" style={st.glowCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', marginBottom: '14px' }}>
         <div>
           <div style={st.widgetLabel}>DEEP TRENDS</div>
           <div style={st.widgetTitle}>PATTERN SCAN</div>
         </div>
-        <span style={{ ...st.badgePill, background: 'rgba(var(--orange-ch), 0.12)', color: 'var(--orange)', border: '1px solid rgba(var(--orange-ch), 0.3)', flexShrink: 0 }}>{past.length}</span>
+        <span style={{ ...st.badgePill, background: 'rgba(var(--orange-ch), 0.12)', color: 'var(--orange)', border: '1px solid rgba(var(--orange-ch), 0.3)', flexShrink: 0 }}>{past.length} RACES</span>
       </div>
 
       {!scan ? (
-        <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '8px' }}>Log 3+ races to unlock pattern analysis.</div>
+        <div style={{ fontSize: '13px', color: 'var(--muted)' }}>Log 3+ races to unlock pattern analysis.</div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginTop: '10px' }}>
-          {/* Season */}
-          {scan.bestSeason && row('Peak season', scan.bestSeason.season, true)}
-          {scan.worstSeason && scan.worstSeason.season !== scan.bestSeason?.season && row('Toughest season', scan.worstSeason.season, false)}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
 
-          {/* Volume YoY */}
-          <div style={{ height: '6px' }} />
-          {row(`Races ${new Date().getFullYear()}`, String(scan.countThisYear), false)}
-          {row(`Races ${new Date().getFullYear() - 1}`, String(scan.countLastYear), false)}
-          {scan.volumeTrend !== null && row('YoY volume', `${scan.volumeTrend >= 0 ? '+' : ''}${scan.volumeTrend}%`, scan.volumeTrend > 0)}
-
-          {/* Finish rate */}
-          <div style={{ height: '6px' }} />
-          {row('Finish rate', `${scan.finishRate}%`, scan.finishRate >= 95)}
-          {scan.dnfCount > 0 && row('DNF / DNS / DSQ', String(scan.dnfCount), false)}
-
-          {/* Podium */}
-          {scan.podiumRate !== null && (
-            <>
-              <div style={{ height: '6px' }} />
-              {row('Top 25% finishes', `${scan.top25Count} of ${scan.withPlacingCount}`, scan.podiumRate >= 30)}
-            </>
+          {/* ── SEASON PERFORMANCE BARS ──────────────────────────────── */}
+          {scan.seasonBars.length > 0 && (
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                  🗓 Season Performance
+                </div>
+                {scan.bestSeason && (
+                  <div style={{ fontSize: '10px', color: 'var(--orange)', fontWeight: 700 }}>
+                    {scan.bestSeason.emoji} {scan.bestSeason.season} is best
+                  </div>
+                )}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {scan.seasonBars.map(s => (
+                  <div key={s.season} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '52px', fontSize: '11px', color: s.isBest ? 'var(--white)' : 'var(--muted)', fontWeight: s.isBest ? 700 : 400, flexShrink: 0 }}>
+                      {s.emoji} {s.season}
+                    </div>
+                    <div style={{ flex: 1, height: '6px', background: 'var(--surface3)', borderRadius: '3px', overflow: 'hidden' }}>
+                      <div style={{
+                        height: '100%',
+                        width: `${s.barPct}%`,
+                        background: s.isBest ? 'var(--orange)' : 'rgba(var(--orange-ch), 0.35)',
+                        borderRadius: '3px',
+                        transition: 'width 0.4s ease',
+                      }} />
+                    </div>
+                    <div style={{ width: '20px', fontSize: '10px', color: 'var(--muted)', textAlign: 'right', flexShrink: 0 }}>{s.count}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
 
-          {/* Top distances */}
-          <div style={{ height: '6px' }} />
-          {scan.topDist.map(([d, n]) => row(d, `${n} race${n > 1 ? 's' : ''}`, false))}
+          {/* ── DISTANCE BREAKDOWN ───────────────────────────────────── */}
+          <div>
+            <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
+              📏 Distance Breakdown
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {scan.topDist.map(([d, n], i) => (
+                <div key={d} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ width: '90px', fontSize: '11px', color: i === 0 ? 'var(--white)' : 'var(--muted)', fontWeight: i === 0 ? 600 : 400, flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d}</div>
+                  <div style={{ flex: 1, height: '6px', background: 'var(--surface3)', borderRadius: '3px', overflow: 'hidden' }}>
+                    <div style={{
+                      height: '100%',
+                      width: `${Math.round((n / scan.maxDistCount) * 100)}%`,
+                      background: i === 0 ? 'var(--orange)' : 'rgba(var(--orange-ch), 0.4)',
+                      borderRadius: '3px',
+                      transition: 'width 0.4s ease',
+                    }} />
+                  </div>
+                  <div style={{ width: '24px', fontSize: '11px', color: i === 0 ? 'var(--orange)' : 'var(--muted)', fontWeight: i === 0 ? 700 : 400, textAlign: 'right', flexShrink: 0 }}>{n}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ── YoY VOLUME + STATS ROW ───────────────────────────────── */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+            {/* YoY */}
+            <div style={{ background: 'var(--surface3)', borderRadius: '8px', padding: '8px', textAlign: 'center' }}>
+              <div style={{ fontSize: '18px', fontFamily: 'var(--headline)', fontWeight: 900, color: scan.volumeColor, lineHeight: 1 }}>
+                {scan.volumeTrend !== null ? `${scan.volumeTrend >= 0 ? '+' : ''}${scan.volumeTrend}%` : '—'}
+              </div>
+              <div style={{ fontSize: '9px', color: 'var(--muted)', textTransform: 'uppercase', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', marginTop: '3px' }}>YoY Volume</div>
+              <div style={{ fontSize: '10px', color: 'var(--muted2)', marginTop: '2px' }}>
+                {scan.countLastYear}→{scan.countThisYear}
+              </div>
+            </div>
+            {/* Finish rate */}
+            <div style={{ background: 'var(--surface3)', borderRadius: '8px', padding: '8px', textAlign: 'center' }}>
+              <div style={{ fontSize: '18px', fontFamily: 'var(--headline)', fontWeight: 900, color: scan.finishRate >= 95 ? '#34D399' : scan.finishRate >= 85 ? 'var(--orange)' : '#F87171', lineHeight: 1 }}>
+                {scan.finishRate}%
+              </div>
+              <div style={{ fontSize: '9px', color: 'var(--muted)', textTransform: 'uppercase', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', marginTop: '3px' }}>Finish Rate</div>
+              {scan.dnfCount > 0 && (
+                <div style={{ fontSize: '10px', color: 'var(--muted2)', marginTop: '2px' }}>{scan.dnfCount} DNF</div>
+              )}
+            </div>
+            {/* Top 25% */}
+            <div style={{ background: 'var(--surface3)', borderRadius: '8px', padding: '8px', textAlign: 'center' }}>
+              <div style={{ fontSize: '18px', fontFamily: 'var(--headline)', fontWeight: 900, color: scan.podiumRate !== null ? (scan.podiumRate >= 30 ? '#34D399' : 'var(--orange)') : 'var(--muted)', lineHeight: 1 }}>
+                {scan.podiumRate !== null ? `${scan.podiumRate}%` : '—'}
+              </div>
+              <div style={{ fontSize: '9px', color: 'var(--muted)', textTransform: 'uppercase', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', marginTop: '3px' }}>Top 25%</div>
+              {scan.withPlacingCount > 0 && (
+                <div style={{ fontSize: '10px', color: 'var(--muted2)', marginTop: '2px' }}>{scan.top25Count}/{scan.withPlacingCount}</div>
+              )}
+            </div>
+          </div>
+
         </div>
       )}
     </WidgetCard>
