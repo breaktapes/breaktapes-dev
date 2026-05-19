@@ -139,15 +139,33 @@ function resolveDistKm(dist: string): { km: string; isNumeric: boolean } {
 
 
 function _wmoCondition(code: number): string {
-  if (code === 0)             return 'Clear sky'
-  if (code <= 3)              return 'Partly cloudy'
-  if (code <= 49)             return 'Foggy'
-  if (code <= 57)             return 'Drizzle'
-  if (code <= 67)             return 'Rain'
-  if (code <= 77)             return 'Snow'
-  if (code <= 82)             return 'Rain showers'
-  if (code <= 86)             return 'Snow showers'
-  if (code <= 99)             return 'Thunderstorm'
+  if (code === 0)              return 'Clear sky'
+  if (code === 1)              return 'Mainly clear'
+  if (code === 2)              return 'Partly cloudy'
+  if (code === 3)              return 'Overcast'
+  if (code <= 19)              return 'Foggy'
+  if (code <= 29)              return 'Foggy'
+  if (code <= 39)              return 'Foggy'
+  if (code <= 49)              return 'Foggy'
+  if (code <= 51)              return 'Light drizzle'
+  if (code <= 53)              return 'Drizzle'
+  if (code <= 55)              return 'Heavy drizzle'
+  if (code <= 57)              return 'Freezing drizzle'
+  if (code <= 61)              return 'Light rain'
+  if (code <= 63)              return 'Rain'
+  if (code <= 65)              return 'Heavy rain'
+  if (code <= 67)              return 'Freezing rain'
+  if (code <= 71)              return 'Light snow'
+  if (code <= 73)              return 'Snow'
+  if (code <= 75)              return 'Heavy snow'
+  if (code === 77)             return 'Snow grains'
+  if (code <= 80)              return 'Light showers'
+  if (code <= 81)              return 'Rain showers'
+  if (code <= 82)              return 'Heavy showers'
+  if (code <= 84)              return 'Snow showers'
+  if (code <= 86)              return 'Heavy snow showers'
+  if (code <= 89)              return 'Hail'
+  if (code <= 99)              return 'Thunderstorm'
   return 'Unknown'
 }
 
@@ -690,7 +708,12 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
       const avgTemp = avg(temps)
       const avgHum  = avg(hums)
       const avgWind = avg(winds)
-      const dominantCode = codes.length ? codes[Math.floor(codes.length / 2)] : null
+      // Most frequent weather code in the race window
+      const dominantCode = codes.length ? (() => {
+        const freq: Record<number, number> = {}
+        for (const c of codes) freq[c] = (freq[c] ?? 0) + 1
+        return Number(Object.entries(freq).sort((a, b) => b[1] - a[1])[0][0])
+      })() : null
 
       if (avgTemp != null) setWeatherTemp(String(avgTemp))
       if (avgHum  != null) setWeatherHum(String(avgHum))
