@@ -2247,7 +2247,7 @@ function PatternScanWidget() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 {scan.seasonBars.map(s => (
                   <div key={s.season} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{ width: '72px', fontSize: '11px', color: s.isBest ? 'var(--white)' : 'var(--muted)', fontWeight: s.isBest ? 700 : 400, flexShrink: 0 }}>
+                    <div style={{ width: '58px', fontSize: '11px', color: s.isBest ? 'var(--white)' : 'var(--muted)', fontWeight: s.isBest ? 700 : 400, flexShrink: 0, whiteSpace: 'nowrap' }}>
                       {s.season}
                     </div>
                     <div style={{ flex: 1, height: '6px', background: 'var(--surface3)', borderRadius: '3px', overflow: 'hidden' }}>
