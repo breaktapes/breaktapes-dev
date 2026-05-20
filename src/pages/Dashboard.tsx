@@ -2961,10 +2961,10 @@ function BestConditionsWidget() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {result.tempBuckets.map((b, i) => (
               <div key={b.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: '12px', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: i === 0 ? 'var(--white)' : 'var(--muted)' }}>
+                <span style={{ fontSize: i === 0 ? '17px' : '14px', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: i === 0 ? 'var(--white)' : 'var(--muted)' }}>
                   {b.label} {i === 0 && '★'}
                 </span>
-                <span style={{ fontSize: '12px', color: i === 0 ? 'var(--green)' : 'var(--muted)', fontWeight: 700 }}>
+                <span style={{ fontSize: i === 0 ? '14px' : '12px', color: i === 0 ? 'var(--green)' : 'var(--muted)', fontWeight: 700 }}>
                   Top {100 - b.avg + 1}% ({b.count})
                 </span>
               </div>
