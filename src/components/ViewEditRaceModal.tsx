@@ -919,7 +919,7 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
                 />
                 {bgRemoving && (
                   <div style={{ position: 'absolute', inset: 0, background: 'rgba(13,13,13,0.7)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <span style={{ fontSize: 18 }}>✨</span>
+                    <span style={{ fontSize: 11, color: 'var(--muted)' }}>…</span>
                   </div>
                 )}
                 <button
@@ -935,7 +935,7 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
                 onClick={() => medalInputRef.current?.click()}
                 style={{ ...st.input, cursor: 'pointer', textAlign: 'left', color: 'var(--muted)', fontSize: 13, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
               >
-                {bgRemoving ? '✨ Removing…' : medalPhoto ? '↺ Replace' : '📷 Upload medal'}
+                {bgRemoving ? 'Removing…' : medalPhoto ? '↺ Replace' : 'Upload medal'}
               </button>
               <span style={{ fontSize: 11, color: 'var(--muted)', lineHeight: 1.4 }}>
                 BG removed auto

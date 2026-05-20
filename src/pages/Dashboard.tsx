@@ -1668,7 +1668,7 @@ function BostonQualWidget() {
       {!hasProfile ? (
         <div style={st.lockedBox}>
           <div style={st.lockedTitle}>PROFILE NEEDED</div>
-          <div style={st.lockedText}>Add date of birth and gender in your athlete profile to unlock your official BQ target.</div>
+          <div style={st.lockedText}>Add date of birth and gender in your athlete profile to see your BQ target.</div>
         </div>
       ) : !bqTarget ? null : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -1793,8 +1793,8 @@ function PacingIQWidget() {
 
       {!analysis ? (
         <div style={st.lockedBox}>
-          <div style={st.lockedTitle}>UNLOCK YOUR PACING PATTERN</div>
-          <div style={st.lockedText}>Add splits when logging races to reveal whether you pace aggressively, evenly, or fade late.</div>
+          <div style={st.lockedTitle}>NO SPLIT DATA</div>
+          <div style={st.lockedText}>Add splits to 2+ races to see your pacing pattern.</div>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -1877,7 +1877,7 @@ function AgeGradeWidget() {
       {!hasProfile ? (
         <div style={st.lockedBox}>
           <div style={st.lockedTitle}>PROFILE NEEDED</div>
-          <div style={st.lockedText}>Add your date of birth and gender in athlete profile to unlock age-grade scoring.</div>
+          <div style={st.lockedText}>Add date of birth and gender in athlete profile to see age-grade scores.</div>
         </div>
       ) : entries.length === 0 ? (
         <div style={{ fontSize: '13px', color: 'var(--muted)' }}>Log races with finish times at 5K, 10K, Half Marathon, or Marathon distances to see your age-grade score.</div>
@@ -2006,7 +2006,7 @@ function RaceDNAWidget() {
       {!dna ? (
         <div style={st.lockedBox}>
           <div style={st.lockedTitle}>NO DATA YET</div>
-          <div style={st.lockedText}>Log your first race to start building your race DNA profile.</div>
+          <div style={st.lockedText}>Log a race to see your conditions profile.</div>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -2015,7 +2015,7 @@ function RaceDNAWidget() {
           {dna.bucketWithPace.length > 0 ? (
             <div>
               <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
-                🌡 Temp Performance
+                TEMP PERFORMANCE
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 {dna.bucketWithPace.map(b => (
@@ -2045,7 +2045,7 @@ function RaceDNAWidget() {
             </div>
           ) : (
             <div style={{ fontSize: '11px', color: 'var(--muted2)', padding: '8px 0' }}>
-              Open a past race → fetch weather to unlock temp analysis.
+              Open a past race and fetch weather to see temp analysis.
             </div>
           )}
 
@@ -2053,7 +2053,7 @@ function RaceDNAWidget() {
           {dna.pacingPersona ? (
             <div style={{ background: 'var(--surface3)', borderRadius: '10px', padding: '10px 12px' }}>
               <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '6px' }}>
-                ⚡ Pacing Pattern
+                PACING PATTERN
               </div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
                 <div>
@@ -2080,10 +2080,9 @@ function RaceDNAWidget() {
             </div>
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'var(--surface3)', borderRadius: '10px', padding: '10px 12px' }}>
-              <div style={{ fontSize: '18px' }}>⚡</div>
               <div>
-                <div style={{ fontSize: '12px', fontFamily: 'var(--headline)', fontWeight: 800, color: 'var(--muted)' }}>PACING LOCKED</div>
-                <div style={{ fontSize: '10px', color: 'var(--muted2)', marginTop: '2px' }}>Add splits to 2+ races to reveal your pacing pattern</div>
+                <div style={{ fontSize: '12px', fontFamily: 'var(--headline)', fontWeight: 800, color: 'var(--muted)' }}>NO SPLIT DATA</div>
+                <div style={{ fontSize: '10px', color: 'var(--muted2)', marginTop: '2px' }}>Add splits to 2+ races to see your pacing pattern</div>
               </div>
             </div>
           )}
@@ -2092,7 +2091,7 @@ function RaceDNAWidget() {
           {dna.surfaces.length > 0 && (
             <div>
               <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
-                🏁 Surface Breakdown
+                SURFACE BREAKDOWN
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 {dna.surfaces.map((s, i) => (
@@ -2120,7 +2119,7 @@ function RaceDNAWidget() {
           {dna.travelCount > 0 && (
             <div>
               <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
-                🌍 {dna.travelCount} {dna.travelCount === 1 ? 'Country' : 'Countries'}
+                {dna.travelCount} {dna.travelCount === 1 ? 'COUNTRY' : 'COUNTRIES'}
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                 {dna.countryList.map(([country, count]) => (
@@ -2228,7 +2227,7 @@ function PatternScanWidget() {
       </div>
 
       {!scan ? (
-        <div style={{ fontSize: '13px', color: 'var(--muted)' }}>Log 3+ races to unlock pattern analysis.</div>
+        <div style={{ fontSize: '13px', color: 'var(--muted)' }}>Log 3+ races to see patterns.</div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
 
@@ -2237,19 +2236,19 @@ function PatternScanWidget() {
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                 <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                  🗓 Season Performance
+                  SEASON PERFORMANCE
                 </div>
                 {scan.bestSeason && (
                   <div style={{ fontSize: '10px', color: 'var(--orange)', fontWeight: 700 }}>
-                    {scan.bestSeason.emoji} {scan.bestSeason.season} is best
+                    {scan.bestSeason.season} is best
                   </div>
                 )}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 {scan.seasonBars.map(s => (
                   <div key={s.season} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{ width: '52px', fontSize: '11px', color: s.isBest ? 'var(--white)' : 'var(--muted)', fontWeight: s.isBest ? 700 : 400, flexShrink: 0 }}>
-                      {s.emoji} {s.season}
+                    <div style={{ width: '58px', fontSize: '11px', color: s.isBest ? 'var(--white)' : 'var(--muted)', fontWeight: s.isBest ? 700 : 400, flexShrink: 0, whiteSpace: 'nowrap' }}>
+                      {s.season}
                     </div>
                     <div style={{ flex: 1, height: '6px', background: 'var(--surface3)', borderRadius: '3px', overflow: 'hidden' }}>
                       <div style={{
@@ -2270,7 +2269,7 @@ function PatternScanWidget() {
           {/* ── DISTANCE BREAKDOWN ───────────────────────────────────── */}
           <div>
             <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
-              📏 Distance Breakdown
+              DISTANCE BREAKDOWN
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               {scan.topDist.map(([d, n], i) => (
@@ -2346,7 +2345,7 @@ function WhyResultWidget() {
     return (
       <WidgetCard id="why-result" style={st.glowCard}>
         <div style={st.widgetLabel}>WHY RESULT</div>
-        <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '6px' }}>Log a timed race to unlock result analysis.</div>
+        <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '6px' }}>Log a timed race to see results.</div>
       </WidgetCard>
     )
   }
@@ -3039,7 +3038,7 @@ function CourseFitWidget({ race }: { race: Race | null }) {
       </div>
 
       {!result ? (
-        <div style={{ fontSize: '13px', color: 'var(--muted)' }}>Log 3+ races with placing data to unlock course fit score.</div>
+        <div style={{ fontSize: '13px', color: 'var(--muted)' }}>Log 3+ races with placing data to see course fit.</div>
       ) : (
         <>
           <div>
@@ -3296,7 +3295,7 @@ function AdvancedRaceDNAWidget() {
       </div>
       {past.length < 2 ? (
         <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>
-          Log 2+ races with placing data to unlock advanced condition analysis.
+          Log 2+ races with placing data to see advanced condition analysis.
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' }}>
@@ -3314,7 +3313,7 @@ function AdvancedRaceDNAWidget() {
           )}
           {!data.humidityInsight && !data.elevInsight && (
             <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5 }}>
-              Add humidity and elevation data to your logged races to unlock insights.
+              Add humidity and elevation data to logged races to see insights.
             </div>
           )}
           <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>
@@ -4080,7 +4079,7 @@ function StoryModeWidget() {
         <div style={st.widgetLabel}>STORY MODE</div>
         <div style={st.widgetTitle}>{year} RECAP</div>
         <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5, marginTop: 4 }}>
-          Log races through the year to unlock annual recaps and season highlights.
+          Log races through the year to build annual recaps and season highlights.
         </div>
       </WidgetCard>
     )
@@ -4787,7 +4786,7 @@ function NoUpcomingRaceCTA({ onAddRace }: { onAddRace: () => void }) {
           marginBottom: '4px',
         }}>No upcoming race</div>
         <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5 }}>
-          Add your next race to start the countdown and unlock race-day forecasts.
+          Add an upcoming race to start the countdown and see race-day forecasts.
         </div>
       </div>
       <button

@@ -3,6 +3,16 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.6.11.1] - 2026-05-20
+
+### Changed
+- Removed emoji section headers across Race DNA and Pattern Scan widgets (temp, pacing, surface, country, season, distance sections now use plain text labels)
+- Removed decorative emoji from onboarding status indicators in Profile — replaced with colored dot (green/orange)
+- Replaced "unlock your X" / "to unlock X" copy with "see X" / "to see X" throughout Dashboard widgets and Profile page
+- Changed locked pacing box title from "UNLOCK YOUR PACING PATTERN" to "NO SPLIT DATA"
+- Removed emoji from medal photo upload button and bg-remove spinner overlay
+- Changed season performance row labels to plain text (no emoji prefix) for consistent alignment
+
 ## [0.6.10.0] - 2026-04-30
 
 ### Changed
