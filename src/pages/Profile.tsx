@@ -2099,7 +2099,7 @@ function AgeGradeTrajectory() {
       <div style={st.section}>
         <h2 style={st.sectionTitle}>AGE-GRADE TRAJECTORY</h2>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', padding: '8px 0', lineHeight: 1.6 }}>
-          Add your date of birth and gender in profile to unlock age-grade scoring.
+          Add date of birth and gender in profile to see age-grade scores.
         </div>
       </div>
     )
@@ -2241,7 +2241,7 @@ function PerformanceTimeline() {
       <div style={st.section}>
         <h2 style={st.sectionTitle}>PERFORMANCE TIMELINE</h2>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', padding: '8px 0', lineHeight: 1.6 }}>
-          Log races across two or more seasons to unlock your season-by-season story.
+          Log races across two or more seasons to see your performance timeline.
         </div>
       </div>
     )
@@ -2877,7 +2877,7 @@ function OnboardingBanner({ onEdit }: { onEdit: () => void }) {
       gap: '12px',
       marginBottom: '4px',
     }}>
-      <span style={{ fontSize: '20px' }}>{complete ? '✅' : '👋'}</span>
+      <div style={{ width: 10, height: 10, borderRadius: '50%', background: complete ? 'var(--green)' : 'var(--orange)', flexShrink: 0 }} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', letterSpacing: '0.04em', textTransform: 'uppercase', color: complete ? 'var(--green)' : 'var(--orange)', lineHeight: 1.1 }}>
           {complete ? 'Profile Complete' : `Profile ${filled}/${total} Complete`}
@@ -2885,7 +2885,7 @@ function OnboardingBanner({ onEdit }: { onEdit: () => void }) {
         <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '2px', lineHeight: 1.4 }}>
           {complete
             ? 'Your profile is ready.'
-            : 'Fill in your details to unlock the full experience.'}
+            : 'Fill in your details to complete your profile.'}
         </div>
       </div>
       <button
