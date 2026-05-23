@@ -150,7 +150,7 @@ function StatRow({
       borderBottom: '1px solid var(--border)',
     }}>
       <div style={{
-        fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px',
+        fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)',
         letterSpacing: '0.02em', color: better === 'a' ? 'var(--orange)' : 'var(--white)',
         textAlign: 'right',
       }}>
@@ -164,7 +164,7 @@ function StatRow({
         {label}
       </div>
       <div style={{
-        fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px',
+        fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)',
         letterSpacing: '0.02em', color: better === 'b' ? 'var(--orange)' : 'var(--white)',
       }}>
         {b ?? '—'}
@@ -178,7 +178,7 @@ function ProfileColumn({ profile }: { profile: AthleteRow | 'private' | 'not_fou
 
   if (profile === 'private') {
     return (
-      <div style={{ flex: 1, padding: '1rem', textAlign: 'center', color: 'var(--muted)', fontFamily: 'var(--body)', fontSize: '13px' }}>
+      <div style={{ flex: 1, padding: '1rem', textAlign: 'center', color: 'var(--muted)', fontFamily: 'var(--body)', fontSize: 'var(--text-sm)' }}>
         Profile is private
       </div>
     )
@@ -186,7 +186,7 @@ function ProfileColumn({ profile }: { profile: AthleteRow | 'private' | 'not_fou
 
   if (profile === 'not_found') {
     return (
-      <div style={{ flex: 1, padding: '1rem', textAlign: 'center', color: 'var(--muted)', fontFamily: 'var(--body)', fontSize: '13px' }}>
+      <div style={{ flex: 1, padding: '1rem', textAlign: 'center', color: 'var(--muted)', fontFamily: 'var(--body)', fontSize: 'var(--text-sm)' }}>
         Athlete not found
       </div>
     )
@@ -203,18 +203,18 @@ function ProfileColumn({ profile }: { profile: AthleteRow | 'private' | 'not_fou
         background: 'var(--surface3)', border: '2px solid var(--orange)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         margin: '0 auto 8px', fontFamily: 'var(--headline)', fontWeight: 900,
-        fontSize: '18px', color: 'var(--white)',
+        fontSize: 'var(--text-md)', color: 'var(--white)',
       }}>
         {initials}
       </div>
       <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '15px', letterSpacing: '0.04em', color: 'var(--white)', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
         {name}
       </div>
-      <div style={{ fontFamily: 'var(--body)', fontSize: '11px', color: 'var(--muted)', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+      <div style={{ fontFamily: 'var(--body)', fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
         @{profile.username}
       </div>
       {loc && (
-        <div style={{ fontFamily: 'var(--body)', fontSize: '11px', color: 'var(--muted)', marginTop: '1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <div style={{ fontFamily: 'var(--body)', fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {loc}
         </div>
       )}
@@ -239,10 +239,10 @@ function SearchSheet({
         onClick={e => e.stopPropagation()}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '0.75rem' }}>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)' }}>
             {placeholder}
           </div>
-          <button onClick={onClose} aria-label="Close" style={{ background: 'transparent', border: 'none', color: 'var(--muted)', fontSize: '18px', cursor: 'pointer', padding: '4px 8px', lineHeight: 1 }}>✕</button>
+          <button onClick={onClose} aria-label="Close" style={{ background: 'transparent', border: 'none', color: 'var(--muted)', fontSize: 'var(--text-md)', cursor: 'pointer', padding: '4px 8px', lineHeight: 1 }}>✕</button>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <input
@@ -260,7 +260,7 @@ function SearchSheet({
             style={{
               flex: 1, background: 'var(--surface3)', border: '1px solid var(--border2)',
               borderRadius: '8px', padding: '10px 12px',
-              fontFamily: 'var(--body)', fontSize: '14px', color: 'var(--white)', outline: 'none',
+              fontFamily: 'var(--body)', fontSize: 'var(--text-compact)', color: 'var(--white)', outline: 'none',
             }}
           />
           <button
@@ -368,7 +368,7 @@ export function Compare() {
           ← Back
         </button>
         <div style={{ flex: 1 }} />
-        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)' }}>
+        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)' }}>
           Compare
         </div>
       </div>
@@ -383,7 +383,7 @@ export function Compare() {
           {/* Instructional state — no params yet */}
           {!usernameA && !usernameB && (
             <div style={{ textAlign: 'center', padding: '1rem 0 0.5rem' }}>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--white)', marginBottom: '6px' }}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--white)', marginBottom: '6px' }}>
                 Compare Two Athletes
               </div>
               <div style={{ fontFamily: 'var(--body)', fontSize: '12px', color: 'var(--muted)', lineHeight: 1.5 }}>
@@ -393,7 +393,7 @@ export function Compare() {
           )}
           {/* Same username guard */}
           {usernameA && usernameB && usernameA.toLowerCase() === usernameB.toLowerCase() && (
-            <div style={{ textAlign: 'center', color: 'var(--muted)', fontFamily: 'var(--body)', fontSize: '13px', marginBottom: '1rem' }}>
+            <div style={{ textAlign: 'center', color: 'var(--muted)', fontFamily: 'var(--body)', fontSize: 'var(--text-sm)', marginBottom: '1rem' }}>
               Can't compare an athlete to themselves.
             </div>
           )}
@@ -410,7 +410,7 @@ export function Compare() {
                   style={{
                     width: '100%', background: 'var(--surface3)', border: '1px dashed var(--border2)',
                     borderRadius: '8px', padding: '1rem 0.5rem', cursor: 'pointer',
-                    fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px',
+                    fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)',
                     letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)',
                   }}
                 >
@@ -422,7 +422,7 @@ export function Compare() {
                   onClick={() => setSearchSlot('a')}
                   style={{
                     display: 'block', margin: '6px auto 0', background: 'none', border: 'none',
-                    color: 'var(--muted)', fontFamily: 'var(--body)', fontSize: '11px',
+                    color: 'var(--muted)', fontFamily: 'var(--body)', fontSize: 'var(--text-xs)',
                     cursor: 'pointer', textDecoration: 'underline',
                   }}
                 >
@@ -451,7 +451,7 @@ export function Compare() {
                   style={{
                     width: '100%', background: 'var(--surface3)', border: '1px dashed var(--border2)',
                     borderRadius: '8px', padding: '1rem 0.5rem', cursor: 'pointer',
-                    fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px',
+                    fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)',
                     letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)',
                   }}
                 >
@@ -463,7 +463,7 @@ export function Compare() {
                   onClick={() => setSearchSlot('b')}
                   style={{
                     display: 'block', margin: '6px auto 0', background: 'none', border: 'none',
-                    color: 'var(--muted)', fontFamily: 'var(--body)', fontSize: '11px',
+                    color: 'var(--muted)', fontFamily: 'var(--body)', fontSize: 'var(--text-xs)',
                     cursor: 'pointer', textDecoration: 'underline',
                   }}
                 >
@@ -477,7 +477,7 @@ export function Compare() {
         {/* Stats comparison — only show when both profiles loaded */}
         {aIsAthleteRow && bIsAthleteRow && (
           <div style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: '12px', padding: '1rem' }}>
-            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '11px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '0.75rem', textAlign: 'center' }}>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xs)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '0.75rem', textAlign: 'center' }}>
               Stats
             </div>
 

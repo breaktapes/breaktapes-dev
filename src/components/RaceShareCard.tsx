@@ -247,7 +247,7 @@ export function RaceShareCard({ race, athleteName, onClose }: Props) {
     borderRadius: '4px',
     fontFamily: 'var(--headline)',
     fontWeight: 900,
-    fontSize: '13px',
+    fontSize: 'var(--text-sm)',
     letterSpacing: '0.1em',
     textTransform: 'uppercase',
     cursor: 'pointer',

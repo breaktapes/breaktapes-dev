@@ -237,7 +237,7 @@ const st = {
     background: 'transparent',
     border: '1px solid var(--border2)',
     color: 'var(--white)',
-    fontSize: '18px',
+    fontSize: 'var(--text-md)',
     cursor: 'pointer',
     width: '36px',
     height: '36px',
@@ -251,7 +251,7 @@ const st = {
 
   tagline: {
     margin: '10px 16px 0',
-    fontSize: '14px',
+    fontSize: 'var(--text-compact)',
     color: 'var(--muted)',
     fontStyle: 'italic',
     lineHeight: 1.5,
@@ -323,7 +323,7 @@ const st = {
   metricValue: {
     fontFamily: 'var(--headline)',
     fontWeight: 900,
-    fontSize: '32px',
+    fontSize: 'var(--text-2xl)',
     letterSpacing: '0.02em',
     color: 'var(--orange)',
     lineHeight: 1.05,
@@ -339,7 +339,7 @@ const st = {
   comparisonRow: {
     display: 'flex',
     justifyContent: 'space-between',
-    fontSize: '13px',
+    fontSize: 'var(--text-sm)',
     color: 'var(--white)',
   } as React.CSSProperties,
 
@@ -409,7 +409,7 @@ const st = {
     padding: '14px',
     fontFamily: 'var(--headline)',
     fontWeight: 800,
-    fontSize: '13px',
+    fontSize: 'var(--text-sm)',
     letterSpacing: '0.1em',
     textTransform: 'uppercase' as const,
     cursor: 'pointer',

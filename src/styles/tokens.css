@@ -54,13 +54,30 @@
   --flatlay-tile: #F2EDE6;
   --flatlay-text: #111111;
   /* text scale */
-  --text-xs:    11px;
-  --text-sm:    13px;
-  --text-base:  16px;
-  --text-md:    18px;
+  --text-xs:      11px; /* captions, badges, chart axis labels, sub-labels */
+  --text-sm:      13px; /* secondary labels, meta info, filter pills */
+  --text-compact: 14px; /* dense list contexts: race rows, history rows, table cells */
+  --text-base:    16px; /* body text, inputs, card content */
+  --text-md:      18px; /* section headers, modal titles (Barlow Condensed) */
+  --text-lg:      20px; /* widget subheaders */
+  --text-xl:      24px; /* page-level titles */
+  --text-2xl:     32px; /* large metrics (recovery days, streak count) */
+  --text-3xl:     48px; /* primary hero metric (finish time, momentum score) */
+  /* chart */
+  --chart-stroke:      1.5;
+  --chart-axis-size:   var(--text-xs);
+  --chart-dot-radius:  3px;
+  --chart-grid-stroke: rgba(255,255,255,0.04);
+  /* border-radius system */
+  --radius-xs:   4px;  /* badges, tight chips */
+  --radius-sm:   6px;  /* buttons, inputs, pills */
+  --radius-md:   8px;  /* cards, surface containers */
+  --radius-lg:  12px;  /* modals, bottom sheets */
+  --radius-pill: 20px; /* filter pills, tag pills */
+  --radius-round: 50%; /* avatars, icons */
   /* spacing */
   --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px;
-  --sp-5: 20px; --sp-6: 24px; --sp-8: 32px;
+  --sp-5: 20px; --sp-6: 24px; --sp-7: 28px; --sp-8: 32px;
   --header-base-height: 56px;
   --bottom-nav-base-height: 56px;
   --shell-top-gradient: var(--black);

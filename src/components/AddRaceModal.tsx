@@ -217,15 +217,15 @@ function SplitInput({ value, onChange }: { value: HMS; onChange: (v: HMS) => voi
         if (max !== undefined) v = Math.min(v, max)
         onChange({ ...value, [field]: Math.max(0, v) })
       }}
-      style={{ width: '40px', textAlign: 'center', background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: '4px', color: 'var(--white)', fontSize: '18px', fontFamily: 'var(--headline)', fontWeight: 700, padding: '5px 2px', MozAppearance: 'textfield' } as React.CSSProperties}
+      style={{ width: '40px', textAlign: 'center', background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: '4px', color: 'var(--white)', fontSize: 'var(--text-md)', fontFamily: 'var(--headline)', fontWeight: 700, padding: '5px 2px', MozAppearance: 'textfield' } as React.CSSProperties}
     />
   )
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
       {numBox(value.h, 'h')}
-      <span style={{ color: 'var(--muted)', fontWeight: 700, fontSize: '16px' }}>:</span>
+      <span style={{ color: 'var(--muted)', fontWeight: 700, fontSize: 'var(--text-base)' }}>:</span>
       {numBox(value.m, 'm', 59)}
-      <span style={{ color: 'var(--muted)', fontWeight: 700, fontSize: '16px' }}>:</span>
+      <span style={{ color: 'var(--muted)', fontWeight: 700, fontSize: 'var(--text-base)' }}>:</span>
       {numBox(value.s, 's', 59)}
     </div>
   )
@@ -248,15 +248,15 @@ function TriathlonSplits({ splits, onChange }: {
         const t = splits[seg.key] ?? { h: 0, m: 0, s: 0 }
         return (
           <div key={seg.key} style={{ display: 'flex', alignItems: 'center', padding: '10px 12px', borderBottom: i < TRI_SEGMENTS.length - 1 ? '1px solid var(--border)' : 'none', gap: '8px' }}>
-            <span style={{ fontSize: '16px', flexShrink: 0 }}>{seg.emoji}</span>
-            <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', letterSpacing: '0.08em', color: 'var(--white)', flex: 1 }}>{seg.label}</span>
+            <span style={{ fontSize: 'var(--text-base)', flexShrink: 0 }}>{seg.emoji}</span>
+            <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', letterSpacing: '0.08em', color: 'var(--white)', flex: 1 }}>{seg.label}</span>
             <SplitInput value={t} onChange={v => onChange(seg.key, v)} />
           </div>
         )
       })}
       <div style={{ display: 'flex', alignItems: 'center', padding: '12px', borderTop: '1px solid var(--border2)', background: 'rgba(var(--green-ch),0.05)' }}>
-        <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', letterSpacing: '0.1em', color: 'var(--green)', flex: 1 }}>TOTAL</span>
-        <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '18px', color: 'var(--green)', letterSpacing: '0.04em' }}>
+        <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', letterSpacing: '0.1em', color: 'var(--green)', flex: 1 }}>TOTAL</span>
+        <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-md)', color: 'var(--green)', letterSpacing: '0.04em' }}>
           {Math.floor(total / 3600)}:{pad2(Math.floor((total % 3600) / 60))}:{pad2(total % 60)}
         </span>
       </div>
@@ -870,7 +870,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
                     <div style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '8px' }}>
                       <span style={{
                         color: s.source === 'past' ? 'var(--orange)' : 'var(--green)',
-                        fontSize: '11px',
+                        fontSize: 'var(--text-xs)',
                         fontWeight: 700,
                         flexShrink: 0,
                       }}>
@@ -886,7 +886,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
                       )}
                     </div>
                     {metaParts.length > 0 && (
-                      <div style={{ fontSize: '11px', color: 'var(--muted)', paddingLeft: '19px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%' }}>
+                      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', paddingLeft: '19px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%' }}>
                         {metaParts.join(' · ')}
                       </div>
                     )}
@@ -933,7 +933,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
                     <button
                       type="button"
                       onClick={() => setMode('upcoming')}
-                      style={{ fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 900, letterSpacing: '0.06em', background: 'var(--orange)', color: 'var(--black)', border: 'none', borderRadius: '6px', padding: '5px 10px', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                      style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 900, letterSpacing: '0.06em', background: 'var(--orange)', color: 'var(--black)', border: 'none', borderRadius: '6px', padding: '5px 10px', cursor: 'pointer', whiteSpace: 'nowrap' }}
                     >
                       MOVE TO UPCOMING →
                     </button>
@@ -945,7 +945,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
                     {catalogYearRows.length > 0 && (
                       <button
                         type="button"
-                        style={{ fontSize: '11px', color: 'var(--muted)', background: 'none', border: 'none', padding: '4px 0', cursor: 'pointer', fontFamily: 'var(--body)' }}
+                        style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', background: 'none', border: 'none', padding: '4px 0', cursor: 'pointer', fontFamily: 'var(--body)' }}
                         onClick={() => setShowManualDate(false)}
                       >
                         ← pick year
@@ -981,7 +981,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
                         {hasMoreInCatalog && (
                           <button
                             type="button"
-                            style={{ ...st.yearPill, color: 'var(--muted)', borderColor: 'var(--border2)', fontSize: '11px', whiteSpace: 'nowrap' }}
+                            style={{ ...st.yearPill, color: 'var(--muted)', borderColor: 'var(--border2)', fontSize: 'var(--text-xs)', whiteSpace: 'nowrap' }}
                             onMouseDown={e => { e.preventDefault(); setShowOlderYears(true) }}
                           >
                             Older →
@@ -989,7 +989,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
                         )}
                         <button
                           type="button"
-                          style={{ ...st.yearPill, color: 'var(--muted)', borderColor: 'var(--border2)', fontSize: '11px', whiteSpace: 'nowrap' }}
+                          style={{ ...st.yearPill, color: 'var(--muted)', borderColor: 'var(--border2)', fontSize: 'var(--text-xs)', whiteSpace: 'nowrap' }}
                           onMouseDown={e => { e.preventDefault(); setShowManualDate(true) }}
                         >
                           Other →
@@ -1007,7 +1007,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
                   </div>
                 )}
                 {mode === 'upcoming' && date && date < today && (
-                  <p style={{ margin: '4px 0 0', fontSize: '11px', color: 'var(--orange)', fontWeight: 600 }}>
+                  <p style={{ margin: '4px 0 0', fontSize: 'var(--text-xs)', color: 'var(--orange)', fontWeight: 600 }}>
                     ⚠️ This date is in the past — use "Log a Race" tab for completed races
                   </p>
                 )}
@@ -1105,23 +1105,23 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
 
           {/* ── Goal Time (upcoming only) ── */}
           {mode === 'upcoming' && (
-            <Field label={<>Goal Time <span style={{ opacity: 0.5, fontWeight: 400, fontSize: '11px', textTransform: 'lowercase', letterSpacing: 0 }}>(optional)</span></>}>
+            <Field label={<>Goal Time <span style={{ opacity: 0.5, fontWeight: 400, fontSize: 'var(--text-xs)', textTransform: 'lowercase', letterSpacing: 0 }}>(optional)</span></>}>
               <TimePickerWheel value={goalHMS} onChange={setGoalHMS} maxHours={99} />
-              <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '6px' }}>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '6px' }}>
                 Scroll to set · Used by Gap To Goal widget
               </div>
             </Field>
           )}
 
           {mode === 'upcoming' && (
-            <Field label={<>Start Time <span style={{ opacity: 0.5, fontWeight: 400, fontSize: '11px', textTransform: 'lowercase', letterSpacing: 0 }}>(local, optional)</span></>}>
+            <Field label={<>Start Time <span style={{ opacity: 0.5, fontWeight: 400, fontSize: 'var(--text-xs)', textTransform: 'lowercase', letterSpacing: 0 }}>(local, optional)</span></>}>
               <input
                 type="time"
                 style={st.input}
                 value={startTime}
                 onChange={e => setStartTime(e.target.value)}
               />
-              <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '6px' }}>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '6px' }}>
                 Race-day wall clock · Auto-filled from catalog when known
               </div>
             </Field>
@@ -1243,7 +1243,7 @@ const st = {
 
   subtitle: {
     margin: '2px 0 0',
-    fontSize: '13px',
+    fontSize: 'var(--text-sm)',
     color: 'var(--muted)',
     fontFamily: 'var(--body)',
   } as React.CSSProperties,
@@ -1252,7 +1252,7 @@ const st = {
     background: 'transparent',
     border: 'none',
     color: 'var(--muted)',
-    fontSize: '18px',
+    fontSize: 'var(--text-md)',
     cursor: 'pointer',
     padding: '4px 8px',
     lineHeight: 1,
@@ -1269,7 +1269,7 @@ const st = {
     color: 'var(--green)',
     borderRadius: '20px',
     padding: '8px 18px',
-    fontSize: '13px',
+    fontSize: 'var(--text-sm)',
     fontFamily: 'var(--body)',
     fontWeight: 600,
     whiteSpace: 'nowrap',
@@ -1286,7 +1286,7 @@ const st = {
     color: 'var(--orange)',
     fontFamily: 'var(--headline)',
     fontWeight: 700,
-    fontSize: '13px',
+    fontSize: 'var(--text-sm)',
     cursor: 'pointer',
     whiteSpace: 'nowrap',
   } as React.CSSProperties,
@@ -1299,7 +1299,7 @@ const st = {
     textAlign: 'center' as const,
     fontFamily: 'var(--headline)',
     fontWeight: 900,
-    fontSize: '14px',
+    fontSize: 'var(--text-compact)',
     letterSpacing: '0.1em',
     color: 'var(--muted)',
     textTransform: 'uppercase' as const,
@@ -1380,7 +1380,7 @@ const st = {
     padding: '14px',
     fontFamily: 'var(--headline)',
     fontWeight: 900,
-    fontSize: '14px',
+    fontSize: 'var(--text-compact)',
     letterSpacing: '0.1em',
     textTransform: 'uppercase',
     cursor: 'pointer',

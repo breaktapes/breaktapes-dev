@@ -217,7 +217,7 @@ export function TimePickerWheel({
         format={v => String(v)}
       />
 
-      <div style={{ color: 'var(--muted)', fontSize: '20px', fontWeight: 700, paddingTop: WHEEL_H / 2 - 4, flexShrink: 0 }}>:</div>
+      <div style={{ color: 'var(--muted)', fontSize: 'var(--text-lg)', fontWeight: 700, paddingTop: WHEEL_H / 2 - 4, flexShrink: 0 }}>:</div>
 
       <Wheel
         values={range(60)}
@@ -226,7 +226,7 @@ export function TimePickerWheel({
         label="MIN"
       />
 
-      <div style={{ color: 'var(--muted)', fontSize: '20px', fontWeight: 700, paddingTop: WHEEL_H / 2 - 4, flexShrink: 0 }}>:</div>
+      <div style={{ color: 'var(--muted)', fontSize: 'var(--text-lg)', fontWeight: 700, paddingTop: WHEEL_H / 2 - 4, flexShrink: 0 }}>:</div>
 
       <Wheel
         values={range(60)}

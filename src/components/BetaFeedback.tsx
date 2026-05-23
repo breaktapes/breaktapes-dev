@@ -64,7 +64,7 @@ export function BetaFeedback() {
           color: 'var(--muted)',
           fontFamily: 'var(--headline)',
           fontWeight: 700,
-          fontSize: '11px',
+          fontSize: 'var(--text-xs)',
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
           padding: '6px 12px',
@@ -105,10 +105,10 @@ export function BetaFeedback() {
             paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))',
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ margin: 0, fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '18px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--white)' }}>
+              <h3 style={{ margin: 0, fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-md)', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--white)' }}>
                 Beta Feedback
               </h3>
-              <button onClick={() => setOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: '20px', lineHeight: 1, padding: '2px' }}>✕</button>
+              <button onClick={() => setOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: 'var(--text-lg)', lineHeight: 1, padding: '2px' }}>✕</button>
             </div>
 
             {/* Star rating */}
@@ -146,7 +146,7 @@ export function BetaFeedback() {
                   </button>
                 ))}
               </div>
-              {ratingError && <p style={{ margin: '4px 0 0', fontSize: '11px', color: 'var(--orange)' }}>Pick a star rating</p>}
+              {ratingError && <p style={{ margin: '4px 0 0', fontSize: 'var(--text-xs)', color: 'var(--orange)' }}>Pick a star rating</p>}
             </div>
 
             {/* Message */}
@@ -164,7 +164,7 @@ export function BetaFeedback() {
                   border: '1px solid var(--border2)',
                   borderRadius: '6px',
                   color: 'var(--white)',
-                  fontSize: '14px',
+                  fontSize: 'var(--text-compact)',
                   padding: '0.6rem 0.75rem',
                   fontFamily: 'var(--body)',
                   boxSizing: 'border-box',
@@ -185,7 +185,7 @@ export function BetaFeedback() {
                 padding: '0.8rem',
                 fontFamily: 'var(--headline)',
                 fontWeight: 900,
-                fontSize: '13px',
+                fontSize: 'var(--text-sm)',
                 letterSpacing: '0.1em',
                 textTransform: 'uppercase',
                 cursor: 'pointer',
