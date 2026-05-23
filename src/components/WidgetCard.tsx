@@ -18,7 +18,7 @@ class WidgetBoundary extends Component<
           <div style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: 1.4, wordBreak: 'break-word' }}>{this.state.error.message}</div>
           <button
             onClick={() => this.setState({ error: null })}
-            style={{ alignSelf: 'flex-start', background: 'none', border: '1px solid var(--border2)', color: 'var(--muted)', borderRadius: '6px', padding: '5px 12px', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px', letterSpacing: '0.08em', cursor: 'pointer' }}
+            style={{ alignSelf: 'flex-start', background: 'none', border: '1px solid var(--border2)', color: 'var(--muted)', borderRadius: '6px', padding: '5px 12px', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.08em', cursor: 'pointer' }}
           >
             RETRY
           </button>

@@ -113,7 +113,7 @@ export function CityPicker({ city, country, onSelect, placeholder = 'e.g. Leh', 
     border: '1px solid var(--border2)',
     borderRadius: '6px',
     color: 'var(--white)',
-    fontSize: '14px',
+    fontSize: 'var(--text-compact)',
     padding: '0.6rem 0.75rem',
     fontFamily: 'var(--body)',
     boxSizing: 'border-box' as const,
@@ -184,9 +184,9 @@ export function CityPicker({ city, country, onSelect, placeholder = 'e.g. Leh', 
                   fontFamily: 'var(--body)',
                 }}
               >
-                <span style={{ fontWeight: 600, fontSize: '14px' }}>{r.name}</span>
+                <span style={{ fontWeight: 600, fontSize: 'var(--text-compact)' }}>{r.name}</span>
                 {secondary && (
-                  <span style={{ fontSize: '11px', color: 'var(--muted)' }}>{secondary}</span>
+                  <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{secondary}</span>
                 )}
               </button>
             )

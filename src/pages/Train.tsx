@@ -50,7 +50,7 @@ const btnMain: React.CSSProperties = {
   letterSpacing: '0.1em',
   textTransform: 'uppercase',
   cursor: 'pointer',
-  fontSize: '13px',
+  fontSize: 'var(--text-sm)',
 }
 
 const card: React.CSSProperties = {
@@ -460,7 +460,7 @@ export function Train() {
                   color: sport === s ? 'var(--orange)' : 'var(--muted)',
                   fontFamily: 'var(--headline)',
                   fontWeight: 900,
-                  fontSize: '13px',
+                  fontSize: 'var(--text-sm)',
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
                   cursor: 'pointer',
@@ -494,7 +494,7 @@ export function Train() {
                           color: 'var(--white)',
                           fontFamily: 'var(--headline)',
                           fontWeight: 700,
-                          fontSize: '14px',
+                          fontSize: 'var(--text-compact)',
                           letterSpacing: '0.05em',
                           padding: '0.75rem 2.5rem 0.75rem 0.85rem',
                           cursor: 'pointer',
@@ -507,7 +507,7 @@ export function Train() {
                           <option key={d.id} value={d.id}>{d.label}</option>
                         ))}
                       </select>
-                      <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--muted)', fontSize: '14px' }}>▾</span>
+                      <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--muted)', fontSize: 'var(--text-compact)' }}>▾</span>
                     </div>
                   </div>
 
@@ -553,7 +553,7 @@ export function Train() {
                   <div>
                     <label style={fieldLabel}>Goal Time</label>
                     <TimePickerWheel value={goalHMS} onChange={setGoalHMS} maxHours={99} />
-                    <p style={{ margin: '6px 0 0', fontSize: '13px', color: 'var(--muted)', textAlign: 'center' }}>
+                    <p style={{ margin: '6px 0 0', fontSize: 'var(--text-sm)', color: 'var(--muted)', textAlign: 'center' }}>
                       {secsToHMS(hmsToSecs(goalHMS))}
                     </p>
                   </div>
@@ -604,17 +604,17 @@ export function Train() {
                     }}>
                       <div>
                         <p style={{ margin: 0, fontSize: '10px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Per km</p>
-                        <p style={{ margin: '4px 0 0', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '24px', color: units !== 'imperial' ? 'var(--orange)' : 'var(--white)' }}>
+                        <p style={{ margin: '4px 0 0', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xl)', color: units !== 'imperial' ? 'var(--orange)' : 'var(--white)' }}>
                           {runResult.km}
                         </p>
-                        <p style={{ margin: '2px 0 0', fontSize: '11px', color: 'var(--muted)' }}>min/km{units !== 'imperial' && ' ✓'}</p>
+                        <p style={{ margin: '2px 0 0', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>min/km{units !== 'imperial' && ' ✓'}</p>
                       </div>
                       <div>
                         <p style={{ margin: 0, fontSize: '10px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Per mile</p>
-                        <p style={{ margin: '4px 0 0', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '24px', color: units === 'imperial' ? 'var(--orange)' : 'var(--white)' }}>
+                        <p style={{ margin: '4px 0 0', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xl)', color: units === 'imperial' ? 'var(--orange)' : 'var(--white)' }}>
                           {runResult.mi}
                         </p>
-                        <p style={{ margin: '2px 0 0', fontSize: '11px', color: 'var(--muted)' }}>min/mi{units === 'imperial' && ' ✓'}</p>
+                        <p style={{ margin: '2px 0 0', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>min/mi{units === 'imperial' && ' ✓'}</p>
                       </div>
                     </div>
                   )}
@@ -720,15 +720,15 @@ export function Train() {
                     {/* Variance % input for pos/neg */}
                     {splitStrategy !== 'even' && (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                        <span style={{ fontSize: '11px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                        <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
                           {splitStrategy === 'negative' ? 'Second half faster by' : 'Second half slower by'}
                         </span>
                         <input
                           type="number" min={1} max={15} value={splitVariancePct}
                           onChange={e => setSplitVariancePct(Math.min(15, Math.max(1, parseInt(e.target.value) || 1)))}
-                          style={{ width: '48px', textAlign: 'center', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', padding: '4px' }}
+                          style={{ width: '48px', textAlign: 'center', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', padding: '4px' }}
                         />
-                        <span style={{ fontSize: '11px', color: 'var(--muted)' }}>%</span>
+                        <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>%</span>
                       </div>
                     )}
 
@@ -767,9 +767,9 @@ export function Train() {
                     <div style={{ maxHeight: '260px', overflowY: 'auto', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
                       {rows.map((row, i) => (
                         <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px', padding: '6px 0', borderBottom: '1px solid var(--border)', alignItems: 'center' }}>
-                          <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', color: 'var(--white)' }}>{row.marker}</span>
-                          <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '13px', color: row.isFast ? 'var(--green)' : row.isSlow ? '#f97316' : 'var(--muted)' }}>{row.split}</span>
-                          <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', color: i === rows.length - 1 ? 'var(--orange)' : 'var(--white)' }}>{row.cumulative}</span>
+                          <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color: 'var(--white)' }}>{row.marker}</span>
+                          <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-sm)', color: row.isFast ? 'var(--green)' : row.isSlow ? '#f97316' : 'var(--muted)' }}>{row.split}</span>
+                          <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color: i === rows.length - 1 ? 'var(--orange)' : 'var(--white)' }}>{row.cumulative}</span>
                         </div>
                       ))}
                     </div>
@@ -788,12 +788,12 @@ export function Train() {
                       return (
                         <div key={z.zone} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                           <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: color + '22', border: `1px solid ${color}55`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                            <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', color }}>{z.abbr}</span>
+                            <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color }}>{z.abbr}</span>
                           </div>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                              <span style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{z.description}</span>
-                              <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '13px', color: 'var(--white)', flexShrink: 0, marginLeft: '6px' }}>
+                              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{z.description}</span>
+                              <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--white)', flexShrink: 0, marginLeft: '6px' }}>
                                 {z.minPaceStr} – {z.maxPaceStr}
                               </span>
                             </div>
@@ -874,7 +874,7 @@ export function Train() {
                       return (
                         <>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px', padding: '7px 10px', borderRadius: '6px', background: ratio < 1 ? 'rgba(0,255,136,0.06)' : ratio > 1 ? 'rgba(249,115,22,0.06)' : 'var(--surface3)', border: `1px solid ${ratio < 1 ? 'rgba(0,255,136,0.2)' : ratio > 1 ? 'rgba(249,115,22,0.2)' : 'var(--border)'}` }}>
-                            <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', color: ratio < 1 ? 'var(--green)' : ratio > 1 ? '#f97316' : 'var(--muted)' }}>
+                            <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color: ratio < 1 ? 'var(--green)' : ratio > 1 ? '#f97316' : 'var(--muted)' }}>
                               {direction}
                             </span>
                             {pctChange > 0.1 && (
@@ -897,9 +897,9 @@ export function Train() {
                             return (
                               <div key={row.label} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', padding: '10px 0', borderBottom: '1px solid var(--border)', alignItems: 'center' }}>
                                 <span style={{ fontSize: '12px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', fontFamily: 'var(--headline)', fontWeight: 700 }}>{row.label}</span>
-                                <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', color: 'var(--white)' }}>{row.timeStr}</span>
+                                <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', color: 'var(--white)' }}>{row.timeStr}</span>
                                 <div>
-                                  <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', color: ratio < 1 ? 'var(--green)' : ratio > 1 ? '#f97316' : 'var(--white)' }}>{projStr}</div>
+                                  <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', color: ratio < 1 ? 'var(--green)' : ratio > 1 ? '#f97316' : 'var(--white)' }}>{projStr}</div>
                                   <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '2px' }}>{projPaceKm}/km</div>
                                 </div>
                               </div>
@@ -908,9 +908,9 @@ export function Train() {
 
                           {/* How it works */}
                           <div style={{ marginTop: '14px', padding: '12px', borderRadius: '8px', background: 'var(--surface3)', border: '1px solid var(--border)' }}>
-                            <p style={{ margin: '0 0 8px', fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)' }}>How it works</p>
+                            <p style={{ margin: '0 0 8px', fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)' }}>How it works</p>
                             <p style={{ margin: '0 0 6px', fontSize: '12px', color: 'var(--muted)', lineHeight: 1.5 }}>
-                              Formula: <span style={{ color: 'var(--white)', fontFamily: 'monospace', fontSize: '11px' }}>projected = current × (factor_target / factor_current)</span>
+                              Formula: <span style={{ color: 'var(--white)', fontFamily: 'monospace', fontSize: 'var(--text-xs)' }}>projected = current × (factor_target / factor_current)</span>
                             </p>
                             <p style={{ margin: '0 0 10px', fontSize: '12px', color: 'var(--muted)', lineHeight: 1.5 }}>
                               Age factors are from the <strong style={{ color: 'var(--white)' }}>World Athletics Masters Age-Grading Tables 2023</strong>. Factor 1.000 = peak performance zone (ages 25–30). Values above 1.0 reflect natural physiological changes from that peak.
@@ -921,12 +921,12 @@ export function Train() {
                                 return (
                                   <div key={a} style={{ textAlign: 'center', padding: '5px 2px', borderRadius: '5px', background: f <= 1.0 ? 'rgba(0,255,136,0.08)' : 'var(--surface2)', border: `1px solid ${f <= 1.0 ? 'rgba(0,255,136,0.2)' : 'var(--border)'}` }}>
                                     <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700 }}>Age {a}</div>
-                                    <div style={{ fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 900, color: f <= 1.0 ? 'var(--green)' : 'var(--white)' }}>{f.toFixed(3)}</div>
+                                    <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 900, color: f <= 1.0 ? 'var(--green)' : 'var(--white)' }}>{f.toFixed(3)}</div>
                                   </div>
                                 )
                               })}
                             </div>
-                            <p style={{ margin: 0, fontSize: '11px', color: 'var(--muted)', lineHeight: 1.4 }}>
+                            <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: 'var(--muted)', lineHeight: 1.4 }}>
                               Note: ages 25–30 are all 1.000 (identical peak zone) — no change between these ages is correct per the WA standard. Source: <a href="https://worldathletics.org/masters/masters-age-grading" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--orange)', textDecoration: 'none' }}>worldathletics.org/masters</a>
                             </p>
                           </div>
@@ -971,7 +971,7 @@ export function Train() {
                             color: 'var(--white)',
                             fontFamily: 'var(--headline)',
                             fontWeight: 700,
-                            fontSize: '14px',
+                            fontSize: 'var(--text-compact)',
                             letterSpacing: '0.05em',
                             padding: '0.75rem 2.5rem 0.75rem 0.85rem',
                             cursor: 'pointer',
@@ -989,9 +989,9 @@ export function Train() {
                             )
                           })}
                         </select>
-                        <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--muted)', fontSize: '14px' }}>▾</span>
+                        <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--muted)', fontSize: 'var(--text-compact)' }}>▾</span>
                       </div>
-                      <p style={{ margin: '4px 0 0', fontSize: '11px', color: 'var(--muted)' }}>
+                      <p style={{ margin: '4px 0 0', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
                         Swim {activeDist.swimM >= 1000 ? `${activeDist.swimM / 1000}km` : `${activeDist.swimM}m`} · Bike {activeDist.bikeKm}km · Run {activeDist.runKm}km
                       </p>
                       {triDistPB && (
@@ -1041,17 +1041,17 @@ export function Train() {
                         background: 'var(--surface)', border: '1px solid var(--border2)',
                         borderRadius: '6px', color: 'var(--white)',
                         fontFamily: 'var(--headline)', fontWeight: 900,
-                        fontSize: '16px', padding: '6px 4px',
+                        fontSize: 'var(--text-base)', padding: '6px 4px',
                         MozAppearance: 'textfield',
                       } as React.CSSProperties}
                     />
                   )
-                  const sep = <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', color: 'var(--muted)', padding: '0 2px' }}>:</span>
+                  const sep = <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', color: 'var(--muted)', padding: '0 2px' }}>:</span>
                   const estTime = (sec: number | null) => sec && sec > 0
-                    ? <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', color: 'var(--orange)', letterSpacing: '0.02em', whiteSpace: 'nowrap' }}>{secsToHMS(sec)}</span>
+                    ? <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', color: 'var(--orange)', letterSpacing: '0.02em', whiteSpace: 'nowrap' }}>{secsToHMS(sec)}</span>
                     : <span style={{ fontSize: '12px', color: 'var(--muted)' }}>—</span>
                   const estPace = (label: string) =>
-                    <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '13px', color: 'var(--muted)', whiteSpace: 'nowrap' }}>{label}</span>
+                    <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--muted)', whiteSpace: 'nowrap' }}>{label}</span>
 
                   const row = (
                     emoji: string, label: string, sub: string,
@@ -1066,11 +1066,11 @@ export function Train() {
                       borderBottom: isLast ? 'none' : '1px solid var(--border)',
                     }}>
                       <div style={{ minWidth: 0 }}>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', color: 'var(--white)', letterSpacing: '0.04em' }}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color: 'var(--white)', letterSpacing: '0.04em' }}>
                           <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '8px', letterSpacing: '0.06em', color: 'var(--orange)', background: 'rgba(var(--orange-ch),0.12)', borderRadius: '3px', padding: '1px 4px' }}>{emoji}</span>
                           {label}
                         </span>
-                        {sub && <span style={{ fontSize: '11px', color: 'var(--muted)', marginLeft: '6px' }}>{sub}</span>}
+                        {sub && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginLeft: '6px' }}>{sub}</span>}
                         <div style={{ fontSize: '10px', color: 'var(--muted)', letterSpacing: '0.04em', marginTop: '1px' }}>{unit}</div>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0' }}>{pace}</div>
@@ -1097,7 +1097,7 @@ export function Train() {
                             border: `1px solid ${triMode === m ? 'rgba(var(--orange-ch),0.4)' : 'var(--border2)'}`,
                             borderRadius: '6px',
                             color: triMode === m ? 'var(--orange)' : 'var(--muted)',
-                            fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px',
+                            fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)',
                             letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer',
                           }}>
                             {m === 'pace' ? 'Enter Pace → Time' : 'Enter Time → Pace'}
@@ -1131,20 +1131,20 @@ export function Train() {
                         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                         padding: '12px 0 0', borderTop: '2px solid var(--border2)', marginTop: '4px',
                       }}>
-                        <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--white)' }}>
+                        <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--white)' }}>
                           Total Finish Time
                         </span>
                         {triResult
                           ? <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '28px', color: 'var(--orange)' }}>{secsToHMS(triResult.totalSec)}</span>
-                          : <span style={{ fontSize: '13px', color: 'var(--muted)' }}>Fill in paces above</span>
+                          : <span style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>Fill in paces above</span>
                         }
                       </div>
 
                       {/* PB reference */}
                       {triPB && (
                         <div style={{ background: 'rgba(var(--orange-ch),0.06)', border: '1px solid rgba(var(--orange-ch),0.2)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ fontSize: '11px', color: 'var(--muted)' }}>Your best at this distance</span>
-                          <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', color: 'var(--orange)' }}>{triPB.time}</span>
+                          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Your best at this distance</span>
+                          <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', color: 'var(--orange)' }}>{triPB.time}</span>
                         </div>
                       )}
 
@@ -1167,7 +1167,7 @@ export function Train() {
                               {segs.map(seg => (
                                 <div key={seg.label}>
                                   <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, color: seg.color, letterSpacing: '0.04em', textTransform: 'uppercase' }}>{seg.label}</div>
-                                  <div style={{ fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 900, color: 'var(--white)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{secsToHMS(seg.sec)}</div>
+                                  <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 900, color: 'var(--white)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{secsToHMS(seg.sec)}</div>
                                 </div>
                               ))}
                             </div>
@@ -1185,16 +1185,16 @@ export function Train() {
 
       {/* ══════════════════════ ACTIVITIES TAB ════════════════════════════════ */}
       {activeTab === 'activities' && (
-        <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--muted)', fontSize: '14px' }}>
-          <p style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)', marginBottom: '8px' }}>Activity Sync</p>
+        <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--muted)', fontSize: 'var(--text-compact)' }}>
+          <p style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)', marginBottom: '8px' }}>Activity Sync</p>
           <p style={{ margin: 0 }}>Strava, WHOOP, Garmin and more — coming soon</p>
         </div>
       )}
 
       {/* ══════════════════════ READINESS TAB ═════════════════════════════════ */}
       {activeTab === 'readiness' && (
-        <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--muted)', fontSize: '14px' }}>
-          <p style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)', marginBottom: '8px' }}>Readiness Sync</p>
+        <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--muted)', fontSize: 'var(--text-compact)' }}>
+          <p style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)', marginBottom: '8px' }}>Readiness Sync</p>
           <p style={{ margin: 0 }}>WHOOP, Garmin and more — coming soon</p>
         </div>
       )}

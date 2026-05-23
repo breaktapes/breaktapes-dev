@@ -22,7 +22,7 @@ const btnGhost: React.CSSProperties = {
   letterSpacing: '0.1em',
   textTransform: 'uppercase',
   cursor: 'pointer',
-  fontSize: '13px',
+  fontSize: 'var(--text-sm)',
 }
 
 const card: React.CSSProperties = {
@@ -189,7 +189,7 @@ export function Settings() {
                   <circle cx="8" cy="5" r="3" stroke="currentColor" strokeWidth="1.4"/>
                   <path d="M2 14c0-3.314 2.686-6 6-6s6 2.686 6 6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
                 </svg>
-                <span style={{ fontSize: '14px', fontWeight: 500 }}>Manage account</span>
+                <span style={{ fontSize: 'var(--text-compact)', fontWeight: 500 }}>Manage account</span>
               </button>
               <div style={{ height: '1px', background: 'var(--border)', margin: '0 4px' }} />
               <button
@@ -205,7 +205,7 @@ export function Settings() {
                   <path d="M6 14H3a1 1 0 01-1-1V3a1 1 0 011-1h3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
                   <path d="M10 11l3-3-3-3M13 8H6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-                <span style={{ fontSize: '14px', fontWeight: 500 }}>Sign out</span>
+                <span style={{ fontSize: 'var(--text-compact)', fontWeight: 500 }}>Sign out</span>
               </button>
             </div>
           )}
@@ -221,7 +221,7 @@ export function Settings() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '2px 0 14px' }}>
             <div>
               <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--white)', fontWeight: 600 }}>Make profile public</p>
-              <p style={{ margin: '2px 0 0', fontSize: '11px', color: 'var(--muted)' }}>
+              <p style={{ margin: '2px 0 0', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
                 {athlete?.username ? `${APP_URL}/u/${athlete.username}` : 'Set a username in account settings first'}
               </p>
             </div>
@@ -265,7 +265,7 @@ export function Settings() {
           {isPublic && (
             <>
               <div style={{ height: '1px', background: 'var(--border)', marginBottom: '14px' }} />
-              <p style={{ margin: '0 0 10px', fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--headline)', fontWeight: 700 }}>
+              <p style={{ margin: '0 0 10px', fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--headline)', fontWeight: 700 }}>
                 What to show on your profile
               </p>
               {([
@@ -282,8 +282,8 @@ export function Settings() {
                   <div key={key}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0' }}>
                       <div style={{ minWidth: 0, flex: 1, paddingRight: '12px' }}>
-                        <p style={{ margin: 0, fontSize: '14px', color: 'var(--white)', fontWeight: 500 }}>{label}</p>
-                        <p style={{ margin: '2px 0 0', fontSize: '11px', color: 'var(--muted)' }}>{desc}</p>
+                        <p style={{ margin: 0, fontSize: 'var(--text-compact)', color: 'var(--white)', fontWeight: 500 }}>{label}</p>
+                        <p style={{ margin: '2px 0 0', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{desc}</p>
                       </div>
                       <button
                         onClick={() => updateAthlete({ profileVisibility: { ...vis, [key]: !enabled } })}
@@ -320,7 +320,7 @@ export function Settings() {
         <div style={{ ...card, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
           {/* Units toggle */}
           <div>
-            <p style={{ margin: '0 0 10px', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '13px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>
+            <p style={{ margin: '0 0 10px', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-sm)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>
               Units
             </p>
             <p style={{ margin: '0 0 10px', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
@@ -342,10 +342,10 @@ export function Settings() {
                       textAlign: 'center' as const,
                     }}
                   >
-                    <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', letterSpacing: '0.08em', textTransform: 'uppercase', color: active ? 'var(--orange)' : 'var(--white)' }}>
+                    <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', letterSpacing: '0.08em', textTransform: 'uppercase', color: active ? 'var(--orange)' : 'var(--white)' }}>
                       {u === 'metric' ? 'Metric' : 'Imperial'}
                     </div>
-                    <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '3px' }}>
+                    <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '3px' }}>
                       {u === 'metric' ? 'km · min/km' : 'mi · min/mi'}
                     </div>
                   </button>
@@ -424,7 +424,7 @@ export function Settings() {
       <section>
         <p style={sectionLabel}>Wearables</p>
         <div style={card}>
-          <p style={{ margin: 0, fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>Wearable Sync</p>
+          <p style={{ margin: 0, fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>Wearable Sync</p>
           <p style={{ margin: '4px 0 0', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Strava, WHOOP, Garmin and more — coming soon</p>
         </div>
       </section>
@@ -507,7 +507,7 @@ export function Settings() {
         transform: 'translateX(-50%)', zIndex: 2000,
         background: 'var(--surface3)', border: '1px solid rgba(var(--orange-ch),0.5)',
         color: 'var(--orange)', borderRadius: '20px', padding: '10px 20px',
-        fontSize: '13px', fontFamily: 'var(--headline)', fontWeight: 700,
+        fontSize: 'var(--text-sm)', fontFamily: 'var(--headline)', fontWeight: 700,
         letterSpacing: '0.06em', whiteSpace: 'nowrap', pointerEvents: 'none',
       }}>
         Link copied ✓

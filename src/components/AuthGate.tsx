@@ -168,7 +168,7 @@ function StagingAccessDenied() {
           border: '1px solid var(--border2)', borderRadius: '4px',
           padding: '0.8rem 1.25rem', fontFamily: 'var(--headline)',
           fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase',
-          cursor: 'pointer', fontSize: '13px',
+          cursor: 'pointer', fontSize: 'var(--text-sm)',
         }}
       >Sign Out</button>
     </div>
@@ -324,21 +324,21 @@ function CustomSignInForm({ onClose: _onClose }: { onClose: () => void }) {
   if (showReset) {
     return (
       <div style={cardSt}>
-        <h2 style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#F5F5F5', fontSize: '20px', margin: 0, textAlign: 'center' }}>Reset Password</h2>
+        <h2 style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#F5F5F5', fontSize: 'var(--text-lg)', margin: 0, textAlign: 'center' }}>Reset Password</h2>
         {resetSent ? (
-          <p style={{ color: 'rgba(245,245,245,0.7)', fontSize: '14px', textAlign: 'center', margin: 0 }}>
+          <p style={{ color: 'rgba(245,245,245,0.7)', fontSize: 'var(--text-compact)', textAlign: 'center', margin: 0 }}>
             Check your email for a reset link.
           </p>
         ) : (
           <form onSubmit={handleReset} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             <input ref={resetEmailRef} type="email" autoComplete="email" placeholder="Email address" style={_inputSt} />
-            {error && <p style={{ color: '#E84E1B', fontSize: '13px', margin: 0 }}>{error}</p>}
-            <button type="submit" disabled={loading} style={{ background: loading ? 'rgba(232,78,27,0.6)' : '#E84E1B', color: '#fff', border: 'none', borderRadius: '6px', padding: '0.75rem', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: loading ? 'not-allowed' : 'pointer', fontSize: '14px' }}>
+            {error && <p style={{ color: '#E84E1B', fontSize: 'var(--text-sm)', margin: 0 }}>{error}</p>}
+            <button type="submit" disabled={loading} style={{ background: loading ? 'rgba(232,78,27,0.6)' : '#E84E1B', color: '#fff', border: 'none', borderRadius: '6px', padding: '0.75rem', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: loading ? 'not-allowed' : 'pointer', fontSize: 'var(--text-compact)' }}>
               {loading ? 'Sending…' : 'Send Reset Link'}
             </button>
           </form>
         )}
-        <button onClick={() => { setShowReset(false); setResetSent(false); setError('') }} style={{ background: 'transparent', border: 'none', color: 'rgba(245,245,245,0.45)', fontSize: '13px', cursor: 'pointer', textAlign: 'center' }}>
+        <button onClick={() => { setShowReset(false); setResetSent(false); setError('') }} style={{ background: 'transparent', border: 'none', color: 'rgba(245,245,245,0.45)', fontSize: 'var(--text-sm)', cursor: 'pointer', textAlign: 'center' }}>
           ← Back to sign in
         </button>
       </div>
@@ -347,16 +347,16 @@ function CustomSignInForm({ onClose: _onClose }: { onClose: () => void }) {
 
   return (
     <div style={cardSt}>
-      <h2 style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#F5F5F5', fontSize: '20px', margin: 0, textAlign: 'center' }}>Sign In</h2>
+      <h2 style={{ fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#F5F5F5', fontSize: 'var(--text-lg)', margin: 0, textAlign: 'center' }}>Sign In</h2>
       <form onSubmit={handleSignIn} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
         <input ref={emailRef} type="email" autoComplete="email" placeholder="Email address" style={_inputSt} />
         <input ref={passwordRef} type="password" autoComplete="current-password" placeholder="Password" style={_inputSt} />
-        {error && <p style={{ color: '#E84E1B', fontSize: '13px', margin: 0 }}>{error}</p>}
-        <button type="submit" disabled={loading} style={{ background: loading ? 'rgba(232,78,27,0.6)' : '#E84E1B', color: '#fff', border: 'none', borderRadius: '6px', padding: '0.75rem', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: loading ? 'not-allowed' : 'pointer', fontSize: '14px', marginTop: '0.25rem' }}>
+        {error && <p style={{ color: '#E84E1B', fontSize: 'var(--text-sm)', margin: 0 }}>{error}</p>}
+        <button type="submit" disabled={loading} style={{ background: loading ? 'rgba(232,78,27,0.6)' : '#E84E1B', color: '#fff', border: 'none', borderRadius: '6px', padding: '0.75rem', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: loading ? 'not-allowed' : 'pointer', fontSize: 'var(--text-compact)', marginTop: '0.25rem' }}>
           {loading ? 'Signing in…' : 'Continue'}
         </button>
       </form>
-      <button onClick={() => { setShowReset(true); setError('') }} style={{ background: 'transparent', border: 'none', color: 'rgba(245,245,245,0.45)', fontSize: '13px', cursor: 'pointer', textAlign: 'center' }}>
+      <button onClick={() => { setShowReset(true); setError('') }} style={{ background: 'transparent', border: 'none', color: 'rgba(245,245,245,0.45)', fontSize: 'var(--text-sm)', cursor: 'pointer', textAlign: 'center' }}>
         Forgot password?
       </button>
     </div>
@@ -426,7 +426,7 @@ function LandingScreen() {
               color: 'rgba(245,245,245,0.6)',
               borderRadius: '50%',
               width: '36px', height: '36px',
-              cursor: 'pointer', fontSize: '18px',
+              cursor: 'pointer', fontSize: 'var(--text-md)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
           >

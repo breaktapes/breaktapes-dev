@@ -12,18 +12,18 @@ export function getChartTheme() {
     cartesianGrid: { stroke: 'rgba(255,255,255,0.04)', strokeDasharray: '3 3' as const },
     xAxis: {
       stroke: 'transparent',
-      tick: { fill: muted, fontSize: 11, fontFamily: 'Barlow' },
+      tick: { fill: muted, fontSize: 'var(--chart-axis-size)', fontFamily: 'var(--mono)' },
     },
     yAxis: {
       stroke: 'transparent',
-      tick: { fill: muted, fontSize: 11, fontFamily: 'Barlow' },
+      tick: { fill: muted, fontSize: 'var(--chart-axis-size)', fontFamily: 'var(--mono)' },
     },
     tooltip: {
       contentStyle: {
         background: surface3,
         border: '1px solid rgba(255,255,255,0.07)',
         borderRadius: 8,
-        fontFamily: 'Barlow',
+        fontFamily: 'var(--body)',
       },
     },
   }
