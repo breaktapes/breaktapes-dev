@@ -208,14 +208,14 @@ function RaceCard({
           </div>
           <div style={{
             fontFamily: 'var(--body)',
-            fontSize: '12px',
+            fontSize: 'var(--text-xs)',
             color: 'var(--muted)',
             marginTop: '2px',
           }}>
             {[race.city, race.country].filter(Boolean).join(' · ')}
             {dateStr
               ? <span style={{ color: 'var(--orange)', marginLeft: '6px' }}>{dateStr}</span>
-              : <span style={{ background: 'var(--surface3)', color: 'var(--muted)', fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', borderRadius: 'var(--radius-xs)', padding: '2px 6px', marginLeft: '6px' }}>Date TBD</span>
+              : <span style={{ background: 'var(--surface3)', color: 'var(--muted)', fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', borderRadius: 'var(--radius-xs)', padding: '2px 6px', marginLeft: '6px' }}>Date TBD</span>
             }
           </div>
         </div>
@@ -259,7 +259,7 @@ function RaceCard({
             padding: '4px 10px',
             fontFamily: 'var(--headline)',
             fontWeight: 800,
-            fontSize: '10px',
+            fontSize: 'var(--text-xs)',
             letterSpacing: '0.08em',
             textTransform: 'uppercase',
             cursor: 'pointer',
@@ -278,7 +278,7 @@ function RaceCard({
             padding: '4px 10px',
             fontFamily: 'var(--headline)',
             fontWeight: 800,
-            fontSize: '10px',
+            fontSize: 'var(--text-xs)',
             letterSpacing: '0.08em',
             textTransform: 'uppercase',
             cursor: 'pointer',
@@ -395,7 +395,7 @@ export function Discover() {
             <span style={{
               fontFamily: 'var(--body)',
               fontWeight: 400,
-              fontSize: '12px',
+              fontSize: 'var(--text-xs)',
               color: 'var(--muted)',
               textTransform: 'none',
               letterSpacing: 0,
@@ -528,7 +528,7 @@ export function Discover() {
             textAlign: 'center',
             color: 'var(--muted)',
             fontFamily: 'var(--body)',
-            fontSize: '12px',
+            fontSize: 'var(--text-xs)',
             paddingTop: '0.5rem',
           }}>
             Showing 100 of {filtered.length.toLocaleString()} — add more filters to narrow results

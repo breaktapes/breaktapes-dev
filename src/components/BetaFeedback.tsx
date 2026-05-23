@@ -74,7 +74,7 @@ export function BetaFeedback() {
           gap: 'var(--sp-1)',
         }}
       >
-        <span style={{ fontSize: '12px' }}>✦</span> Beta
+        <span style={{ fontSize: 'var(--text-xs)' }}>✦</span> Beta
       </button>
 
       {/* Modal */}
@@ -113,7 +113,7 @@ export function BetaFeedback() {
 
             {/* Star rating */}
             <div>
-              <p style={{ margin: '0 0 8px', fontSize: '12px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--headline)', fontWeight: 700 }}>
+              <p style={{ margin: '0 0 8px', fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--headline)', fontWeight: 700 }}>
                 How's BREAKTAPES working for you?
               </p>
               <div
@@ -151,7 +151,7 @@ export function BetaFeedback() {
 
             {/* Message */}
             <div>
-              <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--headline)', fontWeight: 700 }}>
+              <label style={{ display: 'block', marginBottom: '6px', fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--headline)', fontWeight: 700 }}>
                 Message (optional)
               </label>
               <textarea

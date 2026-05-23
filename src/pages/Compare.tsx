@@ -268,7 +268,7 @@ function SearchSheet({
             style={{
               background: 'var(--orange)', color: 'var(--black)', border: 'none',
               borderRadius: 'var(--radius-md)', padding: '10px 16px',
-              fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '12px',
+              fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xs)',
               letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer',
             }}
           >
@@ -361,7 +361,7 @@ export function Compare() {
           onClick={() => navigate(-1)}
           style={{
             background: 'none', border: 'none', color: 'var(--muted)',
-            fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '12px',
+            fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)',
             letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer', padding: 0,
           }}
         >
@@ -386,7 +386,7 @@ export function Compare() {
               <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--white)', marginBottom: '6px' }}>
                 Compare Two Athletes
               </div>
-              <div style={{ fontFamily: 'var(--body)', fontSize: '12px', color: 'var(--muted)', lineHeight: 1.5 }}>
+              <div style={{ fontFamily: 'var(--body)', fontSize: 'var(--text-xs)', color: 'var(--muted)', lineHeight: 1.5 }}>
                 Search for two athletes below to compare personal bests, race counts, and countries raced.
               </div>
             </div>
@@ -401,7 +401,7 @@ export function Compare() {
             {/* Athlete A */}
             <div>
               {loadA === 'loading' ? (
-                <div style={{ textAlign: 'center', color: 'var(--muted)', fontFamily: 'var(--body)', fontSize: '12px' }}>Loading...</div>
+                <div style={{ textAlign: 'center', color: 'var(--muted)', fontFamily: 'var(--body)', fontSize: 'var(--text-xs)' }}>Loading...</div>
               ) : profileA ? (
                 <ProfileColumn profile={profileA} />
               ) : (
@@ -442,7 +442,7 @@ export function Compare() {
             {/* Athlete B */}
             <div>
               {loadB === 'loading' ? (
-                <div style={{ textAlign: 'center', color: 'var(--muted)', fontFamily: 'var(--body)', fontSize: '12px' }}>Loading...</div>
+                <div style={{ textAlign: 'center', color: 'var(--muted)', fontFamily: 'var(--body)', fontSize: 'var(--text-xs)' }}>Loading...</div>
               ) : profileB ? (
                 <ProfileColumn profile={profileB} />
               ) : (
@@ -524,14 +524,14 @@ export function Compare() {
               }).filter(Boolean)
               if (rows.length === 0) {
                 return (
-                  <div style={{ textAlign: 'center', padding: '0.75rem 0', fontFamily: 'var(--body)', fontSize: '12px', color: 'var(--muted)' }}>
+                  <div style={{ textAlign: 'center', padding: '0.75rem 0', fontFamily: 'var(--body)', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
                     No shared distances to compare yet.
                   </div>
                 )
               }
               return (
                 <>
-                  <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '0.75rem', marginBottom: '0.25rem' }}>
+                  <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xs)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '0.75rem', marginBottom: '0.25rem' }}>
                     Personal Bests
                   </div>
                   {rows}
@@ -549,7 +549,7 @@ export function Compare() {
               width: '100%', background: copied ? 'var(--surface3)' : 'var(--surface2)',
               border: '1px solid var(--border2)', borderRadius: 'var(--radius-lg)',
               padding: 'var(--sp-3)', fontFamily: 'var(--headline)', fontWeight: 900,
-              fontSize: '12px', letterSpacing: '0.1em', textTransform: 'uppercase',
+              fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase',
               color: copied ? 'var(--green)' : 'var(--white)', cursor: 'pointer',
               transition: 'all 0.15s',
             }}

@@ -1280,7 +1280,7 @@ function AthleteHero({ onEdit }: { onEdit: () => void }) {
               padding: '10px 16px',
               fontFamily: 'var(--headline)',
               fontWeight: 700,
-              fontSize: '12px',
+              fontSize: 'var(--text-xs)',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
               cursor: 'pointer',
@@ -1302,7 +1302,7 @@ function AthleteHero({ onEdit }: { onEdit: () => void }) {
             padding: '10px 16px',
             fontFamily: 'var(--headline)',
             fontWeight: 700,
-            fontSize: '12px',
+            fontSize: 'var(--text-xs)',
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
             cursor: 'pointer',
@@ -1511,11 +1511,11 @@ function MedalWall() {
                   <div style={{ padding: 'var(--sp-4)', position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', flex: 1 }}>
                     {/* Tier badge */}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: col.text }}>
+                      <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-xs)', letterSpacing: '0.12em', textTransform: 'uppercase', color: col.text }}>
                         {col.label}
                       </span>
                       {isPB && (
-                        <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase', color: col.text, background: col.bg, border: `1px solid ${col.border}`, borderRadius: 'var(--radius-pill)', padding: '2px 7px' }}>
+                        <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase', color: col.text, background: col.bg, border: `1px solid ${col.border}`, borderRadius: 'var(--radius-pill)', padding: '2px 7px' }}>
                           PB
                         </span>
                       )}
@@ -1530,7 +1530,7 @@ function MedalWall() {
                     <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', lineHeight: 1.4 }}>
                       {[distLabel(r.distance), r.time].filter(Boolean).join(' · ')}
                     </div>
-                    <div style={{ fontSize: '10px', color: 'var(--muted)' }}>
+                    <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
                       {r.date ? new Date(r.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : ''}
                       {r.city ? ` · ${r.city}` : ''}
                     </div>
@@ -1679,7 +1679,7 @@ function AchievementsSection() {
               <div key={fam.key} style={{ background: 'var(--surface2)', borderRadius: 'var(--radius-lg)', padding: 'var(--sp-4)', border: '1px solid var(--border)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
-                    <span style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--orange)', background: 'rgba(var(--orange-ch),0.12)', border: '1px solid rgba(var(--orange-ch),0.25)', borderRadius: 'var(--radius-xs)', padding: '3px 7px', whiteSpace: 'nowrap' }}>{fam.icon}</span>
+                    <span style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--orange)', background: 'rgba(var(--orange-ch),0.12)', border: '1px solid rgba(var(--orange-ch),0.25)', borderRadius: 'var(--radius-xs)', padding: '3px 7px', whiteSpace: 'nowrap' }}>{fam.icon}</span>
                     <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>
                       {fam.label}
                     </span>
@@ -1745,7 +1745,7 @@ function AchievementsSection() {
             </div>
             {unlockedIds.has(popup.id) ? (
               <div style={{ background: 'rgba(var(--green-ch),0.08)', border: '1px solid rgba(var(--green-ch),0.25)', borderRadius: 'var(--radius-lg)', padding: '14px 16px', textAlign: 'center' }}>
-                <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '12px', letterSpacing: '0.1em', color: 'var(--green)', marginBottom: popupRace ? '10px' : 0 }}>
+                <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.1em', color: 'var(--green)', marginBottom: popupRace ? '10px' : 0 }}>
                   ✓ UNLOCKED
                 </div>
                 {popupRace && (() => {
@@ -1760,14 +1760,14 @@ function AchievementsSection() {
                         {popupRace.name}
                       </div>
                       {loc && <div style={{ fontSize: 'var(--text-sm)', color: 'rgba(245,245,245,0.65)' }}>{loc}</div>}
-                      {dateStr && <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '2px' }}>{dateStr}</div>}
+                      {dateStr && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>{dateStr}</div>}
                     </div>
                   )
                 })()}
               </div>
             ) : (
               <div style={{ background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '14px 16px', textAlign: 'center' }}>
-                <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '12px', letterSpacing: '0.1em', color: 'var(--muted)' }}>
+                <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.1em', color: 'var(--muted)' }}>
                   NOT YET UNLOCKED
                 </div>
               </div>
@@ -1872,7 +1872,7 @@ function PersonalBests() {
         return (
           <div key={sport} style={{ marginBottom: '16px' }}>
             <div style={{
-              fontFamily: 'var(--headline)', fontSize: '10px', fontWeight: 800,
+              fontFamily: 'var(--headline)', fontSize: 'var(--text-xs)', fontWeight: 800,
               letterSpacing: '0.14em', textTransform: 'uppercase',
               color: accent.color, opacity: 0.7,
               marginBottom: '8px', paddingLeft: '2px',
@@ -1893,7 +1893,7 @@ function PersonalBests() {
                     minWidth: 0,
                   }}
                 >
-                  <div style={{ fontFamily: 'var(--headline)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '6px' }}>
+                  <div style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-xs)', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '6px' }}>
                     {label}
                   </div>
                   <div style={{ fontFamily: 'var(--headline)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.01em', lineHeight: 1, marginBottom: '8px', color: accent.color }}>
@@ -1923,7 +1923,7 @@ function PersonalBests() {
             <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '15px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)', marginBottom: '4px' }}>
               PERSONAL BESTS
             </div>
-            <div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '20px' }}>
+            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginBottom: '20px' }}>
               Toggle which distances appear on your profile.
             </div>
 
@@ -1931,7 +1931,7 @@ function PersonalBests() {
               const accent = SPORT_ACCENT[sport] ?? SPORT_ACCENT.Running
               return (
                 <div key={sport} style={{ marginBottom: '18px' }}>
-                  <div style={{ fontFamily: 'var(--headline)', fontSize: '10px', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: accent.color, opacity: 0.8, marginBottom: '10px' }}>
+                  <div style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-xs)', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: accent.color, opacity: 0.8, marginBottom: '10px' }}>
                     {sport}
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
@@ -2065,7 +2065,7 @@ function SignatureDistances() {
             <div style={{
               fontFamily: 'var(--headline)',
               fontWeight: 800,
-              fontSize: '12px',
+              fontSize: 'var(--text-xs)',
               letterSpacing: '0.06em',
               textTransform: 'uppercase',
               color: item.metric === 'age-grade' ? 'var(--orange)' : 'var(--white)',
@@ -2137,7 +2137,7 @@ function AgeGradeTrajectory() {
           {latestPct.toFixed(1)}%
         </div>
       </div>
-      <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 600, letterSpacing: '0.08em', marginBottom: '12px' }}>
+      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 600, letterSpacing: '0.08em', marginBottom: '12px' }}>
         WA ROAD-RACE STANDARD · {history.length} RESULTS
       </div>
       <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: `${H}px`, display: 'block', marginBottom: '14px' }}>
@@ -2159,10 +2159,10 @@ function AgeGradeTrajectory() {
       </svg>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
         {history.slice(-5).reverse().map((h, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', fontSize: '12px' }}>
-            <div style={{ color: 'var(--muted)', width: '80px', flexShrink: 0, fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '10px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{h.raceDate.slice(0, 7)}</div>
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', fontSize: 'var(--text-xs)' }}>
+            <div style={{ color: 'var(--muted)', width: '80px', flexShrink: 0, fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{h.raceDate.slice(0, 7)}</div>
             <div style={{ color: 'var(--muted)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.distance} · {h.raceName}</div>
-            <div style={{ color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '12px', flexShrink: 0 }}>{h.pct.toFixed(1)}%</div>
+            <div style={{ color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-xs)', flexShrink: 0 }}>{h.pct.toFixed(1)}%</div>
           </div>
         ))}
       </div>
@@ -2262,7 +2262,7 @@ function PerformanceTimeline() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
               {TIMELINE_METRICS.map(({ key, label }) => (
                 <div key={key} style={{ display: 'grid', gridTemplateColumns: '70px 1fr 70px', alignItems: 'center', gap: 'var(--sp-2)' }}>
-                  <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)' }}>{label}</div>
+                  <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)' }}>{label}</div>
                   <div style={{ height: '5px', background: 'var(--surface3)', borderRadius: 'var(--radius-xs)', overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: `${row.metrics[key]}%`, background: 'var(--orange)', borderRadius: 'var(--radius-xs)', transition: 'width 0.4s ease' }} />
                   </div>
@@ -2337,7 +2337,7 @@ function RaceActivityHeatmap() {
         {/* Year rows */}
         {years.map(year => (
           <div key={year} style={{ display: 'grid', gridTemplateColumns: '36px repeat(12, 1fr)', gap: '4px', marginBottom: '4px' }}>
-            <div style={{ fontFamily: 'var(--headline)', fontSize: '10px', fontWeight: 700, color: 'var(--muted)', display: 'flex', alignItems: 'center' }}>
+            <div style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--muted)', display: 'flex', alignItems: 'center' }}>
               {year}
             </div>
             {months.map(month => {
@@ -2395,7 +2395,7 @@ function RaceActivityHeatmap() {
                       <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', lineHeight: 1.2 }}>
                         {r.name}
                       </div>
-                      <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '3px' }}>
+                      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '3px' }}>
                         {[distLabel(r.distance), r.city, abbreviateCountry(r.country)].filter(Boolean).join(' · ')}
                       </div>
                     </div>
@@ -2451,7 +2451,7 @@ function MajorsQualifiers() {
       {/* BQ / Championship tracker card */}
       <div style={{ ...st.subsection, marginTop: '12px' }}>
         <div style={{ textAlign: 'center', marginBottom: '12px' }}>
-          <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.14em', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '4px' }}>
+          <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.14em', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '4px' }}>
             BQ / CHAMPIONSHIP TRACKER
           </div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-md)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', lineHeight: 1.1 }}>
@@ -2532,7 +2532,7 @@ function RacePersonality() {
       {/* Outer card with orange top glow */}
       <div style={{ background: 'var(--surface3)', border: '1px solid var(--border)', borderTop: '1px solid rgba(var(--orange-ch), 0.4)', borderRadius: 'var(--radius-lg)', padding: 'var(--sp-5)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
         <div style={{ textAlign: 'center', marginBottom: '4px' }}>
-          <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.16em', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '6px' }}>
+          <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.16em', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '6px' }}>
             RACE PERSONALITY
           </div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-lg)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', lineHeight: 1.1 }}>
@@ -2680,26 +2680,26 @@ function GoalsSection() {
             <div key={type} style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-lg)', padding: 'var(--sp-3)', position: 'relative' }}>
               <button
                 onClick={() => { setAddMode(type); setAnnualVal(target ? String(target) : '') }}
-                style={{ position: 'absolute', top: '8px', right: '8px', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}
+                style={{ position: 'absolute', top: '8px', right: '8px', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}
               >Edit</button>
-              <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '4px' }}>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '4px' }}>
                 {year} · {type === 'km' ? 'KM' : 'RACES'}
               </div>
               <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', color: 'var(--white)', lineHeight: 1 }}>
                 {current}
-                <span style={{ fontSize: '12px', color: 'var(--muted)', fontWeight: 400 }}> / {target || '—'}{type === 'km' ? ' km' : ''}</span>
+                <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontWeight: 400 }}> / {target || '—'}{type === 'km' ? ' km' : ''}</span>
               </div>
               {target > 0 ? (
                 <>
                   <div style={{ height: '4px', background: 'var(--surface)', borderRadius: 'var(--radius-xs)', marginTop: '8px', overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: `${pct}%`, background: achieved ? 'var(--green)' : 'var(--orange)', borderRadius: 'var(--radius-xs)', transition: 'width 0.3s' }} />
                   </div>
-                  <div style={{ fontSize: '10px', color: achieved ? 'var(--green)' : 'var(--muted)', marginTop: '4px', fontFamily: 'var(--headline)', fontWeight: 700 }}>
+                  <div style={{ fontSize: 'var(--text-xs)', color: achieved ? 'var(--green)' : 'var(--muted)', marginTop: '4px', fontFamily: 'var(--headline)', fontWeight: 700 }}>
                     {pct}%{achieved ? ' · Achieved!' : ''}
                   </div>
                 </>
               ) : (
-                <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '6px', fontFamily: 'var(--headline)' }}>Tap Edit to set target</div>
+                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '6px', fontFamily: 'var(--headline)' }}>Tap Edit to set target</div>
               )}
             </div>
           )
@@ -2714,7 +2714,7 @@ function GoalsSection() {
             const done = pb !== undefined && pb <= g.targetSecs
             return (
               <div key={g.id} style={{ display: 'flex', alignItems: 'center', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-md)', padding: '10px 12px', gap: 'var(--sp-2)' }}>
-                <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '12px', color: 'var(--orange)' }}>SUB</span>
+                <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xs)', color: 'var(--orange)' }}>SUB</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', fontWeight: 600, lineHeight: 1.2 }}>{g.dist}</div>
                   <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>
@@ -2725,7 +2725,7 @@ function GoalsSection() {
                   <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color: done ? 'var(--green)' : 'var(--orange)' }}>
                     {done ? '✓ Done' : pb !== undefined ? secsToHMS(pb) : '—'}
                   </div>
-                  <button onClick={() => deleteDistGoal(g.id)} style={{ background: 'none', border: 'none', color: 'var(--muted2)', cursor: 'pointer', fontSize: '10px', marginTop: '2px' }}>✕ Remove</button>
+                  <button onClick={() => deleteDistGoal(g.id)} style={{ background: 'none', border: 'none', color: 'var(--muted2)', cursor: 'pointer', fontSize: 'var(--text-xs)', marginTop: '2px' }}>✕ Remove</button>
                 </div>
               </div>
             )
@@ -2761,7 +2761,7 @@ function GoalsSection() {
           {/* Step 1 — Sport dropdown */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-2)' }}>
             <div>
-              <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '6px' }}>Sport</div>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '6px' }}>Sport</div>
               <select
                 value={goalSport}
                 onChange={e => handleGoalSportChange(e.target.value)}
@@ -2773,7 +2773,7 @@ function GoalsSection() {
 
             {/* Step 2 — Distance dropdown */}
             <div>
-              <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '6px' }}>Distance</div>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '6px' }}>Distance</div>
               <select
                 value={goalDist}
                 onChange={e => setGoalDist(e.target.value)}
@@ -2817,13 +2817,13 @@ function GoalsSection() {
           {(goalDist !== '') && (
             <>
               <div>
-                <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '8px' }}>Target Time</div>
+                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '8px' }}>Target Time</div>
                 <TimePickerWheel value={goalHMS} onChange={setGoalHMS} maxHours={99} />
               </div>
 
               {/* Deadline */}
               <div>
-                <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '8px' }}>Deadline (optional)</div>
+                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '8px' }}>Deadline (optional)</div>
                 <input
                   type="date"
                   value={goalDeadline}
@@ -2882,7 +2882,7 @@ function OnboardingBanner({ onEdit }: { onEdit: () => void }) {
         <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', letterSpacing: '0.04em', textTransform: 'uppercase', color: complete ? 'var(--green)' : 'var(--orange)', lineHeight: 1.1 }}>
           {complete ? 'Profile Complete' : `Profile ${filled}/${total} Complete`}
         </div>
-        <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '2px', lineHeight: 1.4 }}>
+        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px', lineHeight: 1.4 }}>
           {complete
             ? 'Your profile is ready.'
             : 'Fill in your details to complete your profile.'}
@@ -2906,7 +2906,7 @@ function OnboardingBanner({ onEdit }: { onEdit: () => void }) {
           padding: '8px 14px',
           fontFamily: 'var(--headline)',
           fontWeight: 800,
-          fontSize: '12px',
+          fontSize: 'var(--text-xs)',
           letterSpacing: '0.08em',
           textTransform: 'uppercase',
           cursor: 'pointer',
@@ -3054,7 +3054,7 @@ const st = {
     color: 'var(--orange)',
     borderRadius: 'var(--radius-pill)',
     padding: '3px 10px',
-    fontSize: '10px',
+    fontSize: 'var(--text-xs)',
     fontFamily: 'var(--headline)',
     fontWeight: 800,
     letterSpacing: '0.1em',
@@ -3088,7 +3088,7 @@ const st = {
   } as React.CSSProperties,
 
   heroStatLabel: {
-    fontSize: '10px',
+    fontSize: 'var(--text-xs)',
     fontFamily: 'var(--headline)',
     fontWeight: 700,
     letterSpacing: '0.08em',
@@ -3110,7 +3110,7 @@ const st = {
 
   focusLabel: {
     fontFamily: 'var(--headline)',
-    fontSize: '10px',
+    fontSize: 'var(--text-xs)',
     fontWeight: 800,
     letterSpacing: '0.14em',
     color: 'var(--orange)',

@@ -278,7 +278,7 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
             <>
               {(sourceErrors.ultrasignup || sourceErrors.marathonview || sourceErrors.athlinks || sourceErrors.runsignup) && (
                 <div style={{ padding: '8px 12px', background: 'rgba(var(--error-ch),0.08)', border: '1px solid rgba(var(--error-ch),0.25)', borderRadius: 'var(--radius-md)', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--sp-2)' }}>
-                  <p style={{ margin: 0, fontSize: '12px', color: 'var(--error)' }}>
+                  <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: 'var(--error)' }}>
                     {[sourceErrors.ultrasignup && 'UltraSignup', sourceErrors.marathonview && 'MarathonView', sourceErrors.runsignup && 'RunSignup', sourceErrors.athlinks && 'Athlinks'].filter(Boolean).join(' & ')} failed to respond.
                   </p>
                   <button
@@ -295,7 +295,7 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
                   <p style={{ color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 900, letterSpacing: '0.08em', fontSize: 'var(--text-compact)' }}>
                     NO RESULTS FOUND
                   </p>
-                  <p style={{ color: 'var(--muted)', fontSize: '12px', marginTop: '8px' }}>
+                  <p style={{ color: 'var(--muted)', fontSize: 'var(--text-xs)', marginTop: '8px' }}>
                     Try a different spelling or add your race manually.
                   </p>
                   <button style={{ ...st.cancelBtn, marginTop: '24px' }} onClick={() => setStep('search')}>← BACK</button>
@@ -345,13 +345,13 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
                             const km = r.distance_m && r.distance_m > 0 ? r.distance_m / 1000 : parseDistKm(r.raceName)
                             const lbl = kmToDistLabel(km)
                             return lbl ? (
-                              <p style={{ margin: '2px 0 0', fontSize: '10px', color: 'var(--muted2)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                              <p style={{ margin: '2px 0 0', fontSize: 'var(--text-xs)', color: 'var(--muted2)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                                 {lbl}
                               </p>
                             ) : null
                           })()}
                           {dupe && (
-                            <p style={{ margin: '4px 0 0', fontSize: '10px', color: 'var(--green)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                            <p style={{ margin: '4px 0 0', fontSize: 'var(--text-xs)', color: 'var(--green)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                               ✓ Already in your race history
                             </p>
                           )}
@@ -375,7 +375,7 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
                     </button>
                   )})}
                   {skippedCount > 0 && (
-                    <p style={{ margin: 0, fontSize: '12px', color: 'var(--muted)', textAlign: 'center' }}>
+                    <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: 'var(--muted)', textAlign: 'center' }}>
                       {skippedCount} already logged — skipped.
                     </p>
                   )}
@@ -419,5 +419,5 @@ const st = {
   resultRow:  { width: '100%', borderRadius: 'var(--radius-md)', padding: 'var(--sp-3)', cursor: 'pointer', textAlign: 'left' as const, transition: 'background 0.15s' } as React.CSSProperties,
   saveBtn:    { width: '100%', padding: 'var(--sp-4)' } as React.CSSProperties,
   cancelBtn:  { background: 'transparent', color: 'var(--muted)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-4)', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', letterSpacing: '0.1em', textTransform: 'uppercase' as const, cursor: 'pointer', width: '100%' } as React.CSSProperties,
-  errorText:  { margin: 0, fontSize: '12px', color: 'var(--error)' } as React.CSSProperties,
+  errorText:  { margin: 0, fontSize: 'var(--text-xs)', color: 'var(--error)' } as React.CSSProperties,
 }
