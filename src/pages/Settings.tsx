@@ -118,7 +118,7 @@ export function Settings() {
                 : 'none',
               transition: 'background 0.4s, box-shadow 0.4s',
             }} />
-            <span style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', color: 'var(--muted)', textTransform: 'uppercase' }}>
+            <span style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', color: 'var(--muted)', textTransform: 'uppercase' }}>
               {syncStatus === 'ok' ? 'Synced' : syncStatus === 'error' ? 'Sync failed' : syncStatus === 'syncing' ? 'Syncing…' : 'Not synced'}
             </span>
           </div>
@@ -162,7 +162,7 @@ export function Settings() {
                  [athlete?.firstName, athlete?.lastName].filter(Boolean).join(' ') ||
                  authUser?.email || '—'}
               </div>
-              <div style={{ color: 'var(--muted)', fontSize: '12px', marginTop: '2px' }}>
+              <div style={{ color: 'var(--muted)', fontSize: 'var(--text-xs)', marginTop: '2px' }}>
                 {authUser?.email}
               </div>
             </div>
@@ -254,7 +254,7 @@ export function Settings() {
           {/* Copy link */}
           {athlete?.isPublic && athlete?.username && (
             <button
-              style={{ ...btnGhost, fontSize: '12px', padding: '0.6rem 1rem', marginBottom: '14px' }}
+              style={{ ...btnGhost, fontSize: 'var(--text-xs)', padding: '0.6rem 1rem', marginBottom: '14px' }}
               onClick={() => navigator.clipboard.writeText(`${APP_URL}/u/${athlete.username}`).then(() => showCopyToast()).catch(() => showCopyToast())}
             >
               Copy Profile Link

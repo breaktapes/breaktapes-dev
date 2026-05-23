@@ -975,7 +975,7 @@ export function RaceLogPassport({ races, athlete, onClose, initialYear = 'all', 
   })
   const btn = (primary: boolean): React.CSSProperties => ({
     flex: 1, padding: '0.65rem', border: 'none', borderRadius: 'var(--radius-sm)', cursor: 'pointer',
-    fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '12px',
+    fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xs)',
     letterSpacing: '0.1em', textTransform: 'uppercase',
     background: primary ? 'var(--orange)' : 'var(--surface2)',
     color: primary ? '#000' : 'var(--muted)',
@@ -1032,13 +1032,13 @@ export function RaceLogPassport({ races, athlete, onClose, initialYear = 'all', 
           />
           {!drawn && (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--sp-2)' }}>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: '10px', letterSpacing: '0.2em', textTransform: 'uppercase', color: `rgba(${orangeCh},0.5)` }}>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 'var(--text-xs)', letterSpacing: '0.2em', textTransform: 'uppercase', color: `rgba(${orangeCh},0.5)` }}>
                 {filteredRaces.length === 0 ? 'No races to display' : `${filteredRaces.length} mission${filteredRaces.length === 1 ? '' : 's'} · ${currentRatio.label}`}
               </div>
               {filteredRaces.length > 0 && (
                 <button
                   onClick={redraw}
-                  style={{ padding: '10px 24px', background: 'transparent', border: `1px solid rgba(${orangeCh},0.35)`, borderRadius: 'var(--radius-sm)', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '12px', letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer' }}
+                  style={{ padding: '10px 24px', background: 'transparent', border: `1px solid rgba(${orangeCh},0.35)`, borderRadius: 'var(--radius-sm)', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xs)', letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer' }}
                 >
                   Generate Dossier
                 </button>

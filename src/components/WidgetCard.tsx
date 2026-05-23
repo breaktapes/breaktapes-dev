@@ -14,8 +14,8 @@ class WidgetBoundary extends Component<
     if (this.state.error) {
       return (
         <div style={{ padding: 'var(--sp-4)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)' }}>Widget error</div>
-          <div style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: 1.4, wordBreak: 'break-word' }}>{this.state.error.message}</div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xs)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)' }}>Widget error</div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', lineHeight: 1.4, wordBreak: 'break-word' }}>{this.state.error.message}</div>
           <button
             onClick={() => this.setState({ error: null })}
             style={{ alignSelf: 'flex-start', background: 'none', border: '1px solid var(--border2)', color: 'var(--muted)', borderRadius: 'var(--radius-sm)', padding: '5px 12px', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.08em', cursor: 'pointer' }}
@@ -156,7 +156,7 @@ export function WidgetCard({
             border: '1px solid rgba(var(--orange-ch), 0.55)',
             color: 'rgba(var(--orange-ch), 0.85)',
             fontFamily: 'var(--mono, var(--body))',
-            fontSize: '10px',
+            fontSize: 'var(--text-xs)',
             fontWeight: 700,
             lineHeight: '14px',
             textAlign: 'center',
