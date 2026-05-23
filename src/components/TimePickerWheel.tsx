@@ -187,7 +187,7 @@ export function TimePickerWheel({
     <div style={{
       background:   'var(--surface3)',
       border:       '1px solid var(--border2)',
-      borderRadius: '10px',
+      borderRadius: 'var(--radius-lg)',
       padding:      '0 12px 10px',
       display:      'flex',
       alignItems:   'flex-start',

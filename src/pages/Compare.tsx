@@ -199,7 +199,7 @@ function ProfileColumn({ profile }: { profile: AthleteRow | 'private' | 'not_fou
   return (
     <div style={{ flex: 1, textAlign: 'center', minWidth: 0 }}>
       <div style={{
-        width: '48px', height: '48px', borderRadius: '50%',
+        width: '48px', height: '48px', borderRadius: 'var(--radius-round)',
         background: 'var(--surface3)', border: '2px solid var(--orange)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         margin: '0 auto 8px', fontFamily: 'var(--headline)', fontWeight: 900,
@@ -235,10 +235,10 @@ function SearchSheet({
       zIndex: 1000, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
     }} onClick={onClose}>
       <div
-        style={{ background: 'var(--surface2)', borderRadius: '16px 16px 0 0', padding: '1.25rem 1rem 2rem' }}
+        style={{ background: 'var(--surface2)', borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0', padding: '1.25rem 1rem 2rem' }}
         onClick={e => e.stopPropagation()}
       >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '0.75rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--sp-3)', marginBottom: '0.75rem' }}>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)' }}>
             {placeholder}
           </div>
@@ -259,7 +259,7 @@ function SearchSheet({
             }}
             style={{
               flex: 1, background: 'var(--surface3)', border: '1px solid var(--border2)',
-              borderRadius: '8px', padding: '10px 12px',
+              borderRadius: 'var(--radius-md)', padding: '10px 12px',
               fontFamily: 'var(--body)', fontSize: 'var(--text-compact)', color: 'var(--white)', outline: 'none',
             }}
           />
@@ -267,7 +267,7 @@ function SearchSheet({
             onClick={() => { if (q.trim()) { onSelect(q.trim().replace(/^@/, '')); onClose() } }}
             style={{
               background: 'var(--orange)', color: 'var(--black)', border: 'none',
-              borderRadius: '8px', padding: '10px 16px',
+              borderRadius: 'var(--radius-md)', padding: '10px 16px',
               fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '12px',
               letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer',
             }}
@@ -377,7 +377,7 @@ export function Compare() {
 
         {/* Athlete headers */}
         <div style={{
-          background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: '12px',
+          background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)',
           padding: '1rem',
         }}>
           {/* Instructional state — no params yet */}
@@ -409,7 +409,7 @@ export function Compare() {
                   onClick={() => setSearchSlot('a')}
                   style={{
                     width: '100%', background: 'var(--surface3)', border: '1px dashed var(--border2)',
-                    borderRadius: '8px', padding: '1rem 0.5rem', cursor: 'pointer',
+                    borderRadius: 'var(--radius-md)', padding: '1rem 0.5rem', cursor: 'pointer',
                     fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)',
                     letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)',
                   }}
@@ -450,7 +450,7 @@ export function Compare() {
                   onClick={() => setSearchSlot('b')}
                   style={{
                     width: '100%', background: 'var(--surface3)', border: '1px dashed var(--border2)',
-                    borderRadius: '8px', padding: '1rem 0.5rem', cursor: 'pointer',
+                    borderRadius: 'var(--radius-md)', padding: '1rem 0.5rem', cursor: 'pointer',
                     fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)',
                     letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)',
                   }}
@@ -476,7 +476,7 @@ export function Compare() {
 
         {/* Stats comparison — only show when both profiles loaded */}
         {aIsAthleteRow && bIsAthleteRow && (
-          <div style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: '12px', padding: '1rem' }}>
+          <div style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1rem' }}>
             <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xs)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '0.75rem', textAlign: 'center' }}>
               Stats
             </div>
@@ -547,8 +547,8 @@ export function Compare() {
             onClick={copyLink}
             style={{
               width: '100%', background: copied ? 'var(--surface3)' : 'var(--surface2)',
-              border: '1px solid var(--border2)', borderRadius: '10px',
-              padding: '12px', fontFamily: 'var(--headline)', fontWeight: 900,
+              border: '1px solid var(--border2)', borderRadius: 'var(--radius-lg)',
+              padding: 'var(--sp-3)', fontFamily: 'var(--headline)', fontWeight: 900,
               fontSize: '12px', letterSpacing: '0.1em', textTransform: 'uppercase',
               color: copied ? 'var(--green)' : 'var(--white)', cursor: 'pointer',
               transition: 'all 0.15s',

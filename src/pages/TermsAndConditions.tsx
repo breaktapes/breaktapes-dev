@@ -33,7 +33,7 @@ export default function TermsAndConditions() {
             color: 'var(--white)',
             cursor: 'pointer',
             padding: '0.5rem',
-            borderRadius: 8,
+            borderRadius: 'var(--radius-md)',
             display: 'flex',
             alignItems: 'center',
             gap: '0.5rem',

@@ -367,7 +367,7 @@ function ViewPanel({ race, isPB, onEdit, onDelete, onShare }: { race: Race; isPB
 
       {/* Pill chips — location, priority, medal */}
       {(race.city || race.country || race.priority || race.medal) && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-2)' }}>
           {(race.city || race.country) && (
             <span style={st.infoPill}>
               {[race.city, race.country].filter(Boolean).join(', ')}
@@ -438,9 +438,9 @@ function ViewPanel({ race, isPB, onEdit, onDelete, onShare }: { race: Race; isPB
       {race.photos && race.photos.length > 0 && (
         <div>
           <p style={st.sectionLabel}>PHOTOS</p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: '6px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(80px, 1fr))', gap: 'var(--sp-2)' }}>
             {race.photos.map((src, i) => (
-              <img key={i} src={src} alt={`Photo ${i + 1}`} style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)' }} />
+              <img key={i} src={src} alt={`Photo ${i + 1}`} style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }} />
             ))}
           </div>
         </div>
@@ -472,10 +472,10 @@ function ViewPanel({ race, isPB, onEdit, onDelete, onShare }: { race: Race; isPB
       {race.name && (
         <button
           style={{
-            width: '100%', marginTop: '0.5rem', padding: '10px',
+            width: '100%', marginTop: '0.5rem', padding: 'var(--sp-3)',
             background: resubmitDone ? 'rgba(var(--green-ch),0.08)' : 'transparent',
             border: `1px solid ${resubmitDone ? 'rgba(var(--green-ch),0.3)' : 'var(--border2)'}`,
-            borderRadius: 8, color: resubmitDone ? 'var(--green)' : 'var(--muted)',
+            borderRadius: 'var(--radius-md)', color: resubmitDone ? 'var(--green)' : 'var(--muted)',
             fontSize: '12px', cursor: resubmitting ? 'default' : 'pointer',
             fontFamily: 'var(--headline)', letterSpacing: '0.05em',
           }}
@@ -504,7 +504,7 @@ function InfoRow({ label, value, valueColor }: { label: string; value: string; v
 
 function InfoChip({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px', padding: '6px 10px' }}>
+    <div style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-sm)', padding: '6px 10px' }}>
       <div style={{ fontSize: '9px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</div>
       <div style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', fontWeight: 600, marginTop: '2px' }}>{value}</div>
     </div>
@@ -871,7 +871,7 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
 
       {/* Placing — Overall · Gender · Age Group, three inputs in one row */}
       <div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--sp-2)' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
             <label style={st.fieldLabel}>OVERALL</label>
             <input style={st.input} value={placing} onChange={e => setPlacing(e.target.value)} placeholder="342/5000" />
@@ -908,24 +908,24 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
       {/* Medal Photo + Race Photos — side by side on >360px, stack on tiny screens */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
         <Field label="Medal Photo">
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-2)', alignItems: 'flex-start' }}>
             {/* Preview tile */}
             {medalPhoto && (
               <div style={{ position: 'relative', flexShrink: 0 }}>
                 <img
                   src={medalPhoto}
                   alt="Medal"
-                  style={{ width: 56, height: 56, objectFit: 'contain', borderRadius: 6, background: 'var(--surface3)', border: '1px solid var(--border)' }}
+                  style={{ width: 56, height: 56, objectFit: 'contain', borderRadius: 'var(--radius-sm)', background: 'var(--surface3)', border: '1px solid var(--border)' }}
                 />
                 {bgRemoving && (
-                  <div style={{ position: 'absolute', inset: 0, background: 'rgba(13,13,13,0.7)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ position: 'absolute', inset: 0, background: 'rgba(13,13,13,0.7)', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <span style={{ fontSize: 11, color: 'var(--muted)' }}>…</span>
                   </div>
                 )}
                 <button
                   type="button"
                   onClick={() => setMedalPhoto(undefined)}
-                  style={{ position: 'absolute', top: -6, right: -6, width: 18, height: 18, borderRadius: '50%', background: 'var(--surface3)', border: '1px solid var(--border2)', color: 'var(--muted)', fontSize: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+                  style={{ position: 'absolute', top: -6, right: -6, width: 18, height: 18, borderRadius: 'var(--radius-round)', background: 'var(--surface3)', border: '1px solid var(--border2)', color: 'var(--muted)', fontSize: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
                 >×</button>
               </div>
             )}
@@ -947,14 +947,14 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
 
         <Field label="Race Photos">
           {photos.length > 0 && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-2)', marginBottom: '8px' }}>
               {photos.map((src, i) => (
                 <div key={i} style={{ position: 'relative', flexShrink: 0 }}>
-                  <img src={src} alt={`Photo ${i + 1}`} style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)' }} />
+                  <img src={src} alt={`Photo ${i + 1}`} style={{ width: 56, height: 56, objectFit: 'cover', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }} />
                   <button
                     type="button"
                     onClick={() => setPhotos(prev => prev.filter((_, idx) => idx !== i))}
-                    style={{ position: 'absolute', top: -6, right: -6, width: 18, height: 18, borderRadius: '50%', background: 'var(--surface3)', border: '1px solid var(--border2)', color: 'var(--muted)', fontSize: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+                    style={{ position: 'absolute', top: -6, right: -6, width: 18, height: 18, borderRadius: 'var(--radius-round)', background: 'var(--surface3)', border: '1px solid var(--border2)', color: 'var(--muted)', fontSize: 11, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
                   >×</button>
                 </div>
               ))}
@@ -982,7 +982,7 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
       {sport === 'Triathlon' && !isUpcoming && (
         <div>
           <div style={{ fontFamily: 'var(--headline)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '10px' }}>SPLITS</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-2)' }}>
             {([
               { label: 'Swim',      val: triSwim,  set: setTriSwim,  ph: '0:28:00' },
               { label: 'T1',        val: triT1,    set: setTriT1,    ph: '0:03:30' },
@@ -1023,7 +1023,7 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
             type="button"
             onClick={() => setMoreOpen(o => !o)}
             style={{
-              display: 'flex', alignItems: 'center', gap: '6px',
+              display: 'flex', alignItems: 'center', gap: 'var(--sp-2)',
               background: 'transparent', border: 'none', padding: '4px 0',
               color: 'var(--muted)', fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)',
               fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
@@ -1035,7 +1035,7 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
           </button>
 
           {moreOpen && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '12px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)', marginTop: '12px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                 <Field label="Bib Number">
                   <input style={st.input} value={bibNumber} onChange={e => setBibNumber(e.target.value)} placeholder="1234" />
@@ -1094,14 +1094,14 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
                 </select>
               </Field>
 
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--sp-2)' }}>
                 <p style={{ margin: 0, fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Weather</p>
                 <button
                   type="button"
                   onClick={autoFillWeather}
                   disabled={weatherFetching || !date || (!lat && !lng && !city)}
                   style={{
-                    background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px',
+                    background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-sm)',
                     color: (!lat || !lng || !date) ? 'var(--muted2)' : 'var(--orange)',
                     fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700,
                     letterSpacing: '0.08em', textTransform: 'uppercase', padding: '4px 10px',
@@ -1254,7 +1254,7 @@ const st = {
     maxHeight: '92dvh',
     background: 'var(--surface2)',
     borderTop: '2px solid var(--orange)',
-    borderRadius: '16px 16px 0 0',
+    borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0',
     display: 'flex',
     flexDirection: 'column',
     overflow: 'hidden',
@@ -1264,7 +1264,7 @@ const st = {
     width: '36px',
     height: '4px',
     background: 'var(--border2)',
-    borderRadius: '2px',
+    borderRadius: 'var(--radius-xs)',
     margin: '12px auto 0',
     flexShrink: 0,
   } as React.CSSProperties,
@@ -1313,10 +1313,10 @@ const st = {
   } as React.CSSProperties,
 
   body: {
-    padding: '16px',
+    padding: 'var(--sp-4)',
     display: 'flex',
     flexDirection: 'column',
-    gap: '14px',
+    gap: 'var(--sp-4)',
     paddingBottom: 'calc(var(--safe-bottom) + 32px)',
   } as React.CSSProperties,
 
@@ -1344,7 +1344,7 @@ const st = {
     flex: 1,
     background: 'var(--surface3)',
     border: '1px solid var(--border2)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-md)',
     padding: '10px 12px',
     textAlign: 'center' as const,
   } as React.CSSProperties,
@@ -1378,7 +1378,7 @@ const st = {
     padding: '5px 10px',
     background: 'var(--surface3)',
     border: '1px solid var(--border2)',
-    borderRadius: '20px',
+    borderRadius: 'var(--radius-pill)',
     fontSize: '12px',
     color: 'var(--white)',
     fontWeight: 500,
@@ -1400,8 +1400,8 @@ const st = {
     background: 'var(--surface3)',
     color: 'var(--orange)',
     border: '1px solid var(--orange)',
-    borderRadius: '8px',
-    padding: '13px',
+    borderRadius: 'var(--radius-md)',
+    padding: 'var(--sp-3)',
     fontFamily: 'var(--headline)',
     fontWeight: 900,
     fontSize: 'var(--text-sm)',
@@ -1414,7 +1414,7 @@ const st = {
     background: 'transparent',
     color: 'var(--error)',
     border: '1px solid rgba(var(--error-ch),0.4)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-md)',
     padding: '13px 16px',
     fontFamily: 'var(--headline)',
     fontWeight: 900,
@@ -1428,8 +1428,8 @@ const st = {
     background: 'var(--error)',
     color: '#000',
     border: 'none',
-    borderRadius: '8px',
-    padding: '13px',
+    borderRadius: 'var(--radius-md)',
+    padding: 'var(--sp-3)',
     fontFamily: 'var(--headline)',
     fontWeight: 900,
     fontSize: '12px',
@@ -1442,8 +1442,8 @@ const st = {
     background: 'transparent',
     color: 'var(--white)',
     border: '1px solid var(--border2)',
-    borderRadius: '8px',
-    padding: '13px',
+    borderRadius: 'var(--radius-md)',
+    padding: 'var(--sp-3)',
     fontFamily: 'var(--headline)',
     fontWeight: 900,
     fontSize: 'var(--text-sm)',
@@ -1453,7 +1453,7 @@ const st = {
   } as React.CSSProperties,
 
   saveBtn: {
-    padding: '13px',
+    padding: 'var(--sp-3)',
   } as React.CSSProperties,
 
   fieldLabel: {
@@ -1469,7 +1469,7 @@ const st = {
     width: '100%',
     background: 'var(--surface3)',
     border: '1px solid var(--border2)',
-    borderRadius: '6px',
+    borderRadius: 'var(--radius-sm)',
     color: 'var(--white)',
     fontSize: 'var(--text-sm)',
     // Explicit line-height + padding gives both <input> and <select>
