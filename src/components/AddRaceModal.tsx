@@ -809,12 +809,12 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
               zIndex: 1200,
             }}>
               {catalogLoading && (
-                <div style={{ padding: 'var(--sp-3)', fontSize: '12px', color: 'var(--muted)', textAlign: 'center', fontFamily: 'var(--body)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--sp-2)' }}>
-                  <span style={{ opacity: 0.6, fontFamily: 'var(--mono, var(--body))', fontSize: '10px', letterSpacing: '0.08em' }}>...</span> Searching race catalog…
+                <div style={{ padding: 'var(--sp-3)', fontSize: 'var(--text-xs)', color: 'var(--muted)', textAlign: 'center', fontFamily: 'var(--body)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--sp-2)' }}>
+                  <span style={{ opacity: 0.6, fontFamily: 'var(--mono, var(--body))', fontSize: 'var(--text-xs)', letterSpacing: '0.08em' }}>...</span> Searching race catalog…
                 </div>
               )}
               {suggestions.length === 0 && !catalogLoading && (
-                <div style={{ padding: 'var(--sp-3)', fontSize: '12px', color: 'var(--muted)', textAlign: 'center', fontFamily: 'var(--body)' }}>
+                <div style={{ padding: 'var(--sp-3)', fontSize: 'var(--text-xs)', color: 'var(--muted)', textAlign: 'center', fontFamily: 'var(--body)' }}>
                   No matches in catalog for &ldquo;{query}&rdquo;
                 </div>
               )}
@@ -880,7 +880,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
                         {s.label}
                       </span>
                       {s.data?.type && (
-                        <span style={{ fontSize: '10px', color: 'var(--muted)', flexShrink: 0, textTransform: 'uppercase', fontFamily: 'var(--headline)', letterSpacing: '0.06em' }}>
+                        <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', flexShrink: 0, textTransform: 'uppercase', fontFamily: 'var(--headline)', letterSpacing: '0.06em' }}>
                           {s.data.type}
                         </span>
                       )}
@@ -898,7 +898,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
                 style={{
                   ...st.dropdownItem,
                   color: 'var(--orange)',
-                  fontSize: '12px',
+                  fontSize: 'var(--text-xs)',
                   justifyContent: 'center',
                   fontStyle: 'italic',
                   borderTop: suggestions.length > 0 ? '1px solid var(--border2)' : 'none',
@@ -927,7 +927,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
                 {/* Future-race warning in "Log a Race" mode */}
                 {mode === 'past' && date && date > today && (
                   <div style={{ marginBottom: '8px', padding: '10px 12px', background: 'rgba(var(--orange-ch),0.1)', border: '1px solid rgba(var(--orange-ch),0.35)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: '12px', color: 'var(--orange)', fontFamily: 'var(--body)', flex: 1 }}>
+                    <span style={{ fontSize: 'var(--text-xs)', color: 'var(--orange)', fontFamily: 'var(--body)', flex: 1 }}>
                       ⚠️ This race is in the future — log it as an upcoming race instead.
                     </span>
                     <button
@@ -1395,7 +1395,7 @@ const st = {
     color: 'var(--muted)',
     fontFamily: 'var(--headline)',
     fontWeight: 900,
-    fontSize: '12px',
+    fontSize: 'var(--text-xs)',
     letterSpacing: '0.08em',
     textTransform: 'uppercase',
     padding: '10px 8px',

@@ -69,7 +69,7 @@ export function CustomDistInput({ value, onChange, placeholder }: Props) {
               cursor: 'pointer',
               fontFamily: 'var(--headline)',
               fontWeight: 700,
-              fontSize: '12px',
+              fontSize: 'var(--text-xs)',
               letterSpacing: '0.06em',
               textTransform: 'uppercase',
               background: unit === u ? 'var(--orange)' : 'var(--surface3)',

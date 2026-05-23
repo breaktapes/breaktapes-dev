@@ -19,8 +19,8 @@
   --surface3:   #1A1A1A;
   --border:     rgba(245,245,245,0.06);
   --border2:    rgba(245,245,245,0.12);
-  --muted:      rgba(232,224,213,0.38);
-  --muted2:     rgba(232,224,213,0.18);
+  --muted:      rgba(232,224,213,0.55);
+  --muted2:     rgba(232,224,213,0.32);
   /* medals */
   --gold-a: #FFD770; --gold-b: #B8860B; --gold-c: #FFF0A0;
   --silver-a:#C8D4DC; --silver-b:#6A7880; --silver-c:#E8F0F4;
@@ -54,7 +54,7 @@
   --flatlay-tile: #F2EDE6;
   --flatlay-text: #111111;
   /* text scale */
-  --text-xs:      11px; /* captions, badges, chart axis labels, sub-labels */
+  --text-xs:      12px; /* captions, badges, chart axis labels, sub-labels */
   --text-sm:      13px; /* secondary labels, meta info, filter pills */
   --text-compact: 14px; /* dense list contexts: race rows, history rows, table cells */
   --text-base:    16px; /* body text, inputs, card content */
@@ -101,8 +101,8 @@
   --surface3:   #D8D4CC;
   --border:     rgba(0,0,0,0.08);
   --border2:    rgba(0,0,0,0.14);
-  --muted:      rgba(26,26,26,0.50);
-  --muted2:     rgba(26,26,26,0.30);
+  --muted:      rgba(26,26,26,0.65);
+  --muted2:     rgba(26,26,26,0.45);
   --shell-top-gradient: #F5F0E8;
   --shell-bottom-gradient: #F5F0E8;
   --flatlay-tile: #ffffff;

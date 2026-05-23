@@ -100,7 +100,7 @@ const st = {
     color: 'var(--white)',
   } as React.CSSProperties,
   meta: {
-    fontSize: '12px',
+    fontSize: 'var(--text-xs)',
     color: 'var(--muted)',
     marginTop: '4px',
     display: 'flex',
@@ -136,7 +136,7 @@ const st = {
     border: 'none',
     borderRadius: 'var(--radius-sm)',
     padding: '8px 14px',
-    fontSize: '12px',
+    fontSize: 'var(--text-xs)',
     fontFamily: 'var(--headline)',
     fontWeight: 800,
     letterSpacing: '0.06em',
@@ -150,7 +150,7 @@ const st = {
     border: '1px solid var(--border2)',
     borderRadius: 'var(--radius-sm)',
     padding: '8px 14px',
-    fontSize: '12px',
+    fontSize: 'var(--text-xs)',
     fontFamily: 'var(--headline)',
     fontWeight: 700,
     letterSpacing: '0.06em',
@@ -319,7 +319,7 @@ export function Admin() {
                   {c.contributor_count} {c.contributor_count === 1 ? 'submission' : 'submissions'}
                 </span>
               </div>
-              <div style={{ ...st.meta, marginTop: '6px', fontSize: '10px', opacity: 0.5 }}>
+              <div style={{ ...st.meta, marginTop: '6px', fontSize: 'var(--text-xs)', opacity: 0.5 }}>
                 #{c.id} · submitted {new Date(c.created_at).toLocaleDateString()}
                 {c.contributor_id && ` · ${c.contributor_id.slice(0, 16)}…`}
               </div>

@@ -293,7 +293,7 @@ function DetailedRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onCli
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '15px', color: nonFinish ? 'var(--muted)' : (isPB ? 'var(--green)' : 'var(--orange)'), letterSpacing: '0.02em' }}>
             {nonFinish ?? (race.time ?? '—')}
           </div>
-          {label && <div style={{ fontSize: '10px', color: 'var(--muted)', textAlign: 'right', marginTop: '1px' }}>{label}</div>}
+          {label && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textAlign: 'right', marginTop: '1px' }}>{label}</div>}
         </div>
       </div>
 
@@ -301,12 +301,12 @@ function DetailedRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onCli
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', marginTop: '8px', flexWrap: 'wrap' }}>
         {isPB && <span className="tag tag-pb">PB</span>}
         {race.medal && (
-          <span className={`medal-chip medal-${race.medal}`} style={{ padding: '3px 8px', fontSize: '10px', borderRadius: 'var(--radius-sm)' }}>
+          <span className={`medal-chip medal-${race.medal}`} style={{ padding: '3px 8px', fontSize: 'var(--text-xs)', borderRadius: 'var(--radius-sm)' }}>
             {race.medal.toUpperCase()}
           </span>
         )}
         {placing && (
-          <span className="tag" style={{ fontFamily: 'var(--mono)', fontSize: '10px' }}>
+          <span className="tag" style={{ fontFamily: 'var(--mono)', fontSize: 'var(--text-xs)' }}>
             {placing.pos}/{placing.total} <span style={{ color: 'var(--muted)', marginLeft: '2px' }}>· top {placing.pct}%</span>
           </span>
         )}
@@ -341,7 +341,7 @@ function WishlistRow({ race, onPlan, onRemove }: {
           {[race.distance ? distLabel(race.distance) : null, race.city, race.country].filter(Boolean).join(' · ')}
         </div>
         {race.date && (
-          <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '2px' }}>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>
             {new Date(race.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
           </div>
         )}
@@ -445,161 +445,8 @@ function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport, onDiscover
       {/* Handle */}
       <div className="races-sheet-handle" onClick={() => setExpanded(e => !e)} />
 
-      {/* Search bar (hidden in wishlist mode) */}
-      {!showWishlist && (
-        <div style={{ padding: '0 12px 6px', position: 'relative' }}>
-          <input
-            type="search"
-            placeholder="Search races, cities, countries…"
-            value={search}
-            onChange={e => onSearchChange(e.target.value)}
-            style={{
-              width: '100%', boxSizing: 'border-box',
-              background: 'var(--surface3)',
-              border: '1px solid var(--border2)',
-              borderRadius: 'var(--radius-sm)',
-              color: 'var(--white)',
-              fontSize: 'var(--text-sm)',
-              padding: '7px 30px 7px 10px',
-              fontFamily: 'var(--body)',
-              outline: 'none',
-            }}
-          />
-          {search && (
-            <button
-              onClick={() => { setSearch(''); setDebouncedSearch('') }}
-              style={{
-                position: 'absolute', right: '20px', top: '50%', transform: 'translateY(-50%)',
-                background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer',
-                fontSize: 'var(--text-compact)', padding: 0, lineHeight: 1,
-              }}
-              aria-label="Clear search"
-            >✕</button>
-          )}
-        </div>
-      )}
-
-      {/* Top bar: mode tabs + year filter (hidden in wishlist mode) + view toggle */}
-      <div className="races-sheet-top">
-        {!showWishlist && (
-          <YearTabs races={races} active={yearFilter} onChange={y => { setYearFilter(y); setVisibleCount(20) }} />
-        )}
-        {showWishlist && (
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--orange)', padding: '0 4px', display: 'flex', alignItems: 'center' }}>
-            ♡ WISHLIST · {wishlistRaces.length}
-          </div>
-        )}
-        <div className="races-view-toggle">
-          <button
-            className={`races-view-btn${viewMode === 'compact' ? ' active' : ''}`}
-            onClick={() => setViewMode('compact')}
-            title="Compact"
-          >≡</button>
-          <button
-            className={`races-view-btn${viewMode === 'detailed' ? ' active' : ''}`}
-            onClick={() => setViewMode('detailed')}
-            title="Detailed"
-          >▤</button>
-          <button
-            className={`races-view-btn${viewMode === 'wishlist' ? ' active' : ''}`}
-            onClick={() => setViewMode(v => v === 'wishlist' ? 'compact' : 'wishlist')}
-            title="Wishlist"
-            style={viewMode === 'wishlist' ? { color: 'var(--orange)' } : undefined}
-          >♡</button>
-        </div>
-      </div>
-
-      {/* Stats strip — scoped to the active year filter */}
-      {!showWishlist && <StatsStrip races={filtered} />}
-
-      {/* Content */}
-      <div className="races-sheet-list">
-        {showWishlist ? (
-          wishlistRaces.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '2.5rem 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--sp-2)' }}>
-              <div style={{ fontSize: '28px' }}>♡</div>
-              <div style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)', fontFamily: 'var(--headline)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                Races you&rsquo;re dreaming of
-              </div>
-              <div style={{ color: 'var(--muted2)', fontSize: '12px', fontFamily: 'var(--body)' }}>
-                Add races while logging to save them here.
-              </div>
-            </div>
-          ) : (
-            wishlistRaces.map(r => (
-              <WishlistRow
-                key={r.id}
-                race={r}
-                onPlan={() => moveToUpcoming(r.id)}
-                onRemove={() => removeFromWishlist(r.id)}
-              />
-            ))
-          )
-        ) : sorted.length === 0 ? (
-          <div style={{
-            textAlign: 'center', padding: '2rem 1rem',
-            color: 'var(--muted)', fontSize: 'var(--text-sm)',
-            fontFamily: 'var(--headline)', letterSpacing: '0.08em', textTransform: 'uppercase',
-          }}>
-            {races.length === 0 ? 'No races yet — log your first one' : 'No races in this year'}
-          </div>
-        ) : viewMode === 'compact' ? (
-          <>
-            {(() => {
-              const visible = sorted.slice(0, visibleCount)
-              let lastYear = ''
-              return visible.map(r => {
-                const yr = r.date.slice(0, 4)
-                const showDivider = yearFilter === 'all' && yr !== lastYear
-                lastYear = yr
-                return (
-                  <div key={r.id}>
-                    {showDivider && <YearDivider year={yr} />}
-                    <CompactRow race={r} isPB={pbMap[normKey(r.distance)]?.id === r.id} onClick={() => { setSelectedRaceId(r.id); setExpanded(true) }} />
-                  </div>
-                )
-              })
-            })()}
-            {sorted.length > visibleCount && (
-              <button
-                onClick={() => setVisibleCount(c => c + 20)}
-                style={{ width: '100%', padding: 'var(--sp-3)', background: 'none', border: 'none', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '12px', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer' }}
-              >
-                Show more ({sorted.length - visibleCount} remaining)
-              </button>
-            )}
-          </>
-        ) : (
-          <>
-            {(() => {
-              const visible = sorted.slice(0, visibleCount)
-              let lastYear = ''
-              return visible.map(r => {
-                const yr = r.date.slice(0, 4)
-                const showDivider = yearFilter === 'all' && yr !== lastYear
-                lastYear = yr
-                return (
-                  <div key={r.id}>
-                    {showDivider && <YearDivider year={yr} />}
-                    <DetailedRow race={r} isPB={pbMap[normKey(r.distance)]?.id === r.id} onClick={() => { setSelectedRaceId(r.id); setExpanded(true) }} />
-                  </div>
-                )
-              })
-            })()}
-            {sorted.length > visibleCount && (
-              <button
-                onClick={() => setVisibleCount(c => c + 20)}
-                style={{ width: '100%', padding: 'var(--sp-3)', background: 'none', border: 'none', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '12px', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer' }}
-              >
-                Show more ({sorted.length - visibleCount} remaining)
-              </button>
-            )}
-          </>
-        )}
-      </div>
-
-      {/* Footer */}
-      <div className="races-sheet-footer">
+      {/* Action bar — primary CTAs always visible at top of sheet */}
+      <div className="races-sheet-footer races-sheet-actions">
         <button
           style={{
             flex: 1, background: 'var(--orange)', color: 'var(--black)',
@@ -644,6 +491,159 @@ function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport, onDiscover
         >
           DOSSIER
         </button>
+      </div>
+
+      {/* Top bar: mode tabs + year filter (hidden in wishlist mode) + view toggle */}
+      <div className="races-sheet-top">
+        {!showWishlist && (
+          <YearTabs races={races} active={yearFilter} onChange={y => { setYearFilter(y); setVisibleCount(20) }} />
+        )}
+        {showWishlist && (
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--orange)', padding: '0 4px', display: 'flex', alignItems: 'center' }}>
+            ♡ WISHLIST · {wishlistRaces.length}
+          </div>
+        )}
+        <div className="races-view-toggle">
+          <button
+            className={`races-view-btn${viewMode === 'compact' ? ' active' : ''}`}
+            onClick={() => setViewMode('compact')}
+            title="Compact"
+          >≡</button>
+          <button
+            className={`races-view-btn${viewMode === 'detailed' ? ' active' : ''}`}
+            onClick={() => setViewMode('detailed')}
+            title="Detailed"
+          >▤</button>
+          <button
+            className={`races-view-btn${viewMode === 'wishlist' ? ' active' : ''}`}
+            onClick={() => setViewMode(v => v === 'wishlist' ? 'compact' : 'wishlist')}
+            title="Wishlist"
+            style={viewMode === 'wishlist' ? { color: 'var(--orange)' } : undefined}
+          >♡</button>
+        </div>
+      </div>
+
+      {/* Stats strip — scoped to the active year filter */}
+      {!showWishlist && <StatsStrip races={filtered} />}
+
+      {/* Search bar — below stats, above list (hidden in wishlist mode) */}
+      {!showWishlist && (
+        <div style={{ padding: '0 12px 6px', position: 'relative' }}>
+          <input
+            type="search"
+            placeholder="Search races, cities, countries…"
+            value={search}
+            onChange={e => onSearchChange(e.target.value)}
+            style={{
+              width: '100%', boxSizing: 'border-box',
+              background: 'var(--surface3)',
+              border: '1px solid var(--border2)',
+              borderRadius: 'var(--radius-sm)',
+              color: 'var(--white)',
+              fontSize: 'var(--text-sm)',
+              padding: '7px 30px 7px 10px',
+              fontFamily: 'var(--body)',
+              outline: 'none',
+            }}
+          />
+          {search && (
+            <button
+              onClick={() => { setSearch(''); setDebouncedSearch('') }}
+              style={{
+                position: 'absolute', right: '20px', top: '50%', transform: 'translateY(-50%)',
+                background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer',
+                fontSize: 'var(--text-compact)', padding: 0, lineHeight: 1,
+              }}
+              aria-label="Clear search"
+            >✕</button>
+          )}
+        </div>
+      )}
+
+      {/* Content */}
+      <div className="races-sheet-list">
+        {showWishlist ? (
+          wishlistRaces.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '2.5rem 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--sp-2)' }}>
+              <div style={{ fontSize: '28px' }}>♡</div>
+              <div style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)', fontFamily: 'var(--headline)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                Races you&rsquo;re dreaming of
+              </div>
+              <div style={{ color: 'var(--muted2)', fontSize: 'var(--text-xs)', fontFamily: 'var(--body)' }}>
+                Add races while logging to save them here.
+              </div>
+            </div>
+          ) : (
+            wishlistRaces.map(r => (
+              <WishlistRow
+                key={r.id}
+                race={r}
+                onPlan={() => moveToUpcoming(r.id)}
+                onRemove={() => removeFromWishlist(r.id)}
+              />
+            ))
+          )
+        ) : sorted.length === 0 ? (
+          <div style={{
+            textAlign: 'center', padding: '2rem 1rem',
+            color: 'var(--muted)', fontSize: 'var(--text-sm)',
+            fontFamily: 'var(--headline)', letterSpacing: '0.08em', textTransform: 'uppercase',
+          }}>
+            {races.length === 0 ? 'No races yet — log your first one' : 'No races in this year'}
+          </div>
+        ) : viewMode === 'compact' ? (
+          <>
+            {(() => {
+              const visible = sorted.slice(0, visibleCount)
+              let lastYear = ''
+              return visible.map(r => {
+                const yr = r.date.slice(0, 4)
+                const showDivider = yearFilter === 'all' && yr !== lastYear
+                lastYear = yr
+                return (
+                  <div key={r.id}>
+                    {showDivider && <YearDivider year={yr} />}
+                    <CompactRow race={r} isPB={pbMap[normKey(r.distance)]?.id === r.id} onClick={() => { setSelectedRaceId(r.id); setExpanded(true) }} />
+                  </div>
+                )
+              })
+            })()}
+            {sorted.length > visibleCount && (
+              <button
+                onClick={() => setVisibleCount(c => c + 20)}
+                style={{ width: '100%', padding: 'var(--sp-3)', background: 'none', border: 'none', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer' }}
+              >
+                Show more ({sorted.length - visibleCount} remaining)
+              </button>
+            )}
+          </>
+        ) : (
+          <>
+            {(() => {
+              const visible = sorted.slice(0, visibleCount)
+              let lastYear = ''
+              return visible.map(r => {
+                const yr = r.date.slice(0, 4)
+                const showDivider = yearFilter === 'all' && yr !== lastYear
+                lastYear = yr
+                return (
+                  <div key={r.id}>
+                    {showDivider && <YearDivider year={yr} />}
+                    <DetailedRow race={r} isPB={pbMap[normKey(r.distance)]?.id === r.id} onClick={() => { setSelectedRaceId(r.id); setExpanded(true) }} />
+                  </div>
+                )
+              })
+            })()}
+            {sorted.length > visibleCount && (
+              <button
+                onClick={() => setVisibleCount(c => c + 20)}
+                style={{ width: '100%', padding: 'var(--sp-3)', background: 'none', border: 'none', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer' }}
+              >
+                Show more ({sorted.length - visibleCount} remaining)
+              </button>
+            )}
+          </>
+        )}
       </div>
 
       {/* Race detail / edit modal */}
