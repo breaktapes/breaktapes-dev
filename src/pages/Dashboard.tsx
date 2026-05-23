@@ -5025,7 +5025,7 @@ function VDOTScoreWidget() {
           {equivs.map(e => (
             <div key={e.distance} style={{ background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '10px 6px', textAlign: 'center' }}>
               <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '3px' }}>
-                {e.distance.replace(' Marathon', 'M').replace('Marathon', 'MAR').replace(' Mile', 'mi')}
+                {e.distance === 'Half Marathon' ? '21.1K' : e.distance === 'Marathon' ? '42.2K' : e.distance.replace(' Mile', 'mi')}
               </div>
               <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', color: 'var(--white)' }}>
                 {e.timeStr}
