@@ -5023,11 +5023,11 @@ function VDOTScoreWidget() {
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--sp-2)' }}>
           {equivs.map(e => (
-            <div key={e.distance} style={{ background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '8px 6px', textAlign: 'center' }}>
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '2px' }}>
+            <div key={e.distance} style={{ background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '10px 6px', textAlign: 'center' }}>
+              <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '3px' }}>
                 {e.distance.replace(' Marathon', 'M').replace('Marathon', 'MAR').replace(' Mile', 'mi')}
               </div>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', color: 'var(--white)' }}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', color: 'var(--white)' }}>
                 {e.timeStr}
               </div>
             </div>
