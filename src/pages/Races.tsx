@@ -445,39 +445,53 @@ function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport, onDiscover
       {/* Handle */}
       <div className="races-sheet-handle" onClick={() => setExpanded(e => !e)} />
 
-      {/* Search bar (hidden in wishlist mode) */}
-      {!showWishlist && (
-        <div style={{ padding: '0 12px 6px', position: 'relative' }}>
-          <input
-            type="search"
-            placeholder="Search races, cities, countries…"
-            value={search}
-            onChange={e => onSearchChange(e.target.value)}
-            style={{
-              width: '100%', boxSizing: 'border-box',
-              background: 'var(--surface3)',
-              border: '1px solid var(--border2)',
-              borderRadius: 'var(--radius-sm)',
-              color: 'var(--white)',
-              fontSize: 'var(--text-sm)',
-              padding: '7px 30px 7px 10px',
-              fontFamily: 'var(--body)',
-              outline: 'none',
-            }}
-          />
-          {search && (
-            <button
-              onClick={() => { setSearch(''); setDebouncedSearch('') }}
-              style={{
-                position: 'absolute', right: '20px', top: '50%', transform: 'translateY(-50%)',
-                background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer',
-                fontSize: 'var(--text-compact)', padding: 0, lineHeight: 1,
-              }}
-              aria-label="Clear search"
-            >✕</button>
-          )}
-        </div>
-      )}
+      {/* Action bar — primary CTAs always visible at top of sheet */}
+      <div className="races-sheet-footer races-sheet-actions">
+        <button
+          style={{
+            flex: 1, background: 'var(--orange)', color: 'var(--black)',
+            border: 'none', borderRadius: 'var(--radius-md)', padding: '0.8rem',
+            fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)',
+            letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer',
+            boxShadow: '0 4px 20px rgba(232,78,27,0.35)',
+            transition: 'box-shadow 0.18s, transform 0.18s',
+          }}
+          onClick={onAddRace}
+        >
+          + Log Race
+        </button>
+        <button
+          style={{
+            background: 'transparent', color: 'var(--muted)',
+            border: '1px solid var(--border2)', borderRadius: 'var(--radius-md)', padding: '0.8rem',
+            fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xs)',
+            letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer',
+            whiteSpace: 'nowrap', flexShrink: 0,
+          }}
+          onClick={onImportRace}
+        >
+          ↓ Import
+        </button>
+        <button
+          style={{
+            background: 'transparent', color: 'var(--muted)',
+            border: '1px solid var(--border2)', borderRadius: 'var(--radius-md)', padding: '0.8rem',
+            fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xs)',
+            letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer',
+            whiteSpace: 'nowrap', flexShrink: 0,
+          }}
+          onClick={onDiscover}
+        >
+          Discover
+        </button>
+        <button
+          className="passport-dossier-btn"
+          onClick={() => onOpenPassport(yearFilter)}
+          title="Export Race Log Passport"
+        >
+          DOSSIER
+        </button>
+      </div>
 
       {/* Top bar: mode tabs + year filter (hidden in wishlist mode) + view toggle */}
       <div className="races-sheet-top">
@@ -511,6 +525,40 @@ function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport, onDiscover
 
       {/* Stats strip — scoped to the active year filter */}
       {!showWishlist && <StatsStrip races={filtered} />}
+
+      {/* Search bar — below stats, above list (hidden in wishlist mode) */}
+      {!showWishlist && (
+        <div style={{ padding: '0 12px 6px', position: 'relative' }}>
+          <input
+            type="search"
+            placeholder="Search races, cities, countries…"
+            value={search}
+            onChange={e => onSearchChange(e.target.value)}
+            style={{
+              width: '100%', boxSizing: 'border-box',
+              background: 'var(--surface3)',
+              border: '1px solid var(--border2)',
+              borderRadius: 'var(--radius-sm)',
+              color: 'var(--white)',
+              fontSize: 'var(--text-sm)',
+              padding: '7px 30px 7px 10px',
+              fontFamily: 'var(--body)',
+              outline: 'none',
+            }}
+          />
+          {search && (
+            <button
+              onClick={() => { setSearch(''); setDebouncedSearch('') }}
+              style={{
+                position: 'absolute', right: '20px', top: '50%', transform: 'translateY(-50%)',
+                background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer',
+                fontSize: 'var(--text-compact)', padding: 0, lineHeight: 1,
+              }}
+              aria-label="Clear search"
+            >✕</button>
+          )}
+        </div>
+      )}
 
       {/* Content */}
       <div className="races-sheet-list">
@@ -596,54 +644,6 @@ function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport, onDiscover
             )}
           </>
         )}
-      </div>
-
-      {/* Footer */}
-      <div className="races-sheet-footer">
-        <button
-          style={{
-            flex: 1, background: 'var(--orange)', color: 'var(--black)',
-            border: 'none', borderRadius: 'var(--radius-md)', padding: '0.8rem',
-            fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)',
-            letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer',
-            boxShadow: '0 4px 20px rgba(232,78,27,0.35)',
-            transition: 'box-shadow 0.18s, transform 0.18s',
-          }}
-          onClick={onAddRace}
-        >
-          + Log Race
-        </button>
-        <button
-          style={{
-            background: 'transparent', color: 'var(--muted)',
-            border: '1px solid var(--border2)', borderRadius: 'var(--radius-md)', padding: '0.8rem',
-            fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xs)',
-            letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer',
-            whiteSpace: 'nowrap', flexShrink: 0,
-          }}
-          onClick={onImportRace}
-        >
-          ↓ Import
-        </button>
-        <button
-          style={{
-            background: 'transparent', color: 'var(--muted)',
-            border: '1px solid var(--border2)', borderRadius: 'var(--radius-md)', padding: '0.8rem',
-            fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xs)',
-            letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer',
-            whiteSpace: 'nowrap', flexShrink: 0,
-          }}
-          onClick={onDiscover}
-        >
-          Discover
-        </button>
-        <button
-          className="passport-dossier-btn"
-          onClick={() => onOpenPassport(yearFilter)}
-          title="Export Race Log Passport"
-        >
-          DOSSIER
-        </button>
       </div>
 
       {/* Race detail / edit modal */}

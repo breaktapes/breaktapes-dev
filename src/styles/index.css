@@ -378,9 +378,11 @@ body::after {
 }
 .races-sheet-footer {
   padding: .75rem 1rem;
-  border-top: 1px solid var(--border);
   flex-shrink: 0;
   display: flex; gap: .5rem;
+}
+.races-sheet-actions {
+  border-bottom: 1px solid var(--border);
 }
 .race-row-compact {
   display: grid; grid-template-columns: auto 1fr auto;

@@ -1995,7 +1995,7 @@ function RaceDNAWidget() {
   return (
     <WidgetCard id="race-dna" style={st.glowCard}>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)', marginBottom: '14px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
         <div>
           <div style={st.widgetLabel}>RACE DNA</div>
           <div style={st.widgetTitle}>CONDITIONS PROFILE</div>
@@ -2044,7 +2044,7 @@ function RaceDNAWidget() {
               )}
             </div>
           ) : (
-            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', padding: '8px 0' }}>
+            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)' }}>
               Open a past race and fetch weather to see temp analysis.
             </div>
           )}
@@ -2247,7 +2247,7 @@ function PatternScanWidget() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
                 {scan.seasonBars.map(s => (
                   <div key={s.season} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
-                    <div style={{ width: '58px', fontSize: 'var(--text-xs)', color: s.isBest ? 'var(--white)' : 'var(--muted)', fontWeight: s.isBest ? 700 : 400, flexShrink: 0, whiteSpace: 'nowrap' }}>
+                    <div style={{ width: '90px', fontSize: 'var(--text-xs)', color: s.isBest ? 'var(--white)' : 'var(--muted)', fontWeight: s.isBest ? 700 : 400, flexShrink: 0, whiteSpace: 'nowrap' }}>
                       {s.season}
                     </div>
                     <div style={{ flex: 1, height: '6px', background: 'var(--surface3)', borderRadius: 'var(--radius-xs)', overflow: 'hidden' }}>
@@ -2297,7 +2297,7 @@ function PatternScanWidget() {
               <div style={{ fontSize: 'var(--text-md)', fontFamily: 'var(--headline)', fontWeight: 900, color: scan.volumeColor, lineHeight: 1 }}>
                 {scan.volumeTrend !== null ? `${scan.volumeTrend >= 0 ? '+' : ''}${scan.volumeTrend}%` : '—'}
               </div>
-              <div style={{ fontSize: '9px', color: 'var(--muted)', textTransform: 'uppercase', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', marginTop: '3px' }}>YoY Volume</div>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', marginTop: '3px' }}>YoY Volume</div>
               <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', marginTop: '2px' }}>
                 {scan.countLastYear}→{scan.countThisYear}
               </div>
@@ -2307,7 +2307,7 @@ function PatternScanWidget() {
               <div style={{ fontSize: 'var(--text-md)', fontFamily: 'var(--headline)', fontWeight: 900, color: scan.finishRate >= 95 ? '#34D399' : scan.finishRate >= 85 ? 'var(--orange)' : '#F87171', lineHeight: 1 }}>
                 {scan.finishRate}%
               </div>
-              <div style={{ fontSize: '9px', color: 'var(--muted)', textTransform: 'uppercase', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', marginTop: '3px' }}>Finish Rate</div>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', marginTop: '3px' }}>Finish Rate</div>
               {scan.dnfCount > 0 && (
                 <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', marginTop: '2px' }}>{scan.dnfCount} DNF</div>
               )}
@@ -2317,7 +2317,7 @@ function PatternScanWidget() {
               <div style={{ fontSize: 'var(--text-md)', fontFamily: 'var(--headline)', fontWeight: 900, color: scan.podiumRate !== null ? (scan.podiumRate >= 30 ? '#34D399' : 'var(--orange)') : 'var(--muted)', lineHeight: 1 }}>
                 {scan.podiumRate !== null ? `${scan.podiumRate}%` : '—'}
               </div>
-              <div style={{ fontSize: '9px', color: 'var(--muted)', textTransform: 'uppercase', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', marginTop: '3px' }}>Top 25%</div>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', marginTop: '3px' }}>Top 25%</div>
               {scan.withPlacingCount > 0 && (
                 <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', marginTop: '2px' }}>{scan.top25Count}/{scan.withPlacingCount}</div>
               )}
@@ -5001,14 +5001,14 @@ function VDOTScoreWidget() {
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
           {showPeak && (
             <div style={{ background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '4px 8px', textAlign: 'right' }}>
-              <div style={{ fontSize: '9px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em' }}>PEAK</div>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em' }}>PEAK</div>
               <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-md)', color: 'var(--muted)', lineHeight: 1 }}>{peakVDOT!.vdot}</div>
             </div>
           )}
           {history.length >= 2 && (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
               <VdotSparkline history={history} />
-              <div style={{ fontSize: '9px', color: 'var(--muted2)', fontFamily: 'var(--headline)', letterSpacing: '0.06em' }}>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', fontFamily: 'var(--headline)', letterSpacing: '0.06em' }}>
                 {history.length} RACES
               </div>
             </div>
@@ -5027,7 +5027,7 @@ function VDOTScoreWidget() {
               <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '2px' }}>
                 {e.distance.replace(' Marathon', 'M').replace('Marathon', 'MAR').replace(' Mile', 'mi')}
               </div>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color: 'var(--white)' }}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', color: 'var(--white)' }}>
                 {e.timeStr}
               </div>
             </div>
