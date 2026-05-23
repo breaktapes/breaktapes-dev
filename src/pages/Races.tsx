@@ -293,7 +293,7 @@ function DetailedRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onCli
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '15px', color: nonFinish ? 'var(--muted)' : (isPB ? 'var(--green)' : 'var(--orange)'), letterSpacing: '0.02em' }}>
             {nonFinish ?? (race.time ?? '—')}
           </div>
-          {label && <div style={{ fontSize: '10px', color: 'var(--muted)', textAlign: 'right', marginTop: '1px' }}>{label}</div>}
+          {label && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textAlign: 'right', marginTop: '1px' }}>{label}</div>}
         </div>
       </div>
 
@@ -301,12 +301,12 @@ function DetailedRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onCli
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', marginTop: '8px', flexWrap: 'wrap' }}>
         {isPB && <span className="tag tag-pb">PB</span>}
         {race.medal && (
-          <span className={`medal-chip medal-${race.medal}`} style={{ padding: '3px 8px', fontSize: '10px', borderRadius: 'var(--radius-sm)' }}>
+          <span className={`medal-chip medal-${race.medal}`} style={{ padding: '3px 8px', fontSize: 'var(--text-xs)', borderRadius: 'var(--radius-sm)' }}>
             {race.medal.toUpperCase()}
           </span>
         )}
         {placing && (
-          <span className="tag" style={{ fontFamily: 'var(--mono)', fontSize: '10px' }}>
+          <span className="tag" style={{ fontFamily: 'var(--mono)', fontSize: 'var(--text-xs)' }}>
             {placing.pos}/{placing.total} <span style={{ color: 'var(--muted)', marginLeft: '2px' }}>· top {placing.pct}%</span>
           </span>
         )}
@@ -341,7 +341,7 @@ function WishlistRow({ race, onPlan, onRemove }: {
           {[race.distance ? distLabel(race.distance) : null, race.city, race.country].filter(Boolean).join(' · ')}
         </div>
         {race.date && (
-          <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '2px' }}>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>
             {new Date(race.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
           </div>
         )}
@@ -521,7 +521,7 @@ function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport, onDiscover
               <div style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)', fontFamily: 'var(--headline)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                 Races you&rsquo;re dreaming of
               </div>
-              <div style={{ color: 'var(--muted2)', fontSize: '12px', fontFamily: 'var(--body)' }}>
+              <div style={{ color: 'var(--muted2)', fontSize: 'var(--text-xs)', fontFamily: 'var(--body)' }}>
                 Add races while logging to save them here.
               </div>
             </div>
@@ -563,7 +563,7 @@ function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport, onDiscover
             {sorted.length > visibleCount && (
               <button
                 onClick={() => setVisibleCount(c => c + 20)}
-                style={{ width: '100%', padding: 'var(--sp-3)', background: 'none', border: 'none', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '12px', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer' }}
+                style={{ width: '100%', padding: 'var(--sp-3)', background: 'none', border: 'none', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer' }}
               >
                 Show more ({sorted.length - visibleCount} remaining)
               </button>
@@ -589,7 +589,7 @@ function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport, onDiscover
             {sorted.length > visibleCount && (
               <button
                 onClick={() => setVisibleCount(c => c + 20)}
-                style={{ width: '100%', padding: 'var(--sp-3)', background: 'none', border: 'none', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '12px', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer' }}
+                style={{ width: '100%', padding: 'var(--sp-3)', background: 'none', border: 'none', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer' }}
               >
                 Show more ({sorted.length - visibleCount} remaining)
               </button>

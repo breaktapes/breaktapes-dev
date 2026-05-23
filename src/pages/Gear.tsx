@@ -569,7 +569,7 @@ export function Gear() {
                           margin: 0,
                           fontFamily: 'var(--headline)',
                           fontWeight: 900,
-                          fontSize: '12px',
+                          fontSize: 'var(--text-xs)',
                           letterSpacing: '0.06em',
                           textTransform: 'uppercase',
                           color: 'var(--orange)',
@@ -704,7 +704,7 @@ export function Gear() {
                         <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--orange)' }}>{item.brand}</div>
                         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', fontWeight: 600 }}>{item.name}</div>
                         {item.notes && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>{item.notes}</div>}
-                        <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--muted2)', marginTop: '2px' }}>Custom · {item.category}</div>
+                        <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--muted2)', marginTop: '2px' }}>Custom · {item.category}</div>
                       </div>
                       <div style={{ display: 'flex', gap: 'var(--sp-2)', flexShrink: 0 }}>
                         <button onClick={() => openEditCustom(item)} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 'var(--radius-xs)', color: 'var(--muted)', fontSize: 'var(--text-xs)', padding: '3px 8px', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700 }}>Edit</button>
@@ -719,7 +719,7 @@ export function Gear() {
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--orange)' }}>{item.brand}</div>
                         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', fontWeight: 600 }}>{item.name}</div>
-                        <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--muted2)', marginTop: '2px' }}>{item.category} · {item.sport}</div>
+                        <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--muted2)', marginTop: '2px' }}>{item.category} · {item.sport}</div>
                       </div>
                       <button onClick={() => toggleSave(item.id)} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 'var(--radius-xs)', color: 'var(--muted2)', fontSize: 'var(--text-xs)', padding: '3px 8px', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700, flexShrink: 0 }}>✕ Remove</button>
                     </div>
@@ -815,10 +815,10 @@ export function Gear() {
                             const label   = custom ? `${custom.brand} · ${custom.name}` : catalog ? `${catalog.brand} · ${catalog.name}` : pid
                             return (
                               <div key={pid} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', padding: '6px 8px', background: 'var(--surface3)', borderRadius: 'var(--radius-sm)' }}>
-                                <span style={{ flex: 1, fontSize: '12px', color: 'var(--white)' }}>{label}</span>
-                                <button onClick={() => moveItem(list.id, pid, -1)} disabled={idx === 0} style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: '12px', padding: '0 2px', opacity: idx === 0 ? 0.3 : 1 }}>↑</button>
-                                <button onClick={() => moveItem(list.id, pid, 1)} disabled={idx === list.itemIds.length - 1} style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: '12px', padding: '0 2px', opacity: idx === list.itemIds.length - 1 ? 0.3 : 1 }}>↓</button>
-                                <button onClick={() => removeItemFromList(list.id, pid)} style={{ background: 'none', border: 'none', color: 'var(--muted2)', cursor: 'pointer', fontSize: '12px', padding: '0 2px' }}>✕</button>
+                                <span style={{ flex: 1, fontSize: 'var(--text-xs)', color: 'var(--white)' }}>{label}</span>
+                                <button onClick={() => moveItem(list.id, pid, -1)} disabled={idx === 0} style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: 'var(--text-xs)', padding: '0 2px', opacity: idx === 0 ? 0.3 : 1 }}>↑</button>
+                                <button onClick={() => moveItem(list.id, pid, 1)} disabled={idx === list.itemIds.length - 1} style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: 'var(--text-xs)', padding: '0 2px', opacity: idx === list.itemIds.length - 1 ? 0.3 : 1 }}>↓</button>
+                                <button onClick={() => removeItemFromList(list.id, pid)} style={{ background: 'none', border: 'none', color: 'var(--muted2)', cursor: 'pointer', fontSize: 'var(--text-xs)', padding: '0 2px' }}>✕</button>
                               </div>
                             )
                           })}
