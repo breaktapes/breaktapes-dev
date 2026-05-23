@@ -1138,7 +1138,7 @@ function AthleteHero({ onEdit }: { onEdit: () => void }) {
               right: 0,
               width: '22px',
               height: '22px',
-              borderRadius: '50%',
+              borderRadius: 'var(--radius-round)',
               background: 'var(--orange)',
               color: '#000',
               fontSize: 'var(--text-xs)',
@@ -1164,7 +1164,7 @@ function AthleteHero({ onEdit }: { onEdit: () => void }) {
         <div style={st.avatarInfo}>
           <div style={st.athleteName}>{fullName}</div>
           {sportCity && <div style={st.athleteSub}>{sportCity}</div>}
-          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '4px' }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-2)', flexWrap: 'wrap', marginTop: '4px' }}>
             <span style={st.levelBadge}>{level}</span>
             {age !== null && <span style={st.levelBadge}>{age}yr{ag ? ` · ${ag}` : ''}</span>}
           </div>
@@ -1187,15 +1187,15 @@ function AthleteHero({ onEdit }: { onEdit: () => void }) {
         const ctrs = uniqueCountries(races)
         if (!ctrs.length) return null
         return (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-2)' }}>
             {ctrs.map(c => {
               const flagUrl = countryFlagUrl(c)
               const abbr = countryToISO3(c)
               return (
                 <span key={c} style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '6px',
+                  display: 'inline-flex', alignItems: 'center', gap: 'var(--sp-2)',
                   background: 'var(--surface3)', border: '1px solid var(--border2)',
-                  borderRadius: '8px', padding: '5px 10px',
+                  borderRadius: 'var(--radius-md)', padding: '5px 10px',
                 }}>
                   {flagUrl && (
                     <img
@@ -1203,7 +1203,7 @@ function AthleteHero({ onEdit }: { onEdit: () => void }) {
                       alt={c}
                       width={20}
                       height={15}
-                      style={{ display: 'block', borderRadius: '2px', flexShrink: 0 }}
+                      style={{ display: 'block', borderRadius: 'var(--radius-xs)', flexShrink: 0 }}
                     />
                   )}
                   <span style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
@@ -1219,7 +1219,7 @@ function AthleteHero({ onEdit }: { onEdit: () => void }) {
 
       {/* Bio + clubs */}
       {(athlete?.bio || clubs.length > 0) && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
           {athlete?.bio && (
             <div style={{
               fontSize: 'var(--text-compact)',
@@ -1232,13 +1232,13 @@ function AthleteHero({ onEdit }: { onEdit: () => void }) {
             </div>
           )}
           {clubs.length > 0 && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-2)' }}>
               {clubs.map(c => (
                 <span key={c} style={{
                   display: 'inline-flex', alignItems: 'center',
                   background: 'rgba(var(--orange-ch), 0.1)',
                   border: '1px solid rgba(var(--orange-ch), 0.25)',
-                  borderRadius: '100px', padding: '4px 12px',
+                  borderRadius: 'var(--radius-pill)', padding: '4px 12px',
                   fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)',
                   fontWeight: 700, letterSpacing: '0.06em',
                   color: 'var(--orange)',
@@ -1268,14 +1268,14 @@ function AthleteHero({ onEdit }: { onEdit: () => void }) {
       <div style={{
         display: 'grid',
         gridTemplateColumns: athlete?.username && athlete?.isPublic ? '1fr 1fr' : '1fr',
-        gap: '8px',
+        gap: 'var(--sp-2)',
       }}>
         {athlete?.username && athlete?.isPublic && (
           <button
             style={{
               background: 'rgba(var(--orange-ch), 0.12)',
               border: '1px solid rgba(var(--orange-ch), 0.3)',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-md)',
               color: 'var(--orange)',
               padding: '10px 16px',
               fontFamily: 'var(--headline)',
@@ -1297,7 +1297,7 @@ function AthleteHero({ onEdit }: { onEdit: () => void }) {
           style={{
             background: 'transparent',
             border: '1px solid var(--border2)',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-md)',
             color: 'var(--muted)',
             padding: '10px 16px',
             fontFamily: 'var(--headline)',
@@ -1323,7 +1323,7 @@ function AthleteHero({ onEdit }: { onEdit: () => void }) {
         position: 'fixed', bottom: 'calc(var(--safe-bottom, 0px) + 80px)', left: '50%',
         transform: 'translateX(-50%)', zIndex: 2000,
         background: 'var(--surface3)', border: '1px solid rgba(var(--orange-ch),0.5)',
-        color: 'var(--orange)', borderRadius: '20px', padding: '10px 20px',
+        color: 'var(--orange)', borderRadius: 'var(--radius-pill)', padding: '10px 20px',
         fontSize: 'var(--text-sm)', fontFamily: 'var(--headline)', fontWeight: 700,
         letterSpacing: '0.06em', whiteSpace: 'nowrap', pointerEvents: 'none',
       }}>
@@ -1464,7 +1464,7 @@ function MedalWall() {
               if (count === 0) return null
               const col = MEDAL_COLORS[tier]
               return (
-                <div key={tier} className={`medal-chip medal-${tier}`} style={{ padding: '6px 14px', fontSize: 'var(--text-xs)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                <div key={tier} className={`medal-chip medal-${tier}`} style={{ padding: '6px 14px', fontSize: 'var(--text-xs)', display: 'inline-flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
                   <span style={{ fontWeight: 900, fontSize: 'var(--text-compact)', lineHeight: 1 }}>{count}</span>
                   <span>{col.label}</span>
                 </div>
@@ -1473,7 +1473,7 @@ function MedalWall() {
           </div>
 
           {/* Medal grid — 6 most recent by default, expand for the rest */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 'var(--sp-2)' }}>
             {visibleMedalRaces.map(r => {
               const tier  = medalTier(r.medal!)
               const col   = MEDAL_COLORS[tier]
@@ -1489,7 +1489,7 @@ function MedalWall() {
                   style={{
                     background: hasPhoto ? 'transparent' : col.bg,
                     border: `1px solid ${isPB ? col.border : 'var(--border)'}`,
-                    borderRadius: '12px',
+                    borderRadius: 'var(--radius-lg)',
                     overflow: 'hidden',
                     position: 'relative',
                     display: 'flex',
@@ -1508,14 +1508,14 @@ function MedalWall() {
                     />
                   )}
 
-                  <div style={{ padding: '14px', position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: '6px', flex: 1 }}>
+                  <div style={{ padding: 'var(--sp-4)', position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', flex: 1 }}>
                     {/* Tier badge */}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: col.text }}>
                         {col.label}
                       </span>
                       {isPB && (
-                        <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase', color: col.text, background: col.bg, border: `1px solid ${col.border}`, borderRadius: '100px', padding: '2px 7px' }}>
+                        <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase', color: col.text, background: col.bg, border: `1px solid ${col.border}`, borderRadius: 'var(--radius-pill)', padding: '2px 7px' }}>
                           PB
                         </span>
                       )}
@@ -1548,7 +1548,7 @@ function MedalWall() {
                 style={{
                   background: 'transparent',
                   border: '1px solid var(--border2)',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-md)',
                   color: 'var(--muted)',
                   padding: '8px 18px',
                   fontFamily: 'var(--headline)',
@@ -1613,7 +1613,7 @@ function AchievementsSection() {
         <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.14em', color: 'rgba(var(--green-ch), 0.6)', textTransform: 'uppercase', marginBottom: '8px' }}>
           YOUR ACHIEVEMENTS
         </div>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', marginBottom: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--sp-2)', marginBottom: '10px' }}>
           <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '56px', color: 'var(--white)', lineHeight: 1, letterSpacing: '-0.02em' }}>
             {unlocked.length}
           </span>
@@ -1625,7 +1625,7 @@ function AchievementsSection() {
           Track special race moments, milestone ladders, and major-event progress from one synced wall.
         </div>
         {recentPills.length > 0 && (
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-2)', flexWrap: 'wrap' }}>
             {recentPills.map(a => (
               <div key={a.id} style={st.achievementPill}>
                 <span>{a.name}</span>
@@ -1637,7 +1637,7 @@ function AchievementsSection() {
 
       {/* Special achievements grid */}
       <div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 0 10px', borderBottom: '1px solid var(--border)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', padding: '12px 0 10px', borderBottom: '1px solid var(--border)' }}>
           <span style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-xs)', fontWeight: 700, letterSpacing: '0.14em', color: 'var(--muted)', textTransform: 'uppercase' }}>
             SPECIAL ACHIEVEMENTS
           </span>
@@ -1666,20 +1666,20 @@ function AchievementsSection() {
 
       {/* Performance Ladders */}
       <div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 0 10px', borderBottom: '1px solid var(--border)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', padding: '12px 0 10px', borderBottom: '1px solid var(--border)' }}>
           <span style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-xs)', fontWeight: 700, letterSpacing: '0.14em', color: 'var(--muted)', textTransform: 'uppercase' }}>
             PERFORMANCE LADDERS
           </span>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)', marginTop: '12px' }}>
           {LADDER_FAMILIES.map(fam => {
             const status = ladderStatus[fam.key]
             const tiers = ACHIEVEMENTS.filter(a => a.family === fam.key).sort((a, b) => (a.tier ?? 0) - (b.tier ?? 0))
             return (
-              <div key={fam.key} style={{ background: 'var(--surface2)', borderRadius: '10px', padding: '14px', border: '1px solid var(--border)' }}>
+              <div key={fam.key} style={{ background: 'var(--surface2)', borderRadius: 'var(--radius-lg)', padding: 'var(--sp-4)', border: '1px solid var(--border)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--orange)', background: 'rgba(var(--orange-ch),0.12)', border: '1px solid rgba(var(--orange-ch),0.25)', borderRadius: '4px', padding: '3px 7px', whiteSpace: 'nowrap' }}>{fam.icon}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
+                    <span style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--orange)', background: 'rgba(var(--orange-ch),0.12)', border: '1px solid rgba(var(--orange-ch),0.25)', borderRadius: 'var(--radius-xs)', padding: '3px 7px', whiteSpace: 'nowrap' }}>{fam.icon}</span>
                     <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>
                       {fam.label}
                     </span>
@@ -1699,7 +1699,7 @@ function AchievementsSection() {
                         onClick={() => setPopup(t)}
                         title={t.name}
                         style={{
-                          flex: 1, height: '6px', borderRadius: '3px', cursor: 'pointer',
+                          flex: 1, height: '6px', borderRadius: 'var(--radius-xs)', cursor: 'pointer',
                           background: isHighest ? 'var(--orange)' : isUnlocked ? 'rgba(var(--orange-ch),0.4)' : 'var(--surface3)',
                           transition: 'background 0.2s',
                         }}
@@ -1725,15 +1725,15 @@ function AchievementsSection() {
           onClick={() => setPopup(null)}
         >
           <div
-            style={{ background: 'var(--surface2)', borderRadius: '20px 20px 0 0', padding: '28px 24px 32px', width: '100%', maxHeight: '75vh', overflowY: 'auto', borderTop: '1px solid var(--border2)', boxShadow: '0 -8px 40px rgba(0,0,0,0.5)' }}
+            style={{ background: 'var(--surface2)', borderRadius: 'var(--radius-pill) var(--radius-pill) 0 0', padding: '28px 24px 32px', width: '100%', maxHeight: '75vh', overflowY: 'auto', borderTop: '1px solid var(--border2)', boxShadow: '0 -8px 40px rgba(0,0,0,0.5)' }}
             onClick={e => e.stopPropagation()}
           >
             {/* Drag handle */}
-            <div style={{ width: '40px', height: '4px', background: 'var(--border2)', borderRadius: '2px', margin: '0 auto 24px' }} />
+            <div style={{ width: '40px', height: '4px', background: 'var(--border2)', borderRadius: 'var(--radius-xs)', margin: '0 auto 24px' }} />
             {/* Header — centered */}
             <div style={{ textAlign: 'center', marginBottom: '20px', position: 'relative' }}>
-              <button onClick={() => setPopup(null)} style={{ position: 'absolute', right: 0, top: 0, background: 'none', border: 'none', color: 'var(--muted)', fontSize: 'var(--text-xl)', cursor: 'pointer', padding: '4px', lineHeight: 1 }}>×</button>
-              <div style={{ width: '72px', height: '72px', margin: '0 auto 16px', background: 'rgba(var(--orange-ch),0.12)', border: '2px solid rgba(var(--orange-ch),0.4)', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <button onClick={() => setPopup(null)} style={{ position: 'absolute', right: 0, top: 0, background: 'none', border: 'none', color: 'var(--muted)', fontSize: 'var(--text-xl)', cursor: 'pointer', padding: 'var(--sp-1)', lineHeight: 1 }}>×</button>
+              <div style={{ width: '72px', height: '72px', margin: '0 auto 16px', background: 'rgba(var(--orange-ch),0.12)', border: '2px solid rgba(var(--orange-ch),0.4)', borderRadius: 'var(--radius-lg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <AchievementSVGIcon a={popup} size={32} />
               </div>
               <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)', marginBottom: '6px' }}>
@@ -1744,7 +1744,7 @@ function AchievementsSection() {
               </div>
             </div>
             {unlockedIds.has(popup.id) ? (
-              <div style={{ background: 'rgba(var(--green-ch),0.08)', border: '1px solid rgba(var(--green-ch),0.25)', borderRadius: '10px', padding: '14px 16px', textAlign: 'center' }}>
+              <div style={{ background: 'rgba(var(--green-ch),0.08)', border: '1px solid rgba(var(--green-ch),0.25)', borderRadius: 'var(--radius-lg)', padding: '14px 16px', textAlign: 'center' }}>
                 <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '12px', letterSpacing: '0.1em', color: 'var(--green)', marginBottom: popupRace ? '10px' : 0 }}>
                   ✓ UNLOCKED
                 </div>
@@ -1766,7 +1766,7 @@ function AchievementsSection() {
                 })()}
               </div>
             ) : (
-              <div style={{ background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: '10px', padding: '14px 16px', textAlign: 'center' }}>
+              <div style={{ background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '14px 16px', textAlign: 'center' }}>
                 <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '12px', letterSpacing: '0.1em', color: 'var(--muted)' }}>
                   NOT YET UNLOCKED
                 </div>
@@ -1854,7 +1854,7 @@ function PersonalBests() {
           onClick={() => setShowConfig(true)}
           style={{
             background: 'none', border: '1px solid var(--border2)',
-            borderRadius: '6px', padding: '4px 8px',
+            borderRadius: 'var(--radius-sm)', padding: '4px 8px',
             color: 'var(--muted)', cursor: 'pointer',
             fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700,
             letterSpacing: '0.06em',
@@ -1887,7 +1887,7 @@ function PersonalBests() {
                     background: `linear-gradient(145deg, #141414 0%, ${accent.bg} 100%)`,
                     border: '1px solid var(--border2)',
                     borderLeft: `3px solid ${accent.color}`,
-                    borderRadius: '14px',
+                    borderRadius: 'var(--radius-lg)',
                     padding: '14px 14px 12px',
                     boxShadow: `inset 0 1px 0 ${accent.glow}, 0 4px 20px rgba(0,0,0,0.4)`,
                     minWidth: 0,
@@ -1916,10 +1916,10 @@ function PersonalBests() {
           onClick={() => setShowConfig(false)}
         >
           <div
-            style={{ width: '100%', maxHeight: '75vh', background: 'var(--surface2)', borderRadius: '20px 20px 0 0', borderTop: '1px solid var(--border2)', padding: '16px 20px 32px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0' }}
+            style={{ width: '100%', maxHeight: '75vh', background: 'var(--surface2)', borderRadius: 'var(--radius-pill) var(--radius-pill) 0 0', borderTop: '1px solid var(--border2)', padding: '16px 20px 32px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0' }}
             onClick={e => e.stopPropagation()}
           >
-            <div style={{ width: '40px', height: '4px', background: 'var(--border2)', borderRadius: '2px', margin: '0 auto 16px' }} />
+            <div style={{ width: '40px', height: '4px', background: 'var(--border2)', borderRadius: 'var(--radius-xs)', margin: '0 auto 16px' }} />
             <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '15px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)', marginBottom: '4px' }}>
               PERSONAL BESTS
             </div>
@@ -1934,7 +1934,7 @@ function PersonalBests() {
                   <div style={{ fontFamily: 'var(--headline)', fontSize: '10px', fontWeight: 800, letterSpacing: '0.14em', textTransform: 'uppercase', color: accent.color, opacity: 0.8, marginBottom: '10px' }}>
                     {sport}
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
                     {groupedAll[sport].map(({ key, label, race }) => {
                       const isVisible = !hiddenKeys.has(key)
                       return (
@@ -1944,7 +1944,7 @@ function PersonalBests() {
                           style={{
                             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                             background: 'var(--surface3)', border: `1px solid ${isVisible ? accent.color + '44' : 'var(--border)'}`,
-                            borderRadius: '8px', padding: '10px 12px', cursor: 'pointer',
+                            borderRadius: 'var(--radius-md)', padding: '10px 12px', cursor: 'pointer',
                             opacity: isVisible ? 1 : 0.45,
                           }}
                         >
@@ -1958,14 +1958,14 @@ function PersonalBests() {
                           </div>
                           {/* Toggle pill */}
                           <div style={{
-                            width: '40px', height: '22px', borderRadius: '11px',
+                            width: '40px', height: '22px', borderRadius: 'var(--radius-lg)',
                             background: isVisible ? accent.color : 'var(--border2)',
                             position: 'relative', flexShrink: 0, transition: 'background 0.2s',
                           }}>
                             <div style={{
                               position: 'absolute', top: '3px',
                               left: isVisible ? '21px' : '3px',
-                              width: '16px', height: '16px', borderRadius: '50%',
+                              width: '16px', height: '16px', borderRadius: 'var(--radius-round)',
                               background: isVisible ? '#000' : 'var(--muted)',
                               transition: 'left 0.2s',
                             }} />
@@ -1980,7 +1980,7 @@ function PersonalBests() {
 
             <button
               onClick={() => setShowConfig(false)}
-              style={{ width: '100%', padding: '14px', background: 'var(--orange)', border: 'none', borderRadius: '10px', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', letterSpacing: '0.08em', color: '#000', cursor: 'pointer', marginTop: '4px' }}
+              style={{ width: '100%', padding: 'var(--sp-4)', background: 'var(--orange)', border: 'none', borderRadius: 'var(--radius-lg)', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', letterSpacing: '0.08em', color: '#000', cursor: 'pointer', marginTop: '4px' }}
             >
               DONE
             </button>
@@ -2021,24 +2021,24 @@ function SignatureDistances() {
 
   return (
     <div style={st.section}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', marginBottom: '4px' }}>
         <h2 style={st.sectionTitle}>SIGNATURE DISTANCES</h2>
         <div style={{ height: '1px', flex: 1, background: 'var(--border)' }} />
       </div>
       <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginBottom: '12px', fontFamily: 'var(--headline)', fontWeight: 600, letterSpacing: '0.06em' }}>
         {gender && age ? 'RANKED BY AGE-GRADE WHEN AVAILABLE' : 'RANKED BY PACE / SPEED'}
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
         {top.map((item, i) => (
           <div
             key={item.distance}
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '12px',
+              gap: 'var(--sp-3)',
               background: 'var(--surface2)',
               border: `1px solid ${i === 0 ? 'rgba(var(--orange-ch),0.3)' : 'var(--border)'}`,
-              borderRadius: '10px',
+              borderRadius: 'var(--radius-lg)',
               padding: '12px 14px',
             }}
           >
@@ -2130,7 +2130,7 @@ function AgeGradeTrajectory() {
 
   return (
     <div style={st.section}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', marginBottom: '4px' }}>
         <h2 style={st.sectionTitle}>AGE-GRADE</h2>
         <div style={{ height: '1px', flex: 1, background: 'var(--border)' }} />
         <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', color: 'var(--orange)', letterSpacing: '0.02em' }}>
@@ -2157,9 +2157,9 @@ function AgeGradeTrajectory() {
           )
         })}
       </svg>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
         {history.slice(-5).reverse().map((h, i) => (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px' }}>
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', fontSize: '12px' }}>
             <div style={{ color: 'var(--muted)', width: '80px', flexShrink: 0, fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '10px', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{h.raceDate.slice(0, 7)}</div>
             <div style={{ color: 'var(--muted)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.distance} · {h.raceName}</div>
             <div style={{ color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '12px', flexShrink: 0 }}>{h.pct.toFixed(1)}%</div>
@@ -2249,22 +2249,22 @@ function PerformanceTimeline() {
 
   return (
     <div style={st.section}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', marginBottom: '12px' }}>
         <h2 style={st.sectionTitle}>PERFORMANCE TIMELINE</h2>
         <div style={{ height: '1px', flex: 1, background: 'var(--border)' }} />
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
         {timeline.map(row => (
-          <div key={row.year} style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: '10px', padding: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div key={row.year} style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: 'var(--sp-4)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
             <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', letterSpacing: '0.04em', color: 'var(--orange)' }}>
               {row.year}
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
               {TIMELINE_METRICS.map(({ key, label }) => (
-                <div key={key} style={{ display: 'grid', gridTemplateColumns: '70px 1fr 70px', alignItems: 'center', gap: '8px' }}>
+                <div key={key} style={{ display: 'grid', gridTemplateColumns: '70px 1fr 70px', alignItems: 'center', gap: 'var(--sp-2)' }}>
                   <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)' }}>{label}</div>
-                  <div style={{ height: '5px', background: 'var(--surface3)', borderRadius: '3px', overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${row.metrics[key]}%`, background: 'var(--orange)', borderRadius: '3px', transition: 'width 0.4s ease' }} />
+                  <div style={{ height: '5px', background: 'var(--surface3)', borderRadius: 'var(--radius-xs)', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${row.metrics[key]}%`, background: 'var(--orange)', borderRadius: 'var(--radius-xs)', transition: 'width 0.4s ease' }} />
                   </div>
                   <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, color: 'var(--white)', textAlign: 'right' }}>{row.labels[key]}</div>
                 </div>
@@ -2323,7 +2323,7 @@ function RaceActivityHeatmap() {
         <div style={{ height: '1px', flex: 1, background: 'var(--border)', marginLeft: '16px' }} />
       </div>
 
-      <div style={{ background: 'var(--surface3)', borderRadius: '12px', padding: '14px', marginTop: '10px' }}>
+      <div style={{ background: 'var(--surface3)', borderRadius: 'var(--radius-lg)', padding: 'var(--sp-4)', marginTop: '10px' }}>
         {/* Month headers */}
         <div style={{ display: 'grid', gridTemplateColumns: '36px repeat(12, 1fr)', gap: '4px', marginBottom: '6px' }}>
           <div />
@@ -2351,7 +2351,7 @@ function RaceActivityHeatmap() {
                   onClick={() => !isFuture && count > 0 && setSelectedCell(isSelected ? null : { year, month })}
                   style={{
                     height: '32px',
-                    borderRadius: '6px',
+                    borderRadius: 'var(--radius-sm)',
                     background: isSelected
                       ? 'var(--green)'
                       : count > 0
@@ -2378,7 +2378,7 @@ function RaceActivityHeatmap() {
 
         {/* Selected month details */}
         {selectedCell && selectedRaces.length > 0 && (
-          <div style={{ marginTop: '12px', background: 'var(--surface2)', borderRadius: '10px', padding: '14px' }}>
+          <div style={{ marginTop: '12px', background: 'var(--surface2)', borderRadius: 'var(--radius-lg)', padding: 'var(--sp-4)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
               <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-md)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)' }}>
                 {fmtMonthYear(selectedCell.year, selectedCell.month)}
@@ -2387,10 +2387,10 @@ function RaceActivityHeatmap() {
                 {selectedRaces.length} RACE{selectedRaces.length !== 1 ? 'S' : ''}
               </div>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
               {selectedRaces.sort((a, b) => a.date.localeCompare(b.date)).map(r => (
-                <div key={r.id} style={{ background: 'var(--surface3)', borderRadius: '8px', padding: '12px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                <div key={r.id} style={{ background: 'var(--surface3)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-3)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-2)' }}>
                     <div style={{ minWidth: 0 }}>
                       <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', lineHeight: 1.2 }}>
                         {r.name}
@@ -2463,13 +2463,13 @@ function MajorsQualifiers() {
         </div>
 
         {/* Summary stats */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1px', background: 'var(--border)', borderRadius: '10px', overflow: 'hidden', marginBottom: '14px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1px', background: 'var(--border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden', marginBottom: '14px' }}>
           {[
             { label: 'COMPLETED',   value: `${completedCount}/${MAJORS.length}` },
             { label: 'IN PROGRESS', value: inProgressCount.toString() },
             { label: 'ENTRY READY', value: '0' },
           ].map(s => (
-            <div key={s.label} style={{ background: 'var(--surface3)', padding: '12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <div key={s.label} style={{ background: 'var(--surface3)', padding: 'var(--sp-3)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <div style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase' }}>
                 {s.label}
               </div>
@@ -2481,18 +2481,18 @@ function MajorsQualifiers() {
         </div>
 
         {/* Individual majors */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
           {majorStatus.map(m => (
             <div key={m.id} style={{
               background: 'var(--surface)',
               border: `1px solid ${m.status === 'completed' ? 'rgba(var(--green-ch), 0.3)' : m.status === 'in-progress' ? 'rgba(var(--orange-ch), 0.3)' : 'var(--border)'}`,
-              borderRadius: '10px',
+              borderRadius: 'var(--radius-lg)',
               padding: '14px 16px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
               minHeight: '52px',
-              gap: '12px',
+              gap: 'var(--sp-3)',
             }}>
               <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', letterSpacing: '0.06em', textTransform: 'uppercase', color: m.status === 'completed' ? 'var(--white)' : m.status === 'in-progress' ? 'var(--orange)' : 'var(--muted)' }}>
                 {m.name}
@@ -2504,7 +2504,7 @@ function MajorsQualifiers() {
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase',
                 padding: '5px 12px',
-                borderRadius: '100px',
+                borderRadius: 'var(--radius-pill)',
                 border: `1px solid ${m.status === 'completed' ? 'rgba(var(--green-ch), 0.3)' : m.status === 'in-progress' ? 'rgba(var(--orange-ch), 0.3)' : 'var(--border2)'}`,
                 color: m.status === 'completed' ? 'var(--green)' : m.status === 'in-progress' ? 'var(--orange)' : 'var(--muted)',
                 background: 'transparent',
@@ -2530,7 +2530,7 @@ function RacePersonality() {
   return (
     <div style={st.section}>
       {/* Outer card with orange top glow */}
-      <div style={{ background: 'var(--surface3)', border: '1px solid var(--border)', borderTop: '1px solid rgba(var(--orange-ch), 0.4)', borderRadius: '14px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+      <div style={{ background: 'var(--surface3)', border: '1px solid var(--border)', borderTop: '1px solid rgba(var(--orange-ch), 0.4)', borderRadius: 'var(--radius-lg)', padding: 'var(--sp-5)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
         <div style={{ textAlign: 'center', marginBottom: '4px' }}>
           <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.16em', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '6px' }}>
             RACE PERSONALITY
@@ -2543,9 +2543,9 @@ function RacePersonality() {
           </div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
           {traits.map(t => (
-            <div key={t.trait} style={{ background: 'var(--surface2)', borderRadius: '10px', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <div key={t.trait} style={{ background: 'var(--surface2)', borderRadius: 'var(--radius-lg)', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)' }}>
                   {t.trait}
@@ -2653,11 +2653,11 @@ function GoalsSection() {
   }
 
   const inputSt: React.CSSProperties = {
-    background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px',
+    background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-sm)',
     color: 'var(--white)', fontSize: 'var(--text-compact)', padding: '0.5rem 0.75rem', fontFamily: 'var(--body)',
   }
   const smallBtn: React.CSSProperties = {
-    background: 'var(--orange)', color: 'var(--black)', border: 'none', borderRadius: '4px',
+    background: 'var(--orange)', color: 'var(--black)', border: 'none', borderRadius: 'var(--radius-xs)',
     padding: '0.45rem 0.9rem', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xs)',
     letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer',
   }
@@ -2670,14 +2670,14 @@ function GoalsSection() {
       </div>
 
       {/* Annual cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '12px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-2)', marginBottom: '12px' }}>
         {(['km', 'races'] as const).map(type => {
           const target = type === 'km' ? (ag.km ?? 0) : (ag.races ?? 0)
           const current = type === 'km' ? Math.round(yrKm) : yrCount
           const pct = target ? Math.min(100, Math.round(current / target * 100)) : 0
           const achieved = target > 0 && current >= target
           return (
-            <div key={type} style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '10px', padding: '12px', position: 'relative' }}>
+            <div key={type} style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-lg)', padding: 'var(--sp-3)', position: 'relative' }}>
               <button
                 onClick={() => { setAddMode(type); setAnnualVal(target ? String(target) : '') }}
                 style={{ position: 'absolute', top: '8px', right: '8px', background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}
@@ -2691,8 +2691,8 @@ function GoalsSection() {
               </div>
               {target > 0 ? (
                 <>
-                  <div style={{ height: '4px', background: 'var(--surface)', borderRadius: '2px', marginTop: '8px', overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${pct}%`, background: achieved ? 'var(--green)' : 'var(--orange)', borderRadius: '2px', transition: 'width 0.3s' }} />
+                  <div style={{ height: '4px', background: 'var(--surface)', borderRadius: 'var(--radius-xs)', marginTop: '8px', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${pct}%`, background: achieved ? 'var(--green)' : 'var(--orange)', borderRadius: 'var(--radius-xs)', transition: 'width 0.3s' }} />
                   </div>
                   <div style={{ fontSize: '10px', color: achieved ? 'var(--green)' : 'var(--muted)', marginTop: '4px', fontFamily: 'var(--headline)', fontWeight: 700 }}>
                     {pct}%{achieved ? ' · Achieved!' : ''}
@@ -2708,12 +2708,12 @@ function GoalsSection() {
 
       {/* Distance time goals */}
       {goals.distGoals.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '10px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', marginBottom: '10px' }}>
           {goals.distGoals.map(g => {
             const pb = pbByDist[g.dist]
             const done = pb !== undefined && pb <= g.targetSecs
             return (
-              <div key={g.id} style={{ display: 'flex', alignItems: 'center', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '10px 12px', gap: '10px' }}>
+              <div key={g.id} style={{ display: 'flex', alignItems: 'center', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-md)', padding: '10px 12px', gap: 'var(--sp-2)' }}>
                 <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '12px', color: 'var(--orange)' }}>SUB</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', fontWeight: 600, lineHeight: 1.2 }}>{g.dist}</div>
@@ -2742,24 +2742,24 @@ function GoalsSection() {
 
       {/* Add-goal inline form */}
       {addMode === 'km' && (
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '8px' }}>
+        <div style={{ display: 'flex', gap: 'var(--sp-2)', alignItems: 'center', marginTop: '8px' }}>
           <input type="number" placeholder={`${year} KM target`} value={annualVal} onChange={e => setAnnualVal(e.target.value)} style={{ ...inputSt, flex: 1 }} />
           <button onClick={saveAnnual} style={smallBtn}>Save</button>
           <button onClick={() => setAddMode(null)} style={{ ...smallBtn, background: 'var(--surface3)', color: 'var(--muted)' }}>✕</button>
         </div>
       )}
       {addMode === 'races' && (
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '8px' }}>
+        <div style={{ display: 'flex', gap: 'var(--sp-2)', alignItems: 'center', marginTop: '8px' }}>
           <input type="number" placeholder={`${year} race count target`} value={annualVal} onChange={e => setAnnualVal(e.target.value)} style={{ ...inputSt, flex: 1 }} />
           <button onClick={saveAnnual} style={smallBtn}>Save</button>
           <button onClick={() => setAddMode(null)} style={{ ...smallBtn, background: 'var(--surface3)', color: 'var(--muted)' }}>✕</button>
         </div>
       )}
       {addMode === 'dist' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '8px', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '10px', padding: '14px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)', marginTop: '8px', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-lg)', padding: 'var(--sp-4)' }}>
 
           {/* Step 1 — Sport dropdown */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-2)' }}>
             <div>
               <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '6px' }}>Sport</div>
               <select
@@ -2791,7 +2791,7 @@ function GoalsSection() {
 
           {/* Custom distance input */}
           {goalDist === '__custom__' && (
-            <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: 'var(--sp-2)', alignItems: 'center' }}>
               <input
                 type="number" min={0} step={0.1}
                 placeholder={goalCustomUnit === 'km' ? 'e.g. 30' : 'e.g. 18.6'}
@@ -2799,7 +2799,7 @@ function GoalsSection() {
                 onChange={e => setGoalCustomKm(e.target.value)}
                 style={{ ...inputSt, flex: 1, minWidth: 0 }}
               />
-              <div style={{ display: 'flex', borderRadius: '6px', overflow: 'hidden', border: '1px solid var(--border2)', flexShrink: 0 }}>
+              <div style={{ display: 'flex', borderRadius: 'var(--radius-sm)', overflow: 'hidden', border: '1px solid var(--border2)', flexShrink: 0 }}>
                 {(['km', 'mi'] as const).map(u => (
                   <button key={u} onClick={() => setGoalCustomUnit(u)} style={{
                     background: goalCustomUnit === u ? 'var(--orange)' : 'var(--surface)',
@@ -2834,7 +2834,7 @@ function GoalsSection() {
             </>
           )}
 
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-2)' }}>
             <button onClick={saveDist} disabled={!goalDist || (goalDist === '__custom__' && !goalCustomKm)} style={{ ...smallBtn, flex: 1, opacity: (!goalDist || (goalDist === '__custom__' && !goalCustomKm)) ? 0.4 : 1 }}>Add Goal</button>
             <button onClick={() => { setAddMode(null); setGoalDist(''); setGoalCustomKm(''); setGoalHMS({ h:0, m:0, s:0 }); setGoalDeadline('') }} style={{ ...smallBtn, background: 'var(--surface)', color: 'var(--muted)', flex: 1 }}>Cancel</button>
           </div>
@@ -2870,14 +2870,14 @@ function OnboardingBanner({ onEdit }: { onEdit: () => void }) {
     <div style={{
       background: complete ? 'rgba(var(--green-ch),0.08)' : 'rgba(var(--orange-ch),0.08)',
       border: `1px solid ${complete ? 'rgba(var(--green-ch),0.3)' : 'rgba(var(--orange-ch),0.3)'}`,
-      borderRadius: '12px',
-      padding: '16px',
+      borderRadius: 'var(--radius-lg)',
+      padding: 'var(--sp-4)',
       display: 'flex',
       alignItems: 'center',
-      gap: '12px',
+      gap: 'var(--sp-3)',
       marginBottom: '4px',
     }}>
-      <div style={{ width: 10, height: 10, borderRadius: '50%', background: complete ? 'var(--green)' : 'var(--orange)', flexShrink: 0 }} />
+      <div style={{ width: 10, height: 10, borderRadius: 'var(--radius-round)', background: complete ? 'var(--green)' : 'var(--orange)', flexShrink: 0 }} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', letterSpacing: '0.04em', textTransform: 'uppercase', color: complete ? 'var(--green)' : 'var(--orange)', lineHeight: 1.1 }}>
           {complete ? 'Profile Complete' : `Profile ${filled}/${total} Complete`}
@@ -2902,7 +2902,7 @@ function OnboardingBanner({ onEdit }: { onEdit: () => void }) {
           background: complete ? 'var(--green)' : 'var(--orange)',
           color: '#000',
           border: 'none',
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-md)',
           padding: '8px 14px',
           fontFamily: 'var(--headline)',
           fontWeight: 800,
@@ -2970,7 +2970,7 @@ const st = {
     display: 'grid',
     gridTemplateColumns: '1fr',
     gap: '1rem',
-    padding: '16px',
+    padding: 'var(--sp-4)',
     paddingBottom: '96px',
     fontFamily: 'var(--body)',
     color: 'var(--white)',
@@ -2981,25 +2981,25 @@ const st = {
   heroCard: {
     background: 'var(--surface2)',
     border: '1px solid var(--border2)',
-    borderRadius: '16px',
-    padding: '24px',
+    borderRadius: 'var(--radius-lg)',
+    padding: 'var(--sp-6)',
     display: 'flex',
     flexDirection: 'column',
-    gap: '20px',
+    gap: 'var(--sp-5)',
     minWidth: 0,
   } as React.CSSProperties,
 
   avatarRow: {
     display: 'flex',
     alignItems: 'center',
-    gap: '16px',
+    gap: 'var(--sp-4)',
     minWidth: 0,
   } as React.CSSProperties,
 
   avatar: {
     width: '72px',
     height: '72px',
-    borderRadius: '50%',
+    borderRadius: 'var(--radius-round)',
     background: 'var(--surface3)',
     border: '2px solid var(--orange)',
     display: 'flex',
@@ -3052,7 +3052,7 @@ const st = {
     background: 'rgba(var(--orange-ch), 0.15)',
     border: '1px solid rgba(var(--orange-ch), 0.3)',
     color: 'var(--orange)',
-    borderRadius: '100px',
+    borderRadius: 'var(--radius-pill)',
     padding: '3px 10px',
     fontSize: '10px',
     fontFamily: 'var(--headline)',
@@ -3063,7 +3063,7 @@ const st = {
   heroStats: {
     display: 'grid',
     gridTemplateColumns: 'repeat(4, 1fr)',
-    gap: '8px',
+    gap: 'var(--sp-2)',
     minWidth: 0,
   } as React.CSSProperties,
 
@@ -3071,9 +3071,9 @@ const st = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    gap: '3px',
+    gap: 'var(--sp-1)',
     background: 'linear-gradient(160deg, var(--surface3) 0%, rgba(var(--orange-ch),0.05) 100%)',
-    borderRadius: '10px',
+    borderRadius: 'var(--radius-lg)',
     padding: '12px 8px',
     minWidth: 0,
   } as React.CSSProperties,
@@ -3101,8 +3101,8 @@ const st = {
     background: 'rgba(var(--orange-ch), 0.08)',
     border: '1px solid rgba(var(--orange-ch), 0.2)',
     borderLeft: '3px solid var(--orange)',
-    borderRadius: '10px',
-    padding: '14px',
+    borderRadius: 'var(--radius-lg)',
+    padding: 'var(--sp-4)',
     display: 'flex',
     flexDirection: 'column',
     gap: '4px',
@@ -3146,7 +3146,7 @@ const st = {
   achievementHero: {
     background: 'linear-gradient(135deg, rgba(0,40,20,0.9) 0%, rgba(0,25,12,0.95) 60%, rgba(5,15,8,1) 100%)',
     border: '1px solid rgba(var(--green-ch), 0.2)',
-    borderRadius: '16px',
+    borderRadius: 'var(--radius-lg)',
     padding: '22px',
     minWidth: 0,
   } as React.CSSProperties,
@@ -3154,10 +3154,10 @@ const st = {
   achievementPill: {
     display: 'inline-flex',
     alignItems: 'center',
-    gap: '8px',
+    gap: 'var(--sp-2)',
     background: 'rgba(245,245,245,0.06)',
     border: '1px solid rgba(245,245,245,0.12)',
-    borderRadius: '100px',
+    borderRadius: 'var(--radius-pill)',
     padding: '7px 14px',
     fontSize: 'var(--text-xs)',
     fontFamily: 'var(--headline)',
@@ -3171,32 +3171,32 @@ const st = {
   achievementGroup: {
     background: 'var(--surface2)',
     border: '1px solid var(--border)',
-    borderRadius: '12px',
-    padding: '16px',
+    borderRadius: 'var(--radius-lg)',
+    padding: 'var(--sp-4)',
   } as React.CSSProperties,
 
   achievementGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(3, 1fr)',
-    gap: '8px',
+    gap: 'var(--sp-2)',
   } as React.CSSProperties,
 
   achievementTile: {
     background: 'var(--surface3)',
     border: '1px solid var(--border)',
-    borderRadius: '10px',
+    borderRadius: 'var(--radius-lg)',
     padding: '14px 10px',
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    gap: '8px',
+    gap: 'var(--sp-2)',
     minWidth: 0,
   } as React.CSSProperties,
 
   achievementIconBox: {
     width: '48px',
     height: '48px',
-    borderRadius: '12px',
+    borderRadius: 'var(--radius-lg)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -3221,7 +3221,7 @@ const st = {
     letterSpacing: '0.08em',
     textTransform: 'uppercase',
     padding: '4px 8px',
-    borderRadius: '100px',
+    borderRadius: 'var(--radius-pill)',
     border: '1px solid rgba(245,245,245,0.08)',
   } as React.CSSProperties,
 
@@ -3231,7 +3231,7 @@ const st = {
     alignItems: 'center',
     background: 'var(--surface3)',
     border: '1px solid var(--border2)',
-    borderRadius: '100px',
+    borderRadius: 'var(--radius-pill)',
     padding: '7px 16px',
     fontFamily: 'var(--headline)',
     fontSize: 'var(--text-xs)',
@@ -3250,11 +3250,11 @@ const st = {
   subsection: {
     background: 'var(--surface2)',
     border: '1px solid var(--border)',
-    borderRadius: '12px',
-    padding: '16px',
+    borderRadius: 'var(--radius-lg)',
+    padding: 'var(--sp-4)',
     display: 'flex',
     flexDirection: 'column',
-    gap: '12px',
+    gap: 'var(--sp-3)',
     minWidth: 0,
   } as React.CSSProperties,
 
@@ -3272,8 +3272,8 @@ const st = {
   pbCard: {
     background: 'var(--surface2)',
     border: '1px solid var(--border)',
-    borderRadius: '10px',
-    padding: '14px',
+    borderRadius: 'var(--radius-lg)',
+    padding: 'var(--sp-4)',
     display: 'flex',
     flexDirection: 'column',
     gap: '4px',
@@ -3310,7 +3310,7 @@ const st = {
   detailRow: {
     display: 'flex',
     alignItems: 'center',
-    gap: '12px',
+    gap: 'var(--sp-3)',
     borderBottom: '1px solid var(--border)',
     paddingBottom: '10px',
   } as React.CSSProperties,
@@ -3347,7 +3347,7 @@ const st = {
   editBtnSmall: {
     background: 'transparent',
     border: '1px solid var(--border2)',
-    borderRadius: '100px',
+    borderRadius: 'var(--radius-pill)',
     color: 'var(--muted)',
     padding: '5px 12px',
     fontSize: 'var(--text-xs)',
@@ -3363,7 +3363,7 @@ const st = {
     background: 'transparent',
     color: 'var(--orange)',
     border: '1px solid rgba(var(--orange-ch), 0.5)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-md)',
     padding: '10px 18px',
     fontFamily: 'var(--headline)',
     fontWeight: 800,
@@ -3377,7 +3377,7 @@ const st = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    gap: '12px',
+    gap: 'var(--sp-3)',
     padding: '28px 16px',
     textAlign: 'center',
   } as React.CSSProperties,

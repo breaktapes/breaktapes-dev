@@ -15,7 +15,7 @@ const btnGhost: React.CSSProperties = {
   background: 'transparent',
   color: 'var(--white)',
   border: '1px solid var(--border2)',
-  borderRadius: '4px',
+  borderRadius: 'var(--radius-xs)',
   padding: '0.8rem 1.25rem',
   fontFamily: 'var(--headline)',
   fontWeight: 900,
@@ -28,7 +28,7 @@ const btnGhost: React.CSSProperties = {
 const card: React.CSSProperties = {
   background: 'var(--surface2)',
   border: '1px solid var(--border)',
-  borderRadius: '8px',
+  borderRadius: 'var(--radius-md)',
   padding: '1rem',
 }
 
@@ -105,9 +105,9 @@ export function Settings() {
           Settings
         </h1>
         {authUser && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
             <div style={{
-              width: '7px', height: '7px', borderRadius: '50%',
+              width: '7px', height: '7px', borderRadius: 'var(--radius-round)',
               background: syncStatus === 'ok' ? '#00FF88'
                 : syncStatus === 'error' ? '#FF4444'
                 : syncStatus === 'syncing' ? 'var(--orange)'
@@ -133,13 +133,13 @@ export function Settings() {
           <button
             onClick={() => setAccountExpanded(v => !v)}
             style={{
-              display: 'flex', alignItems: 'center', gap: '14px',
+              display: 'flex', alignItems: 'center', gap: 'var(--sp-4)',
               width: '100%', background: 'transparent', border: 'none',
               cursor: 'pointer', padding: '14px 16px', textAlign: 'left',
             }}
           >
             <div style={{
-              width: '42px', height: '42px', borderRadius: '50%',
+              width: '42px', height: '42px', borderRadius: 'var(--radius-round)',
               background: 'var(--orange)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontFamily: 'var(--headline)', fontWeight: 900,
@@ -147,7 +147,7 @@ export function Settings() {
               flexShrink: 0, letterSpacing: '0.04em',
             }}>
               {clerkUser?.imageUrl
-                ? <img src={clerkUser.imageUrl} alt="" style={{ width: '100%', height: '100%', borderRadius: '50%', objectFit: 'cover' }} />
+                ? <img src={clerkUser.imageUrl} alt="" style={{ width: '100%', height: '100%', borderRadius: 'var(--radius-round)', objectFit: 'cover' }} />
                 : ([clerkUser?.firstName?.[0], clerkUser?.lastName?.[0]].filter(Boolean).join('').toUpperCase() ||
                    athlete?.firstName?.[0]?.toUpperCase() ||
                    authUser?.email?.[0]?.toUpperCase() || '?')}
@@ -179,7 +179,7 @@ export function Settings() {
               <button
                 onClick={() => { setAccountExpanded(false); openUserProfile() }}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: '10px',
+                  display: 'flex', alignItems: 'center', gap: 'var(--sp-2)',
                   width: '100%', background: 'transparent', border: 'none',
                   cursor: 'pointer', padding: '10px 4px', textAlign: 'left',
                   color: 'var(--white)',
@@ -195,7 +195,7 @@ export function Settings() {
               <button
                 onClick={() => { setAccountExpanded(false); handleSignOut() }}
                 style={{
-                  display: 'flex', alignItems: 'center', gap: '10px',
+                  display: 'flex', alignItems: 'center', gap: 'var(--sp-2)',
                   width: '100%', background: 'transparent', border: 'none',
                   cursor: 'pointer', padding: '10px 4px', textAlign: 'left',
                   color: 'var(--orange)',
@@ -230,7 +230,7 @@ export function Settings() {
               disabled={!athlete?.username}
               style={{
                 width: '48px', height: '28px',
-                borderRadius: '14px',
+                borderRadius: 'var(--radius-lg)',
                 border: 'none',
                 cursor: athlete?.username ? 'pointer' : 'not-allowed',
                 background: isPublic ? 'var(--green)' : 'var(--surface3)',
@@ -244,7 +244,7 @@ export function Settings() {
                 top: '3px',
                 left: isPublic ? '23px' : '3px',
                 width: '22px', height: '22px',
-                borderRadius: '50%',
+                borderRadius: 'var(--radius-round)',
                 background: 'var(--black)',
                 transition: 'left 0.2s',
               }} />
@@ -289,7 +289,7 @@ export function Settings() {
                         onClick={() => updateAthlete({ profileVisibility: { ...vis, [key]: !enabled } })}
                         style={{
                           width: '42px', height: '24px',
-                          borderRadius: '12px', border: 'none',
+                          borderRadius: 'var(--radius-lg)', border: 'none',
                           cursor: 'pointer',
                           background: enabled ? 'var(--orange)' : 'var(--surface3)',
                           position: 'relative', transition: 'background 0.2s',
@@ -300,7 +300,7 @@ export function Settings() {
                           position: 'absolute', top: '3px',
                           left: enabled ? '20px' : '3px',
                           width: '18px', height: '18px',
-                          borderRadius: '50%', background: 'var(--black)',
+                          borderRadius: 'var(--radius-round)', background: 'var(--black)',
                           transition: 'left 0.2s',
                         }} />
                       </button>
@@ -326,7 +326,7 @@ export function Settings() {
             <p style={{ margin: '0 0 10px', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
               Distances, paces, and speeds across the app
             </p>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-2)' }}>
               {(['metric', 'imperial'] as const).map(u => {
                 const active = (athlete?.units ?? 'metric') === u
                 return (
@@ -334,8 +334,8 @@ export function Settings() {
                     key={u}
                     onClick={() => updateAthlete({ units: u })}
                     style={{
-                      padding: '10px',
-                      borderRadius: '8px',
+                      padding: 'var(--sp-3)',
+                      borderRadius: 'var(--radius-md)',
                       border: active ? '2px solid var(--orange)' : '1px solid var(--border2)',
                       background: active ? 'rgba(var(--orange-ch),0.1)' : 'var(--surface3)',
                       cursor: 'pointer',
@@ -375,13 +375,13 @@ export function Settings() {
                   height: '80px',
                   background: 'var(--surface2)',
                   border: isActive ? '2px solid var(--orange)' : '1px solid var(--border)',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-md)',
                   cursor: theme.comingSoon ? 'default' : 'pointer',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '6px',
+                  gap: 'var(--sp-2)',
                   padding: '0.5rem',
                   opacity: theme.comingSoon ? 0.45 : 1,
                   position: 'relative',
@@ -409,7 +409,7 @@ export function Settings() {
                     color: 'var(--muted)',
                     background: 'rgba(245,245,245,0.06)',
                     padding: '1px 5px',
-                    borderRadius: '3px',
+                    borderRadius: 'var(--radius-xs)',
                   }}>
                     SOON
                   </span>
@@ -506,7 +506,7 @@ export function Settings() {
         position: 'fixed', bottom: 'calc(var(--safe-bottom, 0px) + 80px)', left: '50%',
         transform: 'translateX(-50%)', zIndex: 2000,
         background: 'var(--surface3)', border: '1px solid rgba(var(--orange-ch),0.5)',
-        color: 'var(--orange)', borderRadius: '20px', padding: '10px 20px',
+        color: 'var(--orange)', borderRadius: 'var(--radius-pill)', padding: '10px 20px',
         fontSize: 'var(--text-sm)', fontFamily: 'var(--headline)', fontWeight: 700,
         letterSpacing: '0.06em', whiteSpace: 'nowrap', pointerEvents: 'none',
       }}>

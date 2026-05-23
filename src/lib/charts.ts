@@ -22,7 +22,7 @@ export function getChartTheme() {
       contentStyle: {
         background: surface3,
         border: '1px solid rgba(255,255,255,0.07)',
-        borderRadius: 8,
+        borderRadius: 'var(--radius-md)',
         fontFamily: 'var(--body)',
       },
     },

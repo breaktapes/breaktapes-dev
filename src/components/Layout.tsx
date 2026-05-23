@@ -47,7 +47,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             width: '36px', height: '36px',
             background: 'var(--surface2)',
             border: `1px solid ${onSettings ? 'var(--orange)' : 'var(--border2)'}`,
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-md)',
             color: onSettings ? 'var(--orange)' : 'var(--muted)',
             cursor: 'pointer', flexShrink: 0,
           }}

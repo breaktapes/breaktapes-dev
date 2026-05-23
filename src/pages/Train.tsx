@@ -43,7 +43,7 @@ const btnMain: React.CSSProperties = {
   background: 'var(--orange)',
   color: 'var(--black)',
   border: 'none',
-  borderRadius: '4px',
+  borderRadius: 'var(--radius-xs)',
   padding: '0.8rem 1.25rem',
   fontFamily: 'var(--headline)',
   fontWeight: 900,
@@ -56,7 +56,7 @@ const btnMain: React.CSSProperties = {
 const card: React.CSSProperties = {
   background: 'var(--surface2)',
   border: '1px solid var(--border)',
-  borderRadius: '8px',
+  borderRadius: 'var(--radius-md)',
   padding: '1rem',
 }
 
@@ -85,7 +85,7 @@ const textInput: React.CSSProperties = {
   width: '100%',
   background: 'var(--surface3)',
   border: '1px solid var(--border2)',
-  borderRadius: '6px',
+  borderRadius: 'var(--radius-sm)',
   color: 'var(--white)',
   fontSize: '15px',
   padding: '0.65rem 0.85rem',
@@ -446,7 +446,7 @@ export function Train() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
 
           {/* Sport selector */}
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-2)' }}>
             {(['running', 'triathlon'] as const).map(s => (
               <button
                 key={s}
@@ -455,7 +455,7 @@ export function Train() {
                   flex: 1,
                   padding: '0.6rem',
                   border: `1px solid ${sport === s ? 'var(--orange)' : 'var(--border2)'}`,
-                  borderRadius: '6px',
+                  borderRadius: 'var(--radius-sm)',
                   background: sport === s ? 'rgba(var(--orange-ch),0.12)' : 'var(--surface2)',
                   color: sport === s ? 'var(--orange)' : 'var(--muted)',
                   fontFamily: 'var(--headline)',
@@ -490,7 +490,7 @@ export function Train() {
                           width: '100%',
                           background: 'var(--surface3)',
                           border: '1px solid var(--border2)',
-                          borderRadius: '8px',
+                          borderRadius: 'var(--radius-md)',
                           color: 'var(--white)',
                           fontFamily: 'var(--headline)',
                           fontWeight: 700,
@@ -515,7 +515,7 @@ export function Train() {
                   {runDistId === 'custom' && (
                     <div>
                       <label style={fieldLabel}>Custom Distance</label>
-                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', gap: 'var(--sp-2)', alignItems: 'center' }}>
                         <input
                           type="number"
                           placeholder="e.g. 15"
@@ -523,7 +523,7 @@ export function Train() {
                           onChange={e => { setCustomVal(e.target.value); setRunResult(null) }}
                           style={{ ...textInput, flex: 1 }}
                         />
-                        <div style={{ display: 'flex', borderRadius: '6px', overflow: 'hidden', border: '1px solid var(--border2)', flexShrink: 0 }}>
+                        <div style={{ display: 'flex', borderRadius: 'var(--radius-sm)', overflow: 'hidden', border: '1px solid var(--border2)', flexShrink: 0 }}>
                           {(['km', 'mi'] as const).map(u => (
                             <button
                               key={u}
@@ -570,7 +570,7 @@ export function Train() {
                         style={{
                           background: 'rgba(var(--orange-ch),0.1)',
                           border: '1px solid rgba(var(--orange-ch),0.3)',
-                          borderRadius: '6px',
+                          borderRadius: 'var(--radius-sm)',
                           padding: '0.6rem 1rem',
                           color: 'var(--orange)',
                           fontFamily: 'var(--headline)',
@@ -596,7 +596,7 @@ export function Train() {
                     <div style={{
                       background: 'var(--surface3)',
                       border: '1px solid var(--border2)',
-                      borderRadius: '8px',
+                      borderRadius: 'var(--radius-md)',
                       padding: '1rem',
                       display: 'grid',
                       gridTemplateColumns: '1fr 1fr',
@@ -707,7 +707,7 @@ export function Train() {
                           flex: 1, padding: '5px 4px',
                           background: splitStrategy === s ? 'rgba(var(--orange-ch),0.12)' : 'var(--surface3)',
                           border: `1px solid ${splitStrategy === s ? 'rgba(var(--orange-ch),0.4)' : 'var(--border2)'}`,
-                          borderRadius: '6px',
+                          borderRadius: 'var(--radius-sm)',
                           color: splitStrategy === s ? 'var(--orange)' : 'var(--muted)',
                           fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '10px',
                           letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer',
@@ -719,14 +719,14 @@ export function Train() {
 
                     {/* Variance % input for pos/neg */}
                     {splitStrategy !== 'even' && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', marginBottom: '10px' }}>
                         <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
                           {splitStrategy === 'negative' ? 'Second half faster by' : 'Second half slower by'}
                         </span>
                         <input
                           type="number" min={1} max={15} value={splitVariancePct}
                           onChange={e => setSplitVariancePct(Math.min(15, Math.max(1, parseInt(e.target.value) || 1)))}
-                          style={{ width: '48px', textAlign: 'center', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', padding: '4px' }}
+                          style={{ width: '48px', textAlign: 'center', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-sm)', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', padding: 'var(--sp-1)' }}
                         />
                         <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>%</span>
                       </div>
@@ -742,7 +742,7 @@ export function Train() {
                             padding: '6px 4px',
                             background: splitsTab === t.id ? 'rgba(var(--orange-ch),0.12)' : 'var(--surface3)',
                             border: `1px solid ${splitsTab === t.id ? 'rgba(var(--orange-ch),0.4)' : 'var(--border2)'}`,
-                            borderRadius: '6px',
+                            borderRadius: 'var(--radius-sm)',
                             color: splitsTab === t.id ? 'var(--orange)' : 'var(--muted)',
                             fontFamily: 'var(--headline)',
                             fontWeight: 700,
@@ -781,13 +781,13 @@ export function Train() {
               {runZones && (
                 <div style={card}>
                   <p style={sectionLabel}>Training Zones</p>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
                     {runZones.map(z => {
                       const zoneColors = ['#4ade80','#60a5fa','#facc15','#f97316','#ef4444']
                       const color = zoneColors[z.zone - 1] ?? 'var(--orange)'
                       return (
-                        <div key={z.zone} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: color + '22', border: `1px solid ${color}55`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <div key={z.zone} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
+                          <div style={{ width: '28px', height: '28px', borderRadius: 'var(--radius-sm)', background: color + '22', border: `1px solid ${color}55`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                             <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color }}>{z.abbr}</span>
                           </div>
                           <div style={{ flex: 1, minWidth: 0 }}>
@@ -797,8 +797,8 @@ export function Train() {
                                 {z.minPaceStr} – {z.maxPaceStr}
                               </span>
                             </div>
-                            <div style={{ height: '4px', background: 'var(--surface3)', borderRadius: '2px', marginTop: '4px', overflow: 'hidden' }}>
-                              <div style={{ height: '100%', width: `${(z.zone / 5) * 100}%`, background: color, borderRadius: '2px' }} />
+                            <div style={{ height: '4px', background: 'var(--surface3)', borderRadius: 'var(--radius-xs)', marginTop: '4px', overflow: 'hidden' }}>
+                              <div style={{ height: '100%', width: `${(z.zone / 5) * 100}%`, background: color, borderRadius: 'var(--radius-xs)' }} />
                             </div>
                           </div>
                         </div>
@@ -839,7 +839,7 @@ export function Train() {
                       See what your PB paces would look like at a different age, based on WA masters age-grading factors.
                     </p>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '12px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-2)', marginBottom: '12px' }}>
                       <div>
                         <label style={fieldLabel}>Current Age</label>
                         <input
@@ -873,7 +873,7 @@ export function Train() {
 
                       return (
                         <>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px', padding: '7px 10px', borderRadius: '6px', background: ratio < 1 ? 'rgba(0,255,136,0.06)' : ratio > 1 ? 'rgba(249,115,22,0.06)' : 'var(--surface3)', border: `1px solid ${ratio < 1 ? 'rgba(0,255,136,0.2)' : ratio > 1 ? 'rgba(249,115,22,0.2)' : 'var(--border)'}` }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', marginBottom: '10px', padding: '7px 10px', borderRadius: 'var(--radius-sm)', background: ratio < 1 ? 'rgba(0,255,136,0.06)' : ratio > 1 ? 'rgba(249,115,22,0.06)' : 'var(--surface3)', border: `1px solid ${ratio < 1 ? 'rgba(0,255,136,0.2)' : ratio > 1 ? 'rgba(249,115,22,0.2)' : 'var(--border)'}` }}>
                             <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color: ratio < 1 ? 'var(--green)' : ratio > 1 ? '#f97316' : 'var(--muted)' }}>
                               {direction}
                             </span>
@@ -885,7 +885,7 @@ export function Train() {
                           </div>
 
                           {/* PB projection table */}
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', padding: '4px 0 8px', borderBottom: '1px solid var(--border2)' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--sp-2)', padding: '4px 0 8px', borderBottom: '1px solid var(--border2)' }}>
                             {['Distance', `Age ${resolvedCurrentAge}`, `Age ${targetAge}`].map(h => (
                               <span key={h} style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)' }}>{h}</span>
                             ))}
@@ -895,7 +895,7 @@ export function Train() {
                             const projStr  = secsToHMS(Math.round(projSecs))
                             const projPaceKm = secsToMMSS(projSecs / row.km)
                             return (
-                              <div key={row.label} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', padding: '10px 0', borderBottom: '1px solid var(--border)', alignItems: 'center' }}>
+                              <div key={row.label} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--sp-2)', padding: '10px 0', borderBottom: '1px solid var(--border)', alignItems: 'center' }}>
                                 <span style={{ fontSize: '12px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', fontFamily: 'var(--headline)', fontWeight: 700 }}>{row.label}</span>
                                 <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', color: 'var(--white)' }}>{row.timeStr}</span>
                                 <div>
@@ -907,7 +907,7 @@ export function Train() {
                           })}
 
                           {/* How it works */}
-                          <div style={{ marginTop: '14px', padding: '12px', borderRadius: '8px', background: 'var(--surface3)', border: '1px solid var(--border)' }}>
+                          <div style={{ marginTop: '14px', padding: 'var(--sp-3)', borderRadius: 'var(--radius-md)', background: 'var(--surface3)', border: '1px solid var(--border)' }}>
                             <p style={{ margin: '0 0 8px', fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)' }}>How it works</p>
                             <p style={{ margin: '0 0 6px', fontSize: '12px', color: 'var(--muted)', lineHeight: 1.5 }}>
                               Formula: <span style={{ color: 'var(--white)', fontFamily: 'monospace', fontSize: 'var(--text-xs)' }}>projected = current × (factor_target / factor_current)</span>
@@ -919,7 +919,7 @@ export function Train() {
                               {([15,20,25,35,40,45,50,55,60,65] as number[]).map(a => {
                                 const f = waAgeFactor(a, gender)
                                 return (
-                                  <div key={a} style={{ textAlign: 'center', padding: '5px 2px', borderRadius: '5px', background: f <= 1.0 ? 'rgba(0,255,136,0.08)' : 'var(--surface2)', border: `1px solid ${f <= 1.0 ? 'rgba(0,255,136,0.2)' : 'var(--border)'}` }}>
+                                  <div key={a} style={{ textAlign: 'center', padding: '5px 2px', borderRadius: 'var(--radius-sm)', background: f <= 1.0 ? 'rgba(0,255,136,0.08)' : 'var(--surface2)', border: `1px solid ${f <= 1.0 ? 'rgba(0,255,136,0.2)' : 'var(--border)'}` }}>
                                     <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700 }}>Age {a}</div>
                                     <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 900, color: f <= 1.0 ? 'var(--green)' : 'var(--white)' }}>{f.toFixed(3)}</div>
                                   </div>
@@ -967,7 +967,7 @@ export function Train() {
                             width: '100%',
                             background: 'var(--surface3)',
                             border: '1px solid var(--border2)',
-                            borderRadius: '8px',
+                            borderRadius: 'var(--radius-md)',
                             color: 'var(--white)',
                             fontFamily: 'var(--headline)',
                             fontWeight: 700,
@@ -1002,7 +1002,7 @@ export function Train() {
                             width: '100%',
                             background: 'rgba(var(--orange-ch),0.1)',
                             border: '1px solid rgba(var(--orange-ch),0.3)',
-                            borderRadius: '6px',
+                            borderRadius: 'var(--radius-sm)',
                             padding: '0.6rem 1rem',
                             color: 'var(--orange)',
                             fontFamily: 'var(--headline)',
@@ -1039,7 +1039,7 @@ export function Train() {
                       style={{
                         width: `${w}px`, textAlign: 'center',
                         background: 'var(--surface)', border: '1px solid var(--border2)',
-                        borderRadius: '6px', color: 'var(--white)',
+                        borderRadius: 'var(--radius-sm)', color: 'var(--white)',
                         fontFamily: 'var(--headline)', fontWeight: 900,
                         fontSize: 'var(--text-base)', padding: '6px 4px',
                         MozAppearance: 'textfield',
@@ -1061,13 +1061,13 @@ export function Train() {
                   ) => (
                     <div style={{
                       display: 'grid', gridTemplateColumns: '1fr auto auto',
-                      gap: '10px', alignItems: 'center',
+                      gap: 'var(--sp-2)', alignItems: 'center',
                       padding: '10px 0',
                       borderBottom: isLast ? 'none' : '1px solid var(--border)',
                     }}>
                       <div style={{ minWidth: 0 }}>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color: 'var(--white)', letterSpacing: '0.04em' }}>
-                          <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '8px', letterSpacing: '0.06em', color: 'var(--orange)', background: 'rgba(var(--orange-ch),0.12)', borderRadius: '3px', padding: '1px 4px' }}>{emoji}</span>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--sp-2)', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color: 'var(--white)', letterSpacing: '0.04em' }}>
+                          <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '8px', letterSpacing: '0.06em', color: 'var(--orange)', background: 'rgba(var(--orange-ch),0.12)', borderRadius: 'var(--radius-xs)', padding: '1px 4px' }}>{emoji}</span>
                           {label}
                         </span>
                         {sub && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginLeft: '6px' }}>{sub}</span>}
@@ -1089,13 +1089,13 @@ export function Train() {
                   return (
                     <div>
                       {/* Mode toggle */}
-                      <div style={{ display: 'flex', gap: '6px', marginBottom: '12px' }}>
+                      <div style={{ display: 'flex', gap: 'var(--sp-2)', marginBottom: '12px' }}>
                         {(['pace', 'time'] as const).map(m => (
                           <button key={m} onClick={() => setTriMode(m)} style={{
                             flex: 1, padding: '7px 0',
                             background: triMode === m ? 'rgba(var(--orange-ch),0.12)' : 'var(--surface3)',
                             border: `1px solid ${triMode === m ? 'rgba(var(--orange-ch),0.4)' : 'var(--border2)'}`,
-                            borderRadius: '6px',
+                            borderRadius: 'var(--radius-sm)',
                             color: triMode === m ? 'var(--orange)' : 'var(--muted)',
                             fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)',
                             letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer',
@@ -1106,7 +1106,7 @@ export function Train() {
                       </div>
 
                       {/* Column headers */}
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: '10px', paddingBottom: '6px', borderBottom: '2px solid var(--border2)' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 'var(--sp-2)', paddingBottom: '6px', borderBottom: '2px solid var(--border2)' }}>
                         <span style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Segment</span>
                         <span style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{triMode === 'pace' ? 'Pace' : 'Time'}</span>
                         <span style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', minWidth: '64px', textAlign: 'right' }}>{triMode === 'pace' ? 'Time' : 'Pace'}</span>
@@ -1142,7 +1142,7 @@ export function Train() {
 
                       {/* PB reference */}
                       {triPB && (
-                        <div style={{ background: 'rgba(var(--orange-ch),0.06)', border: '1px solid rgba(var(--orange-ch),0.2)', borderRadius: '6px', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ background: 'rgba(var(--orange-ch),0.06)', border: '1px solid rgba(var(--orange-ch),0.2)', borderRadius: 'var(--radius-sm)', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Your best at this distance</span>
                           <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', color: 'var(--orange)' }}>{triPB.time}</span>
                         </div>
@@ -1160,7 +1160,7 @@ export function Train() {
                         return (
                           <div>
                             <p style={{ margin: '0 0 8px', fontSize: '10px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--headline)', fontWeight: 700 }}>Time Split</p>
-                            <div style={{ display: 'flex', height: '12px', borderRadius: '6px', overflow: 'hidden', gap: '1px' }}>
+                            <div style={{ display: 'flex', height: '12px', borderRadius: 'var(--radius-sm)', overflow: 'hidden', gap: '1px' }}>
                               {segs.map(seg => <div key={seg.label} style={{ width: `${(seg.sec / triResult.totalSec) * 100}%`, background: seg.color, minWidth: seg.sec > 0 ? '2px' : '0' }} />)}
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '4px', marginTop: '8px' }}>

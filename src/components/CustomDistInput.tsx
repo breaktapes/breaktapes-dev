@@ -4,7 +4,7 @@ const inputStyle: React.CSSProperties = {
   width: '100%',
   background: 'var(--surface3)',
   border: '1px solid var(--border2)',
-  borderRadius: '6px',
+  borderRadius: 'var(--radius-sm)',
   color: 'var(--white)',
   fontSize: 'var(--text-sm)',
   padding: '0.6rem 0.75rem',
@@ -48,7 +48,7 @@ export function CustomDistInput({ value, onChange, placeholder }: Props) {
   }
 
   return (
-    <div style={{ display: 'flex', gap: '6px', marginTop: '6px' }}>
+    <div style={{ display: 'flex', gap: 'var(--sp-2)', marginTop: '6px' }}>
       <input
         style={{ ...inputStyle, flex: 1 }}
         type="text"
@@ -57,7 +57,7 @@ export function CustomDistInput({ value, onChange, placeholder }: Props) {
         onChange={e => handleChange(e.target.value)}
         placeholder={placeholder ?? (unit === 'km' ? 'e.g. 42.2' : 'e.g. 26.2')}
       />
-      <div style={{ display: 'flex', borderRadius: '6px', overflow: 'hidden', border: '1px solid var(--border2)', flexShrink: 0 }}>
+      <div style={{ display: 'flex', borderRadius: 'var(--radius-sm)', overflow: 'hidden', border: '1px solid var(--border2)', flexShrink: 0 }}>
         {(['km', 'mi'] as const).map(u => (
           <button
             key={u}

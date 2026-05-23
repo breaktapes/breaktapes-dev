@@ -299,7 +299,7 @@ function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (v: b
       style={{
         width: '46px', height: '27px',
         background: checked ? 'var(--orange)' : 'var(--surface3)',
-        borderRadius: '14px',
+        borderRadius: 'var(--radius-lg)',
         border: `1px solid ${checked ? 'rgba(var(--orange-ch), 0.5)' : 'var(--border2)'}`,
         position: 'relative',
         cursor: 'pointer',
@@ -313,7 +313,7 @@ function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (v: b
         left: checked ? '22px' : '3px',
         width: '19px', height: '19px',
         background: '#fff',
-        borderRadius: '50%',
+        borderRadius: 'var(--radius-round)',
         transition: 'left 0.2s ease',
         boxShadow: '0 1px 4px rgba(0,0,0,0.5)',
       }} />
@@ -458,18 +458,18 @@ function GreetingCard({ onCustomize }: { onCustomize: () => void }) {
         {geoState === 'ok' && weather ? (
           <div style={{ marginTop: '10px' }}>
             {weather.hourly.length > 0 && (
-              <div style={{ display: 'flex', gap: '6px' }}>
+              <div style={{ display: 'flex', gap: 'var(--sp-2)' }}>
                 {weather.hourly.map((h, i) => (
                   <div key={i} style={{
                     flex: 1,
                     background: h.isSun ? 'rgba(var(--orange-ch), 0.10)' : 'var(--surface3)',
                     border: h.isSun ? '1px solid rgba(var(--orange-ch), 0.30)' : '1px solid transparent',
-                    borderRadius: '10px',
+                    borderRadius: 'var(--radius-lg)',
                     padding: '10px 4px',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
-                    gap: '5px',
+                    gap: 'var(--sp-1)',
                     minWidth: 0,
                   }}>
                     <span style={{ fontSize: 'var(--text-md)', lineHeight: 1 }}>{h.icon}</span>
@@ -486,7 +486,7 @@ function GreetingCard({ onCustomize }: { onCustomize: () => void }) {
         ) : geoState === 'asking' ? (
           <button
             onClick={requestWeather}
-            style={{ marginTop: '8px', background: 'rgba(var(--orange-ch),0.12)', border: '1px solid rgba(var(--orange-ch),0.35)', borderRadius: '8px', padding: '8px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '12px', letterSpacing: '0.06em', textTransform: 'uppercase' }}
+            style={{ marginTop: '8px', background: 'rgba(var(--orange-ch),0.12)', border: '1px solid rgba(var(--orange-ch),0.35)', borderRadius: 'var(--radius-md)', padding: '8px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '12px', letterSpacing: '0.06em', textTransform: 'uppercase' }}
           >
             Tap to show local weather
           </button>
@@ -558,7 +558,7 @@ function RaceMorningBrief({ race, onEditRace, onComplete }: { race: Race; onEdit
     <div style={{ ...st.briefingCard, border: '1px solid rgba(232,78,27,0.4)' }}>
       <div style={st.briefingInner}>
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-1)' }}>
           <IconPin />
           <span style={st.briefingTag}>{isToday ? 'RACE DAY!' : 'TOMORROW!'}</span>
         </div>
@@ -575,7 +575,7 @@ function RaceMorningBrief({ race, onEditRace, onComplete }: { race: Race; onEdit
 
         {/* Goal pace */}
         {goalPace ? (
-          <div style={{ marginTop: '10px', background: 'var(--surface3)', borderRadius: '8px', padding: '10px 12px', display: 'flex', gap: '1.5rem' }}>
+          <div style={{ marginTop: '10px', background: 'var(--surface3)', borderRadius: 'var(--radius-md)', padding: '10px 12px', display: 'flex', gap: '1.5rem' }}>
             <div>
               <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '10px', letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '2px' }}>Goal Pace</div>
               <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-md)', color: 'var(--orange)', letterSpacing: '0.02em' }}>{goalPace.pace}</div>
@@ -601,7 +601,7 @@ function RaceMorningBrief({ race, onEditRace, onComplete }: { race: Race; onEdit
         {/* Gear checklist */}
         <div style={{ marginTop: '10px' }}>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '10px', letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '6px' }}>Gear Checklist</div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-2)' }}>
             {allItems.map(item => {
               const packed = packedGear.includes(item)
               return (
@@ -613,7 +613,7 @@ function RaceMorningBrief({ race, onEditRace, onComplete }: { race: Race; onEdit
                     background: packed ? 'rgba(var(--green-ch),0.12)' : 'var(--surface3)',
                     color: packed ? 'var(--green)' : 'var(--muted)',
                     border: `1px solid ${packed ? 'rgba(var(--green-ch),0.3)' : 'var(--border2)'}`,
-                    borderRadius: '6px', padding: '6px 12px',
+                    borderRadius: 'var(--radius-sm)', padding: '6px 12px',
                     fontFamily: 'var(--headline)', fontWeight: 700,
                     fontSize: '10px', letterSpacing: '0.06em',
                     textTransform: 'uppercase', cursor: 'pointer',
@@ -626,7 +626,7 @@ function RaceMorningBrief({ race, onEditRace, onComplete }: { race: Race; onEdit
             })}
           </div>
           {/* Add item */}
-          <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-2)', marginTop: '8px' }}>
             <input
               type="text"
               placeholder="+ Add item"
@@ -635,7 +635,7 @@ function RaceMorningBrief({ race, onEditRace, onComplete }: { race: Race; onEdit
               onKeyDown={e => e.key === 'Enter' && addGearItem()}
               style={{
                 flex: 1, background: 'var(--surface3)', border: '1px solid var(--border)',
-                borderRadius: '6px', padding: '5px 8px',
+                borderRadius: 'var(--radius-sm)', padding: '5px 8px',
                 fontFamily: 'var(--body)', fontSize: '12px', color: 'var(--white)',
                 outline: 'none',
               }}
@@ -644,7 +644,7 @@ function RaceMorningBrief({ race, onEditRace, onComplete }: { race: Race; onEdit
               onClick={addGearItem}
               style={{
                 background: 'var(--surface3)', color: 'var(--orange)',
-                border: '1px solid var(--border2)', borderRadius: '6px',
+                border: '1px solid var(--border2)', borderRadius: 'var(--radius-sm)',
                 padding: '5px 10px', fontFamily: 'var(--headline)',
                 fontWeight: 800, fontSize: '10px', letterSpacing: '0.08em',
                 textTransform: 'uppercase', cursor: 'pointer',
@@ -664,7 +664,7 @@ function RaceMorningBrief({ race, onEditRace, onComplete }: { race: Race; onEdit
               background: 'var(--green)',
               color: '#000',
               border: 'none',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-md)',
               padding: '12px 16px',
               fontFamily: 'var(--headline)',
               fontWeight: 900,
@@ -677,7 +677,7 @@ function RaceMorningBrief({ race, onEditRace, onComplete }: { race: Race; onEdit
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '8px',
+              gap: 'var(--sp-2)',
             }}
           >
             ✓ Mark Completed · Log Result
@@ -717,7 +717,7 @@ function PreRaceBriefing({ onAddRace, onEditRace, onComplete }: { onAddRace: () 
       return (
         <div style={st.briefingCard}>
           <div style={st.briefingInner}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-1)' }}>
               <IconPin />
               <span style={st.briefingTag}>JUST RACED</span>
             </div>
@@ -732,7 +732,7 @@ function PreRaceBriefing({ onAddRace, onEditRace, onComplete }: { onAddRace: () 
     return (
       <div style={st.briefingCard}>
         <div style={st.briefingInner}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-1)' }}>
             <IconPin />
             <span style={st.briefingTag}>{races.length === 0 ? 'ADD YOUR FIRST RACE' : 'WHAT\'S NEXT?'}</span>
           </div>
@@ -749,7 +749,7 @@ function PreRaceBriefing({ onAddRace, onEditRace, onComplete }: { onAddRace: () 
   return (
     <div style={st.briefingCard}>
       <div style={st.briefingInner}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-1)' }}>
           <IconPin />
           <span style={st.briefingTag}>NEXT RACE</span>
         </div>
@@ -877,7 +877,7 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
     <div style={{ ...st.modalOverlay, zIndex }} onClick={onClose}>
       <div style={{ ...st.customizeSheet, paddingBottom: '0', overflowY: 'hidden' }} onClick={e => e.stopPropagation()}>
         {/* Handle */}
-        <div style={{ width: '40px', height: '4px', background: 'var(--border2)', borderRadius: '2px', margin: '0 auto 20px', flexShrink: 0 }} />
+        <div style={{ width: '40px', height: '4px', background: 'var(--border2)', borderRadius: 'var(--radius-xs)', margin: '0 auto 20px', flexShrink: 0 }} />
 
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', flexShrink: 0 }}>
@@ -889,18 +889,18 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
               {fmtDateIntl(race.date)}{race.city ? ` · ${race.city}` : ''}
             </div>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 'var(--text-lg)', cursor: 'pointer', padding: '4px', lineHeight: 1 }} aria-label="Close">✕</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 'var(--text-lg)', cursor: 'pointer', padding: 'var(--sp-1)', lineHeight: 1 }} aria-label="Close">✕</button>
         </div>
 
         {/* Scrollable body */}
-        <div style={{ overflowY: 'auto', WebkitOverflowScrolling: 'touch' as any, flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: '20px', padding: '20px 0 12px' }}>
+        <div style={{ overflowY: 'auto', WebkitOverflowScrolling: 'touch' as any, flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)', padding: '20px 0 12px' }}>
 
           {/* Priority */}
           <div>
             <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '10px' }}>
               RACE PRIORITY
             </div>
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: 'var(--sp-2)' }}>
               {PRIORITIES.map(p => (
                 <button
                   key={p.key}
@@ -908,7 +908,7 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
                   style={{
                     flex: 1,
                     padding: '12px 8px',
-                    borderRadius: '10px',
+                    borderRadius: 'var(--radius-lg)',
                     border: priority === p.key ? '2px solid var(--orange)' : '1.5px solid var(--border2)',
                     background: priority === p.key ? 'rgba(var(--orange-ch),0.12)' : 'var(--surface3)',
                     cursor: 'pointer',
@@ -937,11 +937,11 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
             <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '10px' }}>
               SPORT &amp; DISTANCE
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-2)' }}>
               <select
                 value={sport}
                 onChange={e => handleSportChange(e.target.value)}
-                style={{ width: '100%', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px', color: 'var(--white)', fontSize: 'var(--text-compact)', padding: '0.6rem 0.75rem', fontFamily: 'var(--body)', boxSizing: 'border-box' as const }}
+                style={{ width: '100%', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-sm)', color: 'var(--white)', fontSize: 'var(--text-compact)', padding: '0.6rem 0.75rem', fontFamily: 'var(--body)', boxSizing: 'border-box' as const }}
               >
                 {Object.keys(UPCOMING_DISTANCES).map(s => (
                   <option key={s} value={s}>{s}</option>
@@ -950,7 +950,7 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
               <select
                 value={distance}
                 onChange={e => { setDistance(e.target.value); setCustomDist('') }}
-                style={{ width: '100%', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px', color: 'var(--white)', fontSize: 'var(--text-compact)', padding: '0.6rem 0.75rem', fontFamily: 'var(--body)', boxSizing: 'border-box' as const }}
+                style={{ width: '100%', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-sm)', color: 'var(--white)', fontSize: 'var(--text-compact)', padding: '0.6rem 0.75rem', fontFamily: 'var(--body)', boxSizing: 'border-box' as const }}
               >
                 <option value="">— Distance —</option>
                 {distOptions.map(opt => (
@@ -988,7 +988,7 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
                 width: '100%',
                 background: 'var(--surface3)',
                 border: '1px solid var(--border2)',
-                borderRadius: '6px',
+                borderRadius: 'var(--radius-sm)',
                 color: 'var(--white)',
                 fontSize: 'var(--text-compact)',
                 padding: '0.6rem 0.75rem',
@@ -1012,14 +1012,14 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
               style={{
                 background: 'transparent',
                 border: '1.5px solid rgba(255,80,80,0.35)',
-                borderRadius: '10px',
+                borderRadius: 'var(--radius-lg)',
                 color: 'var(--error)',
                 fontFamily: 'var(--headline)',
                 fontWeight: 700,
                 fontSize: 'var(--text-sm)',
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase',
-                padding: '12px',
+                padding: 'var(--sp-3)',
                 cursor: 'pointer',
                 width: '100%',
               }}
@@ -1027,15 +1027,15 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
               Remove Race
             </button>
           ) : (
-            <div style={{ background: 'rgba(255,80,80,0.08)', border: '1.5px solid rgba(255,80,80,0.35)', borderRadius: '10px', padding: '14px' }}>
+            <div style={{ background: 'rgba(255,80,80,0.08)', border: '1.5px solid rgba(255,80,80,0.35)', borderRadius: 'var(--radius-lg)', padding: 'var(--sp-4)' }}>
               <div style={{ fontSize: 'var(--text-sm)', color: 'var(--error)', marginBottom: '12px', fontWeight: 600 }}>
                 Remove {race.name ?? 'this race'} from your calendar?
               </div>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <button onClick={() => setConfirmDelete(false)} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid var(--border2)', background: 'var(--surface3)', color: 'var(--white)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-sm)', cursor: 'pointer', letterSpacing: '0.06em' }}>
+              <div style={{ display: 'flex', gap: 'var(--sp-2)' }}>
+                <button onClick={() => setConfirmDelete(false)} style={{ flex: 1, padding: 'var(--sp-3)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border2)', background: 'var(--surface3)', color: 'var(--white)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-sm)', cursor: 'pointer', letterSpacing: '0.06em' }}>
                   CANCEL
                 </button>
-                <button onClick={handleDelete} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: 'var(--error)', color: '#fff', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', cursor: 'pointer', letterSpacing: '0.06em' }}>
+                <button onClick={handleDelete} style={{ flex: 1, padding: 'var(--sp-3)', borderRadius: 'var(--radius-md)', border: 'none', background: 'var(--error)', color: '#fff', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', cursor: 'pointer', letterSpacing: '0.06em' }}>
                   YES, REMOVE
                 </button>
               </div>
@@ -1044,10 +1044,10 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
         </div>
 
         {/* Save button sticky footer */}
-        <div style={{ flexShrink: 0, borderTop: '1px solid var(--border)', padding: '16px', background: 'var(--surface2)' }}>
+        <div style={{ flexShrink: 0, borderTop: '1px solid var(--border)', padding: 'var(--sp-4)', background: 'var(--surface2)' }}>
           <button onClick={handleSave} style={{
-            width: '100%', background: 'var(--orange)', color: '#000', border: 'none', borderRadius: '10px',
-            padding: '14px', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)',
+            width: '100%', background: 'var(--orange)', color: '#000', border: 'none', borderRadius: 'var(--radius-lg)',
+            padding: 'var(--sp-4)', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)',
             letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer',
           }}>
             SAVE CHANGES
@@ -1094,12 +1094,12 @@ function CountdownCard({ race, onShowAll, upcomingRaces, onSelectRace }: { race:
 
         {/* Race picker chips — shown only when there are multiple upcoming races */}
         {upcomingRaces.length > 1 && (
-          <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none' as const }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-2)', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none' as const }}>
             {[...upcomingRaces].sort((a, b) => a.date.localeCompare(b.date)).map(r => (
               <button key={r.id} onClick={() => onSelectRace(r.id)} style={{
                 flexShrink: 0,
                 padding: '4px 10px',
-                borderRadius: '20px',
+                borderRadius: 'var(--radius-pill)',
                 border: `1px solid ${r.id === race.id ? 'var(--orange)' : 'var(--border2)'}`,
                 background: r.id === race.id ? 'rgba(var(--orange-ch),0.15)' : 'transparent',
                 color: r.id === race.id ? 'var(--orange)' : 'var(--muted)',
@@ -1178,7 +1178,7 @@ function CourseInfoCard({ race }: { race: Race }) {
   return (
     <div style={st.infoCard}>
       {tags.length > 0 && (
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 'var(--sp-2)', flexWrap: 'wrap' }}>
           {tags.map(tag => <span key={tag} style={st.terrainTag}>{tag}</span>)}
         </div>
       )}
@@ -1309,7 +1309,7 @@ function WeatherCard({ race }: { race: Race }) {
       <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '8px' }}>
         {location}
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
         <span style={{ fontSize: 'var(--text-2xl)', lineHeight: 1, flexShrink: 0 }}>
           {isLive
             ? (forecast?.icon ?? '🌤')
@@ -1404,18 +1404,18 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
           const cityMeta = [flag && r.city ? `${flag} ${r.city}` : r.city, distBadge(r.distance, r.sport)].filter(Boolean).join(' · ')
           return (
             <div key={r.id} style={{
-              display: 'flex', alignItems: 'center', gap: '12px',
+              display: 'flex', alignItems: 'center', gap: 'var(--sp-3)',
               padding: '10px 0',
               borderBottom: i < recent.length - 1 ? '1px solid var(--border)' : 'none',
             }}>
               {/* Left: name + meta */}
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '7px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', flexWrap: 'wrap' }}>
                   <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '15px', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {r.name ?? 'Untitled'}
                   </span>
                   {isPB && (
-                    <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--gold)', background: 'rgba(var(--gold-ch),0.12)', border: '1px solid rgba(var(--gold-ch),0.3)', borderRadius: '4px', padding: '2px 6px', flexShrink: 0 }}>PB</span>
+                    <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--gold)', background: 'rgba(var(--gold-ch),0.12)', border: '1px solid rgba(var(--gold-ch),0.3)', borderRadius: 'var(--radius-xs)', padding: '2px 6px', flexShrink: 0 }}>PB</span>
                   )}
                 </div>
                 <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>
@@ -1465,7 +1465,7 @@ function StatsStrip() {
   }, [races, units])
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--sp-2)' }}>
       {stats.map(s => (
         <div key={s.label} className="card-v3 card-orange" style={{ padding: '10px 12px', textAlign: 'center' }}>
           <div style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-lg)', fontWeight: 900, lineHeight: 1, color: 'var(--white)', letterSpacing: '0.02em' }}>
@@ -1508,7 +1508,7 @@ function SeasonPlannerWidget({ onAddRace, onOpenPlanner }: { onAddRace: () => vo
 
   return (
     <WidgetCard id="season-planner" style={st.glowCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
         <div>
           <div style={st.widgetLabel}>SEASON PLANNER</div>
           <div style={st.widgetTitle}>NEXT 90 DAYS</div>
@@ -1524,7 +1524,7 @@ function SeasonPlannerWidget({ onAddRace, onOpenPlanner }: { onAddRace: () => vo
         </div>
       ) : (
         <>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
             {upcoming90.slice(0, 3).map(r => {
               const { taper, recover } = taperFor(r.distance)
               const p = r.priority ?? 'C'
@@ -1574,7 +1574,7 @@ function RecoveryIntelWidget() {
 
   return (
     <WidgetCard id="recovery-intel" style={st.glowCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
         <div>
           <div style={st.widgetLabel}>RECOVERY INTELLIGENCE</div>
           <div style={st.widgetTitle}>{(lastRace.name ?? '').toUpperCase()}</div>
@@ -1655,7 +1655,7 @@ function BostonQualWidget() {
   return (
     <WidgetCard id="boston-qual" style={st.glowCard}>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
         <div>
           <div style={st.widgetLabel}>B.A.A.</div>
           <div style={st.widgetTitle}>BOSTON QUALIFIER</div>
@@ -1671,10 +1671,10 @@ function BostonQualWidget() {
           <div style={st.lockedText}>Add date of birth and gender in your athlete profile to see your BQ target.</div>
         </div>
       ) : !bqTarget ? null : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
 
           {/* BQ standard + safe-buffer target side by side */}
-          <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-end' }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'flex-end' }}>
             <div>
               <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '28px', color: 'var(--white)', lineHeight: 1 }}>
                 {secsToHMS(bqTarget)}
@@ -1717,7 +1717,7 @@ function BostonQualWidget() {
 
           {/* Last 3 races in qualifying window */}
           {qualRaces.length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-1)' }}>
               <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase' }}>
                 QUALIFYING RACES ({qualRaces.length})
               </div>
@@ -1728,7 +1728,7 @@ function BostonQualWidget() {
                 const qualified = gap <= 0
                 const rowColor  = qualified ? 'var(--green)' : 'var(--muted)'
                 return (
-                  <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 10px', background: 'var(--surface)', borderRadius: '7px', gap: '10px' }}>
+                  <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '7px 10px', background: 'var(--surface)', borderRadius: 'var(--radius-sm)', gap: 'var(--sp-2)' }}>
                     <div style={{ minWidth: 0 }}>
                       <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {r.name || distBadge(r.distance, r.sport)}
@@ -1783,7 +1783,7 @@ function PacingIQWidget() {
 
   return (
     <WidgetCard id="pacing-iq" style={st.glowCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
         <div>
           <div style={st.widgetLabel}>PACING IQ</div>
           <div style={st.widgetTitle}>RACE RHYTHM</div>
@@ -1797,7 +1797,7 @@ function PacingIQWidget() {
           <div style={st.lockedText}>Add splits to 2+ races to see your pacing pattern.</div>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', color: 'var(--green)', letterSpacing: '0.04em' }}>
             {analysis.dominant}
           </div>
@@ -1823,7 +1823,7 @@ function CareerMomentumWidget() {
 
   return (
     <WidgetCard id="career-momentum" style={st.glowCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
         <div>
           <div style={st.widgetLabel}>CAREER MOMENTUM</div>
           <div style={st.widgetTitle}>FORM TREND</div>
@@ -1839,8 +1839,8 @@ function CareerMomentumWidget() {
           MOMENTUM
         </div>
         <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '2px' }}>→ vs last block</div>
-        <div style={{ height: '3px', background: 'var(--surface3)', borderRadius: '2px', marginTop: '10px', overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: `${Math.round(score * 100)}%`, background: 'var(--green)', borderRadius: '2px' }} />
+        <div style={{ height: '3px', background: 'var(--surface3)', borderRadius: 'var(--radius-xs)', marginTop: '10px', overflow: 'hidden' }}>
+          <div style={{ height: '100%', width: `${Math.round(score * 100)}%`, background: 'var(--green)', borderRadius: 'var(--radius-xs)' }} />
         </div>
       </div>
 
@@ -1866,7 +1866,7 @@ function AgeGradeWidget() {
 
   return (
     <WidgetCard id="age-grade" style={st.glowCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
         <div>
           <div style={st.widgetLabel}>AGE-GRADE SCORE</div>
           <div style={st.widgetTitle}>PERFORMANCE CONTEXT</div>
@@ -1882,9 +1882,9 @@ function AgeGradeWidget() {
       ) : entries.length === 0 ? (
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>Log races with finish times at 5K, 10K, Half Marathon, or Marathon distances to see your age-grade score.</div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', marginTop: '8px' }}>
           {entries.slice(0, 5).map((e, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
               <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xs)', color: 'var(--muted)', minWidth: '16px' }}>#{e.rank}</div>
               <div style={{ flex: 1, overflow: 'hidden' }}>
                 <div style={{ fontSize: '12px', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.race.name ?? e.race.distance}</div>
@@ -1995,7 +1995,7 @@ function RaceDNAWidget() {
   return (
     <WidgetCard id="race-dna" style={st.glowCard}>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', marginBottom: '14px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)', marginBottom: '14px' }}>
         <div>
           <div style={st.widgetLabel}>RACE DNA</div>
           <div style={st.widgetTitle}>CONDITIONS PROFILE</div>
@@ -2009,7 +2009,7 @@ function RaceDNAWidget() {
           <div style={st.lockedText}>Log a race to see your conditions profile.</div>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
 
           {/* ── TEMP PERFORMANCE BARS ────────────────────────────────── */}
           {dna.bucketWithPace.length > 0 ? (
@@ -2017,16 +2017,16 @@ function RaceDNAWidget() {
               <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
                 TEMP PERFORMANCE
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
                 {dna.bucketWithPace.map(b => (
-                  <div key={b.label} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div key={b.label} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
                     <div style={{ width: '42px', fontSize: '10px', color: b.isBest ? b.color : 'var(--muted)', fontWeight: b.isBest ? 700 : 500, flexShrink: 0, fontFamily: 'var(--headline)' }}>{b.short}</div>
-                    <div style={{ flex: 1, height: '6px', background: 'var(--surface3)', borderRadius: '3px', overflow: 'hidden' }}>
+                    <div style={{ flex: 1, height: '6px', background: 'var(--surface3)', borderRadius: 'var(--radius-xs)', overflow: 'hidden' }}>
                       <div style={{
                         height: '100%',
                         width: b.isBest ? '100%' : `${Math.max(15, 100 - b.delta * 8)}%`,
                         background: b.color,
-                        borderRadius: '3px',
+                        borderRadius: 'var(--radius-xs)',
                         opacity: b.isBest ? 1 : 0.45,
                         transition: 'width 0.4s ease',
                       }} />
@@ -2051,11 +2051,11 @@ function RaceDNAWidget() {
 
           {/* ── PACING PERSONA ───────────────────────────────────────── */}
           {dna.pacingPersona ? (
-            <div style={{ background: 'var(--surface3)', borderRadius: '10px', padding: '10px 12px' }}>
+            <div style={{ background: 'var(--surface3)', borderRadius: 'var(--radius-lg)', padding: '10px 12px' }}>
               <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '6px' }}>
                 PACING PATTERN
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--sp-2)' }}>
                 <div>
                   <div style={{ fontSize: 'var(--text-base)', fontFamily: 'var(--headline)', fontWeight: 900, letterSpacing: '0.04em', color: dna.pacingPersonaColor }}>
                     {dna.pacingPersona}
@@ -2063,14 +2063,14 @@ function RaceDNAWidget() {
                   <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>{dna.pacingPersonaDesc}</div>
                 </div>
                 {/* Mini pie-style split breakdown */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', flexShrink: 0 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-1)', flexShrink: 0 }}>
                   {[
                     { label: 'Neg', count: dna.negSplit, color: '#34D399' },
                     { label: 'Even', count: dna.even, color: 'var(--orange)' },
                     { label: 'Fade', count: dna.faded, color: '#F87171' },
                   ].filter(x => x.count > 0).map(x => (
                     <div key={x.label} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: x.color, flexShrink: 0 }} />
+                      <div style={{ width: '6px', height: '6px', borderRadius: 'var(--radius-round)', background: x.color, flexShrink: 0 }} />
                       <div style={{ fontSize: '10px', color: 'var(--muted)', width: '26px' }}>{x.label}</div>
                       <div style={{ fontSize: '10px', color: x.color, fontWeight: 700 }}>{x.count}</div>
                     </div>
@@ -2079,7 +2079,7 @@ function RaceDNAWidget() {
               </div>
             </div>
           ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'var(--surface3)', borderRadius: '10px', padding: '10px 12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', background: 'var(--surface3)', borderRadius: 'var(--radius-lg)', padding: '10px 12px' }}>
               <div>
                 <div style={{ fontSize: '12px', fontFamily: 'var(--headline)', fontWeight: 800, color: 'var(--muted)' }}>NO SPLIT DATA</div>
                 <div style={{ fontSize: '10px', color: 'var(--muted2)', marginTop: '2px' }}>Add splits to 2+ races to see your pacing pattern</div>
@@ -2093,16 +2093,16 @@ function RaceDNAWidget() {
               <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
                 SURFACE BREAKDOWN
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
                 {dna.surfaces.map((s, i) => (
-                  <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
                     <div style={{ width: '44px', fontSize: 'var(--text-xs)', color: i === 0 ? 'var(--white)' : 'var(--muted)', fontWeight: i === 0 ? 600 : 400, flexShrink: 0 }}>{s.label}</div>
-                    <div style={{ flex: 1, height: '6px', background: 'var(--surface3)', borderRadius: '3px', overflow: 'hidden' }}>
+                    <div style={{ flex: 1, height: '6px', background: 'var(--surface3)', borderRadius: 'var(--radius-xs)', overflow: 'hidden' }}>
                       <div style={{
                         height: '100%',
                         width: `${s.pct}%`,
                         background: i === 0 ? 'var(--orange)' : 'rgba(var(--orange-ch), 0.4)',
-                        borderRadius: '3px',
+                        borderRadius: 'var(--radius-xs)',
                         transition: 'width 0.4s ease',
                       }} />
                     </div>
@@ -2121,12 +2121,12 @@ function RaceDNAWidget() {
               <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
                 {dna.travelCount} {dna.travelCount === 1 ? 'COUNTRY' : 'COUNTRIES'}
               </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-2)' }}>
                 {dna.countryList.map(([country, count]) => (
                   <div key={country} style={{
                     display: 'inline-flex', alignItems: 'center', gap: '4px',
                     background: 'var(--surface3)', border: '1px solid var(--border)',
-                    borderRadius: '20px', padding: '3px 9px',
+                    borderRadius: 'var(--radius-pill)', padding: '3px 9px',
                     fontSize: 'var(--text-xs)', color: 'var(--white)',
                   }}>
                     <span>{country}</span>
@@ -2134,7 +2134,7 @@ function RaceDNAWidget() {
                   </div>
                 ))}
                 {dna.travelCount > 5 && (
-                  <div style={{ display: 'inline-flex', alignItems: 'center', background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: '20px', padding: '3px 9px', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: 'var(--radius-pill)', padding: '3px 9px', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
                     +{dna.travelCount - 5} more
                   </div>
                 )}
@@ -2218,7 +2218,7 @@ function PatternScanWidget() {
   return (
     <WidgetCard id="pattern-scan" style={st.glowCard}>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', marginBottom: '14px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)', marginBottom: '14px' }}>
         <div>
           <div style={st.widgetLabel}>DEEP TRENDS</div>
           <div style={st.widgetTitle}>PATTERN SCAN</div>
@@ -2229,7 +2229,7 @@ function PatternScanWidget() {
       {!scan ? (
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>Log 3+ races to see patterns.</div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
 
           {/* ── SEASON PERFORMANCE BARS ──────────────────────────────── */}
           {scan.seasonBars.length > 0 && (
@@ -2244,18 +2244,18 @@ function PatternScanWidget() {
                   </div>
                 )}
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
                 {scan.seasonBars.map(s => (
-                  <div key={s.season} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div key={s.season} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
                     <div style={{ width: '58px', fontSize: 'var(--text-xs)', color: s.isBest ? 'var(--white)' : 'var(--muted)', fontWeight: s.isBest ? 700 : 400, flexShrink: 0, whiteSpace: 'nowrap' }}>
                       {s.season}
                     </div>
-                    <div style={{ flex: 1, height: '6px', background: 'var(--surface3)', borderRadius: '3px', overflow: 'hidden' }}>
+                    <div style={{ flex: 1, height: '6px', background: 'var(--surface3)', borderRadius: 'var(--radius-xs)', overflow: 'hidden' }}>
                       <div style={{
                         height: '100%',
                         width: `${s.barPct}%`,
                         background: s.isBest ? 'var(--orange)' : 'rgba(var(--orange-ch), 0.35)',
-                        borderRadius: '3px',
+                        borderRadius: 'var(--radius-xs)',
                         transition: 'width 0.4s ease',
                       }} />
                     </div>
@@ -2271,16 +2271,16 @@ function PatternScanWidget() {
             <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
               DISTANCE BREAKDOWN
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
               {scan.topDist.map(([d, n], i) => (
-                <div key={d} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div key={d} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
                   <div style={{ width: '90px', fontSize: 'var(--text-xs)', color: i === 0 ? 'var(--white)' : 'var(--muted)', fontWeight: i === 0 ? 600 : 400, flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d}</div>
-                  <div style={{ flex: 1, height: '6px', background: 'var(--surface3)', borderRadius: '3px', overflow: 'hidden' }}>
+                  <div style={{ flex: 1, height: '6px', background: 'var(--surface3)', borderRadius: 'var(--radius-xs)', overflow: 'hidden' }}>
                     <div style={{
                       height: '100%',
                       width: `${Math.round((n / scan.maxDistCount) * 100)}%`,
                       background: i === 0 ? 'var(--orange)' : 'rgba(var(--orange-ch), 0.4)',
-                      borderRadius: '3px',
+                      borderRadius: 'var(--radius-xs)',
                       transition: 'width 0.4s ease',
                     }} />
                   </div>
@@ -2291,9 +2291,9 @@ function PatternScanWidget() {
           </div>
 
           {/* ── YoY VOLUME + STATS ROW ───────────────────────────────── */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--sp-2)' }}>
             {/* YoY */}
-            <div style={{ background: 'var(--surface3)', borderRadius: '8px', padding: '8px', textAlign: 'center' }}>
+            <div style={{ background: 'var(--surface3)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-2)', textAlign: 'center' }}>
               <div style={{ fontSize: 'var(--text-md)', fontFamily: 'var(--headline)', fontWeight: 900, color: scan.volumeColor, lineHeight: 1 }}>
                 {scan.volumeTrend !== null ? `${scan.volumeTrend >= 0 ? '+' : ''}${scan.volumeTrend}%` : '—'}
               </div>
@@ -2303,7 +2303,7 @@ function PatternScanWidget() {
               </div>
             </div>
             {/* Finish rate */}
-            <div style={{ background: 'var(--surface3)', borderRadius: '8px', padding: '8px', textAlign: 'center' }}>
+            <div style={{ background: 'var(--surface3)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-2)', textAlign: 'center' }}>
               <div style={{ fontSize: 'var(--text-md)', fontFamily: 'var(--headline)', fontWeight: 900, color: scan.finishRate >= 95 ? '#34D399' : scan.finishRate >= 85 ? 'var(--orange)' : '#F87171', lineHeight: 1 }}>
                 {scan.finishRate}%
               </div>
@@ -2313,7 +2313,7 @@ function PatternScanWidget() {
               )}
             </div>
             {/* Top 25% */}
-            <div style={{ background: 'var(--surface3)', borderRadius: '8px', padding: '8px', textAlign: 'center' }}>
+            <div style={{ background: 'var(--surface3)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-2)', textAlign: 'center' }}>
               <div style={{ fontSize: 'var(--text-md)', fontFamily: 'var(--headline)', fontWeight: 900, color: scan.podiumRate !== null ? (scan.podiumRate >= 30 ? '#34D399' : 'var(--orange)') : 'var(--muted)', lineHeight: 1 }}>
                 {scan.podiumRate !== null ? `${scan.podiumRate}%` : '—'}
               </div>
@@ -2352,7 +2352,7 @@ function WhyResultWidget() {
 
   return (
     <WidgetCard id="why-result" style={st.glowCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
         <div>
           <div style={st.widgetLabel}>WHY RESULT</div>
           <div style={st.widgetTitle}>{(lastRace.name ?? '').toUpperCase()}</div>
@@ -2360,7 +2360,7 @@ function WhyResultWidget() {
         <span style={{ ...st.badgePill, background: 'rgba(var(--orange-ch), 0.12)', color: 'var(--orange)', border: '1px solid rgba(var(--orange-ch), 0.3)', flexShrink: 0 }}>EXPLAIN</span>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>Best: execution and context aligned well</div>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>Tough day: course and pacing demands stacked up</div>
       </div>
@@ -2375,7 +2375,7 @@ function WhyResultWidget() {
 
 function ActivityPreviewWidget() {
   return (
-    <WidgetCard id="activity-preview" className="" style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: '12px', padding: '14px' }}>
+    <WidgetCard id="activity-preview" className="" style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-lg)', padding: 'var(--sp-4)' }}>
       <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '8px' }}>
         Activity Feed
       </div>
@@ -2407,7 +2407,7 @@ function OnThisDayWidget() {
   const yearStr = years === 1 ? '1 year ago' : `${years} years ago`
 
   return (
-    <WidgetCard id="on-this-day" className="" style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: '12px', padding: '14px', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+    <WidgetCard id="on-this-day" className="" style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-lg)', padding: 'var(--sp-4)', display: 'flex', gap: 'var(--sp-3)', alignItems: 'flex-start' }}>
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ color: 'var(--orange)', flexShrink: 0 }} aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M3 9h18" stroke="currentColor" strokeWidth="1.5"/><path d="M8 2v4M16 2v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
       <div style={{ minWidth: 0 }}>
         <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '4px' }}>
@@ -2453,7 +2453,7 @@ function RaceReadinessWidget() {
 
   return (
     <WidgetCard id="race-readiness" style={st.glowCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
         <div>
           <div style={st.widgetLabel}>READINESS</div>
           <div style={st.widgetTitle}>RACE READINESS</div>
@@ -2468,8 +2468,8 @@ function RaceReadinessWidget() {
         <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '10px', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
           READINESS SCORE
         </div>
-        <div style={{ height: '3px', background: 'var(--surface3)', borderRadius: '2px', marginTop: '10px', overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: `${score}%`, background: sigColor, borderRadius: '2px', transition: 'width 0.5s ease' }} />
+        <div style={{ height: '3px', background: 'var(--surface3)', borderRadius: 'var(--radius-xs)', marginTop: '10px', overflow: 'hidden' }}>
+          <div style={{ height: '100%', width: `${score}%`, background: sigColor, borderRadius: 'var(--radius-xs)', transition: 'width 0.5s ease' }} />
         </div>
       </div>
 
@@ -2554,7 +2554,7 @@ function GapToGoalWidget({ race }: { race: Race | null }) {
 
   return (
     <WidgetCard id="gap-to-goal" style={st.glowCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
         <div>
           <div style={st.widgetLabel}>GAP TO GOAL</div>
           <div style={st.widgetTitle}>{distBadge(nextRace.distance) || 'NEXT RACE'}</div>
@@ -2569,7 +2569,7 @@ function GapToGoalWidget({ race }: { race: Race | null }) {
         </span>
       </div>
 
-      <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-end' }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'flex-end' }}>
         <div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '28px', color: 'var(--white)', lineHeight: 1 }}>{result.goal}</div>
           <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase', marginTop: '3px' }}>GOAL TIME</div>
@@ -2617,7 +2617,7 @@ function SurfaceProfileWidget() {
 
   return (
     <WidgetCard id="surface-profile" style={st.glowCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
         <div>
           <div style={st.widgetLabel}>SURFACE PROFILE</div>
           <div style={st.widgetTitle}>WHERE YOU THRIVE</div>
@@ -2633,7 +2633,7 @@ function SurfaceProfileWidget() {
           <div style={st.lockedText}>Log 3+ races with placing data to see your surface breakdown.</div>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
           {surfaces.slice(0, 4).map((s, i) => {
             const barColor = i === 0 ? 'var(--green)' : 'var(--orange)'
             return (
@@ -2647,8 +2647,8 @@ function SurfaceProfileWidget() {
                     Top {100 - s.avg + 1}% avg
                   </span>
                 </div>
-                <div style={{ height: '3px', background: 'var(--surface3)', borderRadius: '2px', overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${s.avg}%`, background: barColor, borderRadius: '2px' }} />
+                <div style={{ height: '3px', background: 'var(--surface3)', borderRadius: 'var(--radius-xs)', overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${s.avg}%`, background: barColor, borderRadius: 'var(--radius-xs)' }} />
                 </div>
               </div>
             )
@@ -2697,7 +2697,7 @@ function PressurePerformerWidget() {
 
   return (
     <WidgetCard id="pressure-performer" style={st.glowCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
         <div>
           <div style={st.widgetLabel}>PRESSURE PERFORMER</div>
           <div style={st.widgetTitle}>A-RACE IQ</div>
@@ -2711,7 +2711,7 @@ function PressurePerformerWidget() {
           <div style={st.lockedText}>Log 3+ races with placing data and mark A-races to see your pressure profile.</div>
         </div>
       ) : (
-        <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-end' }}>
+        <div style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'flex-end' }}>
           {result.aPct !== null && (
             <div>
               <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', color: 'var(--white)', lineHeight: 1 }}>
@@ -2765,7 +2765,7 @@ function TravelLoadWidget() {
 
   return (
     <WidgetCard id="travel-load" style={st.glowCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
         <div>
           <div style={st.widgetLabel}>TRAVEL LOAD</div>
           <div style={st.widgetTitle}>HOME vs AWAY</div>
@@ -2779,7 +2779,7 @@ function TravelLoadWidget() {
           <div style={st.lockedText}>Log 3+ races and set your home country in athlete profile.</div>
         </div>
       ) : (
-        <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'flex-end', flexWrap: 'wrap' }}>
           {result.localPct !== null && (
             <div>
               <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', color: 'var(--green)', lineHeight: 1 }}>
@@ -2845,7 +2845,7 @@ function RaceDensityWidget() {
 
   return (
     <WidgetCard id="race-density" style={st.glowCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
         <div>
           <div style={st.widgetLabel}>RACE DENSITY</div>
           <div style={st.widgetTitle}>RACE SPACING</div>
@@ -2863,8 +2863,8 @@ function RaceDensityWidget() {
           <div style={st.lockedText}>Log 2+ races to see your race spacing analysis.</div>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-5)', flexWrap: 'wrap' }}>
             <div>
               <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', color: 'var(--white)', lineHeight: 1 }}>{result.avg}d</div>
               <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted)', textTransform: 'uppercase', marginTop: '3px' }}>AVG GAP</div>
@@ -2938,7 +2938,7 @@ function BestConditionsWidget() {
 
   return (
     <WidgetCard id="best-conditions" style={st.glowCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
         <div>
           <div style={st.widgetLabel}>BEST CONDITIONS</div>
           <div style={st.widgetTitle}>YOUR OPTIMAL RACE</div>
@@ -2952,13 +2952,13 @@ function BestConditionsWidget() {
           <div style={st.lockedText}>Log 3+ races with weather and placing data to find your sweet spot.</div>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
           {result.bestSurf && (
             <div style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', fontWeight: 600 }}>
               Best surface: <span style={{ color: 'var(--green)' }}>{result.bestSurf.s.toUpperCase()}</span>
             </div>
           )}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
             {result.tempBuckets.map((b, i) => (
               <div key={b.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: i === 0 ? '17px' : '14px', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: i === 0 ? 'var(--white)' : 'var(--muted)' }}>
@@ -3029,7 +3029,7 @@ function CourseFitWidget({ race }: { race: Race | null }) {
 
   return (
     <WidgetCard id="course-fit" style={st.glowCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
         <div>
           <div style={st.widgetLabel}>COURSE FIT</div>
           <div style={st.widgetTitle}>{(nextRace.name ?? 'NEXT RACE').toUpperCase()}</div>
@@ -3048,8 +3048,8 @@ function CourseFitWidget({ race }: { race: Race | null }) {
             <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '10px', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
               / 100 COURSE FIT
             </div>
-            <div style={{ height: '3px', background: 'var(--surface3)', borderRadius: '2px', marginTop: '10px', overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${result.score}%`, background: result.color, borderRadius: '2px' }} />
+            <div style={{ height: '3px', background: 'var(--surface3)', borderRadius: 'var(--radius-xs)', marginTop: '10px', overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${result.score}%`, background: result.color, borderRadius: 'var(--radius-xs)' }} />
             </div>
           </div>
           <div style={st.widgetDivider} />
@@ -3141,7 +3141,7 @@ function PBProbabilityWidget({ race }: { race: Race | null }) {
 
   return (
     <WidgetCard id="pb-probability" style={st.glowCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
         <div>
           <div style={st.widgetLabel}>PB PROBABILITY</div>
           <div style={st.widgetTitle}>{(nextRace.name ?? 'NEXT RACE').toUpperCase()}</div>
@@ -3160,8 +3160,8 @@ function PBProbabilityWidget({ race }: { race: Race | null }) {
             <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '10px', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
               PB CHANCE
             </div>
-            <div style={{ height: '3px', background: 'var(--surface3)', borderRadius: '2px', marginTop: '10px', overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${result.probability}%`, background: result.color, borderRadius: '2px' }} />
+            <div style={{ height: '3px', background: 'var(--surface3)', borderRadius: 'var(--radius-xs)', marginTop: '10px', overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${result.probability}%`, background: result.color, borderRadius: 'var(--radius-xs)' }} />
             </div>
           </div>
           <div style={st.widgetDivider} />
@@ -3217,7 +3217,7 @@ function StreakRiskWidget() {
 
   return (
     <WidgetCard id="streak-risk" style={st.glowCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
         <div>
           <div style={st.widgetLabel}>STREAK RISK</div>
           <div style={st.widgetTitle}>TRAINING LOAD</div>
@@ -3286,27 +3286,27 @@ function AdvancedRaceDNAWidget() {
 
   return (
     <WidgetCard id="advanced-race-dna" style={st.glowCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
         <div>
           <div style={st.widgetLabel}>ADVANCED RACE DNA</div>
           <div style={st.widgetTitle}>CONDITION ANALYSIS</div>
         </div>
-        <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--muted)', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px', padding: '3px 6px', flexShrink: 0 }}>DNA</span>
+        <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--muted)', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-sm)', padding: '3px 6px', flexShrink: 0 }}>DNA</span>
       </div>
       {past.length < 2 ? (
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>
           Log 2+ races with placing data to see advanced condition analysis.
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', marginTop: '10px' }}>
           {data.humidityInsight && (
-            <div style={{ padding: '8px', background: 'var(--surface3)', borderRadius: '8px' }}>
+            <div style={{ padding: 'var(--sp-2)', background: 'var(--surface3)', borderRadius: 'var(--radius-md)' }}>
               <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '3px' }}>HUMIDITY</div>
               <div style={{ fontSize: '12px', color: 'var(--white)' }}>{data.humidityInsight}</div>
             </div>
           )}
           {data.elevInsight && (
-            <div style={{ padding: '8px', background: 'var(--surface3)', borderRadius: '8px' }}>
+            <div style={{ padding: 'var(--sp-2)', background: 'var(--surface3)', borderRadius: 'var(--radius-md)' }}>
               <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '3px' }}>ELEVATION</div>
               <div style={{ fontSize: '12px', color: 'var(--white)' }}>{data.elevInsight}</div>
             </div>
@@ -3383,14 +3383,14 @@ function WeatherFitWidget({ race }: { race: Race | null }) {
 
   return (
     <WidgetCard id="weather-fit" style={st.glowCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
         <div>
           <div style={st.widgetLabel}>WEATHER FIT SCORE</div>
           <div style={st.widgetTitle}>
             {result ? result.fitLabel : 'YOUR CLIMATE PROFILE'}
           </div>
         </div>
-        <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--muted)', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px', padding: '3px 6px', flexShrink: 0 }}>WX</span>
+        <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--muted)', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-sm)', padding: '3px 6px', flexShrink: 0 }}>WX</span>
       </div>
 
       {!result ? (
@@ -3398,9 +3398,9 @@ function WeatherFitWidget({ race }: { race: Race | null }) {
           Log 2+ races with placing data to build your weather performance profile.
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '4px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', marginTop: '4px' }}>
           {nextRace && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
               <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-sm)', color: result.fitColor, letterSpacing: '0.08em' }}>
                 {result.fitLabel}
               </span>
@@ -3457,21 +3457,21 @@ function RaceGapAnalysisWidget() {
 
   return (
     <WidgetCard id="race-gap-analysis" style={st.glowCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
         <div>
           <div style={st.widgetLabel}>RACE GAP / RECOVERY</div>
           <div style={st.widgetTitle}>{gapData ? `AVG ${gapData.avgGap}d BETWEEN RACES` : 'RECOVERY ANALYSIS'}</div>
         </div>
-        <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--muted)', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px', padding: '3px 6px', flexShrink: 0 }}>GAP</span>
+        <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--muted)', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-sm)', padding: '3px 6px', flexShrink: 0 }}>GAP</span>
       </div>
       {!gapData ? (
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>
           Log 2+ races to analyse recovery and race-spacing patterns.
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', marginTop: '10px' }}>
           {gapData.tightCount > 0 && (
-            <div style={{ padding: '8px', background: 'rgba(var(--orange-ch),0.1)', border: '1px solid rgba(var(--orange-ch),0.25)', borderRadius: '8px' }}>
+            <div style={{ padding: 'var(--sp-2)', background: 'rgba(var(--orange-ch),0.1)', border: '1px solid rgba(var(--orange-ch),0.25)', borderRadius: 'var(--radius-md)' }}>
               <div style={{ fontSize: '12px', color: 'var(--orange)' }}>[!] {gapData.tightCount} tight stack{gapData.tightCount !== 1 ? 's' : ''} — races within 14 days</div>
             </div>
           )}
@@ -3529,13 +3529,13 @@ function WhyPRdWidget() {
 
   return (
     <WidgetCard id="why-prd" style={st.glowCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
         <div>
           <div style={st.widgetLabel}>WHY YOU PR'D</div>
           <div style={st.widgetTitle}>{pbRaces.length} PERSONAL BEST{pbRaces.length !== 1 ? 'S' : ''}</div>
         </div>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '7px', marginTop: '10px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', marginTop: '10px' }}>
         {insights?.topSurface && (
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '12px', color: 'var(--muted)' }}>Best surface</span>
@@ -3590,7 +3590,7 @@ function WhyFadedWidget() {
 
   return (
     <WidgetCard id="why-faded" style={st.glowCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
         <div>
           <div style={st.widgetLabel}>WHY YOU FADED</div>
           <div style={st.widgetTitle}>{fadedRaces.length > 0 ? `${fadedRaces.length} FADE${fadedRaces.length !== 1 ? 'S' : ''} DETECTED` : 'NO FADES DETECTED'}</div>
@@ -3658,15 +3658,15 @@ function RaceComparerWidget() {
         <div style={st.widgetLabel}>RACE COMPARER</div>
         <div style={st.widgetTitle}>SIDE BY SIDE</div>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '10px' }}>
-        <div data-no-widget-detail style={{ background: 'var(--surface3)', borderRadius: '8px', padding: '10px' }} onClick={stopBubble}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-2)', marginTop: '10px' }}>
+        <div data-no-widget-detail style={{ background: 'var(--surface3)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-3)' }} onClick={stopBubble}>
           <select value={idxA} onChange={e => setIdxA(Number(e.target.value))} onClick={stopBubble} style={{ ...selStyle, color: 'var(--orange)' }}>
             {past.map((r, i) => <option key={r.id} value={i}>{r.name ?? r.date}</option>)}
           </select>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', color: diff?.faster === 'A' ? 'var(--green)' : 'var(--white)' }}>{raceA?.time ?? '—'}</div>
           <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '2px' }}>{fmtDateDDMM(raceA?.date ?? '')}</div>
         </div>
-        <div data-no-widget-detail style={{ background: 'var(--surface3)', borderRadius: '8px', padding: '10px' }} onClick={stopBubble}>
+        <div data-no-widget-detail style={{ background: 'var(--surface3)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-3)' }} onClick={stopBubble}>
           <select value={idxB} onChange={e => setIdxB(Number(e.target.value))} onClick={stopBubble} style={{ ...selStyle, color: 'var(--muted)' }}>
             {past.map((r, i) => <option key={r.id} value={i}>{r.name ?? r.date}</option>)}
           </select>
@@ -3675,7 +3675,7 @@ function RaceComparerWidget() {
         </div>
       </div>
       {diff && (
-        <div style={{ marginTop: '8px', padding: '8px', background: 'var(--surface3)', borderRadius: '8px', textAlign: 'center' }}>
+        <div style={{ marginTop: '8px', padding: 'var(--sp-2)', background: 'var(--surface3)', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
           <span style={{ fontFamily: 'var(--mono)', fontSize: 'var(--text-compact)', fontWeight: 600, color: 'var(--green)' }}>{secsToHMS(diff.secs)}</span>
           <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginLeft: '6px' }}>faster in Race {diff.faster}</span>
         </div>
@@ -3764,14 +3764,14 @@ function RaceStackWidget({ race }: { race: Race | null }) {
 
   return (
     <WidgetCard id="race-stack" style={st.glowCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
         <div>
           <div style={st.widgetLabel}>RACE STACK PLANNER</div>
           <div style={st.widgetTitle}>
             {nextRace ? (nextRace.name ?? 'RACE DAY').toUpperCase() : 'ADD A RACE'}
           </div>
         </div>
-        <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--muted)', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px', padding: '3px 6px', flexShrink: 0 }}>KIT</span>
+        <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--muted)', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-sm)', padding: '3px 6px', flexShrink: 0 }}>KIT</span>
       </div>
 
       {!checklist ? (
@@ -3779,7 +3779,7 @@ function RaceStackWidget({ race }: { race: Race | null }) {
           Add an upcoming race to generate your personalised race-day kit list.
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', marginTop: '8px' }}>
           {checklist.map(cat => {
             const visibleItems = cat.items.filter(i => !deletedItems.has(i))
             const extras = customItems[cat.label] ?? []
@@ -3799,29 +3799,29 @@ function RaceStackWidget({ race }: { race: Race | null }) {
                 {isOpen && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingBottom: '8px' }}>
                     {visibleItems.map(item => (
-                      <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '12px', color: 'var(--muted)' }}>
+                      <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--sp-2)', fontSize: '12px', color: 'var(--muted)' }}>
                         <span style={{ color: 'var(--orange)', flexShrink: 0, marginTop: '1px' }}>✓</span>
                         <span style={{ flex: 1 }}>{item}</span>
                         <button onClick={() => deleteItem(item)} style={{ background: 'none', border: 'none', color: 'var(--muted2)', cursor: 'pointer', fontSize: 'var(--text-sm)', padding: '0', lineHeight: 1, flexShrink: 0 }}>✕</button>
                       </div>
                     ))}
                     {extras.map((item, i) => (
-                      <div key={`custom-${i}`} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '12px', color: 'var(--muted)' }}>
+                      <div key={`custom-${i}`} style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--sp-2)', fontSize: '12px', color: 'var(--muted)' }}>
                         <span style={{ color: 'var(--green)', flexShrink: 0, marginTop: '1px' }}>+</span>
                         <span style={{ flex: 1 }}>{item}</span>
                         <button onClick={() => setCustomItems(prev => ({ ...prev, [cat.label]: (prev[cat.label] ?? []).filter((_, j) => j !== i) }))} style={{ background: 'none', border: 'none', color: 'var(--muted2)', cursor: 'pointer', fontSize: 'var(--text-sm)', padding: '0', lineHeight: 1, flexShrink: 0 }}>✕</button>
                       </div>
                     ))}
                     {/* Add new item row */}
-                    <div style={{ display: 'flex', gap: '6px', marginTop: '4px' }}>
+                    <div style={{ display: 'flex', gap: 'var(--sp-2)', marginTop: '4px' }}>
                       <input
                         value={newItemText}
                         onChange={e => setNewItemText(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && addItem(cat.label)}
                         placeholder="Add item…"
-                        style={{ flex: 1, background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '5px', padding: '5px 8px', fontSize: 'var(--text-xs)', color: 'var(--white)', outline: 'none' }}
+                        style={{ flex: 1, background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-sm)', padding: '5px 8px', fontSize: 'var(--text-xs)', color: 'var(--white)', outline: 'none' }}
                       />
-                      <button onClick={() => addItem(cat.label)} style={{ background: 'rgba(var(--orange-ch),0.15)', border: '1px solid rgba(var(--orange-ch),0.3)', borderRadius: '5px', color: 'var(--orange)', fontSize: 'var(--text-compact)', padding: '0 10px', cursor: 'pointer' }}>+</button>
+                      <button onClick={() => addItem(cat.label)} style={{ background: 'rgba(var(--orange-ch),0.15)', border: '1px solid rgba(var(--orange-ch),0.3)', borderRadius: 'var(--radius-sm)', color: 'var(--orange)', fontSize: 'var(--text-compact)', padding: '0 10px', cursor: 'pointer' }}>+</button>
                     </div>
                   </div>
                 )}
@@ -3879,12 +3879,12 @@ function AdaptiveGoalsWidget() {
         <div style={st.widgetLabel}>ADAPTIVE GOALS</div>
         <div style={st.widgetTitle}>GOAL TRACKER</div>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', marginTop: '10px' }}>
         {data.map(({ r, goalSecs, pbSecs }) => {
           const gap = pbSecs != null ? goalSecs - pbSecs : null
           const color = gap == null ? 'var(--muted)' : gap <= 0 ? 'var(--green)' : 'var(--orange)'
           return (
-            <div key={r.id} style={{ padding: '8px', background: 'var(--surface3)', borderRadius: '8px' }}>
+            <div key={r.id} style={{ padding: 'var(--sp-2)', background: 'var(--surface3)', borderRadius: 'var(--radius-md)' }}>
               <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: '4px' }}>{r.name ?? distBadge(r.distance, r.sport)}</div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
@@ -3967,7 +3967,7 @@ function BreakTapeWidget() {
 
   return (
     <WidgetCard id="break-tape" style={st.glowCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
         <div>
           <div style={st.widgetLabel}>BREAK TAPE MOMENTS</div>
           <div style={st.widgetTitle}>{milestones.length} MILESTONE{milestones.length !== 1 ? 'S' : ''}</div>
@@ -3976,7 +3976,7 @@ function BreakTapeWidget() {
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', marginTop: '8px' }}>
         {milestones.map((m, i) => (
-          <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', padding: '7px 0', borderBottom: '1px solid var(--border)' }}>
+          <div key={i} style={{ display: 'flex', gap: 'var(--sp-2)', alignItems: 'flex-start', padding: '7px 0', borderBottom: '1px solid var(--border)' }}>
             <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', color: 'var(--orange)', flexShrink: 0, width: '16px', textAlign: 'center' }}>{m.icon}</span>
             <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--orange)', textTransform: 'uppercase' }}>{m.label}</div>
@@ -4019,14 +4019,14 @@ function WhatToRaceNextWidget() {
 
   return (
     <WidgetCard id="what-to-race-next" style={st.glowCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
         <div>
           <div style={st.widgetLabel}>WHAT TO RACE NEXT</div>
           <div style={st.widgetTitle}>{upcoming.length} RACE{upcoming.length !== 1 ? 'S' : ''} UPCOMING</div>
         </div>
       </div>
       {recommendation && (
-        <div style={{ padding: '8px', background: 'rgba(var(--green-ch),0.08)', border: '1px solid rgba(var(--green-ch),0.2)', borderRadius: '8px', marginTop: '8px' }}>
+        <div style={{ padding: 'var(--sp-2)', background: 'rgba(var(--green-ch),0.08)', border: '1px solid rgba(var(--green-ch),0.2)', borderRadius: 'var(--radius-md)', marginTop: '8px' }}>
           <div style={{ fontSize: '10px', color: 'var(--green)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>SURFACE MATCH</div>
           <div style={{ fontSize: '12px', color: 'var(--white)', marginTop: '2px' }}>Your PBs align with {recommendation.toLowerCase()} — prioritise {recommendation.toLowerCase()} events.</div>
         </div>
@@ -4092,7 +4092,7 @@ function StoryModeWidget() {
           <div style={st.widgetLabel}>STORY MODE</div>
           <div style={st.widgetTitle}>{year} RECAP</div>
         </div>
-        <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--muted)', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px', padding: '3px 6px', flexShrink: 0 }}>STY</span>
+        <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--muted)', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-sm)', padding: '3px 6px', flexShrink: 0 }}>STY</span>
       </div>
       <div style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', lineHeight: 1.5, marginTop: 6 }}>{story.headline}</div>
       <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
@@ -4101,14 +4101,14 @@ function StoryModeWidget() {
           { label: 'COUNTRIES', value: story.countries || 1 },
           { label: 'MEDALS', value: story.medals },
         ].map(({ label, value }) => (
-          <div key={label} style={{ flex: 1, background: 'var(--surface3)', borderRadius: 6, padding: '8px 6px', textAlign: 'center' }}>
+          <div key={label} style={{ flex: 1, background: 'var(--surface3)', borderRadius: 'var(--radius-sm)', padding: '8px 6px', textAlign: 'center' }}>
             <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-lg)', color: 'var(--orange)' }}>{value}</div>
             <div style={{ fontSize: 9, color: 'var(--muted)', fontFamily: 'var(--headline)', letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 2 }}>{label}</div>
           </div>
         ))}
       </div>
       {story.podium > 0 && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: 10, padding: '6px 10px', background: 'rgba(255,215,0,0.08)', border: '1px solid rgba(255,215,0,0.25)', borderRadius: '6px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', marginTop: 10, padding: '6px 10px', background: 'rgba(255,215,0,0.08)', border: '1px solid rgba(255,215,0,0.25)', borderRadius: 'var(--radius-sm)' }}>
           <span style={{ fontSize: 'var(--text-xs)', color: 'var(--gold)', fontFamily: 'var(--headline)', fontWeight: 700 }}>
             ★ {story.podium} PODIUM FINISH{story.podium !== 1 ? 'ES' : ''} THIS YEAR
           </span>
@@ -4141,7 +4141,7 @@ function CoachActivityWidget() {
           <div style={st.widgetLabel}>COACH ACTIVITY</div>
           <div style={st.widgetTitle}>SHARED VIEW</div>
         </div>
-        <span style={{ fontSize: 22, background: 'rgba(var(--orange-ch),0.1)', borderRadius: 8, padding: '4px 8px' }}>{relCount}</span>
+        <span style={{ fontSize: 22, background: 'rgba(var(--orange-ch),0.1)', borderRadius: 'var(--radius-md)', padding: '4px 8px' }}>{relCount}</span>
       </div>
       <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: 6 }}>
         {relCount
@@ -4153,7 +4153,7 @@ function CoachActivityWidget() {
           {comCount} coach comment{comCount > 1 ? 's' : ''} logged.
         </div>
       )}
-      <div style={{ marginTop: 10, fontSize: 'var(--text-xs)', color: 'var(--muted)', background: 'var(--surface3)', borderRadius: 6, padding: '8px 10px' }}>
+      <div style={{ marginTop: 10, fontSize: 'var(--text-xs)', color: 'var(--muted)', background: 'var(--surface3)', borderRadius: 'var(--radius-sm)', padding: '8px 10px' }}>
         Coach mode coming soon — shared views, annotations, and training comments.
       </div>
     </WidgetCard>
@@ -4308,9 +4308,9 @@ function PersonalBestsWidget() {
       <div style={st.widgetTitle}>PERSONAL BESTS</div>
       {/* Distance chip filter — grouped by sport, ascending distance order */}
       {allDists.length > 1 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px', marginBottom: '4px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', marginTop: '8px', marginBottom: '4px' }}>
           {pillGroups.map(pg => (
-            <div key={pg.sport} style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
+            <div key={pg.sport} style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-2)', alignItems: 'center' }}>
               {pillGroups.length > 1 && (
                 <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted2)', marginRight: '2px', flexShrink: 0 }}>
                   {pg.sport}
@@ -4327,7 +4327,7 @@ function PersonalBestsWidget() {
                       background: hidden ? 'var(--surface3)' : 'rgba(var(--orange-ch),0.12)',
                       color: hidden ? 'var(--muted2)' : 'var(--orange)',
                       border: `1px solid ${hidden ? 'var(--border)' : 'rgba(var(--orange-ch),0.35)'}`,
-                      borderRadius: '20px', padding: '5px 14px',
+                      borderRadius: 'var(--radius-pill)', padding: '5px 14px',
                       fontSize: '12px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase',
                       cursor: 'pointer', flexShrink: 0,
                       textDecoration: hidden ? 'line-through' : 'none',
@@ -4345,13 +4345,13 @@ function PersonalBestsWidget() {
       {groups.map(g => (
         <div key={g.sport} style={{ marginTop: '14px' }}>
           {/* Sport header */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingBottom: '12px', borderBottom: '1px solid var(--border)', marginBottom: '14px' }}>
-            <span style={{ width: '8px', height: '8px', borderRadius: '50%', flexShrink: 0, background: g.dot, boxShadow: `0 0 8px ${g.dotGlow}`, display: 'inline-block', animation: 'breathe 2s ease-in-out infinite' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', paddingBottom: '12px', borderBottom: '1px solid var(--border)', marginBottom: '14px' }}>
+            <span style={{ width: '8px', height: '8px', borderRadius: 'var(--radius-round)', flexShrink: 0, background: g.dot, boxShadow: `0 0 8px ${g.dotGlow}`, display: 'inline-block', animation: 'breathe 2s ease-in-out infinite' }} />
             <span style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-xs)', fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--muted)' }}>{g.sport}</span>
           </div>
 
           {/* Horizontal scrolling PB cards */}
-          <div style={{ display: 'flex', gap: '14px', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' as any }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-4)', overflowX: 'auto', paddingBottom: '4px', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' as any }}>
             {g.entries.map(({ key, r }) => {
               const isTri = g.sport === 'Triathlon'
               const accentColor = isTri ? 'var(--purple)' : 'var(--green)'
@@ -4369,7 +4369,7 @@ function PersonalBestsWidget() {
                     background: `linear-gradient(145deg, #141414 0%, ${accentBg} 100%)`,
                     border: `1px solid var(--border2)`,
                     borderLeft: `3px solid ${accentColor}`,
-                    borderRadius: '14px',
+                    borderRadius: 'var(--radius-lg)',
                     padding: '14px 14px 12px',
                     overflow: 'hidden',
                     flexShrink: 0,
@@ -4494,7 +4494,7 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
       <div style={st.modalOverlay} onClick={onClose}>
         <div style={{ ...st.customizeSheet, maxHeight: '80vh', paddingBottom: '0', overflowY: 'hidden' }} onClick={e => e.stopPropagation()}>
           {/* Handle pill */}
-          <div style={{ width: '40px', height: '4px', background: 'var(--border2)', borderRadius: '2px', margin: '0 auto 20px', flexShrink: 0 }} />
+          <div style={{ width: '40px', height: '4px', background: 'var(--border2)', borderRadius: 'var(--radius-xs)', margin: '0 auto 20px', flexShrink: 0 }} />
 
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexShrink: 0 }}>
@@ -4504,7 +4504,7 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                 {sorted.length > 0 ? `${sorted.length} race${sorted.length !== 1 ? 's' : ''}` : ''}
               </span>
             </div>
-            <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 'var(--text-lg)', cursor: 'pointer', padding: '4px', lineHeight: 1 }} aria-label="Close">✕</button>
+            <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 'var(--text-lg)', cursor: 'pointer', padding: 'var(--sp-1)', lineHeight: 1 }} aria-label="Close">✕</button>
           </div>
 
           {/* Race list — scrollable */}
@@ -4525,7 +4525,7 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                 <div key={r.id}>
                   {/* Gap divider */}
                   {gapDays !== null && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '6px 0' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', margin: '6px 0' }}>
                       <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
                       <span style={{ fontFamily: 'var(--body)', fontSize: 'var(--text-xs)', fontWeight: 600, color: gapDays < 21 ? '#ff9966' : 'var(--muted)', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>
                         {gapDays < 21 ? '⚠ ' : ''}{gapDays}d gap
@@ -4536,19 +4536,19 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
 
                   {/* A-race — large highlighted card */}
                   {isA ? (
-                    <div onClick={() => selectFocus(r.id)} style={{ background: 'linear-gradient(135deg, rgba(var(--orange-ch),0.18) 0%, rgba(var(--orange-ch),0.08) 100%)', border: focusRaceId === r.id ? '2px solid var(--orange)' : '1.5px solid rgba(var(--orange-ch),0.5)', borderRadius: '12px', padding: '16px', position: 'relative', overflow: 'hidden', cursor: 'pointer' }}>
-                      <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: '4px', background: 'var(--orange)', borderRadius: '12px 0 0 12px' }} />
+                    <div onClick={() => selectFocus(r.id)} style={{ background: 'linear-gradient(135deg, rgba(var(--orange-ch),0.18) 0%, rgba(var(--orange-ch),0.08) 100%)', border: focusRaceId === r.id ? '2px solid var(--orange)' : '1.5px solid rgba(var(--orange-ch),0.5)', borderRadius: 'var(--radius-lg)', padding: 'var(--sp-4)', position: 'relative', overflow: 'hidden', cursor: 'pointer' }}>
+                      <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: '4px', background: 'var(--orange)', borderRadius: 'var(--radius-lg) 0 0 var(--radius-lg)' }} />
                       {focusRaceId === r.id && (
-                        <div style={{ position: 'absolute', top: '10px', right: '10px', width: '18px', height: '18px', borderRadius: '50%', background: 'var(--orange)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', color: '#000', fontWeight: 900 }}>✓</div>
+                        <div style={{ position: 'absolute', top: '10px', right: '10px', width: '18px', height: '18px', borderRadius: 'var(--radius-round)', background: 'var(--orange)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', color: '#000', fontWeight: 900 }}>✓</div>
                       )}
                       <div style={{ paddingLeft: '10px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '6px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
-                            <span style={{ background: 'var(--orange)', color: '#000', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '10px', letterSpacing: '0.08em', padding: '2px 7px', borderRadius: '4px', flexShrink: 0 }}>{racePriorityLabel(r.priority)}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--sp-2)', marginBottom: '6px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', flex: 1, minWidth: 0 }}>
+                            <span style={{ background: 'var(--orange)', color: '#000', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '10px', letterSpacing: '0.08em', padding: '2px 7px', borderRadius: 'var(--radius-xs)', flexShrink: 0 }}>{racePriorityLabel(r.priority)}</span>
                             <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>{r.name ?? 'Unnamed race'}</span>
                           </div>
-                          <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-                            <button onClick={e => { e.stopPropagation(); setEditingId(r.id) }} style={{ background: 'rgba(var(--orange-ch),0.15)', border: '1px solid rgba(var(--orange-ch),0.4)', borderRadius: '6px', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.06em', padding: '5px 10px', cursor: 'pointer', flexShrink: 0 }}>EDIT</button>
+                          <div style={{ display: 'flex', gap: 'var(--sp-2)', flexShrink: 0 }}>
+                            <button onClick={e => { e.stopPropagation(); setEditingId(r.id) }} style={{ background: 'rgba(var(--orange-ch),0.15)', border: '1px solid rgba(var(--orange-ch),0.4)', borderRadius: 'var(--radius-sm)', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.06em', padding: '5px 10px', cursor: 'pointer', flexShrink: 0 }}>EDIT</button>
                           </div>
                         </div>
                         <div style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: 1.5 }}>
@@ -4558,7 +4558,7 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                           {r.goalTime ? <span style={{ color: 'var(--orange)', marginLeft: '6px' }}>Goal {r.goalTime}</span> : ''}
                         </div>
                         <div style={{ marginTop: '10px' }}>
-                          <span style={{ display: 'inline-block', background: d === 0 ? 'var(--orange)' : 'rgba(var(--orange-ch),0.2)', color: d === 0 ? '#000' : 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', letterSpacing: '0.06em', padding: '4px 12px', borderRadius: '6px' }}>
+                          <span style={{ display: 'inline-block', background: d === 0 ? 'var(--orange)' : 'rgba(var(--orange-ch),0.2)', color: d === 0 ? '#000' : 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', letterSpacing: '0.06em', padding: '4px 12px', borderRadius: 'var(--radius-sm)' }}>
                             {d === 0 ? 'TODAY' : `${d} DAYS`}
                           </span>
                         </div>
@@ -4566,7 +4566,7 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                     </div>
                   ) : (
                     /* Standard B/C card */
-                    <div onClick={() => selectFocus(r.id)} style={{ background: focusRaceId === r.id ? 'rgba(var(--orange-ch),0.08)' : 'var(--surface3)', border: focusRaceId === r.id ? '1px solid rgba(var(--orange-ch),0.5)' : '1px solid var(--border)', borderRadius: '10px', padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', cursor: 'pointer' }}>
+                    <div onClick={() => selectFocus(r.id)} style={{ background: focusRaceId === r.id ? 'rgba(var(--orange-ch),0.08)' : 'var(--surface3)', border: focusRaceId === r.id ? '1px solid rgba(var(--orange-ch),0.5)' : '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--sp-3)', cursor: 'pointer' }}>
                       <div style={{ minWidth: 0, flex: 1 }}>
                         <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-compact)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {r.priority && r.priority !== 'A' && <span style={{ color: 'var(--muted)', marginRight: '6px', fontSize: 'var(--text-xs)' }}>{r.priority}</span>}
@@ -4579,12 +4579,12 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                           {r.goalTime ? <span style={{ color: 'var(--muted)', marginLeft: '4px' }}>· Goal {r.goalTime}</span> : ''}
                         </div>
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px', flexShrink: 0 }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 'var(--sp-2)', flexShrink: 0 }}>
                         <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color: d === 0 ? 'var(--orange)' : 'var(--muted)', letterSpacing: '0.04em' }}>
                           {d === 0 ? 'TODAY' : `${d}D`}
                         </div>
                         <div style={{ display: 'flex', gap: '4px' }}>
-                          <button onClick={e => { e.stopPropagation(); setEditingId(r.id) }} style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: '5px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '10px', letterSpacing: '0.06em', padding: '3px 8px', cursor: 'pointer' }}>EDIT</button>
+                          <button onClick={e => { e.stopPropagation(); setEditingId(r.id) }} style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-sm)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '10px', letterSpacing: '0.06em', padding: '3px 8px', cursor: 'pointer' }}>EDIT</button>
                         </div>
                       </div>
                     </div>
@@ -4604,7 +4604,7 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                           {isOpen ? 'HIDE ALTERNATIVES' : 'FIND ALTERNATIVES'}
                         </button>
                         {isOpen && (
-                          <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                          <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
                             {alts.length === 0 ? (
                               <div style={{ fontSize: '12px', color: 'var(--muted)', padding: '8px 0' }}>
                                 No catalog matches within ±21 days for this distance.
@@ -4638,8 +4638,8 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                                   setAltsOpenId(null)
                                 }
                                 return (
-                                  <div key={alt.id} style={{ background: 'var(--surface2)', borderRadius: '8px', border: isConfirming ? '1px solid rgba(var(--orange-ch),0.4)' : '1px solid var(--border)', overflow: 'hidden' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', padding: '10px 12px' }}>
+                                  <div key={alt.id} style={{ background: 'var(--surface2)', borderRadius: 'var(--radius-md)', border: isConfirming ? '1px solid rgba(var(--orange-ch),0.4)' : '1px solid var(--border)', overflow: 'hidden' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: '10px 12px' }}>
                                       <div style={{ minWidth: 0, flex: 1 }}>
                                         <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-sm)', color: 'var(--white)', letterSpacing: '0.03em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{alt.name}</div>
                                         <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>
@@ -4651,27 +4651,27 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                                       {!isConfirming && (
                                         <button
                                           onClick={e => { e.stopPropagation(); setConfirmAlt({ altKey, prefill: altPrefill, sourceId: r.id }) }}
-                                          style={{ background: 'rgba(var(--orange-ch),0.15)', border: '1px solid rgba(var(--orange-ch),0.4)', borderRadius: '6px', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.06em', padding: '6px 10px', cursor: 'pointer', flexShrink: 0 }}
+                                          style={{ background: 'rgba(var(--orange-ch),0.15)', border: '1px solid rgba(var(--orange-ch),0.4)', borderRadius: 'var(--radius-sm)', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.06em', padding: '6px 10px', cursor: 'pointer', flexShrink: 0 }}
                                         >
                                           + PLAN
                                         </button>
                                       )}
                                     </div>
                                     {isConfirming && (
-                                      <div style={{ padding: '10px 12px', borderTop: '1px solid var(--border)', background: 'rgba(var(--orange-ch),0.04)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                      <div style={{ padding: '10px 12px', borderTop: '1px solid var(--border)', background: 'rgba(var(--orange-ch),0.04)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
                                         <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--body)', letterSpacing: '0.02em' }}>
                                           What do you want to do with <span style={{ color: 'var(--white)', fontWeight: 600 }}>{r.name ?? 'this race'}</span>?
                                         </div>
-                                        <div style={{ display: 'flex', gap: '6px' }}>
+                                        <div style={{ display: 'flex', gap: 'var(--sp-2)' }}>
                                           <button
                                             onClick={e => { e.stopPropagation(); doReplace() }}
-                                            style={{ flex: 1, background: 'var(--orange)', border: 'none', borderRadius: '6px', color: '#000', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xs)', letterSpacing: '0.06em', padding: '7px 8px', cursor: 'pointer', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                                            style={{ flex: 1, background: 'var(--orange)', border: 'none', borderRadius: 'var(--radius-sm)', color: '#000', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xs)', letterSpacing: '0.06em', padding: '7px 8px', cursor: 'pointer', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                                           >
                                             REPLACE {r.name ? r.name.toUpperCase().slice(0, 20) : 'THIS RACE'}
                                           </button>
                                           <button
                                             onClick={e => { e.stopPropagation(); doAddAlongside() }}
-                                            style={{ flex: 1, background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px', color: 'var(--white)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.06em', padding: '7px 8px', cursor: 'pointer', textTransform: 'uppercase' }}
+                                            style={{ flex: 1, background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-sm)', color: 'var(--white)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.06em', padding: '7px 8px', cursor: 'pointer', textTransform: 'uppercase' }}
                                           >
                                             ADD ALONGSIDE
                                           </button>
@@ -4697,8 +4697,8 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
           </div>
 
           {/* Add race — sticky footer */}
-          <div style={{ flexShrink: 0, borderTop: '1px solid var(--border)', padding: '16px', background: 'var(--surface2)' }}>
-            <button onClick={() => { onClose(); onAddRace() }} style={{ width: '100%', background: 'var(--orange)', color: '#000', border: 'none', borderRadius: '10px', padding: '14px', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer' }}>
+          <div style={{ flexShrink: 0, borderTop: '1px solid var(--border)', padding: 'var(--sp-4)', background: 'var(--surface2)' }}>
+            <button onClick={() => { onClose(); onAddRace() }} style={{ width: '100%', background: 'var(--orange)', color: '#000', border: 'none', borderRadius: 'var(--radius-lg)', padding: 'var(--sp-4)', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer' }}>
               + ADD UPCOMING RACE
             </button>
           </div>
@@ -4719,17 +4719,17 @@ function ExpiredRacePrompts({ onLogResult }: { onLogResult: () => void }) {
   if (expired.length === 0) return null
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
       {expired.map(race => (
         <div key={race.id} style={{
           background: 'linear-gradient(135deg, rgba(var(--orange-ch),0.08) 0%, var(--surface2) 100%)',
           border: '1px solid rgba(var(--orange-ch),0.3)',
-          borderRadius: '12px',
+          borderRadius: 'var(--radius-lg)',
           padding: '14px 16px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          gap: '12px',
+          gap: 'var(--sp-3)',
         }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-sm)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--orange)', marginBottom: '2px' }}>
@@ -4739,16 +4739,16 @@ function ExpiredRacePrompts({ onLogResult }: { onLogResult: () => void }) {
               {race.name ?? 'Unnamed Race'} · {fmtDateIntl(race.date)}
             </div>
           </div>
-          <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-2)', flexShrink: 0 }}>
             <button
               onClick={() => onLogResult()}
-              style={{ background: 'var(--orange)', color: '#000', border: 'none', borderRadius: '8px', padding: '8px 14px', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '12px', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer' }}
+              style={{ background: 'var(--orange)', color: '#000', border: 'none', borderRadius: 'var(--radius-md)', padding: '8px 14px', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '12px', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer' }}
             >
               LOG
             </button>
             <button
               onClick={() => dismissExpired(race.id)}
-              style={{ background: 'transparent', color: 'var(--muted)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '8px 10px', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '12px', letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer' }}
+              style={{ background: 'transparent', color: 'var(--muted)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-md)', padding: '8px 10px', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '12px', letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer' }}
             >
               SKIP
             </button>
@@ -4766,12 +4766,12 @@ function NoUpcomingRaceCTA({ onAddRace }: { onAddRace: () => void }) {
     <div style={{
       background: 'linear-gradient(135deg, var(--surface2) 0%, var(--surface3) 100%)',
       border: '1px dashed rgba(var(--orange-ch),0.35)',
-      borderRadius: '12px',
-      padding: '20px',
+      borderRadius: 'var(--radius-lg)',
+      padding: 'var(--sp-5)',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      gap: '14px',
+      gap: 'var(--sp-4)',
       textAlign: 'center',
     }}>
       <svg width="28" height="28" viewBox="0 0 24 24" fill="none" style={{ color: 'var(--orange)', opacity: 0.7 }} aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M3 9h18" stroke="currentColor" strokeWidth="1.5"/><path d="M8 2v4M16 2v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
@@ -4795,7 +4795,7 @@ function NoUpcomingRaceCTA({ onAddRace }: { onAddRace: () => void }) {
           background: 'var(--orange)',
           color: '#000',
           border: 'none',
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-md)',
           padding: '10px 22px',
           fontFamily: 'var(--headline)',
           fontWeight: 800,
@@ -4860,13 +4860,13 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
     <>
       <WidgetCard id="riegel-predictor" style={st.glowCard}>
         {/* data-no-widget-detail on the wrapper prevents any click inside from opening the widget detail popup */}
-        <div data-no-widget-detail style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div data-no-widget-detail style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
         <div style={st.widgetLabel}>RACE PREDICTOR</div>
         <div style={st.widgetTitle}>RIEGEL PREDICTOR</div>
         <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '-4px' }}>
           Based on {race.name} · {fmtDateDDMM(race.date)}
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
           {table.map(row => {
             const matched = matchingUpcoming(row.distance)
             const hasGoal = matched.length > 0 && matched.some(r => r.goalTime === row.predictedTime)
@@ -4877,7 +4877,7 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
                 onClick={() => !row.isSameAsInput && handleSetGoal(row.distance)}
                 style={{
                   display: 'flex', flexDirection: 'column',
-                  padding: '8px 10px', borderRadius: '6px',
+                  padding: '8px 10px', borderRadius: 'var(--radius-sm)',
                   background: row.isSameAsInput ? 'rgba(var(--orange-ch),0.1)' : 'var(--surface3)',
                   border: `1px solid ${row.isSameAsInput ? 'rgba(var(--orange-ch),0.3)' : hasGoal ? 'rgba(var(--green-ch),0.3)' : 'var(--border)'}`,
                   gap: '4px',
@@ -4889,7 +4889,7 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
                     {row.distance}
                     {row.isSameAsInput && <span style={{ fontSize: '10px', marginLeft: '6px', color: 'var(--muted)', textTransform: 'uppercase', fontFamily: 'var(--headline)' }}>actual</span>}
                   </span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
                     <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', color: row.isSameAsInput ? 'var(--orange)' : 'var(--white)' }}>
                       {row.predictedTime}
                     </span>
@@ -4917,16 +4917,16 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
       {showLinkSheet && createPortal(
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 1500, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={() => setShowLinkSheet(false)}>
           <div style={{ ...st.customizeSheet, maxHeight: '60vh' }} onClick={e => e.stopPropagation()}>
-            <div style={{ width: '40px', height: '4px', background: 'var(--border2)', borderRadius: '2px', margin: '0 auto 16px' }} />
+            <div style={{ width: '40px', height: '4px', background: 'var(--border2)', borderRadius: 'var(--radius-xs)', margin: '0 auto 16px' }} />
             <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '15px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)', marginBottom: '4px' }}>
               Set Goal Pace On Race
             </div>
             <div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '14px' }}>
               Sets {selectedRow} target ({table.find(r => r.distance === selectedRow)?.predictedTime}) as the goal time.
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', overflowY: 'auto' }}>
               {upcomingRaces.map(r => (
-                <button key={r.id} onClick={() => linkGoalPace(r.id)} style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '12px', textAlign: 'left', cursor: 'pointer', color: 'var(--white)' }}>
+                <button key={r.id} onClick={() => linkGoalPace(r.id)} style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-3)', textAlign: 'left', cursor: 'pointer', color: 'var(--white)' }}>
                   <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-sm)' }}>{r.name ?? 'Unnamed Race'}</div>
                   <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>{fmtDateDDMM(r.date)} · {r.distance}</div>
                 </button>
@@ -4988,8 +4988,8 @@ function VDOTScoreWidget() {
       <div style={st.widgetLabel}>VDOT SCORE</div>
 
       {/* Current + Peak row */}
-      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '10px' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 'var(--sp-2)' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 'var(--sp-2)' }}>
           <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '52px', lineHeight: 1, color: vdotColor }}>
             {displayPt.vdot}
           </span>
@@ -5000,7 +5000,7 @@ function VDOTScoreWidget() {
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
           {showPeak && (
-            <div style={{ background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: '6px', padding: '4px 8px', textAlign: 'right' }}>
+            <div style={{ background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '4px 8px', textAlign: 'right' }}>
               <div style={{ fontSize: '9px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em' }}>PEAK</div>
               <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-md)', color: 'var(--muted)', lineHeight: 1 }}>{peakVDOT!.vdot}</div>
             </div>
@@ -5021,9 +5021,9 @@ function VDOTScoreWidget() {
         <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '6px' }}>
           EQUIVALENT PERFORMANCES
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '6px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--sp-2)' }}>
           {equivs.map(e => (
-            <div key={e.distance} style={{ background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: '6px', padding: '8px 6px', textAlign: 'center' }}>
+            <div key={e.distance} style={{ background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '8px 6px', textAlign: 'center' }}>
               <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '2px' }}>
                 {e.distance.replace(' Marathon', 'M').replace('Marathon', 'MAR').replace(' Mile', 'mi')}
               </div>
@@ -5042,7 +5042,7 @@ function VDOTScoreWidget() {
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           {zones.map(z => (
-            <div key={z.zone} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', background: 'var(--surface3)', borderRadius: '5px', border: '1px solid var(--border)' }}>
+            <div key={z.zone} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', padding: '6px 8px', background: 'var(--surface3)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
               <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', width: '18px', color: 'var(--orange)' }}>{z.abbr}</span>
               <span style={{ flex: 1, fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{z.description}</span>
               <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '12px', color: 'var(--white)', flexShrink: 0 }}>
@@ -5101,12 +5101,12 @@ function GoalPaceWidget({ race }: { race: Race | null }) {
       <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '-4px' }}>{focusRace.name}</div>
 
       {/* Main pace display */}
-      <div style={{ display: 'flex', gap: '12px' }}>
-        <div style={{ flex: 1, background: 'var(--surface3)', borderRadius: '8px', padding: '14px', border: '1px solid var(--border2)', textAlign: 'center' }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-3)' }}>
+        <div style={{ flex: 1, background: 'var(--surface3)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-4)', border: '1px solid var(--border2)', textAlign: 'center' }}>
           <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, color: 'var(--muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>per KM</div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '26px', color: 'var(--orange)', lineHeight: 1.1, marginTop: '4px' }}>{result.pacePaceStr.split(' ')[0]}</div>
         </div>
-        <div style={{ flex: 1, background: 'var(--surface3)', borderRadius: '8px', padding: '14px', border: '1px solid var(--border2)', textAlign: 'center' }}>
+        <div style={{ flex: 1, background: 'var(--surface3)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-4)', border: '1px solid var(--border2)', textAlign: 'center' }}>
           <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, color: 'var(--muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>per MILE</div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '26px', color: 'var(--white)', lineHeight: 1.1, marginTop: '4px' }}>{result.paceMileStr.split(' ')[0]}</div>
         </div>
@@ -5114,7 +5114,7 @@ function GoalPaceWidget({ race }: { race: Race | null }) {
 
       {/* VDOT gap */}
       {gapLabel && (
-        <div style={{ fontSize: '12px', color: gapColor, padding: '6px 10px', background: 'var(--surface3)', borderRadius: '6px', border: `1px solid ${gapColor}33` }}>
+        <div style={{ fontSize: '12px', color: gapColor, padding: '6px 10px', background: 'var(--surface3)', borderRadius: 'var(--radius-sm)', border: `1px solid ${gapColor}33` }}>
           {gapLabel}
           {result.requiredVDOT && <span style={{ color: 'var(--muted)', marginLeft: '6px' }}>VDOT {result.requiredVDOT}</span>}
         </div>
@@ -5123,9 +5123,9 @@ function GoalPaceWidget({ race }: { race: Race | null }) {
       {/* Splits */}
       <div>
         <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '6px' }}>SPLIT TARGETS</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-1)' }}>
           {result.splitTargets.map(s => (
-            <div key={s.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 8px', background: 'var(--surface3)', borderRadius: '4px' }}>
+            <div key={s.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 8px', background: 'var(--surface3)', borderRadius: 'var(--radius-xs)' }}>
               <span style={{ fontSize: '12px', color: 'var(--muted)' }}>{s.label}</span>
               <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--white)' }}>{s.cumStr}</span>
             </div>
@@ -5233,20 +5233,20 @@ function WeatherImpactWidget() {
       <div style={st.widgetTitle}>WEATHER IMPACT</div>
       <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '-4px' }}>{race.name} · {fmtDateDDMM(race.date)}</div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-        <div style={{ background: 'var(--surface3)', borderRadius: '8px', padding: '12px', border: '1px solid var(--border2)' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-2)' }}>
+        <div style={{ background: 'var(--surface3)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-3)', border: '1px solid var(--border2)' }}>
           <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, color: 'var(--muted)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '4px' }}>ACTUAL</div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-lg)', color: 'var(--white)' }}>{fSecsToHMS(impact.actualSecs)}</div>
           <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>{impact.tempC}°C · {impact.humidityPct}% humidity</div>
         </div>
-        <div style={{ background: 'var(--surface3)', borderRadius: '8px', padding: '12px', border: `1px solid ${impactColor}44` }}>
+        <div style={{ background: 'var(--surface3)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-3)', border: `1px solid ${impactColor}44` }}>
           <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, color: impactColor, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '4px' }}>IDEAL CONDITIONS</div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-lg)', color: impactColor }}>{fSecsToHMS(impact.adjustedSecs)}</div>
           <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>10°C · 50% humidity</div>
         </div>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px', background: 'var(--surface3)', borderRadius: '6px', border: `1px solid ${impactColor}33` }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', padding: 'var(--sp-3)', background: 'var(--surface3)', borderRadius: 'var(--radius-sm)', border: `1px solid ${impactColor}33` }}>
         <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xs)', color: impactColor }}>
           {impact.improvementSecs > 300 ? 'HOT' : impact.improvementSecs > 120 ? 'WARM' : 'OK'}
         </span>
@@ -5273,7 +5273,7 @@ function DistanceMilestonesWidget() {
       <div style={st.widgetTitle}>DISTANCE TOTAL</div>
 
       {/* Hero number */}
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 'var(--sp-2)' }}>
         <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-3xl)', lineHeight: 1, color: 'var(--orange)' }}>
           {result.totalKm.toLocaleString()}
         </span>
@@ -5291,8 +5291,8 @@ function DistanceMilestonesWidget() {
               {result.nextMilestone.label}
             </span>
           </div>
-          <div style={{ height: '6px', background: 'var(--surface3)', borderRadius: '3px', overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: `${result.progressPct}%`, background: 'var(--orange)', borderRadius: '3px', transition: 'width 0.5s ease' }} />
+          <div style={{ height: '6px', background: 'var(--surface3)', borderRadius: 'var(--radius-xs)', overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${result.progressPct}%`, background: 'var(--orange)', borderRadius: 'var(--radius-xs)', transition: 'width 0.5s ease' }} />
           </div>
           <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '4px' }}>
             {result.kmToNext.toLocaleString()} km to {result.nextMilestone.label}
@@ -5301,7 +5301,7 @@ function DistanceMilestonesWidget() {
       )}
 
       {/* Fun fact */}
-      <div style={{ fontSize: '12px', color: 'var(--muted)', fontStyle: 'italic', padding: '8px 10px', background: 'var(--surface3)', borderRadius: '6px', borderLeft: '2px solid var(--orange)' }}>
+      <div style={{ fontSize: '12px', color: 'var(--muted)', fontStyle: 'italic', padding: '8px 10px', background: 'var(--surface3)', borderRadius: 'var(--radius-sm)', borderLeft: '2px solid var(--orange)' }}>
         {result.funFact}
       </div>
     </WidgetCard>
@@ -5336,7 +5336,7 @@ function EquivPerfWidget() {
         {mainDistances.map((e, i) => (
           <React.Fragment key={e.distance}>
             {i > 0 && <span style={{ color: 'var(--muted2)', fontSize: 'var(--text-xs)', textAlign: 'center' }}>≈</span>}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: '8px', padding: '8px 6px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '8px 6px' }}>
               <span style={{ fontSize: '9px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
                 {e.distance.replace('Half Marathon','HM').replace('Marathon','MAR')}
               </span>
@@ -5351,7 +5351,7 @@ function EquivPerfWidget() {
       {/* Extended distances */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px' }}>
         {equivs.filter(e => !['5K','10K','Half Marathon','Marathon'].includes(e.distance)).map(e => (
-          <div key={e.distance} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 8px', background: 'var(--surface3)', borderRadius: '5px', border: '1px solid var(--border)' }}>
+          <div key={e.distance} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 8px', background: 'var(--surface3)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
             <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{e.distance}</span>
             <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '12px', color: 'var(--white)' }}>{e.timeStr}</span>
           </div>
@@ -5375,7 +5375,7 @@ function UpcomingDensityWidget() {
       {upcoming.length < 2 ? (
         <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: 0 }}>Add 2+ upcoming races to check for scheduling conflicts.</p>
       ) : warnings.length === 0 ? (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', background: 'rgba(var(--green-ch),0.06)', borderRadius: '8px', border: '1px solid rgba(var(--green-ch),0.2)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', padding: '10px 12px', background: 'rgba(var(--green-ch),0.06)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(var(--green-ch),0.2)' }}>
           <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', color: 'var(--green)' }}>✓</span>
           <div>
             <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--green)' }}>ALL CLEAR</div>
@@ -5383,10 +5383,10 @@ function UpcomingDensityWidget() {
           </div>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
           {warnings.map((w, i) => (
             <div key={i} style={{
-              padding: '10px 12px', borderRadius: '8px',
+              padding: '10px 12px', borderRadius: 'var(--radius-md)',
               background: w.severity === 'danger' ? 'rgba(255,60,60,0.08)' : 'rgba(var(--orange-ch),0.08)',
               border: `1px solid ${w.severity === 'danger' ? 'rgba(255,60,60,0.3)' : 'rgba(var(--orange-ch),0.3)'}`,
             }}>
@@ -5451,7 +5451,7 @@ function CourseRepeatsWidget() {
     <WidgetCard id="course-repeats" style={st.glowCard}>
       <div style={st.widgetLabel}>REPEATS</div>
       <div style={st.widgetTitle}>COURSE REPEATS</div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
         {courses.slice(0, 4).map(c => (
           <div key={c.key}>
             <div
@@ -5476,7 +5476,7 @@ function CourseRepeatsWidget() {
             </div>
             {/* Year-by-year comparison */}
             {expanded === c.key && (
-              <div style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderTop: 'none', borderRadius: '0 0 8px 8px', padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderTop: 'none', borderRadius: '0 0 var(--radius-md) var(--radius-md)', padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
                 {c.timed.map(r => {
                   const isPB = r.id === c.pb?.id
                   return (
@@ -5487,7 +5487,7 @@ function CourseRepeatsWidget() {
                         </div>
                         <div style={{ fontSize: '10px', color: 'var(--muted2)' }}>{fmtDateDDMM(r.date)}</div>
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
                         {isPB && <span style={{ fontSize: '9px', color: 'var(--gold-a)', fontFamily: 'var(--headline)', fontWeight: 700 }}>PB</span>}
                         <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', color: isPB ? 'var(--orange)' : 'var(--white)' }}>{r.time}</span>
                       </div>
@@ -5533,10 +5533,10 @@ function DashCustomizeModal({ onClose }: { onClose: () => void }) {
     <div style={st.modalOverlay} onClick={onClose}>
       <div style={st.customizeSheet} onClick={e => e.stopPropagation()}>
         {/* Handle pill */}
-        <div style={{ width: '40px', height: '4px', background: 'var(--border2)', borderRadius: '2px', margin: '0 auto 20px' }} />
+        <div style={{ width: '40px', height: '4px', background: 'var(--border2)', borderRadius: 'var(--radius-xs)', margin: '0 auto 20px' }} />
 
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', marginBottom: '6px' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 'var(--sp-3)', marginBottom: '6px' }}>
           <div style={{ minWidth: 0, flex: 1 }}>
             <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)', lineHeight: 1.1 }}>
               CUSTOMIZE DASHBOARD
@@ -5548,7 +5548,7 @@ function DashCustomizeModal({ onClose }: { onClose: () => void }) {
           <button onClick={onClose} aria-label="Close" style={{ background: 'transparent', border: 'none', color: 'var(--muted)', fontSize: 'var(--text-lg)', cursor: 'pointer', padding: '4px 8px', lineHeight: 1, flexShrink: 0 }}>✕</button>
         </div>
 
-        <div style={{ fontSize: '12px', color: 'var(--muted2)', lineHeight: 1.5, padding: '10px 12px', background: 'var(--surface3)', borderRadius: '8px', marginBottom: '4px' }}>
+        <div style={{ fontSize: '12px', color: 'var(--muted2)', lineHeight: 1.5, padding: '10px 12px', background: 'var(--surface3)', borderRadius: 'var(--radius-md)', marginBottom: '4px' }}>
           Use ▲ and ▼ on a widget to reorder it within its section.
         </div>
 
@@ -5568,7 +5568,7 @@ function DashCustomizeModal({ onClose }: { onClose: () => void }) {
                       {meta.tag} — {meta.label}
                     </div>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-1)' }}>
                     <div style={st.arrowBtn}>▲</div>
                     <div style={st.arrowBtn}>▼</div>
                   </div>
@@ -5576,9 +5576,9 @@ function DashCustomizeModal({ onClose }: { onClose: () => void }) {
 
                 {/* Widget rows */}
                 {zWidgets.map((w, idx) => (
-                  <div key={w.id} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 0', borderBottom: '1px solid var(--border)', minWidth: 0 }}>
+                  <div key={w.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', padding: '12px 0', borderBottom: '1px solid var(--border)', minWidth: 0 }}>
                     {/* Icon box */}
-                    <div style={{ width: '38px', height: '38px', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--muted)', flexShrink: 0 }}>
+                    <div style={{ width: '38px', height: '38px', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-lg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--muted)', flexShrink: 0 }}>
                       {w.icon}
                     </div>
                     {/* Label */}
@@ -5586,7 +5586,7 @@ function DashCustomizeModal({ onClose }: { onClose: () => void }) {
                       <span style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', fontFamily: 'var(--body)', fontWeight: 500 }}>{w.label}</span>
                     </div>
                     {/* Reorder buttons */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', flexShrink: 0 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-1)', flexShrink: 0 }}>
                       <button
                         style={{ ...st.arrowBtn, opacity: idx === 0 ? 0.25 : 1, cursor: idx === 0 ? 'default' : 'pointer' }}
                         onClick={() => idx > 0 && reorderWidget(w.id, 'up')}
@@ -5627,11 +5627,11 @@ function NewUserOnboarding({ onLogRace, onAddUpcoming, onDiscover }: { onLogRace
     <div style={{
       background: 'linear-gradient(135deg, rgba(var(--orange-ch),0.08) 0%, var(--surface2) 100%)',
       border: '1px solid rgba(var(--orange-ch),0.25)',
-      borderRadius: '16px',
+      borderRadius: 'var(--radius-lg)',
       padding: '24px 20px',
       display: 'flex',
       flexDirection: 'column',
-      gap: '16px',
+      gap: 'var(--sp-4)',
     }}>
       <div>
         <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', color: 'var(--orange)', textTransform: 'uppercase', marginBottom: '6px' }}>
@@ -5645,23 +5645,23 @@ function NewUserOnboarding({ onLogRace, onAddUpcoming, onDiscover }: { onLogRace
         </div>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
         <button
           onClick={onLogRace}
-          style={{ width: '100%', background: 'var(--orange)', color: '#000', border: 'none', borderRadius: '10px', padding: '14px', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer' }}
+          style={{ width: '100%', background: 'var(--orange)', color: '#000', border: 'none', borderRadius: 'var(--radius-lg)', padding: 'var(--sp-4)', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer' }}
         >
           Log a Past Race
         </button>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-2)' }}>
           <button
             onClick={onAddUpcoming}
-            style={{ background: 'var(--surface3)', color: 'var(--white)', border: '1px solid var(--border2)', borderRadius: '10px', padding: '12px', fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '12px', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer' }}
+            style={{ background: 'var(--surface3)', color: 'var(--white)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-lg)', padding: 'var(--sp-3)', fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '12px', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer' }}
           >
             Plan a Race
           </button>
           <button
             onClick={onDiscover}
-            style={{ background: 'var(--surface3)', color: 'var(--white)', border: '1px solid var(--border2)', borderRadius: '10px', padding: '12px', fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '12px', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer' }}
+            style={{ background: 'var(--surface3)', color: 'var(--white)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-lg)', padding: 'var(--sp-3)', fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '12px', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer' }}
           >
             Discover Races
           </button>
@@ -5843,7 +5843,7 @@ const st = {
     display: 'grid',
     gridTemplateColumns: '1fr',
     gap: '1rem',
-    padding: '16px',
+    padding: 'var(--sp-4)',
     paddingBottom: '96px',
     fontFamily: 'var(--body)',
     color: 'var(--white)',
@@ -5854,12 +5854,12 @@ const st = {
   greetingCard: {
     background: 'var(--surface2)',
     border: '1px solid var(--border)',
-    borderRadius: '16px',
-    padding: '20px',
+    borderRadius: 'var(--radius-lg)',
+    padding: 'var(--sp-5)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: '12px',
+    gap: 'var(--sp-3)',
     minWidth: 0,
   } as React.CSSProperties,
 
@@ -5902,7 +5902,7 @@ const st = {
     height: '44px',
     background: 'var(--surface3)',
     border: '1px solid var(--border2)',
-    borderRadius: '50%',
+    borderRadius: 'var(--radius-round)',
     color: 'var(--muted)',
     display: 'flex',
     alignItems: 'center',
@@ -5915,15 +5915,15 @@ const st = {
   briefingCard: {
     background: 'var(--surface2)',
     border: '1px solid var(--border)',
-    borderRadius: '16px',
-    padding: '20px',
+    borderRadius: 'var(--radius-lg)',
+    padding: 'var(--sp-5)',
     minWidth: 0,
   } as React.CSSProperties,
 
   briefingInner: {
     display: 'flex',
     flexDirection: 'column' as const,
-    gap: '8px',
+    gap: 'var(--sp-2)',
   } as React.CSSProperties,
 
   briefingTag: {
@@ -5956,7 +5956,7 @@ const st = {
     background: 'rgba(var(--green-ch), 0.12)',
     border: '1px solid rgba(var(--green-ch), 0.25)',
     color: 'var(--green)',
-    borderRadius: '100px',
+    borderRadius: 'var(--radius-pill)',
     padding: '5px 12px',
     fontSize: 'var(--text-xs)',
     fontFamily: 'var(--headline)',
@@ -5971,11 +5971,11 @@ const st = {
     background: 'radial-gradient(ellipse at 20% 80%, rgba(var(--orange-ch), 0.15) 0%, transparent 65%), var(--surface)',
     border: '1px solid var(--border)',
     borderTop: '1px solid rgba(var(--orange-ch), 0.35)',
-    borderRadius: '12px',
-    padding: '16px',
+    borderRadius: 'var(--radius-lg)',
+    padding: 'var(--sp-4)',
     display: 'flex',
     flexDirection: 'column' as const,
-    gap: '10px',
+    gap: 'var(--sp-2)',
     minWidth: 0,
   } as React.CSSProperties,
 
@@ -5988,7 +5988,7 @@ const st = {
   countdownHeaderLeft: {
     display: 'flex',
     alignItems: 'center',
-    gap: '7px',
+    gap: 'var(--sp-2)',
   } as React.CSSProperties,
 
   countdownDash: {
@@ -6000,7 +6000,7 @@ const st = {
   aBadge: {
     background: 'var(--orange)',
     color: '#000',
-    borderRadius: '4px',
+    borderRadius: 'var(--radius-xs)',
     padding: '2px 8px',
     fontFamily: 'var(--headline)',
     fontWeight: 900,
@@ -6021,10 +6021,10 @@ const st = {
   editBtn: {
     display: 'flex',
     alignItems: 'center',
-    gap: '5px',
+    gap: 'var(--sp-1)',
     background: 'transparent',
     border: '1px solid var(--border2)',
-    borderRadius: '6px',
+    borderRadius: 'var(--radius-sm)',
     color: 'var(--muted)',
     fontFamily: 'var(--headline)',
     fontWeight: 700,
@@ -6124,11 +6124,11 @@ const st = {
   infoCard: {
     background: 'var(--surface2)',
     border: '1px solid var(--border)',
-    borderRadius: '12px',
-    padding: '14px',
+    borderRadius: 'var(--radius-lg)',
+    padding: 'var(--sp-4)',
     display: 'flex',
     flexDirection: 'column' as const,
-    gap: '10px',
+    gap: 'var(--sp-2)',
     minWidth: 0,
   } as React.CSSProperties,
 
@@ -6137,7 +6137,7 @@ const st = {
     alignItems: 'center',
     background: 'transparent',
     border: '1px solid var(--border2)',
-    borderRadius: '100px',
+    borderRadius: 'var(--radius-pill)',
     padding: '4px 12px',
     fontSize: 'var(--text-xs)',
     fontFamily: 'var(--headline)',
@@ -6158,8 +6158,8 @@ const st = {
   weatherCard: {
     background: 'var(--surface2)',
     border: '1px solid var(--border)',
-    borderRadius: '12px',
-    padding: '14px',
+    borderRadius: 'var(--radius-lg)',
+    padding: 'var(--sp-4)',
     minWidth: 0,
   } as React.CSSProperties,
 
@@ -6168,7 +6168,7 @@ const st = {
     alignItems: 'center',
     background: 'var(--orange)',
     color: '#000',
-    borderRadius: '100px',
+    borderRadius: 'var(--radius-pill)',
     padding: '6px 14px',
     fontFamily: 'var(--headline)',
     fontWeight: 900,
@@ -6183,11 +6183,11 @@ const st = {
   sectionCard: {
     background: 'var(--surface2)',
     border: '1px solid var(--border)',
-    borderRadius: '12px',
-    padding: '16px',
+    borderRadius: 'var(--radius-lg)',
+    padding: 'var(--sp-4)',
     display: 'flex',
     flexDirection: 'column' as const,
-    gap: '12px',
+    gap: 'var(--sp-3)',
     minWidth: 0,
   } as React.CSSProperties,
 
@@ -6203,7 +6203,7 @@ const st = {
   raceRow: {
     display: 'flex',
     alignItems: 'center',
-    gap: '12px',
+    gap: 'var(--sp-3)',
     padding: '10px 0',
     minWidth: 0,
   } as React.CSSProperties,
@@ -6243,7 +6243,7 @@ const st = {
     fontWeight: 800,
     letterSpacing: '0.06em',
     padding: '2px 6px',
-    borderRadius: '4px',
+    borderRadius: 'var(--radius-xs)',
     textTransform: 'uppercase' as const,
   } as React.CSSProperties,
 
@@ -6251,7 +6251,7 @@ const st = {
     display: 'flex',
     flexDirection: 'column' as const,
     alignItems: 'center',
-    gap: '12px',
+    gap: 'var(--sp-3)',
     padding: '20px 0',
   } as React.CSSProperties,
 
@@ -6262,7 +6262,7 @@ const st = {
     gap: '1rem',
     background: 'var(--surface3)',
     border: '1px solid var(--border)',
-    borderRadius: '10px',
+    borderRadius: 'var(--radius-lg)',
     padding: '14px 12px',
     minWidth: 0,
   } as React.CSSProperties,
@@ -6271,7 +6271,7 @@ const st = {
   zone: {
     background: 'var(--surface2)',
     border: '1px solid var(--border)',
-    borderRadius: '12px',
+    borderRadius: 'var(--radius-lg)',
     overflow: 'hidden',
     minWidth: 0,
   } as React.CSSProperties,
@@ -6327,11 +6327,11 @@ const st = {
   widgetShell: {
     background: 'var(--surface3)',
     border: '1px solid var(--border)',
-    borderRadius: '10px',
-    padding: '14px',
+    borderRadius: 'var(--radius-lg)',
+    padding: 'var(--sp-4)',
     display: 'flex',
     flexDirection: 'column' as const,
-    gap: '10px',
+    gap: 'var(--sp-2)',
     minWidth: 0,
   } as React.CSSProperties,
 
@@ -6348,7 +6348,7 @@ const st = {
   glowCard: {
     display: 'flex',
     flexDirection: 'column' as const,
-    gap: '14px',
+    gap: 'var(--sp-4)',
     minWidth: 0,
   } as React.CSSProperties,
 
@@ -6375,7 +6375,7 @@ const st = {
   badgePill: {
     display: 'inline-flex',
     alignItems: 'center',
-    borderRadius: '100px',
+    borderRadius: 'var(--radius-pill)',
     padding: '4px 12px',
     fontFamily: 'var(--headline)',
     fontWeight: 800,
@@ -6393,7 +6393,7 @@ const st = {
     height: '38px',
     background: 'rgba(var(--orange-ch), 0.1)',
     border: '1px solid rgba(var(--orange-ch), 0.2)',
-    borderRadius: '10px',
+    borderRadius: 'var(--radius-lg)',
     fontSize: 'var(--text-lg)',
     flexShrink: 0,
   } as React.CSSProperties,
@@ -6401,11 +6401,11 @@ const st = {
   lockedBox: {
     background: 'var(--surface3)',
     border: '1px dashed var(--border2)',
-    borderRadius: '10px',
-    padding: '14px',
+    borderRadius: 'var(--radius-lg)',
+    padding: 'var(--sp-4)',
     display: 'flex',
     flexDirection: 'column' as const,
-    gap: '6px',
+    gap: 'var(--sp-2)',
   } as React.CSSProperties,
 
   lockedTitle: {
@@ -6432,7 +6432,7 @@ const st = {
   ghostOutlineBtn: {
     background: 'transparent',
     border: '1px solid var(--border2)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-md)',
     color: 'var(--white)',
     fontFamily: 'var(--headline)',
     fontWeight: 700,
@@ -6474,7 +6474,7 @@ const st = {
     width: '100%',
     background: 'var(--surface3)',
     border: '1px solid var(--border2)',
-    borderRadius: '6px',
+    borderRadius: 'var(--radius-sm)',
     color: 'var(--white)',
     fontSize: 'var(--text-sm)',
     padding: '0.55rem 0.75rem',
@@ -6486,7 +6486,7 @@ const st = {
     width: '100%',
     background: 'var(--surface3)',
     border: '1px solid var(--border2)',
-    borderRadius: '6px',
+    borderRadius: 'var(--radius-sm)',
     color: 'var(--white)',
     fontSize: 'var(--text-sm)',
     padding: '0.55rem 0.75rem',
@@ -6497,8 +6497,8 @@ const st = {
   paceResult: {
     background: 'var(--surface3)',
     border: '1px solid var(--border2)',
-    borderRadius: '8px',
-    padding: '12px',
+    borderRadius: 'var(--radius-md)',
+    padding: 'var(--sp-3)',
     display: 'flex',
     flexDirection: 'column' as const,
     gap: '2px',
@@ -6511,7 +6511,7 @@ const st = {
     background: 'var(--orange)',
     color: '#000',
     border: 'none',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-md)',
     padding: '10px 18px',
     fontFamily: 'var(--headline)',
     fontWeight: 800,
@@ -6527,7 +6527,7 @@ const st = {
     background: 'transparent',
     color: 'var(--orange)',
     border: '1px solid rgba(var(--orange-ch), 0.5)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-md)',
     padding: '10px 18px',
     fontFamily: 'var(--headline)',
     fontWeight: 800,
@@ -6556,7 +6556,7 @@ const st = {
     maxHeight: '100%',
     background: 'var(--surface2)',
     borderTop: '1px solid var(--border2)',
-    borderRadius: '20px 20px 0 0',
+    borderRadius: 'var(--radius-pill) var(--radius-pill) 0 0',
     padding: '16px 20px 0',
     display: 'flex',
     flexDirection: 'column' as const,
@@ -6568,7 +6568,7 @@ const st = {
   arrowBtn: {
     background: 'var(--surface3)',
     border: '1px solid var(--border2)',
-    borderRadius: '5px',
+    borderRadius: 'var(--radius-sm)',
     color: 'var(--muted)',
     fontFamily: 'var(--headline)',
     fontWeight: 700,
@@ -6586,8 +6586,8 @@ const st = {
     background: 'var(--orange)',
     color: '#000',
     border: 'none',
-    borderRadius: '12px',
-    padding: '16px',
+    borderRadius: 'var(--radius-lg)',
+    padding: 'var(--sp-4)',
     fontFamily: 'var(--headline)',
     fontWeight: 900,
     fontSize: '15px',

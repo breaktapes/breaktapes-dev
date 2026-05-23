@@ -217,7 +217,7 @@ function SplitInput({ value, onChange }: { value: HMS; onChange: (v: HMS) => voi
         if (max !== undefined) v = Math.min(v, max)
         onChange({ ...value, [field]: Math.max(0, v) })
       }}
-      style={{ width: '40px', textAlign: 'center', background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: '4px', color: 'var(--white)', fontSize: 'var(--text-md)', fontFamily: 'var(--headline)', fontWeight: 700, padding: '5px 2px', MozAppearance: 'textfield' } as React.CSSProperties}
+      style={{ width: '40px', textAlign: 'center', background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-xs)', color: 'var(--white)', fontSize: 'var(--text-md)', fontFamily: 'var(--headline)', fontWeight: 700, padding: '5px 2px', MozAppearance: 'textfield' } as React.CSSProperties}
     />
   )
   return (
@@ -243,18 +243,18 @@ function TriathlonSplits({ splits, onChange }: {
   }, 0)
 
   return (
-    <div style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px', overflow: 'hidden' }}>
+    <div style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
       {TRI_SEGMENTS.map((seg, i) => {
         const t = splits[seg.key] ?? { h: 0, m: 0, s: 0 }
         return (
-          <div key={seg.key} style={{ display: 'flex', alignItems: 'center', padding: '10px 12px', borderBottom: i < TRI_SEGMENTS.length - 1 ? '1px solid var(--border)' : 'none', gap: '8px' }}>
+          <div key={seg.key} style={{ display: 'flex', alignItems: 'center', padding: '10px 12px', borderBottom: i < TRI_SEGMENTS.length - 1 ? '1px solid var(--border)' : 'none', gap: 'var(--sp-2)' }}>
             <span style={{ fontSize: 'var(--text-base)', flexShrink: 0 }}>{seg.emoji}</span>
             <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', letterSpacing: '0.08em', color: 'var(--white)', flex: 1 }}>{seg.label}</span>
             <SplitInput value={t} onChange={v => onChange(seg.key, v)} />
           </div>
         )
       })}
-      <div style={{ display: 'flex', alignItems: 'center', padding: '12px', borderTop: '1px solid var(--border2)', background: 'rgba(var(--green-ch),0.05)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', padding: 'var(--sp-3)', borderTop: '1px solid var(--border2)', background: 'rgba(var(--green-ch),0.05)' }}>
         <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', letterSpacing: '0.1em', color: 'var(--green)', flex: 1 }}>TOTAL</span>
         <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-md)', color: 'var(--green)', letterSpacing: '0.04em' }}>
           {Math.floor(total / 3600)}:{pad2(Math.floor((total % 3600) / 60))}:{pad2(total % 60)}
@@ -763,7 +763,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
         </div>
 
         {/* Mode tabs */}
-        <div style={{ padding: '12px 16px 0', flexShrink: 0, display: 'flex', gap: '8px' }}>
+        <div style={{ padding: '12px 16px 0', flexShrink: 0, display: 'flex', gap: 'var(--sp-2)' }}>
           <button
             style={{ ...st.tabBtn, ...(mode === 'past' ? st.tabBtnActive : {}) }}
             onClick={() => setMode('past')}
@@ -809,12 +809,12 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
               zIndex: 1200,
             }}>
               {catalogLoading && (
-                <div style={{ padding: '12px', fontSize: '12px', color: 'var(--muted)', textAlign: 'center', fontFamily: 'var(--body)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                <div style={{ padding: 'var(--sp-3)', fontSize: '12px', color: 'var(--muted)', textAlign: 'center', fontFamily: 'var(--body)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--sp-2)' }}>
                   <span style={{ opacity: 0.6, fontFamily: 'var(--mono, var(--body))', fontSize: '10px', letterSpacing: '0.08em' }}>...</span> Searching race catalog…
                 </div>
               )}
               {suggestions.length === 0 && !catalogLoading && (
-                <div style={{ padding: '12px', fontSize: '12px', color: 'var(--muted)', textAlign: 'center', fontFamily: 'var(--body)' }}>
+                <div style={{ padding: 'var(--sp-3)', fontSize: '12px', color: 'var(--muted)', textAlign: 'center', fontFamily: 'var(--body)' }}>
                   No matches in catalog for &ldquo;{query}&rdquo;
                 </div>
               )}
@@ -867,7 +867,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
                     onMouseDown={e => { e.preventDefault(); selectSuggestion(s) }}
                     onTouchEnd={e => { e.preventDefault(); selectSuggestion(s) }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', width: '100%', gap: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', width: '100%', gap: 'var(--sp-2)' }}>
                       <span style={{
                         color: s.source === 'past' ? 'var(--orange)' : 'var(--green)',
                         fontSize: 'var(--text-xs)',
@@ -926,14 +926,14 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
               <Field label="Date *">
                 {/* Future-race warning in "Log a Race" mode */}
                 {mode === 'past' && date && date > today && (
-                  <div style={{ marginBottom: '8px', padding: '10px 12px', background: 'rgba(var(--orange-ch),0.1)', border: '1px solid rgba(var(--orange-ch),0.35)', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                  <div style={{ marginBottom: '8px', padding: '10px 12px', background: 'rgba(var(--orange-ch),0.1)', border: '1px solid rgba(var(--orange-ch),0.35)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', flexWrap: 'wrap' }}>
                     <span style={{ fontSize: '12px', color: 'var(--orange)', fontFamily: 'var(--body)', flex: 1 }}>
                       ⚠️ This race is in the future — log it as an upcoming race instead.
                     </span>
                     <button
                       type="button"
                       onClick={() => setMode('upcoming')}
-                      style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 900, letterSpacing: '0.06em', background: 'var(--orange)', color: 'var(--black)', border: 'none', borderRadius: '6px', padding: '5px 10px', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                      style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 900, letterSpacing: '0.06em', background: 'var(--orange)', color: 'var(--black)', border: 'none', borderRadius: 'var(--radius-sm)', padding: '5px 10px', cursor: 'pointer', whiteSpace: 'nowrap' }}
                     >
                       MOVE TO UPCOMING →
                     </button>
@@ -956,7 +956,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
                   <div>
                     {catalogYearRows.length > 0 ? (
                       /* Catalog-only year pills */
-                      <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px', WebkitOverflowScrolling: 'touch', flexWrap: 'wrap' } as React.CSSProperties}>
+                      <div style={{ display: 'flex', gap: 'var(--sp-2)', overflowX: 'auto', paddingBottom: '4px', WebkitOverflowScrolling: 'touch', flexWrap: 'wrap' } as React.CSSProperties}>
                         {visibleRows.map((row, i) => {
                           const isSelected = row.year != null && date?.startsWith(String(row.year))
                           return (
@@ -1016,7 +1016,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
           })()}
 
           {/* ── City + Country — typeahead search (fills country + coords on pick) ── */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-2)' }}>
             <Field label="City">
               <CityPicker
                 city={finalCity}
@@ -1042,7 +1042,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
           </div>
 
           {/* ── Sport + Distance side by side ── */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-2)' }}>
             <Field label="Sport *">
               <select style={st.input} value={sport} onChange={e => setSport(e.target.value)}>
                 <option value="" disabled>Choose sport…</option>
@@ -1130,7 +1130,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
           {/* ── Placing (past only) — Overall · Gender · Age Group ── */}
           {mode === 'past' && (
             <div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--sp-2)' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
                   <label style={st.fieldLabel}>OVERALL</label>
                   <input style={st.input} placeholder="342/5000" value={placing} onChange={e => setPlacing(e.target.value)} />
@@ -1208,7 +1208,7 @@ const st = {
     maxHeight: '100%',
     background: 'var(--surface2)',
     borderTop: '2px solid var(--orange)',
-    borderRadius: '16px 16px 0 0',
+    borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0',
     display: 'flex',
     flexDirection: 'column',
     overflow: 'hidden',
@@ -1218,7 +1218,7 @@ const st = {
     width: '36px',
     height: '4px',
     background: 'var(--border2)',
-    borderRadius: '2px',
+    borderRadius: 'var(--radius-xs)',
     margin: '12px auto 0',
     flexShrink: 0,
   } as React.CSSProperties,
@@ -1267,7 +1267,7 @@ const st = {
     background: 'var(--surface3)',
     border: '1px solid var(--green)',
     color: 'var(--green)',
-    borderRadius: '20px',
+    borderRadius: 'var(--radius-pill)',
     padding: '8px 18px',
     fontSize: 'var(--text-sm)',
     fontFamily: 'var(--body)',
@@ -1282,7 +1282,7 @@ const st = {
     padding: '6px 14px',
     background: 'var(--surface3)',
     border: '1px solid var(--orange)',
-    borderRadius: '20px',
+    borderRadius: 'var(--radius-pill)',
     color: 'var(--orange)',
     fontFamily: 'var(--headline)',
     fontWeight: 700,
@@ -1294,7 +1294,7 @@ const st = {
   manualBadge: {
     background: 'var(--surface3)',
     border: '1px solid var(--border2)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-md)',
     padding: '10px 16px',
     textAlign: 'center' as const,
     fontFamily: 'var(--headline)',
@@ -1306,10 +1306,10 @@ const st = {
   } as React.CSSProperties,
 
   body: {
-    padding: '16px',
+    padding: 'var(--sp-4)',
     display: 'flex',
     flexDirection: 'column',
-    gap: '14px',
+    gap: 'var(--sp-4)',
     paddingBottom: 'calc(var(--safe-bottom) + 32px)',
     overflowY: 'auto',
     WebkitOverflowScrolling: 'touch',
@@ -1330,7 +1330,7 @@ const st = {
     width: '100%',
     background: 'var(--surface3)',
     border: '1px solid var(--border2)',
-    borderRadius: '6px',
+    borderRadius: 'var(--radius-sm)',
     color: 'var(--white)',
     fontSize: 'var(--text-sm)',
     padding: '0.6rem 0.75rem',
@@ -1346,7 +1346,7 @@ const st = {
     right: 0,
     background: 'var(--surface3)',
     border: '1px solid var(--border2)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-md)',
     zIndex: 200,
     boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
     overflow: 'hidden',
@@ -1369,15 +1369,15 @@ const st = {
 
   saveBtn: {
     width: '100%',
-    padding: '14px',
+    padding: 'var(--sp-4)',
   } as React.CSSProperties,
 
   cancelBtn: {
     background: 'transparent',
     color: 'var(--muted)',
     border: '1px solid var(--border2)',
-    borderRadius: '8px',
-    padding: '14px',
+    borderRadius: 'var(--radius-md)',
+    padding: 'var(--sp-4)',
     fontFamily: 'var(--headline)',
     fontWeight: 900,
     fontSize: 'var(--text-compact)',
@@ -1391,7 +1391,7 @@ const st = {
     flex: 1,
     background: 'var(--surface3)',
     border: '1px solid var(--border2)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-md)',
     color: 'var(--muted)',
     fontFamily: 'var(--headline)',
     fontWeight: 900,

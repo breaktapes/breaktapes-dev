@@ -142,7 +142,7 @@ function StagingAccessDenied() {
       background: 'var(--black)',
       display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center',
-      gap: '24px', padding: '2rem', textAlign: 'center',
+      gap: 'var(--sp-6)', padding: '2rem', textAlign: 'center',
     }}>
       <span style={{
         fontFamily: 'var(--headline)',
@@ -165,7 +165,7 @@ function StagingAccessDenied() {
         onClick={() => signOut()}
         style={{
           background: 'transparent', color: 'var(--white)',
-          border: '1px solid var(--border2)', borderRadius: '4px',
+          border: '1px solid var(--border2)', borderRadius: 'var(--radius-xs)',
           padding: '0.8rem 1.25rem', fontFamily: 'var(--headline)',
           fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase',
           cursor: 'pointer', fontSize: 'var(--text-sm)',
@@ -182,7 +182,7 @@ function AuthLoadingScreen() {
       background: 'var(--black)',
       display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center',
-      gap: '24px',
+      gap: 'var(--sp-6)',
     }}>
       <span style={{
         fontFamily: 'var(--headline)',
@@ -196,7 +196,7 @@ function AuthLoadingScreen() {
       </span>
       <div style={{
         width: '6px', height: '6px',
-        borderRadius: '50%',
+        borderRadius: 'var(--radius-round)',
         background: 'var(--orange)',
         animation: 'bt-pulse 1.2s ease-in-out infinite',
       }} />
@@ -213,7 +213,7 @@ const clerkAppearance = {
     colorText: '#F5F5F5',
     colorTextSecondary: 'rgba(245,245,245,0.55)',
     colorNeutral: '#F5F5F5',
-    borderRadius: '6px',
+    borderRadius: 'var(--radius-sm)',
     fontFamily: 'Barlow, sans-serif',
   },
   elements: {
@@ -243,7 +243,7 @@ const clerkAppearance = {
 const _inputSt: React.CSSProperties = {
   background: '#1A1A1A',
   border: '1px solid rgba(245,245,245,0.12)',
-  borderRadius: '6px',
+  borderRadius: 'var(--radius-sm)',
   color: '#F5F5F5',
   padding: '0.7rem 0.875rem',
   fontSize: '15px',
@@ -312,7 +312,7 @@ function CustomSignInForm({ onClose: _onClose }: { onClose: () => void }) {
     background: '#141414',
     border: '1px solid rgba(245,245,245,0.08)',
     boxShadow: '0 24px 48px rgba(0,0,0,0.6)',
-    borderRadius: '6px',
+    borderRadius: 'var(--radius-sm)',
     padding: '2rem',
     width: '100%',
     maxWidth: '420px',
@@ -333,7 +333,7 @@ function CustomSignInForm({ onClose: _onClose }: { onClose: () => void }) {
           <form onSubmit={handleReset} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             <input ref={resetEmailRef} type="email" autoComplete="email" placeholder="Email address" style={_inputSt} />
             {error && <p style={{ color: '#E84E1B', fontSize: 'var(--text-sm)', margin: 0 }}>{error}</p>}
-            <button type="submit" disabled={loading} style={{ background: loading ? 'rgba(232,78,27,0.6)' : '#E84E1B', color: '#fff', border: 'none', borderRadius: '6px', padding: '0.75rem', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: loading ? 'not-allowed' : 'pointer', fontSize: 'var(--text-compact)' }}>
+            <button type="submit" disabled={loading} style={{ background: loading ? 'rgba(232,78,27,0.6)' : '#E84E1B', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', padding: '0.75rem', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: loading ? 'not-allowed' : 'pointer', fontSize: 'var(--text-compact)' }}>
               {loading ? 'Sending…' : 'Send Reset Link'}
             </button>
           </form>
@@ -352,7 +352,7 @@ function CustomSignInForm({ onClose: _onClose }: { onClose: () => void }) {
         <input ref={emailRef} type="email" autoComplete="email" placeholder="Email address" style={_inputSt} />
         <input ref={passwordRef} type="password" autoComplete="current-password" placeholder="Password" style={_inputSt} />
         {error && <p style={{ color: '#E84E1B', fontSize: 'var(--text-sm)', margin: 0 }}>{error}</p>}
-        <button type="submit" disabled={loading} style={{ background: loading ? 'rgba(232,78,27,0.6)' : '#E84E1B', color: '#fff', border: 'none', borderRadius: '6px', padding: '0.75rem', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: loading ? 'not-allowed' : 'pointer', fontSize: 'var(--text-compact)', marginTop: '0.25rem' }}>
+        <button type="submit" disabled={loading} style={{ background: loading ? 'rgba(232,78,27,0.6)' : '#E84E1B', color: '#fff', border: 'none', borderRadius: 'var(--radius-sm)', padding: '0.75rem', fontFamily: 'Barlow Condensed, sans-serif', fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: loading ? 'not-allowed' : 'pointer', fontSize: 'var(--text-compact)', marginTop: '0.25rem' }}>
           {loading ? 'Signing in…' : 'Continue'}
         </button>
       </form>
@@ -424,7 +424,7 @@ function LandingScreen() {
               background: 'transparent',
               border: '1px solid rgba(245,245,245,0.15)',
               color: 'rgba(245,245,245,0.6)',
-              borderRadius: '50%',
+              borderRadius: 'var(--radius-round)',
               width: '36px', height: '36px',
               cursor: 'pointer', fontSize: 'var(--text-md)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',

@@ -106,7 +106,7 @@ export function BottomNav() {
                   top: 0, left: '20%', right: '20%',
                   height: '2px',
                   background: 'linear-gradient(135deg, var(--orange) 0%, color-mix(in srgb, var(--orange) 70%, black) 100%)',
-                  borderRadius: '0 0 3px 3px',
+                  borderRadius: '0 0 var(--radius-xs) var(--radius-xs)',
                   boxShadow: '0 0 10px rgba(var(--orange-ch), 0.6)',
                   animation: 'fadeIn 0.15s ease-out',
                 }}

@@ -965,7 +965,7 @@ export function RaceLogPassport({ races, athlete, onClose, initialYear = 'all', 
     padding: '1rem', gap: '0.75rem', overflowY: 'auto',
   }
   const pill = (active: boolean): React.CSSProperties => ({
-    padding: '5px 12px', borderRadius: '999px', cursor: 'pointer', border: 'none',
+    padding: '5px 12px', borderRadius: 'var(--radius-pill)', cursor: 'pointer', border: 'none',
     fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-xs)',
     letterSpacing: '0.08em', textTransform: 'uppercase',
     background: active ? `rgba(${orangeCh},0.15)` : 'rgba(255,255,255,0.04)',
@@ -974,7 +974,7 @@ export function RaceLogPassport({ races, athlete, onClose, initialYear = 'all', 
     borderColor: active ? `rgba(${orangeCh},0.4)` : 'var(--border2)',
   })
   const btn = (primary: boolean): React.CSSProperties => ({
-    flex: 1, padding: '0.65rem', border: 'none', borderRadius: '6px', cursor: 'pointer',
+    flex: 1, padding: '0.65rem', border: 'none', borderRadius: 'var(--radius-sm)', cursor: 'pointer',
     fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '12px',
     letterSpacing: '0.1em', textTransform: 'uppercase',
     background: primary ? 'var(--orange)' : 'var(--surface2)',
@@ -986,7 +986,7 @@ export function RaceLogPassport({ races, athlete, onClose, initialYear = 'all', 
   return (
     <div style={overlay} onClick={onClose}>
       <div
-        style={{ width: '100%', maxWidth: '640px', display: 'flex', flexDirection: 'column', gap: '10px' }}
+        style={{ width: '100%', maxWidth: '640px', display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
@@ -998,7 +998,7 @@ export function RaceLogPassport({ races, athlete, onClose, initialYear = 'all', 
         </div>
 
         {/* Year filter */}
-        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 'var(--sp-2)', flexWrap: 'wrap' }}>
           <button style={pill(year === 'all')} onClick={() => handleYearChange('all')}>All Time</button>
           {years.map(y => (
             <button key={y} style={pill(year === y)} onClick={() => handleYearChange(y)}>{y}</button>
@@ -1006,9 +1006,9 @@ export function RaceLogPassport({ races, athlete, onClose, initialYear = 'all', 
         </div>
 
         {/* Ratio selector */}
-        <div style={{ display: 'flex', gap: '6px' }}>
+        <div style={{ display: 'flex', gap: 'var(--sp-2)' }}>
           {RATIOS.map(r => (
-            <button key={r.label} style={{ ...pill(ratio === r.label), borderRadius: '6px' }} onClick={() => handleRatioChange(r.label)}>
+            <button key={r.label} style={{ ...pill(ratio === r.label), borderRadius: 'var(--radius-sm)' }} onClick={() => handleRatioChange(r.label)}>
               {r.label}
             </button>
           ))}
@@ -1016,7 +1016,7 @@ export function RaceLogPassport({ races, athlete, onClose, initialYear = 'all', 
 
         {/* Canvas preview */}
         <div style={{
-          background: 'var(--black)', borderRadius: '10px',
+          background: 'var(--black)', borderRadius: 'var(--radius-lg)',
           border: `1px solid rgba(${orangeCh},0.15)`,
           overflow: 'hidden', position: 'relative',
           aspectRatio: `${currentRatio.W} / ${currentRatio.H}`,
@@ -1031,14 +1031,14 @@ export function RaceLogPassport({ races, athlete, onClose, initialYear = 'all', 
             aria-label="Athlete dossier preview"
           />
           {!drawn && (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--sp-2)' }}>
               <div style={{ fontFamily: 'var(--mono)', fontSize: '10px', letterSpacing: '0.2em', textTransform: 'uppercase', color: `rgba(${orangeCh},0.5)` }}>
                 {filteredRaces.length === 0 ? 'No races to display' : `${filteredRaces.length} mission${filteredRaces.length === 1 ? '' : 's'} · ${currentRatio.label}`}
               </div>
               {filteredRaces.length > 0 && (
                 <button
                   onClick={redraw}
-                  style={{ padding: '10px 24px', background: 'transparent', border: `1px solid rgba(${orangeCh},0.35)`, borderRadius: '6px', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '12px', letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer' }}
+                  style={{ padding: '10px 24px', background: 'transparent', border: `1px solid rgba(${orangeCh},0.35)`, borderRadius: 'var(--radius-sm)', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '12px', letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer' }}
                 >
                   Generate Dossier
                 </button>
@@ -1049,7 +1049,7 @@ export function RaceLogPassport({ races, athlete, onClose, initialYear = 'all', 
 
         {/* Actions */}
         {drawn && (
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div style={{ display: 'flex', gap: 'var(--sp-2)' }}>
             <button style={btn(true)} onClick={exportImage} disabled={exporting}>
               {exporting ? 'Exporting…' : '↑ Declassify & Share'}
             </button>
