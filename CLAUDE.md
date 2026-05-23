@@ -1340,6 +1340,34 @@ Direct DB access (psql/psycopg2) is blocked from localhost — Supabase only exp
 
 ---
 
+### Session 34 (2026-05-23) — Visual readability pass: typography tokens, races action bar, widget spacing
+
+**Branch:** `claude/jolly-payne-904ee4` → staging ([PR #334](https://github.com/breaktapes/breaktapes-dev/pull/334)) → main ([PR #336](https://github.com/breaktapes/breaktapes-dev/pull/336))
+
+#### Changes shipped
+
+- **Typography token pass (T1–T4)** — replaced all hard-coded sub-12px font sizes across every component with CSS vars (`--text-xs`, `--text-sm`, `--text-compact`, `--text-base`). Covered: Dashboard widgets, Profile, Races, Train, Settings, all modals, WidgetCard, RaceLogPassport, PublicProfile, Compare, Admin.
+- **Spacing + border-radius token pass (T5–T6)** — `gap`, `padding`, `borderRadius` hard-coded values replaced with `--sp-*` and `--radius-*` tokens throughout.
+- **Races sheet action bar moved to top** — Log Race / Import / Discover / Dossier buttons now appear above the stats strip and search bar. Search bar moved below stats strip. Rationale: new users see CTAs first, not search. CSS: `.races-sheet-footer` loses `border-top`, gains `.races-sheet-actions` modifier with `border-bottom`.
+- **Race DNA widget spacing fix** — `st.glowCard` uses `gap: var(--sp-4)` (16px) between all direct children. The DNA header had an extra `marginBottom: '14px'` that stacked with the flex gap (16+14=30px). The empty-state text had `padding: '8px 0'` on top of that (38px total). Both removed — uniform 16px gap throughout.
+- **Pattern Scan label column fix** — season label column was 58px, distance label column was 90px. Bar start positions misaligned. Both set to 90px.
+- **VDOT equivalent performances** — time font bumped from `var(--text-compact)` to `var(--text-base)` (16px). Distance labels changed from `'HALFM'`/`'MAR'` to `'21.1K'`/`'42.2K'`. Label font bumped to `var(--text-sm)`.
+
+#### Key learnings
+- `st.glowCard` has `gap: var(--sp-4)` between ALL direct children. Never add `marginBottom` to a direct child — it stacks additively with the flex gap. Remove extra spacing from children; rely on the parent gap alone.
+- gstack `.claude/skills/gstack/node_modules/` files show as modified (CRLF→LF) after checkout on macOS. They cannot be stashed cleanly. When cherry-picking fails due to conflicts + these noise files, use `git diff origin/staging <feature-branch> -- src/ > patch && git apply patch` instead. Stage only `src/` before committing.
+- Squash-merge history divergence between staging and main is a recurring pattern. After squash-merging staging → main, always force-sync staging back: `git push origin origin/main:staging --force`.
+- PR not mergeable (`merge commit cannot be cleanly created`) = squash-merge divergence. Solution: close the PR, branch from `origin/main`, apply `git diff origin/main origin/staging -- src/` patch, push new branch, open new PR.
+
+#### Cleanup
+- Deleted remote branches: `claude/jolly-payne-904ee4`, `claude/quizzical-wilbur-a889a7`, `promote-jolly-payne`
+- Deleted local branches: `claude/jolly-payne-904ee4`, `claude/quizzical-wilbur-a889a7`, `claude/modest-shaw-4d0883`, `promote-jolly-payne`
+- Removed worktrees: `modest-shaw-4d0883`, `nostalgic-pike-53306c`, `quizzical-wilbur-a889a7`
+- Remaining: 2 worktrees (`/DEV` on staging, `jolly-payne-904ee4` on `promote-to-main` — current session, auto-cleaned on exit)
+- Staging force-synced to main (`git push origin origin/main:staging --force`)
+
+---
+
 ### Session 32 (2026-05-15) — Migration rollback, env key storage, preview tool fix
 
 **Branch:** `claude/nostalgic-pike-53306c` → main (PR #327)
