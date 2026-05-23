@@ -155,7 +155,7 @@ function FilterChip({
         padding: '5px 12px',
         fontFamily: 'var(--headline)',
         fontWeight: 800,
-        fontSize: '11px',
+        fontSize: 'var(--text-xs)',
         letterSpacing: '0.08em',
         textTransform: 'uppercase',
         cursor: 'pointer',
@@ -197,7 +197,7 @@ function RaceCard({
           <div style={{
             fontFamily: 'var(--headline)',
             fontWeight: 800,
-            fontSize: '14px',
+            fontSize: 'var(--text-compact)',
             letterSpacing: '0.04em',
             color: 'var(--white)',
             overflow: 'hidden',
@@ -241,7 +241,7 @@ function RaceCard({
         <span style={{
           fontFamily: 'var(--headline)',
           fontWeight: 900,
-          fontSize: '11px',
+          fontSize: 'var(--text-xs)',
           letterSpacing: '0.06em',
           color: 'var(--muted)',
           flex: 1,
@@ -384,7 +384,7 @@ export function Discover() {
         <div style={{
           fontFamily: 'var(--headline)',
           fontWeight: 900,
-          fontSize: '20px',
+          fontSize: 'var(--text-lg)',
           letterSpacing: '0.04em',
           textTransform: 'uppercase',
           color: 'var(--white)',
@@ -448,7 +448,7 @@ export function Discover() {
               borderRadius: '8px',
               padding: '7px 10px',
               fontFamily: 'var(--body)',
-              fontSize: '13px',
+              fontSize: 'var(--text-sm)',
               color: 'var(--white)',
               outline: 'none',
             }}
@@ -463,7 +463,7 @@ export function Discover() {
               padding: '7px 10px',
               fontFamily: 'var(--headline)',
               fontWeight: 800,
-              fontSize: '11px',
+              fontSize: 'var(--text-xs)',
               letterSpacing: '0.06em',
               textTransform: 'uppercase',
               color: monthFilter ? 'var(--orange)' : 'var(--muted)',
@@ -494,7 +494,7 @@ export function Discover() {
             textAlign: 'center',
             color: 'var(--muted)',
             fontFamily: 'var(--body)',
-            fontSize: '13px',
+            fontSize: 'var(--text-sm)',
             paddingTop: '3rem',
           }}>
             Loading race catalog...
@@ -506,7 +506,7 @@ export function Discover() {
             textAlign: 'center',
             color: 'var(--muted)',
             fontFamily: 'var(--body)',
-            fontSize: '13px',
+            fontSize: 'var(--text-sm)',
             paddingTop: '3rem',
           }}>
             No upcoming races found — try removing a filter.

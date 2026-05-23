@@ -404,7 +404,7 @@ function ViewPanel({ race, isPB, onEdit, onDelete, onShare }: { race: Race; isPB
             {race.splits.map((s, i) => (
               <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
                 <span style={{ fontSize: '12px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{s.label}</span>
-                <span style={{ fontSize: '13px', fontFamily: 'var(--headline)', fontWeight: 700, color: 'var(--white)' }}>
+                <span style={{ fontSize: 'var(--text-sm)', fontFamily: 'var(--headline)', fontWeight: 700, color: 'var(--white)' }}>
                   {s.cumulative || s.split || '—'}
                 </span>
               </div>
@@ -430,7 +430,7 @@ function ViewPanel({ race, isPB, onEdit, onDelete, onShare }: { race: Race; isPB
       {race.notes && (
         <div>
           <p style={st.sectionLabel}>NOTES</p>
-          <p style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5, margin: 0 }}>{race.notes}</p>
+          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, margin: 0 }}>{race.notes}</p>
         </div>
       )}
 
@@ -492,10 +492,10 @@ function ViewPanel({ race, isPB, onEdit, onDelete, onShare }: { race: Race; isPB
 function InfoRow({ label, value, valueColor }: { label: string; value: string; valueColor?: string }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
-      <span style={{ fontSize: '11px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--headline)', fontWeight: 700 }}>
+      <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--headline)', fontWeight: 700 }}>
         {label}
       </span>
-      <span style={{ fontSize: '13px', color: valueColor ?? 'var(--white)', fontWeight: 500, textTransform: 'capitalize' }}>
+      <span style={{ fontSize: 'var(--text-sm)', color: valueColor ?? 'var(--white)', fontWeight: 500, textTransform: 'capitalize' }}>
         {value}
       </span>
     </div>
@@ -506,7 +506,7 @@ function InfoChip({ label, value }: { label: string; value: string }) {
   return (
     <div style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px', padding: '6px 10px' }}>
       <div style={{ fontSize: '9px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</div>
-      <div style={{ fontSize: '13px', color: 'var(--white)', fontWeight: 600, marginTop: '2px' }}>{value}</div>
+      <div style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', fontWeight: 600, marginTop: '2px' }}>{value}</div>
     </div>
   )
 }
@@ -972,9 +972,9 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
       </div>
 
       {isUpcoming ? (
-        <Field label={<>Goal Time <span style={{ opacity: 0.5, fontWeight: 400, fontSize: '11px', textTransform: 'lowercase', letterSpacing: 0 }}>(optional)</span></>}>
+        <Field label={<>Goal Time <span style={{ opacity: 0.5, fontWeight: 400, fontSize: 'var(--text-xs)', textTransform: 'lowercase', letterSpacing: 0 }}>(optional)</span></>}>
           <TimePickerWheel value={goalHMS} onChange={setGoalHMS} maxHours={99} />
-          <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '6px' }}>Scroll to set · Used by Gap To Goal widget</div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '6px' }}>Scroll to set · Used by Gap To Goal widget</div>
         </Field>
       ) : null}
 
@@ -1003,7 +1003,7 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
               </div>
             ))}
           </div>
-          <div style={{ fontSize: '11px', color: 'var(--muted2)', marginTop: '8px' }}>Format: H:MM:SS or MM:SS</div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', marginTop: '8px' }}>Format: H:MM:SS or MM:SS</div>
         </div>
       )}
 
@@ -1025,7 +1025,7 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
             style={{
               display: 'flex', alignItems: 'center', gap: '6px',
               background: 'transparent', border: 'none', padding: '4px 0',
-              color: 'var(--muted)', fontSize: '11px', fontFamily: 'var(--headline)',
+              color: 'var(--muted)', fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)',
               fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
               cursor: 'pointer', width: '100%',
             }}
@@ -1112,7 +1112,7 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
                 </button>
               </div>
               {weatherFetchMsg && (
-                <p style={{ margin: '-8px 0 0', fontSize: '11px', color: weatherFetchMsg.ok ? 'var(--green)' : 'var(--error)' }}>
+                <p style={{ margin: '-8px 0 0', fontSize: 'var(--text-xs)', color: weatherFetchMsg.ok ? 'var(--green)' : 'var(--error)' }}>
                   {weatherFetchMsg.msg}
                 </p>
               )}
@@ -1280,7 +1280,7 @@ const st = {
   title: {
     fontFamily: 'var(--headline)',
     fontWeight: 900,
-    fontSize: '18px',
+    fontSize: 'var(--text-md)',
     letterSpacing: '0.12em',
     textTransform: 'uppercase',
     color: 'var(--white)',
@@ -1289,7 +1289,7 @@ const st = {
   titleMono: {
     fontFamily: 'var(--mono)',
     fontWeight: 400,
-    fontSize: '11px',
+    fontSize: 'var(--text-xs)',
     letterSpacing: '0.14em',
     textTransform: 'uppercase',
     color: 'var(--muted)',
@@ -1299,7 +1299,7 @@ const st = {
     background: 'transparent',
     border: 'none',
     color: 'var(--muted)',
-    fontSize: '18px',
+    fontSize: 'var(--text-md)',
     cursor: 'pointer',
     padding: '4px 8px',
     lineHeight: 1,
@@ -1331,7 +1331,7 @@ const st = {
 
   raceMeta: {
     margin: '4px 0 0',
-    fontSize: '13px',
+    fontSize: 'var(--text-sm)',
     color: 'var(--muted)',
   } as React.CSSProperties,
 
@@ -1352,7 +1352,7 @@ const st = {
   statVal: {
     fontFamily: 'var(--headline)',
     fontWeight: 900,
-    fontSize: '18px',
+    fontSize: 'var(--text-md)',
     color: 'var(--orange)',
   } as React.CSSProperties,
 
@@ -1404,7 +1404,7 @@ const st = {
     padding: '13px',
     fontFamily: 'var(--headline)',
     fontWeight: 900,
-    fontSize: '13px',
+    fontSize: 'var(--text-sm)',
     letterSpacing: '0.1em',
     textTransform: 'uppercase' as const,
     cursor: 'pointer',
@@ -1446,7 +1446,7 @@ const st = {
     padding: '13px',
     fontFamily: 'var(--headline)',
     fontWeight: 900,
-    fontSize: '13px',
+    fontSize: 'var(--text-sm)',
     letterSpacing: '0.1em',
     textTransform: 'uppercase' as const,
     cursor: 'pointer',

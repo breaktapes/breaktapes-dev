@@ -56,7 +56,7 @@ const st = {
     border: 'none',
     color: 'var(--muted)',
     cursor: 'pointer',
-    fontSize: '20px',
+    fontSize: 'var(--text-lg)',
     padding: '4px 8px',
     lineHeight: 1,
   } as React.CSSProperties,
@@ -70,7 +70,7 @@ const st = {
     margin: 0,
   } as React.CSSProperties,
   badge: {
-    fontSize: '11px',
+    fontSize: 'var(--text-xs)',
     fontFamily: 'var(--headline)',
     fontWeight: 700,
     letterSpacing: '0.08em',
@@ -112,7 +112,7 @@ const st = {
     border: '1px solid var(--border)',
     borderRadius: '4px',
     padding: '2px 7px',
-    fontSize: '11px',
+    fontSize: 'var(--text-xs)',
     color: 'var(--muted)',
     fontFamily: 'var(--body)',
   } as React.CSSProperties,
@@ -121,7 +121,7 @@ const st = {
     border: '1px solid rgba(var(--orange-ch),0.3)',
     borderRadius: '4px',
     padding: '2px 7px',
-    fontSize: '11px',
+    fontSize: 'var(--text-xs)',
     color: 'var(--orange)',
     fontFamily: 'var(--headline)',
     fontWeight: 700,
@@ -162,20 +162,20 @@ const st = {
     textAlign: 'center' as const,
     padding: '48px 16px',
     color: 'var(--muted)',
-    fontSize: '14px',
+    fontSize: 'var(--text-compact)',
   } as React.CSSProperties,
   error: {
     background: 'rgba(255,60,60,0.1)',
     border: '1px solid rgba(255,60,60,0.3)',
     borderRadius: '8px',
     padding: '12px 16px',
-    fontSize: '13px',
+    fontSize: 'var(--text-sm)',
     color: 'var(--error)',
     marginBottom: '16px',
   } as React.CSSProperties,
   sectionLabel: {
     fontFamily: 'var(--headline)',
-    fontSize: '11px',
+    fontSize: 'var(--text-xs)',
     fontWeight: 700,
     letterSpacing: '0.1em',
     textTransform: 'uppercase' as const,
@@ -257,7 +257,7 @@ export function Admin() {
   if (!authUser) {
     return (
       <div style={st.page}>
-        <p style={{ color: 'var(--muted)', fontSize: '14px' }}>Sign in required.</p>
+        <p style={{ color: 'var(--muted)', fontSize: 'var(--text-compact)' }}>Sign in required.</p>
       </div>
     )
   }
@@ -265,7 +265,7 @@ export function Admin() {
   if (!isAdmin) {
     return (
       <div style={st.page}>
-        <p style={{ color: 'var(--muted)', fontSize: '14px' }}>Not authorised.</p>
+        <p style={{ color: 'var(--muted)', fontSize: 'var(--text-compact)' }}>Not authorised.</p>
       </div>
     )
   }
@@ -276,7 +276,7 @@ export function Admin() {
         <div style={{
           position: 'fixed', bottom: '80px', left: '50%', transform: 'translateX(-50%)',
           background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px',
-          padding: '10px 18px', fontSize: '13px', color: 'var(--white)', zIndex: 2000,
+          padding: '10px 18px', fontSize: 'var(--text-sm)', color: 'var(--white)', zIndex: 2000,
           fontFamily: 'var(--body)', boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
         }}>
           {toast}
@@ -296,10 +296,10 @@ export function Admin() {
       </p>
 
       {loading ? (
-        <p style={{ color: 'var(--muted)', fontSize: '13px' }}>Loading…</p>
+        <p style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)' }}>Loading…</p>
       ) : contributions.length === 0 ? (
         <div style={st.empty}>
-          <div style={{ fontSize: '32px', marginBottom: '8px' }}>✓</div>
+          <div style={{ fontSize: 'var(--text-2xl)', marginBottom: '8px' }}>✓</div>
           <div>No pending submissions</div>
         </div>
       ) : (

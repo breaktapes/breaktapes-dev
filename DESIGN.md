@@ -206,13 +206,33 @@ CSS font vars:
 --mono:     'Geist Mono', monospace;
 ```
 
+### Typography Hierarchy
+
+Every screen uses exactly 4 levels of text. No screen should have more than 4 distinct font sizes visible at once.
+
+```
+Level 1 — Hero metric    : 48px     Barlow Condensed 900  (finish time, streak count, recovery days)
+Level 2 — Section label  : 18px     Barlow Condensed 700  uppercase + tracked (widget title, modal header)
+Level 3 — Content        : 16px     Barlow 400–500        (body text, card content, input text)
+Level 4 — Meta/caption   : 11–13px  Geist Mono 400        (labels, chart axes, sub-info, badges)
+```
+
+Rule: any element must map to exactly one level. `--text-compact` (14px) is a Level 3 variant for dense list contexts only — not a fifth level.
+
+Chart hierarchy: axis labels = Level 4 (`var(--chart-axis-size)` = 11px, Geist Mono). Tooltip content = Level 3 (16px, Barlow). No chart element should use Level 1 or 2.
+
 ### Type Scale Tokens
 ```css
---text-xs:   10px;  /* captions, badges, sub-labels */
---text-sm:   12px;  /* secondary labels, meta info */
---text-base: 14px;  /* body text, inputs, card titles */
---text-md:   16px;  /* section headers, modal titles */
-/* Headlines above 16px: use explicit px values (20/24/32/48) */
+--text-xs:      11px; /* captions, badges, chart axis labels, sub-labels */
+--text-sm:      13px; /* secondary labels, meta info, filter pills */
+--text-compact: 14px; /* dense list contexts: race rows, history rows, table cells */
+--text-base:    16px; /* body text, inputs, card content */
+--text-md:      18px; /* section headers, modal titles (Barlow Condensed) */
+/* Large/hero sizes — always explicit token, never raw px */
+--text-lg:      20px; /* widget subheaders */
+--text-xl:      24px; /* page-level titles */
+--text-2xl:     32px; /* large metrics */
+--text-3xl:     48px; /* primary hero metric (finish time, score) */
 ```
 
 ### Data/Metrics Type Scale

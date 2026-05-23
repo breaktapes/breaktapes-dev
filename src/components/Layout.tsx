@@ -36,7 +36,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         borderBottom: '1px solid var(--border)',
         overflow: 'hidden',
       }}>
-        <span style={{ fontFamily: 'var(--headline)', fontSize: '20px', fontWeight: 900, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)' }}>
+        <span style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-lg)', fontWeight: 900, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)' }}>
           BREAK<span style={{ color: 'var(--orange)' }}>/</span>TAPES
         </span>
         <button

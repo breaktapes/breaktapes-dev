@@ -1141,7 +1141,7 @@ function AthleteHero({ onEdit }: { onEdit: () => void }) {
               borderRadius: '50%',
               background: 'var(--orange)',
               color: '#000',
-              fontSize: '11px',
+              fontSize: 'var(--text-xs)',
               fontWeight: 900,
               display: 'flex',
               alignItems: 'center',
@@ -1207,7 +1207,7 @@ function AthleteHero({ onEdit }: { onEdit: () => void }) {
                     />
                   )}
                   <span style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
-                    <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px', letterSpacing: '0.08em', color: 'var(--white)', lineHeight: 1 }}>{abbr}</span>
+                    <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.08em', color: 'var(--white)', lineHeight: 1 }}>{abbr}</span>
                     <span style={{ fontSize: '9px', color: 'var(--muted)', lineHeight: 1, fontFamily: 'var(--body)' }}>{c}</span>
                   </span>
                 </span>
@@ -1222,7 +1222,7 @@ function AthleteHero({ onEdit }: { onEdit: () => void }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {athlete?.bio && (
             <div style={{
-              fontSize: '14px',
+              fontSize: 'var(--text-compact)',
               color: 'rgba(245,245,245,0.72)',
               lineHeight: 1.65,
               borderLeft: '3px solid rgba(var(--orange-ch), 0.4)',
@@ -1239,7 +1239,7 @@ function AthleteHero({ onEdit }: { onEdit: () => void }) {
                   background: 'rgba(var(--orange-ch), 0.1)',
                   border: '1px solid rgba(var(--orange-ch), 0.25)',
                   borderRadius: '100px', padding: '4px 12px',
-                  fontSize: '11px', fontFamily: 'var(--headline)',
+                  fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)',
                   fontWeight: 700, letterSpacing: '0.06em',
                   color: 'var(--orange)',
                 }}>
@@ -1324,7 +1324,7 @@ function AthleteHero({ onEdit }: { onEdit: () => void }) {
         transform: 'translateX(-50%)', zIndex: 2000,
         background: 'var(--surface3)', border: '1px solid rgba(var(--orange-ch),0.5)',
         color: 'var(--orange)', borderRadius: '20px', padding: '10px 20px',
-        fontSize: '13px', fontFamily: 'var(--headline)', fontWeight: 700,
+        fontSize: 'var(--text-sm)', fontFamily: 'var(--headline)', fontWeight: 700,
         letterSpacing: '0.06em', whiteSpace: 'nowrap', pointerEvents: 'none',
       }}>
         Link copied ✓
@@ -1464,8 +1464,8 @@ function MedalWall() {
               if (count === 0) return null
               const col = MEDAL_COLORS[tier]
               return (
-                <div key={tier} className={`medal-chip medal-${tier}`} style={{ padding: '6px 14px', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ fontWeight: 900, fontSize: '14px', lineHeight: 1 }}>{count}</span>
+                <div key={tier} className={`medal-chip medal-${tier}`} style={{ padding: '6px 14px', fontSize: 'var(--text-xs)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontWeight: 900, fontSize: 'var(--text-compact)', lineHeight: 1 }}>{count}</span>
                   <span>{col.label}</span>
                 </div>
               )
@@ -1522,12 +1522,12 @@ function MedalWall() {
                     </div>
 
                     {/* Race name */}
-                    <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {r.name}
                     </div>
 
                     {/* Meta */}
-                    <div style={{ fontSize: '11px', color: 'var(--muted)', lineHeight: 1.4 }}>
+                    <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', lineHeight: 1.4 }}>
                       {[distLabel(r.distance), r.time].filter(Boolean).join(' · ')}
                     </div>
                     <div style={{ fontSize: '10px', color: 'var(--muted)' }}>
@@ -1553,7 +1553,7 @@ function MedalWall() {
                   padding: '8px 18px',
                   fontFamily: 'var(--headline)',
                   fontWeight: 700,
-                  fontSize: '11px',
+                  fontSize: 'var(--text-xs)',
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
                   cursor: 'pointer',
@@ -1610,18 +1610,18 @@ function AchievementsSection() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       {/* Hero achievement card */}
       <div style={st.achievementHero}>
-        <div style={{ fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.14em', color: 'rgba(var(--green-ch), 0.6)', textTransform: 'uppercase', marginBottom: '8px' }}>
+        <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.14em', color: 'rgba(var(--green-ch), 0.6)', textTransform: 'uppercase', marginBottom: '8px' }}>
           YOUR ACHIEVEMENTS
         </div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', marginBottom: '10px' }}>
           <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '56px', color: 'var(--white)', lineHeight: 1, letterSpacing: '-0.02em' }}>
             {unlocked.length}
           </span>
-          <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '20px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-lg)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             OF {ACHIEVEMENTS.length} UNLOCKED
           </span>
         </div>
-        <div style={{ fontSize: '14px', color: 'rgba(245,245,245,0.55)', lineHeight: 1.55, marginBottom: '16px', maxWidth: '340px' }}>
+        <div style={{ fontSize: 'var(--text-compact)', color: 'rgba(245,245,245,0.55)', lineHeight: 1.55, marginBottom: '16px', maxWidth: '340px' }}>
           Track special race moments, milestone ladders, and major-event progress from one synced wall.
         </div>
         {recentPills.length > 0 && (
@@ -1638,10 +1638,10 @@ function AchievementsSection() {
       {/* Special achievements grid */}
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 0 10px', borderBottom: '1px solid var(--border)' }}>
-          <span style={{ fontFamily: 'var(--headline)', fontSize: '11px', fontWeight: 700, letterSpacing: '0.14em', color: 'var(--muted)', textTransform: 'uppercase' }}>
+          <span style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-xs)', fontWeight: 700, letterSpacing: '0.14em', color: 'var(--muted)', textTransform: 'uppercase' }}>
             SPECIAL ACHIEVEMENTS
           </span>
-          <span style={{ marginLeft: 'auto', fontSize: '11px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700 }}>
+          <span style={{ marginLeft: 'auto', fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700 }}>
             {unlocked.filter(a => a.group === 'special').length}/{specialAll.length}
           </span>
         </div>
@@ -1667,7 +1667,7 @@ function AchievementsSection() {
       {/* Performance Ladders */}
       <div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 0 10px', borderBottom: '1px solid var(--border)' }}>
-          <span style={{ fontFamily: 'var(--headline)', fontSize: '11px', fontWeight: 700, letterSpacing: '0.14em', color: 'var(--muted)', textTransform: 'uppercase' }}>
+          <span style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-xs)', fontWeight: 700, letterSpacing: '0.14em', color: 'var(--muted)', textTransform: 'uppercase' }}>
             PERFORMANCE LADDERS
           </span>
         </div>
@@ -1680,11 +1680,11 @@ function AchievementsSection() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--orange)', background: 'rgba(var(--orange-ch),0.12)', border: '1px solid rgba(var(--orange-ch),0.25)', borderRadius: '4px', padding: '3px 7px', whiteSpace: 'nowrap' }}>{fam.icon}</span>
-                    <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>
+                    <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>
                       {fam.label}
                     </span>
                   </div>
-                  <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px', color: status?.highest ? 'var(--orange)' : 'var(--muted)' }}>
+                  <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', color: status?.highest ? 'var(--orange)' : 'var(--muted)' }}>
                     {status?.highest ? status.highest.name : 'NOT STARTED'}
                   </span>
                 </div>
@@ -1708,7 +1708,7 @@ function AchievementsSection() {
                   })}
                 </div>
                 {status?.highest && (
-                  <div style={{ marginTop: '8px', fontSize: '11px', color: 'var(--muted)' }}>
+                  <div style={{ marginTop: '8px', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
                     {status.highest.description}
                   </div>
                 )}
@@ -1732,14 +1732,14 @@ function AchievementsSection() {
             <div style={{ width: '40px', height: '4px', background: 'var(--border2)', borderRadius: '2px', margin: '0 auto 24px' }} />
             {/* Header — centered */}
             <div style={{ textAlign: 'center', marginBottom: '20px', position: 'relative' }}>
-              <button onClick={() => setPopup(null)} style={{ position: 'absolute', right: 0, top: 0, background: 'none', border: 'none', color: 'var(--muted)', fontSize: '24px', cursor: 'pointer', padding: '4px', lineHeight: 1 }}>×</button>
+              <button onClick={() => setPopup(null)} style={{ position: 'absolute', right: 0, top: 0, background: 'none', border: 'none', color: 'var(--muted)', fontSize: 'var(--text-xl)', cursor: 'pointer', padding: '4px', lineHeight: 1 }}>×</button>
               <div style={{ width: '72px', height: '72px', margin: '0 auto 16px', background: 'rgba(var(--orange-ch),0.12)', border: '2px solid rgba(var(--orange-ch),0.4)', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <AchievementSVGIcon a={popup} size={32} />
               </div>
               <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)', marginBottom: '6px' }}>
                 {popup.name}
               </div>
-              <div style={{ fontSize: '14px', color: 'rgba(245,245,245,0.65)', lineHeight: 1.6 }}>
+              <div style={{ fontSize: 'var(--text-compact)', color: 'rgba(245,245,245,0.65)', lineHeight: 1.6 }}>
                 {popup.description}
               </div>
             </div>
@@ -1759,7 +1759,7 @@ function AchievementsSection() {
                       <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '15px', color: 'var(--white)', letterSpacing: '0.03em', marginBottom: '4px' }}>
                         {popupRace.name}
                       </div>
-                      {loc && <div style={{ fontSize: '13px', color: 'rgba(245,245,245,0.65)' }}>{loc}</div>}
+                      {loc && <div style={{ fontSize: 'var(--text-sm)', color: 'rgba(245,245,245,0.65)' }}>{loc}</div>}
                       {dateStr && <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '2px' }}>{dateStr}</div>}
                     </div>
                   )
@@ -1856,7 +1856,7 @@ function PersonalBests() {
             background: 'none', border: '1px solid var(--border2)',
             borderRadius: '6px', padding: '4px 8px',
             color: 'var(--muted)', cursor: 'pointer',
-            fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700,
+            fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700,
             letterSpacing: '0.06em',
             display: 'flex', alignItems: 'center', gap: '4px',
           }}
@@ -1899,7 +1899,7 @@ function PersonalBests() {
                   <div style={{ fontFamily: 'var(--headline)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.01em', lineHeight: 1, marginBottom: '8px', color: accent.color }}>
                     {race.time}
                   </div>
-                  <div style={{ fontSize: '11px', color: 'var(--muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={race.name}>
+                  <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={race.name}>
                     {race.name}
                   </div>
                 </div>
@@ -1949,10 +1949,10 @@ function PersonalBests() {
                           }}
                         >
                           <div>
-                            <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '13px', color: isVisible ? 'var(--white)' : 'var(--muted)' }}>
+                            <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-sm)', color: isVisible ? 'var(--white)' : 'var(--muted)' }}>
                               {label}
                             </div>
-                            <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>
+                            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>
                               {race.time} · {race.name}
                             </div>
                           </div>
@@ -1980,7 +1980,7 @@ function PersonalBests() {
 
             <button
               onClick={() => setShowConfig(false)}
-              style={{ width: '100%', padding: '14px', background: 'var(--orange)', border: 'none', borderRadius: '10px', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', letterSpacing: '0.08em', color: '#000', cursor: 'pointer', marginTop: '4px' }}
+              style={{ width: '100%', padding: '14px', background: 'var(--orange)', border: 'none', borderRadius: '10px', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', letterSpacing: '0.08em', color: '#000', cursor: 'pointer', marginTop: '4px' }}
             >
               DONE
             </button>
@@ -2025,7 +2025,7 @@ function SignatureDistances() {
         <h2 style={st.sectionTitle}>SIGNATURE DISTANCES</h2>
         <div style={{ height: '1px', flex: 1, background: 'var(--border)' }} />
       </div>
-      <div style={{ fontSize: '11px', color: 'var(--muted)', marginBottom: '12px', fontFamily: 'var(--headline)', fontWeight: 600, letterSpacing: '0.06em' }}>
+      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginBottom: '12px', fontFamily: 'var(--headline)', fontWeight: 600, letterSpacing: '0.06em' }}>
         {gender && age ? 'RANKED BY AGE-GRADE WHEN AVAILABLE' : 'RANKED BY PACE / SPEED'}
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -2055,10 +2055,10 @@ function SignatureDistances() {
               {i + 1}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', lineHeight: 1.1 }}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', lineHeight: 1.1 }}>
                 {item.distance}
               </div>
-              <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {item.race.name ?? ''} · {item.race.time}
               </div>
             </div>
@@ -2256,7 +2256,7 @@ function PerformanceTimeline() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         {timeline.map(row => (
           <div key={row.year} style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: '10px', padding: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', letterSpacing: '0.04em', color: 'var(--orange)' }}>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', letterSpacing: '0.04em', color: 'var(--orange)' }}>
               {row.year}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '7px' }}>
@@ -2266,7 +2266,7 @@ function PerformanceTimeline() {
                   <div style={{ height: '5px', background: 'var(--surface3)', borderRadius: '3px', overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: `${row.metrics[key]}%`, background: 'var(--orange)', borderRadius: '3px', transition: 'width 0.4s ease' }} />
                   </div>
-                  <div style={{ fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700, color: 'var(--white)', textAlign: 'right' }}>{row.labels[key]}</div>
+                  <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, color: 'var(--white)', textAlign: 'right' }}>{row.labels[key]}</div>
                 </div>
               ))}
             </div>
@@ -2317,7 +2317,7 @@ function RaceActivityHeatmap() {
   return (
     <div style={st.section}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
-        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '18px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)' }}>
+        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-md)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)' }}>
           RACE ACTIVITY
         </div>
         <div style={{ height: '1px', flex: 1, background: 'var(--border)', marginLeft: '16px' }} />
@@ -2380,10 +2380,10 @@ function RaceActivityHeatmap() {
         {selectedCell && selectedRaces.length > 0 && (
           <div style={{ marginTop: '12px', background: 'var(--surface2)', borderRadius: '10px', padding: '14px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '18px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)' }}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-md)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)' }}>
                 {fmtMonthYear(selectedCell.year, selectedCell.month)}
               </div>
-              <div style={{ fontFamily: 'var(--headline)', fontSize: '11px', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted)', textTransform: 'uppercase' }}>
+              <div style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-xs)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted)', textTransform: 'uppercase' }}>
                 {selectedRaces.length} RACE{selectedRaces.length !== 1 ? 'S' : ''}
               </div>
             </div>
@@ -2392,7 +2392,7 @@ function RaceActivityHeatmap() {
                 <div key={r.id} style={{ background: 'var(--surface3)', borderRadius: '8px', padding: '12px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
                     <div style={{ minWidth: 0 }}>
-                      <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', lineHeight: 1.2 }}>
+                      <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', lineHeight: 1.2 }}>
                         {r.name}
                       </div>
                       <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '3px' }}>
@@ -2400,11 +2400,11 @@ function RaceActivityHeatmap() {
                       </div>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px', flexShrink: 0 }}>
-                      <div style={{ fontSize: '11px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.04em' }}>
+                      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.04em' }}>
                         {fmtDDMMMYYYY(r.date)}
                       </div>
                       {r.time && (
-                        <div style={{ fontSize: '13px', fontFamily: 'var(--headline)', fontWeight: 800, color: 'var(--orange)', letterSpacing: '0.04em' }}>
+                        <div style={{ fontSize: 'var(--text-sm)', fontFamily: 'var(--headline)', fontWeight: 800, color: 'var(--orange)', letterSpacing: '0.04em' }}>
                           {r.time}
                         </div>
                       )}
@@ -2442,7 +2442,7 @@ function MajorsQualifiers() {
   return (
     <div style={st.section}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2px' }}>
-        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '18px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)' }}>
+        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-md)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)' }}>
           MAJORS & QUALIFIERS
         </div>
         <div style={{ height: '1px', flex: 1, background: 'var(--border)', marginLeft: '16px' }} />
@@ -2454,10 +2454,10 @@ function MajorsQualifiers() {
           <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.14em', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '4px' }}>
             BQ / CHAMPIONSHIP TRACKER
           </div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '18px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', lineHeight: 1.1 }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-md)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', lineHeight: 1.1 }}>
             WORLD MARATHON MAJORS BOARD
           </div>
-          <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '10px', lineHeight: 1.6, maxWidth: '360px', margin: '10px auto 0' }}>
+          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginTop: '10px', lineHeight: 1.6, maxWidth: '360px', margin: '10px auto 0' }}>
             Every major lives here. Completed races surface your result and details, while upcoming majors stay highlighted in progress with a live countdown. Qualification is tracked where useful, but it is not treated as the only way in. Ballot, charity, tour, and qualifier paths all count.
           </div>
         </div>
@@ -2473,7 +2473,7 @@ function MajorsQualifiers() {
               <div style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase' }}>
                 {s.label}
               </div>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '20px', color: 'var(--white)', lineHeight: 1 }}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-lg)', color: 'var(--white)', lineHeight: 1 }}>
                 {s.value}
               </div>
             </div>
@@ -2494,13 +2494,13 @@ function MajorsQualifiers() {
               minHeight: '52px',
               gap: '12px',
             }}>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', letterSpacing: '0.06em', textTransform: 'uppercase', color: m.status === 'completed' ? 'var(--white)' : m.status === 'in-progress' ? 'var(--orange)' : 'var(--muted)' }}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', letterSpacing: '0.06em', textTransform: 'uppercase', color: m.status === 'completed' ? 'var(--white)' : m.status === 'in-progress' ? 'var(--orange)' : 'var(--muted)' }}>
                 {m.name}
               </div>
               <div style={{
                 fontFamily: 'var(--headline)',
                 fontWeight: 700,
-                fontSize: '11px',
+                fontSize: 'var(--text-xs)',
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase',
                 padding: '5px 12px',
@@ -2535,10 +2535,10 @@ function RacePersonality() {
           <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.16em', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '6px' }}>
             RACE PERSONALITY
           </div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '20px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', lineHeight: 1.1 }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-lg)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', lineHeight: 1.1 }}>
             WHAT KIND OF RACER ARE YOU?
           </div>
-          <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '8px', lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginTop: '8px', lineHeight: 1.5 }}>
             A fun but useful read on the traits that keep showing up in your results.
           </div>
         </div>
@@ -2547,14 +2547,14 @@ function RacePersonality() {
           {traits.map(t => (
             <div key={t.trait} style={{ background: 'var(--surface2)', borderRadius: '10px', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)' }}>
+                <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)' }}>
                   {t.trait}
                 </div>
-                <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '20px', color: 'var(--orange)', letterSpacing: '0.02em' }}>
+                <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-lg)', color: 'var(--orange)', letterSpacing: '0.02em' }}>
                   {t.score}
                 </div>
               </div>
-              <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5 }}>{t.desc}</div>
+              <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5 }}>{t.desc}</div>
             </div>
           ))}
         </div>
@@ -2654,11 +2654,11 @@ function GoalsSection() {
 
   const inputSt: React.CSSProperties = {
     background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px',
-    color: 'var(--white)', fontSize: '14px', padding: '0.5rem 0.75rem', fontFamily: 'var(--body)',
+    color: 'var(--white)', fontSize: 'var(--text-compact)', padding: '0.5rem 0.75rem', fontFamily: 'var(--body)',
   }
   const smallBtn: React.CSSProperties = {
     background: 'var(--orange)', color: 'var(--black)', border: 'none', borderRadius: '4px',
-    padding: '0.45rem 0.9rem', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '11px',
+    padding: '0.45rem 0.9rem', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xs)',
     letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer',
   }
 
@@ -2716,13 +2716,13 @@ function GoalsSection() {
               <div key={g.id} style={{ display: 'flex', alignItems: 'center', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '10px 12px', gap: '10px' }}>
                 <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '12px', color: 'var(--orange)' }}>SUB</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '13px', color: 'var(--white)', fontWeight: 600, lineHeight: 1.2 }}>{g.dist}</div>
-                  <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>
+                  <div style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', fontWeight: 600, lineHeight: 1.2 }}>{g.dist}</div>
+                  <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>
                     Sub {secsToHMS(g.targetSecs)}{g.deadline ? ` · ${fmtDate(g.deadline)}` : ''}
                   </div>
                 </div>
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', color: done ? 'var(--green)' : 'var(--orange)' }}>
+                  <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color: done ? 'var(--green)' : 'var(--orange)' }}>
                     {done ? '✓ Done' : pb !== undefined ? secsToHMS(pb) : '—'}
                   </div>
                   <button onClick={() => deleteDistGoal(g.id)} style={{ background: 'none', border: 'none', color: 'var(--muted2)', cursor: 'pointer', fontSize: '10px', marginTop: '2px' }}>✕ Remove</button>
@@ -2805,7 +2805,7 @@ function GoalsSection() {
                     background: goalCustomUnit === u ? 'var(--orange)' : 'var(--surface)',
                     color: goalCustomUnit === u ? 'var(--black)' : 'var(--muted)',
                     border: 'none', padding: '7px 12px',
-                    fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700,
+                    fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700,
                     letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer',
                   }}>{u}</button>
                 ))}
@@ -2879,7 +2879,7 @@ function OnboardingBanner({ onEdit }: { onEdit: () => void }) {
     }}>
       <div style={{ width: 10, height: 10, borderRadius: '50%', background: complete ? 'var(--green)' : 'var(--orange)', flexShrink: 0 }} />
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', letterSpacing: '0.04em', textTransform: 'uppercase', color: complete ? 'var(--green)' : 'var(--orange)', lineHeight: 1.1 }}>
+        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', letterSpacing: '0.04em', textTransform: 'uppercase', color: complete ? 'var(--green)' : 'var(--orange)', lineHeight: 1.1 }}>
           {complete ? 'Profile Complete' : `Profile ${filled}/${total} Complete`}
         </div>
         <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '2px', lineHeight: 1.4 }}>
@@ -3080,7 +3080,7 @@ const st = {
 
   heroStatValue: {
     fontFamily: 'var(--headline)',
-    fontSize: '20px',
+    fontSize: 'var(--text-lg)',
     fontWeight: 900,
     lineHeight: 1,
     color: 'var(--white)',
@@ -3119,7 +3119,7 @@ const st = {
 
   focusName: {
     fontFamily: 'var(--headline)',
-    fontSize: '16px',
+    fontSize: 'var(--text-base)',
     fontWeight: 900,
     letterSpacing: '0.04em',
     textTransform: 'uppercase',
@@ -3159,7 +3159,7 @@ const st = {
     border: '1px solid rgba(245,245,245,0.12)',
     borderRadius: '100px',
     padding: '7px 14px',
-    fontSize: '11px',
+    fontSize: 'var(--text-xs)',
     fontFamily: 'var(--headline)',
     fontWeight: 700,
     letterSpacing: '0.08em',
@@ -3234,7 +3234,7 @@ const st = {
     borderRadius: '100px',
     padding: '7px 16px',
     fontFamily: 'var(--headline)',
-    fontSize: '11px',
+    fontSize: 'var(--text-xs)',
     fontWeight: 700,
     letterSpacing: '0.08em',
     textTransform: 'uppercase',
@@ -3261,7 +3261,7 @@ const st = {
   sectionTitle: {
     fontFamily: 'var(--headline)',
     fontWeight: 900,
-    fontSize: '18px',
+    fontSize: 'var(--text-md)',
     letterSpacing: '0.04em',
     textTransform: 'uppercase',
     color: 'var(--white)',
@@ -3282,7 +3282,7 @@ const st = {
 
   pbDist: {
     fontFamily: 'var(--headline)',
-    fontSize: '11px',
+    fontSize: 'var(--text-xs)',
     fontWeight: 700,
     letterSpacing: '0.1em',
     textTransform: 'uppercase',
@@ -3291,7 +3291,7 @@ const st = {
 
   pbTime: {
     fontFamily: 'var(--headline)',
-    fontSize: '20px',
+    fontSize: 'var(--text-lg)',
     fontWeight: 900,
     letterSpacing: '0.04em',
     color: 'var(--white)',
@@ -3317,7 +3317,7 @@ const st = {
 
   detailLabel: {
     fontFamily: 'var(--headline)',
-    fontSize: '11px',
+    fontSize: 'var(--text-xs)',
     fontWeight: 700,
     letterSpacing: '0.1em',
     textTransform: 'uppercase',
@@ -3350,7 +3350,7 @@ const st = {
     borderRadius: '100px',
     color: 'var(--muted)',
     padding: '5px 12px',
-    fontSize: '11px',
+    fontSize: 'var(--text-xs)',
     fontFamily: 'var(--headline)',
     fontWeight: 700,
     letterSpacing: '0.08em',
@@ -3367,7 +3367,7 @@ const st = {
     padding: '10px 18px',
     fontFamily: 'var(--headline)',
     fontWeight: 800,
-    fontSize: '13px',
+    fontSize: 'var(--text-sm)',
     letterSpacing: '0.06em',
     textTransform: 'uppercase',
     cursor: 'pointer',
@@ -3382,7 +3382,7 @@ const st = {
     textAlign: 'center',
   } as React.CSSProperties,
 
-  emptyIcon: { fontSize: '32px', lineHeight: 1 } as React.CSSProperties,
+  emptyIcon: { fontSize: 'var(--text-2xl)', lineHeight: 1 } as React.CSSProperties,
 
   emptyText: {
     fontSize: 'var(--text-sm)',

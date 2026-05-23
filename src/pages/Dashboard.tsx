@@ -472,9 +472,9 @@ function GreetingCard({ onCustomize }: { onCustomize: () => void }) {
                     gap: '5px',
                     minWidth: 0,
                   }}>
-                    <span style={{ fontSize: '18px', lineHeight: 1 }}>{h.icon}</span>
+                    <span style={{ fontSize: 'var(--text-md)', lineHeight: 1 }}>{h.icon}</span>
                     {h.temp !== null
-                      ? <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '14px', color: 'var(--white)', letterSpacing: '0.02em' }}>{h.temp}°</span>
+                      ? <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-compact)', color: 'var(--white)', letterSpacing: '0.02em' }}>{h.temp}°</span>
                       : <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '9px', color: 'var(--orange)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{h.isSun === 'rise' ? 'RISE' : 'SET'}</span>
                     }
                     <span style={{ fontSize: '9px', color: 'var(--muted)', letterSpacing: '0.02em', textAlign: 'center', whiteSpace: 'nowrap' }}>{h.time}</span>
@@ -493,9 +493,9 @@ function GreetingCard({ onCustomize }: { onCustomize: () => void }) {
         ) : geoState === 'loading' ? (
           <div style={{ marginTop: '8px', fontSize: '12px', color: 'var(--muted)' }}>Getting your weather…</div>
         ) : geoState === 'denied' ? (
-          <div style={{ marginTop: '6px', fontSize: '11px', color: 'var(--muted)' }}>Location blocked · Enable in browser settings</div>
+          <div style={{ marginTop: '6px', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Location blocked · Enable in browser settings</div>
         ) : (
-          <div style={{ marginTop: '6px', fontSize: '11px', color: 'var(--muted)' }}>Weather unavailable</div>
+          <div style={{ marginTop: '6px', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Weather unavailable</div>
         )}
       </div>
       <button style={st.gridBtn} onClick={onCustomize} aria-label="Customise dashboard">
@@ -578,11 +578,11 @@ function RaceMorningBrief({ race, onEditRace, onComplete }: { race: Race; onEdit
           <div style={{ marginTop: '10px', background: 'var(--surface3)', borderRadius: '8px', padding: '10px 12px', display: 'flex', gap: '1.5rem' }}>
             <div>
               <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '10px', letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '2px' }}>Goal Pace</div>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '18px', color: 'var(--orange)', letterSpacing: '0.02em' }}>{goalPace.pace}</div>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-md)', color: 'var(--orange)', letterSpacing: '0.02em' }}>{goalPace.pace}</div>
             </div>
             <div>
               <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '10px', letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '2px' }}>Target</div>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '18px', color: 'var(--white)', letterSpacing: '0.02em' }}>{goalPace.target}</div>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-md)', color: 'var(--white)', letterSpacing: '0.02em' }}>{goalPace.target}</div>
             </div>
           </div>
         ) : (
@@ -668,7 +668,7 @@ function RaceMorningBrief({ race, onEditRace, onComplete }: { race: Race; onEdit
               padding: '12px 16px',
               fontFamily: 'var(--headline)',
               fontWeight: 900,
-              fontSize: '13px',
+              fontSize: 'var(--text-sm)',
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
               cursor: 'pointer',
@@ -882,14 +882,14 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', flexShrink: 0 }}>
           <div>
-            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '18px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-md)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>
               {race.name ?? 'Upcoming Race'}
             </div>
             <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '2px' }}>
               {fmtDateIntl(race.date)}{race.city ? ` · ${race.city}` : ''}
             </div>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '20px', cursor: 'pointer', padding: '4px', lineHeight: 1 }} aria-label="Close">✕</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 'var(--text-lg)', cursor: 'pointer', padding: '4px', lineHeight: 1 }} aria-label="Close">✕</button>
         </div>
 
         {/* Scrollable body */}
@@ -897,7 +897,7 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
 
           {/* Priority */}
           <div>
-            <div style={{ fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '10px' }}>
+            <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '10px' }}>
               RACE PRIORITY
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
@@ -921,7 +921,7 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
                   <span style={{
                     fontFamily: 'var(--headline)',
                     fontWeight: 900,
-                    fontSize: '18px',
+                    fontSize: 'var(--text-md)',
                     color: priority === p.key ? 'var(--orange)' : 'var(--white)',
                     letterSpacing: '0.04em',
                   }}>{p.key}</span>
@@ -934,14 +934,14 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
 
           {/* Sport + Distance side by side */}
           <div>
-            <div style={{ fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '10px' }}>
+            <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '10px' }}>
               SPORT &amp; DISTANCE
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
               <select
                 value={sport}
                 onChange={e => handleSportChange(e.target.value)}
-                style={{ width: '100%', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px', color: 'var(--white)', fontSize: '14px', padding: '0.6rem 0.75rem', fontFamily: 'var(--body)', boxSizing: 'border-box' as const }}
+                style={{ width: '100%', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px', color: 'var(--white)', fontSize: 'var(--text-compact)', padding: '0.6rem 0.75rem', fontFamily: 'var(--body)', boxSizing: 'border-box' as const }}
               >
                 {Object.keys(UPCOMING_DISTANCES).map(s => (
                   <option key={s} value={s}>{s}</option>
@@ -950,7 +950,7 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
               <select
                 value={distance}
                 onChange={e => { setDistance(e.target.value); setCustomDist('') }}
-                style={{ width: '100%', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px', color: 'var(--white)', fontSize: '14px', padding: '0.6rem 0.75rem', fontFamily: 'var(--body)', boxSizing: 'border-box' as const }}
+                style={{ width: '100%', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px', color: 'var(--white)', fontSize: 'var(--text-compact)', padding: '0.6rem 0.75rem', fontFamily: 'var(--body)', boxSizing: 'border-box' as const }}
               >
                 <option value="">— Distance —</option>
                 {distOptions.map(opt => (
@@ -966,18 +966,18 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
 
           {/* Goal time — scroll wheel, 0–99h */}
           <div>
-            <div style={{ fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '10px' }}>
+            <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '10px' }}>
               GOAL TIME <span style={{ opacity: 0.5, fontWeight: 400, textTransform: 'lowercase', letterSpacing: 0 }}>(optional)</span>
             </div>
             <TimePickerWheel value={goalHMS} onChange={setGoalHMS} maxHours={99} />
-            <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '6px' }}>
+            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '6px' }}>
               Scroll to set · Used by Gap To Goal widget
             </div>
           </div>
 
           {/* Start time */}
           <div>
-            <div style={{ fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '10px' }}>
+            <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '10px' }}>
               RACE START TIME <span style={{ opacity: 0.5, fontWeight: 400, textTransform: 'lowercase', letterSpacing: 0 }}>(optional)</span>
             </div>
             <input
@@ -990,7 +990,7 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
                 border: '1px solid var(--border2)',
                 borderRadius: '6px',
                 color: 'var(--white)',
-                fontSize: '14px',
+                fontSize: 'var(--text-compact)',
                 padding: '0.6rem 0.75rem',
                 fontFamily: 'var(--body)',
                 boxSizing: 'border-box' as const,
@@ -1000,7 +1000,7 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
                 maxWidth: '100%',
               }}
             />
-            <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '6px' }}>
+            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '6px' }}>
               Local race-city time · Shared to race catalog
             </div>
           </div>
@@ -1016,7 +1016,7 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
                 color: 'var(--error)',
                 fontFamily: 'var(--headline)',
                 fontWeight: 700,
-                fontSize: '13px',
+                fontSize: 'var(--text-sm)',
                 letterSpacing: '0.08em',
                 textTransform: 'uppercase',
                 padding: '12px',
@@ -1028,14 +1028,14 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
             </button>
           ) : (
             <div style={{ background: 'rgba(255,80,80,0.08)', border: '1.5px solid rgba(255,80,80,0.35)', borderRadius: '10px', padding: '14px' }}>
-              <div style={{ fontSize: '13px', color: 'var(--error)', marginBottom: '12px', fontWeight: 600 }}>
+              <div style={{ fontSize: 'var(--text-sm)', color: 'var(--error)', marginBottom: '12px', fontWeight: 600 }}>
                 Remove {race.name ?? 'this race'} from your calendar?
               </div>
               <div style={{ display: 'flex', gap: '8px' }}>
-                <button onClick={() => setConfirmDelete(false)} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid var(--border2)', background: 'var(--surface3)', color: 'var(--white)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '13px', cursor: 'pointer', letterSpacing: '0.06em' }}>
+                <button onClick={() => setConfirmDelete(false)} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: '1px solid var(--border2)', background: 'var(--surface3)', color: 'var(--white)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-sm)', cursor: 'pointer', letterSpacing: '0.06em' }}>
                   CANCEL
                 </button>
-                <button onClick={handleDelete} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: 'var(--error)', color: '#fff', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', cursor: 'pointer', letterSpacing: '0.06em' }}>
+                <button onClick={handleDelete} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: 'var(--error)', color: '#fff', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', cursor: 'pointer', letterSpacing: '0.06em' }}>
                   YES, REMOVE
                 </button>
               </div>
@@ -1047,7 +1047,7 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
         <div style={{ flexShrink: 0, borderTop: '1px solid var(--border)', padding: '16px', background: 'var(--surface2)' }}>
           <button onClick={handleSave} style={{
             width: '100%', background: 'var(--orange)', color: '#000', border: 'none', borderRadius: '10px',
-            padding: '14px', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px',
+            padding: '14px', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)',
             letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer',
           }}>
             SAVE CHANGES
@@ -1103,7 +1103,7 @@ function CountdownCard({ race, onShowAll, upcomingRaces, onSelectRace }: { race:
                 border: `1px solid ${r.id === race.id ? 'var(--orange)' : 'var(--border2)'}`,
                 background: r.id === race.id ? 'rgba(var(--orange-ch),0.15)' : 'transparent',
                 color: r.id === race.id ? 'var(--orange)' : 'var(--muted)',
-                fontSize: '11px',
+                fontSize: 'var(--text-xs)',
                 fontFamily: 'var(--headline)',
                 fontWeight: 700,
                 letterSpacing: '0.06em',
@@ -1306,11 +1306,11 @@ function WeatherCard({ race }: { race: Race }) {
 
   return (
     <div style={st.weatherCard}>
-      <div style={{ fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '8px' }}>
+      <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '8px' }}>
         {location}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <span style={{ fontSize: '32px', lineHeight: 1, flexShrink: 0 }}>
+        <span style={{ fontSize: 'var(--text-2xl)', lineHeight: 1, flexShrink: 0 }}>
           {isLive
             ? (forecast?.icon ?? '🌤')
             : (climate && climate !== 'loading' ? climate.icon : '🌤')}
@@ -1319,7 +1319,7 @@ function WeatherCard({ race }: { race: Race }) {
           {isLive ? (
             forecast ? (
               <>
-                <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '18px', color: 'var(--white)', letterSpacing: '0.02em' }}>
+                <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-md)', color: 'var(--white)', letterSpacing: '0.02em' }}>
                   {forecast.min}° – {forecast.max}°C
                 </div>
                 <div style={{ fontSize: 'var(--text-xs)', color: 'var(--orange)', marginTop: '2px', lineHeight: 1.4, fontWeight: 600 }}>
@@ -1332,7 +1332,7 @@ function WeatherCard({ race }: { race: Race }) {
           ) : (
             climate && climate !== 'loading' ? (
               <>
-                <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '18px', color: 'var(--white)', letterSpacing: '0.02em' }}>
+                <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-md)', color: 'var(--white)', letterSpacing: '0.02em' }}>
                   {climate.min}° – {climate.max}°C
                 </div>
                 <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px', lineHeight: 1.4 }}>
@@ -1386,7 +1386,7 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
     return (
       <WidgetCard id="recent-races" style={st.glowCard}>
         <div style={st.widgetLabel}>RECENT RACES</div>
-        <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5, marginTop: '8px' }}>
+        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: '8px' }}>
           No races in the last 3 months.
         </div>
       </WidgetCard>
@@ -1418,7 +1418,7 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
                     <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--gold)', background: 'rgba(var(--gold-ch),0.12)', border: '1px solid rgba(var(--gold-ch),0.3)', borderRadius: '4px', padding: '2px 6px', flexShrink: 0 }}>PB</span>
                   )}
                 </div>
-                <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>
+                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>
                   {dateStr}{cityMeta ? ` · ${cityMeta}` : ''}
                 </div>
               </div>
@@ -1468,7 +1468,7 @@ function StatsStrip() {
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
       {stats.map(s => (
         <div key={s.label} className="card-v3 card-orange" style={{ padding: '10px 12px', textAlign: 'center' }}>
-          <div style={{ fontFamily: 'var(--headline)', fontSize: '20px', fontWeight: 900, lineHeight: 1, color: 'var(--white)', letterSpacing: '0.02em' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-lg)', fontWeight: 900, lineHeight: 1, color: 'var(--white)', letterSpacing: '0.02em' }}>
             {s.value}
           </div>
           <div style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--orange)', marginTop: '3px' }}>
@@ -1529,7 +1529,7 @@ function SeasonPlannerWidget({ onAddRace, onOpenPlanner }: { onAddRace: () => vo
               const { taper, recover } = taperFor(r.distance)
               const p = r.priority ?? 'C'
               return (
-                <div key={r.id} style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5 }}>
+                <div key={r.id} style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5 }}>
                   <span style={{ color: p === 'A' ? 'var(--white)' : p === 'B' ? 'rgba(245,245,245,0.6)' : 'var(--muted)' }}>{p}</span>
                   {` · ${r.name} · taper ${taper}d / recover ${recover}d`}
                 </div>
@@ -1593,7 +1593,7 @@ function RecoveryIntelWidget() {
 
       <div style={st.widgetDivider} />
 
-      <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.55 }}>
+      <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.55 }}>
         Recent race load score: {loadScore}. Use this to avoid stacking hard events too closely.
       </div>
     </WidgetCard>
@@ -1607,8 +1607,8 @@ function TrainingCorrelWidget() {
     <WidgetCard id="training-correl" style={st.glowCard}>
       <div style={st.widgetLabel}>TRAINING CORRELATION</div>
       <div style={st.widgetTitle}>LOAD VS RESULT</div>
-      <div style={{ padding: '16px 0', textAlign: 'center', color: 'var(--muted)', fontSize: '13px' }}>
-        <p style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '13px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--muted)', margin: '0 0 6px' }}>Coming Soon</p>
+      <div style={{ padding: '16px 0', textAlign: 'center', color: 'var(--muted)', fontSize: 'var(--text-sm)' }}>
+        <p style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-sm)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--muted)', margin: '0 0 6px' }}>Coming Soon</p>
         <p style={{ margin: 0, fontSize: '12px' }}>Connect Strava to see training load vs race performance</p>
       </div>
     </WidgetCard>
@@ -1684,7 +1684,7 @@ function BostonQualWidget() {
               </div>
             </div>
             <div style={{ paddingBottom: '1px' }}>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '18px', color: 'var(--muted)', lineHeight: 1 }}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-md)', color: 'var(--muted)', lineHeight: 1 }}>
                 {secsToHMS(bqTarget - BQ_BUFFER_SECS)}
               </div>
               <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted2)', textTransform: 'uppercase', marginTop: '3px' }}>
@@ -1694,7 +1694,7 @@ function BostonQualWidget() {
           </div>
 
           {/* Qualifying window */}
-          <div style={{ fontSize: '11px', color: 'var(--muted2)', letterSpacing: '0.02em' }}>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', letterSpacing: '0.02em' }}>
             Qualifying window: {fmtWindow(qualStart)} – {fmtWindow(qualEnd)}
           </div>
 
@@ -1736,7 +1736,7 @@ function BostonQualWidget() {
                       <div style={{ fontSize: '10px', color: 'var(--muted2)', marginTop: '1px' }}>{fmtDateDDMM(r.date)}</div>
                     </div>
                     <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                      <div style={{ fontSize: '13px', fontWeight: 800, color: 'var(--white)', fontFamily: 'var(--headline)', lineHeight: 1 }}>{r.time}</div>
+                      <div style={{ fontSize: 'var(--text-sm)', fontWeight: 800, color: 'var(--white)', fontFamily: 'var(--headline)', lineHeight: 1 }}>{r.time}</div>
                       <div style={{ fontSize: '10px', color: rowColor, fontWeight: 700, marginTop: '2px' }}>
                         {qualified ? `${secsToHMS(Math.abs(gap))} under ✓` : `${secsToHMS(gap)} over`}
                       </div>
@@ -1801,7 +1801,7 @@ function PacingIQWidget() {
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', color: 'var(--green)', letterSpacing: '0.04em' }}>
             {analysis.dominant}
           </div>
-          <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5 }}>
+          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5 }}>
             Based on {analysis.total} races with split data.
             Fade rate: {Math.round((analysis.faded / analysis.total) * 100)}%.
             Negative splits: {Math.round((analysis.negative / analysis.total) * 100)}%.
@@ -1845,7 +1845,7 @@ function CareerMomentumWidget() {
       </div>
 
       <div style={st.widgetDivider} />
-      <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.55 }}>
+      <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.55 }}>
         Weighted against your recent personal-best equivalents, this shows whether your results are trending stronger or softer over time.
       </div>
     </WidgetCard>
@@ -1880,17 +1880,17 @@ function AgeGradeWidget() {
           <div style={st.lockedText}>Add date of birth and gender in athlete profile to see age-grade scores.</div>
         </div>
       ) : entries.length === 0 ? (
-        <div style={{ fontSize: '13px', color: 'var(--muted)' }}>Log races with finish times at 5K, 10K, Half Marathon, or Marathon distances to see your age-grade score.</div>
+        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>Log races with finish times at 5K, 10K, Half Marathon, or Marathon distances to see your age-grade score.</div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px' }}>
           {entries.slice(0, 5).map((e, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '11px', color: 'var(--muted)', minWidth: '16px' }}>#{e.rank}</div>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xs)', color: 'var(--muted)', minWidth: '16px' }}>#{e.rank}</div>
               <div style={{ flex: 1, overflow: 'hidden' }}>
                 <div style={{ fontSize: '12px', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.race.name ?? e.race.distance}</div>
-                <div style={{ fontSize: '11px', color: 'var(--muted)' }}>{distBadge(e.race.distance, e.race.sport)} · {e.race.time}</div>
+                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{distBadge(e.race.distance, e.race.sport)} · {e.race.time}</div>
               </div>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', color: e.ageGrade >= 70 ? 'var(--orange)' : 'var(--white)', minWidth: '44px', textAlign: 'right' }}>{e.ageGrade.toFixed(1)}%</div>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', color: e.ageGrade >= 70 ? 'var(--orange)' : 'var(--white)', minWidth: '44px', textAlign: 'right' }}>{e.ageGrade.toFixed(1)}%</div>
             </div>
           ))}
         </div>
@@ -2031,7 +2031,7 @@ function RaceDNAWidget() {
                         transition: 'width 0.4s ease',
                       }} />
                     </div>
-                    <div style={{ width: '36px', fontSize: '11px', color: b.isBest ? b.color : 'var(--muted)', fontWeight: b.isBest ? 700 : 400, textAlign: 'right', flexShrink: 0 }}>
+                    <div style={{ width: '36px', fontSize: 'var(--text-xs)', color: b.isBest ? b.color : 'var(--muted)', fontWeight: b.isBest ? 700 : 400, textAlign: 'right', flexShrink: 0 }}>
                       {b.isBest ? '★ BEST' : `+${b.delta}%`}
                     </div>
                   </div>
@@ -2044,7 +2044,7 @@ function RaceDNAWidget() {
               )}
             </div>
           ) : (
-            <div style={{ fontSize: '11px', color: 'var(--muted2)', padding: '8px 0' }}>
+            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', padding: '8px 0' }}>
               Open a past race and fetch weather to see temp analysis.
             </div>
           )}
@@ -2057,10 +2057,10 @@ function RaceDNAWidget() {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
                 <div>
-                  <div style={{ fontSize: '16px', fontFamily: 'var(--headline)', fontWeight: 900, letterSpacing: '0.04em', color: dna.pacingPersonaColor }}>
+                  <div style={{ fontSize: 'var(--text-base)', fontFamily: 'var(--headline)', fontWeight: 900, letterSpacing: '0.04em', color: dna.pacingPersonaColor }}>
                     {dna.pacingPersona}
                   </div>
-                  <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>{dna.pacingPersonaDesc}</div>
+                  <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>{dna.pacingPersonaDesc}</div>
                 </div>
                 {/* Mini pie-style split breakdown */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', flexShrink: 0 }}>
@@ -2096,7 +2096,7 @@ function RaceDNAWidget() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 {dna.surfaces.map((s, i) => (
                   <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{ width: '44px', fontSize: '11px', color: i === 0 ? 'var(--white)' : 'var(--muted)', fontWeight: i === 0 ? 600 : 400, flexShrink: 0 }}>{s.label}</div>
+                    <div style={{ width: '44px', fontSize: 'var(--text-xs)', color: i === 0 ? 'var(--white)' : 'var(--muted)', fontWeight: i === 0 ? 600 : 400, flexShrink: 0 }}>{s.label}</div>
                     <div style={{ flex: 1, height: '6px', background: 'var(--surface3)', borderRadius: '3px', overflow: 'hidden' }}>
                       <div style={{
                         height: '100%',
@@ -2106,7 +2106,7 @@ function RaceDNAWidget() {
                         transition: 'width 0.4s ease',
                       }} />
                     </div>
-                    <div style={{ width: '32px', fontSize: '11px', color: i === 0 ? 'var(--orange)' : 'var(--muted)', fontWeight: i === 0 ? 700 : 400, textAlign: 'right', flexShrink: 0 }}>
+                    <div style={{ width: '32px', fontSize: 'var(--text-xs)', color: i === 0 ? 'var(--orange)' : 'var(--muted)', fontWeight: i === 0 ? 700 : 400, textAlign: 'right', flexShrink: 0 }}>
                       {s.pct}%
                     </div>
                   </div>
@@ -2127,14 +2127,14 @@ function RaceDNAWidget() {
                     display: 'inline-flex', alignItems: 'center', gap: '4px',
                     background: 'var(--surface3)', border: '1px solid var(--border)',
                     borderRadius: '20px', padding: '3px 9px',
-                    fontSize: '11px', color: 'var(--white)',
+                    fontSize: 'var(--text-xs)', color: 'var(--white)',
                   }}>
                     <span>{country}</span>
                     <span style={{ color: 'var(--muted)', fontSize: '10px' }}>{count}</span>
                   </div>
                 ))}
                 {dna.travelCount > 5 && (
-                  <div style={{ display: 'inline-flex', alignItems: 'center', background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: '20px', padding: '3px 9px', fontSize: '11px', color: 'var(--muted)' }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: '20px', padding: '3px 9px', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
                     +{dna.travelCount - 5} more
                   </div>
                 )}
@@ -2227,7 +2227,7 @@ function PatternScanWidget() {
       </div>
 
       {!scan ? (
-        <div style={{ fontSize: '13px', color: 'var(--muted)' }}>Log 3+ races to see patterns.</div>
+        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>Log 3+ races to see patterns.</div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
 
@@ -2247,7 +2247,7 @@ function PatternScanWidget() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 {scan.seasonBars.map(s => (
                   <div key={s.season} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{ width: '58px', fontSize: '11px', color: s.isBest ? 'var(--white)' : 'var(--muted)', fontWeight: s.isBest ? 700 : 400, flexShrink: 0, whiteSpace: 'nowrap' }}>
+                    <div style={{ width: '58px', fontSize: 'var(--text-xs)', color: s.isBest ? 'var(--white)' : 'var(--muted)', fontWeight: s.isBest ? 700 : 400, flexShrink: 0, whiteSpace: 'nowrap' }}>
                       {s.season}
                     </div>
                     <div style={{ flex: 1, height: '6px', background: 'var(--surface3)', borderRadius: '3px', overflow: 'hidden' }}>
@@ -2274,7 +2274,7 @@ function PatternScanWidget() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
               {scan.topDist.map(([d, n], i) => (
                 <div key={d} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ width: '90px', fontSize: '11px', color: i === 0 ? 'var(--white)' : 'var(--muted)', fontWeight: i === 0 ? 600 : 400, flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d}</div>
+                  <div style={{ width: '90px', fontSize: 'var(--text-xs)', color: i === 0 ? 'var(--white)' : 'var(--muted)', fontWeight: i === 0 ? 600 : 400, flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d}</div>
                   <div style={{ flex: 1, height: '6px', background: 'var(--surface3)', borderRadius: '3px', overflow: 'hidden' }}>
                     <div style={{
                       height: '100%',
@@ -2284,7 +2284,7 @@ function PatternScanWidget() {
                       transition: 'width 0.4s ease',
                     }} />
                   </div>
-                  <div style={{ width: '24px', fontSize: '11px', color: i === 0 ? 'var(--orange)' : 'var(--muted)', fontWeight: i === 0 ? 700 : 400, textAlign: 'right', flexShrink: 0 }}>{n}</div>
+                  <div style={{ width: '24px', fontSize: 'var(--text-xs)', color: i === 0 ? 'var(--orange)' : 'var(--muted)', fontWeight: i === 0 ? 700 : 400, textAlign: 'right', flexShrink: 0 }}>{n}</div>
                 </div>
               ))}
             </div>
@@ -2294,7 +2294,7 @@ function PatternScanWidget() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
             {/* YoY */}
             <div style={{ background: 'var(--surface3)', borderRadius: '8px', padding: '8px', textAlign: 'center' }}>
-              <div style={{ fontSize: '18px', fontFamily: 'var(--headline)', fontWeight: 900, color: scan.volumeColor, lineHeight: 1 }}>
+              <div style={{ fontSize: 'var(--text-md)', fontFamily: 'var(--headline)', fontWeight: 900, color: scan.volumeColor, lineHeight: 1 }}>
                 {scan.volumeTrend !== null ? `${scan.volumeTrend >= 0 ? '+' : ''}${scan.volumeTrend}%` : '—'}
               </div>
               <div style={{ fontSize: '9px', color: 'var(--muted)', textTransform: 'uppercase', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', marginTop: '3px' }}>YoY Volume</div>
@@ -2304,7 +2304,7 @@ function PatternScanWidget() {
             </div>
             {/* Finish rate */}
             <div style={{ background: 'var(--surface3)', borderRadius: '8px', padding: '8px', textAlign: 'center' }}>
-              <div style={{ fontSize: '18px', fontFamily: 'var(--headline)', fontWeight: 900, color: scan.finishRate >= 95 ? '#34D399' : scan.finishRate >= 85 ? 'var(--orange)' : '#F87171', lineHeight: 1 }}>
+              <div style={{ fontSize: 'var(--text-md)', fontFamily: 'var(--headline)', fontWeight: 900, color: scan.finishRate >= 95 ? '#34D399' : scan.finishRate >= 85 ? 'var(--orange)' : '#F87171', lineHeight: 1 }}>
                 {scan.finishRate}%
               </div>
               <div style={{ fontSize: '9px', color: 'var(--muted)', textTransform: 'uppercase', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', marginTop: '3px' }}>Finish Rate</div>
@@ -2314,7 +2314,7 @@ function PatternScanWidget() {
             </div>
             {/* Top 25% */}
             <div style={{ background: 'var(--surface3)', borderRadius: '8px', padding: '8px', textAlign: 'center' }}>
-              <div style={{ fontSize: '18px', fontFamily: 'var(--headline)', fontWeight: 900, color: scan.podiumRate !== null ? (scan.podiumRate >= 30 ? '#34D399' : 'var(--orange)') : 'var(--muted)', lineHeight: 1 }}>
+              <div style={{ fontSize: 'var(--text-md)', fontFamily: 'var(--headline)', fontWeight: 900, color: scan.podiumRate !== null ? (scan.podiumRate >= 30 ? '#34D399' : 'var(--orange)') : 'var(--muted)', lineHeight: 1 }}>
                 {scan.podiumRate !== null ? `${scan.podiumRate}%` : '—'}
               </div>
               <div style={{ fontSize: '9px', color: 'var(--muted)', textTransform: 'uppercase', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', marginTop: '3px' }}>Top 25%</div>
@@ -2345,7 +2345,7 @@ function WhyResultWidget() {
     return (
       <WidgetCard id="why-result" style={st.glowCard}>
         <div style={st.widgetLabel}>WHY RESULT</div>
-        <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '6px' }}>Log a timed race to see results.</div>
+        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginTop: '6px' }}>Log a timed race to see results.</div>
       </WidgetCard>
     )
   }
@@ -2361,8 +2361,8 @@ function WhyResultWidget() {
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-        <div style={{ fontSize: '13px', color: 'var(--muted)' }}>Best: execution and context aligned well</div>
-        <div style={{ fontSize: '13px', color: 'var(--muted)' }}>Tough day: course and pacing demands stacked up</div>
+        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>Best: execution and context aligned well</div>
+        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>Tough day: course and pacing demands stacked up</div>
       </div>
 
       <div style={st.widgetDivider} />
@@ -2379,8 +2379,8 @@ function ActivityPreviewWidget() {
       <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '8px' }}>
         Activity Feed
       </div>
-      <div style={{ padding: '8px 0', textAlign: 'center', color: 'var(--muted)', fontSize: '13px' }}>
-        <p style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '13px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--muted)', margin: '0 0 6px' }}>Coming Soon</p>
+      <div style={{ padding: '8px 0', textAlign: 'center', color: 'var(--muted)', fontSize: 'var(--text-sm)' }}>
+        <p style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-sm)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--muted)', margin: '0 0 6px' }}>Coming Soon</p>
         <p style={{ margin: 0, fontSize: '12px' }}>Connect Strava to see training load vs race performance</p>
       </div>
     </WidgetCard>
@@ -2413,14 +2413,14 @@ function OnThisDayWidget() {
         <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '4px' }}>
           On This Day
         </div>
-        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', color: 'var(--white)', letterSpacing: '0.04em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', color: 'var(--white)', letterSpacing: '0.04em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {race.name}
         </div>
         <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '4px' }}>
           {yearStr}{race.city ? ` · ${race.city}` : ''}{race.country ? `, ${race.country}` : ''}
         </div>
         {race.time && (
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', color: 'var(--orange)', marginTop: '4px' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', color: 'var(--orange)', marginTop: '4px' }}>
             {race.time}
           </div>
         )}
@@ -2474,7 +2474,7 @@ function RaceReadinessWidget() {
       </div>
 
       <div style={st.widgetDivider} />
-      <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.55 }}>{detail}</div>
+      <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.55 }}>{detail}</div>
     </WidgetCard>
   )
 }
@@ -2527,7 +2527,7 @@ function GapToGoalWidget({ race }: { race: Race | null }) {
     return (
       <WidgetCard id="gap-to-goal" style={st.glowCard}>
         <div style={st.widgetLabel}>GAP TO GOAL</div>
-        <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '6px' }}>Add an upcoming race to track your gap to goal.</div>
+        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginTop: '6px' }}>Add an upcoming race to track your gap to goal.</div>
       </WidgetCard>
     )
   }
@@ -2576,7 +2576,7 @@ function GapToGoalWidget({ race }: { race: Race | null }) {
         </div>
         {result.pb && (
           <div style={{ paddingBottom: '1px' }}>
-            <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '18px', color: 'var(--muted)', lineHeight: 1 }}>{result.pb}</div>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-md)', color: 'var(--muted)', lineHeight: 1 }}>{result.pb}</div>
             <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted2)', textTransform: 'uppercase', marginTop: '3px' }}>
               {result.isCourse ? 'COURSE PB' : 'DISTANCE PB'}
             </div>
@@ -2714,7 +2714,7 @@ function PressurePerformerWidget() {
         <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-end' }}>
           {result.aPct !== null && (
             <div>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '32px', color: 'var(--white)', lineHeight: 1 }}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', color: 'var(--white)', lineHeight: 1 }}>
                 Top {100 - result.aPct + 1}%
               </div>
               <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted)', textTransform: 'uppercase', marginTop: '3px' }}>A-RACES ({result.aCount})</div>
@@ -2722,7 +2722,7 @@ function PressurePerformerWidget() {
           )}
           {result.otherPct !== null && (
             <div style={{ paddingBottom: '2px' }}>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '20px', color: 'var(--muted)', lineHeight: 1 }}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-lg)', color: 'var(--muted)', lineHeight: 1 }}>
                 Top {100 - result.otherPct + 1}%
               </div>
               <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted2)', textTransform: 'uppercase', marginTop: '3px' }}>B/C RACES ({result.otherCount})</div>
@@ -2782,7 +2782,7 @@ function TravelLoadWidget() {
         <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
           {result.localPct !== null && (
             <div>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '32px', color: 'var(--green)', lineHeight: 1 }}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', color: 'var(--green)', lineHeight: 1 }}>
                 Top {100 - result.localPct + 1}%
               </div>
               <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted)', textTransform: 'uppercase', marginTop: '3px' }}>
@@ -2792,7 +2792,7 @@ function TravelLoadWidget() {
           )}
           {result.awayPct !== null && (
             <div style={{ paddingBottom: '2px' }}>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '20px', color: 'var(--muted)', lineHeight: 1 }}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-lg)', color: 'var(--muted)', lineHeight: 1 }}>
                 Top {100 - result.awayPct + 1}%
               </div>
               <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted2)', textTransform: 'uppercase', marginTop: '3px' }}>
@@ -2803,7 +2803,7 @@ function TravelLoadWidget() {
           {result.localPct !== null && result.awayPct !== null && (
             <>
               <div style={st.widgetDivider} />
-              <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.55 }}>
+              <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.55 }}>
                 {result.localPct > result.awayPct + 5
                   ? 'You perform better at home-country races.'
                   : result.awayPct > result.localPct + 5
@@ -2866,16 +2866,16 @@ function RaceDensityWidget() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
             <div>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '32px', color: 'var(--white)', lineHeight: 1 }}>{result.avg}d</div>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', color: 'var(--white)', lineHeight: 1 }}>{result.avg}d</div>
               <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted)', textTransform: 'uppercase', marginTop: '3px' }}>AVG GAP</div>
             </div>
             <div style={{ paddingBottom: '2px' }}>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '20px', color: result.min < 14 ? 'var(--orange)' : 'var(--muted)', lineHeight: 1 }}>{result.min}d</div>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-lg)', color: result.min < 14 ? 'var(--orange)' : 'var(--muted)', lineHeight: 1 }}>{result.min}d</div>
               <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted2)', textTransform: 'uppercase', marginTop: '3px' }}>SHORTEST</div>
             </div>
           </div>
           {result.tightCount > 0 && (
-            <div style={{ fontSize: '13px', color: 'var(--orange)', lineHeight: 1.5 }}>
+            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--orange)', lineHeight: 1.5 }}>
               ⚠ {result.tightCount} race{result.tightCount > 1 ? 's' : ''} stacked within 14 days of another.
             </div>
           )}
@@ -2954,7 +2954,7 @@ function BestConditionsWidget() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {result.bestSurf && (
-            <div style={{ fontSize: '13px', color: 'var(--white)', fontWeight: 600 }}>
+            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', fontWeight: 600 }}>
               Best surface: <span style={{ color: 'var(--green)' }}>{result.bestSurf.s.toUpperCase()}</span>
             </div>
           )}
@@ -3022,7 +3022,7 @@ function CourseFitWidget({ race }: { race: Race | null }) {
     return (
       <WidgetCard id="course-fit" style={st.glowCard}>
         <div style={st.widgetLabel}>COURSE FIT</div>
-        <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '6px' }}>Add an upcoming race to calculate your course fit score.</div>
+        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginTop: '6px' }}>Add an upcoming race to calculate your course fit score.</div>
       </WidgetCard>
     )
   }
@@ -3038,7 +3038,7 @@ function CourseFitWidget({ race }: { race: Race | null }) {
       </div>
 
       {!result ? (
-        <div style={{ fontSize: '13px', color: 'var(--muted)' }}>Log 3+ races with placing data to see course fit.</div>
+        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>Log 3+ races with placing data to see course fit.</div>
       ) : (
         <>
           <div>
@@ -3053,7 +3053,7 @@ function CourseFitWidget({ race }: { race: Race | null }) {
             </div>
           </div>
           <div style={st.widgetDivider} />
-          <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.55 }}>
+          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.55 }}>
             Surface: {result.nextSurface.toUpperCase()}
             {result.surfaceRaceCount > 0 ? ` · ${result.surfaceRaceCount} prior ${result.nextSurface} races` : ' · no prior races on this surface'}
           </div>
@@ -3134,7 +3134,7 @@ function PBProbabilityWidget({ race }: { race: Race | null }) {
     return (
       <WidgetCard id="pb-probability" style={st.glowCard}>
         <div style={st.widgetLabel}>PB PROBABILITY</div>
-        <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '6px' }}>Add an upcoming race to estimate your PB chance.</div>
+        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginTop: '6px' }}>Add an upcoming race to estimate your PB chance.</div>
       </WidgetCard>
     )
   }
@@ -3150,7 +3150,7 @@ function PBProbabilityWidget({ race }: { race: Race | null }) {
       </div>
 
       {!result ? (
-        <div style={{ fontSize: '13px', color: 'var(--muted)' }}>Log 2+ races to calculate PB probability.</div>
+        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>Log 2+ races to calculate PB probability.</div>
       ) : (
         <>
           <div>
@@ -3165,7 +3165,7 @@ function PBProbabilityWidget({ race }: { race: Race | null }) {
             </div>
           </div>
           <div style={st.widgetDivider} />
-          <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.55 }}>
+          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.55 }}>
             {!result.hasPBForDist
               ? 'No PB logged for this distance — every finish is a new PB.'
               : result.pbIsNameMatch
@@ -3241,7 +3241,7 @@ function StreakRiskWidget() {
             </div>
           </div>
           <div style={st.widgetDivider} />
-          <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.55 }}>{result.note}</div>
+          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.55 }}>{result.note}</div>
         </>
       )}
     </WidgetCard>
@@ -3294,7 +3294,7 @@ function AdvancedRaceDNAWidget() {
         <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--muted)', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px', padding: '3px 6px', flexShrink: 0 }}>DNA</span>
       </div>
       {past.length < 2 ? (
-        <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>
+        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>
           Log 2+ races with placing data to see advanced condition analysis.
         </div>
       ) : (
@@ -3312,11 +3312,11 @@ function AdvancedRaceDNAWidget() {
             </div>
           )}
           {!data.humidityInsight && !data.elevInsight && (
-            <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5 }}>
+            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5 }}>
               Add humidity and elevation data to logged races to see insights.
             </div>
           )}
-          <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>
             {data.withHumidity} humidity · {data.withElev} elevation records
           </div>
         </div>
@@ -3394,14 +3394,14 @@ function WeatherFitWidget({ race }: { race: Race | null }) {
       </div>
 
       {!result ? (
-        <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>
+        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>
           Log 2+ races with placing data to build your weather performance profile.
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '4px' }}>
           {nextRace && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '13px', color: result.fitColor, letterSpacing: '0.08em' }}>
+              <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-sm)', color: result.fitColor, letterSpacing: '0.08em' }}>
                 {result.fitLabel}
               </span>
             </div>
@@ -3420,7 +3420,7 @@ function WeatherFitWidget({ race }: { race: Race | null }) {
               </span>
             </div>
           ))}
-          <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>
             Based on {result.total} races with weather + placing data
           </div>
         </div>
@@ -3465,7 +3465,7 @@ function RaceGapAnalysisWidget() {
         <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--muted)', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px', padding: '3px 6px', flexShrink: 0 }}>GAP</span>
       </div>
       {!gapData ? (
-        <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>
+        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>
           Log 2+ races to analyse recovery and race-spacing patterns.
         </div>
       ) : (
@@ -3478,7 +3478,7 @@ function RaceGapAnalysisWidget() {
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '10px', letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase' }}>RECENT GAPS</div>
           {gapData.recentGaps.map((g, i) => (
             <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 0', borderBottom: '1px solid var(--border)' }}>
-              <span style={{ fontSize: '11px', color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '70%' }}>
+              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '70%' }}>
                 {g.prev.name ?? g.prev.date} → {g.race.name ?? g.race.date}
               </span>
               <span style={{ fontSize: '12px', fontFamily: 'var(--mono)', color: g.isTight ? 'var(--orange)' : 'var(--green)', flexShrink: 0, marginLeft: '8px' }}>
@@ -3522,7 +3522,7 @@ function WhyPRdWidget() {
       <WidgetCard id="why-prd" style={st.glowCard}>
         <div style={st.widgetLabel}>WHY YOU PR'D</div>
         <div style={st.widgetTitle}>NO PBs YET</div>
-        <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>Log races to discover the conditions behind your best performances.</div>
+        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>Log races to discover the conditions behind your best performances.</div>
       </WidgetCard>
     )
   }
@@ -3556,7 +3556,7 @@ function WhyPRdWidget() {
         )}
         <div style={st.widgetDivider} />
         {pbRaces.slice(0, 3).map(r => (
-          <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
+          <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-xs)' }}>
             <span style={{ color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '60%' }}>{r.name ?? r.date}</span>
             <span style={{ color: 'var(--gold)', fontFamily: 'var(--mono)', flexShrink: 0 }}>{r.time}</span>
           </div>
@@ -3595,10 +3595,10 @@ function WhyFadedWidget() {
           <div style={st.widgetLabel}>WHY YOU FADED</div>
           <div style={st.widgetTitle}>{fadedRaces.length > 0 ? `${fadedRaces.length} FADE${fadedRaces.length !== 1 ? 'S' : ''} DETECTED` : 'NO FADES DETECTED'}</div>
         </div>
-        <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', color: 'var(--muted)', flexShrink: 0, letterSpacing: '0.04em' }}>↓</span>
+        <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', color: 'var(--muted)', flexShrink: 0, letterSpacing: '0.04em' }}>↓</span>
       </div>
       {fadedRaces.length === 0 ? (
-        <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>
+        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>
           No significant pace drops found. Log races with splits to track pacing patterns.
         </div>
       ) : (
@@ -3609,7 +3609,7 @@ function WhyFadedWidget() {
               <span style={{ fontSize: '12px', fontFamily: 'var(--mono)', color: 'var(--orange)', flexShrink: 0 }}>+{fadePct}% fade</span>
             </div>
           ))}
-          <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '6px' }}>Detected from split-time data</div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '6px' }}>Detected from split-time data</div>
         </div>
       )}
     </WidgetCard>
@@ -3640,7 +3640,7 @@ function RaceComparerWidget() {
       <WidgetCard id="race-comparer" style={st.glowCard}>
         <div style={st.widgetLabel}>RACE COMPARER</div>
         <div style={st.widgetTitle}>LOG 2+ RACES</div>
-        <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>Need at least 2 timed races to compare.</div>
+        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>Need at least 2 timed races to compare.</div>
       </WidgetCard>
     )
   }
@@ -3663,21 +3663,21 @@ function RaceComparerWidget() {
           <select value={idxA} onChange={e => setIdxA(Number(e.target.value))} onClick={stopBubble} style={{ ...selStyle, color: 'var(--orange)' }}>
             {past.map((r, i) => <option key={r.id} value={i}>{r.name ?? r.date}</option>)}
           </select>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', color: diff?.faster === 'A' ? 'var(--green)' : 'var(--white)' }}>{raceA?.time ?? '—'}</div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', color: diff?.faster === 'A' ? 'var(--green)' : 'var(--white)' }}>{raceA?.time ?? '—'}</div>
           <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '2px' }}>{fmtDateDDMM(raceA?.date ?? '')}</div>
         </div>
         <div data-no-widget-detail style={{ background: 'var(--surface3)', borderRadius: '8px', padding: '10px' }} onClick={stopBubble}>
           <select value={idxB} onChange={e => setIdxB(Number(e.target.value))} onClick={stopBubble} style={{ ...selStyle, color: 'var(--muted)' }}>
             {past.map((r, i) => <option key={r.id} value={i}>{r.name ?? r.date}</option>)}
           </select>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', color: diff?.faster === 'B' ? 'var(--green)' : 'var(--white)' }}>{raceB?.time ?? '—'}</div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', color: diff?.faster === 'B' ? 'var(--green)' : 'var(--white)' }}>{raceB?.time ?? '—'}</div>
           <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '2px' }}>{fmtDateDDMM(raceB?.date ?? '')}</div>
         </div>
       </div>
       {diff && (
         <div style={{ marginTop: '8px', padding: '8px', background: 'var(--surface3)', borderRadius: '8px', textAlign: 'center' }}>
-          <span style={{ fontFamily: 'var(--mono)', fontSize: '14px', fontWeight: 600, color: 'var(--green)' }}>{secsToHMS(diff.secs)}</span>
-          <span style={{ fontSize: '11px', color: 'var(--muted)', marginLeft: '6px' }}>faster in Race {diff.faster}</span>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 'var(--text-compact)', fontWeight: 600, color: 'var(--green)' }}>{secsToHMS(diff.secs)}</span>
+          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginLeft: '6px' }}>faster in Race {diff.faster}</span>
         </div>
       )}
     </WidgetCard>
@@ -3775,7 +3775,7 @@ function RaceStackWidget({ race }: { race: Race | null }) {
       </div>
 
       {!checklist ? (
-        <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>
+        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>
           Add an upcoming race to generate your personalised race-day kit list.
         </div>
       ) : (
@@ -3791,7 +3791,7 @@ function RaceStackWidget({ race }: { race: Race | null }) {
                   onClick={() => setOpenCat(isOpen ? null : cat.label)}
                   style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0' }}
                 >
-                  <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px', letterSpacing: '0.12em', color: 'var(--white)', textTransform: 'uppercase' as const }}>
+                  <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.12em', color: 'var(--white)', textTransform: 'uppercase' as const }}>
                     {cat.emoji} {cat.label}
                   </span>
                   <span style={{ fontSize: '10px', color: 'var(--muted)' }}>{isOpen ? '▲' : '▼'} {totalCount}</span>
@@ -3802,14 +3802,14 @@ function RaceStackWidget({ race }: { race: Race | null }) {
                       <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '12px', color: 'var(--muted)' }}>
                         <span style={{ color: 'var(--orange)', flexShrink: 0, marginTop: '1px' }}>✓</span>
                         <span style={{ flex: 1 }}>{item}</span>
-                        <button onClick={() => deleteItem(item)} style={{ background: 'none', border: 'none', color: 'var(--muted2)', cursor: 'pointer', fontSize: '13px', padding: '0', lineHeight: 1, flexShrink: 0 }}>✕</button>
+                        <button onClick={() => deleteItem(item)} style={{ background: 'none', border: 'none', color: 'var(--muted2)', cursor: 'pointer', fontSize: 'var(--text-sm)', padding: '0', lineHeight: 1, flexShrink: 0 }}>✕</button>
                       </div>
                     ))}
                     {extras.map((item, i) => (
                       <div key={`custom-${i}`} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', fontSize: '12px', color: 'var(--muted)' }}>
                         <span style={{ color: 'var(--green)', flexShrink: 0, marginTop: '1px' }}>+</span>
                         <span style={{ flex: 1 }}>{item}</span>
-                        <button onClick={() => setCustomItems(prev => ({ ...prev, [cat.label]: (prev[cat.label] ?? []).filter((_, j) => j !== i) }))} style={{ background: 'none', border: 'none', color: 'var(--muted2)', cursor: 'pointer', fontSize: '13px', padding: '0', lineHeight: 1, flexShrink: 0 }}>✕</button>
+                        <button onClick={() => setCustomItems(prev => ({ ...prev, [cat.label]: (prev[cat.label] ?? []).filter((_, j) => j !== i) }))} style={{ background: 'none', border: 'none', color: 'var(--muted2)', cursor: 'pointer', fontSize: 'var(--text-sm)', padding: '0', lineHeight: 1, flexShrink: 0 }}>✕</button>
                       </div>
                     ))}
                     {/* Add new item row */}
@@ -3819,9 +3819,9 @@ function RaceStackWidget({ race }: { race: Race | null }) {
                         onChange={e => setNewItemText(e.target.value)}
                         onKeyDown={e => e.key === 'Enter' && addItem(cat.label)}
                         placeholder="Add item…"
-                        style={{ flex: 1, background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '5px', padding: '5px 8px', fontSize: '11px', color: 'var(--white)', outline: 'none' }}
+                        style={{ flex: 1, background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '5px', padding: '5px 8px', fontSize: 'var(--text-xs)', color: 'var(--white)', outline: 'none' }}
                       />
-                      <button onClick={() => addItem(cat.label)} style={{ background: 'rgba(var(--orange-ch),0.15)', border: '1px solid rgba(var(--orange-ch),0.3)', borderRadius: '5px', color: 'var(--orange)', fontSize: '14px', padding: '0 10px', cursor: 'pointer' }}>+</button>
+                      <button onClick={() => addItem(cat.label)} style={{ background: 'rgba(var(--orange-ch),0.15)', border: '1px solid rgba(var(--orange-ch),0.3)', borderRadius: '5px', color: 'var(--orange)', fontSize: 'var(--text-compact)', padding: '0 10px', cursor: 'pointer' }}>+</button>
                     </div>
                   </div>
                 )}
@@ -3829,7 +3829,7 @@ function RaceStackWidget({ race }: { race: Race | null }) {
               </div>
             )
           })}
-          <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>
             Tailored for {distBadge(nextRace?.distance) || nextRace?.distance || 'your race'} · {(nextRace?.surface ?? 'road')}
           </div>
         </div>
@@ -3866,7 +3866,7 @@ function AdaptiveGoalsWidget() {
       <WidgetCard id="adaptive-goals" style={st.glowCard}>
         <div style={st.widgetLabel}>ADAPTIVE GOALS</div>
         <div style={st.widgetTitle}>NO GOALS SET</div>
-        <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>
+        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>
           Set goal times on upcoming races to track your gap.
         </div>
       </WidgetCard>
@@ -3885,7 +3885,7 @@ function AdaptiveGoalsWidget() {
           const color = gap == null ? 'var(--muted)' : gap <= 0 ? 'var(--green)' : 'var(--orange)'
           return (
             <div key={r.id} style={{ padding: '8px', background: 'var(--surface3)', borderRadius: '8px' }}>
-              <div style={{ fontSize: '11px', color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: '4px' }}>{r.name ?? distBadge(r.distance, r.sport)}</div>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: '4px' }}>{r.name ?? distBadge(r.distance, r.sport)}</div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '15px', color: 'var(--white)' }}>{r.goalTime}</span>
@@ -3958,7 +3958,7 @@ function BreakTapeWidget() {
       <WidgetCard id="break-tape" style={st.glowCard}>
         <div style={st.widgetLabel}>BREAK TAPE MOMENTS</div>
         <div style={st.widgetTitle}>LOG YOUR FIRST RACE</div>
-        <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>
+        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>
           Your iconic milestones will appear here as you race.
         </div>
       </WidgetCard>
@@ -3972,12 +3972,12 @@ function BreakTapeWidget() {
           <div style={st.widgetLabel}>BREAK TAPE MOMENTS</div>
           <div style={st.widgetTitle}>{milestones.length} MILESTONE{milestones.length !== 1 ? 'S' : ''}</div>
         </div>
-        <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', color: 'var(--orange)', flexShrink: 0, letterSpacing: '0.04em' }}>★</span>
+        <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', color: 'var(--orange)', flexShrink: 0, letterSpacing: '0.04em' }}>★</span>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', marginTop: '8px' }}>
         {milestones.map((m, i) => (
           <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', padding: '7px 0', borderBottom: '1px solid var(--border)' }}>
-            <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', color: 'var(--orange)', flexShrink: 0, width: '16px', textAlign: 'center' }}>{m.icon}</span>
+            <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', color: 'var(--orange)', flexShrink: 0, width: '16px', textAlign: 'center' }}>{m.icon}</span>
             <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--orange)', textTransform: 'uppercase' }}>{m.label}</div>
               <div style={{ fontSize: '12px', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: '1px' }}>{m.detail}</div>
@@ -4010,7 +4010,7 @@ function WhatToRaceNextWidget() {
       <WidgetCard id="what-to-race-next" style={st.glowCard}>
         <div style={st.widgetLabel}>WHAT TO RACE NEXT</div>
         <div style={st.widgetTitle}>NO UPCOMING RACES</div>
-        <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>
+        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>
           Add upcoming races to get recommendations based on your performance trends.
         </div>
       </WidgetCard>
@@ -4078,7 +4078,7 @@ function StoryModeWidget() {
       <WidgetCard id="story-mode">
         <div style={st.widgetLabel}>STORY MODE</div>
         <div style={st.widgetTitle}>{year} RECAP</div>
-        <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5, marginTop: 4 }}>
+        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: 4 }}>
           Log races through the year to build annual recaps and season highlights.
         </div>
       </WidgetCard>
@@ -4094,7 +4094,7 @@ function StoryModeWidget() {
         </div>
         <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--muted)', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px', padding: '3px 6px', flexShrink: 0 }}>STY</span>
       </div>
-      <div style={{ fontSize: '13px', color: 'var(--white)', lineHeight: 1.5, marginTop: 6 }}>{story.headline}</div>
+      <div style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', lineHeight: 1.5, marginTop: 6 }}>{story.headline}</div>
       <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
         {[
           { label: 'RACES', value: story.raceCount },
@@ -4102,19 +4102,19 @@ function StoryModeWidget() {
           { label: 'MEDALS', value: story.medals },
         ].map(({ label, value }) => (
           <div key={label} style={{ flex: 1, background: 'var(--surface3)', borderRadius: 6, padding: '8px 6px', textAlign: 'center' }}>
-            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 20, color: 'var(--orange)' }}>{value}</div>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-lg)', color: 'var(--orange)' }}>{value}</div>
             <div style={{ fontSize: 9, color: 'var(--muted)', fontFamily: 'var(--headline)', letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 2 }}>{label}</div>
           </div>
         ))}
       </div>
       {story.podium > 0 && (
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: 10, padding: '6px 10px', background: 'rgba(255,215,0,0.08)', border: '1px solid rgba(255,215,0,0.25)', borderRadius: '6px' }}>
-          <span style={{ fontSize: '11px', color: 'var(--gold)', fontFamily: 'var(--headline)', fontWeight: 700 }}>
+          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--gold)', fontFamily: 'var(--headline)', fontWeight: 700 }}>
             ★ {story.podium} PODIUM FINISH{story.podium !== 1 ? 'ES' : ''} THIS YEAR
           </span>
         </div>
       )}
-      <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 8 }}>
+      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 8 }}>
         Annual recap and season cards build on this data.
       </div>
     </WidgetCard>
@@ -4143,7 +4143,7 @@ function CoachActivityWidget() {
         </div>
         <span style={{ fontSize: 22, background: 'rgba(var(--orange-ch),0.1)', borderRadius: 8, padding: '4px 8px' }}>{relCount}</span>
       </div>
-      <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5, marginTop: 6 }}>
+      <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: 6 }}>
         {relCount
           ? `${relCount} coach connection${relCount > 1 ? 's' : ''} active.`
           : 'Coach mode scaffold ready for shared athlete review.'}
@@ -4153,7 +4153,7 @@ function CoachActivityWidget() {
           {comCount} coach comment{comCount > 1 ? 's' : ''} logged.
         </div>
       )}
-      <div style={{ marginTop: 10, fontSize: 11, color: 'var(--muted)', background: 'var(--surface3)', borderRadius: 6, padding: '8px 10px' }}>
+      <div style={{ marginTop: 10, fontSize: 'var(--text-xs)', color: 'var(--muted)', background: 'var(--surface3)', borderRadius: 6, padding: '8px 10px' }}>
         Coach mode coming soon — shared views, annotations, and training comments.
       </div>
     </WidgetCard>
@@ -4296,7 +4296,7 @@ function PersonalBestsWidget() {
     return (
       <WidgetCard id="personal-bests" style={st.glowCard}>
         <div style={st.widgetLabel}>PERSONAL BESTS</div>
-        <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5, marginTop: '8px' }}>
+        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: '8px' }}>
           Log timed races to build your PB board.
         </div>
       </WidgetCard>
@@ -4347,7 +4347,7 @@ function PersonalBestsWidget() {
           {/* Sport header */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingBottom: '12px', borderBottom: '1px solid var(--border)', marginBottom: '14px' }}>
             <span style={{ width: '8px', height: '8px', borderRadius: '50%', flexShrink: 0, background: g.dot, boxShadow: `0 0 8px ${g.dotGlow}`, display: 'inline-block', animation: 'breathe 2s ease-in-out infinite' }} />
-            <span style={{ fontFamily: 'var(--headline)', fontSize: '11px', fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--muted)' }}>{g.sport}</span>
+            <span style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-xs)', fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'var(--muted)' }}>{g.sport}</span>
           </div>
 
           {/* Horizontal scrolling PB cards */}
@@ -4386,7 +4386,7 @@ function PersonalBestsWidget() {
                     {r.time}
                   </div>
                   {/* Race name */}
-                  <div style={{ fontSize: '11px', color: 'var(--muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {r.name ?? r.date}
                   </div>
                   {/* Date */}
@@ -4498,19 +4498,19 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
 
           {/* Header */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexShrink: 0 }}>
-            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '20px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-lg)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>
               UPCOMING RACES
-              <span style={{ marginLeft: '8px', fontFamily: 'var(--body)', fontWeight: 600, fontSize: '13px', color: 'var(--muted)', letterSpacing: 0, textTransform: 'none' }}>
+              <span style={{ marginLeft: '8px', fontFamily: 'var(--body)', fontWeight: 600, fontSize: 'var(--text-sm)', color: 'var(--muted)', letterSpacing: 0, textTransform: 'none' }}>
                 {sorted.length > 0 ? `${sorted.length} race${sorted.length !== 1 ? 's' : ''}` : ''}
               </span>
             </div>
-            <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '20px', cursor: 'pointer', padding: '4px', lineHeight: 1 }} aria-label="Close">✕</button>
+            <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 'var(--text-lg)', cursor: 'pointer', padding: '4px', lineHeight: 1 }} aria-label="Close">✕</button>
           </div>
 
           {/* Race list — scrollable */}
           <div style={{ overflowY: 'auto', WebkitOverflowScrolling: 'touch' as any, overscrollBehavior: 'contain', flex: 1, display: 'flex', flexDirection: 'column', gap: '0', paddingBottom: '12px' }}>
             {sorted.length === 0 ? (
-              <div style={{ textAlign: 'center', color: 'var(--muted)', padding: '32px 0', fontSize: '14px' }}>
+              <div style={{ textAlign: 'center', color: 'var(--muted)', padding: '32px 0', fontSize: 'var(--text-compact)' }}>
                 No upcoming races yet.
               </div>
             ) : sorted.map((r, idx) => {
@@ -4527,7 +4527,7 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                   {gapDays !== null && (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '6px 0' }}>
                       <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
-                      <span style={{ fontFamily: 'var(--body)', fontSize: '11px', fontWeight: 600, color: gapDays < 21 ? '#ff9966' : 'var(--muted)', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>
+                      <span style={{ fontFamily: 'var(--body)', fontSize: 'var(--text-xs)', fontWeight: 600, color: gapDays < 21 ? '#ff9966' : 'var(--muted)', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>
                         {gapDays < 21 ? '⚠ ' : ''}{gapDays}d gap
                       </span>
                       <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
@@ -4545,10 +4545,10 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '6px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, minWidth: 0 }}>
                             <span style={{ background: 'var(--orange)', color: '#000', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '10px', letterSpacing: '0.08em', padding: '2px 7px', borderRadius: '4px', flexShrink: 0 }}>{racePriorityLabel(r.priority)}</span>
-                            <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>{r.name ?? 'Unnamed race'}</span>
+                            <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>{r.name ?? 'Unnamed race'}</span>
                           </div>
                           <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-                            <button onClick={e => { e.stopPropagation(); setEditingId(r.id) }} style={{ background: 'rgba(var(--orange-ch),0.15)', border: '1px solid rgba(var(--orange-ch),0.4)', borderRadius: '6px', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px', letterSpacing: '0.06em', padding: '5px 10px', cursor: 'pointer', flexShrink: 0 }}>EDIT</button>
+                            <button onClick={e => { e.stopPropagation(); setEditingId(r.id) }} style={{ background: 'rgba(var(--orange-ch),0.15)', border: '1px solid rgba(var(--orange-ch),0.4)', borderRadius: '6px', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.06em', padding: '5px 10px', cursor: 'pointer', flexShrink: 0 }}>EDIT</button>
                           </div>
                         </div>
                         <div style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: 1.5 }}>
@@ -4558,7 +4558,7 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                           {r.goalTime ? <span style={{ color: 'var(--orange)', marginLeft: '6px' }}>Goal {r.goalTime}</span> : ''}
                         </div>
                         <div style={{ marginTop: '10px' }}>
-                          <span style={{ display: 'inline-block', background: d === 0 ? 'var(--orange)' : 'rgba(var(--orange-ch),0.2)', color: d === 0 ? '#000' : 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', letterSpacing: '0.06em', padding: '4px 12px', borderRadius: '6px' }}>
+                          <span style={{ display: 'inline-block', background: d === 0 ? 'var(--orange)' : 'rgba(var(--orange-ch),0.2)', color: d === 0 ? '#000' : 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', letterSpacing: '0.06em', padding: '4px 12px', borderRadius: '6px' }}>
                             {d === 0 ? 'TODAY' : `${d} DAYS`}
                           </span>
                         </div>
@@ -4568,8 +4568,8 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                     /* Standard B/C card */
                     <div onClick={() => selectFocus(r.id)} style={{ background: focusRaceId === r.id ? 'rgba(var(--orange-ch),0.08)' : 'var(--surface3)', border: focusRaceId === r.id ? '1px solid rgba(var(--orange-ch),0.5)' : '1px solid var(--border)', borderRadius: '10px', padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', cursor: 'pointer' }}>
                       <div style={{ minWidth: 0, flex: 1 }}>
-                        <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '14px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {r.priority && r.priority !== 'A' && <span style={{ color: 'var(--muted)', marginRight: '6px', fontSize: '11px' }}>{r.priority}</span>}
+                        <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-compact)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {r.priority && r.priority !== 'A' && <span style={{ color: 'var(--muted)', marginRight: '6px', fontSize: 'var(--text-xs)' }}>{r.priority}</span>}
                           {r.name ?? 'Unnamed race'}
                         </div>
                         <div style={{ fontSize: '12px', color: 'var(--muted)', marginTop: '3px' }}>
@@ -4580,7 +4580,7 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                         </div>
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px', flexShrink: 0 }}>
-                        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', color: d === 0 ? 'var(--orange)' : 'var(--muted)', letterSpacing: '0.04em' }}>
+                        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color: d === 0 ? 'var(--orange)' : 'var(--muted)', letterSpacing: '0.04em' }}>
                           {d === 0 ? 'TODAY' : `${d}D`}
                         </div>
                         <div style={{ display: 'flex', gap: '4px' }}>
@@ -4598,7 +4598,7 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                       <div style={{ marginTop: '6px' }}>
                         <button
                           onClick={e => { e.stopPropagation(); setAltsOpenId(isOpen ? null : r.id) }}
-                          style={{ background: 'none', border: 'none', padding: '4px 0', cursor: 'pointer', fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '4px' }}
+                          style={{ background: 'none', border: 'none', padding: '4px 0', cursor: 'pointer', fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '4px' }}
                         >
                           <span style={{ fontSize: '9px' }}>{isOpen ? '▲' : '▼'}</span>
                           {isOpen ? 'HIDE ALTERNATIVES' : 'FIND ALTERNATIVES'}
@@ -4641,8 +4641,8 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                                   <div key={alt.id} style={{ background: 'var(--surface2)', borderRadius: '8px', border: isConfirming ? '1px solid rgba(var(--orange-ch),0.4)' : '1px solid var(--border)', overflow: 'hidden' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', padding: '10px 12px' }}>
                                       <div style={{ minWidth: 0, flex: 1 }}>
-                                        <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '13px', color: 'var(--white)', letterSpacing: '0.03em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{alt.name}</div>
-                                        <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>
+                                        <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-sm)', color: 'var(--white)', letterSpacing: '0.03em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{alt.name}</div>
+                                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>
                                           {[alt.city, alt.country].filter(Boolean).join(', ')}
                                           {alt.dist_km != null ? ` · ${distLabelUtil(alt.dist ?? String(alt.dist_km), alt.type ?? '')}` : ''}
                                           {' · '}{altDate}
@@ -4651,7 +4651,7 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                                       {!isConfirming && (
                                         <button
                                           onClick={e => { e.stopPropagation(); setConfirmAlt({ altKey, prefill: altPrefill, sourceId: r.id }) }}
-                                          style={{ background: 'rgba(var(--orange-ch),0.15)', border: '1px solid rgba(var(--orange-ch),0.4)', borderRadius: '6px', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px', letterSpacing: '0.06em', padding: '6px 10px', cursor: 'pointer', flexShrink: 0 }}
+                                          style={{ background: 'rgba(var(--orange-ch),0.15)', border: '1px solid rgba(var(--orange-ch),0.4)', borderRadius: '6px', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.06em', padding: '6px 10px', cursor: 'pointer', flexShrink: 0 }}
                                         >
                                           + PLAN
                                         </button>
@@ -4659,25 +4659,25 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                                     </div>
                                     {isConfirming && (
                                       <div style={{ padding: '10px 12px', borderTop: '1px solid var(--border)', background: 'rgba(var(--orange-ch),0.04)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        <div style={{ fontSize: '11px', color: 'var(--muted)', fontFamily: 'var(--body)', letterSpacing: '0.02em' }}>
+                                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--body)', letterSpacing: '0.02em' }}>
                                           What do you want to do with <span style={{ color: 'var(--white)', fontWeight: 600 }}>{r.name ?? 'this race'}</span>?
                                         </div>
                                         <div style={{ display: 'flex', gap: '6px' }}>
                                           <button
                                             onClick={e => { e.stopPropagation(); doReplace() }}
-                                            style={{ flex: 1, background: 'var(--orange)', border: 'none', borderRadius: '6px', color: '#000', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '11px', letterSpacing: '0.06em', padding: '7px 8px', cursor: 'pointer', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                                            style={{ flex: 1, background: 'var(--orange)', border: 'none', borderRadius: '6px', color: '#000', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xs)', letterSpacing: '0.06em', padding: '7px 8px', cursor: 'pointer', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
                                           >
                                             REPLACE {r.name ? r.name.toUpperCase().slice(0, 20) : 'THIS RACE'}
                                           </button>
                                           <button
                                             onClick={e => { e.stopPropagation(); doAddAlongside() }}
-                                            style={{ flex: 1, background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px', color: 'var(--white)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px', letterSpacing: '0.06em', padding: '7px 8px', cursor: 'pointer', textTransform: 'uppercase' }}
+                                            style={{ flex: 1, background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px', color: 'var(--white)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.06em', padding: '7px 8px', cursor: 'pointer', textTransform: 'uppercase' }}
                                           >
                                             ADD ALONGSIDE
                                           </button>
                                           <button
                                             onClick={e => { e.stopPropagation(); setConfirmAlt(null) }}
-                                            style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: '16px', padding: '0 4px', cursor: 'pointer', lineHeight: 1 }}
+                                            style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 'var(--text-base)', padding: '0 4px', cursor: 'pointer', lineHeight: 1 }}
                                           >✕</button>
                                         </div>
                                       </div>
@@ -4698,7 +4698,7 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
 
           {/* Add race — sticky footer */}
           <div style={{ flexShrink: 0, borderTop: '1px solid var(--border)', padding: '16px', background: 'var(--surface2)' }}>
-            <button onClick={() => { onClose(); onAddRace() }} style={{ width: '100%', background: 'var(--orange)', color: '#000', border: 'none', borderRadius: '10px', padding: '14px', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer' }}>
+            <button onClick={() => { onClose(); onAddRace() }} style={{ width: '100%', background: 'var(--orange)', color: '#000', border: 'none', borderRadius: '10px', padding: '14px', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer' }}>
               + ADD UPCOMING RACE
             </button>
           </div>
@@ -4732,10 +4732,10 @@ function ExpiredRacePrompts({ onLogResult }: { onLogResult: () => void }) {
           gap: '12px',
         }}>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '13px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--orange)', marginBottom: '2px' }}>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-sm)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--orange)', marginBottom: '2px' }}>
               Race passed — log your result?
             </div>
-            <div style={{ fontSize: '13px', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {race.name ?? 'Unnamed Race'} · {fmtDateIntl(race.date)}
             </div>
           </div>
@@ -4779,13 +4779,13 @@ function NoUpcomingRaceCTA({ onAddRace }: { onAddRace: () => void }) {
         <div style={{
           fontFamily: 'var(--headline)',
           fontWeight: 900,
-          fontSize: '16px',
+          fontSize: 'var(--text-base)',
           letterSpacing: '0.06em',
           textTransform: 'uppercase',
           color: 'var(--white)',
           marginBottom: '4px',
         }}>No upcoming race</div>
-        <div style={{ fontSize: '13px', color: 'var(--muted)', lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5 }}>
           Add an upcoming race to start the countdown and see race-day forecasts.
         </div>
       </div>
@@ -4799,7 +4799,7 @@ function NoUpcomingRaceCTA({ onAddRace }: { onAddRace: () => void }) {
           padding: '10px 22px',
           fontFamily: 'var(--headline)',
           fontWeight: 800,
-          fontSize: '13px',
+          fontSize: 'var(--text-sm)',
           letterSpacing: '0.08em',
           textTransform: 'uppercase',
           cursor: 'pointer',
@@ -4826,7 +4826,7 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
     <WidgetCard id="riegel-predictor" style={st.glowCard}>
       <div style={st.widgetLabel}>RACE PREDICTOR</div>
       <div style={st.widgetTitle}>RIEGEL PREDICTOR</div>
-      <p style={{ fontSize: '13px', color: 'var(--muted)', margin: 0 }}>Log a race with a finish time to see predictions.</p>
+      <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: 0 }}>Log a race with a finish time to see predictions.</p>
     </WidgetCard>
   )
   const { race, table } = result
@@ -4863,7 +4863,7 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
         <div data-no-widget-detail style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <div style={st.widgetLabel}>RACE PREDICTOR</div>
         <div style={st.widgetTitle}>RIEGEL PREDICTOR</div>
-        <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '-4px' }}>
+        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '-4px' }}>
           Based on {race.name} · {fmtDateDDMM(race.date)}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -4885,12 +4885,12 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '13px', color: row.isSameAsInput ? 'var(--orange)' : 'var(--white)', fontWeight: row.isSameAsInput ? 700 : 400 }}>
+                  <span style={{ fontSize: 'var(--text-sm)', color: row.isSameAsInput ? 'var(--orange)' : 'var(--white)', fontWeight: row.isSameAsInput ? 700 : 400 }}>
                     {row.distance}
                     {row.isSameAsInput && <span style={{ fontSize: '10px', marginLeft: '6px', color: 'var(--muted)', textTransform: 'uppercase', fontFamily: 'var(--headline)' }}>actual</span>}
                   </span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', color: row.isSameAsInput ? 'var(--orange)' : 'var(--white)' }}>
+                    <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', color: row.isSameAsInput ? 'var(--orange)' : 'var(--white)' }}>
                       {row.predictedTime}
                     </span>
                     {hasGoal && (
@@ -4907,7 +4907,7 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
             )
           })}
         </div>
-        <div style={{ fontSize: '11px', color: 'var(--muted2)', lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', lineHeight: 1.5 }}>
           T₂ = T₁ × (D₂/D₁)^1.06
         </div>
         </div>{/* end data-no-widget-detail wrapper */}
@@ -4927,8 +4927,8 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto' }}>
               {upcomingRaces.map(r => (
                 <button key={r.id} onClick={() => linkGoalPace(r.id)} style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '12px', textAlign: 'left', cursor: 'pointer', color: 'var(--white)' }}>
-                  <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '13px' }}>{r.name ?? 'Unnamed Race'}</div>
-                  <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>{fmtDateDDMM(r.date)} · {r.distance}</div>
+                  <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-sm)' }}>{r.name ?? 'Unnamed Race'}</div>
+                  <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>{fmtDateDDMM(r.date)} · {r.distance}</div>
                 </button>
               ))}
             </div>
@@ -4977,7 +4977,7 @@ function VDOTScoreWidget() {
     <WidgetCard id="vdot-score" style={st.glowCard}>
       <div style={st.widgetLabel}>VDOT SCORE</div>
       <div style={st.widgetTitle}>VDOT FITNESS</div>
-      <p style={{ fontSize: '13px', color: 'var(--muted)', margin: 0 }}>Log a running race with a finish time to compute your VDOT.</p>
+      <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: 0 }}>Log a running race with a finish time to compute your VDOT.</p>
     </WidgetCard>
   )
 
@@ -4994,15 +4994,15 @@ function VDOTScoreWidget() {
             {displayPt.vdot}
           </span>
           <div style={{ paddingBottom: '6px' }}>
-            <div style={{ fontSize: '11px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em' }}>CURRENT</div>
-            <div style={{ fontSize: '11px', color: 'var(--muted)' }}>{displayPt.raceName}</div>
+            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em' }}>CURRENT</div>
+            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{displayPt.raceName}</div>
           </div>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
           {showPeak && (
             <div style={{ background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: '6px', padding: '4px 8px', textAlign: 'right' }}>
               <div style={{ fontSize: '9px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em' }}>PEAK</div>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '18px', color: 'var(--muted)', lineHeight: 1 }}>{peakVDOT!.vdot}</div>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-md)', color: 'var(--muted)', lineHeight: 1 }}>{peakVDOT!.vdot}</div>
             </div>
           )}
           {history.length >= 2 && (
@@ -5027,7 +5027,7 @@ function VDOTScoreWidget() {
               <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '2px' }}>
                 {e.distance.replace(' Marathon', 'M').replace('Marathon', 'MAR').replace(' Mile', 'mi')}
               </div>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', color: 'var(--white)' }}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color: 'var(--white)' }}>
                 {e.timeStr}
               </div>
             </div>
@@ -5043,8 +5043,8 @@ function VDOTScoreWidget() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           {zones.map(z => (
             <div key={z.zone} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', background: 'var(--surface3)', borderRadius: '5px', border: '1px solid var(--border)' }}>
-              <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', width: '18px', color: 'var(--orange)' }}>{z.abbr}</span>
-              <span style={{ flex: 1, fontSize: '11px', color: 'var(--muted)' }}>{z.description}</span>
+              <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', width: '18px', color: 'var(--orange)' }}>{z.abbr}</span>
+              <span style={{ flex: 1, fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{z.description}</span>
               <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '12px', color: 'var(--white)', flexShrink: 0 }}>
                 {z.minPaceStr} – {z.maxPaceStr}
               </span>
@@ -5080,7 +5080,7 @@ function GoalPaceWidget({ race }: { race: Race | null }) {
     <WidgetCard id="goal-pace" style={st.glowCard}>
       <div style={st.widgetLabel}>GOAL PACE</div>
       <div style={st.widgetTitle}>GOAL PACE</div>
-      <p style={{ fontSize: '13px', color: 'var(--muted)', margin: 0 }}>
+      <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: 0 }}>
         Set a goal time on {focusRace.name} to see your pace breakdown.
       </p>
     </WidgetCard>
@@ -5098,7 +5098,7 @@ function GoalPaceWidget({ race }: { race: Race | null }) {
     <WidgetCard id="goal-pace" style={st.glowCard}>
       <div style={st.widgetLabel}>GOAL PACE</div>
       <div style={st.widgetTitle}>GOAL PACE</div>
-      <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '-4px' }}>{focusRace.name}</div>
+      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '-4px' }}>{focusRace.name}</div>
 
       {/* Main pace display */}
       <div style={{ display: 'flex', gap: '12px' }}>
@@ -5127,7 +5127,7 @@ function GoalPaceWidget({ race }: { race: Race | null }) {
           {result.splitTargets.map(s => (
             <div key={s.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 8px', background: 'var(--surface3)', borderRadius: '4px' }}>
               <span style={{ fontSize: '12px', color: 'var(--muted)' }}>{s.label}</span>
-              <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '13px', color: 'var(--white)' }}>{s.cumStr}</span>
+              <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--white)' }}>{s.cumStr}</span>
             </div>
           ))}
         </div>
@@ -5218,7 +5218,7 @@ function WeatherImpactWidget() {
     <WidgetCard id="weather-impact" style={st.glowCard}>
       <div style={st.widgetLabel}>WEATHER IMPACT</div>
       <div style={st.widgetTitle}>WEATHER IMPACT</div>
-      <p style={{ fontSize: '13px', color: 'var(--muted)', margin: 0 }}>Races with weather data will show adjusted performance.</p>
+      <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: 0 }}>Races with weather data will show adjusted performance.</p>
     </WidgetCard>
   )
 
@@ -5231,29 +5231,29 @@ function WeatherImpactWidget() {
     <WidgetCard id="weather-impact" style={st.glowCard}>
       <div style={st.widgetLabel}>WEATHER IMPACT</div>
       <div style={st.widgetTitle}>WEATHER IMPACT</div>
-      <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '-4px' }}>{race.name} · {fmtDateDDMM(race.date)}</div>
+      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '-4px' }}>{race.name} · {fmtDateDDMM(race.date)}</div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
         <div style={{ background: 'var(--surface3)', borderRadius: '8px', padding: '12px', border: '1px solid var(--border2)' }}>
           <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, color: 'var(--muted)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '4px' }}>ACTUAL</div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '20px', color: 'var(--white)' }}>{fSecsToHMS(impact.actualSecs)}</div>
-          <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>{impact.tempC}°C · {impact.humidityPct}% humidity</div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-lg)', color: 'var(--white)' }}>{fSecsToHMS(impact.actualSecs)}</div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>{impact.tempC}°C · {impact.humidityPct}% humidity</div>
         </div>
         <div style={{ background: 'var(--surface3)', borderRadius: '8px', padding: '12px', border: `1px solid ${impactColor}44` }}>
           <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, color: impactColor, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '4px' }}>IDEAL CONDITIONS</div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '20px', color: impactColor }}>{fSecsToHMS(impact.adjustedSecs)}</div>
-          <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>10°C · 50% humidity</div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-lg)', color: impactColor }}>{fSecsToHMS(impact.adjustedSecs)}</div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>10°C · 50% humidity</div>
         </div>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px', background: 'var(--surface3)', borderRadius: '6px', border: `1px solid ${impactColor}33` }}>
-        <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '11px', color: impactColor }}>
+        <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xs)', color: impactColor }}>
           {impact.improvementSecs > 300 ? 'HOT' : impact.improvementSecs > 120 ? 'WARM' : 'OK'}
         </span>
         <div>
           <div style={{ fontSize: '12px', color: 'var(--white)', fontWeight: 500 }}>{impact.label}</div>
           {impact.improvementSecs > 10 && (
-            <div style={{ fontSize: '11px', color: impactColor }}>
+            <div style={{ fontSize: 'var(--text-xs)', color: impactColor }}>
               +{fSecsToHMS(impact.improvementSecs)} due to heat/humidity ({impact.impactPct}%)
             </div>
           )}
@@ -5274,27 +5274,27 @@ function DistanceMilestonesWidget() {
 
       {/* Hero number */}
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px' }}>
-        <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '48px', lineHeight: 1, color: 'var(--orange)' }}>
+        <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-3xl)', lineHeight: 1, color: 'var(--orange)' }}>
           {result.totalKm.toLocaleString()}
         </span>
-        <span style={{ fontSize: '14px', color: 'var(--muted)', paddingBottom: '6px', fontFamily: 'var(--headline)', fontWeight: 700 }}>KM TOTAL</span>
+        <span style={{ fontSize: 'var(--text-compact)', color: 'var(--muted)', paddingBottom: '6px', fontFamily: 'var(--headline)', fontWeight: 700 }}>KM TOTAL</span>
       </div>
 
       {/* Progress bar to next milestone */}
       {result.nextMilestone && (
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-            <span style={{ fontSize: '11px', color: 'var(--muted)' }}>
+            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
               {result.lastMilestone ? result.lastMilestone.label : '0 KM'}
             </span>
-            <span style={{ fontSize: '11px', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 700 }}>
+            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 700 }}>
               {result.nextMilestone.label}
             </span>
           </div>
           <div style={{ height: '6px', background: 'var(--surface3)', borderRadius: '3px', overflow: 'hidden' }}>
             <div style={{ height: '100%', width: `${result.progressPct}%`, background: 'var(--orange)', borderRadius: '3px', transition: 'width 0.5s ease' }} />
           </div>
-          <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '4px' }}>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '4px' }}>
             {result.kmToNext.toLocaleString()} km to {result.nextMilestone.label}
           </div>
         </div>
@@ -5319,7 +5319,7 @@ function EquivPerfWidget() {
     <WidgetCard id="equiv-perf" style={st.glowCard}>
       <div style={st.widgetLabel}>EQUIVALENTS</div>
       <div style={st.widgetTitle}>EQUIV PERFORMANCES</div>
-      <p style={{ fontSize: '13px', color: 'var(--muted)', margin: 0 }}>Log a race to see equivalent performances across distances.</p>
+      <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: 0 }}>Log a race to see equivalent performances across distances.</p>
     </WidgetCard>
   )
 
@@ -5329,13 +5329,13 @@ function EquivPerfWidget() {
     <WidgetCard id="equiv-perf" style={st.glowCard}>
       <div style={st.widgetLabel}>EQUIVALENTS</div>
       <div style={st.widgetTitle}>EQUIV PERFORMANCES</div>
-      <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '-4px' }}>VDOT {vdotPt.vdot} · {vdotPt.raceName}</div>
+      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '-4px' }}>VDOT {vdotPt.vdot} · {vdotPt.raceName}</div>
 
       {/* Main 4-distance row — equal-width cards edge to edge */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr auto 1fr auto 1fr', gap: '0 4px', alignItems: 'center' }}>
         {mainDistances.map((e, i) => (
           <React.Fragment key={e.distance}>
-            {i > 0 && <span style={{ color: 'var(--muted2)', fontSize: '11px', textAlign: 'center' }}>≈</span>}
+            {i > 0 && <span style={{ color: 'var(--muted2)', fontSize: 'var(--text-xs)', textAlign: 'center' }}>≈</span>}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: '8px', padding: '8px 6px' }}>
               <span style={{ fontSize: '9px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
                 {e.distance.replace('Half Marathon','HM').replace('Marathon','MAR')}
@@ -5352,7 +5352,7 @@ function EquivPerfWidget() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px' }}>
         {equivs.filter(e => !['5K','10K','Half Marathon','Marathon'].includes(e.distance)).map(e => (
           <div key={e.distance} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 8px', background: 'var(--surface3)', borderRadius: '5px', border: '1px solid var(--border)' }}>
-            <span style={{ fontSize: '11px', color: 'var(--muted)' }}>{e.distance}</span>
+            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{e.distance}</span>
             <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '12px', color: 'var(--white)' }}>{e.timeStr}</span>
           </div>
         ))}
@@ -5373,13 +5373,13 @@ function UpcomingDensityWidget() {
       <div style={st.widgetTitle}>RACE CONFLICTS</div>
 
       {upcoming.length < 2 ? (
-        <p style={{ fontSize: '13px', color: 'var(--muted)', margin: 0 }}>Add 2+ upcoming races to check for scheduling conflicts.</p>
+        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: 0 }}>Add 2+ upcoming races to check for scheduling conflicts.</p>
       ) : warnings.length === 0 ? (
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 12px', background: 'rgba(var(--green-ch),0.06)', borderRadius: '8px', border: '1px solid rgba(var(--green-ch),0.2)' }}>
-          <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', color: 'var(--green)' }}>✓</span>
+          <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', color: 'var(--green)' }}>✓</span>
           <div>
-            <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '13px', color: 'var(--green)' }}>ALL CLEAR</div>
-            <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>No scheduling conflicts in {upcoming.length} upcoming races.</div>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--green)' }}>ALL CLEAR</div>
+            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>No scheduling conflicts in {upcoming.length} upcoming races.</div>
           </div>
         </div>
       ) : (
@@ -5390,7 +5390,7 @@ function UpcomingDensityWidget() {
               background: w.severity === 'danger' ? 'rgba(255,60,60,0.08)' : 'rgba(var(--orange-ch),0.08)',
               border: `1px solid ${w.severity === 'danger' ? 'rgba(255,60,60,0.3)' : 'rgba(var(--orange-ch),0.3)'}`,
             }}>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px', color: w.severity === 'danger' ? 'var(--error)' : 'var(--orange)', letterSpacing: '0.08em', marginBottom: '4px' }}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', color: w.severity === 'danger' ? 'var(--error)' : 'var(--orange)', letterSpacing: '0.08em', marginBottom: '4px' }}>
                 {w.severity === 'danger' ? '🚨 DANGER' : '⚠ WARNING'} · {w.windowDays}d gap
               </div>
               <div style={{ fontSize: '12px', color: 'var(--white)', lineHeight: 1.4 }}>{w.message}</div>
@@ -5443,7 +5443,7 @@ function CourseRepeatsWidget() {
     <WidgetCard id="course-repeats" style={st.glowCard}>
       <div style={st.widgetLabel}>REPEATS</div>
       <div style={st.widgetTitle}>COURSE REPEATS</div>
-      <p style={{ fontSize: '13px', color: 'var(--muted)', margin: 0 }}>Run the same race 3+ times to see your course repeat history.</p>
+      <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: 0 }}>Run the same race 3+ times to see your course repeat history.</p>
     </WidgetCard>
   )
 
@@ -5460,12 +5460,12 @@ function CourseRepeatsWidget() {
               style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: 'var(--surface3)', borderRadius: expanded === c.key ? '8px 8px 0 0' : '8px', border: '1px solid var(--border)', cursor: 'pointer' }}
             >
               <div>
-                <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '13px', color: 'var(--white)' }}>{c.displayName}</div>
+                <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--white)' }}>{c.displayName}</div>
                 <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '2px' }}>{c.count}× · since {fmtDateDDMM(c.first)}</div>
               </div>
               <div style={{ textAlign: 'right', flexShrink: 0 }}>
                 {c.pb?.time && (
-                  <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', color: 'var(--orange)' }}>{c.pb.time}</div>
+                  <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', color: 'var(--orange)' }}>{c.pb.time}</div>
                 )}
                 <div style={{ fontSize: '12px', marginTop: '2px' }}>
                   {c.trend === 'improving' && <span style={{ color: 'var(--green)' }}>▲ FASTER</span>}
@@ -5482,14 +5482,14 @@ function CourseRepeatsWidget() {
                   return (
                     <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 0', borderBottom: '1px solid var(--border)' }}>
                       <div>
-                        <div style={{ fontSize: '11px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700 }}>
+                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700 }}>
                           {r.date.slice(0, 4)}
                         </div>
                         <div style={{ fontSize: '10px', color: 'var(--muted2)' }}>{fmtDateDDMM(r.date)}</div>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         {isPB && <span style={{ fontSize: '9px', color: 'var(--gold-a)', fontFamily: 'var(--headline)', fontWeight: 700 }}>PB</span>}
-                        <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', color: isPB ? 'var(--orange)' : 'var(--white)' }}>{r.time}</span>
+                        <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', color: isPB ? 'var(--orange)' : 'var(--white)' }}>{r.time}</span>
                       </div>
                     </div>
                   )
@@ -5541,11 +5541,11 @@ function DashCustomizeModal({ onClose }: { onClose: () => void }) {
             <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)', lineHeight: 1.1 }}>
               CUSTOMIZE DASHBOARD
             </div>
-            <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '6px', lineHeight: 1.5 }}>
+            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginTop: '6px', lineHeight: 1.5 }}>
               Turn widgets on or off, reorder them within a section.
             </div>
           </div>
-          <button onClick={onClose} aria-label="Close" style={{ background: 'transparent', border: 'none', color: 'var(--muted)', fontSize: '20px', cursor: 'pointer', padding: '4px 8px', lineHeight: 1, flexShrink: 0 }}>✕</button>
+          <button onClick={onClose} aria-label="Close" style={{ background: 'transparent', border: 'none', color: 'var(--muted)', fontSize: 'var(--text-lg)', cursor: 'pointer', padding: '4px 8px', lineHeight: 1, flexShrink: 0 }}>✕</button>
         </div>
 
         <div style={{ fontSize: '12px', color: 'var(--muted2)', lineHeight: 1.5, padding: '10px 12px', background: 'var(--surface3)', borderRadius: '8px', marginBottom: '4px' }}>
@@ -5634,13 +5634,13 @@ function NewUserOnboarding({ onLogRace, onAddUpcoming, onDiscover }: { onLogRace
       gap: '16px',
     }}>
       <div>
-        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '11px', letterSpacing: '0.14em', color: 'var(--orange)', textTransform: 'uppercase', marginBottom: '6px' }}>
+        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', color: 'var(--orange)', textTransform: 'uppercase', marginBottom: '6px' }}>
           GET STARTED
         </div>
-        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '20px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', lineHeight: 1.1 }}>
+        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-lg)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', lineHeight: 1.1 }}>
           Your race history<br />starts here
         </div>
-        <div style={{ fontSize: '13px', color: 'var(--muted)', marginTop: '8px', lineHeight: 1.5 }}>
+        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginTop: '8px', lineHeight: 1.5 }}>
           Log a past race to see your PRs, medal wall, and training insights — or plan an upcoming race to get a race-day countdown and forecast.
         </div>
       </div>
@@ -5648,7 +5648,7 @@ function NewUserOnboarding({ onLogRace, onAddUpcoming, onDiscover }: { onLogRace
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <button
           onClick={onLogRace}
-          style={{ width: '100%', background: 'var(--orange)', color: '#000', border: 'none', borderRadius: '10px', padding: '14px', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer' }}
+          style={{ width: '100%', background: 'var(--orange)', color: '#000', border: 'none', borderRadius: '10px', padding: '14px', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer' }}
         >
           Log a Past Race
         </button>
@@ -5928,7 +5928,7 @@ const st = {
 
   briefingTag: {
     fontFamily: 'var(--headline)',
-    fontSize: '11px',
+    fontSize: 'var(--text-xs)',
     fontWeight: 700,
     letterSpacing: '0.14em',
     color: 'var(--orange)',
@@ -5994,7 +5994,7 @@ const st = {
   countdownDash: {
     color: 'var(--muted)',
     fontWeight: 700,
-    fontSize: '14px',
+    fontSize: 'var(--text-compact)',
   } as React.CSSProperties,
 
   aBadge: {
@@ -6004,7 +6004,7 @@ const st = {
     padding: '2px 8px',
     fontFamily: 'var(--headline)',
     fontWeight: 900,
-    fontSize: '13px',
+    fontSize: 'var(--text-sm)',
     letterSpacing: '0.04em',
     lineHeight: 1.4,
   } as React.CSSProperties,
@@ -6028,7 +6028,7 @@ const st = {
     color: 'var(--muted)',
     fontFamily: 'var(--headline)',
     fontWeight: 700,
-    fontSize: '11px',
+    fontSize: 'var(--text-xs)',
     letterSpacing: '0.1em',
     textTransform: 'uppercase' as const,
     padding: '5px 10px',
@@ -6111,7 +6111,7 @@ const st = {
     color: 'var(--muted)',
     fontFamily: 'var(--headline)',
     fontWeight: 700,
-    fontSize: '11px',
+    fontSize: 'var(--text-xs)',
     letterSpacing: '0.1em',
     textTransform: 'uppercase' as const,
     cursor: 'pointer',
@@ -6139,7 +6139,7 @@ const st = {
     border: '1px solid var(--border2)',
     borderRadius: '100px',
     padding: '4px 12px',
-    fontSize: '11px',
+    fontSize: 'var(--text-xs)',
     fontFamily: 'var(--headline)',
     fontWeight: 700,
     letterSpacing: '0.08em',
@@ -6290,7 +6290,7 @@ const st = {
 
   zoneTag: {
     fontFamily: 'var(--headline)',
-    fontSize: '11px',
+    fontSize: 'var(--text-xs)',
     fontWeight: 700,
     letterSpacing: '0.14em',
     textTransform: 'uppercase' as const,
@@ -6308,7 +6308,7 @@ const st = {
   } as React.CSSProperties,
 
   zoneChevron: {
-    fontSize: '14px',
+    fontSize: 'var(--text-compact)',
     color: 'var(--muted)',
     transition: 'transform 0.2s ease',
     display: 'inline-block',
@@ -6337,7 +6337,7 @@ const st = {
 
   widgetShellLabel: {
     fontFamily: 'var(--headline)',
-    fontSize: '11px',
+    fontSize: 'var(--text-xs)',
     fontWeight: 700,
     letterSpacing: '0.1em',
     textTransform: 'uppercase' as const,
@@ -6365,7 +6365,7 @@ const st = {
   widgetTitle: {
     fontFamily: 'var(--headline)',
     fontWeight: 900,
-    fontSize: '20px',
+    fontSize: 'var(--text-lg)',
     letterSpacing: '0.04em',
     textTransform: 'uppercase' as const,
     color: 'var(--white)',
@@ -6379,7 +6379,7 @@ const st = {
     padding: '4px 12px',
     fontFamily: 'var(--headline)',
     fontWeight: 800,
-    fontSize: '11px',
+    fontSize: 'var(--text-xs)',
     letterSpacing: '0.08em',
     textTransform: 'uppercase' as const,
     whiteSpace: 'nowrap' as const,
@@ -6394,7 +6394,7 @@ const st = {
     background: 'rgba(var(--orange-ch), 0.1)',
     border: '1px solid rgba(var(--orange-ch), 0.2)',
     borderRadius: '10px',
-    fontSize: '20px',
+    fontSize: 'var(--text-lg)',
     flexShrink: 0,
   } as React.CSSProperties,
 
@@ -6410,7 +6410,7 @@ const st = {
 
   lockedTitle: {
     fontFamily: 'var(--headline)',
-    fontSize: '11px',
+    fontSize: 'var(--text-xs)',
     fontWeight: 800,
     letterSpacing: '0.12em',
     textTransform: 'uppercase' as const,
@@ -6418,7 +6418,7 @@ const st = {
   } as React.CSSProperties,
 
   lockedText: {
-    fontSize: '13px',
+    fontSize: 'var(--text-sm)',
     color: 'var(--muted)',
     lineHeight: 1.55,
   } as React.CSSProperties,
@@ -6461,7 +6461,7 @@ const st = {
   // ── Pace calc
   inputLabel: {
     display: 'block',
-    fontSize: '11px',
+    fontSize: 'var(--text-xs)',
     fontFamily: 'var(--headline)',
     fontWeight: 700,
     letterSpacing: '0.08em',
@@ -6515,7 +6515,7 @@ const st = {
     padding: '10px 18px',
     fontFamily: 'var(--headline)',
     fontWeight: 800,
-    fontSize: '13px',
+    fontSize: 'var(--text-sm)',
     letterSpacing: '0.06em',
     textTransform: 'uppercase' as const,
     cursor: 'pointer',
@@ -6531,7 +6531,7 @@ const st = {
     padding: '10px 18px',
     fontFamily: 'var(--headline)',
     fontWeight: 800,
-    fontSize: '13px',
+    fontSize: 'var(--text-sm)',
     letterSpacing: '0.06em',
     textTransform: 'uppercase' as const,
     cursor: 'pointer',

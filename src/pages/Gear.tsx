@@ -252,7 +252,7 @@ const btnMain: React.CSSProperties = {
   letterSpacing: '0.1em',
   textTransform: 'uppercase',
   cursor: 'pointer',
-  fontSize: '13px',
+  fontSize: 'var(--text-sm)',
 }
 
 const btnGhost: React.CSSProperties = {
@@ -266,7 +266,7 @@ const btnGhost: React.CSSProperties = {
   letterSpacing: '0.1em',
   textTransform: 'uppercase',
   cursor: 'pointer',
-  fontSize: '13px',
+  fontSize: 'var(--text-sm)',
 }
 
 const card: React.CSSProperties = {
@@ -338,12 +338,12 @@ function AuthGate() {
       gap: '1rem',
       padding: '4rem 1.5rem',
     }}>
-      <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '11px', letterSpacing: '0.08em', color: 'var(--muted)', opacity: 0.6 }}>GEAR</span>
+      <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xs)', letterSpacing: '0.08em', color: 'var(--muted)', opacity: 0.6 }}>GEAR</span>
       <p style={{
         margin: 0,
         fontFamily: 'var(--headline)',
         fontWeight: 900,
-        fontSize: '18px',
+        fontSize: 'var(--text-md)',
         letterSpacing: '0.08em',
         textTransform: 'uppercase',
         color: 'var(--white)',
@@ -612,7 +612,7 @@ export function Gear() {
                               color: savedIds.includes(item.id) ? 'var(--orange)' : 'var(--muted)',
                               borderRadius: '4px',
                               padding: '3px 8px',
-                              fontSize: '11px',
+                              fontSize: 'var(--text-xs)',
                               cursor: 'pointer',
                               fontFamily: 'var(--headline)',
                               fontWeight: 700,
@@ -647,30 +647,30 @@ export function Gear() {
               {customModal && (
                 <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 900, display: 'flex', alignItems: 'flex-end' }} onClick={() => setCustomModal(null)}>
                   <div style={{ width: '100%', background: 'var(--surface2)', borderRadius: '16px 16px 0 0', padding: '24px', display: 'flex', flexDirection: 'column', gap: '14px' }} onClick={e => e.stopPropagation()}>
-                    <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '18px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)' }}>
+                    <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-md)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)' }}>
                       {customModal.mode === 'edit' ? 'Edit Product' : 'Custom Product'}
                     </div>
                     {(['brand', 'name'] as const).map(field => (
                       <div key={field} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        <label style={{ fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)' }}>{field}</label>
+                        <label style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)' }}>{field}</label>
                         <input
                           type="text"
                           value={customForm[field]}
                           onChange={e => setCustomForm(f => ({ ...f, [field]: e.target.value }))}
                           placeholder={field === 'brand' ? 'Brand name' : 'Product name'}
-                          style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '10px 12px', color: 'var(--white)', fontFamily: 'var(--body)', fontSize: '14px' }}
+                          style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '10px 12px', color: 'var(--white)', fontFamily: 'var(--body)', fontSize: 'var(--text-compact)' }}
                         />
                       </div>
                     ))}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <label style={{ fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)' }}>Category</label>
-                      <select value={customForm.category} onChange={e => setCustomForm(f => ({ ...f, category: e.target.value }))} style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '10px 12px', color: 'var(--white)', fontFamily: 'var(--body)', fontSize: '14px' }}>
+                      <label style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)' }}>Category</label>
+                      <select value={customForm.category} onChange={e => setCustomForm(f => ({ ...f, category: e.target.value }))} style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '10px 12px', color: 'var(--white)', fontFamily: 'var(--body)', fontSize: 'var(--text-compact)' }}>
                         {CATEGORIES.filter(c => c !== 'All').map(c => <option key={c} value={c}>{c}</option>)}
                       </select>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <label style={{ fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)' }}>Notes</label>
-                      <input type="text" value={customForm.notes} onChange={e => setCustomForm(f => ({ ...f, notes: e.target.value }))} placeholder="Optional notes" style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '10px 12px', color: 'var(--white)', fontFamily: 'var(--body)', fontSize: '14px' }} />
+                      <label style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)' }}>Notes</label>
+                      <input type="text" value={customForm.notes} onChange={e => setCustomForm(f => ({ ...f, notes: e.target.value }))} placeholder="Optional notes" style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '10px 12px', color: 'var(--white)', fontFamily: 'var(--body)', fontSize: 'var(--text-compact)' }} />
                     </div>
                     <div style={{ display: 'flex', gap: '10px' }}>
                       <button
@@ -701,14 +701,14 @@ export function Gear() {
                     <div key={item.id} style={{ ...card, display: 'flex', alignItems: 'center', gap: '12px' }}>
                       <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: 'var(--surface3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--muted)', flexShrink: 0 }}>GEAR</div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--orange)' }}>{item.brand}</div>
+                        <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--orange)' }}>{item.brand}</div>
                         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', fontWeight: 600 }}>{item.name}</div>
-                        {item.notes && <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>{item.notes}</div>}
+                        {item.notes && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>{item.notes}</div>}
                         <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--muted2)', marginTop: '2px' }}>Custom · {item.category}</div>
                       </div>
                       <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-                        <button onClick={() => openEditCustom(item)} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: '4px', color: 'var(--muted)', fontSize: '11px', padding: '3px 8px', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700 }}>Edit</button>
-                        <button onClick={() => deleteCustom(item.id)} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: '4px', color: 'var(--muted2)', fontSize: '11px', padding: '3px 8px', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700 }}>✕</button>
+                        <button onClick={() => openEditCustom(item)} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: '4px', color: 'var(--muted)', fontSize: 'var(--text-xs)', padding: '3px 8px', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700 }}>Edit</button>
+                        <button onClick={() => deleteCustom(item.id)} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: '4px', color: 'var(--muted2)', fontSize: 'var(--text-xs)', padding: '3px 8px', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700 }}>✕</button>
                       </div>
                     </div>
                   ))}
@@ -717,11 +717,11 @@ export function Gear() {
                     <div key={item.id} style={{ ...card, display: 'flex', alignItems: 'center', gap: '12px' }}>
                       <img src={item.image} alt={item.name} style={{ width: '40px', height: '40px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }} />
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '11px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--orange)' }}>{item.brand}</div>
+                        <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--orange)' }}>{item.brand}</div>
                         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', fontWeight: 600 }}>{item.name}</div>
                         <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--muted2)', marginTop: '2px' }}>{item.category} · {item.sport}</div>
                       </div>
-                      <button onClick={() => toggleSave(item.id)} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: '4px', color: 'var(--muted2)', fontSize: '11px', padding: '3px 8px', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700, flexShrink: 0 }}>✕ Remove</button>
+                      <button onClick={() => toggleSave(item.id)} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: '4px', color: 'var(--muted2)', fontSize: 'var(--text-xs)', padding: '3px 8px', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700, flexShrink: 0 }}>✕ Remove</button>
                     </div>
                   ))}
                 </div>
@@ -745,14 +745,14 @@ export function Gear() {
               {listModal === 'new' && (
                 <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 900, display: 'flex', alignItems: 'flex-end' }} onClick={() => setListModal(null)}>
                   <div style={{ width: '100%', background: 'var(--surface2)', borderRadius: '16px 16px 0 0', padding: '24px', display: 'flex', flexDirection: 'column', gap: '14px' }} onClick={e => e.stopPropagation()}>
-                    <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '18px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)' }}>New Gear List</div>
+                    <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-md)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)' }}>New Gear List</div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <label style={{ fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)' }}>List Name</label>
-                      <input type="text" value={listForm.name} onChange={e => setListForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Valencia Marathon kit" style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '10px 12px', color: 'var(--white)', fontFamily: 'var(--body)', fontSize: '14px' }} />
+                      <label style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)' }}>List Name</label>
+                      <input type="text" value={listForm.name} onChange={e => setListForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Valencia Marathon kit" style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '10px 12px', color: 'var(--white)', fontFamily: 'var(--body)', fontSize: 'var(--text-compact)' }} />
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <label style={{ fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)' }}>Type</label>
-                      <select value={listForm.kind} onChange={e => setListForm(f => ({ ...f, kind: e.target.value }))} style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '10px 12px', color: 'var(--white)', fontFamily: 'var(--body)', fontSize: '14px' }}>
+                      <label style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)' }}>Type</label>
+                      <select value={listForm.kind} onChange={e => setListForm(f => ({ ...f, kind: e.target.value }))} style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '10px 12px', color: 'var(--white)', fontFamily: 'var(--body)', fontSize: 'var(--text-compact)' }}>
                         {LIST_KINDS.map(k => <option key={k} value={k}>{k}</option>)}
                       </select>
                     </div>
@@ -771,15 +771,15 @@ export function Gear() {
                 return (
                   <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 900, display: 'flex', alignItems: 'flex-end' }} onClick={() => setListModal(null)}>
                     <div style={{ width: '100%', maxHeight: '70vh', background: 'var(--surface2)', borderRadius: '16px 16px 0 0', padding: '24px', display: 'flex', flexDirection: 'column', gap: '14px', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
-                      <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)' }}>Add to "{list.name}"</div>
+                      <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)' }}>Add to "{list.name}"</div>
                       {allLibraryProducts.length === 0 ? (
-                        <p style={{ color: 'var(--muted)', fontSize: '13px' }}>Save gear in your Library first, then add it to lists.</p>
+                        <p style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)' }}>Save gear in your Library first, then add it to lists.</p>
                       ) : allLibraryProducts.map(p => (
                         <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
-                          <span style={{ flex: 1, fontSize: '13px', color: 'var(--white)' }}>{p.label}</span>
+                          <span style={{ flex: 1, fontSize: 'var(--text-sm)', color: 'var(--white)' }}>{p.label}</span>
                           <button
                             onClick={() => list.itemIds.includes(p.id) ? removeItemFromList(list.id, p.id) : addItemToList(list.id, p.id)}
-                            style={{ ...list.itemIds.includes(p.id) ? btnMain : btnGhost, padding: '4px 12px', fontSize: '11px' }}
+                            style={{ ...list.itemIds.includes(p.id) ? btnMain : btnGhost, padding: '4px 12px', fontSize: 'var(--text-xs)' }}
                           >
                             {list.itemIds.includes(p.id) ? '✓ Added' : '+ Add'}
                           </button>
@@ -799,12 +799,12 @@ export function Gear() {
                     <div key={list.id} style={{ ...card, display: 'flex', flexDirection: 'column', gap: '10px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div>
-                          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>{list.name}</div>
-                          <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>{list.kind} · {list.itemIds.length} item{list.itemIds.length !== 1 ? 's' : ''}</div>
+                          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>{list.name}</div>
+                          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>{list.kind} · {list.itemIds.length} item{list.itemIds.length !== 1 ? 's' : ''}</div>
                         </div>
                         <div style={{ display: 'flex', gap: '6px' }}>
-                          <button onClick={() => setListModal({ listId: list.id, mode: 'items' })} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: '4px', color: 'var(--orange)', fontSize: '11px', padding: '3px 8px', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700 }}>+ Items</button>
-                          <button onClick={() => deleteList(list.id)} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: '4px', color: 'var(--muted2)', fontSize: '11px', padding: '3px 8px', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700 }}>✕</button>
+                          <button onClick={() => setListModal({ listId: list.id, mode: 'items' })} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: '4px', color: 'var(--orange)', fontSize: 'var(--text-xs)', padding: '3px 8px', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700 }}>+ Items</button>
+                          <button onClick={() => deleteList(list.id)} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: '4px', color: 'var(--muted2)', fontSize: 'var(--text-xs)', padding: '3px 8px', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700 }}>✕</button>
                         </div>
                       </div>
                       {list.itemIds.length > 0 && (
@@ -845,10 +845,10 @@ export function Gear() {
 
               {/* Templates row */}
               <div>
-                <p style={{ margin: '0 0 8px', fontSize: '11px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Templates</p>
+                <p style={{ margin: '0 0 8px', fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Templates</p>
                 <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px' }}>
                   {STACK_TEMPLATES.map(t => (
-                    <button key={t.label} onClick={() => { addStack(t.label, undefined, t.label, t.items) }} style={{ ...btnGhost, padding: '5px 12px', fontSize: '11px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                    <button key={t.label} onClick={() => { addStack(t.label, undefined, t.label, t.items) }} style={{ ...btnGhost, padding: '5px 12px', fontSize: 'var(--text-xs)', whiteSpace: 'nowrap', flexShrink: 0 }}>
                       {t.label}
                     </button>
                   ))}
@@ -859,15 +859,15 @@ export function Gear() {
               {stackModal === 'new' && (
                 <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 900, display: 'flex', alignItems: 'flex-end' }} onClick={() => setStackModal(null)}>
                   <div style={{ width: '100%', background: 'var(--surface2)', borderRadius: '16px 16px 0 0', padding: '24px', display: 'flex', flexDirection: 'column', gap: '14px' }} onClick={e => e.stopPropagation()}>
-                    <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '18px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)' }}>New Race Stack</div>
+                    <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-md)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)' }}>New Race Stack</div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                      <label style={{ fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)' }}>Stack Name</label>
-                      <input type="text" value={stackForm.name} onChange={e => setStackForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Berlin Marathon 2026" style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '10px 12px', color: 'var(--white)', fontFamily: 'var(--body)', fontSize: '14px' }} />
+                      <label style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)' }}>Stack Name</label>
+                      <input type="text" value={stackForm.name} onChange={e => setStackForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Berlin Marathon 2026" style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '10px 12px', color: 'var(--white)', fontFamily: 'var(--body)', fontSize: 'var(--text-compact)' }} />
                     </div>
                     {allRaces.length > 0 && (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        <label style={{ fontSize: '11px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)' }}>Link to Race (optional)</label>
-                        <select value={stackForm.raceId} onChange={e => setStackForm(f => ({ ...f, raceId: e.target.value }))} style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '10px 12px', color: 'var(--white)', fontFamily: 'var(--body)', fontSize: '14px' }}>
+                        <label style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)' }}>Link to Race (optional)</label>
+                        <select value={stackForm.raceId} onChange={e => setStackForm(f => ({ ...f, raceId: e.target.value }))} style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '10px 12px', color: 'var(--white)', fontFamily: 'var(--body)', fontSize: 'var(--text-compact)' }}>
                           <option value="">— No race linked —</option>
                           {allRaces.map(r => <option key={r.id} value={r.id}>{r.name ?? r.distance} · {fmtDateDDMM(r.date)}</option>)}
                         </select>
@@ -888,13 +888,13 @@ export function Gear() {
                 return (
                   <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 900, display: 'flex', alignItems: 'flex-end' }} onClick={() => setStackModal(null)}>
                     <div style={{ width: '100%', maxHeight: '70vh', background: 'var(--surface2)', borderRadius: '16px 16px 0 0', padding: '24px', display: 'flex', flexDirection: 'column', gap: '14px', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
-                      <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '16px', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)' }}>Edit "{stack.name}"</div>
+                      <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)' }}>Edit "{stack.name}"</div>
                       {allLibraryProducts.length === 0 ? (
-                        <p style={{ color: 'var(--muted)', fontSize: '13px' }}>Save gear in your Library first.</p>
+                        <p style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)' }}>Save gear in your Library first.</p>
                       ) : allLibraryProducts.map(p => (
                         <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
-                          <span style={{ flex: 1, fontSize: '13px', color: 'var(--white)' }}>{p.label}</span>
-                          <button onClick={() => toggleStackItem(stack.id, p.id)} style={{ ...stack.itemIds.includes(p.id) ? btnMain : btnGhost, padding: '4px 12px', fontSize: '11px' }}>
+                          <span style={{ flex: 1, fontSize: 'var(--text-sm)', color: 'var(--white)' }}>{p.label}</span>
+                          <button onClick={() => toggleStackItem(stack.id, p.id)} style={{ ...stack.itemIds.includes(p.id) ? btnMain : btnGhost, padding: '4px 12px', fontSize: 'var(--text-xs)' }}>
                             {stack.itemIds.includes(p.id) ? '✓' : '+ Add'}
                           </button>
                         </div>
@@ -915,14 +915,14 @@ export function Gear() {
                       <div key={stack.id} style={{ ...card, display: 'flex', flexDirection: 'column', gap: '10px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                           <div>
-                            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '14px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>{stack.name}</div>
-                            <div style={{ fontSize: '11px', color: 'var(--muted)', marginTop: '2px' }}>
+                            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>{stack.name}</div>
+                            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>
                               {linkedRace ? `${linkedRace.name ?? 'Race'} · ${fmtDateDDMM(linkedRace.date)}` : stack.template ? `Template: ${stack.template}` : 'Custom stack'} · {stack.itemIds.length} items
                             </div>
                           </div>
                           <div style={{ display: 'flex', gap: '6px' }}>
-                            <button onClick={() => setStackModal({ stackId: stack.id, mode: 'items' })} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: '4px', color: 'var(--orange)', fontSize: '11px', padding: '3px 8px', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700 }}>Edit</button>
-                            <button onClick={() => deleteStack(stack.id)} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: '4px', color: 'var(--muted2)', fontSize: '11px', padding: '3px 8px', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700 }}>✕</button>
+                            <button onClick={() => setStackModal({ stackId: stack.id, mode: 'items' })} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: '4px', color: 'var(--orange)', fontSize: 'var(--text-xs)', padding: '3px 8px', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700 }}>Edit</button>
+                            <button onClick={() => deleteStack(stack.id)} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: '4px', color: 'var(--muted2)', fontSize: 'var(--text-xs)', padding: '3px 8px', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700 }}>✕</button>
                           </div>
                         </div>
                         {stack.itemIds.length > 0 && (
@@ -932,7 +932,7 @@ export function Gear() {
                               const catalog = GEAR_CATALOG.find(g => g.id === pid)
                               const label   = custom ? custom.name : catalog ? catalog.name : pid
                               return (
-                                <span key={pid} style={{ fontSize: '11px', background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: '100px', padding: '3px 8px', color: 'var(--white)' }}>
+                                <span key={pid} style={{ fontSize: 'var(--text-xs)', background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: '100px', padding: '3px 8px', color: 'var(--white)' }}>
                                   {label}
                                 </span>
                               )

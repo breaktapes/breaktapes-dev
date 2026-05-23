@@ -46,7 +46,7 @@ export function AgeGradeChart({ races, height = 160 }: AgeGradeChartProps) {
 
   if (data.length === 0) {
     return (
-      <div style={{ height, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', fontSize: '12px' }}>
+      <div style={{ height, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', fontSize: 'var(--text-xs)' }}>
         Log races with times to see age-grade trajectory
       </div>
     )

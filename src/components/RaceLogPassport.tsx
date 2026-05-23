@@ -966,7 +966,7 @@ export function RaceLogPassport({ races, athlete, onClose, initialYear = 'all', 
   }
   const pill = (active: boolean): React.CSSProperties => ({
     padding: '5px 12px', borderRadius: '999px', cursor: 'pointer', border: 'none',
-    fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '11px',
+    fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-xs)',
     letterSpacing: '0.08em', textTransform: 'uppercase',
     background: active ? `rgba(${orangeCh},0.15)` : 'rgba(255,255,255,0.04)',
     color: active ? 'var(--orange)' : 'var(--muted)',
@@ -991,10 +991,10 @@ export function RaceLogPassport({ races, athlete, onClose, initialYear = 'all', 
       >
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '13px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--orange)' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--orange)' }}>
             Athlete Dossier
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: '18px', lineHeight: 1 }}>✕</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: 'var(--text-md)', lineHeight: 1 }}>✕</button>
         </div>
 
         {/* Year filter */}
