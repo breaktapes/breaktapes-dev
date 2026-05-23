@@ -244,7 +244,7 @@ export function RaceShareCard({ race, athleteName, onClose }: Props) {
 
   const btnBase: React.CSSProperties = {
     padding: '0.7rem 1.5rem',
-    borderRadius: '4px',
+    borderRadius: 'var(--radius-xs)',
     fontFamily: 'var(--headline)',
     fontWeight: 900,
     fontSize: 'var(--text-sm)',
@@ -260,12 +260,12 @@ export function RaceShareCard({ race, athleteName, onClose }: Props) {
         {/* Preview canvas (scaled to fit screen) */}
         <canvas
           ref={canvasRef}
-          style={{ width: '100%', borderRadius: '8px', display: drawn ? 'block' : 'none' }}
+          style={{ width: '100%', borderRadius: 'var(--radius-md)', display: drawn ? 'block' : 'none' }}
           aria-label="Race share card preview"
         />
 
         {!drawn && (
-          <div style={{ background: '#141414', borderRadius: '8px', height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: '#141414', borderRadius: 'var(--radius-md)', height: '200px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <button style={{ ...btnBase, background: 'var(--orange)', color: 'var(--black)' }} onClick={draw}>
               Generate Card
             </button>

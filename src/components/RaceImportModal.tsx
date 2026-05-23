@@ -213,7 +213,7 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
           {step === 'search' && (
             <>
               <p style={st.hint}>Search UltraSignup, MarathonView, and RunSignup for races you've run.</p>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-2)' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <label style={st.fieldLabel}>First Name</label>
                   <input
@@ -252,7 +252,7 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
                   Find your ID: athlinks.com → My Profile → copy the URL
                 </p>
               </div>
-              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: 'var(--sp-2)', flexWrap: 'wrap' }}>
                 <span style={st.sourcePill}>✓ UltraSignup</span>
                 <span style={st.sourcePill}>✓ MarathonView</span>
                 <span style={st.sourcePill}>✓ RunSignup</span>
@@ -277,12 +277,12 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
           {step === 'results' && (
             <>
               {(sourceErrors.ultrasignup || sourceErrors.marathonview || sourceErrors.athlinks || sourceErrors.runsignup) && (
-                <div style={{ padding: '8px 12px', background: 'rgba(var(--error-ch),0.08)', border: '1px solid rgba(var(--error-ch),0.25)', borderRadius: '8px', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                <div style={{ padding: '8px 12px', background: 'rgba(var(--error-ch),0.08)', border: '1px solid rgba(var(--error-ch),0.25)', borderRadius: 'var(--radius-md)', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--sp-2)' }}>
                   <p style={{ margin: 0, fontSize: '12px', color: 'var(--error)' }}>
                     {[sourceErrors.ultrasignup && 'UltraSignup', sourceErrors.marathonview && 'MarathonView', sourceErrors.runsignup && 'RunSignup', sourceErrors.athlinks && 'Athlinks'].filter(Boolean).join(' & ')} failed to respond.
                   </p>
                   <button
-                    style={{ background: 'none', border: '1px solid rgba(var(--error-ch),0.4)', color: 'var(--error)', fontSize: 'var(--text-xs)', padding: '3px 8px', borderRadius: '4px', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', flexShrink: 0 }}
+                    style={{ background: 'none', border: '1px solid rgba(var(--error-ch),0.4)', color: 'var(--error)', fontSize: 'var(--text-xs)', padding: '3px 8px', borderRadius: 'var(--radius-xs)', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', flexShrink: 0 }}
                     onClick={() => { setStep('search'); }}
                     type="button"
                   >
@@ -333,7 +333,7 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
                       aria-disabled={dupe}
                       title={dupe ? 'Already in your race history' : undefined}
                     >
-                      <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', alignItems: 'center', gap: '10px' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', alignItems: 'center', gap: 'var(--sp-2)' }}>
                         <span style={{ fontSize: 'var(--text-base)', flexShrink: 0 }}>
                           {dupe ? '✕' : selected.has(i) ? '✓' : '○'}
                         </span>
@@ -406,18 +406,18 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
 
 const st = {
   overlay:    { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)', zIndex: 960, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' } as React.CSSProperties,
-  sheet:      { width: '100%', maxWidth: '680px', maxHeight: '85dvh', background: 'var(--surface2)', borderTop: '2px solid var(--orange)', borderRadius: '16px 16px 0 0', display: 'flex', flexDirection: 'column', overflow: 'hidden' } as React.CSSProperties,
-  handle:     { width: '36px', height: '4px', background: 'var(--border2)', borderRadius: '2px', margin: '12px auto 0', flexShrink: 0 } as React.CSSProperties,
+  sheet:      { width: '100%', maxWidth: '680px', maxHeight: '85dvh', background: 'var(--surface2)', borderTop: '2px solid var(--orange)', borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0', display: 'flex', flexDirection: 'column', overflow: 'hidden' } as React.CSSProperties,
+  handle:     { width: '36px', height: '4px', background: 'var(--border2)', borderRadius: 'var(--radius-xs)', margin: '12px auto 0', flexShrink: 0 } as React.CSSProperties,
   header:     { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 0', flexShrink: 0 } as React.CSSProperties,
   title:      { fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-lg)', letterSpacing: '0.06em', textTransform: 'uppercase' as const, color: 'var(--white)' } as React.CSSProperties,
   closeBtn:   { background: 'transparent', border: 'none', color: 'var(--muted)', fontSize: 'var(--text-md)', cursor: 'pointer', padding: '4px 8px', lineHeight: 1 } as React.CSSProperties,
-  body:       { padding: '16px', display: 'flex', flexDirection: 'column', gap: '14px', overflowY: 'auto', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain', flex: 1, paddingBottom: 'calc(var(--safe-bottom) + 32px)' } as React.CSSProperties,
+  body:       { padding: 'var(--sp-4)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)', overflowY: 'auto', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain', flex: 1, paddingBottom: 'calc(var(--safe-bottom) + 32px)' } as React.CSSProperties,
   fieldLabel: { fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: 'var(--muted)' } as React.CSSProperties,
-  input:      { width: '100%', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '6px', color: 'var(--white)', fontSize: 'var(--text-compact)', padding: '0.6rem 0.75rem', fontFamily: 'var(--body)', boxSizing: 'border-box' as const, minWidth: 0 } as React.CSSProperties,
+  input:      { width: '100%', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-sm)', color: 'var(--white)', fontSize: 'var(--text-compact)', padding: '0.6rem 0.75rem', fontFamily: 'var(--body)', boxSizing: 'border-box' as const, minWidth: 0 } as React.CSSProperties,
   hint:       { margin: 0, fontSize: 'var(--text-sm)', color: 'var(--muted)', fontFamily: 'var(--body)' } as React.CSSProperties,
-  sourcePill: { background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '20px', padding: '4px 10px', fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', color: 'var(--green)' } as React.CSSProperties,
-  resultRow:  { width: '100%', borderRadius: '8px', padding: '12px', cursor: 'pointer', textAlign: 'left' as const, transition: 'background 0.15s' } as React.CSSProperties,
-  saveBtn:    { width: '100%', padding: '14px' } as React.CSSProperties,
-  cancelBtn:  { background: 'transparent', color: 'var(--muted)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '14px', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', letterSpacing: '0.1em', textTransform: 'uppercase' as const, cursor: 'pointer', width: '100%' } as React.CSSProperties,
+  sourcePill: { background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-pill)', padding: '4px 10px', fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', color: 'var(--green)' } as React.CSSProperties,
+  resultRow:  { width: '100%', borderRadius: 'var(--radius-md)', padding: 'var(--sp-3)', cursor: 'pointer', textAlign: 'left' as const, transition: 'background 0.15s' } as React.CSSProperties,
+  saveBtn:    { width: '100%', padding: 'var(--sp-4)' } as React.CSSProperties,
+  cancelBtn:  { background: 'transparent', color: 'var(--muted)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-4)', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', letterSpacing: '0.1em', textTransform: 'uppercase' as const, cursor: 'pointer', width: '100%' } as React.CSSProperties,
   errorText:  { margin: 0, fontSize: '12px', color: 'var(--error)' } as React.CSSProperties,
 }

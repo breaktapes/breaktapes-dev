@@ -71,7 +71,7 @@ export function WidgetDetailModal({ widget, preview, dynamicContext, actions, on
     >
       <div style={st.scrollBody} onTouchMove={e => e.stopPropagation()}>
         <div style={st.header}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', minWidth: 0 }}>
             <span style={st.icon} aria-hidden="true">{widget.icon}</span>
             <div style={{ minWidth: 0 }}>
               <div style={st.kicker}>WIDGET</div>
@@ -179,7 +179,7 @@ const st = {
     alignItems: 'flex-start',
     justifyContent: 'space-between',
     padding: '14px 16px 10px',
-    gap: '12px',
+    gap: 'var(--sp-3)',
     position: 'sticky',
     top: 0,
     background: 'var(--surface)',
@@ -195,7 +195,7 @@ const st = {
     height: '42px',
     background: 'rgba(var(--orange-ch), 0.1)',
     border: '1px solid rgba(var(--orange-ch), 0.25)',
-    borderRadius: '12px',
+    borderRadius: 'var(--radius-lg)',
     fontSize: '22px',
     flexShrink: 0,
   } as React.CSSProperties,
@@ -227,7 +227,7 @@ const st = {
     letterSpacing: '0.1em',
     color: 'var(--orange)',
     border: '1px solid rgba(var(--orange-ch), 0.5)',
-    borderRadius: '100px',
+    borderRadius: 'var(--radius-pill)',
     padding: '3px 8px',
     height: 'fit-content',
     marginTop: '6px',
@@ -241,7 +241,7 @@ const st = {
     cursor: 'pointer',
     width: '36px',
     height: '36px',
-    borderRadius: '50%',
+    borderRadius: 'var(--radius-round)',
     lineHeight: 1,
     flexShrink: 0,
     display: 'inline-flex',
@@ -279,7 +279,7 @@ const st = {
   previewBlock: {
     display: 'flex',
     flexDirection: 'column' as const,
-    gap: '10px',
+    gap: 'var(--sp-2)',
   } as React.CSSProperties,
 
   previewKicker: {
@@ -294,21 +294,21 @@ const st = {
   previewHost: {
     display: 'flex',
     flexDirection: 'column' as const,
-    gap: '14px',
+    gap: 'var(--sp-4)',
     background: 'var(--surface2)',
     border: '1px solid var(--border)',
-    borderRadius: '14px',
-    padding: '16px',
+    borderRadius: 'var(--radius-lg)',
+    padding: 'var(--sp-4)',
   } as React.CSSProperties,
 
   metricBlock: {
     background: 'var(--surface3)',
     border: '1px solid var(--border2)',
-    borderRadius: '12px',
-    padding: '16px',
+    borderRadius: 'var(--radius-lg)',
+    padding: 'var(--sp-4)',
     display: 'flex',
     flexDirection: 'column' as const,
-    gap: '8px',
+    gap: 'var(--sp-2)',
   } as React.CSSProperties,
 
   metricLabel: {
@@ -360,7 +360,7 @@ const st = {
   section: {
     display: 'flex',
     flexDirection: 'column' as const,
-    gap: '6px',
+    gap: 'var(--sp-2)',
   } as React.CSSProperties,
 
   sectionLabel: {
@@ -382,7 +382,7 @@ const st = {
   actionsBlock: {
     display: 'flex',
     flexDirection: 'column' as const,
-    gap: '10px',
+    gap: 'var(--sp-2)',
     marginTop: '6px',
   } as React.CSSProperties,
 
@@ -398,15 +398,15 @@ const st = {
   actionsGrid: {
     display: 'flex',
     flexDirection: 'column' as const,
-    gap: '8px',
+    gap: 'var(--sp-2)',
   } as React.CSSProperties,
 
   actionBtn: {
     background: 'transparent',
     color: 'var(--orange)',
     border: '1px solid var(--orange)',
-    borderRadius: '10px',
-    padding: '14px',
+    borderRadius: 'var(--radius-lg)',
+    padding: 'var(--sp-4)',
     fontFamily: 'var(--headline)',
     fontWeight: 800,
     fontSize: 'var(--text-sm)',

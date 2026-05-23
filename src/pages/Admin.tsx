@@ -48,7 +48,7 @@ const st = {
   header: {
     display: 'flex',
     alignItems: 'center',
-    gap: '12px',
+    gap: 'var(--sp-3)',
     marginBottom: '24px',
   } as React.CSSProperties,
   backBtn: {
@@ -77,19 +77,19 @@ const st = {
     background: 'rgba(var(--orange-ch),0.15)',
     color: 'var(--orange)',
     border: '1px solid rgba(var(--orange-ch),0.35)',
-    borderRadius: '4px',
+    borderRadius: 'var(--radius-xs)',
     padding: '2px 8px',
     textTransform: 'uppercase' as const,
   } as React.CSSProperties,
   card: {
     background: 'var(--surface2)',
     border: '1px solid var(--border2)',
-    borderRadius: '12px',
+    borderRadius: 'var(--radius-lg)',
     padding: '14px 16px',
     marginBottom: '10px',
     display: 'grid',
     gridTemplateColumns: '1fr auto',
-    gap: '12px',
+    gap: 'var(--sp-3)',
     alignItems: 'center',
   } as React.CSSProperties,
   raceName: {
@@ -105,12 +105,12 @@ const st = {
     marginTop: '4px',
     display: 'flex',
     flexWrap: 'wrap' as const,
-    gap: '6px',
+    gap: 'var(--sp-2)',
   } as React.CSSProperties,
   pill: {
     background: 'var(--surface3)',
     border: '1px solid var(--border)',
-    borderRadius: '4px',
+    borderRadius: 'var(--radius-xs)',
     padding: '2px 7px',
     fontSize: 'var(--text-xs)',
     color: 'var(--muted)',
@@ -119,7 +119,7 @@ const st = {
   countPill: {
     background: 'rgba(var(--orange-ch),0.12)',
     border: '1px solid rgba(var(--orange-ch),0.3)',
-    borderRadius: '4px',
+    borderRadius: 'var(--radius-xs)',
     padding: '2px 7px',
     fontSize: 'var(--text-xs)',
     color: 'var(--orange)',
@@ -128,13 +128,13 @@ const st = {
   } as React.CSSProperties,
   btnRow: {
     display: 'flex',
-    gap: '8px',
+    gap: 'var(--sp-2)',
   } as React.CSSProperties,
   approveBtn: {
     background: '#00FF88',
     color: '#000',
     border: 'none',
-    borderRadius: '7px',
+    borderRadius: 'var(--radius-sm)',
     padding: '8px 14px',
     fontSize: '12px',
     fontFamily: 'var(--headline)',
@@ -148,7 +148,7 @@ const st = {
     background: 'none',
     color: 'var(--muted)',
     border: '1px solid var(--border2)',
-    borderRadius: '7px',
+    borderRadius: 'var(--radius-sm)',
     padding: '8px 14px',
     fontSize: '12px',
     fontFamily: 'var(--headline)',
@@ -167,7 +167,7 @@ const st = {
   error: {
     background: 'rgba(255,60,60,0.1)',
     border: '1px solid rgba(255,60,60,0.3)',
-    borderRadius: '8px',
+    borderRadius: 'var(--radius-md)',
     padding: '12px 16px',
     fontSize: 'var(--text-sm)',
     color: 'var(--error)',
@@ -275,7 +275,7 @@ export function Admin() {
       {toast && (
         <div style={{
           position: 'fixed', bottom: '80px', left: '50%', transform: 'translateX(-50%)',
-          background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px',
+          background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-md)',
           padding: '10px 18px', fontSize: 'var(--text-sm)', color: 'var(--white)', zIndex: 2000,
           fontFamily: 'var(--body)', boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
         }}>

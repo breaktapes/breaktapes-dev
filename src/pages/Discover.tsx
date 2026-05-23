@@ -151,7 +151,7 @@ function FilterChip({
         background: active ? 'rgba(232,78,27,0.12)' : 'var(--surface2)',
         color: active ? 'var(--orange)' : 'var(--white)',
         border: `1px solid ${active ? 'rgba(232,78,27,0.4)' : 'var(--border2)'}`,
-        borderRadius: '20px',
+        borderRadius: 'var(--radius-pill)',
         padding: '5px 12px',
         fontFamily: 'var(--headline)',
         fontWeight: 800,
@@ -185,7 +185,7 @@ function RaceCard({
     <div style={{
       background: 'var(--surface2)',
       border: '1px solid var(--border)',
-      borderRadius: '10px',
+      borderRadius: 'var(--radius-lg)',
       padding: '0.875rem 1rem',
       display: 'flex',
       flexDirection: 'column',
@@ -215,7 +215,7 @@ function RaceCard({
             {[race.city, race.country].filter(Boolean).join(' · ')}
             {dateStr
               ? <span style={{ color: 'var(--orange)', marginLeft: '6px' }}>{dateStr}</span>
-              : <span style={{ background: 'var(--surface3)', color: 'var(--muted)', fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', borderRadius: '4px', padding: '2px 6px', marginLeft: '6px' }}>Date TBD</span>
+              : <span style={{ background: 'var(--surface3)', color: 'var(--muted)', fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', borderRadius: 'var(--radius-xs)', padding: '2px 6px', marginLeft: '6px' }}>Date TBD</span>
             }
           </div>
         </div>
@@ -228,7 +228,7 @@ function RaceCard({
           color: sportColor(race.type),
           background: `${sportColor(race.type)}18`,
           border: `1px solid ${sportColor(race.type)}40`,
-          borderRadius: '4px',
+          borderRadius: 'var(--radius-xs)',
           padding: '2px 6px',
           flexShrink: 0,
         }}>
@@ -255,7 +255,7 @@ function RaceCard({
             background: isWishlisted ? 'rgba(255,77,0,0.12)' : 'transparent',
             color: isWishlisted ? 'var(--orange)' : 'var(--muted)',
             border: `1px solid ${isWishlisted ? 'var(--orange)' : 'var(--border2)'}`,
-            borderRadius: '6px',
+            borderRadius: 'var(--radius-sm)',
             padding: '4px 10px',
             fontFamily: 'var(--headline)',
             fontWeight: 800,
@@ -274,7 +274,7 @@ function RaceCard({
             background: 'var(--surface3)',
             color: 'var(--green)',
             border: '1px solid rgba(var(--green-ch),0.25)',
-            borderRadius: '6px',
+            borderRadius: 'var(--radius-sm)',
             padding: '4px 10px',
             fontFamily: 'var(--headline)',
             fontWeight: 800,
@@ -445,7 +445,7 @@ export function Discover() {
               flex: 1,
               background: 'var(--surface2)',
               border: '1px solid var(--border2)',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-md)',
               padding: '7px 10px',
               fontFamily: 'var(--body)',
               fontSize: 'var(--text-sm)',
@@ -459,7 +459,7 @@ export function Discover() {
             style={{
               background: 'var(--surface2)',
               border: '1px solid var(--border2)',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-md)',
               padding: '7px 10px',
               fontFamily: 'var(--headline)',
               fontWeight: 800,

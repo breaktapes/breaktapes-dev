@@ -33,7 +33,7 @@ export default function PrivacyPolicy() {
             color: 'var(--white)',
             cursor: 'pointer',
             padding: '0.5rem',
-            borderRadius: 8,
+            borderRadius: 'var(--radius-md)',
             display: 'flex',
             alignItems: 'center',
             gap: '0.5rem',
@@ -384,7 +384,7 @@ function A({ href, children }: { href: string; children: React.ReactNode }) {
 const codeStyle: React.CSSProperties = {
   background: 'var(--surface3)',
   padding: '2px 6px',
-  borderRadius: 4,
+  borderRadius: 'var(--radius-xs)',
   fontSize: 13,
   fontFamily: 'monospace',
 }

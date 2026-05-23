@@ -181,9 +181,9 @@ export function EditProfileModal({ onClose }: Props) {
           {/* Clubs — multi-pill tag input */}
           <Field label="Club / Team">
             {clubs.length > 0 && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '8px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', marginBottom: '8px' }}>
                 {clubs.map(c => (
-                  <div key={c} style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                  <div key={c} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', flexWrap: 'wrap' }}>
                     <span style={st.clubPill}>
                       {c}
                       <button
@@ -206,7 +206,7 @@ export function EditProfileModal({ onClose }: Props) {
               </div>
             )}
             {clubs.length < 8 && (
-              <div style={{ display: 'flex', gap: '6px' }}>
+              <div style={{ display: 'flex', gap: 'var(--sp-2)' }}>
                 <input
                   style={{ ...st.input, flex: 1 }}
                   value={clubInput}
@@ -287,7 +287,7 @@ const st = {
     maxHeight: '90vh',
     background: 'var(--surface2)',
     borderTop: '1px solid var(--border2)',
-    borderRadius: '16px 16px 0 0',
+    borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0',
     display: 'flex',
     flexDirection: 'column',
     overflowY: 'auto',
@@ -299,7 +299,7 @@ const st = {
     width: '36px',
     height: '4px',
     background: 'var(--border2)',
-    borderRadius: '2px',
+    borderRadius: 'var(--radius-xs)',
     margin: '12px auto 0',
     flexShrink: 0,
   } as React.CSSProperties,
@@ -332,10 +332,10 @@ const st = {
   } as React.CSSProperties,
 
   body: {
-    padding: '16px',
+    padding: 'var(--sp-4)',
     display: 'flex',
     flexDirection: 'column',
-    gap: '14px',
+    gap: 'var(--sp-4)',
     paddingBottom: 'calc(var(--safe-bottom) + 32px)',
   } as React.CSSProperties,
 
@@ -352,7 +352,7 @@ const st = {
     width: '100%',
     background: 'var(--surface3)',
     border: '1px solid var(--border2)',
-    borderRadius: '6px',
+    borderRadius: 'var(--radius-sm)',
     color: 'var(--white)',
     fontSize: 'var(--text-sm)',
     padding: '0.6rem 0.75rem',
@@ -364,17 +364,17 @@ const st = {
   saveBtn: {
     width: '100%',
     marginTop: '4px',
-    padding: '14px',
+    padding: 'var(--sp-4)',
   } as React.CSSProperties,
 
   clubPill: {
     display: 'inline-flex',
     alignItems: 'center',
-    gap: '6px',
+    gap: 'var(--sp-2)',
     background: 'rgba(var(--orange-ch),0.12)',
     border: '1px solid rgba(var(--orange-ch),0.3)',
     color: 'var(--orange)',
-    borderRadius: '100px',
+    borderRadius: 'var(--radius-pill)',
     padding: '4px 10px',
     fontSize: '12px',
     fontFamily: 'var(--headline)',
@@ -398,7 +398,7 @@ const st = {
   addClubBtn: {
     background: 'var(--surface3)',
     border: '1px solid var(--border2)',
-    borderRadius: '6px',
+    borderRadius: 'var(--radius-sm)',
     color: 'var(--white)',
     fontSize: 'var(--text-md)',
     cursor: 'pointer',

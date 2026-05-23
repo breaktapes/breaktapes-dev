@@ -60,7 +60,7 @@ export function BetaFeedback() {
           zIndex: 900,
           background: 'var(--surface2)',
           border: '1px solid var(--border2)',
-          borderRadius: '20px',
+          borderRadius: 'var(--radius-pill)',
           color: 'var(--muted)',
           fontFamily: 'var(--headline)',
           fontWeight: 700,
@@ -71,7 +71,7 @@ export function BetaFeedback() {
           cursor: 'pointer',
           display: 'flex',
           alignItems: 'center',
-          gap: '5px',
+          gap: 'var(--sp-1)',
         }}
       >
         <span style={{ fontSize: '12px' }}>✦</span> Beta
@@ -95,7 +95,7 @@ export function BetaFeedback() {
           <div style={{
             background: 'var(--surface2)',
             borderTop: '2px solid var(--orange)',
-            borderRadius: '16px 16px 0 0',
+            borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0',
             padding: '1.5rem 1rem',
             width: '100%',
             maxWidth: '480px',
@@ -119,9 +119,9 @@ export function BetaFeedback() {
               <div
                 style={{
                   display: 'flex',
-                  gap: '8px',
+                  gap: 'var(--sp-2)',
                   outline: ratingError ? '1px solid var(--orange)' : 'none',
-                  borderRadius: '4px',
+                  borderRadius: 'var(--radius-xs)',
                   padding: '2px',
                 }}
               >
@@ -162,7 +162,7 @@ export function BetaFeedback() {
                   width: '100%',
                   background: 'var(--surface3)',
                   border: '1px solid var(--border2)',
-                  borderRadius: '6px',
+                  borderRadius: 'var(--radius-sm)',
                   color: 'var(--white)',
                   fontSize: 'var(--text-compact)',
                   padding: '0.6rem 0.75rem',
@@ -181,7 +181,7 @@ export function BetaFeedback() {
                 background: 'var(--orange)',
                 color: 'var(--black)',
                 border: 'none',
-                borderRadius: '4px',
+                borderRadius: 'var(--radius-xs)',
                 padding: '0.8rem',
                 fontFamily: 'var(--headline)',
                 fontWeight: 900,

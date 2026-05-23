@@ -63,11 +63,11 @@ class RootErrorBoundary extends Component<{ children: ReactNode }, { error: Erro
   render() {
     if (this.state.error) {
       return (
-        <div style={{ position: 'fixed', inset: 0, background: '#0d0d0d', color: '#f5f5f5', fontFamily: 'monospace', padding: '24px', overflowY: 'auto', fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>
+        <div style={{ position: 'fixed', inset: 0, background: '#0d0d0d', color: '#f5f5f5', fontFamily: 'monospace', padding: 'var(--sp-6)', overflowY: 'auto', fontSize: 'var(--text-sm)', lineHeight: 1.6 }}>
           <div style={{ color: '#E84E1B', fontWeight: 700, marginBottom: '12px' }}>⚠ App crashed</div>
           <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{(this.state.error as Error).message}</pre>
           <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all', color: 'rgba(245,245,245,0.45)', marginTop: '12px', fontSize: 'var(--text-xs)' }}>{(this.state.error as Error).stack}</pre>
-          <button onClick={() => window.location.reload()} style={{ marginTop: '20px', background: '#E84E1B', color: '#000', border: 'none', borderRadius: '8px', padding: '10px 20px', fontWeight: 700, cursor: 'pointer' }}>Reload</button>
+          <button onClick={() => window.location.reload()} style={{ marginTop: '20px', background: '#E84E1B', color: '#000', border: 'none', borderRadius: 'var(--radius-md)', padding: '10px 20px', fontWeight: 700, cursor: 'pointer' }}>Reload</button>
         </div>
       )
     }
@@ -78,7 +78,7 @@ class RootErrorBoundary extends Component<{ children: ReactNode }, { error: Erro
 function NotFound() {
   const navigate = useNavigate()
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'var(--black)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '24px', padding: '2rem', textAlign: 'center' }}>
+    <div style={{ position: 'fixed', inset: 0, background: 'var(--black)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'var(--sp-6)', padding: '2rem', textAlign: 'center' }}>
       <span style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-sm)', fontWeight: 900, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--muted)' }}>BREAKTAPES</span>
       <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'clamp(64px, 16vw, 96px)', letterSpacing: '0.04em', color: 'var(--orange)', lineHeight: 1 }}>404</div>
       <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'clamp(20px, 5vw, 28px)', textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--white)' }}>Page not found</div>
@@ -87,7 +87,7 @@ function NotFound() {
       </p>
       <button
         onClick={() => navigate('/')}
-        style={{ background: 'var(--orange)', color: '#000', border: 'none', borderRadius: '8px', padding: '12px 28px', fontFamily: 'var(--headline)', fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer', fontSize: 'var(--text-compact)' }}
+        style={{ background: 'var(--orange)', color: '#000', border: 'none', borderRadius: 'var(--radius-md)', padding: '12px 28px', fontFamily: 'var(--headline)', fontWeight: 900, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer', fontSize: 'var(--text-compact)' }}
       >
         Go Home
       </button>

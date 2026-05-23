@@ -275,7 +275,7 @@ function DetailedRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onCli
       style={{ cursor: 'pointer' }}
     >
       {/* Top row: date chip + name + time */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: '10px', alignItems: 'center' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: 'var(--sp-2)', alignItems: 'center' }}>
         <div className={`rrc-date-chip${isPB ? ' is-pb' : ''}`}>
           <div className="rrc-date-chip-mon">{mon}</div>
           <div className="rrc-date-chip-day">{day}</div>
@@ -298,10 +298,10 @@ function DetailedRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onCli
       </div>
 
       {/* Stats row: placing + percentile + distance badge */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '8px', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', marginTop: '8px', flexWrap: 'wrap' }}>
         {isPB && <span className="tag tag-pb">PB</span>}
         {race.medal && (
-          <span className={`medal-chip medal-${race.medal}`} style={{ padding: '3px 8px', fontSize: '10px', borderRadius: '5px' }}>
+          <span className={`medal-chip medal-${race.medal}`} style={{ padding: '3px 8px', fontSize: '10px', borderRadius: 'var(--radius-sm)' }}>
             {race.medal.toUpperCase()}
           </span>
         )}
@@ -331,7 +331,7 @@ function WishlistRow({ race, onPlan, onRemove }: {
       borderBottom: '1px solid var(--border)',
       display: 'flex',
       alignItems: 'center',
-      gap: '10px',
+      gap: 'var(--sp-2)',
     }}>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-compact)', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -346,16 +346,16 @@ function WishlistRow({ race, onPlan, onRemove }: {
           </div>
         )}
       </div>
-      <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-2)', flexShrink: 0 }}>
         <button
           onClick={onPlan}
-          style={{ background: 'rgba(var(--green-ch),0.12)', border: '1px solid rgba(var(--green-ch),0.3)', color: 'var(--green)', borderRadius: '6px', padding: '5px 10px', fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-xs)', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer' }}
+          style={{ background: 'rgba(var(--green-ch),0.12)', border: '1px solid rgba(var(--green-ch),0.3)', color: 'var(--green)', borderRadius: 'var(--radius-sm)', padding: '5px 10px', fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-xs)', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer' }}
         >
           PLAN
         </button>
         <button
           onClick={onRemove}
-          style={{ background: 'transparent', border: '1px solid var(--border2)', color: 'var(--muted)', borderRadius: '6px', padding: '5px 8px', fontSize: 'var(--text-sm)', cursor: 'pointer' }}
+          style={{ background: 'transparent', border: '1px solid var(--border2)', color: 'var(--muted)', borderRadius: 'var(--radius-sm)', padding: '5px 8px', fontSize: 'var(--text-sm)', cursor: 'pointer' }}
           aria-label="Remove from wishlist"
         >
           ✕
@@ -369,7 +369,7 @@ function WishlistRow({ race, onPlan, onRemove }: {
 
 function YearDivider({ year }: { year: string }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '12px 16px 6px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', padding: '12px 16px 6px' }}>
       <span style={{
         fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xs)',
         letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)',
@@ -457,7 +457,7 @@ function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport, onDiscover
               width: '100%', boxSizing: 'border-box',
               background: 'var(--surface3)',
               border: '1px solid var(--border2)',
-              borderRadius: '6px',
+              borderRadius: 'var(--radius-sm)',
               color: 'var(--white)',
               fontSize: 'var(--text-sm)',
               padding: '7px 30px 7px 10px',
@@ -516,7 +516,7 @@ function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport, onDiscover
       <div className="races-sheet-list">
         {showWishlist ? (
           wishlistRaces.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '2.5rem 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+            <div style={{ textAlign: 'center', padding: '2.5rem 1rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--sp-2)' }}>
               <div style={{ fontSize: '28px' }}>♡</div>
               <div style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)', fontFamily: 'var(--headline)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                 Races you&rsquo;re dreaming of
@@ -563,7 +563,7 @@ function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport, onDiscover
             {sorted.length > visibleCount && (
               <button
                 onClick={() => setVisibleCount(c => c + 20)}
-                style={{ width: '100%', padding: '10px', background: 'none', border: 'none', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '12px', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer' }}
+                style={{ width: '100%', padding: 'var(--sp-3)', background: 'none', border: 'none', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '12px', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer' }}
               >
                 Show more ({sorted.length - visibleCount} remaining)
               </button>
@@ -589,7 +589,7 @@ function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport, onDiscover
             {sorted.length > visibleCount && (
               <button
                 onClick={() => setVisibleCount(c => c + 20)}
-                style={{ width: '100%', padding: '10px', background: 'none', border: 'none', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '12px', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer' }}
+                style={{ width: '100%', padding: 'var(--sp-3)', background: 'none', border: 'none', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '12px', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer' }}
               >
                 Show more ({sorted.length - visibleCount} remaining)
               </button>
@@ -603,7 +603,7 @@ function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport, onDiscover
         <button
           style={{
             flex: 1, background: 'var(--orange)', color: 'var(--black)',
-            border: 'none', borderRadius: '8px', padding: '0.8rem',
+            border: 'none', borderRadius: 'var(--radius-md)', padding: '0.8rem',
             fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)',
             letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer',
             boxShadow: '0 4px 20px rgba(232,78,27,0.35)',
@@ -616,7 +616,7 @@ function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport, onDiscover
         <button
           style={{
             background: 'transparent', color: 'var(--muted)',
-            border: '1px solid var(--border2)', borderRadius: '8px', padding: '0.8rem',
+            border: '1px solid var(--border2)', borderRadius: 'var(--radius-md)', padding: '0.8rem',
             fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xs)',
             letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer',
             whiteSpace: 'nowrap', flexShrink: 0,
@@ -628,7 +628,7 @@ function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport, onDiscover
         <button
           style={{
             background: 'transparent', color: 'var(--muted)',
-            border: '1px solid var(--border2)', borderRadius: '8px', padding: '0.8rem',
+            border: '1px solid var(--border2)', borderRadius: 'var(--radius-md)', padding: '0.8rem',
             fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xs)',
             letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer',
             whiteSpace: 'nowrap', flexShrink: 0,
@@ -826,7 +826,7 @@ export function Races() {
               style={{
                 width: '10px',
                 height: '10px',
-                borderRadius: '50%',
+                borderRadius: 'var(--radius-round)',
                 background: '#E84E1B',
                 border: '2px solid rgba(245,245,245,0.5)',
                 boxShadow: '0 0 6px rgba(232,78,27,0.6)',

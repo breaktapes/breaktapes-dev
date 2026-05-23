@@ -245,7 +245,7 @@ const btnMain: React.CSSProperties = {
   background: 'var(--orange)',
   color: 'var(--black)',
   border: 'none',
-  borderRadius: '4px',
+  borderRadius: 'var(--radius-xs)',
   padding: '0.8rem 1.25rem',
   fontFamily: 'var(--headline)',
   fontWeight: 900,
@@ -259,7 +259,7 @@ const btnGhost: React.CSSProperties = {
   background: 'transparent',
   color: 'var(--white)',
   border: '1px solid var(--border2)',
-  borderRadius: '4px',
+  borderRadius: 'var(--radius-xs)',
   padding: '0.8rem 1.25rem',
   fontFamily: 'var(--headline)',
   fontWeight: 900,
@@ -272,7 +272,7 @@ const btnGhost: React.CSSProperties = {
 const card: React.CSSProperties = {
   background: 'var(--surface2)',
   border: '1px solid var(--border)',
-  borderRadius: '8px',
+  borderRadius: 'var(--radius-md)',
   padding: '1rem',
 }
 
@@ -436,7 +436,7 @@ export function Gear() {
   const selectStyle: React.CSSProperties = {
     background: 'var(--surface3)',
     border: '1px solid var(--border2)',
-    borderRadius: '4px',
+    borderRadius: 'var(--radius-xs)',
     color: 'var(--white)',
     fontSize: 'var(--text-xs)',
     padding: '0.4rem 0.6rem',
@@ -492,7 +492,7 @@ export function Gear() {
                     flex: 1,
                     background: 'var(--surface2)',
                     border: '1px solid var(--border2)',
-                    borderRadius: '4px',
+                    borderRadius: 'var(--radius-xs)',
                     color: 'var(--white)',
                     fontSize: 'var(--text-sm)',
                     padding: '0.6rem 0.75rem',
@@ -597,7 +597,7 @@ export function Gear() {
                               border: '1px solid var(--border)',
                               color: 'var(--muted)',
                               padding: '2px 6px',
-                              borderRadius: '4px',
+                              borderRadius: 'var(--radius-xs)',
                             }}>
                               {tag}
                             </span>
@@ -610,7 +610,7 @@ export function Gear() {
                               background: savedIds.includes(item.id) ? 'rgba(var(--orange-ch),0.15)' : 'var(--surface3)',
                               border: `1px solid ${savedIds.includes(item.id) ? 'rgba(var(--orange-ch),0.4)' : 'var(--border)'}`,
                               color: savedIds.includes(item.id) ? 'var(--orange)' : 'var(--muted)',
-                              borderRadius: '4px',
+                              borderRadius: 'var(--radius-xs)',
                               padding: '3px 8px',
                               fontSize: 'var(--text-xs)',
                               cursor: 'pointer',
@@ -646,7 +646,7 @@ export function Gear() {
               {/* Custom product modal */}
               {customModal && (
                 <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 900, display: 'flex', alignItems: 'flex-end' }} onClick={() => setCustomModal(null)}>
-                  <div style={{ width: '100%', background: 'var(--surface2)', borderRadius: '16px 16px 0 0', padding: '24px', display: 'flex', flexDirection: 'column', gap: '14px' }} onClick={e => e.stopPropagation()}>
+                  <div style={{ width: '100%', background: 'var(--surface2)', borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0', padding: 'var(--sp-6)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }} onClick={e => e.stopPropagation()}>
                     <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-md)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)' }}>
                       {customModal.mode === 'edit' ? 'Edit Product' : 'Custom Product'}
                     </div>
@@ -658,21 +658,21 @@ export function Gear() {
                           value={customForm[field]}
                           onChange={e => setCustomForm(f => ({ ...f, [field]: e.target.value }))}
                           placeholder={field === 'brand' ? 'Brand name' : 'Product name'}
-                          style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '10px 12px', color: 'var(--white)', fontFamily: 'var(--body)', fontSize: 'var(--text-compact)' }}
+                          style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-md)', padding: '10px 12px', color: 'var(--white)', fontFamily: 'var(--body)', fontSize: 'var(--text-compact)' }}
                         />
                       </div>
                     ))}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       <label style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)' }}>Category</label>
-                      <select value={customForm.category} onChange={e => setCustomForm(f => ({ ...f, category: e.target.value }))} style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '10px 12px', color: 'var(--white)', fontFamily: 'var(--body)', fontSize: 'var(--text-compact)' }}>
+                      <select value={customForm.category} onChange={e => setCustomForm(f => ({ ...f, category: e.target.value }))} style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-md)', padding: '10px 12px', color: 'var(--white)', fontFamily: 'var(--body)', fontSize: 'var(--text-compact)' }}>
                         {CATEGORIES.filter(c => c !== 'All').map(c => <option key={c} value={c}>{c}</option>)}
                       </select>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       <label style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)' }}>Notes</label>
-                      <input type="text" value={customForm.notes} onChange={e => setCustomForm(f => ({ ...f, notes: e.target.value }))} placeholder="Optional notes" style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '10px 12px', color: 'var(--white)', fontFamily: 'var(--body)', fontSize: 'var(--text-compact)' }} />
+                      <input type="text" value={customForm.notes} onChange={e => setCustomForm(f => ({ ...f, notes: e.target.value }))} placeholder="Optional notes" style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-md)', padding: '10px 12px', color: 'var(--white)', fontFamily: 'var(--body)', fontSize: 'var(--text-compact)' }} />
                     </div>
-                    <div style={{ display: 'flex', gap: '10px' }}>
+                    <div style={{ display: 'flex', gap: 'var(--sp-2)' }}>
                       <button
                         onClick={saveCustomModal}
                         disabled={!customForm.name.trim() || !customForm.brand.trim()}
@@ -695,33 +695,33 @@ export function Gear() {
                   onCta={() => setActiveTab('discover')}
                 />
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
                   {/* Custom items first */}
                   {customGear.map(item => (
-                    <div key={item.id} style={{ ...card, display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: 'var(--surface3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--muted)', flexShrink: 0 }}>GEAR</div>
+                    <div key={item.id} style={{ ...card, display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
+                      <div style={{ width: '40px', height: '40px', borderRadius: 'var(--radius-md)', background: 'var(--surface3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--muted)', flexShrink: 0 }}>GEAR</div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--orange)' }}>{item.brand}</div>
                         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', fontWeight: 600 }}>{item.name}</div>
                         {item.notes && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>{item.notes}</div>}
                         <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--muted2)', marginTop: '2px' }}>Custom · {item.category}</div>
                       </div>
-                      <div style={{ display: 'flex', gap: '6px', flexShrink: 0 }}>
-                        <button onClick={() => openEditCustom(item)} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: '4px', color: 'var(--muted)', fontSize: 'var(--text-xs)', padding: '3px 8px', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700 }}>Edit</button>
-                        <button onClick={() => deleteCustom(item.id)} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: '4px', color: 'var(--muted2)', fontSize: 'var(--text-xs)', padding: '3px 8px', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700 }}>✕</button>
+                      <div style={{ display: 'flex', gap: 'var(--sp-2)', flexShrink: 0 }}>
+                        <button onClick={() => openEditCustom(item)} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 'var(--radius-xs)', color: 'var(--muted)', fontSize: 'var(--text-xs)', padding: '3px 8px', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700 }}>Edit</button>
+                        <button onClick={() => deleteCustom(item.id)} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 'var(--radius-xs)', color: 'var(--muted2)', fontSize: 'var(--text-xs)', padding: '3px 8px', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700 }}>✕</button>
                       </div>
                     </div>
                   ))}
                   {/* Saved catalog items */}
                   {GEAR_CATALOG.filter(g => savedIds.includes(g.id)).map(item => (
-                    <div key={item.id} style={{ ...card, display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <img src={item.image} alt={item.name} style={{ width: '40px', height: '40px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }} />
+                    <div key={item.id} style={{ ...card, display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
+                      <img src={item.image} alt={item.name} style={{ width: '40px', height: '40px', borderRadius: 'var(--radius-md)', objectFit: 'cover', flexShrink: 0 }} />
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--orange)' }}>{item.brand}</div>
                         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', fontWeight: 600 }}>{item.name}</div>
                         <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--muted2)', marginTop: '2px' }}>{item.category} · {item.sport}</div>
                       </div>
-                      <button onClick={() => toggleSave(item.id)} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: '4px', color: 'var(--muted2)', fontSize: 'var(--text-xs)', padding: '3px 8px', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700, flexShrink: 0 }}>✕ Remove</button>
+                      <button onClick={() => toggleSave(item.id)} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 'var(--radius-xs)', color: 'var(--muted2)', fontSize: 'var(--text-xs)', padding: '3px 8px', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700, flexShrink: 0 }}>✕ Remove</button>
                     </div>
                   ))}
                 </div>
@@ -744,19 +744,19 @@ export function Gear() {
               {/* New list modal */}
               {listModal === 'new' && (
                 <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 900, display: 'flex', alignItems: 'flex-end' }} onClick={() => setListModal(null)}>
-                  <div style={{ width: '100%', background: 'var(--surface2)', borderRadius: '16px 16px 0 0', padding: '24px', display: 'flex', flexDirection: 'column', gap: '14px' }} onClick={e => e.stopPropagation()}>
+                  <div style={{ width: '100%', background: 'var(--surface2)', borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0', padding: 'var(--sp-6)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }} onClick={e => e.stopPropagation()}>
                     <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-md)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)' }}>New Gear List</div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       <label style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)' }}>List Name</label>
-                      <input type="text" value={listForm.name} onChange={e => setListForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Valencia Marathon kit" style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '10px 12px', color: 'var(--white)', fontFamily: 'var(--body)', fontSize: 'var(--text-compact)' }} />
+                      <input type="text" value={listForm.name} onChange={e => setListForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Valencia Marathon kit" style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-md)', padding: '10px 12px', color: 'var(--white)', fontFamily: 'var(--body)', fontSize: 'var(--text-compact)' }} />
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       <label style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)' }}>Type</label>
-                      <select value={listForm.kind} onChange={e => setListForm(f => ({ ...f, kind: e.target.value }))} style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '10px 12px', color: 'var(--white)', fontFamily: 'var(--body)', fontSize: 'var(--text-compact)' }}>
+                      <select value={listForm.kind} onChange={e => setListForm(f => ({ ...f, kind: e.target.value }))} style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-md)', padding: '10px 12px', color: 'var(--white)', fontFamily: 'var(--body)', fontSize: 'var(--text-compact)' }}>
                         {LIST_KINDS.map(k => <option key={k} value={k}>{k}</option>)}
                       </select>
                     </div>
-                    <div style={{ display: 'flex', gap: '10px' }}>
+                    <div style={{ display: 'flex', gap: 'var(--sp-2)' }}>
                       <button onClick={() => { if (!listForm.name.trim()) return; addList(listForm.name.trim(), listForm.kind); setListModal(null) }} disabled={!listForm.name.trim()} style={{ ...btnMain, flex: 1, opacity: !listForm.name.trim() ? 0.5 : 1 }}>Create List</button>
                       <button onClick={() => setListModal(null)} style={{ ...btnGhost, flex: 1 }}>Cancel</button>
                     </div>
@@ -770,12 +770,12 @@ export function Gear() {
                 if (!list) return null
                 return (
                   <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 900, display: 'flex', alignItems: 'flex-end' }} onClick={() => setListModal(null)}>
-                    <div style={{ width: '100%', maxHeight: '70vh', background: 'var(--surface2)', borderRadius: '16px 16px 0 0', padding: '24px', display: 'flex', flexDirection: 'column', gap: '14px', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+                    <div style={{ width: '100%', maxHeight: '70vh', background: 'var(--surface2)', borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0', padding: 'var(--sp-6)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
                       <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)' }}>Add to "{list.name}"</div>
                       {allLibraryProducts.length === 0 ? (
                         <p style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)' }}>Save gear in your Library first, then add it to lists.</p>
                       ) : allLibraryProducts.map(p => (
-                        <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
+                        <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
                           <span style={{ flex: 1, fontSize: 'var(--text-sm)', color: 'var(--white)' }}>{p.label}</span>
                           <button
                             onClick={() => list.itemIds.includes(p.id) ? removeItemFromList(list.id, p.id) : addItemToList(list.id, p.id)}
@@ -794,17 +794,17 @@ export function Gear() {
               {lists.length === 0 ? (
                 <EmptyState title="No lists yet" body="Create a list to organize your race day kit — shoes, nutrition, gear by distance." cta="Create a List" onCta={() => { setListForm({ name: '', kind: 'Race Day Kit' }); setListModal('new') }} />
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
                   {lists.map(list => (
-                    <div key={list.id} style={{ ...card, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div key={list.id} style={{ ...card, display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <div>
                           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>{list.name}</div>
                           <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>{list.kind} · {list.itemIds.length} item{list.itemIds.length !== 1 ? 's' : ''}</div>
                         </div>
-                        <div style={{ display: 'flex', gap: '6px' }}>
-                          <button onClick={() => setListModal({ listId: list.id, mode: 'items' })} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: '4px', color: 'var(--orange)', fontSize: 'var(--text-xs)', padding: '3px 8px', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700 }}>+ Items</button>
-                          <button onClick={() => deleteList(list.id)} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: '4px', color: 'var(--muted2)', fontSize: 'var(--text-xs)', padding: '3px 8px', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700 }}>✕</button>
+                        <div style={{ display: 'flex', gap: 'var(--sp-2)' }}>
+                          <button onClick={() => setListModal({ listId: list.id, mode: 'items' })} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 'var(--radius-xs)', color: 'var(--orange)', fontSize: 'var(--text-xs)', padding: '3px 8px', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700 }}>+ Items</button>
+                          <button onClick={() => deleteList(list.id)} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 'var(--radius-xs)', color: 'var(--muted2)', fontSize: 'var(--text-xs)', padding: '3px 8px', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700 }}>✕</button>
                         </div>
                       </div>
                       {list.itemIds.length > 0 && (
@@ -814,7 +814,7 @@ export function Gear() {
                             const catalog = GEAR_CATALOG.find(g => g.id === pid)
                             const label   = custom ? `${custom.brand} · ${custom.name}` : catalog ? `${catalog.brand} · ${catalog.name}` : pid
                             return (
-                              <div key={pid} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 8px', background: 'var(--surface3)', borderRadius: '6px' }}>
+                              <div key={pid} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', padding: '6px 8px', background: 'var(--surface3)', borderRadius: 'var(--radius-sm)' }}>
                                 <span style={{ flex: 1, fontSize: '12px', color: 'var(--white)' }}>{label}</span>
                                 <button onClick={() => moveItem(list.id, pid, -1)} disabled={idx === 0} style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: '12px', padding: '0 2px', opacity: idx === 0 ? 0.3 : 1 }}>↑</button>
                                 <button onClick={() => moveItem(list.id, pid, 1)} disabled={idx === list.itemIds.length - 1} style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: '12px', padding: '0 2px', opacity: idx === list.itemIds.length - 1 ? 0.3 : 1 }}>↓</button>
@@ -846,7 +846,7 @@ export function Gear() {
               {/* Templates row */}
               <div>
                 <p style={{ margin: '0 0 8px', fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Templates</p>
-                <div style={{ display: 'flex', gap: '6px', overflowX: 'auto', paddingBottom: '4px' }}>
+                <div style={{ display: 'flex', gap: 'var(--sp-2)', overflowX: 'auto', paddingBottom: '4px' }}>
                   {STACK_TEMPLATES.map(t => (
                     <button key={t.label} onClick={() => { addStack(t.label, undefined, t.label, t.items) }} style={{ ...btnGhost, padding: '5px 12px', fontSize: 'var(--text-xs)', whiteSpace: 'nowrap', flexShrink: 0 }}>
                       {t.label}
@@ -858,22 +858,22 @@ export function Gear() {
               {/* New stack modal */}
               {stackModal === 'new' && (
                 <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 900, display: 'flex', alignItems: 'flex-end' }} onClick={() => setStackModal(null)}>
-                  <div style={{ width: '100%', background: 'var(--surface2)', borderRadius: '16px 16px 0 0', padding: '24px', display: 'flex', flexDirection: 'column', gap: '14px' }} onClick={e => e.stopPropagation()}>
+                  <div style={{ width: '100%', background: 'var(--surface2)', borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0', padding: 'var(--sp-6)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }} onClick={e => e.stopPropagation()}>
                     <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-md)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)' }}>New Race Stack</div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       <label style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)' }}>Stack Name</label>
-                      <input type="text" value={stackForm.name} onChange={e => setStackForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Berlin Marathon 2026" style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '10px 12px', color: 'var(--white)', fontFamily: 'var(--body)', fontSize: 'var(--text-compact)' }} />
+                      <input type="text" value={stackForm.name} onChange={e => setStackForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Berlin Marathon 2026" style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-md)', padding: '10px 12px', color: 'var(--white)', fontFamily: 'var(--body)', fontSize: 'var(--text-compact)' }} />
                     </div>
                     {allRaces.length > 0 && (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         <label style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)' }}>Link to Race (optional)</label>
-                        <select value={stackForm.raceId} onChange={e => setStackForm(f => ({ ...f, raceId: e.target.value }))} style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: '8px', padding: '10px 12px', color: 'var(--white)', fontFamily: 'var(--body)', fontSize: 'var(--text-compact)' }}>
+                        <select value={stackForm.raceId} onChange={e => setStackForm(f => ({ ...f, raceId: e.target.value }))} style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-md)', padding: '10px 12px', color: 'var(--white)', fontFamily: 'var(--body)', fontSize: 'var(--text-compact)' }}>
                           <option value="">— No race linked —</option>
                           {allRaces.map(r => <option key={r.id} value={r.id}>{r.name ?? r.distance} · {fmtDateDDMM(r.date)}</option>)}
                         </select>
                       </div>
                     )}
-                    <div style={{ display: 'flex', gap: '10px' }}>
+                    <div style={{ display: 'flex', gap: 'var(--sp-2)' }}>
                       <button onClick={() => { if (!stackForm.name.trim()) return; addStack(stackForm.name.trim(), stackForm.raceId || undefined); setStackModal(null) }} disabled={!stackForm.name.trim()} style={{ ...btnMain, flex: 1, opacity: !stackForm.name.trim() ? 0.5 : 1 }}>Create Stack</button>
                       <button onClick={() => setStackModal(null)} style={{ ...btnGhost, flex: 1 }}>Cancel</button>
                     </div>
@@ -887,12 +887,12 @@ export function Gear() {
                 if (!stack) return null
                 return (
                   <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 900, display: 'flex', alignItems: 'flex-end' }} onClick={() => setStackModal(null)}>
-                    <div style={{ width: '100%', maxHeight: '70vh', background: 'var(--surface2)', borderRadius: '16px 16px 0 0', padding: '24px', display: 'flex', flexDirection: 'column', gap: '14px', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
+                    <div style={{ width: '100%', maxHeight: '70vh', background: 'var(--surface2)', borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0', padding: 'var(--sp-6)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
                       <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)' }}>Edit "{stack.name}"</div>
                       {allLibraryProducts.length === 0 ? (
                         <p style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)' }}>Save gear in your Library first.</p>
                       ) : allLibraryProducts.map(p => (
-                        <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
+                        <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
                           <span style={{ flex: 1, fontSize: 'var(--text-sm)', color: 'var(--white)' }}>{p.label}</span>
                           <button onClick={() => toggleStackItem(stack.id, p.id)} style={{ ...stack.itemIds.includes(p.id) ? btnMain : btnGhost, padding: '4px 12px', fontSize: 'var(--text-xs)' }}>
                             {stack.itemIds.includes(p.id) ? '✓' : '+ Add'}
@@ -908,11 +908,11 @@ export function Gear() {
               {stacks.length === 0 ? (
                 <EmptyState title="No stacks yet" body="Pick a template above or create a custom stack for a specific race build." />
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
                   {stacks.map(stack => {
                     const linkedRace = allRaces.find(r => r.id === stack.raceId)
                     return (
-                      <div key={stack.id} style={{ ...card, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      <div key={stack.id} style={{ ...card, display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                           <div>
                             <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>{stack.name}</div>
@@ -920,9 +920,9 @@ export function Gear() {
                               {linkedRace ? `${linkedRace.name ?? 'Race'} · ${fmtDateDDMM(linkedRace.date)}` : stack.template ? `Template: ${stack.template}` : 'Custom stack'} · {stack.itemIds.length} items
                             </div>
                           </div>
-                          <div style={{ display: 'flex', gap: '6px' }}>
-                            <button onClick={() => setStackModal({ stackId: stack.id, mode: 'items' })} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: '4px', color: 'var(--orange)', fontSize: 'var(--text-xs)', padding: '3px 8px', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700 }}>Edit</button>
-                            <button onClick={() => deleteStack(stack.id)} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: '4px', color: 'var(--muted2)', fontSize: 'var(--text-xs)', padding: '3px 8px', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700 }}>✕</button>
+                          <div style={{ display: 'flex', gap: 'var(--sp-2)' }}>
+                            <button onClick={() => setStackModal({ stackId: stack.id, mode: 'items' })} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 'var(--radius-xs)', color: 'var(--orange)', fontSize: 'var(--text-xs)', padding: '3px 8px', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700 }}>Edit</button>
+                            <button onClick={() => deleteStack(stack.id)} style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 'var(--radius-xs)', color: 'var(--muted2)', fontSize: 'var(--text-xs)', padding: '3px 8px', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700 }}>✕</button>
                           </div>
                         </div>
                         {stack.itemIds.length > 0 && (
@@ -932,7 +932,7 @@ export function Gear() {
                               const catalog = GEAR_CATALOG.find(g => g.id === pid)
                               const label   = custom ? custom.name : catalog ? catalog.name : pid
                               return (
-                                <span key={pid} style={{ fontSize: 'var(--text-xs)', background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: '100px', padding: '3px 8px', color: 'var(--white)' }}>
+                                <span key={pid} style={{ fontSize: 'var(--text-xs)', background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: 'var(--radius-pill)', padding: '3px 8px', color: 'var(--white)' }}>
                                   {label}
                                 </span>
                               )
