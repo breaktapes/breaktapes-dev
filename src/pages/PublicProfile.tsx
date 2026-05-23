@@ -221,7 +221,7 @@ export function PublicProfile({ profile }: PublicProfileProps) {
           padding: 'var(--sp-3)',
           fontFamily: 'var(--headline)',
           fontWeight: 900,
-          fontSize: '12px',
+          fontSize: 'var(--text-xs)',
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
           color: 'var(--white)',

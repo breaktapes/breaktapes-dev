@@ -403,7 +403,7 @@ function ViewPanel({ race, isPB, onEdit, onDelete, onShare }: { race: Race; isPB
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             {race.splits.map((s, i) => (
               <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
-                <span style={{ fontSize: '12px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{s.label}</span>
+                <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{s.label}</span>
                 <span style={{ fontSize: 'var(--text-sm)', fontFamily: 'var(--headline)', fontWeight: 700, color: 'var(--white)' }}>
                   {s.cumulative || s.split || '—'}
                 </span>
@@ -476,7 +476,7 @@ function ViewPanel({ race, isPB, onEdit, onDelete, onShare }: { race: Race; isPB
             background: resubmitDone ? 'rgba(var(--green-ch),0.08)' : 'transparent',
             border: `1px solid ${resubmitDone ? 'rgba(var(--green-ch),0.3)' : 'var(--border2)'}`,
             borderRadius: 'var(--radius-md)', color: resubmitDone ? 'var(--green)' : 'var(--muted)',
-            fontSize: '12px', cursor: resubmitting ? 'default' : 'pointer',
+            fontSize: 'var(--text-xs)', cursor: resubmitting ? 'default' : 'pointer',
             fontFamily: 'var(--headline)', letterSpacing: '0.05em',
           }}
           onClick={handleResubmit}
@@ -981,7 +981,7 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
       {/* Triathlon discipline splits */}
       {sport === 'Triathlon' && !isUpcoming && (
         <div>
-          <div style={{ fontFamily: 'var(--headline)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '10px' }}>SPLITS</div>
+          <div style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-xs)', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '10px' }}>SPLITS</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-2)' }}>
             {([
               { label: 'Swim',      val: triSwim,  set: setTriSwim,  ph: '0:28:00' },
@@ -991,7 +991,7 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
               { label: 'Run',       val: triRun,   set: setTriRun,   ph: '1:55:00' },
             ] as { label: string; val: string; set: (v: string) => void; ph: string }[]).map(seg => (
               <div key={seg.label} style={seg.label === 'Run' ? { gridColumn: '1 / -1' } : undefined}>
-                <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '4px' }}>{seg.label}</div>
+                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '4px' }}>{seg.label}</div>
                 <input
                   style={st.input}
                   type="text"
@@ -1095,7 +1095,7 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
               </Field>
 
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--sp-2)' }}>
-                <p style={{ margin: 0, fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Weather</p>
+                <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Weather</p>
                 <button
                   type="button"
                   onClick={autoFillWeather}
@@ -1103,7 +1103,7 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
                   style={{
                     background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-sm)',
                     color: (!lat || !lng || !date) ? 'var(--muted2)' : 'var(--orange)',
-                    fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700,
+                    fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700,
                     letterSpacing: '0.08em', textTransform: 'uppercase', padding: '4px 10px',
                     cursor: (!lat || !lng || !date) ? 'not-allowed' : 'pointer',
                   }}
@@ -1379,7 +1379,7 @@ const st = {
     background: 'var(--surface3)',
     border: '1px solid var(--border2)',
     borderRadius: 'var(--radius-pill)',
-    fontSize: '12px',
+    fontSize: 'var(--text-xs)',
     color: 'var(--white)',
     fontWeight: 500,
     lineHeight: 1.2,
@@ -1418,7 +1418,7 @@ const st = {
     padding: '13px 16px',
     fontFamily: 'var(--headline)',
     fontWeight: 900,
-    fontSize: '12px',
+    fontSize: 'var(--text-xs)',
     letterSpacing: '0.1em',
     textTransform: 'uppercase' as const,
     cursor: 'pointer',
@@ -1432,7 +1432,7 @@ const st = {
     padding: 'var(--sp-3)',
     fontFamily: 'var(--headline)',
     fontWeight: 900,
-    fontSize: '12px',
+    fontSize: 'var(--text-xs)',
     letterSpacing: '0.1em',
     textTransform: 'uppercase' as const,
     cursor: 'pointer',

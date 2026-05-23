@@ -90,7 +90,7 @@ export function BottomNav() {
             <Icon />
             <span style={{
               fontFamily: 'var(--headline)',
-              fontSize: '10px',
+              fontSize: 'var(--text-xs)',
               fontWeight: 700,
               letterSpacing: '0.08em',
               textTransform: 'uppercase',

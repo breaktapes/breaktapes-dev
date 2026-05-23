@@ -154,7 +154,7 @@ export function CityPicker({ city, country, onSelect, placeholder = 'e.g. Leh', 
           }}
         >
           {loading && results.length === 0 && (
-            <div style={{ padding: '10px 12px', fontSize: '12px', color: 'var(--muted)' }}>
+            <div style={{ padding: '10px 12px', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
               Searching…
             </div>
           )}

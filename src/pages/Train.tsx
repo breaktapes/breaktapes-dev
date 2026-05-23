@@ -535,7 +535,7 @@ export function Train() {
                                 border: 'none',
                                 fontFamily: 'var(--headline)',
                                 fontWeight: 900,
-                                fontSize: '12px',
+                                fontSize: 'var(--text-xs)',
                                 letterSpacing: '0.08em',
                                 textTransform: 'uppercase',
                                 cursor: 'pointer',
@@ -575,7 +575,7 @@ export function Train() {
                           color: 'var(--orange)',
                           fontFamily: 'var(--headline)',
                           fontWeight: 700,
-                          fontSize: '12px',
+                          fontSize: 'var(--text-xs)',
                           letterSpacing: '0.08em',
                           textTransform: 'uppercase',
                           cursor: 'pointer',
@@ -603,14 +603,14 @@ export function Train() {
                       gap: '1rem',
                     }}>
                       <div>
-                        <p style={{ margin: 0, fontSize: '10px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Per km</p>
+                        <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Per km</p>
                         <p style={{ margin: '4px 0 0', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xl)', color: units !== 'imperial' ? 'var(--orange)' : 'var(--white)' }}>
                           {runResult.km}
                         </p>
                         <p style={{ margin: '2px 0 0', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>min/km{units !== 'imperial' && ' ✓'}</p>
                       </div>
                       <div>
-                        <p style={{ margin: 0, fontSize: '10px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Per mile</p>
+                        <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Per mile</p>
                         <p style={{ margin: '4px 0 0', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xl)', color: units === 'imperial' ? 'var(--orange)' : 'var(--white)' }}>
                           {runResult.mi}
                         </p>
@@ -709,7 +709,7 @@ export function Train() {
                           border: `1px solid ${splitStrategy === s ? 'rgba(var(--orange-ch),0.4)' : 'var(--border2)'}`,
                           borderRadius: 'var(--radius-sm)',
                           color: splitStrategy === s ? 'var(--orange)' : 'var(--muted)',
-                          fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '10px',
+                          fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)',
                           letterSpacing: '0.06em', textTransform: 'uppercase', cursor: 'pointer',
                         }}>
                           {s === 'even' ? 'Even' : s === 'negative' ? '↗ Neg Split' : '↘ Pos Split'}
@@ -746,7 +746,7 @@ export function Train() {
                             color: splitsTab === t.id ? 'var(--orange)' : 'var(--muted)',
                             fontFamily: 'var(--headline)',
                             fontWeight: 700,
-                            fontSize: '10px',
+                            fontSize: 'var(--text-xs)',
                             letterSpacing: '0.06em',
                             textTransform: 'uppercase',
                             cursor: 'pointer',
@@ -760,7 +760,7 @@ export function Train() {
                     {/* Header */}
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px', padding: '4px 0 8px', borderBottom: '1px solid var(--border2)' }}>
                       {['Split', 'Time', 'Cumulative'].map(h => (
-                        <span key={h} style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)' }}>{h}</span>
+                        <span key={h} style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)' }}>{h}</span>
                       ))}
                     </div>
                     {/* Rows */}
@@ -835,7 +835,7 @@ export function Train() {
                 return (
                   <div style={card}>
                     <p style={sectionLabel}>Age-Grade Pace Projection</p>
-                    <p style={{ margin: '0 0 12px', fontSize: '12px', color: 'var(--muted)' }}>
+                    <p style={{ margin: '0 0 12px', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
                       See what your PB paces would look like at a different age, based on WA masters age-grading factors.
                     </p>
 
@@ -850,7 +850,7 @@ export function Train() {
                           style={{ ...textInput, fontSize: '15px' }}
                         />
                         {currentAge && !ageCalcCurrentAge && (
-                          <p style={{ margin: '3px 0 0', fontSize: '10px', color: 'var(--muted)' }}>From your profile</p>
+                          <p style={{ margin: '3px 0 0', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>From your profile</p>
                         )}
                       </div>
                       <div>
@@ -878,7 +878,7 @@ export function Train() {
                               {direction}
                             </span>
                             {pctChange > 0.1 && (
-                              <span style={{ fontSize: '12px', color: 'var(--muted)' }}>
+                              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
                                 ~{pctChange.toFixed(1)}% {targetAge < resolvedCurrentAge! ? 'improvement' : 'slower'} at age {targetAge}
                               </span>
                             )}
@@ -887,7 +887,7 @@ export function Train() {
                           {/* PB projection table */}
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--sp-2)', padding: '4px 0 8px', borderBottom: '1px solid var(--border2)' }}>
                             {['Distance', `Age ${resolvedCurrentAge}`, `Age ${targetAge}`].map(h => (
-                              <span key={h} style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)' }}>{h}</span>
+                              <span key={h} style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)' }}>{h}</span>
                             ))}
                           </div>
                           {pbRows.map(row => {
@@ -896,11 +896,11 @@ export function Train() {
                             const projPaceKm = secsToMMSS(projSecs / row.km)
                             return (
                               <div key={row.label} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--sp-2)', padding: '10px 0', borderBottom: '1px solid var(--border)', alignItems: 'center' }}>
-                                <span style={{ fontSize: '12px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', fontFamily: 'var(--headline)', fontWeight: 700 }}>{row.label}</span>
+                                <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', fontFamily: 'var(--headline)', fontWeight: 700 }}>{row.label}</span>
                                 <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', color: 'var(--white)' }}>{row.timeStr}</span>
                                 <div>
                                   <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', color: ratio < 1 ? 'var(--green)' : ratio > 1 ? '#f97316' : 'var(--white)' }}>{projStr}</div>
-                                  <div style={{ fontSize: '10px', color: 'var(--muted)', marginTop: '2px' }}>{projPaceKm}/km</div>
+                                  <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>{projPaceKm}/km</div>
                                 </div>
                               </div>
                             )
@@ -909,10 +909,10 @@ export function Train() {
                           {/* How it works */}
                           <div style={{ marginTop: '14px', padding: 'var(--sp-3)', borderRadius: 'var(--radius-md)', background: 'var(--surface3)', border: '1px solid var(--border)' }}>
                             <p style={{ margin: '0 0 8px', fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)' }}>How it works</p>
-                            <p style={{ margin: '0 0 6px', fontSize: '12px', color: 'var(--muted)', lineHeight: 1.5 }}>
+                            <p style={{ margin: '0 0 6px', fontSize: 'var(--text-xs)', color: 'var(--muted)', lineHeight: 1.5 }}>
                               Formula: <span style={{ color: 'var(--white)', fontFamily: 'monospace', fontSize: 'var(--text-xs)' }}>projected = current × (factor_target / factor_current)</span>
                             </p>
-                            <p style={{ margin: '0 0 10px', fontSize: '12px', color: 'var(--muted)', lineHeight: 1.5 }}>
+                            <p style={{ margin: '0 0 10px', fontSize: 'var(--text-xs)', color: 'var(--muted)', lineHeight: 1.5 }}>
                               Age factors are from the <strong style={{ color: 'var(--white)' }}>World Athletics Masters Age-Grading Tables 2023</strong>. Factor 1.000 = peak performance zone (ages 25–30). Values above 1.0 reflect natural physiological changes from that peak.
                             </p>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '4px', marginBottom: '10px' }}>
@@ -920,7 +920,7 @@ export function Train() {
                                 const f = waAgeFactor(a, gender)
                                 return (
                                   <div key={a} style={{ textAlign: 'center', padding: '5px 2px', borderRadius: 'var(--radius-sm)', background: f <= 1.0 ? 'rgba(0,255,136,0.08)' : 'var(--surface2)', border: `1px solid ${f <= 1.0 ? 'rgba(0,255,136,0.2)' : 'var(--border)'}` }}>
-                                    <div style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700 }}>Age {a}</div>
+                                    <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700 }}>Age {a}</div>
                                     <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 900, color: f <= 1.0 ? 'var(--green)' : 'var(--white)' }}>{f.toFixed(3)}</div>
                                   </div>
                                 )
@@ -935,10 +935,10 @@ export function Train() {
                     })()}
 
                     {canProject && pbRows.length === 0 && (
-                      <p style={{ margin: 0, fontSize: '12px', color: 'var(--muted)' }}>Log timed races at 5K–Marathon distances to see pace projections.</p>
+                      <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Log timed races at 5K–Marathon distances to see pace projections.</p>
                     )}
                     {!canProject && (
-                      <p style={{ margin: 0, fontSize: '12px', color: 'var(--muted)' }}>Enter your current and target age above.</p>
+                      <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Enter your current and target age above.</p>
                     )}
                   </div>
                 )
@@ -1007,7 +1007,7 @@ export function Train() {
                             color: 'var(--orange)',
                             fontFamily: 'var(--headline)',
                             fontWeight: 700,
-                            fontSize: '12px',
+                            fontSize: 'var(--text-xs)',
                             letterSpacing: '0.08em',
                             textTransform: 'uppercase',
                             cursor: 'pointer',
@@ -1049,7 +1049,7 @@ export function Train() {
                   const sep = <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', color: 'var(--muted)', padding: '0 2px' }}>:</span>
                   const estTime = (sec: number | null) => sec && sec > 0
                     ? <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', color: 'var(--orange)', letterSpacing: '0.02em', whiteSpace: 'nowrap' }}>{secsToHMS(sec)}</span>
-                    : <span style={{ fontSize: '12px', color: 'var(--muted)' }}>—</span>
+                    : <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>—</span>
                   const estPace = (label: string) =>
                     <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--muted)', whiteSpace: 'nowrap' }}>{label}</span>
 
@@ -1071,7 +1071,7 @@ export function Train() {
                           {label}
                         </span>
                         {sub && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginLeft: '6px' }}>{sub}</span>}
-                        <div style={{ fontSize: '10px', color: 'var(--muted)', letterSpacing: '0.04em', marginTop: '1px' }}>{unit}</div>
+                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', letterSpacing: '0.04em', marginTop: '1px' }}>{unit}</div>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0' }}>{pace}</div>
                       <div style={{ textAlign: 'right', minWidth: '64px' }}>{rightOverride !== undefined ? rightOverride : estTime(sec)}</div>
@@ -1107,9 +1107,9 @@ export function Train() {
 
                       {/* Column headers */}
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 'var(--sp-2)', paddingBottom: '6px', borderBottom: '2px solid var(--border2)' }}>
-                        <span style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Segment</span>
-                        <span style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{triMode === 'pace' ? 'Pace' : 'Time'}</span>
-                        <span style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', minWidth: '64px', textAlign: 'right' }}>{triMode === 'pace' ? 'Time' : 'Pace'}</span>
+                        <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Segment</span>
+                        <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{triMode === 'pace' ? 'Pace' : 'Time'}</span>
+                        <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', minWidth: '64px', textAlign: 'right' }}>{triMode === 'pace' ? 'Time' : 'Pace'}</span>
                       </div>
 
                       {triMode === 'pace' ? (<>
@@ -1159,14 +1159,14 @@ export function Train() {
                         ]
                         return (
                           <div>
-                            <p style={{ margin: '0 0 8px', fontSize: '10px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--headline)', fontWeight: 700 }}>Time Split</p>
+                            <p style={{ margin: '0 0 8px', fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--headline)', fontWeight: 700 }}>Time Split</p>
                             <div style={{ display: 'flex', height: '12px', borderRadius: 'var(--radius-sm)', overflow: 'hidden', gap: '1px' }}>
                               {segs.map(seg => <div key={seg.label} style={{ width: `${(seg.sec / triResult.totalSec) * 100}%`, background: seg.color, minWidth: seg.sec > 0 ? '2px' : '0' }} />)}
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '4px', marginTop: '8px' }}>
                               {segs.map(seg => (
                                 <div key={seg.label}>
-                                  <div style={{ fontSize: '10px', fontFamily: 'var(--headline)', fontWeight: 700, color: seg.color, letterSpacing: '0.04em', textTransform: 'uppercase' }}>{seg.label}</div>
+                                  <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, color: seg.color, letterSpacing: '0.04em', textTransform: 'uppercase' }}>{seg.label}</div>
                                   <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 900, color: 'var(--white)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{secsToHMS(seg.sec)}</div>
                                 </div>
                               ))}

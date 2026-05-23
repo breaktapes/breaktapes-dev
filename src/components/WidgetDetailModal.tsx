@@ -284,7 +284,7 @@ const st = {
 
   previewKicker: {
     fontFamily: 'var(--headline)',
-    fontSize: '10px',
+    fontSize: 'var(--text-xs)',
     fontWeight: 700,
     letterSpacing: '0.16em',
     textTransform: 'uppercase' as const,
@@ -313,7 +313,7 @@ const st = {
 
   metricLabel: {
     fontFamily: 'var(--headline)',
-    fontSize: '10px',
+    fontSize: 'var(--text-xs)',
     fontWeight: 700,
     letterSpacing: '0.12em',
     textTransform: 'uppercase' as const,
@@ -352,7 +352,7 @@ const st = {
 
   comparisonNote: {
     marginTop: '4px',
-    fontSize: '12px',
+    fontSize: 'var(--text-xs)',
     color: 'var(--muted2)',
     lineHeight: 1.5,
   } as React.CSSProperties,
@@ -365,7 +365,7 @@ const st = {
 
   sectionLabel: {
     fontFamily: 'var(--headline)',
-    fontSize: '10px',
+    fontSize: 'var(--text-xs)',
     fontWeight: 700,
     letterSpacing: '0.14em',
     textTransform: 'uppercase' as const,
@@ -388,7 +388,7 @@ const st = {
 
   actionsLabel: {
     fontFamily: 'var(--headline)',
-    fontSize: '10px',
+    fontSize: 'var(--text-xs)',
     fontWeight: 700,
     letterSpacing: '0.14em',
     textTransform: 'uppercase' as const,

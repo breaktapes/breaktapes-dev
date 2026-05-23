@@ -193,10 +193,10 @@ export function EditProfileModal({ onClose }: Props) {
                       >×</button>
                     </span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flex: 1, minWidth: '120px' }}>
-                      <span style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', letterSpacing: '0.06em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>joined</span>
+                      <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', letterSpacing: '0.06em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>joined</span>
                       <input
                         type="date"
-                        style={{ ...st.input, fontSize: '12px', padding: '4px 8px', flex: 1 }}
+                        style={{ ...st.input, fontSize: 'var(--text-xs)', padding: '4px 8px', flex: 1 }}
                         value={clubJoinDates[c] ?? ''}
                         onChange={e => setClubJoinDates(prev => ({ ...prev, [c]: e.target.value }))}
                       />
@@ -237,11 +237,11 @@ export function EditProfileModal({ onClose }: Props) {
           <Field label="Injury / Break Period">
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
               <div>
-                <span style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>From</span>
+                <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>From</span>
                 <DateInput value={injuryBreakStart} onChange={setInjuryBreakStart} max={new Date().toISOString().split('T')[0]} />
               </div>
               <div>
-                <span style={{ fontSize: '10px', color: 'var(--muted)', fontFamily: 'var(--headline)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>To</span>
+                <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>To</span>
                 <DateInput value={injuryBreakEnd} onChange={setInjuryBreakEnd} max={new Date().toISOString().split('T')[0]} />
               </div>
             </div>
@@ -376,7 +376,7 @@ const st = {
     color: 'var(--orange)',
     borderRadius: 'var(--radius-pill)',
     padding: '4px 10px',
-    fontSize: '12px',
+    fontSize: 'var(--text-xs)',
     fontFamily: 'var(--headline)',
     fontWeight: 700,
     letterSpacing: '0.06em',
