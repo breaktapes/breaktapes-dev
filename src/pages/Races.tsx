@@ -105,6 +105,16 @@ function countryFlag(country: string | undefined): string {
   return code.toUpperCase().replace(/./g, c => String.fromCodePoint(0x1F1E5 + c.charCodeAt(0)))
 }
 
+/** Zero-pads hours in a time string: "5:09:49" → "05:09:49" */
+function padTime(t: string | undefined): string | undefined {
+  if (!t) return t
+  const parts = t.split(':')
+  if (parts.length === 3 && parts[0].length === 1) {
+    return `0${parts[0]}:${parts[1]}:${parts[2]}`
+  }
+  return t
+}
+
 function normKey(d: string | undefined): string {
   const km = distanceToKm(d)
   if (km <= 0) return (d ?? '').toLowerCase().trim()
@@ -247,7 +257,7 @@ function CompactRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onClic
           className="rrc-time"
           style={nonFinish ? { color: 'var(--muted)' } : undefined}
         >
-          {nonFinish ?? (race.time ?? '—')}
+          {nonFinish ?? (padTime(race.time) ?? '—')}
         </div>
         {label && <div className="rrc-dist">{label}</div>}
       </div>
@@ -290,8 +300,8 @@ function DetailedRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onCli
           </div>
         </div>
         <div style={{ textAlign: 'right', flexShrink: 0 }}>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '15px', color: nonFinish ? 'var(--muted)' : (isPB ? 'var(--green)' : 'var(--orange)'), letterSpacing: '0.02em' }}>
-            {nonFinish ?? (race.time ?? '—')}
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '17px', color: nonFinish ? 'var(--muted)' : (isPB ? 'var(--green)' : 'var(--orange)'), letterSpacing: '0.02em' }}>
+            {nonFinish ?? (padTime(race.time) ?? '—')}
           </div>
           {label && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textAlign: 'right', marginTop: '1px' }}>{label}</div>}
         </div>

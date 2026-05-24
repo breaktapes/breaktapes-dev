@@ -447,25 +447,19 @@ function ViewPanel({ race, isPB, onEdit, onDelete, onShare }: { race: Race; isPB
       )}
 
       {/* Action buttons */}
-      <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem', flexWrap: 'wrap' }}>
-        <button style={st.editBtn} onClick={onEdit}>Edit Race</button>
+      <div style={{ display: 'grid', gridTemplateColumns: confirmDelete ? '1fr 1fr 1fr 1fr' : '1fr 1fr 1fr', gap: '0.5rem', marginTop: '0.5rem' }}>
+        <button style={{ ...st.editBtn, margin: 0 }} onClick={onEdit}>EDIT RACE</button>
         <button
-          style={{ ...st.editBtn, background: 'transparent', border: '1px solid var(--border2)', color: 'var(--muted)' }}
+          style={{ ...st.editBtn, background: 'transparent', border: '1px solid var(--border2)', color: 'var(--muted)', margin: 0 }}
           onClick={onShare}
-        >Share</button>
+        >SHARE</button>
         {confirmDelete ? (
-          <div style={{ display: 'flex', gap: '0.5rem', flex: 1 }}>
-            <button
-              style={{ ...st.deleteConfirmBtn, flex: 1 }}
-              onClick={onDelete}
-            >Confirm Delete</button>
-            <button
-              style={{ ...st.cancelBtn, flex: 1 }}
-              onClick={() => setConfirmDelete(false)}
-            >Cancel</button>
-          </div>
+          <>
+            <button style={{ ...st.deleteConfirmBtn }} onClick={onDelete}>CONFIRM DELETE</button>
+            <button style={{ ...st.cancelBtn }} onClick={() => setConfirmDelete(false)}>CANCEL</button>
+          </>
         ) : (
-          <button style={st.deleteBtn} onClick={() => setConfirmDelete(true)}>Delete</button>
+          <button style={{ ...st.deleteBtn, margin: 0 }} onClick={() => setConfirmDelete(true)}>DELETE</button>
         )}
       </div>
       {/* Re-submit to catalog */}
