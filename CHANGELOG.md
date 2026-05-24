@@ -3,6 +3,11 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.6.12.2] - 2026-05-24
+
+### Changed
+- **Collapsible split targets** — SPLIT TARGETS section in the Goal Pace widget now collapses/expands with a toggle; collapsed by default to reduce scroll length
+
 ## [0.6.12.1] - 2026-05-24
 
 ### Fixed
