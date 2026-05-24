@@ -5,8 +5,9 @@ import type { DashWidget, WidgetSize } from '@/types'
 // Default widget configuration — zones: now, recently, trending, context
 const DEFAULT_WIDGETS: DashWidget[] = [
   // NOW — RACE CONTEXT
-  { id: 'countdown',        label: 'Next Race Countdown',       icon: 'CD',  zone: 'now',      enabled: true,  pro: false, size: 'medium' },
-  { id: 'race-forecast',    label: 'Race Day Forecast',         icon: 'WX',  zone: 'now',      enabled: true,  pro: false, size: 'medium' },
+  { id: 'stats-strip',      label: 'Career Stats',              icon: 'STS', zone: 'now',      enabled: true,  pro: false, size: 'medium' },
+  { id: 'countdown',        label: 'Next Race Countdown',       icon: 'CD',  zone: 'now',      enabled: true,  pro: false, size: 'large'  },
+  { id: 'race-forecast',    label: 'Race Day Forecast',         icon: 'WX',  zone: 'now',      enabled: false, pro: false, size: 'medium' },
   { id: 'race-prediction',  label: 'Race Prediction',           icon: 'PRD', zone: 'now',      enabled: false, pro: false, size: 'medium' },
   { id: 'race-readiness',   label: 'Race Readiness Score',      icon: 'RDY', zone: 'now',      enabled: true,  pro: false, size: 'medium' },
   { id: 'gap-to-goal',      label: 'Gap To Goal',               icon: 'GTG', zone: 'now',      enabled: true,  pro: false, size: 'medium' },
@@ -16,12 +17,12 @@ const DEFAULT_WIDGETS: DashWidget[] = [
   { id: 'race-stack',       label: 'Race Stack Planner',        icon: 'STK', zone: 'now',      enabled: false, pro: false, size: 'medium' },
   { id: 'on-this-day',      label: 'On This Day',               icon: 'OTD', zone: 'now',      enabled: true,  pro: false, size: 'medium' },
   // RECENTLY — YOUR RACING
-  { id: 'recent-races',     label: 'Recent Races',              icon: 'RC',  zone: 'recently', enabled: true,  pro: false, size: 'medium' },
-  { id: 'activity-preview', label: 'Activity Feed Preview',     icon: 'ACT', zone: 'recently', enabled: false, pro: false, size: 'medium' },
-  { id: 'personal-bests',   label: 'Personal Bests',            icon: 'PB',  zone: 'recently', enabled: true,  pro: false, size: 'medium' },
-  { id: 'why-prd',          label: "Why You PR'd",              icon: 'PR',  zone: 'recently', enabled: false, pro: false, size: 'medium' },
-  { id: 'why-faded',        label: 'Why You Faded',             icon: 'FD',  zone: 'recently', enabled: false, pro: false, size: 'medium' },
-  { id: 'break-tape',       label: 'Break Tape Moments',        icon: 'BT',  zone: 'recently', enabled: false, pro: false, size: 'medium' },
+  { id: 'recent-races',     label: 'Recent Races',              icon: 'RC',  zone: 'recently', enabled: true,  pro: false, size: 'small'  },
+  { id: 'activity-preview', label: 'Activity Feed Preview',     icon: 'ACT', zone: 'recently', enabled: false, pro: false, size: 'small'  },
+  { id: 'personal-bests',   label: 'Personal Bests',            icon: 'PB',  zone: 'recently', enabled: true,  pro: false, size: 'small'  },
+  { id: 'why-prd',          label: "Why You PR'd",              icon: 'PR',  zone: 'recently', enabled: false, pro: false, size: 'small'  },
+  { id: 'why-faded',        label: 'Why You Faded',             icon: 'FD',  zone: 'recently', enabled: false, pro: false, size: 'small'  },
+  { id: 'break-tape',       label: 'Break Tape Moments',        icon: 'BT',  zone: 'recently', enabled: false, pro: false, size: 'small'  },
   // CONSISTENCY — BUILD
   { id: 'season-planner',   label: 'Season Planner',            icon: 'SP',  zone: 'trending', enabled: true,  pro: false, size: 'medium' },
   { id: 'recovery-intel',   label: 'Recovery Intelligence',     icon: 'REC', zone: 'trending', enabled: true,  pro: false, size: 'medium' },
@@ -45,13 +46,13 @@ const DEFAULT_WIDGETS: DashWidget[] = [
   { id: 'advanced-race-dna',label: 'Advanced Race DNA',         icon: 'DNA', zone: 'context',  enabled: false, pro: false, size: 'medium' },
   { id: 'race-comparer',    label: 'Race Comparer',             icon: 'CMP', zone: 'context',  enabled: false, pro: false, size: 'medium' },
   { id: 'what-to-race-next',label: 'What To Race Next',         icon: 'WTR', zone: 'context',  enabled: false, pro: false, size: 'medium' },
-  { id: 'story-mode',       label: 'Story Mode',                icon: 'STY', zone: 'recently', enabled: true,  pro: false, size: 'medium' },
+  { id: 'story-mode',       label: 'Story Mode',                icon: 'STY', zone: 'recently', enabled: true,  pro: false, size: 'small'  },
   { id: 'coach-activity',   label: 'Coach Activity',            icon: 'CCH', zone: 'context',  enabled: false, pro: false, size: 'medium' },
   // Day 2 formula widgets
-  { id: 'riegel-predictor', label: 'Race Predictor (Riegel)',   icon: 'RGL', zone: 'recently', enabled: true,  pro: false, size: 'medium' },
+  { id: 'riegel-predictor', label: 'Race Predictor (Riegel)',   icon: 'RGL', zone: 'recently', enabled: true,  pro: false, size: 'small'  },
   { id: 'vdot-score',       label: 'VDOT Fitness Score',        icon: 'VDT', zone: 'context',  enabled: true,  pro: false, size: 'medium' },
   { id: 'goal-pace',        label: 'Goal Pace Breakdown',       icon: 'PCE', zone: 'now',      enabled: true,  pro: false, size: 'medium' },
-  { id: 'weather-impact',   label: 'Weather Impact Score',      icon: 'WX',  zone: 'recently', enabled: true,  pro: false, size: 'medium' },
+  { id: 'weather-impact',   label: 'Weather Impact Score',      icon: 'WX',  zone: 'recently', enabled: true,  pro: false, size: 'small'  },
   { id: 'distance-milestones', label: 'Distance Milestones',    icon: 'MI',  zone: 'context',  enabled: true,  pro: false, size: 'medium' },
   // Day 3 formula widgets
   { id: 'equiv-perf',       label: 'Equivalent Performances',   icon: 'EQV', zone: 'context',  enabled: false, pro: false, size: 'medium' },
@@ -64,8 +65,11 @@ const STRAVA_PENDING = new Set(['training-correl', 'activity-preview'])
 
 // Which sizes each widget supports
 export const WIDGET_SIZES: Record<string, WidgetSize[]> = {
-  // small + medium + large (19)
-  'countdown':           ['small', 'medium', 'large'],
+  // large only
+  'countdown':           ['large'],
+  // medium only (structural)
+  'stats-strip':         ['medium'],
+  // small + medium + large (17)
   'race-forecast':       ['small', 'medium', 'large'],
   'goal-pace':           ['small', 'medium', 'large'],
   'gap-to-goal':         ['small', 'medium', 'large'],
@@ -84,26 +88,28 @@ export const WIDGET_SIZES: Record<string, WidgetSize[]> = {
   'distance-milestones': ['small', 'medium', 'large'],
   'race-prediction':     ['small', 'medium'],
   'race-stack':          ['small', 'medium'],
-  // medium + large (13)
+  // medium + large
   'race-dna':            ['medium', 'large'],
   'pattern-scan':        ['medium', 'large'],
   'season-planner':      ['medium', 'large'],
-  'riegel-predictor':    ['medium', 'large'],
   'race-density':        ['medium', 'large'],
-  'personal-bests':      ['medium', 'large'],
-  'recent-races':        ['medium', 'large'],
-  'weather-impact':      ['medium', 'large'],
-  'activity-preview':    ['medium', 'large'],
   'training-correl':     ['medium', 'large'],
   'upcoming-density':    ['medium', 'large'],
   'equiv-perf':          ['medium', 'large'],
   'advanced-race-dna':   ['medium', 'large'],
-  // medium only (15)
-  'story-mode':          ['medium'],
+  // small + medium + large (recently zone)
+  'recent-races':        ['small', 'medium', 'large'],
+  'personal-bests':      ['small', 'medium', 'large'],
+  'riegel-predictor':    ['small', 'medium', 'large'],
+  'weather-impact':      ['small', 'medium', 'large'],
+  'activity-preview':    ['small', 'medium', 'large'],
+  // small + medium (recently zone)
+  'story-mode':          ['small', 'medium'],
+  'why-prd':             ['small', 'medium'],
+  'why-faded':           ['small', 'medium'],
+  'break-tape':          ['small', 'medium'],
+  // medium only
   'why-result':          ['medium'],
-  'why-prd':             ['medium'],
-  'why-faded':           ['medium'],
-  'break-tape':          ['medium'],
   'surface-profile':     ['medium'],
   'pressure-performer':  ['medium'],
   'travel-load':         ['medium'],
@@ -123,8 +129,8 @@ export function getWidgetSizes(id: string): WidgetSize[] {
 // Hardcoded presets
 const PRESETS: Record<string, { widgetOrder: string[]; sizes: Partial<Record<string, WidgetSize>> }> = {
   'race-week': {
-    widgetOrder: ['zone:now', 'countdown', 'gap-to-goal', 'race-forecast', 'pb-probability', 'race-readiness'],
-    sizes: { countdown: 'large', 'gap-to-goal': 'medium', 'race-forecast': 'small', 'pb-probability': 'small', 'race-readiness': 'medium' },
+    widgetOrder: ['zone:now', 'countdown', 'gap-to-goal', 'pb-probability', 'race-readiness'],
+    sizes: { countdown: 'large', 'gap-to-goal': 'medium', 'pb-probability': 'small', 'race-readiness': 'medium' },
   },
   'off-season': {
     widgetOrder: ['zone:recently', 'recent-races', 'personal-bests', 'zone:context', 'career-momentum', 'age-grade', 'race-dna', 'pattern-scan'],
@@ -132,7 +138,7 @@ const PRESETS: Record<string, { widgetOrder: string[]; sizes: Partial<Record<str
   },
   'minimal': {
     widgetOrder: ['zone:now', 'countdown', 'gap-to-goal', 'pacing-iq'],
-    sizes: { countdown: 'medium', 'gap-to-goal': 'small', 'pacing-iq': 'small' },
+    sizes: { countdown: 'large', 'gap-to-goal': 'small', 'pacing-iq': 'small' },
   },
 }
 

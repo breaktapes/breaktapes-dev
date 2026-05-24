@@ -25,6 +25,18 @@ export interface WidgetContent {
 }
 
 export const WIDGET_CONTENT: Record<string, WidgetContent> = {
+  'stats-strip': {
+    id: 'stats-strip',
+    title: 'CAREER STATS',
+    tagline: 'Your racing at a glance.',
+    whatItIs: 'A summary strip of your all-time race stats — total races, distances covered, and top disciplines. Appears at the top of every dashboard view.',
+    howToRead: 'Numbers update automatically as you log races. The dominant sport is the one you have the most recorded events in.',
+    howItImpactsPerformance: 'Seeing your career totals regularly reinforces identity and consistency. Knowing your numbers means you can set more grounded goals.',
+    relatedActions: [
+      { label: 'Log a past race', action: 'openAddRace' },
+    ],
+  },
+
   'countdown': {
     id: 'countdown',
     title: 'NEXT RACE COUNTDOWN',
