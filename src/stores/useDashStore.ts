@@ -18,7 +18,6 @@ const DEFAULT_WIDGETS: DashWidget[] = [
   { id: 'on-this-day',      label: 'On This Day',               icon: 'OTD', zone: 'now',      enabled: true,  pro: false, size: 'medium' },
   // RECENTLY — YOUR RACING
   { id: 'recent-races',     label: 'Recent Races',              icon: 'RC',  zone: 'recently', enabled: true,  pro: false, size: 'small'  },
-  { id: 'activity-preview', label: 'Activity Feed Preview',     icon: 'ACT', zone: 'recently', enabled: false, pro: false, size: 'small'  },
   { id: 'personal-bests',   label: 'Personal Bests',            icon: 'PB',  zone: 'recently', enabled: true,  pro: false, size: 'small'  },
   { id: 'why-prd',          label: "Why You PR'd",              icon: 'PR',  zone: 'recently', enabled: false, pro: false, size: 'small'  },
   { id: 'why-faded',        label: 'Why You Faded',             icon: 'FD',  zone: 'recently', enabled: false, pro: false, size: 'small'  },
@@ -28,7 +27,6 @@ const DEFAULT_WIDGETS: DashWidget[] = [
   { id: 'recovery-intel',   label: 'Recovery Intelligence',     icon: 'REC', zone: 'trending', enabled: true,  pro: false, size: 'medium' },
   { id: 'race-density',     label: 'Race Density',              icon: 'DNS', zone: 'trending', enabled: true,  pro: false, size: 'medium' },
   { id: 'streak-risk',      label: 'Streak Risk',               icon: 'STR', zone: 'trending', enabled: true,  pro: false, size: 'medium' },
-  { id: 'training-correl',  label: 'Training Correlation',      icon: 'TRN', zone: 'trending', enabled: false, pro: false, size: 'medium' },
   { id: 'race-gap-analysis',label: 'Race Gap / Recovery',       icon: 'GAP', zone: 'trending', enabled: false, pro: false, size: 'medium' },
   { id: 'adaptive-goals',   label: 'Adaptive Goals',            icon: 'AG',  zone: 'trending', enabled: false, pro: false, size: 'medium' },
   // PATTERNS — ANALYSIS
@@ -60,8 +58,7 @@ const DEFAULT_WIDGETS: DashWidget[] = [
   { id: 'course-repeats',   label: 'Course Repeats',            icon: 'RPT', zone: 'context',  enabled: true,  pro: false, size: 'medium' },
 ]
 
-// Widgets disabled until Strava integration ships
-const STRAVA_PENDING = new Set(['training-correl', 'activity-preview'])
+const STRAVA_PENDING = new Set<string>()
 
 // Which sizes each widget supports
 export const WIDGET_SIZES: Record<string, WidgetSize[]> = {
@@ -93,7 +90,6 @@ export const WIDGET_SIZES: Record<string, WidgetSize[]> = {
   'pattern-scan':        ['medium', 'large'],
   'season-planner':      ['medium', 'large'],
   'race-density':        ['medium', 'large'],
-  'training-correl':     ['medium', 'large'],
   'upcoming-density':    ['medium', 'large'],
   'equiv-perf':          ['medium', 'large'],
   'advanced-race-dna':   ['medium', 'large'],
@@ -102,7 +98,6 @@ export const WIDGET_SIZES: Record<string, WidgetSize[]> = {
   'personal-bests':      ['small', 'medium', 'large'],
   'riegel-predictor':    ['small', 'medium', 'large'],
   'weather-impact':      ['small', 'medium', 'large'],
-  'activity-preview':    ['small', 'medium', 'large'],
   // small + medium (recently zone)
   'story-mode':          ['small', 'medium'],
   'why-prd':             ['small', 'medium'],

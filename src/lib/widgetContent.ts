@@ -161,18 +161,6 @@ export const WIDGET_CONTENT: Record<string, WidgetContent> = {
     ],
   },
 
-  'activity-preview': {
-    id: 'activity-preview',
-    title: 'ACTIVITY FEED',
-    tagline: 'Your latest training sessions.',
-    whatItIs: 'Your recent training activity. Wearable sync coming soon.',
-    howToRead: 'Use the feed to spot weekly rhythm: three easy + one quality is a canonical week. Gaps longer than 4 days without a run deserve a reason (rest, sickness, travel).',
-    howItImpactsPerformance: 'Consistency beats volume. The feed is the scoreboard that tells you whether your week actually matched the plan.',
-    relatedActions: [
-      { label: 'Connect Strava or WHOOP', to: '/settings' },
-    ],
-  },
-
   'personal-bests': {
     id: 'personal-bests',
     title: 'PERSONAL BESTS',
@@ -250,18 +238,6 @@ export const WIDGET_CONTENT: Record<string, WidgetContent> = {
     whatItIs: 'Tracks your current run streak and weighs it against load, sleep, and recent race effort to flag overtraining risk.',
     howToRead: 'Streaks are motivating but load-blind. When the risk score goes orange, the streak is doing more damage than good. Take a day off.',
     howItImpactsPerformance: 'Injury is the most expensive mistake in endurance sport. A calculated rest day protects six months of fitness.',
-  },
-
-  'training-correl': {
-    id: 'training-correl',
-    title: 'TRAINING CORRELATION',
-    tagline: 'How training volume maps to race results.',
-    whatItIs: "Training load vs race performance. Coming soon with Strava.",
-    howToRead: 'A positive slope means more volume leads to better results for you. A flat line means volume is not the bottleneck — look at quality, recovery, or race selection.',
-    howItImpactsPerformance: 'Volume is not a universal lever. This widget answers whether, for you specifically, adding kilometers in a build actually translates to faster races.',
-    relatedActions: [
-      { label: 'Connect Strava', to: '/settings' },
-    ],
   },
 
   'race-gap-analysis': {

@@ -1552,19 +1552,6 @@ function RecoveryIntelWidget() {
 
 // ─── Training Correlation Widget ─────────────────────────────────────────────
 
-function TrainingCorrelWidget() {
-  return (
-    <WidgetCard id="training-correl" style={st.glowCard}>
-      <div style={st.widgetLabel}>TRAINING CORRELATION</div>
-      <div style={st.widgetTitle}>LOAD VS RESULT</div>
-      <div style={{ padding: '16px 0', textAlign: 'center', color: 'var(--muted)', fontSize: 'var(--text-sm)' }}>
-        <p style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-sm)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--muted)', margin: '0 0 6px' }}>Coming Soon</p>
-        <p style={{ margin: 0, fontSize: 'var(--text-xs)' }}>Connect Strava to see training load vs race performance</p>
-      </div>
-    </WidgetCard>
-  )
-}
-
 // ─── Boston Qualifier Widget ──────────────────────────────────────────────────
 
 // Typical recent cutoff buffer: ~7 min under the BQ standard to safely get in
@@ -2322,20 +2309,6 @@ function WhyResultWidget() {
 }
 
 // ─── Activity Feed Preview Widget ────────────────────────────────────────────
-
-function ActivityPreviewWidget() {
-  return (
-    <WidgetCard id="activity-preview" className="" style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-lg)', padding: 'var(--sp-4)' }}>
-      <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-xs)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '8px' }}>
-        Activity Feed
-      </div>
-      <div style={{ padding: '8px 0', textAlign: 'center', color: 'var(--muted)', fontSize: 'var(--text-sm)' }}>
-        <p style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-sm)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--muted)', margin: '0 0 6px' }}>Coming Soon</p>
-        <p style={{ margin: 0, fontSize: 'var(--text-xs)' }}>Connect Strava to see training load vs race performance</p>
-      </div>
-    </WidgetCard>
-  )
-}
 
 // ─── On This Day Widget ───────────────────────────────────────────────────────
 
@@ -5555,7 +5528,7 @@ function EditModeBar({
 
       <button
         onClick={onDone}
-        style={{ marginLeft: 'auto', fontFamily: 'var(--headline)', fontSize: 'var(--text-sm)', fontWeight: 700, textTransform: 'uppercase' as const, height: 30, padding: '0 14px', borderRadius: 6, border: 'none', background: 'var(--orange)', color: 'var(--white)', cursor: 'pointer', flexShrink: 0 }}
+        style={{ marginLeft: 'auto', fontFamily: 'var(--headline)', fontSize: 'var(--text-sm)', fontWeight: 700, textTransform: 'uppercase' as const, height: 30, padding: '0 14px', borderRadius: 6, border: 'none', background: 'var(--orange)', color: '#000', cursor: 'pointer', flexShrink: 0 }}
       >DONE</button>
     </div>
   )
@@ -5851,7 +5824,6 @@ export function Dashboard() {
       case 'on-this-day':       return <OnThisDayWidget />
       case 'race-prediction':   return <WidgetCard id="race-prediction"><div style={{ padding: 'var(--sp-4)', fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>Race Prediction coming soon</div></WidgetCard>
       case 'recent-races':      return <RecentRaces onAddRace={openAddRace} />
-      case 'activity-preview':  return <ActivityPreviewWidget />
       case 'personal-bests':    return <PersonalBestsWidget />
       case 'riegel-predictor':  return <RiegelPredictorWidget onAddGoal={openRiegelGoal} />
       case 'weather-impact':    return <WeatherImpactWidget />
@@ -5863,7 +5835,6 @@ export function Dashboard() {
       case 'recovery-intel':    return <RecoveryIntelWidget />
       case 'race-density':      return <RaceDensityWidget />
       case 'streak-risk':       return <StreakRiskWidget />
-      case 'training-correl':   return <TrainingCorrelWidget />
       case 'race-gap-analysis': return <RaceGapAnalysisWidget />
       case 'adaptive-goals':    return <AdaptiveGoalsWidget />
       case 'upcoming-density':  return <UpcomingDensityWidget />
