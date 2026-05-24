@@ -1121,32 +1121,19 @@ function CountdownCard({ race, onShowAll, upcomingRaces, onSelectRace }: { race:
 
         <div style={st.countdownDivider} />
         <button style={st.allRacesBtn} onClick={onShowAll}>ALL UPCOMING RACES →</button>
+
+        {/* Course info tags */}
+        {(race.surface || typeof race.elevation === 'number') && (
+          <div style={{ display: 'flex', gap: 'var(--sp-2)', flexWrap: 'wrap' as const, paddingTop: 'var(--sp-2)' }}>
+            {race.surface && <span style={st.terrainTag}>{race.surface.toUpperCase()}</span>}
+            {typeof race.elevation === 'number' && <span style={st.terrainTag}>{race.elevation > 300 ? 'HILLY' : 'FLAT'}</span>}
+          </div>
+        )}
+
+        {/* Weather — embedded inside countdown widget */}
+        <WeatherCard race={race} />
       </div>
     </>
-  )
-}
-
-// ─── Course Info Card ─────────────────────────────────────────────────────────
-
-function CourseInfoCard({ race }: { race: Race }) {
-  const tags = useMemo(() => {
-    const t: string[] = []
-    if (race.surface) t.push(race.surface.toUpperCase())
-    if (typeof race.elevation === 'number') t.push(race.elevation > 300 ? 'HILLY' : 'FLAT')
-    return t
-  }, [race])
-
-  if (!race.notes && tags.length === 0) return null
-
-  return (
-    <div style={st.infoCard}>
-      {tags.length > 0 && (
-        <div style={{ display: 'flex', gap: 'var(--sp-2)', flexWrap: 'wrap' }}>
-          {tags.map(tag => <span key={tag} style={st.terrainTag}>{tag}</span>)}
-        </div>
-      )}
-      {race.notes && <p style={st.infoText}>{race.notes}</p>}
-    </div>
   )
 }
 
@@ -2518,14 +2505,12 @@ function GapToGoalWidget({ race }: { race: Race | null }) {
   return (
     <WidgetCard id="gap-to-goal" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
-        <div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
           <div style={st.widgetLabel}>GAP TO GOAL</div>
-          <div style={st.widgetTitle}>{distBadge(nextRace.distance) || 'NEXT RACE'}</div>
-          {nextRace.name && (
-            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '3px', fontFamily: 'var(--body)', fontWeight: 500 }}>
-              {nextRace.name}
-            </div>
-          )}
+          {nextRace.name
+            ? <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', lineHeight: 1.1 }}>{nextRace.name}</div>
+            : <div style={st.widgetTitle}>{distBadge(nextRace.distance) || 'NEXT RACE'}</div>
+          }
         </div>
         <span style={{ ...st.badgePill, background: 'rgba(var(--orange-ch),0.12)', color: 'var(--orange)', border: '1px solid rgba(var(--orange-ch),0.3)', flexShrink: 0 }}>
           TARGET
@@ -4135,14 +4120,16 @@ const ZONE_LABELS: Record<string, { tag: string; label: string }> = {
 
 function ZoneHeader({ id, editMode }: { id: string; editMode: boolean }) {
   const meta = ZONE_LABELS[id] ?? { tag: id.replace('zone:', '').toUpperCase(), label: '' }
+  const isFirst = id === 'zone:now'
   return (
     <div style={{
-      gridColumn: '1 / -1',
       fontFamily: 'var(--headline)',
       display: 'flex',
       flexDirection: 'column',
       gap: 2,
-      padding: editMode ? '10px 0 4px' : '14px 0 6px',
+      padding: editMode ? '8px 0 4px' : '20px 0 6px',
+      marginTop: isFirst ? 0 : 4,
+      borderTop: isFirst ? undefined : '1px solid var(--border)',
       opacity: editMode ? 0.7 : 1,
     }}>
       <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: 'var(--orange)' }}>{meta.tag}</span>
@@ -5465,12 +5452,13 @@ function CourseRepeatsWidget() {
 // ─── DnD: SortableItem ───────────────────────────────────────────────────────
 
 const SortableItem = React.memo(function SortableItem({
-  id, editMode, children,
-}: { id: string; editMode: boolean; children: React.ReactNode }) {
+  id, editMode, size, children,
+}: { id: string; editMode: boolean; size?: WidgetSize; children: React.ReactNode }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
+  const gridColumn = size === 'small' ? undefined : '1 / -1'
 
   if (!editMode) {
-    return <div ref={setNodeRef} style={{ minWidth: 0 }}>{children}</div>
+    return <div ref={setNodeRef} style={{ minWidth: 0, gridColumn }}>{children}</div>
   }
 
   const style: React.CSSProperties = {
@@ -5478,6 +5466,7 @@ const SortableItem = React.memo(function SortableItem({
     transition,
     opacity: isDragging ? 0.4 : 1,
     minWidth: 0,
+    gridColumn,
   }
 
   return (
@@ -5523,12 +5512,18 @@ function DragGhost({ id, widgets }: { id: string; widgets: DashWidget[] }) {
 // ─── EditModeBar ─────────────────────────────────────────────────────────────
 
 function EditModeBar({
-  onPreset, onDone, hasCountdownRace,
+  onPreset, onDone, onEnableAll, hasCountdownRace,
 }: {
   onPreset: (id: 'race-week' | 'off-season' | 'minimal') => void
   onDone: () => void
+  onEnableAll: () => void
   hasCountdownRace: boolean
 }) {
+  const chipStyle: React.CSSProperties = {
+    fontFamily: 'var(--headline)', fontSize: 'var(--text-xs)', fontWeight: 600, textTransform: 'uppercase',
+    height: 26, padding: '0 10px', borderRadius: 4, border: '1px solid var(--border2)',
+    background: 'transparent', color: 'var(--muted)', cursor: 'pointer', whiteSpace: 'nowrap',
+  }
   return (
     <div style={{
       background: 'var(--surface3)',
@@ -5546,26 +5541,16 @@ function EditModeBar({
         CUSTOMIZING
       </span>
 
-      {/* Preset chips — scrollable on mobile */}
+      {/* Preset + All Widgets chips — scrollable on mobile */}
       <div style={{ display: 'flex', gap: 'var(--sp-2)', overflowX: 'auto' as const, scrollbarWidth: 'none' as const, WebkitOverflowScrolling: 'touch' as const, flex: '1 1 0', minWidth: 0 }}>
+        <button onClick={onEnableAll} style={chipStyle}>All Widgets</button>
         <button
           onClick={() => onPreset('race-week')}
           title={!hasCountdownRace ? 'Add an upcoming race first' : undefined}
-          style={{
-            fontFamily: 'var(--headline)', fontSize: 'var(--text-xs)', fontWeight: 600, textTransform: 'uppercase' as const,
-            height: 26, padding: '0 10px', borderRadius: 4, border: '1px solid var(--border2)',
-            background: 'transparent', color: 'var(--muted)', cursor: 'pointer', whiteSpace: 'nowrap' as const,
-            opacity: hasCountdownRace ? 1 : 0.45,
-          }}
+          style={{ ...chipStyle, opacity: hasCountdownRace ? 1 : 0.45 }}
         >Race Week</button>
-        <button
-          onClick={() => onPreset('off-season')}
-          style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-xs)', fontWeight: 600, textTransform: 'uppercase' as const, height: 26, padding: '0 10px', borderRadius: 4, border: '1px solid var(--border2)', background: 'transparent', color: 'var(--muted)', cursor: 'pointer', whiteSpace: 'nowrap' as const }}
-        >Off Season</button>
-        <button
-          onClick={() => onPreset('minimal')}
-          style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-xs)', fontWeight: 600, textTransform: 'uppercase' as const, height: 26, padding: '0 10px', borderRadius: 4, border: '1px solid var(--border2)', background: 'transparent', color: 'var(--muted)', cursor: 'pointer', whiteSpace: 'nowrap' as const }}
-        >Minimal</button>
+        <button onClick={() => onPreset('off-season')} style={chipStyle}>Off Season</button>
+        <button onClick={() => onPreset('minimal')} style={chipStyle}>Minimal</button>
       </div>
 
       <button
@@ -5578,43 +5563,60 @@ function EditModeBar({
 
 // ─── Add Widgets Sheet ────────────────────────────────────────────────────────
 
-function AddWidgetsSheet({ widgets, onEnable, onClose }: { widgets: DashWidget[]; onEnable: (id: string) => void; onClose: () => void }) {
+function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
+  return (
+    <div
+      role="switch"
+      aria-checked={on}
+      onClick={onToggle}
+      style={{
+        width: 44, height: 26, borderRadius: 13, flexShrink: 0, cursor: 'pointer',
+        background: on ? 'var(--orange)' : 'var(--surface3)',
+        border: `1px solid ${on ? 'rgba(var(--orange-ch),0.6)' : 'var(--border2)'}`,
+        position: 'relative', transition: 'background 0.18s, border-color 0.18s',
+      }}
+    >
+      <div style={{
+        position: 'absolute', top: 3, width: 18, height: 18, borderRadius: '50%',
+        background: on ? '#000' : 'var(--muted2)',
+        left: on ? 21 : 3,
+        transition: 'left 0.18s, background 0.18s',
+      }} />
+    </div>
+  )
+}
+
+// Widgets embedded inside other widgets — hidden from the toggle panel
+const EMBEDDED_WIDGET_IDS = new Set(['race-forecast'])
+
+function AddWidgetsSheet({ widgets, onEnable, onDisable, onClose }: { widgets: DashWidget[]; onEnable: (id: string) => void; onDisable: (id: string) => void; onClose: () => void }) {
   const zones: Array<'now' | 'recently' | 'trending' | 'context'> = ['now', 'recently', 'trending', 'context']
-  const disabled = widgets.filter(w => !w.enabled)
 
   return createPortal((
     <div style={{ position: 'fixed', inset: 0, zIndex: 500, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.70)' }} onClick={onClose} />
-      <div style={{ position: 'relative', background: 'var(--surface2)', borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0', borderTop: '1px solid var(--border2)', maxHeight: '70vh', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ position: 'relative', background: 'var(--surface2)', borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0', borderTop: '1px solid var(--border2)', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 'var(--sp-4)', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
-          <div style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-base)', fontWeight: 700, textTransform: 'uppercase' as const, color: 'var(--white)', letterSpacing: '0.06em' }}>+ ADD WIDGETS</div>
+          <div style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-base)', fontWeight: 700, textTransform: 'uppercase' as const, color: 'var(--white)', letterSpacing: '0.06em' }}>WIDGETS</div>
           <button onClick={onClose} aria-label="Close" style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 'var(--text-base)', cursor: 'pointer', padding: '4px 8px', lineHeight: 1 }}>✕</button>
         </div>
 
-        {/* Scrollable list */}
+        {/* Scrollable list — all widgets, grouped by zone */}
         <div style={{ overflowY: 'auto', paddingBottom: 'calc(var(--safe-bottom, 0px) + var(--sp-4))' }}>
-          {disabled.length === 0 ? (
-            <div style={{ padding: 'var(--sp-8) var(--sp-4)', textAlign: 'center', fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>
-              All widgets are enabled — remove some first.
-            </div>
-          ) : zones.map(zone => {
-            const zoneWidgets = disabled.filter(w => w.zone === zone)
+          {zones.map(zone => {
+            const zoneWidgets = widgets.filter(w => w.zone === zone && !EMBEDDED_WIDGET_IDS.has(w.id))
             if (zoneWidgets.length === 0) return null
             const meta = ZONE_LABELS[`zone:${zone}`] ?? { tag: zone.toUpperCase(), label: '' }
             return (
               <div key={zone}>
-                <div style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-xs)', fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.06em', color: 'var(--muted)', padding: 'var(--sp-3) var(--sp-4) var(--sp-2)' }}>
-                  {meta.tag}
+                <div style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-xs)', fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.06em', color: 'var(--muted)', padding: 'var(--sp-3) var(--sp-4) var(--sp-2)', borderTop: '1px solid var(--border)' }}>
+                  {meta.tag} · {meta.label}
                 </div>
                 {zoneWidgets.map(w => (
-                  <div key={w.id} style={{ display: 'grid', gridTemplateColumns: '40px 1fr auto', alignItems: 'center', gap: 'var(--sp-3)', padding: 'var(--sp-3) var(--sp-4)' }}>
-                    <div style={{ width: 40, height: 40, borderRadius: 'var(--radius-sm)', background: 'var(--surface3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'var(--text-compact)', fontFamily: 'var(--headline)', fontWeight: 800, color: 'var(--muted)' }}>{w.icon}</div>
-                    <span style={{ fontSize: 'var(--text-compact)', fontWeight: 500, color: 'var(--white)' }}>{w.label}</span>
-                    <button
-                      onClick={() => { onEnable(w.id); onClose() }}
-                      style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-xs)', fontWeight: 700, textTransform: 'uppercase' as const, height: 26, padding: '0 10px', borderRadius: 4, border: '1px solid var(--orange)', background: 'transparent', color: 'var(--orange)', cursor: 'pointer' }}
-                    >+ ADD</button>
+                  <div key={w.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', padding: 'var(--sp-3) var(--sp-4)', opacity: w.enabled ? 1 : 0.6 }}>
+                    <span style={{ flex: 1, fontSize: 'var(--text-compact)', fontWeight: 500, color: 'var(--white)' }}>{w.label}</span>
+                    <Toggle on={w.enabled} onToggle={() => w.enabled ? onDisable(w.id) : onEnable(w.id)} />
                   </div>
                 ))}
               </div>
@@ -5836,8 +5838,9 @@ export function Dashboard() {
   function renderWidget(id: string): React.ReactNode {
     const race = countdownRace
     switch (id) {
+      case 'stats-strip':        return <StatsStrip />
       case 'countdown':         return race ? <CountdownCard race={race} onShowAll={() => setShowAllUpcoming(true)} upcomingRaces={upcomingRaces} onSelectRace={pinFocusRace} /> : null
-      case 'race-forecast':     return race ? <WeatherCard race={race} /> : null
+      case 'race-forecast':     return null  // weather embedded inside countdown widget
       case 'goal-pace':         return race ? <GoalPaceWidget race={race} /> : null
       case 'gap-to-goal':       return race ? <GapToGoalWidget race={race} /> : null
       case 'race-readiness':    return <RaceReadinessWidget />
@@ -5894,7 +5897,7 @@ export function Dashboard() {
       {showAllUpcoming  && <AllUpcomingModal onClose={() => setShowAllUpcoming(false)} onAddRace={openAddUpcomingRace} />}
       {editRace         && <ViewEditRaceModal race={editRace} initialMode={editRaceMode} onClose={() => { setEditRace(null); setEditRaceMode('view') }} />}
       {detailWidget     && <WidgetDetailModal widget={detailWidget} preview={detailPreview} dynamicContext={detailCtx} actions={widgetActions} onClose={closeDetail} />}
-      {showAddWidgets   && <AddWidgetsSheet widgets={widgets} onEnable={(id) => setWidgetEnabled(id, true)} onClose={() => setShowAddWidgets(false)} />}
+      {showAddWidgets   && <AddWidgetsSheet widgets={widgets} onEnable={(id) => setWidgetEnabled(id, true)} onDisable={(id) => setWidgetEnabled(id, false)} onClose={() => setShowAddWidgets(false)} />}
 
       {/* Dashboard header row with EDIT button */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', minWidth: 0 }}>
@@ -5907,9 +5910,12 @@ export function Dashboard() {
         {!editMode && (
           <button
             onClick={enterEditMode}
-            style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-sm)', fontWeight: 600, textTransform: 'uppercase', height: 28, padding: '0 12px', borderRadius: 8, border: '1px solid rgba(232,224,213,0.20)', background: 'transparent', color: 'var(--white)', cursor: 'pointer', flexShrink: 0, marginLeft: 'var(--sp-3)' }}
+            aria-label="Edit dashboard"
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: 8, border: '1px solid rgba(232,224,213,0.20)', background: 'transparent', color: 'var(--white)', cursor: 'pointer', flexShrink: 0, marginLeft: 'var(--sp-3)', padding: 0 }}
           >
-            EDIT
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M11.854 1.146a.5.5 0 0 0-.707 0L3.5 8.793V11.5h2.707l7.647-7.647a.5.5 0 0 0 0-.707l-2-2ZM4.5 10.5v-1.293l6.5-6.5L12.293 4l-6.5 6.5H4.5Z" fill="currentColor"/>
+            </svg>
           </button>
         )}
       </div>
@@ -5919,6 +5925,7 @@ export function Dashboard() {
         <EditModeBar
           onPreset={handlePreset}
           onDone={exitEditMode}
+          onEnableAll={() => widgets.forEach(w => !w.enabled && setWidgetEnabled(w.id, true))}
           hasCountdownRace={!!countdownRace}
         />
       )}
@@ -5938,12 +5945,8 @@ export function Dashboard() {
             onDiscover={() => navigate('/discover')}
           />
           <ExpiredRacePrompts onLogResult={() => { setAddRaceMode('past'); setShowAddRace(true) }} />
-          {/* Structural non-widget elements pinned above DnD list */}
-          {countdownRace
-            ? <CourseInfoCard race={countdownRace} />
-            : <NoUpcomingRaceCTA onAddRace={openAddUpcomingRace} />
-          }
-          <StatsStrip />
+          {/* Show CTA only when no upcoming race — countdown widget handles the rest */}
+          {!countdownRace && <NoUpcomingRaceCTA onAddRace={openAddUpcomingRace} />}
         </>
       )}
 
@@ -5958,12 +5961,14 @@ export function Dashboard() {
           <div style={st.dashGrid}>
             {visibleOrder.map(id => {
               const isZone = id.startsWith('zone:')
+              const widgetData = !isZone ? widgets.find(w => w.id === id) : undefined
+              const size = widgetData?.size
               const node = isZone
                 ? <ZoneHeader id={id} editMode={editMode} />
                 : renderWidget(id)
               if (!node) return null
               return (
-                <SortableItem key={id} id={id} editMode={editMode}>
+                <SortableItem key={id} id={id} editMode={editMode} size={isZone ? 'medium' : size}>
                   {node}
                 </SortableItem>
               )
@@ -6451,6 +6456,8 @@ const st = {
     flexDirection: 'column' as const,
     gap: 'var(--sp-4)',
     minWidth: 0,
+    height: '100%',
+    boxSizing: 'border-box' as const,
   } as React.CSSProperties,
 
   widgetLabel: {
