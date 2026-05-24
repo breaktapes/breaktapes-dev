@@ -2357,19 +2357,20 @@ function OnThisDayWidget() {
 function RaceReadinessWidget() {
   const races = useRaceStore(selectRaces)
   const today = todayStr()
+  const ctx   = useWidgetCardContext()
+  const size  = ctx?.getWidgetSize('race-readiness') ?? 'medium'
 
-  const { signal, score, detail } = useMemo(() => {
-    // Derive from days since last race
+  const { signal, score, daysSince, recoveryDays, lastDist } = useMemo(() => {
     const past = races.filter(r => r.date <= today).sort((a, b) => b.date.localeCompare(a.date))
     const last = past[0]
-    if (!last) return { signal: 'BUILDING', score: 50, detail: 'Log your first race to track readiness.' }
+    if (!last) return { signal: 'BUILDING', score: 50, daysSince: null, recoveryDays: null, lastDist: null }
     const dist = distanceToKm(last.distance)
     const recoveryDays = dist >= 42 ? 14 : dist >= 21 ? 7 : dist >= 10 ? 3 : 2
     const daysSince = daysAgo(last.date)
     const ratio = Math.min(1, daysSince / recoveryDays)
     const s = Math.round(ratio * 100)
     const signal = s >= 85 ? 'READY' : s >= 50 ? 'BUILDING' : 'UNDERCOOKED'
-    return { signal, score: s, detail: `${daysSince}d since ${distBadge(last.distance)} · recovery window: ${recoveryDays}d` }
+    return { signal, score: s, daysSince, recoveryDays, lastDist: last.distance }
   }, [races, today])
 
   const sigColor = signal === 'READY' ? 'var(--green)' : signal === 'BUILDING' ? 'var(--gold)' : 'var(--orange)'
@@ -2396,8 +2397,23 @@ function RaceReadinessWidget() {
         </div>
       </div>
 
-      <div style={st.widgetDivider} />
-      <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.55 }}>{detail}</div>
+      {size === 'medium' && daysSince !== null && recoveryDays !== null && (
+        <>
+          <div style={st.widgetDivider} />
+          <div style={{ display: 'flex', gap: 'var(--sp-3)' }}>
+            <div style={{ flex: 1, background: 'var(--surface3)', borderRadius: 'var(--radius-sm)', padding: 'var(--sp-3)' }}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', color: 'var(--white)', lineHeight: 1 }}>{daysSince}d</div>
+              <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted)', textTransform: 'uppercase', marginTop: '4px' }}>SINCE LAST</div>
+              {lastDist && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', marginTop: '2px' }}>{distBadge(lastDist)}</div>}
+            </div>
+            <div style={{ flex: 1, background: 'var(--surface3)', borderRadius: 'var(--radius-sm)', padding: 'var(--sp-3)' }}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', color: 'var(--white)', lineHeight: 1 }}>{recoveryDays}d</div>
+              <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted)', textTransform: 'uppercase', marginTop: '4px' }}>RECOVERY</div>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', marginTop: '2px' }}>WINDOW</div>
+            </div>
+          </div>
+        </>
+      )}
     </WidgetCard>
   )
 }
@@ -5562,8 +5578,11 @@ function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
 // Widgets embedded inside other widgets — hidden from the toggle panel
 const EMBEDDED_WIDGET_IDS = new Set(['race-forecast'])
 
-function AddWidgetsSheet({ widgets, onEnable, onDisable, onClose }: { widgets: DashWidget[]; onEnable: (id: string) => void; onDisable: (id: string) => void; onClose: () => void }) {
+function AddWidgetsSheet({ onClose }: { onClose: () => void }) {
   const zones: Array<'now' | 'recently' | 'trending' | 'context'> = ['now', 'recently', 'trending', 'context']
+  // Subscribe directly so toggles reflect instantly without parent useMemo chain
+  const widgets         = useDashStore(s => s.widgets)
+  const setWidgetEnabled = useDashStore(s => s.setWidgetEnabled)
 
   return createPortal((
     <div style={{ position: 'fixed', inset: 0, zIndex: 500, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
@@ -5589,7 +5608,7 @@ function AddWidgetsSheet({ widgets, onEnable, onDisable, onClose }: { widgets: D
                 {zoneWidgets.map(w => (
                   <div key={w.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', padding: 'var(--sp-3) var(--sp-4)', opacity: w.enabled ? 1 : 0.6 }}>
                     <span style={{ flex: 1, fontSize: 'var(--text-compact)', fontWeight: 500, color: 'var(--white)' }}>{w.label}</span>
-                    <Toggle on={w.enabled} onToggle={() => w.enabled ? onDisable(w.id) : onEnable(w.id)} />
+                    <Toggle on={w.enabled} onToggle={() => setWidgetEnabled(w.id, !w.enabled)} />
                   </div>
                 ))}
               </div>
@@ -5868,7 +5887,7 @@ export function Dashboard() {
       {showAllUpcoming  && <AllUpcomingModal onClose={() => setShowAllUpcoming(false)} onAddRace={openAddUpcomingRace} />}
       {editRace         && <ViewEditRaceModal race={editRace} initialMode={editRaceMode} onClose={() => { setEditRace(null); setEditRaceMode('view') }} />}
       {detailWidget     && <WidgetDetailModal widget={detailWidget} preview={detailPreview} dynamicContext={detailCtx} actions={widgetActions} onClose={closeDetail} />}
-      {showAddWidgets   && <AddWidgetsSheet widgets={widgets} onEnable={(id) => setWidgetEnabled(id, true)} onDisable={(id) => setWidgetEnabled(id, false)} onClose={() => setShowAddWidgets(false)} />}
+      {showAddWidgets   && <AddWidgetsSheet onClose={() => setShowAddWidgets(false)} />}
 
       {/* Dashboard header row with EDIT button */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', minWidth: 0 }}>

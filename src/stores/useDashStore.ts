@@ -69,9 +69,9 @@ export const WIDGET_SIZES: Record<string, WidgetSize[]> = {
   // small + medium + large (17)
   'race-forecast':       ['small', 'medium', 'large'],
   'goal-pace':           ['small', 'medium', 'large'],
-  'gap-to-goal':         ['small', 'medium', 'large'],
-  'pb-probability':      ['small', 'medium', 'large'],
-  'race-readiness':      ['small', 'medium', 'large'],
+  'gap-to-goal':         ['small', 'medium'],
+  'pb-probability':      ['small', 'medium'],
+  'race-readiness':      ['small', 'medium'],
   'course-fit':          ['small', 'medium', 'large'],
   'boston-qual':         ['small', 'medium', 'large'],
   'pacing-iq':           ['small', 'medium', 'large'],
