@@ -5012,6 +5012,7 @@ function GoalPaceWidget({ race }: { race: Race | null }) {
   const races     = useRaceStore(selectRaces)
   const units     = useUnits()
   const vdotPt    = useMemo(() => bestVDOT(races), [races])
+  const [splitsOpen, setSplitsOpen] = useState(false)
 
   const result = useMemo(() => {
     if (!focusRace?.goalTime) return null
@@ -5073,15 +5074,20 @@ function GoalPaceWidget({ race }: { race: Race | null }) {
 
       {/* Splits */}
       <div>
-        <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '6px' }}>SPLIT TARGETS</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-1)' }}>
-          {result.splitTargets.map(s => (
-            <div key={s.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 8px', background: 'var(--surface3)', borderRadius: 'var(--radius-xs)' }}>
-              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{s.label}</span>
-              <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--white)' }}>{s.cumStr}</span>
-            </div>
-          ))}
-        </div>
+        <button onClick={() => setSplitsOpen(o => !o)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', background: 'none', border: 'none', padding: 0, cursor: 'pointer', marginBottom: splitsOpen ? '6px' : 0 }}>
+          <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase' }}>SPLIT TARGETS</div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', lineHeight: 1 }}>{splitsOpen ? '▲' : '▼'}</div>
+        </button>
+        {splitsOpen && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-1)' }}>
+            {result.splitTargets.map(s => (
+              <div key={s.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 8px', background: 'var(--surface3)', borderRadius: 'var(--radius-xs)' }}>
+                <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{s.label}</span>
+                <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--white)' }}>{s.cumStr}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </WidgetCard>
   )
