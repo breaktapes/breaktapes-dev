@@ -4,11 +4,20 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import { WidgetCard, WidgetCardContext, markWidgetDetailDiscovered } from '../WidgetCard'
 
+const baseCtx = (openDetail = vi.fn()) => ({
+  openDetail,
+  actions: {},
+  editMode: false,
+  getWidgetSize: () => 'medium' as const,
+  setWidgetSize: vi.fn(),
+  setWidgetEnabled: vi.fn(),
+})
+
 function renderWithCtx(ui: React.ReactNode, openDetail = vi.fn()) {
   return {
     openDetail,
     ...render(
-      <WidgetCardContext.Provider value={{ openDetail, actions: {} }}>
+      <WidgetCardContext.Provider value={baseCtx(openDetail)}>
         {ui}
       </WidgetCardContext.Provider>
     ),
@@ -104,7 +113,7 @@ describe('WidgetCard', () => {
     )
     markWidgetDetailDiscovered()
     rerender(
-      <WidgetCardContext.Provider value={{ openDetail: vi.fn(), actions: {} }}>
+      <WidgetCardContext.Provider value={baseCtx()}>
         <WidgetCard id="boston-qual"><span>unique-body-text</span></WidgetCard>
       </WidgetCardContext.Provider>
     )

@@ -95,20 +95,16 @@ export interface WearableToken {
   profile?: Record<string, any>
 }
 
+export type WidgetSize = 'small' | 'medium' | 'large'
+
 export interface DashWidget {
   id: string
   label: string
   icon: string
-  zone: 'now' | 'recently' | 'trending' | 'context'
+  zone: 'now' | 'recently' | 'trending' | 'context'  // metadata only — not used for layout order
   enabled: boolean
   pro?: boolean
-}
-
-export interface DashZoneCollapse {
-  now: boolean
-  recently: boolean
-  trending: boolean
-  context: boolean
+  size: WidgetSize  // user-set, default: 'medium'
 }
 
 export interface SeasonPlan {
