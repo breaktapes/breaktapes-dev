@@ -18,7 +18,7 @@ const DEFAULT_WIDGETS: DashWidget[] = [
   { id: 'on-this-day',      label: 'On This Day',               icon: 'OTD', zone: 'now',      enabled: true,  pro: false, size: 'medium' },
   // RECENTLY — YOUR RACING
   { id: 'recent-races',     label: 'Recent Races',              icon: 'RC',  zone: 'recently', enabled: true,  pro: false, size: 'small'  },
-  { id: 'personal-bests',   label: 'Personal Bests',            icon: 'PB',  zone: 'recently', enabled: true,  pro: false, size: 'small'  },
+  { id: 'personal-bests',   label: 'Personal Bests',            icon: 'PB',  zone: 'recently', enabled: true,  pro: false, size: 'large'  },
   { id: 'why-prd',          label: "Why You PR'd",              icon: 'PR',  zone: 'recently', enabled: false, pro: false, size: 'small'  },
   { id: 'why-faded',        label: 'Why You Faded',             icon: 'FD',  zone: 'recently', enabled: false, pro: false, size: 'small'  },
   { id: 'break-tape',       label: 'Break Tape Moments',        icon: 'BT',  zone: 'recently', enabled: false, pro: false, size: 'small'  },
@@ -95,7 +95,7 @@ export const WIDGET_SIZES: Record<string, WidgetSize[]> = {
   'advanced-race-dna':   ['medium', 'large'],
   // small + medium + large (recently zone)
   'recent-races':        ['small', 'medium', 'large'],
-  'personal-bests':      ['small', 'medium', 'large'],
+  'personal-bests':      ['large'],
   'riegel-predictor':    ['small', 'medium', 'large'],
   'weather-impact':      ['small', 'medium', 'large'],
   // small + medium (recently zone)
@@ -138,7 +138,7 @@ const PRESETS: Record<string, { widgetOrder: string[]; sizes: Partial<Record<str
 }
 
 // Build the default widget order from zone-grouped DEFAULT_WIDGETS
-function buildDefaultWidgetOrder(): string[] {
+export function buildDefaultWidgetOrder(): string[] {
   const zones: Array<'now' | 'recently' | 'trending' | 'context'> = ['now', 'recently', 'trending', 'context']
   const order: string[] = []
   for (const zone of zones) {
@@ -183,6 +183,7 @@ export interface DashState {
   setWidgetSize: (id: string, size: WidgetSize) => void
   setWidgetOrder: (newOrder: string[]) => void
   applyPreset: (presetId: 'race-week' | 'off-season' | 'minimal') => void
+  enableAllWidgets: () => void
 }
 
 export const useDashStore = create<DashState>()(
@@ -279,6 +280,20 @@ export const useDashStore = create<DashState>()(
             return { ...w, enabled: false, size: 'medium' as WidgetSize }
           })
           return { widgets: updatedWidgets, widgetOrder: preset.widgetOrder }
+        }),
+
+      enableAllWidgets: () =>
+        set(s => {
+          const EMBEDDED = new Set(['race-forecast'])
+          const allIds = new Set(DEFAULT_WIDGETS.map(w => w.id))
+          const storedIds = new Set(s.widgets.map(w => w.id))
+          const newDefaults = DEFAULT_WIDGETS.filter(w => !storedIds.has(w.id))
+          const updatedWidgets = [
+            ...s.widgets.map(w => ({ ...w, enabled: EMBEDDED.has(w.id) ? w.enabled : true })),
+            ...newDefaults.map(w => ({ ...w, enabled: !EMBEDDED.has(w.id) })),
+          ].filter(w => allIds.has(w.id))
+          const widgetOrder = buildDefaultWidgetOrder()
+          return { widgets: updatedWidgets, widgetOrder }
         }),
     }),
     { name: 'fl2_dash_layout' },

@@ -17,7 +17,7 @@ import { ViewEditRaceModal } from '@/components/ViewEditRaceModal'
 import { TimePickerWheel } from '@/components/TimePickerWheel'
 import type { HMS } from '@/components/TimePickerWheel'
 import { CustomDistInput } from '@/components/CustomDistInput'
-import { WidgetCard, WidgetCardContext, DragListenersContext, type WidgetCardActions } from '@/components/WidgetCard'
+import { WidgetCard, WidgetCardContext, DragListenersContext, useWidgetCardContext, type WidgetCardActions } from '@/components/WidgetCard'
 import { WidgetDetailModal } from '@/components/WidgetDetailModal'
 import type { WidgetDynamicContext } from '@/lib/widgetContent'
 import type { Race, DashWidget, WidgetSize } from '@/types'
@@ -1781,10 +1781,6 @@ function CareerMomentumWidget() {
         </div>
       </div>
 
-      <div style={st.widgetDivider} />
-      <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.55 }}>
-        Weighted against your recent personal-best equivalents, this shows whether your results are trending stronger or softer over time.
-      </div>
     </WidgetCard>
   )
 }
@@ -1795,6 +1791,9 @@ function AgeGradeWidget() {
   const athlete = useAthleteStore(selectAthlete)
   const races   = useRaceStore(selectRaces)
   const hasProfile = !!(athlete?.dob && athlete?.gender)
+  const agCtx  = useWidgetCardContext()
+  const agSize = agCtx?.getWidgetSize('age-grade') ?? 'medium'
+  const agLimit = agSize === 'small' ? 1 : agSize === 'medium' ? 3 : 5
 
   const entries = useMemo(() => {
     if (!hasProfile || !athlete) return []
@@ -1820,7 +1819,7 @@ function AgeGradeWidget() {
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>Log races with finish times at 5K, 10K, Half Marathon, or Marathon distances to see your age-grade score.</div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', marginTop: '8px' }}>
-          {entries.slice(0, 5).map((e, i) => (
+          {entries.slice(0, agLimit).map((e, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
               <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xs)', color: 'var(--muted)', minWidth: '16px' }}>#{e.rank}</div>
               <div style={{ flex: 1, overflow: 'hidden' }}>
@@ -1842,6 +1841,8 @@ function RaceDNAWidget() {
   const races  = useRaceStore(selectRaces)
   const today  = todayStr()
   const past   = useMemo(() => races.filter(r => r.date <= today), [races, today])
+  const dnaCtx  = useWidgetCardContext()
+  const dnaSize = dnaCtx?.getWidgetSize('race-dna') ?? 'medium'
 
   const dna = useMemo(() => {
     if (past.length === 0) return null
@@ -1955,7 +1956,7 @@ function RaceDNAWidget() {
                 TEMP PERFORMANCE
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
-                {dna.bucketWithPace.map(b => (
+                {(dnaSize === 'medium' ? dna.bucketWithPace.filter(b => b.isBest) : dna.bucketWithPace).map(b => (
                   <div key={b.label} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
                     <div style={{ width: '42px', fontSize: 'var(--text-xs)', color: b.isBest ? b.color : 'var(--muted)', fontWeight: b.isBest ? 700 : 500, flexShrink: 0, fontFamily: 'var(--headline)' }}>{b.short}</div>
                     <div style={{ flex: 1, height: '6px', background: 'var(--surface3)', borderRadius: 'var(--radius-xs)', overflow: 'hidden' }}>
@@ -1974,7 +1975,7 @@ function RaceDNAWidget() {
                   </div>
                 ))}
               </div>
-              {dna.tempRaceCount < past.length && (
+              {dnaSize === 'large' && dna.tempRaceCount < past.length && (
                 <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', marginTop: '6px' }}>
                   {dna.tempRaceCount}/{past.length} races have weather data
                 </div>
@@ -2031,7 +2032,7 @@ function RaceDNAWidget() {
                 SURFACE BREAKDOWN
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
-                {dna.surfaces.map((s, i) => (
+                {(dnaSize === 'medium' ? dna.surfaces.slice(0, 1) : dna.surfaces).map((s, i) => (
                   <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
                     <div style={{ width: '44px', fontSize: 'var(--text-xs)', color: i === 0 ? 'var(--white)' : 'var(--muted)', fontWeight: i === 0 ? 600 : 400, flexShrink: 0 }}>{s.label}</div>
                     <div style={{ flex: 1, height: '6px', background: 'var(--surface3)', borderRadius: 'var(--radius-xs)', overflow: 'hidden' }}>
@@ -2053,7 +2054,7 @@ function RaceDNAWidget() {
           )}
 
           {/* ── COUNTRY CLUSTERS ─────────────────────────────────────── */}
-          {dna.travelCount > 0 && (
+          {dnaSize === 'large' && dna.travelCount > 0 && (
             <div>
               <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
                 {dna.travelCount} {dna.travelCount === 1 ? 'COUNTRY' : 'COUNTRIES'}
@@ -2091,6 +2092,8 @@ function PatternScanWidget() {
   const races   = useRaceStore(selectRaces)
   const today   = todayStr()
   const past    = useMemo(() => races.filter(r => r.date <= today), [races, today])
+  const ptCtx  = useWidgetCardContext()
+  const ptSize = ptCtx?.getWidgetSize('pattern-scan') ?? 'medium'
 
   const scan = useMemo(() => {
     if (past.length < 3) return null
@@ -2182,7 +2185,7 @@ function PatternScanWidget() {
                 )}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
-                {scan.seasonBars.map(s => (
+                {(ptSize === 'medium' ? scan.seasonBars.filter(s => s.isBest) : scan.seasonBars).map(s => (
                   <div key={s.season} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
                     <div style={{ width: '90px', fontSize: 'var(--text-xs)', color: s.isBest ? 'var(--white)' : 'var(--muted)', fontWeight: s.isBest ? 700 : 400, flexShrink: 0, whiteSpace: 'nowrap' }}>
                       {s.season}
@@ -2209,7 +2212,7 @@ function PatternScanWidget() {
               DISTANCE BREAKDOWN
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
-              {scan.topDist.map(([d, n], i) => (
+              {(ptSize === 'medium' ? scan.topDist.slice(0, 1) : scan.topDist).map(([d, n], i) => (
                 <div key={d} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
                   <div style={{ width: '90px', fontSize: 'var(--text-xs)', color: i === 0 ? 'var(--white)' : 'var(--muted)', fontWeight: i === 0 ? 600 : 400, flexShrink: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d}</div>
                   <div style={{ flex: 1, height: '6px', background: 'var(--surface3)', borderRadius: 'var(--radius-xs)', overflow: 'hidden' }}>
@@ -3105,9 +3108,7 @@ function PBProbabilityWidget({ race }: { race: Race | null }) {
           <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.55 }}>
             {!result.hasPBForDist
               ? 'No PB logged for this distance — every finish is a new PB.'
-              : result.pbIsNameMatch
-                ? 'Compared against your best prior result at this event (course distance varies year to year).'
-                : 'Based on form trend, surface fit, and recent recovery.'}
+              : 'Based on form trend, surface fit, and recent recovery.'}
           </div>
         </>
       )}
@@ -4149,6 +4150,7 @@ function PersonalBestsWidget() {
   const pbMap = useMemo(() => buildPBMap(races), [races])
   const [selectedRace, setSelectedRace] = useState<Race | null>(null)
   const [hiddenDists, setHiddenDists] = useState<Set<string>>(() => readPBHiddenKeys())
+  const [showEdit, setShowEdit] = useState(false)
 
   const toggleDist = useCallback((label: string) => {
     setHiddenDists(prev => {
@@ -4240,39 +4242,53 @@ function PersonalBestsWidget() {
 
   return (
     <WidgetCard id="personal-bests" style={st.glowCard} noDetailPreview>
-      <div style={st.widgetTitle}>PERSONAL BESTS</div>
-      {/* Distance chip filter — grouped by sport, ascending distance order */}
-      {allDists.length > 1 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', marginTop: '8px', marginBottom: '4px' }}>
+      {/* Header row */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={st.widgetLabel}>PERSONAL BESTS</div>
+        {allDists.length > 0 && (
+          <button
+            onClick={e => { e.stopPropagation(); setShowEdit(v => !v) }}
+            data-no-widget-detail
+            style={{
+              background: showEdit ? 'rgba(var(--orange-ch),0.12)' : 'none',
+              border: `1px solid ${showEdit ? 'rgba(var(--orange-ch),0.35)' : 'var(--border2)'}`,
+              color: showEdit ? 'var(--orange)' : 'var(--muted)',
+              borderRadius: 'var(--radius-sm)',
+              padding: '3px 10px',
+              fontFamily: 'var(--headline)',
+              fontWeight: 700,
+              fontSize: 'var(--text-xs)',
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              cursor: 'pointer',
+            }}
+          >
+            EDIT
+          </button>
+        )}
+      </div>
+
+      {/* Edit panel — sport-grouped toggle rows */}
+      {showEdit && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)', marginTop: '10px', padding: '12px', background: 'var(--surface3)', borderRadius: 'var(--radius-md)' }}>
           {pillGroups.map(pg => (
-            <div key={pg.sport} style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-2)', alignItems: 'center' }}>
-              {pillGroups.length > 1 && (
-                <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted2)', marginRight: '2px', flexShrink: 0 }}>
-                  {pg.sport}
-                </span>
-              )}
-              {pg.labels.map(label => {
-                const hidden = hiddenDists.has(label)
-                return (
-                  <button
-                    key={label}
-                    onClick={e => { e.stopPropagation(); toggleDist(label) }}
-                    data-no-widget-detail
-                    style={{
-                      background: hidden ? 'var(--surface3)' : 'rgba(var(--orange-ch),0.12)',
-                      color: hidden ? 'var(--muted2)' : 'var(--orange)',
-                      border: `1px solid ${hidden ? 'var(--border)' : 'rgba(var(--orange-ch),0.35)'}`,
-                      borderRadius: 'var(--radius-pill)', padding: '5px 14px',
-                      fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase',
-                      cursor: 'pointer', flexShrink: 0,
-                      textDecoration: hidden ? 'line-through' : 'none',
-                      opacity: hidden ? 0.5 : 1,
-                    }}
-                  >
-                    {label}
-                  </button>
-                )
-              })}
+            <div key={pg.sport}>
+              <div style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted2)', marginBottom: '8px' }}>
+                {pg.sport}
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+                {pg.labels.map(label => {
+                  const hidden = hiddenDists.has(label)
+                  return (
+                    <div key={label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ fontSize: 'var(--text-xs)', color: hidden ? 'var(--muted2)' : 'var(--white)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                        {label}
+                      </span>
+                      <Toggle on={!hidden} onToggle={() => toggleDist(label)} />
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           ))}
         </div>
@@ -5445,9 +5461,10 @@ const SortableItem = React.memo(function SortableItem({
 }: { id: string; editMode: boolean; size?: WidgetSize; children: React.ReactNode }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
   const gridColumn = size === 'small' ? undefined : '1 / -1'
+  const aspectRatio = size === 'small' ? '1 / 1' : undefined
 
   if (!editMode) {
-    return <div ref={setNodeRef} style={{ minWidth: 0, gridColumn }}>{children}</div>
+    return <div ref={setNodeRef} style={{ minWidth: 0, gridColumn, aspectRatio }}>{children}</div>
   }
 
   const style: React.CSSProperties = {
@@ -5456,6 +5473,7 @@ const SortableItem = React.memo(function SortableItem({
     opacity: isDragging ? 0.4 : 1,
     minWidth: 0,
     gridColumn,
+    aspectRatio,
   }
 
   return (
@@ -5716,6 +5734,7 @@ export function Dashboard() {
   const setWidgetSize   = useDashStore(s => s.setWidgetSize)
   const setWidgetOrder  = useDashStore(s => s.setWidgetOrder)
   const applyPreset     = useDashStore(s => s.applyPreset)
+  const enableAllWidgets = useDashStore(s => s.enableAllWidgets)
 
   const widgets = useMemo(() => getDashLayout(), [storeWidgets, getDashLayout])
 
@@ -5915,7 +5934,7 @@ export function Dashboard() {
         <EditModeBar
           onPreset={handlePreset}
           onDone={exitEditMode}
-          onEnableAll={() => widgets.forEach(w => !w.enabled && setWidgetEnabled(w.id, true))}
+          onEnableAll={enableAllWidgets}
           hasCountdownRace={!!countdownRace}
         />
       )}
