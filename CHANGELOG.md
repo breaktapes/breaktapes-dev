@@ -3,6 +3,14 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.6.12.1] - 2026-05-24
+
+### Fixed
+- **Sign-in accepts username or email** — replaced custom sign-in form with Clerk's native `<SignIn>` component; Clerk handles both email address and username login natively
+- **Shared credentials across environments** — removed staging-only `hasStagingAccess` gate; any account created on `app.breaktapes.com` is now valid on `dev.breaktapes.com` (both share the same Clerk instance)
+- **Forgot password OTP flow** — Clerk's built-in forgot password sends a one-time code to the registered email; user enters the code inline and resets password without leaving the page
+- **"Secured by Clerk" branding** — using the native `<SignIn>` / `<SignUp>` components shows Clerk's branding automatically
+
 ## [0.6.12.0] - 2026-05-24
 
 ### Added
