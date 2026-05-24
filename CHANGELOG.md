@@ -3,6 +3,28 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.6.12.0] - 2026-05-24
+
+### Added
+- **Widget resize controls** — every widget now has S / M / L size buttons in edit mode; small widgets stack two-per-row, medium/large span full width
+- **Drag-and-drop reordering** — widgets can be dragged within and between zones in edit mode using @dnd-kit; order persists across sessions
+- **Toggle-based widget panel** — "WIDGETS" sheet now shows all widgets grouped by zone with iOS-style toggle switches; users can freely enable/disable without closing the sheet
+- **RECENTLY zone small layout** — all RECENTLY zone widgets default to small size and stack side-by-side for a compact two-column grid
+- **"All Widgets" chip** — one-tap button in the edit bar enables every widget at once
+- **Zone separator borders** — non-first zones get a subtle border-top for visual separation
+- **Weather and course info embedded in countdown** — race day forecast and course surface/elevation tags now appear inside the countdown card; no longer separate widgets
+- **Stats strip as DnD widget** — career stats strip is now a proper dashboard widget (id: stats-strip) that can be moved and toggled like any other
+
+### Changed
+- RECENTLY zone widgets default to `size: 'small'` (stacked two-per-row); all other zones default to `size: 'medium'`
+- "Race Day Forecast" hidden from widget toggle panel (embedded inside countdown widget)
+- Small widgets render at equal height via `height: 100%` on the card container
+- GapToGoalWidget race name label tightened — no gap between zone label and race name
+- Zone headers span full width regardless of grid layout
+
+### Fixed
+- Equal-height small widgets in the same row — `glowCard` now uses `height: 100%` + `box-sizing: border-box` so paired widgets match
+
 ## [0.6.11.1] - 2026-05-20
 
 ### Changed
