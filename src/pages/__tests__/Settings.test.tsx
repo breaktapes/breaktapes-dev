@@ -74,17 +74,9 @@ describe('Settings — units preference', () => {
   })
 })
 
-describe('Settings — Strava integration', () => {
-  it('shows Connect button when not connected', () => {
+describe('Settings — Wearables section', () => {
+  it('shows coming soon text for wearables', () => {
     renderSettings()
-    expect(screen.getByRole('button', { name: /^connect$/i })).toBeInTheDocument()
-  })
-
-  it('shows Disconnect button when token present', () => {
-    useWearableStore.setState({
-      stravaToken: { access_token: 'tok', athlete: { firstname: 'Sam' } },
-    } as any)
-    renderSettings()
-    expect(screen.getByRole('button', { name: /disconnect/i })).toBeInTheDocument()
+    expect(screen.getByText(/coming soon/i)).toBeInTheDocument()
   })
 })
