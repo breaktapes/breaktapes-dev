@@ -1,19 +1,26 @@
-import React, { useMemo, useState, useEffect, useCallback } from 'react'
+import React, { useMemo, useState, useEffect, useCallback, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
+import {
+  DndContext, DragOverlay, PointerSensor, TouchSensor,
+  useSensor, useSensors, closestCenter,
+  type DragEndEvent, type DragStartEvent,
+} from '@dnd-kit/core'
+import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
-import { useDashStore } from '@/stores/useDashStore'
-import { selectRaces, selectNextRace, selectAthlete, selectDashZoneCollapse, selectUpcomingRaces, selectFocusRaceId } from '@/stores/selectors'
+import { useDashStore, initDashV3Migration } from '@/stores/useDashStore'
+import { selectRaces, selectNextRace, selectAthlete, selectUpcomingRaces, selectFocusRaceId } from '@/stores/selectors'
 import { AddRaceModal } from '@/components/AddRaceModal'
 import { ViewEditRaceModal } from '@/components/ViewEditRaceModal'
 import { TimePickerWheel } from '@/components/TimePickerWheel'
 import type { HMS } from '@/components/TimePickerWheel'
 import { CustomDistInput } from '@/components/CustomDistInput'
-import { WidgetCard, WidgetCardContext, type WidgetCardActions } from '@/components/WidgetCard'
+import { WidgetCard, WidgetCardContext, DragListenersContext, type WidgetCardActions } from '@/components/WidgetCard'
 import { WidgetDetailModal } from '@/components/WidgetDetailModal'
 import type { WidgetDynamicContext } from '@/lib/widgetContent'
-import type { Race, DashWidget } from '@/types'
+import type { Race, DashWidget, WidgetSize } from '@/types'
 import { useUnits, distUnit, computePaceSecPerKm as computePaceSecPerKmFn } from '@/lib/units'
 import { fmtDateDDMM, distLabel as distLabelUtil, normalizeName, racePriorityLabel } from '@/lib/utils'
 import { useRaceCatalog, type CatalogRace } from '@/hooks/useRaceCatalog'
@@ -267,14 +274,6 @@ function countryToFlag(country: string | undefined): string {
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
-const IconGrid = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-    {[4,8,12].flatMap(x => [4,8,12].map(y =>
-      <circle key={`${x}${y}`} cx={x} cy={y} r={1.4}/>
-    ))}
-  </svg>
-)
-
 const IconPin = ({ color = 'var(--orange)', size = 12 }: { color?: string; size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill={color} style={{ flexShrink: 0 }}>
     <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
@@ -288,45 +287,12 @@ const IconEdit = () => (
   </svg>
 )
 
-// ─── Toggle Switch ────────────────────────────────────────────────────────────
-
-function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
-  return (
-    <div
-      onClick={() => onChange(!checked)}
-      role="switch"
-      aria-checked={checked}
-      style={{
-        width: '46px', height: '27px',
-        background: checked ? 'var(--orange)' : 'var(--surface3)',
-        borderRadius: 'var(--radius-lg)',
-        border: `1px solid ${checked ? 'rgba(var(--orange-ch), 0.5)' : 'var(--border2)'}`,
-        position: 'relative',
-        cursor: 'pointer',
-        transition: 'background 0.2s ease, border-color 0.2s ease',
-        flexShrink: 0,
-      }}
-    >
-      <div style={{
-        position: 'absolute',
-        top: '3px',
-        left: checked ? '22px' : '3px',
-        width: '19px', height: '19px',
-        background: '#fff',
-        borderRadius: 'var(--radius-round)',
-        transition: 'left 0.2s ease',
-        boxShadow: '0 1px 4px rgba(0,0,0,0.5)',
-      }} />
-    </div>
-  )
-}
-
 // ─── Greeting Card ────────────────────────────────────────────────────────────
 
 type HourlyPill = { time: string; temp: number | null; icon: string; isSun?: 'rise' | 'set' }
 type GeoWeather = { temp: number; icon: string; desc: string; low: number; high: number; hourly: HourlyPill[] }
 
-function GreetingCard({ onCustomize }: { onCustomize: () => void }) {
+function GreetingCard() {
   const athlete   = useAthleteStore(selectAthlete)
   const firstName = (athlete?.firstName ?? 'Athlete').toUpperCase()
 
@@ -498,9 +464,6 @@ function GreetingCard({ onCustomize }: { onCustomize: () => void }) {
           <div style={{ marginTop: '6px', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Weather unavailable</div>
         )}
       </div>
-      <button style={st.gridBtn} onClick={onCustomize} aria-label="Customise dashboard">
-        <IconGrid />
-      </button>
     </div>
   )
 }
@@ -4162,32 +4125,28 @@ function CoachActivityWidget() {
 
 // ─── Zone accordion ───────────────────────────────────────────────────────────
 
-interface ZoneProps {
-  id:       'now' | 'recently' | 'trending' | 'context'
-  tag:      string
-  label:    string
-  children: React.ReactNode
+// Zone header — non-draggable in v1, full-row label only
+const ZONE_LABELS: Record<string, { tag: string; label: string }> = {
+  'zone:now':      { tag: 'NOW',         label: 'RACE DAY'   },
+  'zone:recently': { tag: 'RECENTLY',    label: 'YOUR SEASON'},
+  'zone:trending': { tag: 'CONSISTENCY', label: 'BUILD'      },
+  'zone:context':  { tag: 'PATTERNS',    label: 'ANALYSIS'   },
 }
 
-function DashZone({ id, tag, label, children }: ZoneProps) {
-  const zoneCollapse    = useDashStore(selectDashZoneCollapse)
-  const setZoneCollapse = useDashStore(s => s.setZoneCollapse)
-  const isCollapsed     = zoneCollapse[id] ?? false
-
+function ZoneHeader({ id, editMode }: { id: string; editMode: boolean }) {
+  const meta = ZONE_LABELS[id] ?? { tag: id.replace('zone:', '').toUpperCase(), label: '' }
   return (
-    <div style={st.zone}>
-      <button
-        style={st.zoneBtn}
-        onClick={() => setZoneCollapse(id, !isCollapsed)}
-        aria-expanded={!isCollapsed}
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-          <span style={st.zoneTag}>{tag}</span>
-          <span style={st.zoneLabel}>{label}</span>
-        </div>
-        <span style={{ ...st.zoneChevron, transform: isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)' }}>▾</span>
-      </button>
-      {!isCollapsed && <div style={st.zoneContent}>{children}</div>}
+    <div style={{
+      gridColumn: '1 / -1',
+      fontFamily: 'var(--headline)',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 2,
+      padding: editMode ? '10px 0 4px' : '14px 0 6px',
+      opacity: editMode ? 0.7 : 1,
+    }}>
+      <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: 'var(--orange)' }}>{meta.tag}</span>
+      <span style={{ fontSize: '15px', fontWeight: 900, letterSpacing: '0.06em', textTransform: 'uppercase' as const, color: 'var(--white)', lineHeight: 1.1 }}>{meta.label}</span>
     </div>
   )
 }
@@ -5503,113 +5462,164 @@ function CourseRepeatsWidget() {
   )
 }
 
-// ─── Customize Modal ──────────────────────────────────────────────────────────
+// ─── DnD: SortableItem ───────────────────────────────────────────────────────
 
-const ZONE_META: Record<string, { tag: string; label: string }> = {
-  now:      { tag: 'NOW',          label: 'RACE CONTEXT'   },
-  recently: { tag: 'RECENTLY',     label: 'YOUR RACING'    },
-  trending: { tag: 'CONSISTENCY',  label: 'BUILD'          },
-  context:  { tag: 'PATTERNS',     label: 'ANALYSIS'       },
+const SortableItem = React.memo(function SortableItem({
+  id, editMode, children,
+}: { id: string; editMode: boolean; children: React.ReactNode }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
+
+  if (!editMode) {
+    return <div ref={setNodeRef} style={{ minWidth: 0 }}>{children}</div>
+  }
+
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+    minWidth: 0,
+  }
+
+  return (
+    <DragListenersContext.Provider value={listeners}>
+      <div ref={setNodeRef} style={style} {...attributes} tabIndex={-1}>
+        {children}
+      </div>
+    </DragListenersContext.Provider>
+  )
+})
+
+// ─── DragGhost ───────────────────────────────────────────────────────────────
+
+function DragGhost({ id, widgets }: { id: string; widgets: DashWidget[] }) {
+  const w = widgets.find(x => x.id === id)
+  const isZone = id.startsWith('zone:')
+  const label = isZone
+    ? (ZONE_LABELS[id]?.tag ?? id.replace('zone:', '').toUpperCase())
+    : (w?.label ?? id)
+  const icon = !isZone && w?.icon
+  const size = w?.size ?? 'medium'
+  const isHalf = size === 'small'
+
+  return (
+    <div style={{
+      background: 'rgba(13,13,13,0.90)',
+      border: '1px solid var(--orange)',
+      borderRadius: 'var(--radius-md)',
+      boxShadow: '0 8px 24px rgba(0,0,0,0.60)',
+      height: 56,
+      width: isHalf ? '50%' : '100%',
+      display: 'flex',
+      alignItems: 'center',
+      gap: 'var(--sp-3)',
+      padding: '0 var(--sp-4)',
+    }}>
+      {icon && <span style={{ fontSize: 'var(--text-base)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 800 }}>{icon}</span>}
+      <span style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-compact)', fontWeight: 600, textTransform: 'uppercase', color: 'var(--white)', letterSpacing: '0.06em' }}>{label}</span>
+    </div>
+  )
 }
 
-const ZONE_ORDER = ['now', 'recently', 'trending', 'context'] as const
+// ─── EditModeBar ─────────────────────────────────────────────────────────────
 
-function DashCustomizeModal({ onClose }: { onClose: () => void }) {
-  const storeWidgets     = useDashStore(s => s.widgets)
-  const getDashLayout    = useDashStore(s => s.getDashLayout)
-  const setWidgetEnabled = useDashStore(s => s.setWidgetEnabled)
-  const reorderWidget    = useDashStore(s => s.reorderWidget)
-  const widgets          = useMemo(() => getDashLayout(), [storeWidgets, getDashLayout])
+function EditModeBar({
+  onPreset, onDone, hasCountdownRace,
+}: {
+  onPreset: (id: 'race-week' | 'off-season' | 'minimal') => void
+  onDone: () => void
+  hasCountdownRace: boolean
+}) {
+  return (
+    <div style={{
+      background: 'var(--surface3)',
+      borderTop: '2px solid var(--orange)',
+      padding: '10px var(--sp-4)',
+      display: 'flex',
+      flexWrap: 'wrap' as const,
+      alignItems: 'center',
+      gap: 'var(--sp-3)',
+      position: 'sticky' as const,
+      top: 0,
+      zIndex: 200,
+    }}>
+      <span style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-xs)', fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.06em', color: 'var(--muted)', whiteSpace: 'nowrap' as const }}>
+        CUSTOMIZING
+      </span>
 
-  const byZone = useMemo(() =>
-    ZONE_ORDER.reduce((acc, z) => {
-      acc[z] = widgets.filter(w => w.zone === z)
-      return acc
-    }, {} as Record<string, typeof widgets>),
-    [widgets],
+      {/* Preset chips — scrollable on mobile */}
+      <div style={{ display: 'flex', gap: 'var(--sp-2)', overflowX: 'auto' as const, scrollbarWidth: 'none' as const, WebkitOverflowScrolling: 'touch' as const, flex: '1 1 0', minWidth: 0 }}>
+        <button
+          onClick={() => onPreset('race-week')}
+          title={!hasCountdownRace ? 'Add an upcoming race first' : undefined}
+          style={{
+            fontFamily: 'var(--headline)', fontSize: 'var(--text-xs)', fontWeight: 600, textTransform: 'uppercase' as const,
+            height: 26, padding: '0 10px', borderRadius: 4, border: '1px solid var(--border2)',
+            background: 'transparent', color: 'var(--muted)', cursor: 'pointer', whiteSpace: 'nowrap' as const,
+            opacity: hasCountdownRace ? 1 : 0.45,
+          }}
+        >Race Week</button>
+        <button
+          onClick={() => onPreset('off-season')}
+          style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-xs)', fontWeight: 600, textTransform: 'uppercase' as const, height: 26, padding: '0 10px', borderRadius: 4, border: '1px solid var(--border2)', background: 'transparent', color: 'var(--muted)', cursor: 'pointer', whiteSpace: 'nowrap' as const }}
+        >Off Season</button>
+        <button
+          onClick={() => onPreset('minimal')}
+          style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-xs)', fontWeight: 600, textTransform: 'uppercase' as const, height: 26, padding: '0 10px', borderRadius: 4, border: '1px solid var(--border2)', background: 'transparent', color: 'var(--muted)', cursor: 'pointer', whiteSpace: 'nowrap' as const }}
+        >Minimal</button>
+      </div>
+
+      <button
+        onClick={onDone}
+        style={{ marginLeft: 'auto', fontFamily: 'var(--headline)', fontSize: 'var(--text-sm)', fontWeight: 700, textTransform: 'uppercase' as const, height: 30, padding: '0 14px', borderRadius: 6, border: 'none', background: 'var(--orange)', color: 'var(--white)', cursor: 'pointer', flexShrink: 0 }}
+      >DONE</button>
+    </div>
   )
+}
+
+// ─── Add Widgets Sheet ────────────────────────────────────────────────────────
+
+function AddWidgetsSheet({ widgets, onEnable, onClose }: { widgets: DashWidget[]; onEnable: (id: string) => void; onClose: () => void }) {
+  const zones: Array<'now' | 'recently' | 'trending' | 'context'> = ['now', 'recently', 'trending', 'context']
+  const disabled = widgets.filter(w => !w.enabled)
 
   return createPortal((
-    <div style={st.modalOverlay} onClick={onClose}>
-      <div style={st.customizeSheet} onClick={e => e.stopPropagation()}>
-        {/* Handle pill */}
-        <div style={{ width: '40px', height: '4px', background: 'var(--border2)', borderRadius: 'var(--radius-xs)', margin: '0 auto 20px' }} />
-
+    <div style={{ position: 'fixed', inset: 0, zIndex: 500, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+      <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.70)' }} onClick={onClose} />
+      <div style={{ position: 'relative', background: 'var(--surface2)', borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0', borderTop: '1px solid var(--border2)', maxHeight: '70vh', display: 'flex', flexDirection: 'column' }}>
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 'var(--sp-3)', marginBottom: '6px' }}>
-          <div style={{ minWidth: 0, flex: 1 }}>
-            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)', lineHeight: 1.1 }}>
-              CUSTOMIZE DASHBOARD
-            </div>
-            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginTop: '6px', lineHeight: 1.5 }}>
-              Turn widgets on or off, reorder them within a section.
-            </div>
-          </div>
-          <button onClick={onClose} aria-label="Close" style={{ background: 'transparent', border: 'none', color: 'var(--muted)', fontSize: 'var(--text-lg)', cursor: 'pointer', padding: '4px 8px', lineHeight: 1, flexShrink: 0 }}>✕</button>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 'var(--sp-4)', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
+          <div style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-base)', fontWeight: 700, textTransform: 'uppercase' as const, color: 'var(--white)', letterSpacing: '0.06em' }}>+ ADD WIDGETS</div>
+          <button onClick={onClose} aria-label="Close" style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 'var(--text-base)', cursor: 'pointer', padding: '4px 8px', lineHeight: 1 }}>✕</button>
         </div>
 
-        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', lineHeight: 1.5, padding: '10px 12px', background: 'var(--surface3)', borderRadius: 'var(--radius-md)', marginBottom: '4px' }}>
-          Use ▲ and ▼ on a widget to reorder it within its section.
-        </div>
-
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
-          {ZONE_ORDER.map(zoneId => {
-            const meta = ZONE_META[zoneId]
-            const zWidgets = byZone[zoneId] ?? []
+        {/* Scrollable list */}
+        <div style={{ overflowY: 'auto', paddingBottom: 'calc(var(--safe-bottom, 0px) + var(--sp-4))' }}>
+          {disabled.length === 0 ? (
+            <div style={{ padding: 'var(--sp-8) var(--sp-4)', textAlign: 'center', fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>
+              All widgets are enabled — remove some first.
+            </div>
+          ) : zones.map(zone => {
+            const zoneWidgets = disabled.filter(w => w.zone === zone)
+            if (zoneWidgets.length === 0) return null
+            const meta = ZONE_LABELS[`zone:${zone}`] ?? { tag: zone.toUpperCase(), label: '' }
             return (
-              <div key={zoneId} style={{ marginTop: '16px' }}>
-                {/* Section header */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0 8px', borderTop: '1px solid var(--border)' }}>
-                  <div>
-                    <div style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-xs)', fontWeight: 700, letterSpacing: '0.14em', color: 'var(--orange)', textTransform: 'uppercase' }}>
-                      SECTION
-                    </div>
-                    <div style={{ fontFamily: 'var(--headline)', fontSize: '15px', fontWeight: 900, letterSpacing: '0.06em', color: 'var(--white)', textTransform: 'uppercase' }}>
-                      {meta.tag} — {meta.label}
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-1)' }}>
-                    <div style={st.arrowBtn}>▲</div>
-                    <div style={st.arrowBtn}>▼</div>
-                  </div>
+              <div key={zone}>
+                <div style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-xs)', fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.06em', color: 'var(--muted)', padding: 'var(--sp-3) var(--sp-4) var(--sp-2)' }}>
+                  {meta.tag}
                 </div>
-
-                {/* Widget rows */}
-                {zWidgets.map((w, idx) => (
-                  <div key={w.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', padding: '12px 0', borderBottom: '1px solid var(--border)', minWidth: 0 }}>
-                    {/* Icon box */}
-                    <div style={{ width: '38px', height: '38px', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-lg)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--muted)', flexShrink: 0 }}>
-                      {w.icon}
-                    </div>
-                    {/* Label */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <span style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', fontFamily: 'var(--body)', fontWeight: 500 }}>{w.label}</span>
-                    </div>
-                    {/* Reorder buttons */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-1)', flexShrink: 0 }}>
-                      <button
-                        style={{ ...st.arrowBtn, opacity: idx === 0 ? 0.25 : 1, cursor: idx === 0 ? 'default' : 'pointer' }}
-                        onClick={() => idx > 0 && reorderWidget(w.id, 'up')}
-                        disabled={idx === 0}
-                      >▲</button>
-                      <button
-                        style={{ ...st.arrowBtn, opacity: idx === zWidgets.length - 1 ? 0.25 : 1, cursor: idx === zWidgets.length - 1 ? 'default' : 'pointer' }}
-                        onClick={() => idx < zWidgets.length - 1 && reorderWidget(w.id, 'down')}
-                        disabled={idx === zWidgets.length - 1}
-                      >▼</button>
-                    </div>
-                    {/* Toggle */}
-                    <ToggleSwitch checked={w.enabled} onChange={v => setWidgetEnabled(w.id, v)} />
+                {zoneWidgets.map(w => (
+                  <div key={w.id} style={{ display: 'grid', gridTemplateColumns: '40px 1fr auto', alignItems: 'center', gap: 'var(--sp-3)', padding: 'var(--sp-3) var(--sp-4)' }}>
+                    <div style={{ width: 40, height: 40, borderRadius: 'var(--radius-sm)', background: 'var(--surface3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'var(--text-compact)', fontFamily: 'var(--headline)', fontWeight: 800, color: 'var(--muted)' }}>{w.icon}</div>
+                    <span style={{ fontSize: 'var(--text-compact)', fontWeight: 500, color: 'var(--white)' }}>{w.label}</span>
+                    <button
+                      onClick={() => { onEnable(w.id); onClose() }}
+                      style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-xs)', fontWeight: 700, textTransform: 'uppercase' as const, height: 26, padding: '0 10px', borderRadius: 4, border: '1px solid var(--orange)', background: 'transparent', color: 'var(--orange)', cursor: 'pointer' }}
+                    >+ ADD</button>
                   </div>
                 ))}
               </div>
             )
           })}
-        </div>
-
-        {/* DONE button — sticky at bottom */}
-        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '12px 20px 28px', background: 'var(--surface2)', borderTop: '1px solid var(--border)' }}>
-          <button style={st.doneBtn} onClick={onClose}>DONE</button>
         </div>
       </div>
     </div>
@@ -5673,54 +5683,93 @@ function NewUserOnboarding({ onLogRace, onAddUpcoming, onDiscover }: { onLogRace
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 
-function isEnabled(widgets: ReturnType<typeof useDashStore.getState>['widgets'], id: string) {
-  return widgets.find(w => w.id === id)?.enabled !== false
-}
-
 export function Dashboard() {
   const navigate = useNavigate()
-  const [showCustomize,     setShowCustomize]     = useState(false)
-  const [showAddRace,       setShowAddRace]       = useState(false)
-  const [addRaceMode,       setAddRaceMode]       = useState<'past' | 'upcoming'>('past')
-  const [showAllUpcoming,   setShowAllUpcoming]   = useState(false)
-  const [editRace,          setEditRace]          = useState<Race | null>(null)
-  const [editRaceMode,      setEditRaceMode]      = useState<'view' | 'edit'>('view')
+
+  // modals
+  const [showAddRace,     setShowAddRace]     = useState(false)
+  const [addRaceMode,     setAddRaceMode]     = useState<'past' | 'upcoming'>('past')
+  const [showAllUpcoming, setShowAllUpcoming] = useState(false)
+  const [editRace,        setEditRace]        = useState<Race | null>(null)
+  const [editRaceMode,    setEditRaceMode]    = useState<'view' | 'edit'>('view')
+  const [showAddWidgets,  setShowAddWidgets]  = useState(false)
+  const [detailWidget,    setDetailWidget]    = useState<DashWidget | null>(null)
+  const [detailPreview,   setDetailPreview]   = useState<React.ReactNode>(null)
+  const [detailCtx,       setDetailCtx]       = useState<WidgetDynamicContext | undefined>(undefined)
+
+  // edit mode
+  const [editMode, setEditMode] = useState(false)
+  const [activeId, setActiveId] = useState<string | null>(null)
+  const presetUndoRef = useRef<{ widgetOrder: string[]; sizes: Record<string, WidgetSize> } | null>(null)
+  const undoToastRef  = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // race state
   const dismissExpiredRace = useRaceStore(s => s.dismissExpiredRace)
-  const [detailWidget,      setDetailWidget]      = useState<DashWidget | null>(null)
-  const [detailPreview,     setDetailPreview]     = useState<React.ReactNode>(null)
-  const [detailCtx,         setDetailCtx]         = useState<WidgetDynamicContext | undefined>(undefined)
-  const nextRace        = useRaceStore(selectNextRace)   // always nearest upcoming (A-Race preferred)
+  const nextRace        = useRaceStore(selectNextRace)
   const upcomingRaces   = useRaceStore(selectUpcomingRaces)
   const focusRaceId     = useRaceStore(selectFocusRaceId)
   const pinFocusRace    = useRaceStore(s => s.pinFocusRace)
   const countdownRace   = useMemo(() => {
-    if (focusRaceId) {
-      return upcomingRaces.find(r => r.id === focusRaceId) ?? nextRace
-    }
+    if (focusRaceId) return upcomingRaces.find(r => r.id === focusRaceId) ?? nextRace
     return nextRace
   }, [focusRaceId, upcomingRaces, nextRace])
-  const storeWidgets  = useDashStore(s => s.widgets)
-  const getDashLayout = useDashStore(s => s.getDashLayout)
-  const widgets       = useMemo(() => getDashLayout(), [storeWidgets, getDashLayout])
+
+  // store
+  const storeWidgets    = useDashStore(s => s.widgets)
+  const storeOrder      = useDashStore(s => s.widgetOrder)
+  const getDashLayout   = useDashStore(s => s.getDashLayout)
+  const setWidgetEnabled = useDashStore(s => s.setWidgetEnabled)
+  const setWidgetSize   = useDashStore(s => s.setWidgetSize)
+  const setWidgetOrder  = useDashStore(s => s.setWidgetOrder)
+  const applyPreset     = useDashStore(s => s.applyPreset)
+
+  const widgets = useMemo(() => getDashLayout(), [storeWidgets, getDashLayout])
+
+  // Run migration v3 once on mount
+  useEffect(() => {
+    const stored = useDashStore.getState()
+    initDashV3Migration(
+      { widgets: stored.widgets, widgetOrder: stored.widgetOrder },
+      (patch) => useDashStore.setState(patch),
+    )
+  }, [])
+
+  // widgetOrder from store (may be updated by migration)
+  const widgetOrder = useMemo(() => {
+    if (Array.isArray(storeOrder) && storeOrder.length > 0) return storeOrder
+    // Fallback: zone-grouped from enabled widgets
+    const zones: Array<'now' | 'recently' | 'trending' | 'context'> = ['now', 'recently', 'trending', 'context']
+    const order: string[] = []
+    for (const zone of zones) {
+      order.push(`zone:${zone}`)
+      widgets.filter(w => w.zone === zone && w.enabled).forEach(w => order.push(w.id))
+    }
+    return order
+  }, [storeOrder, widgets])
+
+  // Only show IDs that are in widgetOrder and have an enabled widget (or are zone headers)
+  const visibleOrder = useMemo(() =>
+    widgetOrder.filter(id =>
+      id.startsWith('zone:') || widgets.find(w => w.id === id && w.enabled)
+    ),
+    [widgetOrder, widgets],
+  )
 
   const [riegelPrefillDist, setRiegelPrefillDist] = useState<string | undefined>()
   const [catalogPrefill,    setCatalogPrefill]    = useState<Partial<Race> | undefined>()
-  const openAddRace          = () => { setAddRaceMode('past');     setRiegelPrefillDist(undefined); setCatalogPrefill(undefined); setShowAddRace(true) }
-  const openAddUpcomingRace  = () => { setAddRaceMode('upcoming'); setRiegelPrefillDist(undefined); setCatalogPrefill(undefined); setShowAddRace(true) }
-  const openRiegelGoal = (dist: string) => { setAddRaceMode('upcoming'); setRiegelPrefillDist(dist); setCatalogPrefill(undefined); setShowAddRace(true) }
-
-  const en = (id: string) => isEnabled(widgets, id)
+  const openAddRace         = useCallback(() => { setAddRaceMode('past');     setRiegelPrefillDist(undefined); setCatalogPrefill(undefined); setShowAddRace(true) }, [])
+  const openAddUpcomingRace = useCallback(() => { setAddRaceMode('upcoming'); setRiegelPrefillDist(undefined); setCatalogPrefill(undefined); setShowAddRace(true) }, [])
+  const openRiegelGoal      = useCallback((dist: string) => { setAddRaceMode('upcoming'); setRiegelPrefillDist(dist); setCatalogPrefill(undefined); setShowAddRace(true) }, [])
 
   const widgetActions: WidgetCardActions = useMemo(() => ({
     openAddRace,
     openAddUpcomingRace,
-    openCustomize:   () => setShowCustomize(true),
     openAllUpcoming: () => setShowAllUpcoming(true),
     openFocusRaceEdit: () => {
       const race = countdownRace ?? nextRace ?? null
       if (race) setEditRace(race)
     },
-  }), [countdownRace, nextRace])
+  }), [openAddRace, openAddUpcomingRace, countdownRace, nextRace])
 
   const openDetail = useCallback((id: string, preview?: React.ReactNode, ctx?: WidgetDynamicContext) => {
     const w = widgets.find(x => x.id === id)
@@ -5731,105 +5780,211 @@ export function Dashboard() {
   }, [widgets])
 
   const closeDetail = useCallback(() => {
-    setDetailWidget(null)
-    setDetailPreview(null)
-    setDetailCtx(undefined)
+    setDetailWidget(null); setDetailPreview(null); setDetailCtx(undefined)
   }, [])
 
-  const widgetCtxValue = useMemo(() => ({ openDetail, actions: widgetActions }), [openDetail, widgetActions])
+  const getWidgetSize = useCallback((id: string): WidgetSize =>
+    widgets.find(w => w.id === id)?.size ?? 'medium'
+  , [widgets])
+
+  const enterEditMode = useCallback(() => setEditMode(true), [])
+  const exitEditMode  = useCallback(() => { setEditMode(false); setActiveId(null) }, [])
+
+  const handlePreset = useCallback((id: 'race-week' | 'off-season' | 'minimal') => {
+    // Snapshot for undo
+    const snap = {
+      widgetOrder: storeOrder,
+      sizes: Object.fromEntries(storeWidgets.map(w => [w.id, w.size ?? 'medium'])) as Record<string, WidgetSize>,
+    }
+    presetUndoRef.current = snap
+    applyPreset(id)
+    // Clear undo after 5s
+    if (undoToastRef.current) clearTimeout(undoToastRef.current)
+    undoToastRef.current = setTimeout(() => { presetUndoRef.current = null }, 5000)
+  }, [storeOrder, storeWidgets, applyPreset])
+
+  // DnD sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } }),
+  )
+
+  const handleDragStart = useCallback(({ active }: DragStartEvent) => {
+    setActiveId(active.id as string)
+  }, [])
+
+  const handleDragEnd = useCallback(({ active, over }: DragEndEvent) => {
+    setActiveId(null)
+    if (!over || active.id === over.id) return
+    const oldIdx = widgetOrder.indexOf(active.id as string)
+    const newIdx = widgetOrder.indexOf(over.id as string)
+    if (oldIdx !== -1 && newIdx !== -1) {
+      setWidgetOrder(arrayMove(widgetOrder, oldIdx, newIdx))
+    }
+  }, [widgetOrder, setWidgetOrder])
+
+  const widgetCtxValue = useMemo(() => ({
+    openDetail,
+    actions: widgetActions,
+    editMode,
+    getWidgetSize,
+    setWidgetSize,
+    setWidgetEnabled,
+  }), [openDetail, widgetActions, editMode, getWidgetSize, setWidgetSize, setWidgetEnabled])
+
+  // renderWidget: switch over all 47 widget IDs
+  function renderWidget(id: string): React.ReactNode {
+    const race = countdownRace
+    switch (id) {
+      case 'countdown':         return race ? <CountdownCard race={race} onShowAll={() => setShowAllUpcoming(true)} upcomingRaces={upcomingRaces} onSelectRace={pinFocusRace} /> : null
+      case 'race-forecast':     return race ? <WeatherCard race={race} /> : null
+      case 'goal-pace':         return race ? <GoalPaceWidget race={race} /> : null
+      case 'gap-to-goal':       return race ? <GapToGoalWidget race={race} /> : null
+      case 'race-readiness':    return <RaceReadinessWidget />
+      case 'pb-probability':    return race ? <PBProbabilityWidget race={race} /> : null
+      case 'course-fit':        return race ? <CourseFitWidget race={race} /> : null
+      case 'weather-fit':       return race ? <WeatherFitWidget race={race} /> : null
+      case 'race-stack':        return race ? <RaceStackWidget race={race} /> : null
+      case 'on-this-day':       return <OnThisDayWidget />
+      case 'race-prediction':   return <WidgetCard id="race-prediction"><div style={{ padding: 'var(--sp-4)', fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>Race Prediction coming soon</div></WidgetCard>
+      case 'recent-races':      return <RecentRaces onAddRace={openAddRace} />
+      case 'activity-preview':  return <ActivityPreviewWidget />
+      case 'personal-bests':    return <PersonalBestsWidget />
+      case 'riegel-predictor':  return <RiegelPredictorWidget onAddGoal={openRiegelGoal} />
+      case 'weather-impact':    return <WeatherImpactWidget />
+      case 'why-prd':           return <WhyPRdWidget />
+      case 'why-faded':         return <WhyFadedWidget />
+      case 'break-tape':        return <BreakTapeWidget />
+      case 'story-mode':        return <StoryModeWidget />
+      case 'season-planner':    return <SeasonPlannerWidget onAddRace={openAddUpcomingRace} onOpenPlanner={() => setShowAllUpcoming(true)} />
+      case 'recovery-intel':    return <RecoveryIntelWidget />
+      case 'race-density':      return <RaceDensityWidget />
+      case 'streak-risk':       return <StreakRiskWidget />
+      case 'training-correl':   return <TrainingCorrelWidget />
+      case 'race-gap-analysis': return <RaceGapAnalysisWidget />
+      case 'adaptive-goals':    return <AdaptiveGoalsWidget />
+      case 'upcoming-density':  return <UpcomingDensityWidget />
+      case 'boston-qual':       return <BostonQualWidget />
+      case 'pacing-iq':         return <PacingIQWidget />
+      case 'career-momentum':   return <CareerMomentumWidget />
+      case 'age-grade':         return <AgeGradeWidget />
+      case 'race-dna':          return <RaceDNAWidget />
+      case 'surface-profile':   return <SurfaceProfileWidget />
+      case 'pressure-performer':return <PressurePerformerWidget />
+      case 'travel-load':       return <TravelLoadWidget />
+      case 'best-conditions':   return <BestConditionsWidget />
+      case 'pattern-scan':      return <PatternScanWidget />
+      case 'why-result':        return <WhyResultWidget />
+      case 'advanced-race-dna': return <AdvancedRaceDNAWidget />
+      case 'race-comparer':     return <RaceComparerWidget />
+      case 'what-to-race-next': return <WhatToRaceNextWidget />
+      case 'coach-activity':    return <CoachActivityWidget />
+      case 'vdot-score':        return <VDOTScoreWidget />
+      case 'equiv-perf':        return <EquivPerfWidget />
+      case 'distance-milestones': return <DistanceMilestonesWidget />
+      case 'course-repeats':    return <CourseRepeatsWidget />
+      default:                  return null
+    }
+  }
 
   return (
     <WidgetCardContext.Provider value={widgetCtxValue}>
     <div style={st.page}>
-      {showCustomize    && <DashCustomizeModal onClose={() => setShowCustomize(false)} />}
       {showAddRace      && <AddRaceModal defaultMode={addRaceMode} prefillDistance={riegelPrefillDist} prefill={catalogPrefill} onClose={() => { setShowAddRace(false); setRiegelPrefillDist(undefined); setCatalogPrefill(undefined) }} />}
       {showAllUpcoming  && <AllUpcomingModal onClose={() => setShowAllUpcoming(false)} onAddRace={openAddUpcomingRace} />}
       {editRace         && <ViewEditRaceModal race={editRace} initialMode={editRaceMode} onClose={() => { setEditRace(null); setEditRaceMode('view') }} />}
       {detailWidget     && <WidgetDetailModal widget={detailWidget} preview={detailPreview} dynamicContext={detailCtx} actions={widgetActions} onClose={closeDetail} />}
+      {showAddWidgets   && <AddWidgetsSheet widgets={widgets} onEnable={(id) => setWidgetEnabled(id, true)} onClose={() => setShowAddWidgets(false)} />}
 
-      <GreetingCard onCustomize={() => setShowCustomize(true)} />
+      {/* Dashboard header row with EDIT button */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', minWidth: 0 }}>
+        <div style={{ minWidth: 0, flex: 1 }}>
+          {/* GreetingCard: CSS-hidden in edit mode to preserve weather state */}
+          <div style={{ display: editMode ? 'none' : undefined }}>
+            <GreetingCard />
+          </div>
+        </div>
+        {!editMode && (
+          <button
+            onClick={enterEditMode}
+            style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-sm)', fontWeight: 600, textTransform: 'uppercase', height: 28, padding: '0 12px', borderRadius: 8, border: '1px solid rgba(232,224,213,0.20)', background: 'transparent', color: 'var(--white)', cursor: 'pointer', flexShrink: 0, marginLeft: 'var(--sp-3)' }}
+          >
+            EDIT
+          </button>
+        )}
+      </div>
+
+      {/* EditModeBar — shown only in edit mode */}
+      {editMode && (
+        <EditModeBar
+          onPreset={handlePreset}
+          onDone={exitEditMode}
+          hasCountdownRace={!!countdownRace}
+        />
+      )}
+
+      {/* Pinned non-widget elements — always above DnD list */}
       <PreRaceBriefing
         onAddRace={openAddRace}
         onEditRace={(race) => { setEditRaceMode('view'); setEditRace(race) }}
         onComplete={(race) => { dismissExpiredRace(race.id); setEditRaceMode('edit'); setEditRace(race) }}
       />
 
-      {/* First-time user onboarding — shown only when no races and no upcoming races */}
-      <NewUserOnboarding
-        onLogRace={openAddRace}
-        onAddUpcoming={openAddUpcomingRace}
-        onDiscover={() => navigate('/discover')}
-      />
+      {!editMode && (
+        <>
+          <NewUserOnboarding
+            onLogRace={openAddRace}
+            onAddUpcoming={openAddUpcomingRace}
+            onDiscover={() => navigate('/discover')}
+          />
+          <ExpiredRacePrompts onLogResult={() => { setAddRaceMode('past'); setShowAddRace(true) }} />
+          {/* Structural non-widget elements pinned above DnD list */}
+          {countdownRace
+            ? <CourseInfoCard race={countdownRace} />
+            : <NoUpcomingRaceCTA onAddRace={openAddUpcomingRace} />
+          }
+          <StatsStrip />
+        </>
+      )}
 
-      {/* Expired upcoming race prompts */}
-      <ExpiredRacePrompts onLogResult={() => { setAddRaceMode('past'); setShowAddRace(true) }} />
+      {/* Flat DnD grid */}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext items={widgetOrder} strategy={verticalListSortingStrategy}>
+          <div style={st.dashGrid}>
+            {visibleOrder.map(id => {
+              const isZone = id.startsWith('zone:')
+              const node = isZone
+                ? <ZoneHeader id={id} editMode={editMode} />
+                : renderWidget(id)
+              if (!node) return null
+              return (
+                <SortableItem key={id} id={id} editMode={editMode}>
+                  {node}
+                </SortableItem>
+              )
+            })}
+          </div>
+        </SortableContext>
 
-      {/* NOW — RACE DAY */}
-      <DashZone id="now" tag="NOW" label="RACE DAY">
-        {(countdownRace ?? nextRace)
-          ? <>{en('countdown')       && countdownRace && <CountdownCard race={countdownRace} onShowAll={() => setShowAllUpcoming(true)} upcomingRaces={upcomingRaces} onSelectRace={pinFocusRace} />}
-              {en('race-forecast')   && countdownRace && <WeatherCard race={countdownRace} />}
-              <CourseInfoCard race={countdownRace ?? nextRace!} /></>
-          : <NoUpcomingRaceCTA onAddRace={openAddUpcomingRace} />
-        }
-        {en('goal-pace')      && countdownRace && <GoalPaceWidget race={countdownRace} />}
-        {en('on-this-day')    && <OnThisDayWidget />}
-        {en('race-readiness') && <RaceReadinessWidget />}
-        {en('gap-to-goal')    && countdownRace && <GapToGoalWidget race={countdownRace} />}
-        {en('course-fit')     && countdownRace && <CourseFitWidget race={countdownRace} />}
-        {en('pb-probability') && countdownRace && <PBProbabilityWidget race={countdownRace} />}
-        {en('weather-fit')    && countdownRace && <WeatherFitWidget race={countdownRace} />}
-        {en('race-stack')     && countdownRace && <RaceStackWidget race={countdownRace} />}
-      </DashZone>
+        <DragOverlay>
+          {activeId ? <DragGhost id={activeId} widgets={widgets} /> : null}
+        </DragOverlay>
+      </DndContext>
 
-      {/* RECENTLY — YOUR SEASON */}
-      <DashZone id="recently" tag="RECENTLY" label="YOUR SEASON">
-        <StatsStrip />
-        {en('recent-races')       && <RecentRaces onAddRace={openAddRace} />}
-        {en('activity-preview')   && <ActivityPreviewWidget />}
-        {en('personal-bests')     && <PersonalBestsWidget />}
-        {en('riegel-predictor')   && <RiegelPredictorWidget onAddGoal={openRiegelGoal} />}
-        {en('weather-impact')     && <WeatherImpactWidget />}
-        {en('why-prd')        && <WhyPRdWidget />}
-        {en('why-faded')      && <WhyFadedWidget />}
-        {en('break-tape')     && <BreakTapeWidget />}
-        {en('story-mode')     && <StoryModeWidget />}
-      </DashZone>
-
-      {/* CONSISTENCY — BUILD */}
-      <DashZone id="trending" tag="CONSISTENCY" label="BUILD">
-        {en('season-planner')    && <SeasonPlannerWidget onAddRace={openAddUpcomingRace} onOpenPlanner={() => setShowAllUpcoming(true)} />}
-        {en('recovery-intel')    && <RecoveryIntelWidget />}
-        {en('race-density')      && <RaceDensityWidget />}
-        {en('upcoming-density')  && <UpcomingDensityWidget />}
-        {en('streak-risk')       && <StreakRiskWidget />}
-        {en('training-correl')   && <TrainingCorrelWidget />}
-        {en('race-gap-analysis') && <RaceGapAnalysisWidget />}
-        {en('adaptive-goals')    && <AdaptiveGoalsWidget />}
-      </DashZone>
-
-      {/* PATTERNS — ANALYSIS */}
-      <DashZone id="context" tag="PATTERNS" label="ANALYSIS">
-        {en('vdot-score')          && <VDOTScoreWidget />}
-        {en('equiv-perf')          && <EquivPerfWidget />}
-        {en('distance-milestones') && <DistanceMilestonesWidget />}
-        {en('course-repeats')      && <CourseRepeatsWidget />}
-        {en('boston-qual')       && <BostonQualWidget />}
-        {en('pacing-iq')         && <PacingIQWidget />}
-        {en('career-momentum')   && <CareerMomentumWidget />}
-        {en('age-grade')         && <AgeGradeWidget />}
-        {en('race-dna')          && <RaceDNAWidget />}
-        {en('surface-profile')   && <SurfaceProfileWidget />}
-        {en('pressure-performer') && <PressurePerformerWidget />}
-        {en('travel-load')       && <TravelLoadWidget />}
-        {en('best-conditions')   && <BestConditionsWidget />}
-        {en('pattern-scan')      && <PatternScanWidget />}
-        {en('why-result')        && <WhyResultWidget />}
-        {en('advanced-race-dna') && <AdvancedRaceDNAWidget />}
-        {en('race-comparer')     && <RaceComparerWidget />}
-        {en('what-to-race-next') && <WhatToRaceNextWidget />}
-        {en('coach-activity')    && <CoachActivityWidget />}
-      </DashZone>
+      {/* + Add Widgets button at bottom of flat list in edit mode */}
+      {editMode && (
+        <button
+          onClick={() => setShowAddWidgets(true)}
+          style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-sm)', fontWeight: 700, textTransform: 'uppercase', width: '100%', height: 40, borderRadius: 'var(--radius-md)', border: '1px dashed var(--border2)', background: 'transparent', color: 'var(--muted)', cursor: 'pointer', letterSpacing: '0.06em' }}
+        >
+          + ADD WIDGETS
+        </button>
+      )}
 
     </div>
     </WidgetCardContext.Provider>
@@ -5847,6 +6002,13 @@ const st = {
     paddingBottom: '96px',
     fontFamily: 'var(--body)',
     color: 'var(--white)',
+    minWidth: 0,
+  } as React.CSSProperties,
+
+  dashGrid: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: 'var(--sp-3)',
     minWidth: 0,
   } as React.CSSProperties,
 
@@ -5895,20 +6057,6 @@ const st = {
     color: 'var(--muted)',
     marginTop: '6px',
     lineHeight: 1.4,
-  } as React.CSSProperties,
-
-  gridBtn: {
-    width: '44px',
-    height: '44px',
-    background: 'var(--surface3)',
-    border: '1px solid var(--border2)',
-    borderRadius: 'var(--radius-round)',
-    color: 'var(--muted)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    cursor: 'pointer',
-    flexShrink: 0,
   } as React.CSSProperties,
 
   // ── Pre-race briefing
@@ -6276,53 +6424,6 @@ const st = {
     minWidth: 0,
   } as React.CSSProperties,
 
-  zoneBtn: {
-    width: '100%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '14px 16px',
-    background: 'transparent',
-    border: 'none',
-    cursor: 'pointer',
-    textAlign: 'left' as const,
-  } as React.CSSProperties,
-
-  zoneTag: {
-    fontFamily: 'var(--headline)',
-    fontSize: 'var(--text-xs)',
-    fontWeight: 700,
-    letterSpacing: '0.14em',
-    textTransform: 'uppercase' as const,
-    color: 'var(--orange)',
-  } as React.CSSProperties,
-
-  zoneLabel: {
-    fontFamily: 'var(--headline)',
-    fontSize: '17px',
-    fontWeight: 900,
-    letterSpacing: '0.06em',
-    textTransform: 'uppercase' as const,
-    color: 'var(--white)',
-    lineHeight: 1.1,
-  } as React.CSSProperties,
-
-  zoneChevron: {
-    fontSize: 'var(--text-compact)',
-    color: 'var(--muted)',
-    transition: 'transform 0.2s ease',
-    display: 'inline-block',
-    flexShrink: 0,
-  } as React.CSSProperties,
-
-  zoneContent: {
-    padding: '0 12px 12px',
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '1rem',
-    minWidth: 0,
-  } as React.CSSProperties,
-
   // ── Widget shell (placeholder)
   widgetShell: {
     background: 'var(--surface3)',
@@ -6563,22 +6664,6 @@ const st = {
     gap: '0',
     position: 'relative' as const,
     overflowY: 'auto' as const,
-  } as React.CSSProperties,
-
-  arrowBtn: {
-    background: 'var(--surface3)',
-    border: '1px solid var(--border2)',
-    borderRadius: 'var(--radius-sm)',
-    color: 'var(--muted)',
-    fontFamily: 'var(--headline)',
-    fontWeight: 700,
-    fontSize: 'var(--text-xs)',
-    padding: '3px 6px',
-    cursor: 'pointer',
-    lineHeight: 1,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
   } as React.CSSProperties,
 
   doneBtn: {

@@ -1,5 +1,8 @@
 import React, { Component, createContext, useContext, useCallback, useEffect, useRef, useState } from 'react'
+import type { SyntheticListenerMap } from '@dnd-kit/core/dist/hooks/utilities'
 import type { WidgetDynamicContext } from '@/lib/widgetContent'
+import type { WidgetSize } from '@/types'
+import { WIDGET_SIZES } from '@/stores/useDashStore'
 
 class WidgetBoundary extends Component<
   { id: string; children: React.ReactNode },
@@ -32,7 +35,6 @@ class WidgetBoundary extends Component<
 export interface WidgetCardActions {
   openAddRace?: () => void
   openAddUpcomingRace?: () => void
-  openCustomize?: () => void
   openAllUpcoming?: () => void
   openFocusRaceEdit?: () => void
 }
@@ -40,6 +42,10 @@ export interface WidgetCardActions {
 export interface WidgetCardContextValue {
   openDetail: (id: string, preview?: React.ReactNode, ctx?: WidgetDynamicContext) => void
   actions: WidgetCardActions
+  editMode: boolean
+  getWidgetSize: (id: string) => WidgetSize
+  setWidgetSize: (id: string, size: WidgetSize) => void
+  setWidgetEnabled: (id: string, enabled: boolean) => void
 }
 
 export const WidgetCardContext = createContext<WidgetCardContextValue | null>(null)
@@ -47,6 +53,9 @@ export const WidgetCardContext = createContext<WidgetCardContextValue | null>(nu
 export function useWidgetCardContext(): WidgetCardContextValue | null {
   return useContext(WidgetCardContext)
 }
+
+// Drag listeners provided by SortableItem — consumed by ≡ handle in WidgetCard edit bar
+export const DragListenersContext = createContext<SyntheticListenerMap | undefined | null>(null)
 
 const DISCOVERED_KEY = 'fl2_widget_detail_discovered'
 
@@ -81,7 +90,7 @@ interface WidgetCardProps {
   style?: React.CSSProperties
   hint?: boolean
   ariaLabel?: string
-  noDetailPreview?: boolean  // when true, detail modal shows explanatory text only, not the live widget content
+  noDetailPreview?: boolean
 }
 
 export function WidgetCard({
@@ -95,8 +104,13 @@ export function WidgetCard({
   noDetailPreview = false,
 }: WidgetCardProps) {
   const ctx = useWidgetCardContext()
+  const dl  = useContext(DragListenersContext)
   const cardRef = useRef<HTMLDivElement>(null)
   const discovered = useDiscovered()
+
+  const inEditMode = ctx?.editMode ?? false
+  const currentSize = ctx?.getWidgetSize(id) ?? 'medium'
+  const supportedSizes = WIDGET_SIZES[id] ?? ['medium']
 
   const trigger = useCallback(() => {
     if (!ctx) return
@@ -104,27 +118,30 @@ export function WidgetCard({
   }, [ctx, id, children, dynamicContext, noDetailPreview])
 
   const handleClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (inEditMode) return
     const target = e.target as HTMLElement
     const interactive = target.closest(
       'button, a, input, select, textarea, [data-no-widget-detail], [role="button"]',
     )
     if (interactive && interactive !== cardRef.current) return
     trigger()
-  }, [trigger])
+  }, [inEditMode, trigger])
 
   const handleKey = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (inEditMode) return
     if (e.target !== cardRef.current) return
     if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
       e.preventDefault()
       trigger()
     }
-  }, [trigger])
+  }, [inEditMode, trigger])
 
-  const showHint = hint && !discovered && !!ctx
+  const showHint = hint && !discovered && !!ctx && !inEditMode
 
   const composedStyle: React.CSSProperties = {
     position: 'relative',
-    cursor: ctx ? 'pointer' : 'default',
+    cursor: inEditMode ? 'default' : (ctx ? 'pointer' : 'default'),
+    boxShadow: inEditMode ? '0 0 0 1px var(--orange-dim)' : undefined,
     ...style,
   }
 
@@ -133,16 +150,96 @@ export function WidgetCard({
       ref={cardRef}
       className={className}
       style={composedStyle}
-      role={ctx ? 'button' : undefined}
-      tabIndex={ctx ? 0 : undefined}
-      aria-label={ctx ? (ariaLabel ?? `${id.replace(/-/g, ' ')} — tap for details`) : undefined}
+      role={ctx && !inEditMode ? 'button' : undefined}
+      tabIndex={ctx && !inEditMode ? 0 : undefined}
+      aria-label={ctx && !inEditMode ? (ariaLabel ?? `${id.replace(/-/g, ' ')} — tap for details`) : undefined}
       onClick={ctx ? handleClick : undefined}
       onKeyDown={ctx ? handleKey : undefined}
       data-widget-id={id}
+      data-widget-size={currentSize}
+      data-edit-mode={inEditMode ? 'true' : 'false'}
     >
+      {/* Edit bar — shown in edit mode above widget content */}
+      {inEditMode && (
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 'var(--sp-2)',
+          padding: '6px var(--sp-3)',
+          background: 'var(--surface3)',
+          borderBottom: '1px solid var(--border)',
+          borderRadius: 'var(--radius-sm) var(--radius-sm) 0 0',
+          marginBottom: 0,
+        }}>
+          {/* Drag handle */}
+          <span
+            {...(dl ?? {})}
+            style={{
+              color: 'var(--muted2)',
+              fontSize: 'var(--text-base)',
+              cursor: dl ? 'grab' : 'default',
+              padding: '0 var(--sp-1)',
+              lineHeight: 1,
+              userSelect: 'none',
+              touchAction: 'none',
+            }}
+            aria-label="Drag to reorder"
+          >≡</span>
+
+          {/* Size chips */}
+          <div style={{ display: 'flex', gap: 4 }}>
+            {(['small', 'medium', 'large'] as WidgetSize[]).map(s => {
+              const supported = supportedSizes.includes(s)
+              const active = currentSize === s
+              return (
+                <button
+                  key={s}
+                  disabled={!supported}
+                  onClick={e => { e.stopPropagation(); if (supported) ctx?.setWidgetSize(id, s) }}
+                  style={{
+                    fontFamily: 'var(--headline)',
+                    fontSize: 'var(--text-xs)',
+                    fontWeight: 700,
+                    textTransform: 'uppercase' as const,
+                    height: 22,
+                    padding: '0 7px',
+                    borderRadius: 4,
+                    border: 'none',
+                    cursor: supported ? 'pointer' : 'not-allowed',
+                    background: active ? 'var(--orange)' : 'var(--surface2)',
+                    color: active ? 'var(--white)' : 'var(--muted)',
+                    opacity: supported ? 1 : 0.25,
+                    transition: 'background 120ms, color 120ms',
+                  }}
+                >
+                  {s[0].toUpperCase()}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Remove button */}
+          <button
+            onClick={e => { e.stopPropagation(); ctx?.setWidgetEnabled(id, false) }}
+            style={{
+              marginLeft: 'auto',
+              background: 'none',
+              border: 'none',
+              color: 'var(--muted)',
+              fontSize: 'var(--text-sm)',
+              cursor: 'pointer',
+              padding: '0 var(--sp-1)',
+              lineHeight: 1,
+            }}
+            aria-label="Remove widget"
+          >✕</button>
+        </div>
+      )}
+
       <WidgetBoundary id={id}>
         {children}
       </WidgetBoundary>
+
       {showHint && (
         <span
           aria-hidden="true"
