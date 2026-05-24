@@ -5,7 +5,7 @@
 | Task | Command |
 |------|---------|
 | Local dev server | `npm run dev -- --port 3000` (Vite, port 3000 — required for preview tool) |
-| Tests | `npm test` (vitest, 475 tests) |
+| Tests | `npm test` (vitest, 483 tests) |
 | Build for deploy | `npm run build` |
 | Deploy to staging | `git push origin staging` (auto-deploy via GitHub Actions) |
 | Deploy to prod | `git push origin main` |
@@ -1337,6 +1337,34 @@ Direct DB access (psql/psycopg2) is blocked from localhost — Supabase only exp
 - Deleted remote branches: `claude/nifty-jackson-b9e460`, `fix/race-delete-sync`
 - Main repo (`/Users/akrish/DEV`) switched to `staging` branch, reset to `origin/staging`
 - Remaining: 2 worktrees (`/DEV` on staging, `nostalgic-pike-53306c` on main), both at `892ff4e`
+
+---
+
+### Session 35 (2026-05-24) — Auth overhaul: Clerk native SignIn/SignUp, username login, shared credentials
+
+**Branch:** `claude/priceless-ellis-fbbb9d` → main ([PR #341](https://github.com/breaktapes/breaktapes-dev/pull/341))
+
+#### Changes shipped
+
+- **Replaced `CustomSignInForm` with Clerk's native `<SignIn>` / `<SignUp>` components** — ~175 lines of custom auth code deleted. All sign-in/sign-up logic now handled by Clerk components with `routing="virtual"` (required for modal context).
+- **Username or email login** — Clerk's `<SignIn>` natively shows "Email address or username" field when Username is enabled in the Clerk dashboard (Instance → User & Authentication → Username). All three username toggles confirmed ON: sign-up with username, require username, sign-in with username.
+- **Shared credentials across environments** — removed `hasStagingAccess()` function that gated `dev.breaktapes.com` behind `publicMetadata.staging_access === true`. Both environments share the same `pk_live_` Clerk instance so any account is valid everywhere.
+- **OTP forgot password** — Clerk's built-in `reset_password_email_code` flow: enter email → OTP sent → enter code inline → reset password. No custom code needed.
+- **"Secured by Clerk" branding** — visible automatically on sign-in / sign-up modals when using native Clerk components.
+- **Version bump** — v0.6.12.0 → v0.6.12.1
+
+#### Key learnings
+
+- Clerk's `<SignIn routing="virtual">` handles the complete multi-step flow (identifier → password → OTP forgot-password → reset) entirely in memory without URL changes. Required for modal contexts where URL routing would break the modal.
+- `hasStagingAccess()` checking `publicMetadata.staging_access` was the only thing blocking prod-account holders from staging. Removing it is safe because both environments share the same Clerk instance — the "gate" had no security value, only user friction.
+- "Couldn't find your account" in Clerk's `<SignIn>` means the exact email string doesn't exist as a primary identifier in that Clerk instance. Account may exist under a different email, or was created via social OAuth. Use username login as fallback when email lookup fails.
+- `CustomSignInForm` used `useSignIn()` hook (imperative Clerk API). `<SignIn>` component is the declarative equivalent — same underlying Clerk instance, but ships the full UI including branding, forgot-password, and multi-step flows out of the box.
+- Clerk username settings require all three toggles ON in the dashboard: "Sign-up with username", "Require username", AND "Sign-in with username". Missing "Sign-in with username" means the field label still shows "Email address" only.
+
+#### Cleanup
+- Deleted remote branches: `claude/priceless-ellis-fbbb9d`, `claude/heuristic-leakey-20ebc2`, `promote-to-main`, `jolly-payne-904ee4`
+- Removed worktrees: `priceless-ellis-fbbb9d`, `heuristic-leakey-20ebc2`, `jolly-payne-904ee4`
+- Staging force-synced to main
 
 ---
 
