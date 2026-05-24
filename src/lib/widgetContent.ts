@@ -50,24 +50,6 @@ export const WIDGET_CONTENT: Record<string, WidgetContent> = {
     ],
   },
 
-  'race-forecast': {
-    id: 'race-forecast',
-    title: 'RACE DAY FORECAST',
-    tagline: 'Weather at the start line.',
-    whatItIs: 'Hourly forecast for your focus race location on race morning, pulled from Open-Meteo. Shows temperature, feels-like, wind, humidity, and conditions from the scheduled start hour forward.',
-    howToRead: 'Temperatures in the 10–15°C range are fastest for most runners. Above 20°C expect meaningful slowdown. Humidity over 70% compounds the heat penalty. Wind above 15 km/h means dig in for effort, not pace.',
-    howItImpactsPerformance: 'Temperature changes your race plan, not just your kit. A 25°C forecast at a goal marathon means starting 8–12 seconds per km slower than PB pace and drinking at every aid station. Knowing the forecast a week out lets you adapt.',
-  },
-
-  'race-prediction': {
-    id: 'race-prediction',
-    title: 'RACE PREDICTION',
-    tagline: 'Model-estimated finish time.',
-    whatItIs: 'A projected finish time for your focus race based on recent equivalent performances, course profile, and weather. Updates as new training activities and races are logged.',
-    howToRead: 'The prediction is a midpoint, not a ceiling. The range underneath shows the 10th–90th percentile of likely outcomes given your current form. Tight range = consistent recent racing. Wide range = less data or mixed signals.',
-    howItImpactsPerformance: 'Use the prediction to set an honest goal, not an aspirational one. Starting a marathon at a predicted pace will beat starting at a dream pace almost every time. If the prediction is faster than your goal, raise your ceiling.',
-  },
-
   'race-readiness': {
     id: 'race-readiness',
     title: 'RACE READINESS',
@@ -108,24 +90,6 @@ export const WIDGET_CONTENT: Record<string, WidgetContent> = {
     whatItIs: 'A 0–100% estimate of your chance of setting a PB at your focus race. Combines current form, course fit, recency of last PB attempt, and weather when available.',
     howToRead: 'Above 60% is a strong PB window. 30–60% means stars have to align. Under 30% means use the race as a rust-buster or tune-up, not a PB attempt.',
     howItImpactsPerformance: 'PB attempts have an energy cost. Chasing the same PB 4 times a year burns you out. Use this score to pick one A-race per cycle and commit; B-races are practice.',
-  },
-
-  'weather-fit': {
-    id: 'weather-fit',
-    title: 'WEATHER FIT SCORE',
-    tagline: 'How your body handles the forecast conditions.',
-    whatItIs: 'Scores race-day weather against your historical performance in similar conditions. Uses your archived race weather to identify which temperatures, humidity, and wind you race best in.',
-    howToRead: 'High green score means the forecast matches your best conditions. Orange means you have struggled in this weather before. Red means consider adjusting target pace or hydration strategy.',
-    howItImpactsPerformance: 'Knowing you run poorly in cold + windy conditions is more useful than any taper tweak. Weather Fit tells you when to aim and when to survive.',
-  },
-
-  'race-stack': {
-    id: 'race-stack',
-    title: 'RACE STACK PLANNER',
-    tagline: 'Your race-week checklist.',
-    whatItIs: 'A structured prep plan for race week — nutrition, sleep, kit, travel, pace strategy, pacing aids. Adapts to distance and priority (A/B/C).',
-    howToRead: 'Each line is a checkbox. Work top-down from 7 days out to race morning. Green check = done. Orange = in progress. Blank = not yet.',
-    howItImpactsPerformance: 'Most blow-ups trace to skipped week-of basics: undercarb, poor sleep, wrong shoes, late travel. A written stack beats memory every time.',
   },
 
   'on-this-day': {
@@ -170,33 +134,6 @@ export const WIDGET_CONTENT: Record<string, WidgetContent> = {
     howItImpactsPerformance: 'PBs are the numbers that come up in every conversation about your running. Watching them move is the clearest evidence that training is working — or that it is not.',
   },
 
-  'why-prd': {
-    id: 'why-prd',
-    title: "WHY YOU PR'D",
-    tagline: 'The factors behind your latest breakthrough.',
-    whatItIs: 'An AI-generated breakdown of why your most recent PB happened. Weighs training load, recovery, weather, pacing, and course versus prior attempts.',
-    howToRead: 'Read the top two factors as repeatable and the bottom two as lucky. You cannot control weather next time; you can control pacing.',
-    howItImpactsPerformance: 'PBs are signals, not accidents. Understanding the repeatable causes means the next PB is closer than the last one.',
-  },
-
-  'why-faded': {
-    id: 'why-faded',
-    title: 'WHY YOU FADED',
-    tagline: 'What went wrong in your last bad race.',
-    whatItIs: 'An AI-generated breakdown of your most recent poor race. Looks at starting pace, weather, training gaps, and stress around the race date.',
-    howToRead: 'The top factor is your controllable lesson. Secondary factors are supporting evidence. If the top factor is pacing, that is the target for your next A-race.',
-    howItImpactsPerformance: 'Bad races are free training data. Ignoring them compounds the mistake; studying them prevents the repeat.',
-  },
-
-  'break-tape': {
-    id: 'break-tape',
-    title: 'BREAK TAPE MOMENTS',
-    tagline: 'Races where you crossed a threshold.',
-    whatItIs: 'Surfaces races where you broke a round-number barrier for the first time (sub-40 10K, sub-3 marathon, sub-90 half). The symbolic moments of your running life.',
-    howToRead: 'Each entry is a milestone date and the race that earned it. Use them to narrate your arc to new training partners, coaches, or yourself.',
-    howItImpactsPerformance: 'Progress is invisible inside the grind. Break-tape moments remind you where you were a year or five years ago — and where the next threshold is.',
-  },
-
   'season-planner': {
     id: 'season-planner',
     title: 'SEASON PLANNER',
@@ -208,54 +145,6 @@ export const WIDGET_CONTENT: Record<string, WidgetContent> = {
       { label: 'Open Season Planner', to: '/races' },
       { label: 'Add an upcoming race', action: 'openAddUpcomingRace' },
     ],
-  },
-
-  'recovery-intel': {
-    id: 'recovery-intel',
-    title: 'RECOVERY INTELLIGENCE',
-    tagline: 'How recovered you are from your last race.',
-    whatItIs: 'A post-race recovery tracker. Uses distance and effort of your last race to estimate recovery days needed.',
-    howToRead: 'The top number is days remaining on your recovery clock. When it hits zero, you are cleared for full training again. If you are training hard before zero, expect reduced adaptation.',
-    howItImpactsPerformance: 'Recovery is where fitness is made, not lost. Skipping the window compresses progress and raises injury risk. Respecting it is the single cheapest performance decision.',
-    relatedActions: [
-      { label: 'Connect a wearable', to: '/settings' },
-    ],
-  },
-
-  'race-density': {
-    id: 'race-density',
-    title: 'RACE DENSITY',
-    tagline: 'How often you race.',
-    whatItIs: 'A rolling 90-day view of your race frequency. Flags clusters where three or more races happen inside a 30-day window.',
-    howToRead: 'Green density means well-spaced races. Orange means you are racing more often than a typical training cycle supports. Red means you are treating races as workouts — which is fine for C-races, not A-races.',
-    howItImpactsPerformance: 'Races drain more than they train. Too many races in a window leaves no time for the long, easy work that builds the engine.',
-  },
-
-  'streak-risk': {
-    id: 'streak-risk',
-    title: 'STREAK RISK',
-    tagline: 'Your training streak and overtraining score.',
-    whatItIs: 'Tracks your current run streak and weighs it against load, sleep, and recent race effort to flag overtraining risk.',
-    howToRead: 'Streaks are motivating but load-blind. When the risk score goes orange, the streak is doing more damage than good. Take a day off.',
-    howItImpactsPerformance: 'Injury is the most expensive mistake in endurance sport. A calculated rest day protects six months of fitness.',
-  },
-
-  'race-gap-analysis': {
-    id: 'race-gap-analysis',
-    title: 'RACE GAP ANALYSIS',
-    tagline: 'How long you actually need between races.',
-    whatItIs: 'Looks at the gap between each of your races and classifies performances that followed short gaps versus long gaps. Identifies your personal recovery floor.',
-    howToRead: 'Your recommended minimum gap is the smallest window after which you raced at full form. Going tighter than that historically cost you time.',
-    howItImpactsPerformance: 'Generic "2 weeks per marathon" rules are averages. Your personal recovery floor might be 3 weeks, or 9 days. Knowing it is worth a goal-time swing.',
-  },
-
-  'adaptive-goals': {
-    id: 'adaptive-goals',
-    title: 'ADAPTIVE GOALS',
-    tagline: 'Goal times that move with your training.',
-    whatItIs: 'Adjusts your goal times week by week as training load, recent races, and recovery change. Keeps the goal honest rather than aspirational.',
-    howToRead: 'The original goal is anchored in orange. The adaptive goal is green if form is trending up, or red if conditions suggest pulling back.',
-    howItImpactsPerformance: 'Static goals ignore reality. Adaptive goals force the hard conversation earlier — either the plan extends or the number moves.',
   },
 
   'boston-qual': {
@@ -310,15 +199,6 @@ export const WIDGET_CONTENT: Record<string, WidgetContent> = {
     howItImpactsPerformance: 'DNA makes race selection strategic. Chasing PBs in your weakness conditions is expensive. Prioritize A-races that match your DNA; use off-DNA races for development.',
   },
 
-  'surface-profile': {
-    id: 'surface-profile',
-    title: 'SURFACE PROFILE',
-    tagline: 'Road, trail, track — what suits you.',
-    whatItIs: 'Breaks down your races by surface type and compares your performance percentile on each. Needs at least 3 races per surface for a reliable read.',
-    howToRead: 'The surface with the highest percentile is your home. A gap of 10+ percentile points between surfaces is meaningful — you are a road runner who sometimes trails, or vice versa.',
-    howItImpactsPerformance: 'Surface choice is a goal-time decision. Picking a trail 50K when you are a road marathoner means you are training a weakness, not hunting a PB.',
-  },
-
   'pressure-performer': {
     id: 'pressure-performer',
     title: 'PRESSURE PERFORMER',
@@ -337,15 +217,6 @@ export const WIDGET_CONTENT: Record<string, WidgetContent> = {
     howItImpactsPerformance: 'Travel has a real pace cost for most runners. If long-haul races are 2–3% slower for you, either arrive 5+ days early or keep A-races regional.',
   },
 
-  'best-conditions': {
-    id: 'best-conditions',
-    title: 'BEST CONDITIONS',
-    tagline: 'The weather you race fastest in.',
-    whatItIs: 'Identifies the specific temperature and humidity range where your races have been fastest. Requires weather data on at least 5 past races.',
-    howToRead: 'Your sweet spot is the range where your race times cluster. A 4–8°C sweet spot with low humidity is common for marathon PBs. Fall and early spring races often match this.',
-    howItImpactsPerformance: 'Pick goal races by the forecast, not the field. A flatter course in worse weather will cost you more than a hillier course in your sweet spot.',
-  },
-
   'pattern-scan': {
     id: 'pattern-scan',
     title: 'PATTERN SCAN',
@@ -353,24 +224,6 @@ export const WIDGET_CONTENT: Record<string, WidgetContent> = {
     whatItIs: 'A deeper analytical pass over your entire race log. Looks for comeback races after gaps, seasonal patterns, recurring distances, and repeat-course improvements.',
     howToRead: 'Each tag is a specific signal the scan found. Tags are ranked by confidence. Tap EXPLAIN WITH AI for a narrative summary of the top patterns.',
     howItImpactsPerformance: 'Patterns are the training plan writing itself. Seeing that you always PR after a 2-week gap tells you something no coach can infer without your data.',
-  },
-
-  'why-result': {
-    id: 'why-result',
-    title: 'WHY THIS RESULT',
-    tagline: 'The coach-brief on your last race.',
-    whatItIs: 'An AI-generated coaching brief on your most recent race. Explains the result in terms of pacing, training load, weather, and conditions.',
-    howToRead: 'The brief lists execution wins and execution misses. Read the misses as training inputs for the next cycle, not as judgment.',
-    howItImpactsPerformance: 'Every race is a workout you will repeat. Understanding what worked and what did not makes the next race cycle more deliberate.',
-  },
-
-  'advanced-race-dna': {
-    id: 'advanced-race-dna',
-    title: 'ADVANCED RACE DNA',
-    tagline: 'Multi-factor race-condition analysis.',
-    whatItIs: 'An extended Race DNA view that combines weather, surface, elevation, distance, and time of year into a single signature. Requires 10+ races.',
-    howToRead: 'Each factor gets a separate score. The combined signature is your ideal race: a specific distance, surface, month, elevation range, and temperature.',
-    howItImpactsPerformance: 'This is the bespoke answer to "where should I race next to PR?" It removes guessing from goal-race selection.',
   },
 
   'race-comparer': {
@@ -391,24 +244,6 @@ export const WIDGET_CONTENT: Record<string, WidgetContent> = {
     howItImpactsPerformance: 'Most runners pick races by what sounds exciting. Picking by fit is how you actually PR more often.',
   },
 
-  'coach-activity': {
-    id: 'coach-activity',
-    title: 'COACH ACTIVITY',
-    tagline: 'Feedback from your coach.',
-    whatItIs: 'An inbox for notes, adjustments, and feedback from a coach who has been granted access to your dashboard. Coach-only — visible when a coach is linked.',
-    howToRead: 'New notes are bolded. Notes are keyed to specific races or training blocks. Reply through the coach channel to keep the conversation anchored.',
-    howItImpactsPerformance: 'A good coach shortens the learning loop. Having their feedback surfaced alongside your data turns every race into a shared review.',
-  },
-
-  'story-mode': {
-    id: 'story-mode',
-    title: 'STORY MODE',
-    tagline: 'Your running year, as a story.',
-    whatItIs: 'An annual recap stitched from your races, PBs, countries, and break-tape moments. Generated once per year or on-demand.',
-    howToRead: 'Each chapter covers a block of the year — your first PR, your toughest race, your biggest distance, your most-raced city. Tap a chapter to expand.',
-    howItImpactsPerformance: 'Story mode is not analytics. It is perspective. Looking back 12 months in narrative form is how most athletes realize they have come much further than they feel.',
-  },
-
   'riegel-predictor': {
     id: 'riegel-predictor',
     title: 'RACE PREDICTOR',
@@ -421,24 +256,6 @@ export const WIDGET_CONTENT: Record<string, WidgetContent> = {
     ],
   },
 
-  'weather-impact': {
-    id: 'weather-impact',
-    title: 'WEATHER IMPACT',
-    tagline: 'Your fastest race weighted for conditions.',
-    whatItIs: 'Ranks your races by how fast they were given the weather. Surfaces hidden PBs — races that were not your fastest on the clock but were your best given heat, wind, or humidity.',
-    howToRead: 'The top race is the one you executed best, not the one with the lowest time. Use it as the benchmark for what your body can do in similar conditions again.',
-    howItImpactsPerformance: 'Raw times hide context. A 3:01 marathon at 25°C might be a harder effort than a 2:58 at 10°C. Weather impact lets you see training gains that pure PBs miss.',
-  },
-
-  'vdot-score': {
-    id: 'vdot-score',
-    title: 'VDOT FITNESS SCORE',
-    tagline: 'Jack Daniels\' running fitness number.',
-    whatItIs: 'Calculates your VDOT from your best recent race. VDOT is a standardized running fitness score (roughly 30–85) that translates directly into training paces.',
-    howToRead: 'Under 40: beginner/recreational. 45–55: serious amateur. 55–65: competitive amateur. 65+: elite. Your VDOT updates whenever you race faster.',
-    howItImpactsPerformance: 'VDOT gives you training paces that match current fitness — easy, threshold, interval, and repetition pace all derive from it. Training too fast on a low VDOT burns you out; training too slow on a high VDOT wastes sessions.',
-  },
-
   'distance-milestones': {
     id: 'distance-milestones',
     title: 'DISTANCE MILESTONES',
@@ -446,27 +263,6 @@ export const WIDGET_CONTENT: Record<string, WidgetContent> = {
     whatItIs: 'Total kilometers raced at each distance — 5Ks, 10Ks, halfs, marathons, ultras. DNFs excluded.',
     howToRead: 'The bars show race volume, not training. A deep marathon total with no 5Ks tells a different story than the reverse. Each milestone (100K raced, 1000K raced) is marked.',
     howItImpactsPerformance: 'Experience matters at a distance. Most runners need 3–4 marathons before they race it well. Milestones show how much experience you have banked.',
-  },
-
-  'equiv-perf': {
-    id: 'equiv-perf',
-    title: 'EQUIVALENT PERFORMANCES',
-    tagline: 'How your PB at one distance maps to others.',
-    whatItIs: 'Translates your best race across every other distance using the Riegel formula. Identifies distances where you are over- or under-performing relative to expectation.',
-    howToRead: 'Green rows mean that distance is faster than Riegel predicts — a natural strength. Orange rows are slower than expected — a place to target improvement.',
-    howItImpactsPerformance: 'Athletes are not equally strong at every distance. Knowing that your marathon is under-performing your 10K tells you where the next training cycle should focus.',
-  },
-
-  'upcoming-density': {
-    id: 'upcoming-density',
-    title: 'RACE CONFLICT CHECKER',
-    tagline: 'Calendar conflicts in your planned races.',
-    whatItIs: 'Scans your upcoming race list for calendar conflicts: two races in the same week, a marathon followed by a race less than 21 days later, or three races in a 30-day window.',
-    howToRead: 'Green = clean calendar. Yellow = tight spacing, manageable if races are B/C priority. Red = conflict that will compromise your A-race. Each warning lists the specific races involved.',
-    howItImpactsPerformance: 'Race calendars fill up one commitment at a time. Checking the whole season as a unit catches the stack-ups that silently degrade your A-race.',
-    relatedActions: [
-      { label: 'Open Season Planner', to: '/races' },
-    ],
   },
 
   'course-repeats': {

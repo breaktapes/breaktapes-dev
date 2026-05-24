@@ -5,116 +5,70 @@ import type { DashWidget, WidgetSize } from '@/types'
 // Default widget configuration — zones: now, recently, trending, context
 const DEFAULT_WIDGETS: DashWidget[] = [
   // NOW — RACE CONTEXT
-  { id: 'stats-strip',      label: 'Career Stats',              icon: 'STS', zone: 'now',      enabled: true,  pro: false, size: 'medium' },
-  { id: 'countdown',        label: 'Next Race Countdown',       icon: 'CD',  zone: 'now',      enabled: true,  pro: false, size: 'large'  },
-  { id: 'race-forecast',    label: 'Race Day Forecast',         icon: 'WX',  zone: 'now',      enabled: false, pro: false, size: 'medium' },
-  { id: 'race-prediction',  label: 'Race Prediction',           icon: 'PRD', zone: 'now',      enabled: false, pro: false, size: 'medium' },
-  { id: 'race-readiness',   label: 'Race Readiness Score',      icon: 'RDY', zone: 'now',      enabled: true,  pro: false, size: 'medium' },
-  { id: 'gap-to-goal',      label: 'Gap To Goal',               icon: 'GTG', zone: 'now',      enabled: true,  pro: false, size: 'medium' },
-  { id: 'course-fit',       label: 'Course Fit Score',          icon: 'FIT', zone: 'now',      enabled: true,  pro: false, size: 'medium' },
-  { id: 'pb-probability',   label: 'PB Probability',            icon: 'PBP', zone: 'now',      enabled: true,  pro: false, size: 'medium' },
-  { id: 'weather-fit',      label: 'Weather Fit Score',         icon: 'WX',  zone: 'now',      enabled: false, pro: false, size: 'medium' },
-  { id: 'race-stack',       label: 'Race Stack Planner',        icon: 'STK', zone: 'now',      enabled: false, pro: false, size: 'medium' },
-  { id: 'on-this-day',      label: 'On This Day',               icon: 'OTD', zone: 'now',      enabled: true,  pro: false, size: 'medium' },
+  { id: 'stats-strip',       label: 'Career Stats',             icon: 'STS', zone: 'now',      enabled: true,  pro: false, size: 'medium' },
+  { id: 'countdown',         label: 'Next Race Countdown',      icon: 'CD',  zone: 'now',      enabled: true,  pro: false, size: 'large'  },
+  { id: 'race-readiness',    label: 'Race Readiness',           icon: 'RDY', zone: 'now',      enabled: true,  pro: false, size: 'medium' },
+  { id: 'gap-to-goal',       label: 'Gap To Goal',              icon: 'GTG', zone: 'now',      enabled: true,  pro: false, size: 'medium' },
+  { id: 'course-fit',        label: 'Course Fit Score',         icon: 'FIT', zone: 'now',      enabled: true,  pro: false, size: 'medium' },
+  { id: 'pb-probability',    label: 'PB Probability',           icon: 'PBP', zone: 'now',      enabled: true,  pro: false, size: 'medium' },
+  { id: 'on-this-day',       label: 'On This Day',              icon: 'OTD', zone: 'now',      enabled: true,  pro: false, size: 'small'  },
+  { id: 'goal-pace',         label: 'Goal Pace Breakdown',      icon: 'PCE', zone: 'now',      enabled: true,  pro: false, size: 'medium' },
   // RECENTLY — YOUR RACING
-  { id: 'recent-races',     label: 'Recent Races',              icon: 'RC',  zone: 'recently', enabled: true,  pro: false, size: 'small'  },
-  { id: 'personal-bests',   label: 'Personal Bests',            icon: 'PB',  zone: 'recently', enabled: true,  pro: false, size: 'large'  },
-  { id: 'why-prd',          label: "Why You PR'd",              icon: 'PR',  zone: 'recently', enabled: false, pro: false, size: 'small'  },
-  { id: 'why-faded',        label: 'Why You Faded',             icon: 'FD',  zone: 'recently', enabled: false, pro: false, size: 'small'  },
-  { id: 'break-tape',       label: 'Break Tape Moments',        icon: 'BT',  zone: 'recently', enabled: false, pro: false, size: 'small'  },
+  { id: 'recent-races',      label: 'Recent Races',             icon: 'RC',  zone: 'recently', enabled: true,  pro: false, size: 'small'  },
+  { id: 'personal-bests',    label: 'Personal Bests',           icon: 'PB',  zone: 'recently', enabled: true,  pro: false, size: 'large'  },
+  { id: 'riegel-predictor',  label: 'Race Predictor',           icon: 'RGL', zone: 'recently', enabled: true,  pro: false, size: 'small'  },
   // CONSISTENCY — BUILD
-  { id: 'season-planner',   label: 'Season Planner',            icon: 'SP',  zone: 'trending', enabled: true,  pro: false, size: 'medium' },
-  { id: 'recovery-intel',   label: 'Recovery Intelligence',     icon: 'REC', zone: 'trending', enabled: true,  pro: false, size: 'medium' },
-  { id: 'race-density',     label: 'Race Density',              icon: 'DNS', zone: 'trending', enabled: true,  pro: false, size: 'medium' },
-  { id: 'streak-risk',      label: 'Streak Risk',               icon: 'STR', zone: 'trending', enabled: true,  pro: false, size: 'medium' },
-  { id: 'race-gap-analysis',label: 'Race Gap / Recovery',       icon: 'GAP', zone: 'trending', enabled: false, pro: false, size: 'medium' },
-  { id: 'adaptive-goals',   label: 'Adaptive Goals',            icon: 'AG',  zone: 'trending', enabled: false, pro: false, size: 'medium' },
+  { id: 'season-planner',    label: 'Season Planner',           icon: 'SP',  zone: 'trending', enabled: true,  pro: false, size: 'medium' },
   // PATTERNS — ANALYSIS
-  { id: 'boston-qual',      label: 'Boston Qualifier',          icon: 'BQ',  zone: 'context',  enabled: true,  pro: false, size: 'medium' },
-  { id: 'pacing-iq',        label: 'Pacing IQ',                 icon: 'IQ',  zone: 'context',  enabled: true,  pro: false, size: 'medium' },
-  { id: 'career-momentum',  label: 'Career Momentum',           icon: 'MOM', zone: 'context',  enabled: true,  pro: false, size: 'medium' },
-  { id: 'age-grade',        label: 'Age-Grade Score',           icon: 'AG%', zone: 'context',  enabled: true,  pro: false, size: 'medium' },
-  { id: 'race-dna',         label: 'Race DNA',                  icon: 'DNA', zone: 'context',  enabled: true,  pro: false, size: 'medium' },
-  { id: 'surface-profile',  label: 'Surface Profile',           icon: 'SRF', zone: 'context',  enabled: true,  pro: false, size: 'medium' },
+  { id: 'boston-qual',       label: 'Boston Qualifier',         icon: 'BQ',  zone: 'context',  enabled: true,  pro: false, size: 'medium' },
+  { id: 'pacing-iq',         label: 'Pacing IQ',                icon: 'IQ',  zone: 'context',  enabled: true,  pro: false, size: 'medium' },
+  { id: 'career-momentum',   label: 'Career Momentum',          icon: 'MOM', zone: 'context',  enabled: true,  pro: false, size: 'medium' },
+  { id: 'age-grade',         label: 'Age-Grade Score',          icon: 'AG%', zone: 'context',  enabled: true,  pro: false, size: 'medium' },
+  { id: 'race-dna',          label: 'Race DNA',                 icon: 'DNA', zone: 'context',  enabled: true,  pro: false, size: 'medium' },
   { id: 'pressure-performer',label: 'Pressure Performer',       icon: 'PRS', zone: 'context',  enabled: true,  pro: false, size: 'medium' },
-  { id: 'travel-load',      label: 'Travel Load',               icon: 'TRV', zone: 'context',  enabled: true,  pro: false, size: 'medium' },
-  { id: 'best-conditions',  label: 'Best Conditions',           icon: 'BCS', zone: 'context',  enabled: true,  pro: false, size: 'medium' },
-  { id: 'pattern-scan',     label: 'Pattern Scan',              icon: 'PTN', zone: 'context',  enabled: true,  pro: false, size: 'medium' },
-  { id: 'why-result',       label: 'Why Result',                icon: 'WHY', zone: 'context',  enabled: false, pro: false, size: 'medium' },
-  { id: 'advanced-race-dna',label: 'Advanced Race DNA',         icon: 'DNA', zone: 'context',  enabled: false, pro: false, size: 'medium' },
-  { id: 'race-comparer',    label: 'Race Comparer',             icon: 'CMP', zone: 'context',  enabled: false, pro: false, size: 'medium' },
-  { id: 'what-to-race-next',label: 'What To Race Next',         icon: 'WTR', zone: 'context',  enabled: false, pro: false, size: 'medium' },
-  { id: 'story-mode',       label: 'Story Mode',                icon: 'STY', zone: 'recently', enabled: true,  pro: false, size: 'small'  },
-  { id: 'coach-activity',   label: 'Coach Activity',            icon: 'CCH', zone: 'context',  enabled: false, pro: false, size: 'medium' },
-  // Day 2 formula widgets
-  { id: 'riegel-predictor', label: 'Race Predictor (Riegel)',   icon: 'RGL', zone: 'recently', enabled: true,  pro: false, size: 'small'  },
-  { id: 'vdot-score',       label: 'VDOT Fitness Score',        icon: 'VDT', zone: 'context',  enabled: true,  pro: false, size: 'medium' },
-  { id: 'goal-pace',        label: 'Goal Pace Breakdown',       icon: 'PCE', zone: 'now',      enabled: true,  pro: false, size: 'medium' },
-  { id: 'weather-impact',   label: 'Weather Impact Score',      icon: 'WX',  zone: 'recently', enabled: true,  pro: false, size: 'small'  },
-  { id: 'distance-milestones', label: 'Distance Milestones',    icon: 'MI',  zone: 'context',  enabled: true,  pro: false, size: 'medium' },
-  // Day 3 formula widgets
-  { id: 'equiv-perf',       label: 'Equivalent Performances',   icon: 'EQV', zone: 'context',  enabled: false, pro: false, size: 'medium' },
-  { id: 'upcoming-density', label: 'Race Conflict Checker',     icon: 'CHK', zone: 'trending', enabled: true,  pro: false, size: 'medium' },
-  { id: 'course-repeats',   label: 'Course Repeats',            icon: 'RPT', zone: 'context',  enabled: true,  pro: false, size: 'medium' },
+  { id: 'travel-load',       label: 'Travel Load',              icon: 'TRV', zone: 'context',  enabled: true,  pro: false, size: 'medium' },
+  { id: 'pattern-scan',      label: 'Pattern Scan',             icon: 'PTN', zone: 'context',  enabled: true,  pro: false, size: 'medium' },
+  { id: 'distance-milestones',label: 'Distance Milestones',     icon: 'MI',  zone: 'context',  enabled: true,  pro: false, size: 'medium' },
+  { id: 'course-repeats',    label: 'Course Repeats',           icon: 'RPT', zone: 'context',  enabled: true,  pro: false, size: 'medium' },
+  // DISABLED — available to enable
+  { id: 'race-comparer',     label: 'Race Comparer',            icon: 'CMP', zone: 'context',  enabled: false, pro: false, size: 'medium' },
+  { id: 'what-to-race-next', label: 'What To Race Next',        icon: 'WTR', zone: 'context',  enabled: false, pro: false, size: 'medium' },
 ]
 
-const STRAVA_PENDING = new Set<string>()
+// Fixed-size widgets — no size picker shown in customize modal
+export const FIXED_SIZE_WIDGETS = new Set(['countdown', 'stats-strip'])
 
 // Which sizes each widget supports
 export const WIDGET_SIZES: Record<string, WidgetSize[]> = {
-  // large only
+  // Fixed (no resize)
   'countdown':           ['large'],
-  // medium only (structural)
   'stats-strip':         ['medium'],
-  // small + medium + large (17)
-  'race-forecast':       ['small', 'medium', 'large'],
-  'goal-pace':           ['small', 'medium', 'large'],
-  'gap-to-goal':         ['small', 'medium'],
-  'pb-probability':      ['small', 'medium'],
-  'race-readiness':      ['small', 'medium'],
+  // small + medium + large
+  'race-readiness':      ['small', 'medium', 'large'],
+  'gap-to-goal':         ['small', 'medium', 'large'],
   'course-fit':          ['small', 'medium', 'large'],
-  'boston-qual':         ['small', 'medium', 'large'],
-  'pacing-iq':           ['small', 'medium', 'large'],
-  'career-momentum':     ['small', 'medium', 'large'],
-  'age-grade':           ['small', 'medium', 'large'],
-  'vdot-score':          ['small', 'medium', 'large'],
-  'recovery-intel':      ['small', 'medium', 'large'],
-  'streak-risk':         ['small', 'medium', 'large'],
-  'on-this-day':         ['small', 'medium', 'large'],
-  'weather-fit':         ['small', 'medium', 'large'],
-  'distance-milestones': ['small', 'medium', 'large'],
-  'race-prediction':     ['small', 'medium'],
-  'race-stack':          ['small', 'medium'],
-  // medium + large
-  'race-dna':            ['medium', 'large'],
-  'pattern-scan':        ['medium', 'large'],
-  'season-planner':      ['medium', 'large'],
-  'race-density':        ['medium', 'large'],
-  'upcoming-density':    ['medium', 'large'],
-  'equiv-perf':          ['medium', 'large'],
-  'advanced-race-dna':   ['medium', 'large'],
-  // small + medium + large (recently zone)
-  'recent-races':        ['small', 'medium', 'large'],
-  'personal-bests':      ['large'],
+  'personal-bests':      ['small', 'medium', 'large'],
   'riegel-predictor':    ['small', 'medium', 'large'],
-  'weather-impact':      ['small', 'medium', 'large'],
-  // small + medium (recently zone)
-  'story-mode':          ['small', 'medium'],
-  'why-prd':             ['small', 'medium'],
-  'why-faded':           ['small', 'medium'],
-  'break-tape':          ['small', 'medium'],
+  'boston-qual':         ['small', 'medium', 'large'],
+  'age-grade':           ['small', 'medium', 'large'],
+  'race-dna':            ['small', 'medium', 'large'],
+  'pattern-scan':        ['small', 'medium', 'large'],
+  'goal-pace':           ['small', 'medium', 'large'],
+  'distance-milestones': ['small', 'medium', 'large'],
+  'course-repeats':      ['small', 'medium', 'large'],
+  'recent-races':        ['small', 'medium', 'large'],
+  'what-to-race-next':   ['small', 'medium', 'large'],
+  // small + medium only
+  'pb-probability':      ['small', 'medium'],
+  'on-this-day':         ['small', 'medium'],
+  'pacing-iq':           ['small', 'medium'],
+  'career-momentum':     ['small', 'medium'],
+  'pressure-performer':  ['small', 'medium'],
+  'travel-load':         ['small', 'medium'],
+  // medium + large only
+  'season-planner':      ['medium', 'large'],
   // medium only
-  'why-result':          ['medium'],
-  'surface-profile':     ['medium'],
-  'pressure-performer':  ['medium'],
-  'travel-load':         ['medium'],
-  'best-conditions':     ['medium'],
-  'race-gap-analysis':   ['medium'],
-  'adaptive-goals':      ['medium'],
-  'course-repeats':      ['medium'],
   'race-comparer':       ['medium'],
-  'what-to-race-next':   ['medium'],
-  'coach-activity':      ['medium'],
 }
 
 export function getWidgetSizes(id: string): WidgetSize[] {
@@ -148,6 +102,16 @@ export function buildDefaultWidgetOrder(): string[] {
   return order
 }
 
+// Set of IDs that were removed — used to purge stale persisted data
+const REMOVED_WIDGET_IDS = new Set([
+  'race-forecast', 'race-prediction', 'weather-fit', 'race-stack',
+  'why-prd', 'why-faded', 'break-tape', 'streak-risk', 'race-density',
+  'race-gap-analysis', 'adaptive-goals', 'why-result', 'advanced-race-dna',
+  'coach-activity', 'equiv-perf', 'story-mode', 'recovery-intel',
+  'surface-profile', 'best-conditions', 'weather-impact', 'upcoming-density',
+  'vdot-score',
+])
+
 // Migration v3: run once outside getDashLayout — call from store create() or App useEffect
 export function initDashV3Migration(
   stored: { widgets: DashWidget[]; widgetOrder: string[] },
@@ -163,14 +127,11 @@ export function initDashV3Migration(
 
   const defaultIds = new Set(DEFAULT_WIDGETS.map(w => w.id))
 
-  // Assign size: 'medium' to all existing widgets; filter orphaned IDs
   const migratedWidgets: DashWidget[] = (stored.widgets ?? [])
     .filter(w => defaultIds.has(w.id))
     .map(w => ({ ...w, size: w.size ?? 'medium' }))
 
-  // Build widgetOrder from zone-grouped widgets
   const widgetOrder = buildDefaultWidgetOrder()
-
   set({ widgets: migratedWidgets, widgetOrder })
   localStorage.setItem('fl2_dash_v3', 'true')
 }
@@ -199,27 +160,36 @@ export const useDashStore = create<DashState>()(
           return DEFAULT_WIDGETS
         }
 
-        const storedIds = new Set(widgets.map((w: DashWidget) => w.id))
+        // Purge removed widgets from persisted state
+        const activeWidgets = widgets.filter((w: DashWidget) => !REMOVED_WIDGET_IDS.has(w.id))
+
+        const storedIds = new Set(activeWidgets.map((w: DashWidget) => w.id))
         const newDefaults = DEFAULT_WIDGETS.filter(w => !storedIds.has(w.id))
 
-        // Force Strava-pending off; ensure size field present
-        const base = newDefaults.length > 0 ? [...widgets, ...newDefaults] : widgets
+        const base = newDefaults.length > 0 ? [...activeWidgets, ...newDefaults] : activeWidgets
         const merged = base.map((w: DashWidget) => ({
           ...w,
           size: w.size ?? 'medium',
-          enabled: STRAVA_PENDING.has(w.id) ? false : w.enabled,
         }))
 
-        // Insert new widget IDs into widgetOrder immediately before next zone header of their zone
+        // Clamp size to allowed sizes for this widget
+        const clamped = merged.map((w: DashWidget) => {
+          const allowed = WIDGET_SIZES[w.id]
+          if (allowed && !allowed.includes(w.size)) {
+            return { ...w, size: allowed[0] }
+          }
+          return w
+        })
+
+        // Insert new widget IDs into widgetOrder
         let currentOrder = Array.isArray(widgetOrder) && widgetOrder.length > 0
-          ? widgetOrder
+          ? widgetOrder.filter((id: string) => !REMOVED_WIDGET_IDS.has(id))
           : buildDefaultWidgetOrder()
 
         if (newDefaults.length > 0) {
           const updatedOrder = [...currentOrder]
           for (const w of newDefaults) {
             const zoneHeader = `zone:${w.zone}`
-            // Find the next zone header after this zone's header
             const headerIdx = updatedOrder.indexOf(zoneHeader)
             const insertBefore = updatedOrder.findIndex((id, i) => i > headerIdx && id.startsWith('zone:'))
             if (insertBefore === -1) {
@@ -231,11 +201,11 @@ export const useDashStore = create<DashState>()(
           currentOrder = updatedOrder
         }
 
-        const changed = merged.some((w: DashWidget, i: number) => w.enabled !== base[i]?.enabled || w.size !== base[i]?.size)
-        if (newDefaults.length > 0 || changed || currentOrder !== widgetOrder) {
-          set({ widgets: merged, widgetOrder: currentOrder })
+        const changed = clamped.some((w: DashWidget, i: number) => w.enabled !== base[i]?.enabled || w.size !== base[i]?.size)
+        if (newDefaults.length > 0 || changed || currentOrder !== widgetOrder || activeWidgets.length !== widgets.length) {
+          set({ widgets: clamped, widgetOrder: currentOrder })
         }
-        return merged
+        return clamped
       },
 
       setWidgetEnabled: (id, enabled) =>
@@ -246,7 +216,6 @@ export const useDashStore = create<DashState>()(
           }
           const def = DEFAULT_WIDGETS.find(w => w.id === id)
           if (!def) return {}
-          // When enabling a new widget, ensure its zone header is in widgetOrder
           const order = [...s.widgetOrder]
           if (!order.includes(id)) {
             const zoneHeader = `zone:${def.zone}`
@@ -284,13 +253,12 @@ export const useDashStore = create<DashState>()(
 
       enableAllWidgets: () =>
         set(s => {
-          const EMBEDDED = new Set(['race-forecast'])
           const allIds = new Set(DEFAULT_WIDGETS.map(w => w.id))
           const storedIds = new Set(s.widgets.map(w => w.id))
           const newDefaults = DEFAULT_WIDGETS.filter(w => !storedIds.has(w.id))
           const updatedWidgets = [
-            ...s.widgets.map(w => ({ ...w, enabled: EMBEDDED.has(w.id) ? w.enabled : true })),
-            ...newDefaults.map(w => ({ ...w, enabled: !EMBEDDED.has(w.id) })),
+            ...s.widgets.map(w => ({ ...w, enabled: true })),
+            ...newDefaults.map(w => ({ ...w, enabled: true })),
           ].filter(w => allIds.has(w.id))
           const widgetOrder = buildDefaultWidgetOrder()
           return { widgets: updatedWidgets, widgetOrder }

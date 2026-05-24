@@ -75,7 +75,7 @@ describe('useDashStore — setWidgetSize', () => {
   it('does not affect other widgets', () => {
     useDashStore.getState().setWidgetSize('athlete-briefing', 'small')
     const layout = useDashStore.getState().getDashLayout()
-    const other = layout.find(x => x.id === 'race-forecast')
+    const other = layout.find(x => x.id === 'recent-races')
     expect(other?.size).toBe('medium')
   })
 })

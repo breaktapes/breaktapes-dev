@@ -26,10 +26,10 @@ import { fmtDateDDMM, distLabel as distLabelUtil, normalizeName, racePriorityLab
 import { useRaceCatalog, type CatalogRace } from '@/hooks/useRaceCatalog'
 import {
   bestRiegelTable,
-  bestVDOT, latestPBVDOT, equivalentPerformances, paceZones, vdotHistory,
+  bestVDOT, vdotEquivTime,
   goalPaceCalc, parseTimeSecs as fParseTimeSecs, parseDistKm as fParseDistKm,
-  bestWeatherImpact, distanceMilestones, secsToHMS as fSecsToHMS,
-  raceDensityWarnings, findCourseRepeats, personalLeagueTable,
+  distanceMilestones, secsToHMS as fSecsToHMS,
+  findCourseRepeats, personalLeagueTable,
 } from '@/lib/raceFormulas'
 import { supabase } from '@/lib/supabase'
 
@@ -1310,6 +1310,8 @@ function WeatherCard({ race }: { race: Race }) {
 function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
   const races = useRaceStore(selectRaces)
   const today = todayStr()
+  const ctx = useWidgetCardContext()
+  const size = ctx?.getWidgetSize('recent-races') ?? 'medium'
   const pbMap = useMemo(() => buildPBMap(races), [races])
   const recent = useMemo(() => {
     const cutoff = new Date(); cutoff.setMonth(cutoff.getMonth() - 3)
@@ -1318,6 +1320,25 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
       .filter(r => r.date <= today && r.date >= cutoffStr)
       .sort((a, b) => b.date.localeCompare(a.date))
   }, [races, today])
+
+  if (size === 'small') {
+    const last = recent[0] ?? races.filter(r => r.date <= today).sort((a, b) => b.date.localeCompare(a.date))[0]
+    const displayVal = last?.time ? toHHMMSS(last.time) : last ? distBadge(last.distance, last.sport) ?? '—' : '—'
+    const shortName = last ? ((last.name ?? '').length > 12 ? (last.name ?? '').slice(0, 12) + '…' : (last.name ?? '')) : 'NO RACES'
+    return (
+      <WidgetCard id="recent-races" style={st.glowCard}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
+          <div style={st.widgetLabel}>RECENT</div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '28px', lineHeight: 1, color: 'var(--orange)', letterSpacing: '0.02em' }}>
+            {displayVal}
+          </div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {shortName}
+          </div>
+        </div>
+      </WidgetCard>
+    )
+  }
 
   if (races.length === 0) {
     return (
@@ -1343,9 +1364,19 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
     )
   }
 
+  const narrative = (() => {
+    if (!recent.length) return null
+    const pbCount = recent.filter(r => r.time && pbMap[normalizeDistKey(r.distance)]?.id === r.id).length
+    if (pbCount > 0) return `${pbCount} PB${pbCount > 1 ? 's' : ''} in the last 3 months`
+    return `${recent.length} race${recent.length > 1 ? 's' : ''} in the last 3 months`
+  })()
+
   return (
     <WidgetCard id="recent-races" style={st.glowCard}>
-      <div style={st.widgetLabel}>RECENT RACES</div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 'var(--sp-2)' }}>
+        <div style={st.widgetLabel}>RECENT RACES</div>
+        {narrative && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontStyle: 'italic' }}>{narrative}</div>}
+      </div>
       <div style={{ display: 'flex', flexDirection: 'column', marginTop: '4px' }}>
         {recent.map((r, i) => {
           const isPB = !!r.time && pbMap[normalizeDistKey(r.distance)]?.id === r.id
@@ -1436,6 +1467,8 @@ function StatsStrip() {
 function SeasonPlannerWidget({ onAddRace, onOpenPlanner }: { onAddRace: () => void; onOpenPlanner: () => void }) {
   const upcoming = useRaceStore(selectUpcomingRaces)
   const today = todayStr()
+  const ctx = useWidgetCardContext()
+  const size = ctx?.getWidgetSize('season-planner') ?? 'medium'
 
   const upcoming90 = useMemo(() => {
     const cutoff = new Date(); cutoff.setDate(cutoff.getDate() + 90)
@@ -1456,6 +1489,34 @@ function SeasonPlannerWidget({ onAddRace, onOpenPlanner }: { onAddRace: () => vo
   const badgeColors = { HIGH: 'var(--orange)', MEDIUM: 'var(--gold)', LOW: 'var(--muted)' }
   const bc = badgeColors[badge]
 
+  // Conflict check: A/B races within 21 days of each other
+  const conflictWarning = useMemo(() => {
+    const priority = upcoming90.filter(r => r.priority === 'A' || r.priority === 'B')
+    for (let i = 0; i < priority.length - 1; i++) {
+      const d1 = new Date(priority[i].date + 'T00:00:00').getTime()
+      const d2 = new Date(priority[i + 1].date + 'T00:00:00').getTime()
+      if (Math.abs(d2 - d1) < 21 * 86400000) {
+        return `⚠ ${priority[i].name} + ${priority[i + 1].name} are within 21 days`
+      }
+    }
+    return null
+  }, [upcoming90])
+
+  const raceRows = (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+      {upcoming90.slice(0, size === 'large' ? upcoming90.length : 3).map(r => {
+        const { taper, recover } = taperFor(r.distance)
+        const p = r.priority ?? 'C'
+        return (
+          <div key={r.id} style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5 }}>
+            <span style={{ color: p === 'A' ? 'var(--white)' : p === 'B' ? 'rgba(245,245,245,0.6)' : 'var(--muted)' }}>{p}</span>
+            {` · ${r.name} · taper ${taper}d / recover ${recover}d`}
+          </div>
+        )
+      })}
+    </div>
+  )
+
   return (
     <WidgetCard id="season-planner" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
@@ -1474,78 +1535,35 @@ function SeasonPlannerWidget({ onAddRace, onOpenPlanner }: { onAddRace: () => vo
         </div>
       ) : (
         <>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
-            {upcoming90.slice(0, 3).map(r => {
-              const { taper, recover } = taperFor(r.distance)
-              const p = r.priority ?? 'C'
-              return (
-                <div key={r.id} style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5 }}>
-                  <span style={{ color: p === 'A' ? 'var(--white)' : p === 'B' ? 'rgba(245,245,245,0.6)' : 'var(--muted)' }}>{p}</span>
-                  {` · ${r.name} · taper ${taper}d / recover ${recover}d`}
+          {raceRows}
+          {size === 'large' && (
+            <>
+              <div style={st.widgetDivider} />
+              <div style={{ display: 'flex', gap: 'var(--sp-4)' }}>
+                <div>
+                  <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', color: 'var(--white)', lineHeight: 1 }}>
+                    {upcoming.length}
+                  </div>
+                  <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: '3px' }}>TOTAL RACES</div>
                 </div>
-              )
-            })}
-          </div>
+                <div>
+                  <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', color: 'var(--white)', lineHeight: 1 }}>
+                    {upcoming90.length}
+                  </div>
+                  <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: '3px' }}>NEXT 90D</div>
+                </div>
+              </div>
+              {conflictWarning && (
+                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--orange)', lineHeight: 1.5, marginTop: '4px' }}>
+                  {conflictWarning}
+                </div>
+              )}
+            </>
+          )}
           <div style={st.widgetDivider} />
           <button style={st.ghostOutlineBtn} onClick={onOpenPlanner}>OPEN PLANNER</button>
         </>
       )}
-    </WidgetCard>
-  )
-}
-
-// ─── Recovery Intelligence Widget ────────────────────────────────────────────
-
-function RecoveryIntelWidget() {
-  const races = useRaceStore(selectRaces)
-  const today = todayStr()
-
-  const lastRace = useMemo(
-    () => races.filter(r => r.date <= today).sort((a, b) => b.date.localeCompare(a.date))[0],
-    [races, today],
-  )
-
-  if (!lastRace) {
-    return (
-      <WidgetCard id="recovery-intel" style={st.glowCard}>
-        <div style={st.widgetLabel}>RECOVERY INTELLIGENCE</div>
-        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '6px' }}>Log your first race to track recovery.</div>
-      </WidgetCard>
-    )
-  }
-
-  const dist = distanceToKm(lastRace.distance)
-  const recoveryDays = dist >= 42 ? 14 : dist >= 21 ? 7 : dist >= 10 ? 3 : 2
-  const daysSince = daysAgo(lastRace.date)
-  const daysLeft = Math.max(0, recoveryDays - daysSince)
-  const loadScore = Math.min(100, Math.round(dist * 2))
-  const badge = recoveryDays >= 14 ? 'HIGH' : recoveryDays >= 7 ? 'MEDIUM' : 'LOW'
-  const bc = badge === 'HIGH' ? 'var(--orange)' : badge === 'MEDIUM' ? 'var(--gold)' : 'var(--green)'
-
-  return (
-    <WidgetCard id="recovery-intel" style={st.glowCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
-        <div>
-          <div style={st.widgetLabel}>RECOVERY INTELLIGENCE</div>
-          <div style={st.widgetTitle}>{(lastRace.name ?? '').toUpperCase()}</div>
-        </div>
-        <span style={{ ...st.badgePill, background: `${bc}22`, color: bc, border: `1px solid ${bc}55`, flexShrink: 0 }}>{badge}</span>
-      </div>
-
-      <div>
-        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '68px', lineHeight: 1, color: 'var(--white)', letterSpacing: '-0.02em' }}>
-          {daysLeft}d
-        </div>
-        <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
-          ESTIMATED RECOVERY
-        </div>
-      </div>
-
-      <div style={st.widgetDivider} />
-
-      <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.55 }}>
-        Recent race load score: {loadScore}. Use this to avoid stacking hard events too closely.
-      </div>
     </WidgetCard>
   )
 }
@@ -1561,6 +1579,8 @@ function BostonQualWidget() {
   const athlete    = useAthleteStore(selectAthlete)
   const races      = useRaceStore(selectRaces)
   const hasProfile = !!(athlete?.dob && athlete?.gender)
+  const ctx = useWidgetCardContext()
+  const size = ctx?.getWidgetSize('boston-qual') ?? 'medium'
 
   const bostonYear                  = useMemo(() => nextBostonYear(), [])
   const { start: qualStart, end: qualEnd } = useMemo(() => bqQualWindow(bostonYear), [bostonYear])
@@ -1587,6 +1607,41 @@ function BostonQualWidget() {
     const [y, m, day] = d.split('-')
     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
     return `${months[+m - 1]} ${+day}, ${y}`
+  }
+
+  // Small view
+  if (size === 'small') {
+    let gapStr = '—'
+    let gapColor = 'var(--muted)'
+    let subLabel = 'TO QUALIFY'
+    if (bqTarget && bestQual?.time) {
+      const pbSecs = parseHMS(bestQual.time)
+      if (pbSecs) {
+        const gap = pbSecs - bqTarget
+        if (gap <= 0) {
+          gapStr = `−${secsToHMS(Math.abs(gap))}`
+          gapColor = 'var(--green)'
+          subLabel = 'QUALIFIED!'
+        } else {
+          gapStr = `+${secsToHMS(gap)}`
+          gapColor = 'var(--orange)'
+          subLabel = 'TO QUALIFY'
+        }
+      }
+    }
+    return (
+      <WidgetCard id="boston-qual" style={st.glowCard}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
+          <div style={st.widgetLabel}>BQ GAP</div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '28px', lineHeight: 1, color: gapColor, letterSpacing: '-0.01em' }}>
+            {gapStr}
+          </div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>
+            {subLabel}
+          </div>
+        </div>
+      </WidgetCard>
+    )
   }
 
   return (
@@ -1687,6 +1742,11 @@ function BostonQualWidget() {
               No marathons yet in the {bostonYear} qualifying window.
             </div>
           )}
+          {size === 'large' && (
+            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', padding: '6px 10px', background: 'var(--surface3)', borderRadius: 'var(--radius-sm)', borderLeft: '2px solid rgba(var(--orange-ch),0.4)' }}>
+              BAA qualifying window: {bostonYear - 2} Sep 16 – {bostonYear - 1} Sep 15. Results must be from an AIMS or USATF certified course.
+            </div>
+          )}
         </div>
       )}
     </WidgetCard>
@@ -1697,6 +1757,8 @@ function BostonQualWidget() {
 
 function PacingIQWidget() {
   const races = useRaceStore(selectRaces)
+  const ctx = useWidgetCardContext()
+  const size = ctx?.getWidgetSize('pacing-iq') ?? 'medium'
 
   const analysis = useMemo(() => {
     const withSplits = races.filter(r => r.splits && r.splits.length >= 2)
@@ -1717,6 +1779,24 @@ function PacingIQWidget() {
       negative > even ? 'NEGATIVE SPLITTER' : 'EVEN PACER'
     return { faded, negative, even, total, dominant }
   }, [races])
+
+  if (size === 'small') {
+    const abbrev = !analysis ? '—' : analysis.dominant === 'NEGATIVE SPLITTER' ? 'NEG' : analysis.dominant === 'EVEN PACER' ? 'EVN' : 'FDR'
+    const abbrevColor = !analysis ? 'var(--muted)' : analysis.dominant === 'NEGATIVE SPLITTER' ? 'var(--green)' : analysis.dominant === 'EVEN PACER' ? 'var(--white)' : 'var(--orange)'
+    return (
+      <WidgetCard id="pacing-iq" style={st.glowCard}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
+          <div style={st.widgetLabel}>PACING IQ</div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '36px', lineHeight: 1, color: abbrevColor }}>
+            {abbrev}
+          </div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>
+            {analysis ? analysis.dominant : 'NO DATA'}
+          </div>
+        </div>
+      </WidgetCard>
+    )
+  }
 
   return (
     <WidgetCard id="pacing-iq" style={st.glowCard}>
@@ -1753,10 +1833,31 @@ function PacingIQWidget() {
 
 function CareerMomentumWidget() {
   const races = useRaceStore(selectRaces)
+  const ctx = useWidgetCardContext()
+  const size = ctx?.getWidgetSize('career-momentum') ?? 'medium'
+
   const { score, badge } = useMemo(() => computeMomentum(races), [races])
 
   const bc = badge === 'HOT' ? 'var(--orange)' : badge === 'RISING' ? 'var(--gold)' :
     badge === 'NEUTRAL' ? 'var(--muted)' : 'rgba(var(--orange-ch), 0.4)'
+
+  if (size === 'small') {
+    const scoreNum = Math.round(score * 100)
+    const scoreColor = badge === 'HOT' ? 'var(--green)' : badge === 'RISING' ? 'var(--orange)' : badge === 'NEUTRAL' ? 'var(--white)' : 'var(--muted)'
+    return (
+      <WidgetCard id="career-momentum" style={st.glowCard}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
+          <div style={st.widgetLabel}>MOMENTUM</div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '36px', lineHeight: 1, color: scoreColor }}>
+            {races.length < 2 ? '—' : scoreNum}
+          </div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>
+            {races.length < 2 ? 'NO DATA' : badge}
+          </div>
+        </div>
+      </WidgetCard>
+    )
+  }
 
   return (
     <WidgetCard id="career-momentum" style={st.glowCard}>
@@ -2270,53 +2371,14 @@ function PatternScanWidget() {
   )
 }
 
-// ─── Why Result Widget ────────────────────────────────────────────────────────
-
-function WhyResultWidget() {
-  const races = useRaceStore(selectRaces)
-  const today = todayStr()
-
-  const lastRace = useMemo(
-    () => races.filter(r => r.date <= today && r.time).sort((a, b) => b.date.localeCompare(a.date))[0],
-    [races, today],
-  )
-
-  if (!lastRace) {
-    return (
-      <WidgetCard id="why-result" style={st.glowCard}>
-        <div style={st.widgetLabel}>WHY RESULT</div>
-        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginTop: '6px' }}>Log a timed race to see results.</div>
-      </WidgetCard>
-    )
-  }
-
-  return (
-    <WidgetCard id="why-result" style={st.glowCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
-        <div>
-          <div style={st.widgetLabel}>WHY RESULT</div>
-          <div style={st.widgetTitle}>{(lastRace.name ?? '').toUpperCase()}</div>
-        </div>
-        <span style={{ ...st.badgePill, background: 'rgba(var(--orange-ch), 0.12)', color: 'var(--orange)', border: '1px solid rgba(var(--orange-ch), 0.3)', flexShrink: 0 }}>EXPLAIN</span>
-      </div>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
-        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>Best: execution and context aligned well</div>
-        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>Tough day: course and pacing demands stacked up</div>
-      </div>
-
-      <div style={st.widgetDivider} />
-      <button style={st.ghostOutlineBtn}>COACH BRIEF</button>
-    </WidgetCard>
-  )
-}
-
 // ─── Activity Feed Preview Widget ────────────────────────────────────────────
 
 // ─── On This Day Widget ───────────────────────────────────────────────────────
 
 function OnThisDayWidget() {
   const races = useRaceStore(selectRaces)
+  const ctx = useWidgetCardContext()
+  const size = ctx?.getWidgetSize('on-this-day') ?? 'medium'
 
   const race = useMemo(() => {
     const now = new Date()
@@ -2331,6 +2393,23 @@ function OnThisDayWidget() {
 
   const years = new Date().getFullYear() - parseInt(race.date.slice(0, 4))
   const yearStr = years === 1 ? '1 year ago' : `${years} years ago`
+
+  if (size === 'small') {
+    const shortName = (race.name ?? '').length > 12 ? (race.name ?? '').slice(0, 12) + '…' : (race.name ?? '')
+    return (
+      <WidgetCard id="on-this-day" style={st.glowCard}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
+          <div style={st.widgetLabel}>ON THIS DAY</div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '36px', lineHeight: 1, color: 'var(--orange)' }}>
+            {race.date.slice(0, 4)}
+          </div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {shortName}
+          </div>
+        </div>
+      </WidgetCard>
+    )
+  }
 
   return (
     <WidgetCard id="on-this-day" className="" style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-lg)', padding: 'var(--sp-4)', display: 'flex', gap: 'var(--sp-3)', alignItems: 'flex-start' }}>
@@ -2427,6 +2506,8 @@ function GapToGoalWidget({ race }: { race: Race | null }) {
   const races   = useRaceStore(selectRaces)
   const nextRace = race
   const today   = todayStr()
+  const ctx = useWidgetCardContext()
+  const size = ctx?.getWidgetSize('gap-to-goal') ?? 'medium'
 
   const result = useMemo(() => {
     if (!nextRace?.goalTime) return null
@@ -2465,6 +2546,30 @@ function GapToGoalWidget({ race }: { race: Race | null }) {
     return { goal: secsToHMS(goalSecs), pb: pbRace.time, gap, raceName: nextRace.name, pbLabel, isCourse: !!coursePBRace }
   }, [races, nextRace, today])
 
+  // Small view
+  if (size === 'small') {
+    const gapMetric = result?.gap == null
+      ? '—'
+      : result.gap <= 0
+        ? `-${secsToHMS(Math.abs(result.gap))}`
+        : `+${secsToHMS(result.gap)}`
+    const gapColor = !result?.goal ? 'var(--muted)' : result?.gap == null ? 'var(--muted)' : result.gap <= 0 ? 'var(--green)' : 'var(--orange)'
+    const subLabel = !nextRace ? 'NO RACE' : !result?.goal ? 'NO GOAL' : result?.gap == null ? 'NO PB' : result.gap <= 0 ? 'AHEAD' : 'BEHIND'
+    return (
+      <WidgetCard id="gap-to-goal" style={st.glowCard}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
+          <div style={st.widgetLabel}>GAP TO GOAL</div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '28px', lineHeight: 1, color: gapColor, letterSpacing: '-0.01em' }}>
+            {gapMetric}
+          </div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>
+            {subLabel}
+          </div>
+        </div>
+      </WidgetCard>
+    )
+  }
+
   if (!nextRace) {
     return (
       <WidgetCard id="gap-to-goal" style={st.glowCard}>
@@ -2493,6 +2598,8 @@ function GapToGoalWidget({ race }: { race: Race | null }) {
     : result.gap <= 0
       ? `${secsToHMS(Math.abs(result.gap))} AHEAD OF GOAL`
       : `${secsToHMS(result.gap)} BEHIND GOAL`
+
+  const weeksToRace = nextRace.date ? Math.ceil(daysUntil(nextRace.date) / 7) : null
 
   return (
     <WidgetCard id="gap-to-goal" style={st.glowCard}>
@@ -2525,75 +2632,25 @@ function GapToGoalWidget({ race }: { race: Race | null }) {
       </div>
 
       <div style={{ fontSize: 'var(--text-sm)', color: gapColor, fontWeight: 600 }}>{gapLabel}</div>
-    </WidgetCard>
-  )
-}
 
-// ─── Surface Profile Widget ───────────────────────────────────────────────────
-
-function SurfaceProfileWidget() {
-  const races = useRaceStore(selectRaces)
-  const today = todayStr()
-
-  const surfaces = useMemo(() => {
-    const past = races.filter(r => r.date <= today && r.placing)
-    if (past.length < 3) return null
-    const grouped: Record<string, number[]> = {}
-    for (const r of past) {
-      const s = (r.surface ?? 'road').toLowerCase()
-      const p = parsePlacing(r.placing)
-      if (!p) continue
-      if (!grouped[s]) grouped[s] = []
-      grouped[s].push(p.percentile)
-    }
-    return Object.entries(grouped)
-      .map(([surface, pcts]) => ({
-        surface,
-        avg: Math.round(pcts.reduce((a, b) => a + b, 0) / pcts.length),
-        count: pcts.length,
-      }))
-      .sort((a, b) => b.avg - a.avg)
-  }, [races, today])
-
-  return (
-    <WidgetCard id="surface-profile" style={st.glowCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
-        <div>
-          <div style={st.widgetLabel}>SURFACE PROFILE</div>
-          <div style={st.widgetTitle}>WHERE YOU THRIVE</div>
-        </div>
-        <span style={{ ...st.badgePill, background: 'rgba(var(--orange-ch),0.12)', color: 'var(--orange)', border: '1px solid rgba(var(--orange-ch),0.3)', flexShrink: 0 }}>
-          {surfaces ? surfaces.length : '—'}
-        </span>
-      </div>
-
-      {!surfaces ? (
-        <div style={st.lockedBox}>
-          <div style={st.lockedTitle}>NOT ENOUGH DATA</div>
-          <div style={st.lockedText}>Log 3+ races with placing data to see your surface breakdown.</div>
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
-          {surfaces.slice(0, 4).map((s, i) => {
-            const barColor = i === 0 ? 'var(--green)' : 'var(--orange)'
-            return (
-              <div key={s.surface}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                  <span style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: i === 0 ? 'var(--white)' : 'var(--muted)' }}>
-                    {s.surface}
-                    {i === 0 && <span style={{ marginLeft: '6px', fontSize: 'var(--text-xs)', color: 'var(--green)' }}>BEST</span>}
-                  </span>
-                  <span style={{ fontSize: 'var(--text-xs)', color: i === 0 ? 'var(--green)' : 'var(--muted)', fontWeight: 700 }}>
-                    Top {100 - s.avg + 1}% avg
-                  </span>
-                </div>
-                <div style={{ height: '3px', background: 'var(--surface3)', borderRadius: 'var(--radius-xs)', overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${s.avg}%`, background: barColor, borderRadius: 'var(--radius-xs)' }} />
-                </div>
+      {size === 'large' && (weeksToRace !== null || result.gap !== null) && (
+        <>
+          <div style={st.widgetDivider} />
+          <div style={{ display: 'flex', gap: 'var(--sp-3)' }}>
+            {weeksToRace !== null && (
+              <div style={{ flex: 1, background: 'var(--surface3)', borderRadius: 'var(--radius-sm)', padding: 'var(--sp-3)' }}>
+                <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', color: 'var(--white)', lineHeight: 1 }}>{weeksToRace}w</div>
+                <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted)', textTransform: 'uppercase', marginTop: '4px' }}>WEEKS TO RACE</div>
               </div>
-            )
-          })}
-        </div>
+            )}
+            {result.gap !== null && (
+              <div style={{ flex: 1, background: 'var(--surface3)', borderRadius: 'var(--radius-sm)', padding: 'var(--sp-3)' }}>
+                <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', color: gapColor, lineHeight: 1 }}>{result.gap <= 0 ? `-${secsToHMS(Math.abs(result.gap))}` : `+${secsToHMS(result.gap)}`}</div>
+                <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted)', textTransform: 'uppercase', marginTop: '4px' }}>PB GAP</div>
+              </div>
+            )}
+          </div>
+        </>
       )}
     </WidgetCard>
   )
@@ -2604,6 +2661,8 @@ function SurfaceProfileWidget() {
 function PressurePerformerWidget() {
   const races = useRaceStore(selectRaces)
   const today = todayStr()
+  const ctx = useWidgetCardContext()
+  const size = ctx?.getWidgetSize('pressure-performer') ?? 'medium'
 
   const result = useMemo(() => {
     const past = races.filter(r => r.date <= today && r.placing)
@@ -2634,6 +2693,24 @@ function PressurePerformerWidget() {
   }, [races, today])
 
   const labelColor = result?.label === 'CLUTCH' ? 'var(--green)' : result?.label === 'RELAXED RACER' ? 'var(--gold)' : 'var(--orange)'
+
+  if (size === 'small') {
+    const shortLabel = !result ? '—' : result.label === 'CLUTCH' ? 'CLUTCH' : result.label === 'RELAXED RACER' ? 'AVG' : 'AVG'
+    const smallColor = !result ? 'var(--muted)' : labelColor
+    return (
+      <WidgetCard id="pressure-performer" style={st.glowCard}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
+          <div style={st.widgetLabel}>PRESSURE</div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '28px', lineHeight: 1, color: smallColor }}>
+            {shortLabel}
+          </div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>
+            UNDER PRESSURE
+          </div>
+        </div>
+      </WidgetCard>
+    )
+  }
 
   return (
     <WidgetCard id="pressure-performer" style={st.glowCard}>
@@ -2680,6 +2757,8 @@ function TravelLoadWidget() {
   const races   = useRaceStore(selectRaces)
   const athlete = useAthleteStore(selectAthlete)
   const today   = todayStr()
+  const ctx = useWidgetCardContext()
+  const size = ctx?.getWidgetSize('travel-load') ?? 'medium'
 
   const result = useMemo(() => {
     const past = races.filter(r => r.date <= today && r.placing)
@@ -2702,6 +2781,25 @@ function TravelLoadWidget() {
       awayCount: away.length,
     }
   }, [races, athlete, today])
+
+  if (size === 'small') {
+    const diff = (result?.localPct != null && result?.awayPct != null) ? result.awayPct - result.localPct : null
+    const impactLabel = diff === null ? '—' : Math.abs(diff) <= 5 ? 'LOW' : Math.abs(diff) <= 15 ? 'MED' : 'HIGH'
+    const impactColor = diff === null ? 'var(--muted)' : Math.abs(diff) <= 5 ? 'var(--green)' : Math.abs(diff) <= 15 ? 'var(--orange)' : '#ef4444'
+    return (
+      <WidgetCard id="travel-load" style={st.glowCard}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
+          <div style={st.widgetLabel}>TRAVEL</div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '36px', lineHeight: 1, color: impactColor }}>
+            {impactLabel}
+          </div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>
+            IMPACT RATING
+          </div>
+        </div>
+      </WidgetCard>
+    )
+  }
 
   return (
     <WidgetCard id="travel-load" style={st.glowCard}>
@@ -2758,172 +2856,14 @@ function TravelLoadWidget() {
   )
 }
 
-// ─── Race Density Widget ──────────────────────────────────────────────────────
-
-function RaceDensityWidget() {
-  const races = useRaceStore(selectRaces)
-  const today = todayStr()
-
-  const result = useMemo(() => {
-    const past = races.filter(r => r.date <= today).sort((a, b) => a.date.localeCompare(b.date))
-    if (past.length < 2) return null
-
-    const gaps: number[] = []
-    for (let i = 1; i < past.length; i++) {
-      const gap = Math.round(
-        (new Date(past[i].date + 'T00:00:00').getTime() - new Date(past[i - 1].date + 'T00:00:00').getTime()) / 86400000
-      )
-      gaps.push(gap)
-    }
-
-    const avg = Math.round(gaps.reduce((a, b) => a + b, 0) / gaps.length)
-    const min = Math.min(...gaps)
-    const tightCount = gaps.filter(g => g < 14).length
-
-    return { avg, min, tightCount, total: past.length }
-  }, [races, today])
-
-  return (
-    <WidgetCard id="race-density" style={st.glowCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
-        <div>
-          <div style={st.widgetLabel}>RACE DENSITY</div>
-          <div style={st.widgetTitle}>RACE SPACING</div>
-        </div>
-        {result && (
-          <span style={{ ...st.badgePill, background: result.tightCount > 0 ? 'rgba(var(--orange-ch),0.12)' : 'rgba(0,255,136,0.1)', color: result.tightCount > 0 ? 'var(--orange)' : 'var(--green)', border: `1px solid ${result.tightCount > 0 ? 'rgba(var(--orange-ch),0.3)' : 'rgba(var(--green-ch),0.3)'}`, flexShrink: 0 }}>
-            {result.tightCount > 0 ? 'TIGHT' : 'SPACED'}
-          </span>
-        )}
-      </div>
-
-      {!result ? (
-        <div style={st.lockedBox}>
-          <div style={st.lockedTitle}>NOT ENOUGH DATA</div>
-          <div style={st.lockedText}>Log 2+ races to see your race spacing analysis.</div>
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
-          <div style={{ display: 'flex', gap: 'var(--sp-5)', flexWrap: 'wrap' }}>
-            <div>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', color: 'var(--white)', lineHeight: 1 }}>{result.avg}d</div>
-              <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted)', textTransform: 'uppercase', marginTop: '3px' }}>AVG GAP</div>
-            </div>
-            <div style={{ paddingBottom: '2px' }}>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-lg)', color: result.min < 14 ? 'var(--orange)' : 'var(--muted)', lineHeight: 1 }}>{result.min}d</div>
-              <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted2)', textTransform: 'uppercase', marginTop: '3px' }}>SHORTEST</div>
-            </div>
-          </div>
-          {result.tightCount > 0 && (
-            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--orange)', lineHeight: 1.5 }}>
-              ⚠ {result.tightCount} race{result.tightCount > 1 ? 's' : ''} stacked within 14 days of another.
-            </div>
-          )}
-        </div>
-      )}
-    </WidgetCard>
-  )
-}
-
-// ─── Best Conditions Widget ───────────────────────────────────────────────────
-
-function BestConditionsWidget() {
-  const races = useRaceStore(selectRaces)
-  const today = todayStr()
-
-  const result = useMemo(() => {
-    const past = races.filter(r => r.date <= today && r.placing && r.weather?.temp != null)
-    if (past.length < 3) return null
-
-    // Bucket by temp range and find best avg percentile
-    const buckets: { label: string; min: number; max: number; pcts: number[] }[] = [
-      { label: '< 5°C', min: -999, max: 5, pcts: [] },
-      { label: '5–10°C', min: 5, max: 10, pcts: [] },
-      { label: '10–15°C', min: 10, max: 15, pcts: [] },
-      { label: '15–20°C', min: 15, max: 20, pcts: [] },
-      { label: '20–25°C', min: 20, max: 25, pcts: [] },
-      { label: '> 25°C', min: 25, max: 999, pcts: [] },
-    ]
-
-    for (const r of past) {
-      const t = r.weather!.temp!
-      const p = parsePlacing(r.placing)
-      if (!p) continue
-      const bucket = buckets.find(b => t >= b.min && t < b.max)
-      if (bucket) bucket.pcts.push(p.percentile)
-    }
-
-    const ranked = buckets
-      .filter(b => b.pcts.length > 0)
-      .map(b => ({ label: b.label, avg: Math.round(b.pcts.reduce((a, c) => a + c, 0) / b.pcts.length), count: b.pcts.length }))
-      .sort((a, b) => b.avg - a.avg)
-
-    if (!ranked.length) return null
-
-    // Best surface
-    const surfMap: Record<string, number[]> = {}
-    for (const r of past) {
-      const s = r.surface ?? 'road'
-      const p = parsePlacing(r.placing)
-      if (!p) continue
-      if (!surfMap[s]) surfMap[s] = []
-      surfMap[s].push(p.percentile)
-    }
-    const bestSurf = Object.entries(surfMap)
-      .map(([s, ps]) => ({ s, avg: Math.round(ps.reduce((a, b) => a + b, 0) / ps.length) }))
-      .sort((a, b) => b.avg - a.avg)[0]
-
-    return { tempBuckets: ranked.slice(0, 3), bestSurf, totalWithWeather: past.length }
-  }, [races, today])
-
-  return (
-    <WidgetCard id="best-conditions" style={st.glowCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
-        <div>
-          <div style={st.widgetLabel}>BEST CONDITIONS</div>
-          <div style={st.widgetTitle}>YOUR OPTIMAL RACE</div>
-        </div>
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ color: 'var(--muted)', flexShrink: 0 }} aria-hidden="true"><circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M19.07 4.93l-1.41 1.41M6.34 17.66l-1.41 1.41" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-      </div>
-
-      {!result ? (
-        <div style={st.lockedBox}>
-          <div style={st.lockedTitle}>NOT ENOUGH DATA</div>
-          <div style={st.lockedText}>Log 3+ races with weather and placing data to find your sweet spot.</div>
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
-          {result.bestSurf && (
-            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', fontWeight: 600 }}>
-              Best surface: <span style={{ color: 'var(--green)' }}>{result.bestSurf.s.toUpperCase()}</span>
-            </div>
-          )}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
-            {result.tempBuckets.map((b, i) => (
-              <div key={b.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: i === 0 ? 'var(--white)' : 'var(--muted)' }}>
-                  {b.label} {i === 0 && '★'}
-                </span>
-                <span style={{ fontSize: 'var(--text-xs)', color: i === 0 ? 'var(--green)' : 'var(--muted)', fontWeight: 700 }}>
-                  Top {100 - b.avg + 1}% ({b.count})
-                </span>
-              </div>
-            ))}
-          </div>
-          <div style={st.widgetDivider} />
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Based on {result.totalWithWeather} races with weather data</div>
-        </div>
-      )}
-    </WidgetCard>
-  )
-}
-
 // ─── Course Fit Score Widget ──────────────────────────────────────────────────
 
 function CourseFitWidget({ race }: { race: Race | null }) {
   const races    = useRaceStore(selectRaces)
   const nextRace = race
   const today    = todayStr()
+  const ctx = useWidgetCardContext()
+  const size = ctx?.getWidgetSize('course-fit') ?? 'medium'
 
   const result = useMemo(() => {
     if (!nextRace) return null
@@ -2957,6 +2897,25 @@ function CourseFitWidget({ race }: { race: Race | null }) {
 
     return { score, label, color, nextSurface, surfaceRaceCount: surfaceRaces.length }
   }, [races, nextRace, today])
+
+  if (size === 'small') {
+    const scoreStr = result ? `${result.score}%` : '—'
+    const scoreColor = result ? result.color : 'var(--muted)'
+    const fitLabel = result ? result.label : (nextRace ? 'NO DATA' : 'NO RACE')
+    return (
+      <WidgetCard id="course-fit" style={st.glowCard}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
+          <div style={st.widgetLabel}>COURSE FIT</div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '36px', lineHeight: 1, color: scoreColor }}>
+            {scoreStr}
+          </div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>
+            {fitLabel}
+          </div>
+        </div>
+      </WidgetCard>
+    )
+  }
 
   if (!nextRace) {
     return (
@@ -3009,6 +2968,8 @@ function PBProbabilityWidget({ race }: { race: Race | null }) {
   const races    = useRaceStore(selectRaces)
   const nextRace = race
   const today    = todayStr()
+  const ctx = useWidgetCardContext()
+  const size = ctx?.getWidgetSize('pb-probability') ?? 'medium'
 
   const result = useMemo(() => {
     if (!nextRace) return null
@@ -3070,6 +3031,24 @@ function PBProbabilityWidget({ race }: { race: Race | null }) {
     return { probability: clamped, label, color, hasPBForDist, pbIsNameMatch }
   }, [races, nextRace, today])
 
+  if (size === 'small') {
+    const probStr = result ? `${result.probability}%` : '—'
+    const probColor = result ? result.color : 'var(--muted)'
+    return (
+      <WidgetCard id="pb-probability" style={st.glowCard}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
+          <div style={st.widgetLabel}>PB CHANCE</div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '36px', lineHeight: 1, color: probColor }}>
+            {probStr}
+          </div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>
+            PROBABILITY
+          </div>
+        </div>
+      </WidgetCard>
+    )
+  }
+
   if (!nextRace) {
     return (
       <WidgetCard id="pb-probability" style={st.glowCard}>
@@ -3112,988 +3091,6 @@ function PBProbabilityWidget({ race }: { race: Race | null }) {
           </div>
         </>
       )}
-    </WidgetCard>
-  )
-}
-
-// ─── Streak Risk Widget ───────────────────────────────────────────────────────
-
-function StreakRiskWidget() {
-  const races = useRaceStore(selectRaces)
-  const today = todayStr()
-
-  const result = useMemo(() => {
-    // Build a set of active days from recent races
-    const activeDays = new Set<string>()
-    races.filter(r => r.date <= today).forEach(r => activeDays.add(r.date))
-
-    if (activeDays.size === 0) return null
-
-    // Compute current streak (consecutive days back from today)
-    let streak = 0
-    let d = new Date(); d.setHours(0, 0, 0, 0)
-    while (true) {
-      const ds = d.toISOString().split('T')[0]
-      if (!activeDays.has(ds)) break
-      streak++
-      d.setDate(d.getDate() - 1)
-    }
-
-    const isRisk = streak >= 14
-    const label = isRisk ? 'RISK' : streak >= 7 ? 'BUILDING' : 'HEALTHY'
-    const color = isRisk ? 'var(--orange)' : streak >= 7 ? 'var(--gold)' : 'var(--green)'
-    const note = isRisk
-      ? `${streak}-day streak — consider a rest day to avoid overtraining.`
-      : streak >= 7
-      ? `${streak}-day streak — monitor for fatigue signs.`
-      : streak > 0
-      ? `${streak}-day active streak. Keep it consistent.`
-      : 'No recent activity streak detected.'
-
-    return { streak, label, color, note }
-  }, [races, today])
-
-  return (
-    <WidgetCard id="streak-risk" style={st.glowCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
-        <div>
-          <div style={st.widgetLabel}>STREAK RISK</div>
-          <div style={st.widgetTitle}>TRAINING LOAD</div>
-        </div>
-        {result && <span style={{ ...st.badgePill, background: `${result.color}22`, color: result.color, border: `1px solid ${result.color}55`, flexShrink: 0 }}>{result.label}</span>}
-      </div>
-
-      {!result ? (
-        <div style={st.lockedBox}>
-          <div style={st.lockedTitle}>NO ACTIVITY DATA</div>
-          <div style={st.lockedText}>Connect Garmin or WHOOP to track your training streak risk.</div>
-        </div>
-      ) : (
-        <>
-          <div>
-            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: result.color, letterSpacing: '-0.02em' }}>
-              {result.streak}d
-            </div>
-            <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
-              CURRENT STREAK
-            </div>
-          </div>
-          <div style={st.widgetDivider} />
-          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.55 }}>{result.note}</div>
-        </>
-      )}
-    </WidgetCard>
-  )
-}
-
-// ─── Advanced Race DNA Widget (Pro) ──────────────────────────────────────────
-
-function AdvancedRaceDNAWidget() {
-  const races = useRaceStore(selectRaces)
-  const today = todayStr()
-  const past  = useMemo(() => races.filter(r => r.date <= today && r.placing), [races, today])
-
-  const data = useMemo(() => {
-    const withHumidity = past.filter(r => r.weather?.humidity != null)
-    const withElev = past.filter(r => typeof r.elevation === 'number')
-
-    let humidityInsight: string | null = null
-    if (withHumidity.length >= 2) {
-      const lo = withHumidity.filter(r => r.weather!.humidity! < 60)
-      const hi = withHumidity.filter(r => r.weather!.humidity! >= 60)
-      const avg = (rs: Race[]) => rs.length ? rs.reduce((s, r) => s + (parsePlacing(r.placing)?.percentile ?? 50), 0) / rs.length : null
-      const avgLo = avg(lo), avgHi = avg(hi)
-      if (avgLo != null && avgHi != null) {
-        humidityInsight = avgLo > avgHi ? 'Better in dry conditions (<60% humidity)' : 'Handles humidity well (60%+)'
-      }
-    }
-
-    let elevInsight: string | null = null
-    if (withElev.length >= 2) {
-      const flat  = withElev.filter(r => r.elevation! < 200)
-      const hilly = withElev.filter(r => r.elevation! >= 200)
-      const avg = (rs: Race[]) => rs.length ? rs.reduce((s, r) => s + (parsePlacing(r.placing)?.percentile ?? 50), 0) / rs.length : null
-      const avgFlat = avg(flat), avgHilly = avg(hilly)
-      if (avgFlat != null && avgHilly != null) {
-        elevInsight = avgFlat > avgHilly ? 'Flat course specialist' : 'Performs well on hills'
-      }
-    }
-
-    return { withHumidity: withHumidity.length, withElev: withElev.length, humidityInsight, elevInsight }
-  }, [past])
-
-  return (
-    <WidgetCard id="advanced-race-dna" style={st.glowCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
-        <div>
-          <div style={st.widgetLabel}>ADVANCED RACE DNA</div>
-          <div style={st.widgetTitle}>CONDITION ANALYSIS</div>
-        </div>
-        <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--muted)', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-sm)', padding: '3px 6px', flexShrink: 0 }}>DNA</span>
-      </div>
-      {past.length < 2 ? (
-        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>
-          Log 2+ races with placing data to see advanced condition analysis.
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', marginTop: '10px' }}>
-          {data.humidityInsight && (
-            <div style={{ padding: 'var(--sp-2)', background: 'var(--surface3)', borderRadius: 'var(--radius-md)' }}>
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '3px' }}>HUMIDITY</div>
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--white)' }}>{data.humidityInsight}</div>
-            </div>
-          )}
-          {data.elevInsight && (
-            <div style={{ padding: 'var(--sp-2)', background: 'var(--surface3)', borderRadius: 'var(--radius-md)' }}>
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '3px' }}>ELEVATION</div>
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--white)' }}>{data.elevInsight}</div>
-            </div>
-          )}
-          {!data.humidityInsight && !data.elevInsight && (
-            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5 }}>
-              Add humidity and elevation data to logged races to see insights.
-            </div>
-          )}
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>
-            {data.withHumidity} humidity · {data.withElev} elevation records
-          </div>
-        </div>
-      )}
-    </WidgetCard>
-  )
-}
-
-// ─── Weather Fit Score Widget (Pro) ──────────────────────────────────────────
-
-function WeatherFitWidget({ race }: { race: Race | null }) {
-  const races    = useRaceStore(selectRaces)
-  const nextRace = race
-  const today    = todayStr()
-
-  const result = useMemo(() => {
-    const past = races.filter(r => r.date <= today && r.placing && r.weather?.temp != null)
-    if (past.length < 2) return null
-
-    // Bucket performance by temp
-    const buckets: { label: string; min: number; max: number; pcts: number[]; emoji: string }[] = [
-      { label: 'Cold (<5°C)',  min: -99, max:  5, pcts: [], emoji: '<5°' },
-      { label: 'Cool (5–12)', min:   5, max: 12, pcts: [], emoji: '5–12°' },
-      { label: 'Mild (12–18)',min:  12, max: 18, pcts: [], emoji: '12–18°' },
-      { label: 'Warm (18–24)',min:  18, max: 24, pcts: [], emoji: '18–24°' },
-      { label: 'Hot (>24°C)', min:  24, max: 99, pcts: [], emoji: '>24°' },
-    ]
-
-    for (const r of past) {
-      const t = r.weather!.temp!
-      const p = parsePlacing(r.placing)
-      if (!p) continue
-      const b = buckets.find(b => t >= b.min && t < b.max)
-      if (b) b.pcts.push(p.percentile)
-    }
-
-    const ranked = buckets
-      .filter(b => b.pcts.length > 0)
-      .map(b => ({ ...b, avg: Math.round(b.pcts.reduce((a, c) => a + c, 0) / b.pcts.length) }))
-      .sort((a, b) => b.avg - a.avg)
-
-    if (!ranked.length) return null
-
-    const best = ranked[0]
-
-    // Estimate next race month's typical temp (rough heuristic by month)
-    let fitLabel = 'UNKNOWN'
-    let fitColor = 'var(--muted)'
-    if (nextRace?.date) {
-      const m = parseInt(nextRace.date.split('-')[1] ?? '6')
-      // rough northern-hemisphere estimate
-      const estTemp = [2, 3, 7, 11, 16, 20, 23, 22, 17, 12, 6, 3][m - 1]
-      const matchBucket = ranked.find(b => estTemp >= b.min && estTemp < b.max)
-      if (matchBucket) {
-        const rank = ranked.indexOf(matchBucket)
-        if (rank === 0) { fitLabel = 'IDEAL CONDITIONS'; fitColor = 'var(--green)' }
-        else if (rank === 1) { fitLabel = 'GOOD CONDITIONS'; fitColor = '#7CFC00' }
-        else { fitLabel = 'CHALLENGING CONDITIONS'; fitColor = 'var(--orange)' }
-      }
-    }
-
-    return { ranked: ranked.slice(0, 3), best, fitLabel, fitColor, total: past.length }
-  }, [races, nextRace, today])
-
-  return (
-    <WidgetCard id="weather-fit" style={st.glowCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
-        <div>
-          <div style={st.widgetLabel}>WEATHER FIT SCORE</div>
-          <div style={st.widgetTitle}>
-            {result ? result.fitLabel : 'YOUR CLIMATE PROFILE'}
-          </div>
-        </div>
-        <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--muted)', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-sm)', padding: '3px 6px', flexShrink: 0 }}>WX</span>
-      </div>
-
-      {!result ? (
-        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>
-          Log 2+ races with placing data to build your weather performance profile.
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', marginTop: '4px' }}>
-          {nextRace && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
-              <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-sm)', color: result.fitColor, letterSpacing: '0.08em' }}>
-                {result.fitLabel}
-              </span>
-            </div>
-          )}
-          <div style={st.widgetDivider} />
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase' }}>
-            YOUR BEST PERFORMING CONDITIONS
-          </div>
-          {result.ranked.map((b, i) => (
-            <div key={b.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: 'var(--text-xs)', color: i === 0 ? 'var(--white)' : 'var(--muted)', fontWeight: i === 0 ? 700 : 400 }}>
-                {b.emoji} {b.label}
-              </span>
-              <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: i === 0 ? 'var(--green)' : 'var(--muted)' }}>
-                Top {100 - b.avg}% {i === 0 && '★'}
-              </span>
-            </div>
-          ))}
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>
-            Based on {result.total} races with weather + placing data
-          </div>
-        </div>
-      )}
-    </WidgetCard>
-  )
-}
-
-// ─── Race Gap Analysis Widget (Pro) ──────────────────────────────────────────
-
-function RaceGapAnalysisWidget() {
-  const races = useRaceStore(selectRaces)
-  const today = todayStr()
-  const past = useMemo(() => races.filter(r => r.date <= today).sort((a, b) => a.date.localeCompare(b.date)), [races, today])
-  const tightStacks = useMemo(() => {
-    let count = 0
-    for (let i = 1; i < past.length; i++) {
-      const gap = Math.round((new Date(past[i].date + 'T00:00:00').getTime() - new Date(past[i - 1].date + 'T00:00:00').getTime()) / 86400000)
-      const d = distanceToKm(past[i - 1].distance)
-      if (d >= 10 && gap < 14) count++
-    }
-    return count
-  }, [past])
-  const gapData = useMemo(() => {
-    if (past.length < 2) return null
-    const gaps = past.slice(1).map((r, i) => {
-      const gapDays = Math.round((new Date(r.date + 'T00:00:00').getTime() - new Date(past[i].date + 'T00:00:00').getTime()) / 86400000)
-      const d = distanceToKm(past[i].distance)
-      return { race: r, prev: past[i], gapDays, isTight: d >= 10 && gapDays < 14 }
-    })
-    const avgGap = Math.round(gaps.reduce((s, g) => s + g.gapDays, 0) / gaps.length)
-    return { avgGap, tightCount: tightStacks, recentGaps: gaps.slice(-3).reverse() }
-  }, [past, tightStacks])
-
-  return (
-    <WidgetCard id="race-gap-analysis" style={st.glowCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
-        <div>
-          <div style={st.widgetLabel}>RACE GAP / RECOVERY</div>
-          <div style={st.widgetTitle}>{gapData ? `AVG ${gapData.avgGap}d BETWEEN RACES` : 'RECOVERY ANALYSIS'}</div>
-        </div>
-        <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--muted)', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-sm)', padding: '3px 6px', flexShrink: 0 }}>GAP</span>
-      </div>
-      {!gapData ? (
-        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>
-          Log 2+ races to analyse recovery and race-spacing patterns.
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', marginTop: '10px' }}>
-          {gapData.tightCount > 0 && (
-            <div style={{ padding: 'var(--sp-2)', background: 'rgba(var(--orange-ch),0.1)', border: '1px solid rgba(var(--orange-ch),0.25)', borderRadius: 'var(--radius-md)' }}>
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--orange)' }}>[!] {gapData.tightCount} tight stack{gapData.tightCount !== 1 ? 's' : ''} — races within 14 days</div>
-            </div>
-          )}
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase' }}>RECENT GAPS</div>
-          {gapData.recentGaps.map((g, i) => (
-            <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '5px 0', borderBottom: '1px solid var(--border)' }}>
-              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '70%' }}>
-                {g.prev.name ?? g.prev.date} → {g.race.name ?? g.race.date}
-              </span>
-              <span style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--mono)', color: g.isTight ? 'var(--orange)' : 'var(--green)', flexShrink: 0, marginLeft: '8px' }}>
-                {g.gapDays}d
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
-    </WidgetCard>
-  )
-}
-
-// ─── Why You PR'd Widget (Pro) ────────────────────────────────────────────────
-
-function WhyPRdWidget() {
-  const races = useRaceStore(selectRaces)
-  const today = todayStr()
-  const pbMap = useMemo(() => buildPBMap(races.filter(r => r.date <= today)), [races, today])
-  const pbRaces = useMemo(() => Object.values(pbMap), [pbMap])
-
-  const insights = useMemo(() => {
-    if (!pbRaces.length) return null
-    const surfaces: Record<string, number> = {}
-    const months: Record<number, number> = {}
-    for (const r of pbRaces) {
-      const s = r.surface ?? 'Road'; surfaces[s] = (surfaces[s] ?? 0) + 1
-      const m = parseInt(r.date.split('-')[1]); months[m] = (months[m] ?? 0) + 1
-    }
-    const topSurface = Object.entries(surfaces).sort((a, b) => b[1] - a[1])[0]?.[0]
-    const topMonthNum = Object.entries(months).sort((a, b) => Number(b[1]) - Number(a[1]))[0]?.[0]
-    const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-    const topMonth = topMonthNum ? MONTHS[parseInt(topMonthNum) - 1] : null
-    const withTemp = pbRaces.filter(r => r.weather?.temp != null)
-    const avgTemp = withTemp.length ? Math.round(withTemp.reduce((s, r) => s + r.weather!.temp!, 0) / withTemp.length) : null
-    return { topSurface, topMonth, avgTemp }
-  }, [pbRaces])
-
-  if (!pbRaces.length) {
-    return (
-      <WidgetCard id="why-prd" style={st.glowCard}>
-        <div style={st.widgetLabel}>WHY YOU PR'D</div>
-        <div style={st.widgetTitle}>NO PBs YET</div>
-        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>Log races to discover the conditions behind your best performances.</div>
-      </WidgetCard>
-    )
-  }
-
-  return (
-    <WidgetCard id="why-prd" style={st.glowCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
-        <div>
-          <div style={st.widgetLabel}>WHY YOU PR'D</div>
-          <div style={st.widgetTitle}>{pbRaces.length} PERSONAL BEST{pbRaces.length !== 1 ? 'S' : ''}</div>
-        </div>
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', marginTop: '10px' }}>
-        {insights?.topSurface && (
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Best surface</span>
-            <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--white)' }}>{insights.topSurface}</span>
-          </div>
-        )}
-        {insights?.topMonth && (
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Peak month</span>
-            <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--white)' }}>{insights.topMonth}</span>
-          </div>
-        )}
-        {insights?.avgTemp != null && (
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Avg race temp</span>
-            <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, color: 'var(--white)' }}>{insights.avgTemp}°C</span>
-          </div>
-        )}
-        <div style={st.widgetDivider} />
-        {pbRaces.slice(0, 3).map(r => (
-          <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-xs)' }}>
-            <span style={{ color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '60%' }}>{r.name ?? r.date}</span>
-            <span style={{ color: 'var(--gold)', fontFamily: 'var(--mono)', flexShrink: 0 }}>{r.time}</span>
-          </div>
-        ))}
-      </div>
-    </WidgetCard>
-  )
-}
-
-// ─── Why You Faded Widget (Pro) ───────────────────────────────────────────────
-
-function WhyFadedWidget() {
-  const races = useRaceStore(selectRaces)
-  const today = todayStr()
-
-  const fadedRaces = useMemo(() => {
-    return races
-      .filter(r => r.date <= today && (r.splits ?? []).length >= 2)
-      .map(r => {
-        const splits = (r.splits ?? []).filter(s => s.split)
-        if (splits.length < 2) return null
-        const first = parseHMS(splits[0].split!) ?? 0
-        const last  = parseHMS(splits[splits.length - 1].split!) ?? 0
-        if (last <= first * 1.05) return null
-        const fadePct = Math.round(((last - first) / Math.max(first, 1)) * 100)
-        return { r, fadePct }
-      })
-      .filter(Boolean)
-      .sort((a, b) => b!.fadePct - a!.fadePct) as { r: Race; fadePct: number }[]
-  }, [races, today])
-
-  return (
-    <WidgetCard id="why-faded" style={st.glowCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
-        <div>
-          <div style={st.widgetLabel}>WHY YOU FADED</div>
-          <div style={st.widgetTitle}>{fadedRaces.length > 0 ? `${fadedRaces.length} FADE${fadedRaces.length !== 1 ? 'S' : ''} DETECTED` : 'NO FADES DETECTED'}</div>
-        </div>
-        <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', color: 'var(--muted)', flexShrink: 0, letterSpacing: '0.04em' }}>↓</span>
-      </div>
-      {fadedRaces.length === 0 ? (
-        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>
-          No significant pace drops found. Log races with splits to track pacing patterns.
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0', marginTop: '8px' }}>
-          {fadedRaces.slice(0, 4).map(({ r, fadePct }) => (
-            <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
-              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '65%' }}>{r.name ?? r.date}</span>
-              <span style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--mono)', color: 'var(--orange)', flexShrink: 0 }}>+{fadePct}% fade</span>
-            </div>
-          ))}
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '6px' }}>Detected from split-time data</div>
-        </div>
-      )}
-    </WidgetCard>
-  )
-}
-
-// ─── Race Comparer Widget (Pro) ───────────────────────────────────────────────
-
-function RaceComparerWidget() {
-  const races = useRaceStore(selectRaces)
-  const today = todayStr()
-  const past  = useMemo(() => races.filter(r => r.date <= today && r.time).sort((a, b) => b.date.localeCompare(a.date)), [races, today])
-  const [idxA, setIdxA] = useState(0)
-  const [idxB, setIdxB] = useState(Math.min(1, Math.max(0, past.length - 1)))
-  const raceA = past[idxA]
-  const raceB = past[idxB]
-
-  const diff = useMemo(() => {
-    if (!raceA?.time || !raceB?.time) return null
-    const a = parseHMS(raceA.time) ?? 0
-    const b = parseHMS(raceB.time) ?? 0
-    if (!a || !b) return null
-    return { secs: Math.abs(a - b), faster: a < b ? 'A' : 'B' }
-  }, [raceA, raceB])
-
-  if (past.length < 2) {
-    return (
-      <WidgetCard id="race-comparer" style={st.glowCard}>
-        <div style={st.widgetLabel}>RACE COMPARER</div>
-        <div style={st.widgetTitle}>LOG 2+ RACES</div>
-        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>Need at least 2 timed races to compare.</div>
-      </WidgetCard>
-    )
-  }
-
-  // 12px (was 10) is the minimum iOS Safari treats as a non-zoom-trigger
-  // tap target. Wrappers also get data-no-widget-detail so taps never
-  // bubble to WidgetCard's onClick (which used to open the detail modal
-  // on top of the picker, dismissing it before the user could choose).
-  const selStyle: React.CSSProperties = { width: '100%', background: 'transparent', border: 'none', outline: 'none', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '6px', color: 'inherit', padding: '4px 0', appearance: 'none', WebkitAppearance: 'none' }
-  const stopBubble = (e: React.SyntheticEvent) => e.stopPropagation()
-
-  return (
-    <WidgetCard id="race-comparer" style={st.glowCard}>
-      <div>
-        <div style={st.widgetLabel}>RACE COMPARER</div>
-        <div style={st.widgetTitle}>SIDE BY SIDE</div>
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-2)', marginTop: '10px' }}>
-        <div data-no-widget-detail style={{ background: 'var(--surface3)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-3)' }} onClick={stopBubble}>
-          <select value={idxA} onChange={e => setIdxA(Number(e.target.value))} onClick={stopBubble} style={{ ...selStyle, color: 'var(--orange)' }}>
-            {past.map((r, i) => <option key={r.id} value={i}>{r.name ?? r.date}</option>)}
-          </select>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', color: diff?.faster === 'A' ? 'var(--green)' : 'var(--white)' }}>{raceA?.time ?? '—'}</div>
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>{fmtDateDDMM(raceA?.date ?? '')}</div>
-        </div>
-        <div data-no-widget-detail style={{ background: 'var(--surface3)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-3)' }} onClick={stopBubble}>
-          <select value={idxB} onChange={e => setIdxB(Number(e.target.value))} onClick={stopBubble} style={{ ...selStyle, color: 'var(--muted)' }}>
-            {past.map((r, i) => <option key={r.id} value={i}>{r.name ?? r.date}</option>)}
-          </select>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', color: diff?.faster === 'B' ? 'var(--green)' : 'var(--white)' }}>{raceB?.time ?? '—'}</div>
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>{fmtDateDDMM(raceB?.date ?? '')}</div>
-        </div>
-      </div>
-      {diff && (
-        <div style={{ marginTop: '8px', padding: 'var(--sp-2)', background: 'var(--surface3)', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
-          <span style={{ fontFamily: 'var(--mono)', fontSize: 'var(--text-compact)', fontWeight: 600, color: 'var(--green)' }}>{secsToHMS(diff.secs)}</span>
-          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginLeft: '6px' }}>faster in Race {diff.faster}</span>
-        </div>
-      )}
-    </WidgetCard>
-  )
-}
-
-// ─── Race Stack Planner Widget (Pro) ─────────────────────────────────────────
-
-function RaceStackWidget({ race }: { race: Race | null }) {
-  const nextRace = race
-
-  const checklist = useMemo(() => {
-    if (!nextRace) return null
-
-    const dist    = distanceToKm(nextRace.distance)
-    const surface = (nextRace.surface ?? 'road').toLowerCase()
-    const sport   = (nextRace.sport   ?? 'run').toLowerCase()
-    const isTri   = sport.includes('tri') || sport.includes('iron') || sport === 'duathlon'
-    const isUltra = dist > 50
-    const isTrail = surface.includes('trail') || surface.includes('mountain')
-    const month   = nextRace.date ? parseInt(nextRace.date.split('-')[1] ?? '6') : 6
-    const isHot   = [5, 6, 7, 8, 9].includes(month)
-    const isCold  = [11, 12, 1, 2].includes(month)
-
-    const categories: { label: string; emoji: string; items: string[] }[] = []
-
-    // Core running kit
-    const core: string[] = [
-      isTrail ? 'Trail shoes' : 'Race flats / carbon shoes',
-      'Race kit (top + shorts/tights)',
-      'Race bib + safety pins',
-      'GPS watch + charged',
-    ]
-    if (isHot)  core.push('Cap / visor', 'Sunscreen SPF50+', 'Extra electrolytes')
-    if (isCold) core.push('Arm warmers', 'Gloves', 'Throwaway top for start')
-    categories.push({ label: 'RACE KIT', emoji: '', items: core })
-
-    // Nutrition
-    const nutrition: string[] = []
-    if (dist >= 21)  nutrition.push('Gels × ' + Math.ceil(dist / 10), 'Electrolyte tabs')
-    if (dist >= 42)  nutrition.push('Real food / bars', 'Hydration vest or belt')
-    if (isUltra)     nutrition.push('Drop bags packed', 'Headtorch + spare batteries')
-    if (nutrition.length) categories.push({ label: 'NUTRITION', emoji: '', items: nutrition })
-
-    // Triathlon-specific
-    if (isTri) {
-      const triItems = [
-        'Wetsuit + wetsuit lube', 'Goggles (+ spare pair)',
-        'Transition bag', 'Helmet (must)', 'Cycling shoes + cleats',
-        'Race number belt', 'Flat kit (tube, CO2, tyre levers)',
-      ]
-      categories.push({ label: 'TRIATHLON', emoji: '', items: triItems })
-    }
-
-    // Trail-specific
-    if (isTrail && !isTri) {
-      const trailItems = ['Poles (check rules)', 'Mandatory kit bag', 'Buff / beanie']
-      if (dist >= 42) trailItems.push('Emergency blanket', 'Whistle')
-      categories.push({ label: 'TRAIL EXTRAS', emoji: '', items: trailItems })
-    }
-
-    // Day-before / travel
-    const prep = ['Lay out kit tonight', 'Charge all devices', 'Check bib pickup time']
-    if (nextRace.city) prep.push('Route to venue saved offline')
-    categories.push({ label: 'DAY BEFORE', emoji: '', items: prep })
-
-    return categories
-  }, [nextRace])
-
-  const [openCat, setOpenCat] = useState<string | null>('RACE KIT')
-  const [deletedItems, setDeletedItems] = useState<Set<string>>(() => new Set())
-  const [customItems, setCustomItems] = useState<Record<string, string[]>>({})
-  const [newItemText, setNewItemText] = useState('')
-
-  function deleteItem(item: string) {
-    setDeletedItems(prev => new Set([...prev, item]))
-  }
-  function addItem(catLabel: string) {
-    const text = newItemText.trim()
-    if (!text) return
-    setCustomItems(prev => ({ ...prev, [catLabel]: [...(prev[catLabel] ?? []), text] }))
-    setNewItemText('')
-  }
-
-  return (
-    <WidgetCard id="race-stack" style={st.glowCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
-        <div>
-          <div style={st.widgetLabel}>RACE STACK PLANNER</div>
-          <div style={st.widgetTitle}>
-            {nextRace ? (nextRace.name ?? 'RACE DAY').toUpperCase() : 'ADD A RACE'}
-          </div>
-        </div>
-        <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--muted)', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-sm)', padding: '3px 6px', flexShrink: 0 }}>KIT</span>
-      </div>
-
-      {!checklist ? (
-        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>
-          Add an upcoming race to generate your personalised race-day kit list.
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', marginTop: '8px' }}>
-          {checklist.map(cat => {
-            const visibleItems = cat.items.filter(i => !deletedItems.has(i))
-            const extras = customItems[cat.label] ?? []
-            const totalCount = visibleItems.length + extras.length
-            const isOpen = openCat === cat.label
-            return (
-              <div key={cat.label}>
-                <button
-                  onClick={() => setOpenCat(isOpen ? null : cat.label)}
-                  style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0' }}
-                >
-                  <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.12em', color: 'var(--white)', textTransform: 'uppercase' as const }}>
-                    {cat.emoji} {cat.label}
-                  </span>
-                  <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{isOpen ? '▲' : '▼'} {totalCount}</span>
-                </button>
-                {isOpen && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingBottom: '8px' }}>
-                    {visibleItems.map(item => (
-                      <div key={item} style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--sp-2)', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
-                        <span style={{ color: 'var(--orange)', flexShrink: 0, marginTop: '1px' }}>✓</span>
-                        <span style={{ flex: 1 }}>{item}</span>
-                        <button onClick={() => deleteItem(item)} style={{ background: 'none', border: 'none', color: 'var(--muted2)', cursor: 'pointer', fontSize: 'var(--text-sm)', padding: '0', lineHeight: 1, flexShrink: 0 }}>✕</button>
-                      </div>
-                    ))}
-                    {extras.map((item, i) => (
-                      <div key={`custom-${i}`} style={{ display: 'flex', alignItems: 'flex-start', gap: 'var(--sp-2)', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
-                        <span style={{ color: 'var(--green)', flexShrink: 0, marginTop: '1px' }}>+</span>
-                        <span style={{ flex: 1 }}>{item}</span>
-                        <button onClick={() => setCustomItems(prev => ({ ...prev, [cat.label]: (prev[cat.label] ?? []).filter((_, j) => j !== i) }))} style={{ background: 'none', border: 'none', color: 'var(--muted2)', cursor: 'pointer', fontSize: 'var(--text-sm)', padding: '0', lineHeight: 1, flexShrink: 0 }}>✕</button>
-                      </div>
-                    ))}
-                    {/* Add new item row */}
-                    <div style={{ display: 'flex', gap: 'var(--sp-2)', marginTop: '4px' }}>
-                      <input
-                        value={newItemText}
-                        onChange={e => setNewItemText(e.target.value)}
-                        onKeyDown={e => e.key === 'Enter' && addItem(cat.label)}
-                        placeholder="Add item…"
-                        style={{ flex: 1, background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-sm)', padding: '5px 8px', fontSize: 'var(--text-xs)', color: 'var(--white)', outline: 'none' }}
-                      />
-                      <button onClick={() => addItem(cat.label)} style={{ background: 'rgba(var(--orange-ch),0.15)', border: '1px solid rgba(var(--orange-ch),0.3)', borderRadius: 'var(--radius-sm)', color: 'var(--orange)', fontSize: 'var(--text-compact)', padding: '0 10px', cursor: 'pointer' }}>+</button>
-                    </div>
-                  </div>
-                )}
-                <div style={st.widgetDivider} />
-              </div>
-            )
-          })}
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>
-            Tailored for {distBadge(nextRace?.distance) || nextRace?.distance || 'your race'} · {(nextRace?.surface ?? 'road')}
-          </div>
-        </div>
-      )}
-    </WidgetCard>
-  )
-}
-
-// ─── Adaptive Goals Widget (Pro) ─────────────────────────────────────────────
-
-function AdaptiveGoalsWidget() {
-  const pastRaces    = useRaceStore(selectRaces)
-  const upcomingRaces = useRaceStore(selectUpcomingRaces)
-
-  const data = useMemo(() => {
-    const pbMap = buildPBMap(pastRaces)
-    return upcomingRaces
-      .filter(r => r.goalTime)
-      .sort((a, b) => a.date.localeCompare(b.date))
-      .map(r => {
-        const key = normalizeDistKey(r.distance)
-        const pb = pbMap[key]
-        const goalSecs = parseHMS(r.goalTime!)
-        const pbSecs = pb?.time ? parseHMS(pb.time) : null
-        if (!goalSecs) return null
-        return { r, goalSecs, pbSecs }
-      })
-      .filter(Boolean)
-      .slice(0, 3) as { r: Race; goalSecs: number; pbSecs: number | null }[]
-  }, [pastRaces, upcomingRaces])
-
-  if (!data.length) {
-    return (
-      <WidgetCard id="adaptive-goals" style={st.glowCard}>
-        <div style={st.widgetLabel}>ADAPTIVE GOALS</div>
-        <div style={st.widgetTitle}>NO GOALS SET</div>
-        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>
-          Set goal times on upcoming races to track your gap.
-        </div>
-      </WidgetCard>
-    )
-  }
-
-  return (
-    <WidgetCard id="adaptive-goals" style={st.glowCard}>
-      <div>
-        <div style={st.widgetLabel}>ADAPTIVE GOALS</div>
-        <div style={st.widgetTitle}>GOAL TRACKER</div>
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', marginTop: '10px' }}>
-        {data.map(({ r, goalSecs, pbSecs }) => {
-          const gap = pbSecs != null ? goalSecs - pbSecs : null
-          const color = gap == null ? 'var(--muted)' : gap <= 0 ? 'var(--green)' : 'var(--orange)'
-          return (
-            <div key={r.id} style={{ padding: 'var(--sp-2)', background: 'var(--surface3)', borderRadius: 'var(--radius-md)' }}>
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginBottom: '4px' }}>{r.name ?? distBadge(r.distance, r.sport)}</div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '15px', color: 'var(--white)' }}>{r.goalTime}</span>
-                  <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginLeft: '4px' }}>GOAL</span>
-                </div>
-                {gap != null && (
-                  <span style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--mono)', color }}>
-                    {gap <= 0 ? `${secsToHMS(Math.abs(gap))} ahead` : `${secsToHMS(gap)} behind`}
-                  </span>
-                )}
-              </div>
-            </div>
-          )
-        })}
-      </div>
-    </WidgetCard>
-  )
-}
-
-// ─── Break Tape Moments Widget (Pro) ─────────────────────────────────────────
-
-function BreakTapeWidget() {
-  const races = useRaceStore(selectRaces)
-  const today = todayStr()
-  const past  = useMemo(() => races.filter(r => r.date <= today).sort((a, b) => a.date.localeCompare(b.date)), [races, today])
-
-  const milestones = useMemo(() => {
-    const m: { icon: string; label: string; detail: string }[] = []
-    if (past.length > 0) m.push({ icon: '→', label: 'FIRST RACE', detail: past[0].name ?? past[0].date })
-
-    const distanceSeen = new Set<string>()
-    for (const r of past) {
-      const key = normalizeDistKey(r.distance)
-      const badge = distBadge(r.distance, r.sport)
-      if (key && badge && !distanceSeen.has(key) && badge !== `${distanceToKm(r.distance)}K`) {
-        distanceSeen.add(key)
-        if (m.length < 6) m.push({ icon: '★', label: `FIRST ${badge.toUpperCase()}`, detail: r.name ?? r.date })
-      }
-    }
-
-    // Biggest single-race time improvement
-    const byDist: Record<string, Race[]> = {}
-    for (const r of past) {
-      if (!r.time) continue
-      const key = normalizeDistKey(r.distance)
-      if (!key) continue
-      ;(byDist[key] = byDist[key] ?? []).push(r)
-    }
-    let biggestDrop: { label: string; drop: number; race: Race } | null = null
-    for (const [key, rs] of Object.entries(byDist)) {
-      if (rs.length < 2) continue
-      for (let i = 1; i < rs.length; i++) {
-        const prev = parseHMS(rs[i - 1].time!) ?? 0
-        const curr = parseHMS(rs[i].time!) ?? 0
-        const drop = prev - curr
-        if (drop > 0 && (!biggestDrop || drop > biggestDrop.drop)) {
-          biggestDrop = { label: key, drop, race: rs[i] }
-        }
-      }
-    }
-    if (biggestDrop && m.length < 6) {
-      m.push({ icon: '↓', label: `BIGGEST DROP — ${biggestDrop.label}`, detail: `-${secsToHMS(biggestDrop.drop)} · ${biggestDrop.race.name ?? biggestDrop.race.date}` })
-    }
-
-    return m
-  }, [past])
-
-  if (!milestones.length) {
-    return (
-      <WidgetCard id="break-tape" style={st.glowCard}>
-        <div style={st.widgetLabel}>BREAK TAPE MOMENTS</div>
-        <div style={st.widgetTitle}>LOG YOUR FIRST RACE</div>
-        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>
-          Your iconic milestones will appear here as you race.
-        </div>
-      </WidgetCard>
-    )
-  }
-
-  return (
-    <WidgetCard id="break-tape" style={st.glowCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
-        <div>
-          <div style={st.widgetLabel}>BREAK TAPE MOMENTS</div>
-          <div style={st.widgetTitle}>{milestones.length} MILESTONE{milestones.length !== 1 ? 'S' : ''}</div>
-        </div>
-        <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', color: 'var(--orange)', flexShrink: 0, letterSpacing: '0.04em' }}>★</span>
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', marginTop: '8px' }}>
-        {milestones.map((m, i) => (
-          <div key={i} style={{ display: 'flex', gap: 'var(--sp-2)', alignItems: 'flex-start', padding: '7px 0', borderBottom: '1px solid var(--border)' }}>
-            <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', color: 'var(--orange)', flexShrink: 0, width: '16px', textAlign: 'center' }}>{m.icon}</span>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--orange)', textTransform: 'uppercase' }}>{m.label}</div>
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', marginTop: '1px' }}>{m.detail}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </WidgetCard>
-  )
-}
-
-// ─── What To Race Next Widget (Pro) ──────────────────────────────────────────
-
-function WhatToRaceNextWidget() {
-  const races    = useRaceStore(selectRaces)
-  const upcoming = useRaceStore(selectUpcomingRaces)
-  const today    = todayStr()
-  const past     = useMemo(() => races.filter(r => r.date <= today && r.time), [races, today])
-
-  const recommendation = useMemo(() => {
-    if (!past.length) return null
-    const pbRaces = Object.values(buildPBMap(past))
-    const surfaces: Record<string, number> = {}
-    for (const r of pbRaces) { const s = r.surface ?? 'Road'; surfaces[s] = (surfaces[s] ?? 0) + 1 }
-    return Object.entries(surfaces).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null
-  }, [past])
-
-  if (!upcoming.length) {
-    return (
-      <WidgetCard id="what-to-race-next" style={st.glowCard}>
-        <div style={st.widgetLabel}>WHAT TO RACE NEXT</div>
-        <div style={st.widgetTitle}>NO UPCOMING RACES</div>
-        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: '4px' }}>
-          Add upcoming races to get recommendations based on your performance trends.
-        </div>
-      </WidgetCard>
-    )
-  }
-
-  return (
-    <WidgetCard id="what-to-race-next" style={st.glowCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
-        <div>
-          <div style={st.widgetLabel}>WHAT TO RACE NEXT</div>
-          <div style={st.widgetTitle}>{upcoming.length} RACE{upcoming.length !== 1 ? 'S' : ''} UPCOMING</div>
-        </div>
-      </div>
-      {recommendation && (
-        <div style={{ padding: 'var(--sp-2)', background: 'rgba(var(--green-ch),0.08)', border: '1px solid rgba(var(--green-ch),0.2)', borderRadius: 'var(--radius-md)', marginTop: '8px' }}>
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--green)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>SURFACE MATCH</div>
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--white)', marginTop: '2px' }}>Your PBs align with {recommendation.toLowerCase()} — prioritise {recommendation.toLowerCase()} events.</div>
-        </div>
-      )}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0', marginTop: '8px' }}>
-        {upcoming.slice(0, 3).map(r => (
-          <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
-            <div style={{ minWidth: 0, flex: 1 }}>
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name ?? 'Unnamed Race'}</div>
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '1px' }}>{fmtDateDDMM(r.date)} · {distBadge(r.distance, r.sport)}</div>
-            </div>
-            {r.priority && (
-              <span style={{ fontSize: 'var(--text-xs)', color: r.priority === 'A' ? 'var(--orange)' : 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, flexShrink: 0, marginLeft: '8px' }}>
-                {racePriorityLabel(r.priority)}
-              </span>
-            )}
-          </div>
-        ))}
-      </div>
-    </WidgetCard>
-  )
-}
-
-// ─── Story Mode widget ────────────────────────────────────────────────────────
-
-function StoryModeWidget() {
-  const races = useRaceStore(selectRaces)
-  const year  = new Date().getFullYear()
-
-  const story = useMemo(() => {
-    if (!races.length) return null
-    const thisYear = races.filter(r => (r.date ?? '').startsWith(String(year)))
-    if (!thisYear.length) return null
-    const countries = new Set(thisYear.map(r => r.country).filter(Boolean)).size
-    const finisher  = thisYear.filter(r => r.medal && r.medal !== '').length
-    const podium    = thisYear.filter(r => r.medal === 'gold' || r.medal === 'silver' || r.medal === 'bronze').length
-    const medals    = finisher + podium
-    return {
-      raceCount: thisYear.length,
-      countries,
-      medals,
-      podium,
-      headline: `${thisYear.length} race${thisYear.length !== 1 ? 's' : ''} across ${countries || 1} countr${countries === 1 ? 'y' : 'ies'}`,
-    }
-  }, [races, year])
-
-  if (!story) {
-    return (
-      <WidgetCard id="story-mode">
-        <div style={st.widgetLabel}>STORY MODE</div>
-        <div style={st.widgetTitle}>{year} RECAP</div>
-        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: 4 }}>
-          Log races through the year to build annual recaps and season highlights.
-        </div>
-      </WidgetCard>
-    )
-  }
-
-  return (
-    <WidgetCard id="story-mode">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <div>
-          <div style={st.widgetLabel}>STORY MODE</div>
-          <div style={st.widgetTitle}>{year} RECAP</div>
-        </div>
-        <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--muted)', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-sm)', padding: '3px 6px', flexShrink: 0 }}>STY</span>
-      </div>
-      <div style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', lineHeight: 1.5, marginTop: 6 }}>{story.headline}</div>
-      <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-        {[
-          { label: 'RACES', value: story.raceCount },
-          { label: 'COUNTRIES', value: story.countries || 1 },
-          { label: 'MEDALS', value: story.medals },
-        ].map(({ label, value }) => (
-          <div key={label} style={{ flex: 1, background: 'var(--surface3)', borderRadius: 'var(--radius-sm)', padding: '8px 6px', textAlign: 'center' }}>
-            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-lg)', color: 'var(--orange)' }}>{value}</div>
-            <div style={{ fontSize: 9, color: 'var(--muted)', fontFamily: 'var(--headline)', letterSpacing: '0.08em', textTransform: 'uppercase', marginTop: 2 }}>{label}</div>
-          </div>
-        ))}
-      </div>
-      {story.podium > 0 && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', marginTop: 10, padding: '6px 10px', background: 'rgba(255,215,0,0.08)', border: '1px solid rgba(255,215,0,0.25)', borderRadius: 'var(--radius-sm)' }}>
-          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--gold)', fontFamily: 'var(--headline)', fontWeight: 700 }}>
-            ★ {story.podium} PODIUM FINISH{story.podium !== 1 ? 'ES' : ''} THIS YEAR
-          </span>
-        </div>
-      )}
-      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 8 }}>
-        Annual recap and season cards build on this data.
-      </div>
-    </WidgetCard>
-  )
-}
-
-// ─── Coach Activity widget ────────────────────────────────────────────────────
-
-function CoachActivityWidget() {
-  const coachRelationships: unknown[] = useMemo(() => {
-    try { return JSON.parse(localStorage.getItem('fl2_coach_relationships') ?? '[]') } catch { return [] }
-  }, [])
-  const coachComments: unknown[] = useMemo(() => {
-    try { return JSON.parse(localStorage.getItem('fl2_coach_comments') ?? '[]') } catch { return [] }
-  }, [])
-
-  const relCount = coachRelationships.length
-  const comCount = coachComments.length
-
-  return (
-    <WidgetCard id="coach-activity">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <div>
-          <div style={st.widgetLabel}>COACH ACTIVITY</div>
-          <div style={st.widgetTitle}>SHARED VIEW</div>
-        </div>
-        <span style={{ fontSize: 22, background: 'rgba(var(--orange-ch),0.1)', borderRadius: 'var(--radius-md)', padding: '4px 8px' }}>{relCount}</span>
-      </div>
-      <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: 6 }}>
-        {relCount
-          ? `${relCount} coach connection${relCount > 1 ? 's' : ''} active.`
-          : 'Coach mode scaffold ready for shared athlete review.'}
-      </div>
-      {comCount > 0 && (
-        <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4 }}>
-          {comCount} coach comment{comCount > 1 ? 's' : ''} logged.
-        </div>
-      )}
-      <div style={{ marginTop: 10, fontSize: 'var(--text-xs)', color: 'var(--muted)', background: 'var(--surface3)', borderRadius: 'var(--radius-sm)', padding: '8px 10px' }}>
-        Coach mode coming soon — shared views, annotations, and training comments.
-      </div>
     </WidgetCard>
   )
 }
@@ -4147,6 +3144,8 @@ function savePBHiddenKeys(s: Set<string>) {
 
 function PersonalBestsWidget() {
   const races = useRaceStore(selectRaces)
+  const ctx = useWidgetCardContext()
+  const size = ctx?.getWidgetSize('personal-bests') ?? 'medium'
   const pbMap = useMemo(() => buildPBMap(races), [races])
   const [selectedRace, setSelectedRace] = useState<Race | null>(null)
   const [hiddenDists, setHiddenDists] = useState<Set<string>>(() => readPBHiddenKeys())
@@ -4229,6 +3228,30 @@ function PersonalBestsWidget() {
   }, [pbMap, hiddenDists])
 
   const allDists = pillGroups.flatMap(g => g.labels)
+
+  if (size === 'small') {
+    // Show best marathon or half marathon time, fallback to first available PB
+    const runGroup = groups.find(g => g.sport === 'Running')
+    const preferredKeys = ['Marathon', 'Half Marathon']
+    let bestEntry = runGroup?.entries.find(e => preferredKeys.includes(distBadge(e.r.distance, e.r.sport) || ''))
+    if (!bestEntry) bestEntry = runGroup?.entries[0] ?? groups[0]?.entries[0]
+    const distLabel = bestEntry ? (distBadge(bestEntry.r.distance, bestEntry.r.sport) || bestEntry.key.toUpperCase()) : '—'
+    const timeDisplay = bestEntry?.r.time ?? '—'
+    return (
+      <WidgetCard id="personal-bests" style={st.glowCard}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
+          <div style={st.widgetLabel}>PERSONAL BESTS</div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '28px', lineHeight: 1, color: 'var(--green)', letterSpacing: '0.01em' }}>
+            {timeDisplay}
+          </div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>
+            {distLabel}
+          </div>
+        </div>
+      </WidgetCard>
+    )
+  }
+
   if (!allDists.length) {
     return (
       <WidgetCard id="personal-bests" style={st.glowCard}>
@@ -4769,6 +3792,9 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
   const races        = useRaceStore(selectRaces)
   const upcomingRaces = useRaceStore(selectUpcomingRaces)
   const updateRace   = useRaceStore(s => s.updateRace)
+  const ctx = useWidgetCardContext()
+  const size = ctx?.getWidgetSize('riegel-predictor') ?? 'medium'
+  const vdotPt = useMemo(() => bestVDOT(races), [races])
   const [selectedRow, setSelectedRow] = useState<string | null>(null)
   const [showLinkSheet, setShowLinkSheet] = useState(false)
   const result = useMemo(() => bestRiegelTable(races), [races])
@@ -4781,6 +3807,24 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
     </WidgetCard>
   )
   const { race, table } = result
+
+  if (size === 'small') {
+    // Best predicted time for most-raced distance — use the table's first non-input row
+    const targetRow = table.find(r => !r.isSameAsInput) ?? table[0]
+    return (
+      <WidgetCard id="riegel-predictor" style={st.glowCard}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
+          <div style={st.widgetLabel}>RIEGEL</div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '28px', lineHeight: 1, color: 'var(--orange)', letterSpacing: '0.01em' }}>
+            {targetRow?.predictedTime ?? '—'}
+          </div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>
+            {targetRow?.distance ?? 'PREDICTED'}
+          </div>
+        </div>
+      </WidgetCard>
+    )
+  }
 
   function linkGoalPace(upcomingId: string) {
     if (!selectedRow) return
@@ -4861,6 +3905,34 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
         <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', lineHeight: 1.5 }}>
           T₂ = T₁ × (D₂/D₁)^1.06
         </div>
+        {size === 'large' && vdotPt && (() => {
+          const v = vdotPt.vdot
+          // Training zones via Jack Daniels VDOT equivalents for 1km
+          // zone VDOT fractions: Easy 0.67, Tempo 0.84, Threshold 0.88, Interval 0.97
+          const paceForFraction = (frac: number) => secsToHMS(vdotEquivTime(v * frac, 1))
+          const zones = [
+            { label: 'Easy',      pace: `${paceForFraction(0.65)}–${paceForFraction(0.74)}`, color: 'var(--green)' },
+            { label: 'Tempo',     pace: paceForFraction(0.84),                                color: 'var(--gold)' },
+            { label: 'Threshold', pace: paceForFraction(0.88),                                color: 'var(--orange)' },
+            { label: 'Interval',  pace: paceForFraction(0.97),                                color: '#ef4444' },
+          ]
+          return (
+            <>
+              <div style={st.widgetDivider} />
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)' }}>
+                TRAINING ZONES (VDOT {Math.round(v)})
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+                {zones.map(z => (
+                  <div key={z.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                    <span style={{ fontSize: 'var(--text-xs)', color: z.color, fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{z.label}</span>
+                    <span style={{ fontFamily: 'var(--mono)', fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--white)' }}>{z.pace}/km</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )
+        })()}
         </div>{/* end data-no-widget-detail wrapper */}
       </WidgetCard>
 
@@ -4891,128 +3963,14 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
   )
 }
 
-function VdotSparkline({ history }: { history: { vdot: number }[] }) {
-  const pts = history.slice(-12)
-  if (pts.length < 2) return null
-  const W = 120, H = 32, pad = 2
-  const vals = pts.map(p => p.vdot)
-  const lo = Math.min(...vals), hi = Math.max(...vals)
-  const range = hi - lo || 1
-  const xs = pts.map((_, i) => pad + (i / (pts.length - 1)) * (W - pad * 2))
-  const ys = pts.map(p => H - pad - ((p.vdot - lo) / range) * (H - pad * 2))
-  const d = xs.map((x, i) => `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${ys[i].toFixed(1)}`).join(' ')
-  return (
-    <svg width={W} height={H} style={{ display: 'block' }}>
-      <polyline points={xs.map((x, i) => `${x.toFixed(1)},${ys[i].toFixed(1)}`).join(' ')}
-        fill="none" stroke="rgba(var(--orange-ch),0.5)" strokeWidth="1.5" strokeLinejoin="round" />
-      <path d={`${d} L${xs[xs.length-1].toFixed(1)},${H} L${xs[0].toFixed(1)},${H} Z`}
-        fill="rgba(var(--orange-ch),0.1)" />
-      <circle cx={xs[xs.length-1].toFixed(1)} cy={ys[ys.length-1].toFixed(1)} r="3" fill="var(--orange)" />
-    </svg>
-  )
-}
-
-function VDOTScoreWidget() {
-  const races      = useRaceStore(selectRaces)
-  const units      = useUnits()
-  const history    = useMemo(() => vdotHistory(races), [races])
-  const peakVDOT    = useMemo(() => bestVDOT(races), [races])
-  const currentVDOT = useMemo(() => latestPBVDOT(races), [races])
-  // Display latest PB-based VDOT as current; show all-time peak as secondary if higher
-  const displayPt   = currentVDOT ?? peakVDOT
-  const equivs     = useMemo(() => displayPt ? equivalentPerformances(displayPt.vdot) : [], [displayPt])
-  const zones      = useMemo(() => displayPt ? paceZones(displayPt.vdot, units) : [], [displayPt, units])
-  const showPeak   = peakVDOT && currentVDOT && peakVDOT.vdot > currentVDOT.vdot
-
-  if (!displayPt) return (
-    <WidgetCard id="vdot-score" style={st.glowCard}>
-      <div style={st.widgetLabel}>VDOT SCORE</div>
-      <div style={st.widgetTitle}>VDOT FITNESS</div>
-      <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: 0 }}>Log a running race with a finish time to compute your VDOT.</p>
-    </WidgetCard>
-  )
-
-  const vdotColor = displayPt.vdot >= 55 ? 'var(--green)' : displayPt.vdot >= 45 ? 'var(--orange)' : 'var(--white)'
-
-  return (
-    <WidgetCard id="vdot-score" style={st.glowCard}>
-      <div style={st.widgetLabel}>VDOT SCORE</div>
-
-      {/* Current + Peak row */}
-      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 'var(--sp-2)' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 'var(--sp-2)' }}>
-          <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '52px', lineHeight: 1, color: vdotColor }}>
-            {displayPt.vdot}
-          </span>
-          <div style={{ paddingBottom: '6px' }}>
-            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em' }}>CURRENT</div>
-            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{displayPt.raceName}</div>
-          </div>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
-          {showPeak && (
-            <div style={{ background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '4px 8px', textAlign: 'right' }}>
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em' }}>PEAK</div>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-md)', color: 'var(--muted)', lineHeight: 1 }}>{peakVDOT!.vdot}</div>
-            </div>
-          )}
-          {history.length >= 2 && (
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
-              <VdotSparkline history={history} />
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', fontFamily: 'var(--headline)', letterSpacing: '0.06em' }}>
-                {history.length} RACES
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Equivalent performances */}
-      <div>
-        <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '6px' }}>
-          EQUIVALENT PERFORMANCES
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--sp-2)' }}>
-          {equivs.map(e => (
-            <div key={e.distance} style={{ background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '10px 6px', textAlign: 'center' }}>
-              <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '3px' }}>
-                {e.distance === 'Half Marathon' ? '21.1K' : e.distance === 'Marathon' ? '42.2K' : e.distance.replace(' Mile', 'mi')}
-              </div>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', color: 'var(--white)' }}>
-                {e.timeStr}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Training zones */}
-      <div>
-        <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '6px' }}>
-          TRAINING ZONES
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          {zones.map(z => (
-            <div key={z.zone} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', padding: '6px 8px', background: 'var(--surface3)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
-              <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', width: '18px', color: 'var(--orange)' }}>{z.abbr}</span>
-              <span style={{ flex: 1, fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{z.description}</span>
-              <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', color: 'var(--white)', flexShrink: 0 }}>
-                {z.minPaceStr} – {z.maxPaceStr}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </WidgetCard>
-  )
-}
-
 function GoalPaceWidget({ race }: { race: Race | null }) {
   const focusRace = race
   const races     = useRaceStore(selectRaces)
   const units     = useUnits()
   const vdotPt    = useMemo(() => bestVDOT(races), [races])
   const [splitsOpen, setSplitsOpen] = useState(false)
+  const ctx = useWidgetCardContext()
+  const size = ctx?.getWidgetSize('goal-pace') ?? 'medium'
 
   const result = useMemo(() => {
     if (!focusRace?.goalTime) return null
@@ -5027,6 +3985,24 @@ function GoalPaceWidget({ race }: { race: Race | null }) {
   if (sport !== 'Running') return null
 
   if (!focusRace) return null  // no focus race — hide widget entirely
+
+  if (size === 'small') {
+    const paceStr = result?.pacePaceStr ? result.pacePaceStr.split(' ')[0] : '—'
+    const raceName = (focusRace.name ?? '').length > 12 ? (focusRace.name ?? '').slice(0, 12) + '…' : (focusRace.name ?? 'NO GOAL SET')
+    return (
+      <WidgetCard id="goal-pace" style={st.glowCard}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
+          <div style={st.widgetLabel}>GOAL PACE</div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '28px', lineHeight: 1, color: result ? 'var(--orange)' : 'var(--muted)' }}>
+            {result ? `${paceStr}/${distUnit(units) === 'KM' ? 'km' : 'mi'}` : '—'}
+          </div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {result ? raceName : 'NO GOAL SET'}
+          </div>
+        </div>
+      </WidgetCard>
+    )
+  }
 
   if (!result) return (
     <WidgetCard id="goal-pace" style={st.glowCard}>
@@ -5093,136 +4069,28 @@ function GoalPaceWidget({ race }: { race: Race | null }) {
   )
 }
 
-const _raceWeatherCache: Record<string, { temp: number; humidity: number } | null> = {}
-
-async function fetchArchiveWeather(race: Race): Promise<{ temp: number; humidity: number } | null> {
-  if (!race.city && !race.country) return null
-  const cacheKey = `${race.id}-${race.date}`
-  if (cacheKey in _raceWeatherCache) return _raceWeatherCache[cacheKey]
-
-  // Check localStorage cache
-  const lsKey = `fl2_rwc_${race.id}`
-  const cached = localStorage.getItem(lsKey)
-  if (cached) {
-    try {
-      const parsed = JSON.parse(cached)
-      _raceWeatherCache[cacheKey] = parsed
-      return parsed
-    } catch { /* ignore */ }
-  }
-
-  try {
-    const city = race.city ?? race.country ?? ''
-    const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`)
-    const geoData = await geoRes.json()
-    const loc = geoData?.results?.[0]
-    if (!loc) { _raceWeatherCache[cacheKey] = null; return null }
-
-    const { latitude, longitude } = loc
-    const res = await fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${latitude}&longitude=${longitude}&start_date=${race.date}&end_date=${race.date}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&hourly=relativehumidity_2m&timezone=auto`)
-    const data = await res.json()
-
-    const maxArr: number[] = data?.daily?.temperature_2m_max ?? []
-    const minArr: number[] = data?.daily?.temperature_2m_min ?? []
-    const humArr: number[] = data?.hourly?.relativehumidity_2m ?? []
-
-    if (!maxArr.length || !minArr.length) { _raceWeatherCache[cacheKey] = null; return null }
-
-    const temp = Math.round((maxArr[0] + minArr[0]) / 2)
-    const humSlice = humArr.slice(6, 12)
-    const humidity = humSlice.length
-      ? Math.round(humSlice.reduce((s, v) => s + v, 0) / humSlice.length)
-      : 60
-
-    const result = { temp, humidity }
-    _raceWeatherCache[cacheKey] = result
-    localStorage.setItem(lsKey, JSON.stringify(result))
-    return result
-  } catch {
-    _raceWeatherCache[cacheKey] = null
-    return null
-  }
-}
-
-function WeatherImpactWidget() {
-  const races  = useRaceStore(selectRaces)
-  const [fetchedWeather, setFetchedWeather] = useState<Record<string, { temp: number; humidity: number }>>({})
-
-  // Auto-fetch archive weather for past races without weather data
-  useEffect(() => {
-    const today = new Date().toISOString().slice(0, 10)
-    const needFetch = races
-      .filter(r => r.date <= today && r.time && !r.weather?.temp && (r.city || r.country))
-      .sort((a, b) => b.date.localeCompare(a.date))
-      .slice(0, 5)
-
-    for (const r of needFetch) {
-      fetchArchiveWeather(r).then(w => {
-        if (w) setFetchedWeather(prev => ({ ...prev, [r.id]: w }))
-      })
-    }
-  }, [races])
-
-  const racesWithWeather = useMemo(() =>
-    races.map(r => fetchedWeather[r.id]
-      ? { ...r, weather: { ...r.weather, temp: fetchedWeather[r.id].temp, humidity: fetchedWeather[r.id].humidity } }
-      : r
-    ), [races, fetchedWeather])
-
-  const result = useMemo(() => bestWeatherImpact(racesWithWeather), [racesWithWeather])
-
-  if (!result) return (
-    <WidgetCard id="weather-impact" style={st.glowCard}>
-      <div style={st.widgetLabel}>WEATHER IMPACT</div>
-      <div style={st.widgetTitle}>WEATHER IMPACT</div>
-      <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: 0 }}>Races with weather data will show adjusted performance.</p>
-    </WidgetCard>
-  )
-
-  const { race, impact } = result
-  const impactColor = impact.improvementSecs > 300 ? 'var(--error)'
-    : impact.improvementSecs > 120 ? 'var(--orange)'
-    : 'var(--green)'
-
-  return (
-    <WidgetCard id="weather-impact" style={st.glowCard}>
-      <div style={st.widgetLabel}>WEATHER IMPACT</div>
-      <div style={st.widgetTitle}>WEATHER IMPACT</div>
-      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '-4px' }}>{race.name} · {fmtDateDDMM(race.date)}</div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-2)' }}>
-        <div style={{ background: 'var(--surface3)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-3)', border: '1px solid var(--border2)' }}>
-          <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, color: 'var(--muted)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '4px' }}>ACTUAL</div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-lg)', color: 'var(--white)' }}>{fSecsToHMS(impact.actualSecs)}</div>
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>{impact.tempC}°C · {impact.humidityPct}% humidity</div>
-        </div>
-        <div style={{ background: 'var(--surface3)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-3)', border: `1px solid ${impactColor}44` }}>
-          <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, color: impactColor, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '4px' }}>IDEAL CONDITIONS</div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-lg)', color: impactColor }}>{fSecsToHMS(impact.adjustedSecs)}</div>
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>10°C · 50% humidity</div>
-        </div>
-      </div>
-
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', padding: 'var(--sp-3)', background: 'var(--surface3)', borderRadius: 'var(--radius-sm)', border: `1px solid ${impactColor}33` }}>
-        <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xs)', color: impactColor }}>
-          {impact.improvementSecs > 300 ? 'HOT' : impact.improvementSecs > 120 ? 'WARM' : 'OK'}
-        </span>
-        <div>
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--white)', fontWeight: 500 }}>{impact.label}</div>
-          {impact.improvementSecs > 10 && (
-            <div style={{ fontSize: 'var(--text-xs)', color: impactColor }}>
-              +{fSecsToHMS(impact.improvementSecs)} due to heat/humidity ({impact.impactPct}%)
-            </div>
-          )}
-        </div>
-      </div>
-    </WidgetCard>
-  )
-}
-
 function DistanceMilestonesWidget() {
   const races  = useRaceStore(selectRaces)
+  const ctx = useWidgetCardContext()
+  const size = ctx?.getWidgetSize('distance-milestones') ?? 'medium'
   const result = useMemo(() => distanceMilestones(races), [races])
+
+  if (size === 'small') {
+    const milestoneLabel = result.nextMilestone ? result.nextMilestone.label.toUpperCase() : 'KM RACED'
+    return (
+      <WidgetCard id="distance-milestones" style={st.glowCard}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
+          <div style={st.widgetLabel}>MILESTONES</div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', lineHeight: 1, color: 'var(--orange)' }}>
+            {result.nextMilestone ? `${result.totalKm.toLocaleString()}/${result.nextMilestone.km.toLocaleString()}` : result.totalKm.toLocaleString()}
+          </div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>
+            {milestoneLabel}
+          </div>
+        </div>
+      </WidgetCard>
+    )
+  }
 
   return (
     <WidgetCard id="distance-milestones" style={st.glowCard}>
@@ -5265,100 +4133,6 @@ function DistanceMilestonesWidget() {
   )
 }
 
-// ─── Equivalent Performances Widget ──────────────────────────────────────────
-
-function EquivPerfWidget() {
-  const races   = useRaceStore(selectRaces)
-  const vdotPt  = useMemo(() => bestVDOT(races), [races])
-  const equivs  = useMemo(() => vdotPt ? equivalentPerformances(vdotPt.vdot) : [], [vdotPt])
-
-  if (!vdotPt) return (
-    <WidgetCard id="equiv-perf" style={st.glowCard}>
-      <div style={st.widgetLabel}>EQUIVALENTS</div>
-      <div style={st.widgetTitle}>EQUIV PERFORMANCES</div>
-      <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: 0 }}>Log a race to see equivalent performances across distances.</p>
-    </WidgetCard>
-  )
-
-  const mainDistances = equivs.filter(e => ['5K','10K','Half Marathon','Marathon'].includes(e.distance))
-
-  return (
-    <WidgetCard id="equiv-perf" style={st.glowCard}>
-      <div style={st.widgetLabel}>EQUIVALENTS</div>
-      <div style={st.widgetTitle}>EQUIV PERFORMANCES</div>
-      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '-4px' }}>VDOT {vdotPt.vdot} · {vdotPt.raceName}</div>
-
-      {/* Main 4-distance row — equal-width cards edge to edge */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr auto 1fr auto 1fr', gap: '0 4px', alignItems: 'center' }}>
-        {mainDistances.map((e, i) => (
-          <React.Fragment key={e.distance}>
-            {i > 0 && <span style={{ color: 'var(--muted2)', fontSize: 'var(--text-xs)', textAlign: 'center' }}>≈</span>}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '8px 6px' }}>
-              <span style={{ fontSize: '9px', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-                {e.distance.replace('Half Marathon','HM').replace('Marathon','MAR')}
-              </span>
-              <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '15px', color: 'var(--white)', marginTop: '2px', whiteSpace: 'nowrap' }}>
-                {e.timeStr}
-              </span>
-            </div>
-          </React.Fragment>
-        ))}
-      </div>
-
-      {/* Extended distances */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px' }}>
-        {equivs.filter(e => !['5K','10K','Half Marathon','Marathon'].includes(e.distance)).map(e => (
-          <div key={e.distance} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 8px', background: 'var(--surface3)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }}>
-            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{e.distance}</span>
-            <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', color: 'var(--white)' }}>{e.timeStr}</span>
-          </div>
-        ))}
-      </div>
-    </WidgetCard>
-  )
-}
-
-// ─── Upcoming Race Density Widget ─────────────────────────────────────────────
-
-function UpcomingDensityWidget() {
-  const upcoming = useRaceStore(selectUpcomingRaces)
-  const warnings = useMemo(() => raceDensityWarnings(upcoming), [upcoming])
-
-  return (
-    <WidgetCard id="upcoming-density" style={st.glowCard}>
-      <div style={st.widgetLabel}>SCHEDULING</div>
-      <div style={st.widgetTitle}>RACE CONFLICTS</div>
-
-      {upcoming.length < 2 ? (
-        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: 0 }}>Add 2+ upcoming races to check for scheduling conflicts.</p>
-      ) : warnings.length === 0 ? (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', padding: '10px 12px', background: 'rgba(var(--green-ch),0.06)', borderRadius: 'var(--radius-md)', border: '1px solid rgba(var(--green-ch),0.2)' }}>
-          <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', color: 'var(--green)' }}>✓</span>
-          <div>
-            <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--green)' }}>ALL CLEAR</div>
-            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>No scheduling conflicts in {upcoming.length} upcoming races.</div>
-          </div>
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
-          {warnings.map((w, i) => (
-            <div key={i} style={{
-              padding: '10px 12px', borderRadius: 'var(--radius-md)',
-              background: w.severity === 'danger' ? 'rgba(255,60,60,0.08)' : 'rgba(var(--orange-ch),0.08)',
-              border: `1px solid ${w.severity === 'danger' ? 'rgba(255,60,60,0.3)' : 'rgba(var(--orange-ch),0.3)'}`,
-            }}>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', color: w.severity === 'danger' ? 'var(--error)' : 'var(--orange)', letterSpacing: '0.08em', marginBottom: '4px' }}>
-                {w.severity === 'danger' ? '🚨 DANGER' : '⚠ WARNING'} · {w.windowDays}d gap
-              </div>
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--white)', lineHeight: 1.4 }}>{w.message}</div>
-            </div>
-          ))}
-        </div>
-      )}
-    </WidgetCard>
-  )
-}
-
 // ─── Course Repeats Widget ────────────────────────────────────────────────────
 
 function toTitleCase(s: string): string {
@@ -5367,6 +4141,8 @@ function toTitleCase(s: string): string {
 
 function CourseRepeatsWidget() {
   const races = useRaceStore(selectRaces)
+  const ctx = useWidgetCardContext()
+  const size = ctx?.getWidgetSize('course-repeats') ?? 'medium'
   const [expanded, setExpanded] = useState<string | null>(null)
 
   const courses = useMemo(() => {
@@ -5395,6 +4171,22 @@ function CourseRepeatsWidget() {
       })
       .sort((a, b) => b.count - a.count)
   }, [races])
+
+  if (size === 'small') {
+    return (
+      <WidgetCard id="course-repeats" style={st.glowCard}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
+          <div style={st.widgetLabel}>REPEATS</div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-3xl)', lineHeight: 1, color: 'var(--orange)' }}>
+            {courses.length || '—'}
+          </div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>
+            COURSES
+          </div>
+        </div>
+      </WidgetCard>
+    )
+  }
 
   if (!courses.length) return (
     <WidgetCard id="course-repeats" style={st.glowCard}>
@@ -5851,54 +4643,33 @@ export function Dashboard() {
     setWidgetEnabled,
   }), [openDetail, widgetActions, editMode, getWidgetSize, setWidgetSize, setWidgetEnabled])
 
-  // renderWidget: switch over all 47 widget IDs
+  // renderWidget: switch over widget IDs
   function renderWidget(id: string): React.ReactNode {
     const race = countdownRace
     switch (id) {
       case 'stats-strip':        return <StatsStrip />
       case 'countdown':         return race ? <CountdownCard race={race} onShowAll={() => setShowAllUpcoming(true)} upcomingRaces={upcomingRaces} onSelectRace={pinFocusRace} /> : null
-      case 'race-forecast':     return null  // weather embedded inside countdown widget
       case 'goal-pace':         return race ? <GoalPaceWidget race={race} /> : null
       case 'gap-to-goal':       return race ? <GapToGoalWidget race={race} /> : null
       case 'race-readiness':    return <RaceReadinessWidget />
       case 'pb-probability':    return race ? <PBProbabilityWidget race={race} /> : null
       case 'course-fit':        return race ? <CourseFitWidget race={race} /> : null
-      case 'weather-fit':       return race ? <WeatherFitWidget race={race} /> : null
-      case 'race-stack':        return race ? <RaceStackWidget race={race} /> : null
       case 'on-this-day':       return <OnThisDayWidget />
       case 'race-prediction':   return <WidgetCard id="race-prediction"><div style={{ padding: 'var(--sp-4)', fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>Race Prediction coming soon</div></WidgetCard>
       case 'recent-races':      return <RecentRaces onAddRace={openAddRace} />
       case 'personal-bests':    return <PersonalBestsWidget />
       case 'riegel-predictor':  return <RiegelPredictorWidget onAddGoal={openRiegelGoal} />
-      case 'weather-impact':    return <WeatherImpactWidget />
-      case 'why-prd':           return <WhyPRdWidget />
-      case 'why-faded':         return <WhyFadedWidget />
-      case 'break-tape':        return <BreakTapeWidget />
-      case 'story-mode':        return <StoryModeWidget />
       case 'season-planner':    return <SeasonPlannerWidget onAddRace={openAddUpcomingRace} onOpenPlanner={() => setShowAllUpcoming(true)} />
-      case 'recovery-intel':    return <RecoveryIntelWidget />
-      case 'race-density':      return <RaceDensityWidget />
-      case 'streak-risk':       return <StreakRiskWidget />
-      case 'race-gap-analysis': return <RaceGapAnalysisWidget />
-      case 'adaptive-goals':    return <AdaptiveGoalsWidget />
-      case 'upcoming-density':  return <UpcomingDensityWidget />
       case 'boston-qual':       return <BostonQualWidget />
       case 'pacing-iq':         return <PacingIQWidget />
       case 'career-momentum':   return <CareerMomentumWidget />
       case 'age-grade':         return <AgeGradeWidget />
       case 'race-dna':          return <RaceDNAWidget />
-      case 'surface-profile':   return <SurfaceProfileWidget />
       case 'pressure-performer':return <PressurePerformerWidget />
       case 'travel-load':       return <TravelLoadWidget />
-      case 'best-conditions':   return <BestConditionsWidget />
       case 'pattern-scan':      return <PatternScanWidget />
-      case 'why-result':        return <WhyResultWidget />
-      case 'advanced-race-dna': return <AdvancedRaceDNAWidget />
-      case 'race-comparer':     return <RaceComparerWidget />
-      case 'what-to-race-next': return <WhatToRaceNextWidget />
-      case 'coach-activity':    return <CoachActivityWidget />
-      case 'vdot-score':        return <VDOTScoreWidget />
-      case 'equiv-perf':        return <EquivPerfWidget />
+      case 'race-comparer':     return <WidgetCard id="race-comparer" style={st.glowCard}><div style={{ padding: 'var(--sp-4)', fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>Compare two races coming soon</div></WidgetCard>
+      case 'what-to-race-next': return <WidgetCard id="what-to-race-next" style={st.glowCard}><div style={{ padding: 'var(--sp-4)', fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>Race recommendations coming soon</div></WidgetCard>
       case 'distance-milestones': return <DistanceMilestonesWidget />
       case 'course-repeats':    return <CourseRepeatsWidget />
       default:                  return null
