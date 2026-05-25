@@ -1329,7 +1329,7 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
       <WidgetCard id="recent-races" style={st.glowCard}>
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
           <div style={st.widgetLabel}>RECENT</div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '28px', lineHeight: 1, color: 'var(--orange)', letterSpacing: '0.02em' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', lineHeight: 1, color: 'var(--orange)', letterSpacing: '0.02em' }}>
             {displayVal}
           </div>
           <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -1633,7 +1633,7 @@ function BostonQualWidget() {
       <WidgetCard id="boston-qual" style={st.glowCard}>
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
           <div style={st.widgetLabel}>BQ GAP</div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '28px', lineHeight: 1, color: gapColor, letterSpacing: '-0.01em' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', lineHeight: 1, color: gapColor, letterSpacing: '-0.01em' }}>
             {gapStr}
           </div>
           <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>
@@ -1787,7 +1787,7 @@ function PacingIQWidget() {
       <WidgetCard id="pacing-iq" style={st.glowCard}>
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
           <div style={st.widgetLabel}>PACING IQ</div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '36px', lineHeight: 1, color: abbrevColor }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', lineHeight: 1, color: abbrevColor }}>
             {abbrev}
           </div>
           <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>
@@ -1848,7 +1848,7 @@ function CareerMomentumWidget() {
       <WidgetCard id="career-momentum" style={st.glowCard}>
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
           <div style={st.widgetLabel}>MOMENTUM</div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '36px', lineHeight: 1, color: scoreColor }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', lineHeight: 1, color: scoreColor }}>
             {races.length < 2 ? '—' : scoreNum}
           </div>
           <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>
@@ -2400,7 +2400,7 @@ function OnThisDayWidget() {
       <WidgetCard id="on-this-day" style={st.glowCard}>
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
           <div style={st.widgetLabel}>ON THIS DAY</div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '36px', lineHeight: 1, color: 'var(--orange)' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', lineHeight: 1, color: 'var(--orange)' }}>
             {race.date.slice(0, 4)}
           </div>
           <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -2456,6 +2456,22 @@ function RaceReadinessWidget() {
   }, [races, today])
 
   const sigColor = signal === 'READY' ? 'var(--green)' : signal === 'BUILDING' ? 'var(--gold)' : 'var(--orange)'
+
+  if (size === 'small') {
+    return (
+      <WidgetCard id="race-readiness" style={st.glowCard}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
+          <div style={st.widgetLabel}>READINESS</div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', lineHeight: 1, color: sigColor, letterSpacing: '-0.01em' }}>
+            {score}%
+          </div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>
+            {signal}
+          </div>
+        </div>
+      </WidgetCard>
+    )
+  }
 
   return (
     <WidgetCard id="race-readiness" style={st.glowCard}>
@@ -2559,7 +2575,7 @@ function GapToGoalWidget({ race }: { race: Race | null }) {
       <WidgetCard id="gap-to-goal" style={st.glowCard}>
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
           <div style={st.widgetLabel}>GAP TO GOAL</div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '28px', lineHeight: 1, color: gapColor, letterSpacing: '-0.01em' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', lineHeight: 1, color: gapColor, letterSpacing: '-0.01em' }}>
             {gapMetric}
           </div>
           <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>
@@ -2701,7 +2717,7 @@ function PressurePerformerWidget() {
       <WidgetCard id="pressure-performer" style={st.glowCard}>
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
           <div style={st.widgetLabel}>PRESSURE</div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '28px', lineHeight: 1, color: smallColor }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', lineHeight: 1, color: smallColor }}>
             {shortLabel}
           </div>
           <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>
@@ -2790,7 +2806,7 @@ function TravelLoadWidget() {
       <WidgetCard id="travel-load" style={st.glowCard}>
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
           <div style={st.widgetLabel}>TRAVEL</div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '36px', lineHeight: 1, color: impactColor }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', lineHeight: 1, color: impactColor }}>
             {impactLabel}
           </div>
           <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>
@@ -2906,7 +2922,7 @@ function CourseFitWidget({ race }: { race: Race | null }) {
       <WidgetCard id="course-fit" style={st.glowCard}>
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
           <div style={st.widgetLabel}>COURSE FIT</div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '36px', lineHeight: 1, color: scoreColor }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', lineHeight: 1, color: scoreColor }}>
             {scoreStr}
           </div>
           <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>
@@ -3038,7 +3054,7 @@ function PBProbabilityWidget({ race }: { race: Race | null }) {
       <WidgetCard id="pb-probability" style={st.glowCard}>
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
           <div style={st.widgetLabel}>PB CHANCE</div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '36px', lineHeight: 1, color: probColor }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', lineHeight: 1, color: probColor }}>
             {probStr}
           </div>
           <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>
@@ -3241,7 +3257,7 @@ function PersonalBestsWidget() {
       <WidgetCard id="personal-bests" style={st.glowCard}>
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
           <div style={st.widgetLabel}>PERSONAL BESTS</div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '28px', lineHeight: 1, color: 'var(--green)', letterSpacing: '0.01em' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', lineHeight: 1, color: 'var(--green)', letterSpacing: '0.01em' }}>
             {timeDisplay}
           </div>
           <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>
@@ -3815,7 +3831,7 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
       <WidgetCard id="riegel-predictor" style={st.glowCard}>
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
           <div style={st.widgetLabel}>RIEGEL</div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '28px', lineHeight: 1, color: 'var(--orange)', letterSpacing: '0.01em' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', lineHeight: 1, color: 'var(--orange)', letterSpacing: '0.01em' }}>
             {targetRow?.predictedTime ?? '—'}
           </div>
           <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>
@@ -3993,7 +4009,7 @@ function GoalPaceWidget({ race }: { race: Race | null }) {
       <WidgetCard id="goal-pace" style={st.glowCard}>
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
           <div style={st.widgetLabel}>GOAL PACE</div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '28px', lineHeight: 1, color: result ? 'var(--orange)' : 'var(--muted)' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', lineHeight: 1, color: result ? 'var(--orange)' : 'var(--muted)' }}>
             {result ? `${paceStr}/${distUnit(units) === 'KM' ? 'km' : 'mi'}` : '—'}
           </div>
           <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
