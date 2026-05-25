@@ -306,7 +306,8 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 | `getDashZoneCollapse()` | Read `fl2_dash_zone_collapse` from localStorage; returns default state (NOW+RECENTLY expanded) if unset or invalid |
 | `saveDashZoneCollapse(state)` | Persist accordion collapse state object to `fl2_dash_zone_collapse` in localStorage |
 | `initDashAccordion()` | Attach single delegated click listener on dashboard page for zone accordion; idempotent (guards with `_accordionInit` flag) |
-| `getDashLayout()` | Return array of `{id, enabled}` widget config; migration v2 handles legacy layout formats |
+| `getDashLayout()` | **Pure read** — compute merged widget layout from store state. No `set()` calls — safe in `useMemo`. Call `initDashLayout()` from `useEffect` for write/migration side |
+| `initDashLayout()` | **Write** — purge `REMOVED_WIDGET_IDS`, merge new defaults, clamp sizes to `WIDGET_SIZES`. Call once from `useEffect` on mount only, never during render |
 | `renderTaperTimeline(planItems)` | Generate inline SVG taper/recovery timeline for Season Planner; returns empty string if < 2 valid items or data is missing |
 | `deleteSeasonPlan(planId)` | Remove a saved season plan by ID, persist, sync, re-render saved list, show toast |
 | `autoSuggestPriorities()` | Assign A/B/C priorities to future upcoming races by distance rank (IM=10 → A, Marathon=7 → A/B, 5K=2 → C); updates `data-planner-priority` selects in-place |
@@ -842,6 +843,9 @@ PR #164 was squash-merged to main; subsequent fixes commit `6b8debd` from worktr
 
 ## Known Issues / Watch Points
 
+- `getDashLayout()` is a **pure read** — must never call `set()`. If you add any write logic, it creates an infinite render loop (render → useMemo → getDashLayout → set → re-render). Any state mutation belongs in `initDashLayout()`, called from `useEffect` on mount only. This bug caused the Safari "page not responding" crash and was fixed in Session 36.
+- Every widget that supports `size: 'small'` must have a `if (size === 'small') return (...)` early-return branch with metric at `var(--text-2xl)`. Without it the widget renders at whatever its medium view uses, causing visual inconsistency in the 2-col small grid.
+- `REMOVED_WIDGET_IDS` in `useDashStore.ts` must be kept up to date whenever a widget is removed. Entries here purge stale IDs from persisted `fl2_dash_layout` localStorage on upgrade. Removing an ID from this set while deleting the widget causes the widget to persist in users' layouts invisibly.
 - Clerk custom domain DNS: `clerk.breaktapes.com` and `accounts.breaktapes.com` require CNAME records in Cloudflare pointing to `frontend-api.clerk.services` and `accounts.clerk.services` respectively. Proxy status MUST be **DNS only** (grey cloud) — Cloudflare proxy breaks Clerk's SSL. Missing CNAMEs cause `isLoaded` to never resolve → infinite loading screen on app.breaktapes.com.
 - Beta invite codes: `BETA_INVITE_CODES` array is client-visible in source — intentional tradeoff for self-service beta; update the array and redeploy to staging to add/revoke codes
 - Safari autofill: fixed with `autocomplete="off"` + `readonly` trick on inputs; do not revert
@@ -1337,6 +1341,35 @@ Direct DB access (psql/psycopg2) is blocked from localhost — Supabase only exp
 - Deleted remote branches: `claude/nifty-jackson-b9e460`, `fix/race-delete-sync`
 - Main repo (`/Users/akrish/DEV`) switched to `staging` branch, reset to `origin/staging`
 - Remaining: 2 worktrees (`/DEV` on staging, `nostalgic-pike-53306c` on main), both at `892ff4e`
+
+---
+
+### Session 36 (2026-05-25) — Widget consolidation, small-view font fix, infinite render loop fix
+
+**Branch:** `claude/quizzical-bartik-b6b936` → direct push to `main` + `staging`
+
+#### Changes shipped
+
+- **Widget consolidation (v0.6.14.0)** — reduced dashboard from 47 widgets to 24. Removed 22 overlapping/redundant widgets (`REMOVED_WIDGET_IDS` set for localStorage purge). VDOT + Riegel merged into single "Race Predictor" widget. Size-aware small views added for all remaining widgets. `WIDGET_SIZES` record defines allowed sizes per widget. `FIXED_SIZE_WIDGETS = new Set(['countdown', 'stats-strip'])` skips resize picker.
+- **Small widget font standardization** — all 14 small-view primary metric numbers standardized to `var(--text-2xl)` (32px). Previously ranged inconsistently from 28px to 36px to 64px. `RaceReadinessWidget` was missing a small view entirely (always rendered at 64px) — added proper `size === 'small'` early-return branch.
+- **Infinite render loop fix** — `getDashLayout()` was calling Zustand `set()` inside itself, invoked from a `useMemo` during render. Created `render → useMemo → getDashLayout → set → re-render → ...` infinite synchronous loop blocking the JS thread → Safari "page not responding" crash. Fix: split into two functions:
+  - `getDashLayout()` — pure read, no `set()`, safe in `useMemo`
+  - `initDashLayout()` — write side, called once from `useEffect` on mount
+  - Array comparison in `initDashLayout` uses element-wise check instead of `!==` reference equality (was always `true` for new arrays, guaranteeing spurious `set()` on every call)
+
+#### Key learnings
+
+- **Zustand `set()` inside a getter = infinite loop.** Any store function that calls `set()` must NEVER be invoked during the render phase (in `useMemo`, `useCallback`, or computed vars). Separate read path (pure getter) from write path (action). Call write actions from `useEffect` only.
+- **`useMemo` dependency array:** including a Zustand action function (`getDashLayout`) in deps is risky — if the action ref changes (e.g. after a `set()` call rebuilds the store object), the memo re-runs, which calls the action, which calls `set()`, loop. Omit stable store function refs from deps; only include the data slices they read (`storeWidgets`).
+- **Reference equality on arrays always returns `false`:** `const a = [...x]; a !== x` is always true even when content is identical. `initDashLayout`'s guard `currentOrder !== widgetOrder` was always `true`, so `set()` was always called. Use element-wise comparison.
+- **`getDashLayout` must remain pure.** It's called in a `useMemo` on every render. Any side effect (logging, fetching, writing state) here will run on every render cycle.
+- **Small widget small view:** every widget that supports `size: 'small'` must have a `if (size === 'small') return (...)` early-return branch. Without it, the widget renders at whatever size its medium/large view uses — causing massive inconsistency in the 2-col grid.
+- **Token enforcement test (`token-enforcement.test.ts`)** only checks for `32px` and `48px` — doesn't catch `28px`, `36px`, or `64px`. These must be audited manually when reviewing small widget views.
+
+#### Cleanup
+- Deleted local branches: `claude/heuristic-leakey-20ebc2`, `promote-to-main`
+- Staging worktree (`/Users/akrish/DEV`) fast-forwarded to match `origin/staging`
+- No open PRs — all changes pushed directly to `main` then synced to `staging`
 
 ---
 
