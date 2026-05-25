@@ -3,6 +3,12 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.6.14.1] - 2026-05-25
+
+### Added
+- **Race Comparer widget** — restored: pick any 2 past races from your history, compare finish times side by side with delta highlighted in green for the faster race
+- **What to Race Next widget** — restored: shows upcoming races with A/B/C priority labels and a surface-match recommendation based on where you run your PBs
+
 ## [0.6.12.2] - 2026-05-24
 
 ### Changed
