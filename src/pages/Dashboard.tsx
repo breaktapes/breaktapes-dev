@@ -3111,6 +3111,129 @@ function PBProbabilityWidget({ race }: { race: Race | null }) {
   )
 }
 
+// ─── Race Comparer Widget ─────────────────────────────────────────────────────
+
+function RaceComparerWidget() {
+  const races = useRaceStore(selectRaces)
+  const today = todayStr()
+  const past  = useMemo(() => races.filter(r => r.date <= today && r.time).sort((a, b) => b.date.localeCompare(a.date)), [races, today])
+  const [idxA, setIdxA] = useState(0)
+  const [idxB, setIdxB] = useState(Math.min(1, Math.max(0, past.length - 1)))
+  const raceA = past[idxA]
+  const raceB = past[idxB]
+
+  const diff = useMemo(() => {
+    if (!raceA?.time || !raceB?.time) return null
+    const a = parseHMS(raceA.time) ?? 0
+    const b = parseHMS(raceB.time) ?? 0
+    if (!a || !b) return null
+    return { secs: Math.abs(a - b), faster: a < b ? 'A' : 'B' }
+  }, [raceA, raceB])
+
+  if (past.length < 2) {
+    return (
+      <WidgetCard id="race-comparer" style={st.glowCard}>
+        <div style={st.widgetLabel}>RACE COMPARER</div>
+        <div style={st.widgetTitle}>LOG 2+ RACES</div>
+        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: 'var(--sp-1)' }}>Need at least 2 timed races to compare.</div>
+      </WidgetCard>
+    )
+  }
+
+  const selStyle: React.CSSProperties = { width: '100%', background: 'transparent', border: 'none', outline: 'none', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 'var(--sp-1)', color: 'inherit' }
+
+  return (
+    <WidgetCard id="race-comparer" style={st.glowCard}>
+      <div>
+        <div style={st.widgetLabel}>RACE COMPARER</div>
+        <div style={st.widgetTitle}>SIDE BY SIDE</div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-2)', marginTop: 'var(--sp-3)' }}>
+        <div style={{ background: 'var(--surface3)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-2)' }}>
+          <select value={idxA} onChange={e => setIdxA(Number(e.target.value))} style={{ ...selStyle, color: 'var(--orange)' }}>
+            {past.map((r, i) => <option key={r.id} value={i}>{r.name ?? r.date}</option>)}
+          </select>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', color: diff?.faster === 'A' ? 'var(--green)' : 'var(--white)' }}>{raceA?.time ?? '—'}</div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 'var(--sp-1)' }}>{raceA?.date ?? ''}</div>
+        </div>
+        <div style={{ background: 'var(--surface3)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-2)' }}>
+          <select value={idxB} onChange={e => setIdxB(Number(e.target.value))} style={{ ...selStyle, color: 'var(--muted)' }}>
+            {past.map((r, i) => <option key={r.id} value={i}>{r.name ?? r.date}</option>)}
+          </select>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', color: diff?.faster === 'B' ? 'var(--green)' : 'var(--white)' }}>{raceB?.time ?? '—'}</div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 'var(--sp-1)' }}>{raceB?.date ?? ''}</div>
+        </div>
+      </div>
+      {diff && (
+        <div style={{ marginTop: 'var(--sp-2)', padding: 'var(--sp-2)', background: 'var(--surface3)', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--green)' }}>{secsToHMS(diff.secs)}</span>
+          <span style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginLeft: 'var(--sp-2)' }}>faster in Race {diff.faster}</span>
+        </div>
+      )}
+    </WidgetCard>
+  )
+}
+
+// ─── What To Race Next Widget ─────────────────────────────────────────────────
+
+function WhatToRaceNextWidget() {
+  const races = useRaceStore(selectRaces)
+  const upcoming = useRaceStore(s => s.upcomingRaces)
+  const today = todayStr()
+  const past  = useMemo(() => races.filter(r => r.date <= today && r.time), [races, today])
+  const futureUpcoming = useMemo(() => upcoming.filter(r => r.date > today).sort((a, b) => a.date.localeCompare(b.date)), [upcoming, today])
+
+  const recommendation = useMemo(() => {
+    if (!past.length) return null
+    const pbRaces = Object.values(buildPBMap(past))
+    const surfaces: Record<string, number> = {}
+    for (const r of pbRaces) { const s = r.surface ?? 'Road'; surfaces[s] = (surfaces[s] ?? 0) + 1 }
+    return Object.entries(surfaces).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null
+  }, [past])
+
+  if (!futureUpcoming.length) {
+    return (
+      <WidgetCard id="what-to-race-next" style={st.glowCard}>
+        <div style={st.widgetLabel}>WHAT TO RACE NEXT</div>
+        <div style={st.widgetTitle}>NO UPCOMING RACES</div>
+        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: 'var(--sp-1)' }}>Add upcoming races to get recommendations based on your performance trends.</div>
+      </WidgetCard>
+    )
+  }
+
+  return (
+    <WidgetCard id="what-to-race-next" style={st.glowCard}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
+        <div>
+          <div style={st.widgetLabel}>WHAT TO RACE NEXT</div>
+          <div style={st.widgetTitle}>{futureUpcoming.length} RACE{futureUpcoming.length !== 1 ? 'S' : ''} UPCOMING</div>
+        </div>
+      </div>
+      {recommendation && (
+        <div style={{ padding: 'var(--sp-2)', background: 'rgba(var(--green-ch),0.08)', border: '1px solid rgba(var(--green-ch),0.2)', borderRadius: 'var(--radius-md)', marginTop: 'var(--sp-2)' }}>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--green)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>SURFACE MATCH</div>
+          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', marginTop: 'var(--sp-1)' }}>Your PBs align with {recommendation.toLowerCase()} — prioritise {recommendation.toLowerCase()} events.</div>
+        </div>
+      )}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 0, marginTop: 'var(--sp-2)' }}>
+        {futureUpcoming.slice(0, 3).map(r => (
+          <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 'var(--sp-2) 0', borderBottom: '1px solid var(--border)' }}>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name ?? 'Unnamed Race'}</div>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 'var(--sp-1)' }}>{r.date} · {distBadge(r.distance) || r.distance}</div>
+            </div>
+            {r.priority && (
+              <span style={{ fontSize: 'var(--text-xs)', color: r.priority === 'A' ? 'var(--orange)' : 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, flexShrink: 0, marginLeft: 'var(--sp-2)' }}>
+                {r.priority}-RACE
+              </span>
+            )}
+          </div>
+        ))}
+      </div>
+    </WidgetCard>
+  )
+}
+
 // ─── Zone accordion ───────────────────────────────────────────────────────────
 
 // Zone header — non-draggable in v1, full-row label only
@@ -4688,8 +4811,8 @@ export function Dashboard() {
       case 'pressure-performer':return <PressurePerformerWidget />
       case 'travel-load':       return <TravelLoadWidget />
       case 'pattern-scan':      return <PatternScanWidget />
-      case 'race-comparer':     return <WidgetCard id="race-comparer" style={st.glowCard}><div style={{ padding: 'var(--sp-4)', fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>Compare two races coming soon</div></WidgetCard>
-      case 'what-to-race-next': return <WidgetCard id="what-to-race-next" style={st.glowCard}><div style={{ padding: 'var(--sp-4)', fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>Race recommendations coming soon</div></WidgetCard>
+      case 'race-comparer':     return <RaceComparerWidget />
+      case 'what-to-race-next': return <WhatToRaceNextWidget />
       case 'distance-milestones': return <DistanceMilestonesWidget />
       case 'course-repeats':    return <CourseRepeatsWidget />
       default:                  return null
