@@ -139,7 +139,10 @@ export function initDashV3Migration(
 export interface DashState {
   widgets: DashWidget[]
   widgetOrder: string[]
+  /** Pure read — computes merged layout WITHOUT touching state. Safe to call in render/useMemo. */
   getDashLayout: () => DashWidget[]
+  /** Write — purges removed IDs, adds new defaults, clamps sizes. Call from useEffect on mount only. */
+  initDashLayout: () => void
   setWidgetEnabled: (id: string, enabled: boolean) => void
   setWidgetSize: (id: string, size: WidgetSize) => void
   setWidgetOrder: (newOrder: string[]) => void
@@ -153,59 +156,69 @@ export const useDashStore = create<DashState>()(
       widgets: DEFAULT_WIDGETS,
       widgetOrder: buildDefaultWidgetOrder(),
 
+      // Pure read — safe to call in render/useMemo. Never calls set().
       getDashLayout: () => {
         const { widgets, widgetOrder } = get()
         if (!Array.isArray(widgets) || widgets.length === 0 || typeof widgets[0] !== 'object') {
-          set({ widgets: DEFAULT_WIDGETS, widgetOrder: buildDefaultWidgetOrder() })
           return DEFAULT_WIDGETS
         }
-
-        // Purge removed widgets from persisted state
         const activeWidgets = widgets.filter((w: DashWidget) => !REMOVED_WIDGET_IDS.has(w.id))
-
         const storedIds = new Set(activeWidgets.map((w: DashWidget) => w.id))
         const newDefaults = DEFAULT_WIDGETS.filter(w => !storedIds.has(w.id))
-
         const base = newDefaults.length > 0 ? [...activeWidgets, ...newDefaults] : activeWidgets
-        const merged = base.map((w: DashWidget) => ({
-          ...w,
-          size: w.size ?? 'medium',
-        }))
-
-        // Clamp size to allowed sizes for this widget
-        const clamped = merged.map((w: DashWidget) => {
+        const clamped = base.map((w: DashWidget) => {
+          const withSize = { ...w, size: w.size ?? 'medium' } as DashWidget
           const allowed = WIDGET_SIZES[w.id]
-          if (allowed && !allowed.includes(w.size)) {
-            return { ...w, size: allowed[0] }
+          if (allowed && !allowed.includes(withSize.size)) {
+            return { ...withSize, size: allowed[0] }
           }
-          return w
+          return withSize
         })
+        // Suppress widgetOrder warning — reads only
+        void widgetOrder
+        return clamped
+      },
 
-        // Insert new widget IDs into widgetOrder
+      // Write — purges removed IDs, merges new defaults, clamps sizes. Call from useEffect on mount only.
+      initDashLayout: () => {
+        const { widgets, widgetOrder } = get()
+        if (!Array.isArray(widgets) || widgets.length === 0 || typeof widgets[0] !== 'object') {
+          set({ widgets: DEFAULT_WIDGETS, widgetOrder: buildDefaultWidgetOrder() })
+          return
+        }
+        const activeWidgets = widgets.filter((w: DashWidget) => !REMOVED_WIDGET_IDS.has(w.id))
+        const storedIds = new Set(activeWidgets.map((w: DashWidget) => w.id))
+        const newDefaults = DEFAULT_WIDGETS.filter(w => !storedIds.has(w.id))
+        const base = newDefaults.length > 0 ? [...activeWidgets, ...newDefaults] : activeWidgets
+        const clamped = base.map((w: DashWidget) => {
+          const withSize = { ...w, size: w.size ?? 'medium' } as DashWidget
+          const allowed = WIDGET_SIZES[w.id]
+          if (allowed && !allowed.includes(withSize.size)) {
+            return { ...withSize, size: allowed[0] }
+          }
+          return withSize
+        })
         let currentOrder = Array.isArray(widgetOrder) && widgetOrder.length > 0
           ? widgetOrder.filter((id: string) => !REMOVED_WIDGET_IDS.has(id))
           : buildDefaultWidgetOrder()
-
         if (newDefaults.length > 0) {
           const updatedOrder = [...currentOrder]
           for (const w of newDefaults) {
             const zoneHeader = `zone:${w.zone}`
             const headerIdx = updatedOrder.indexOf(zoneHeader)
             const insertBefore = updatedOrder.findIndex((id, i) => i > headerIdx && id.startsWith('zone:'))
-            if (insertBefore === -1) {
-              updatedOrder.push(w.id)
-            } else {
-              updatedOrder.splice(insertBefore, 0, w.id)
-            }
+            if (insertBefore === -1) updatedOrder.push(w.id)
+            else updatedOrder.splice(insertBefore, 0, w.id)
           }
           currentOrder = updatedOrder
         }
-
-        const changed = clamped.some((w: DashWidget, i: number) => w.enabled !== base[i]?.enabled || w.size !== base[i]?.size)
-        if (newDefaults.length > 0 || changed || currentOrder !== widgetOrder || activeWidgets.length !== widgets.length) {
+        const orderChanged = currentOrder.length !== widgetOrder?.length ||
+          currentOrder.some((id, i) => id !== widgetOrder?.[i])
+        const widgetsChanged = clamped.length !== widgets.length ||
+          clamped.some((w, i) => w.id !== widgets[i]?.id || w.size !== widgets[i]?.size)
+        if (widgetsChanged || orderChanged) {
           set({ widgets: clamped, widgetOrder: currentOrder })
         }
-        return clamped
       },
 
       setWidgetEnabled: (id, enabled) =>

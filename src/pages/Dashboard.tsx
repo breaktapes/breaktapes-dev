@@ -4544,22 +4544,26 @@ export function Dashboard() {
   const storeWidgets    = useDashStore(s => s.widgets)
   const storeOrder      = useDashStore(s => s.widgetOrder)
   const getDashLayout   = useDashStore(s => s.getDashLayout)
+  const initDashLayout  = useDashStore(s => s.initDashLayout)
   const setWidgetEnabled = useDashStore(s => s.setWidgetEnabled)
   const setWidgetSize   = useDashStore(s => s.setWidgetSize)
   const setWidgetOrder  = useDashStore(s => s.setWidgetOrder)
   const applyPreset     = useDashStore(s => s.applyPreset)
   const enableAllWidgets = useDashStore(s => s.enableAllWidgets)
 
-  const widgets = useMemo(() => getDashLayout(), [storeWidgets, getDashLayout])
+  // getDashLayout is a pure read — safe in useMemo. Do NOT include getDashLayout in deps
+  // (it's a stable store function ref). Recomputes only when storeWidgets changes.
+  const widgets = useMemo(() => getDashLayout(), [storeWidgets]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Run migration v3 once on mount
+  // Run migration + layout init once on mount (writes state — must NOT be in render path)
   useEffect(() => {
     const stored = useDashStore.getState()
     initDashV3Migration(
       { widgets: stored.widgets, widgetOrder: stored.widgetOrder },
       (patch) => useDashStore.setState(patch),
     )
-  }, [])
+    initDashLayout()
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // widgetOrder from store (may be updated by migration)
   const widgetOrder = useMemo(() => {
