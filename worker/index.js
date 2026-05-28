@@ -1206,6 +1206,62 @@ function resolveAdminUserId(request, env) {
   return userId;
 }
 
+async function handleCatalogSubmit(request, env) {
+  if (request.method === 'OPTIONS') return adminCors();
+  if (request.method !== 'POST') return new Response('Method not allowed', { status: 405, headers: ADMIN_CORS });
+
+  // Auth: decode Clerk JWT
+  const authHeader = request.headers.get('Authorization') ?? '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  if (!token) return new Response('Unauthorized', { status: 401, headers: ADMIN_CORS });
+  const payload = decodeJwtPayload(token);
+  if (!payload || !payload.sub) return new Response('Invalid token', { status: 401, headers: ADMIN_CORS });
+  if (payload.exp && Math.floor(Date.now() / 1000) > payload.exp) return new Response('Token expired', { status: 401, headers: ADMIN_CORS });
+  const iss = String(payload.iss ?? '');
+  if (!iss.includes('clerk') && !iss.includes('breaktapes')) return new Response('Invalid issuer', { status: 401, headers: ADMIN_CORS });
+  const userId = payload.sub;
+  if (!userId.startsWith('user_')) return new Response('Invalid user ID format', { status: 401, headers: ADMIN_CORS });
+
+  let body;
+  try { body = await request.json(); } catch { return new Response('Invalid JSON', { status: 400, headers: ADMIN_CORS }); }
+
+  const { name, city, country, sport, dist_label, dist_km, year, event_date, month, day } = body;
+  if (!name || !city) return new Response('name and city required', { status: 400, headers: ADMIN_CORS });
+
+  const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceKey) return new Response('Service unavailable', { status: 503, headers: ADMIN_CORS });
+
+  const supabaseUrl = env.SUPABASE_URL || 'https://kmdpufauamadwavqsinj.supabase.co';
+  const res = await fetch(`${supabaseUrl}/rest/v1/rpc/upsert_catalog_contribution`, {
+    method: 'POST',
+    headers: {
+      apikey: serviceKey,
+      Authorization: `Bearer ${serviceKey}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=minimal',
+    },
+    body: JSON.stringify({
+      p_name:           name,
+      p_city:           city,
+      p_country:        country ?? '',
+      p_sport:          sport ?? 'Running',
+      p_dist_label:     dist_label ?? null,
+      p_dist_km:        dist_km ?? null,
+      p_year:           year ?? null,
+      p_event_date:     event_date ?? null,
+      p_month:          month ?? null,
+      p_day:            day ?? null,
+      p_contributor_id: userId,
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.text().catch(() => '');
+    return new Response(`RPC error: ${err}`, { status: 502, headers: ADMIN_CORS });
+  }
+  return new Response(JSON.stringify({ ok: true }), { headers: ADMIN_CORS });
+}
+
 async function handleAdminListContributions(request, env) {
   if (request.method === 'OPTIONS') return adminCors();
 
@@ -1467,6 +1523,11 @@ export default {
     const adminActionMatch = path.match(/^\/api\/admin\/contributions\/(\d+)\/(approve|reject)$/);
     if (request.method === 'POST' && adminActionMatch) {
       return handleAdminAction(request, env, Number(adminActionMatch[1]), adminActionMatch[2]);
+    }
+
+    // POST /api/catalog/submit — user submits upcoming race to catalog
+    if ((request.method === 'POST' || request.method === 'OPTIONS') && path === '/api/catalog/submit') {
+      return handleCatalogSubmit(request, env);
     }
 
     // POST /api/error-report — client-side crash reporting (sendBeacon)

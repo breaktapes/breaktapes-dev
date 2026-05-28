@@ -72,11 +72,7 @@ export function WidgetDetailModal({ widget, preview, dynamicContext, actions, on
       <div style={st.scrollBody} onTouchMove={e => e.stopPropagation()}>
         <div style={st.header}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', minWidth: 0 }}>
-            <span style={st.icon} aria-hidden="true">{widget.icon}</span>
-            <div style={{ minWidth: 0 }}>
-              <div style={st.kicker}>WIDGET</div>
-              <h2 id="widget-detail-title" style={st.title}>{content.title}</h2>
-            </div>
+            <h2 id="widget-detail-title" style={st.title}>{content.title}</h2>
             {widget.pro && <span style={st.proPill}>PRO</span>}
           </div>
           <button
@@ -176,7 +172,7 @@ const st = {
 
   header: {
     display: 'flex',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'space-between',
     padding: '14px 16px 10px',
     gap: 'var(--sp-3)',
