@@ -1393,6 +1393,8 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
   const races = useRaceStore(selectRaces)
   const today = todayStr()
   const pbMap = useMemo(() => buildPBMap(races), [races])
+  const ctx = useWidgetCardContext()
+  const size = ctx?.getWidgetSize('recent-races') ?? 'medium'
   const recent = useMemo(() => {
     const cutoff = new Date(); cutoff.setMonth(cutoff.getMonth() - 3)
     const cutoffStr = cutoff.toISOString().split('T')[0]
@@ -1432,6 +1434,41 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
     if (pbCount > 0) return `${pbCount} PB${pbCount > 1 ? 's' : ''} in the last 3 months`
     return `${recent.length} race${recent.length > 1 ? 's' : ''} in the last 3 months`
   })()
+
+  // Small view — one race only, PB tag in top-right of card, single-line meta, full name
+  if (size === 'small') {
+    const r = recent[0]
+    const isPB = !!r.time && pbMap[normalizeDistKey(r.distance)]?.id === r.id
+    const dateStr = fmtDateDDMM(r.date)
+    const flag = countryToFlag(r.country)
+    const cityMeta = [flag && r.city ? `${flag} ${r.city}` : r.city, distBadge(r.distance, r.sport)].filter(Boolean).join(' · ')
+    return (
+      <WidgetCard id="recent-races" style={st.glowCard}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-2)' }}>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ ...st.widgetLabel, whiteSpace: 'nowrap' as const }}>YOUR RECAP</div>
+            <div style={{ ...st.widgetTitle, whiteSpace: 'nowrap' as const }}>RECENT RACES</div>
+          </div>
+          {isPB && (
+            <span style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--gold)', background: 'rgba(var(--gold-ch),0.12)', border: '1px solid rgba(var(--gold-ch),0.3)', borderRadius: 'var(--radius-xs)', padding: '2px 6px', flexShrink: 0 }}>PB</span>
+          )}
+        </div>
+        <div style={{ marginTop: 'auto' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', color: 'var(--white)', lineHeight: 1.2 }}>
+            {r.name ?? 'Untitled'}
+          </div>
+          {r.time && (
+            <div style={{ fontFamily: 'var(--mono)', fontWeight: 700, fontSize: '64px', color: isPB ? 'var(--gold)' : 'var(--orange)', letterSpacing: '-0.02em', lineHeight: 1, marginTop: '4px' }}>
+              {toHHMMSS(r.time)}
+            </div>
+          )}
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '6px', whiteSpace: 'nowrap' as const, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {dateStr}{cityMeta ? ` · ${cityMeta}` : ''}
+          </div>
+        </div>
+      </WidgetCard>
+    )
+  }
 
   return (
     <WidgetCard id="recent-races" style={st.glowCard}>
@@ -2974,7 +3011,7 @@ function CourseFitWidget({ race }: { race: Race | null }) {
       <WidgetCard id="course-fit" style={st.glowCard}>
         <div>
           <div style={st.widgetLabel}>COURSE FIT</div>
-          <div style={st.widgetTitle}>NEXT RACE</div>
+          <div style={st.widgetTitle}>{(nextRace?.name ?? 'NEXT RACE').toUpperCase()}</div>
         </div>
         <div style={{ marginTop: 'auto' }}>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: scoreColor, letterSpacing: '-0.02em' }}>
@@ -3113,14 +3150,14 @@ function PBProbabilityWidget({ race }: { race: Race | null }) {
       <WidgetCard id="pb-probability" style={st.glowCard}>
         <div>
           <div style={st.widgetLabel}>PB PROBABILITY</div>
-          <div style={st.widgetTitle}>NEXT RACE</div>
+          <div style={st.widgetTitle}>{(nextRace?.name ?? 'NEXT RACE').toUpperCase()}</div>
         </div>
         <div style={{ marginTop: 'auto' }}>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: probColor, letterSpacing: '-0.02em' }}>
             {probStr}
           </div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
-            PROBABILITY
+            PB CHANCE
           </div>
           <div style={{ height: '3px', background: 'var(--surface3)', borderRadius: 'var(--radius-xs)', marginTop: '10px', overflow: 'hidden' }}>
             <div style={{ height: '100%', width: `${result?.probability ?? 0}%`, background: probColor, borderRadius: 'var(--radius-xs)', transition: 'width 0.5s ease' }} />
@@ -4176,9 +4213,6 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
               </div>
             )
           })}
-        </div>
-        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', lineHeight: 1.5 }}>
-          T₂ = T₁ × (D₂/D₁)^1.06
         </div>
         {size === 'large' && vdotPt && (() => {
           const v = vdotPt.vdot

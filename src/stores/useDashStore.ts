@@ -53,7 +53,7 @@ export const WIDGET_SIZES: Record<string, WidgetSize[]> = {
   'age-grade':           ['small', 'medium', 'large'],
   'race-dna':            ['small', 'medium', 'large'],
   'pattern-scan':        ['small', 'medium', 'large'],
-  'goal-pace':           ['small', 'medium', 'large'],
+  'goal-pace':           ['small', 'medium'],
   'distance-milestones': ['small', 'medium', 'large'],
   'course-repeats':      ['small', 'medium', 'large'],
   'recent-races':        ['small', 'medium'],
