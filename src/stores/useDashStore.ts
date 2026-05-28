@@ -5,7 +5,7 @@ import type { DashWidget, WidgetSize } from '@/types'
 // Default widget configuration — zones: now, recently, trending, context
 const DEFAULT_WIDGETS: DashWidget[] = [
   // NOW — RACE CONTEXT
-  { id: 'stats-strip',       label: 'Career Stats',             icon: 'STS', zone: 'now',      enabled: true,  pro: false, size: 'medium' },
+  { id: 'stats-strip',       label: 'Career Stats',             icon: '',    zone: 'now',      enabled: true,  pro: false, size: 'medium' },
   { id: 'countdown',         label: 'Next Race Countdown',      icon: 'CD',  zone: 'now',      enabled: true,  pro: false, size: 'large'  },
   { id: 'race-readiness',    label: 'Race Readiness',           icon: 'RDY', zone: 'now',      enabled: true,  pro: false, size: 'medium' },
   { id: 'gap-to-goal',       label: 'Gap To Goal',              icon: 'GTG', zone: 'now',      enabled: true,  pro: false, size: 'medium' },
