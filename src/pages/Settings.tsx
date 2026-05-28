@@ -95,7 +95,7 @@ export function Settings() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <h1 style={{
           fontFamily: 'var(--headline)',
-          fontSize: '22px',
+          fontSize: 'var(--text-xl)',
           fontWeight: 900,
           letterSpacing: '0.1em',
           textTransform: 'uppercase',
@@ -143,7 +143,7 @@ export function Settings() {
               background: 'var(--orange)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontFamily: 'var(--headline)', fontWeight: 900,
-              fontSize: '15px', color: 'var(--black)',
+              fontSize: 'var(--text-base)', color: 'var(--black)',
               flexShrink: 0, letterSpacing: '0.04em',
             }}>
               {clerkUser?.imageUrl
@@ -154,7 +154,7 @@ export function Settings() {
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{
-                color: 'var(--white)', fontSize: '15px',
+                color: 'var(--white)', fontSize: 'var(--text-base)',
                 fontWeight: 600, lineHeight: 1.25,
                 overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
               }}>
@@ -401,7 +401,7 @@ export function Settings() {
                 </span>
                 {theme.comingSoon && (
                   <span style={{
-                    fontSize: '9px',
+                    fontSize: 'var(--text-xs)',
                     fontFamily: 'var(--headline)',
                     fontWeight: 700,
                     letterSpacing: '0.1em',

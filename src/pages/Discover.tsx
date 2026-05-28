@@ -407,7 +407,7 @@ function RaceCard({
         <span style={{
           fontFamily: 'var(--headline)',
           fontWeight: 900,
-          fontSize: '9px',
+          fontSize: 'var(--text-xs)',
           letterSpacing: '0.1em',
           color: sportColor(race.type),
           background: `${sportColor(race.type)}18`,

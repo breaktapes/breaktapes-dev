@@ -1208,7 +1208,7 @@ function AthleteHero({ onEdit }: { onEdit: () => void }) {
                   )}
                   <span style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
                     <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.08em', color: 'var(--white)', lineHeight: 1 }}>{abbr}</span>
-                    <span style={{ fontSize: '9px', color: 'var(--muted)', lineHeight: 1, fontFamily: 'var(--body)' }}>{c}</span>
+                    <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', lineHeight: 1, fontFamily: 'var(--body)' }}>{c}</span>
                   </span>
                 </span>
               )
@@ -1736,7 +1736,7 @@ function AchievementsSection() {
               <div style={{ width: '72px', height: '72px', margin: '0 auto 16px', background: 'rgba(var(--orange-ch),0.12)', border: '2px solid rgba(var(--orange-ch),0.4)', borderRadius: 'var(--radius-lg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <AchievementSVGIcon a={popup} size={32} />
               </div>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)', marginBottom: '6px' }}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xl)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)', marginBottom: '6px' }}>
                 {popup.name}
               </div>
               <div style={{ fontSize: 'var(--text-compact)', color: 'rgba(245,245,245,0.65)', lineHeight: 1.6 }}>
@@ -1756,7 +1756,7 @@ function AchievementsSection() {
                   const loc = locParts.join(', ')
                   return (
                     <div>
-                      <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '15px', color: 'var(--white)', letterSpacing: '0.03em', marginBottom: '4px' }}>
+                      <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-base)', color: 'var(--white)', letterSpacing: '0.03em', marginBottom: '4px' }}>
                         {popupRace.name}
                       </div>
                       {loc && <div style={{ fontSize: 'var(--text-sm)', color: 'rgba(245,245,245,0.65)' }}>{loc}</div>}
@@ -1920,7 +1920,7 @@ function PersonalBests() {
             onClick={e => e.stopPropagation()}
           >
             <div style={{ width: '40px', height: '4px', background: 'var(--border2)', borderRadius: 'var(--radius-xs)', margin: '0 auto 16px' }} />
-            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '15px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)', marginBottom: '4px' }}>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)', marginBottom: '4px' }}>
               PERSONAL BESTS
             </div>
             <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginBottom: '20px' }}>
@@ -2045,7 +2045,7 @@ function SignatureDistances() {
             <div style={{
               fontFamily: 'var(--headline)',
               fontWeight: 900,
-              fontSize: '22px',
+              fontSize: 'var(--text-xl)',
               color: rankColors[i],
               width: '20px',
               flexShrink: 0,
@@ -2133,7 +2133,7 @@ function AgeGradeTrajectory() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', marginBottom: '4px' }}>
         <h2 style={st.sectionTitle}>AGE-GRADE</h2>
         <div style={{ height: '1px', flex: 1, background: 'var(--border)' }} />
-        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', color: 'var(--orange)', letterSpacing: '0.02em' }}>
+        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xl)', color: 'var(--orange)', letterSpacing: '0.02em' }}>
           {latestPct.toFixed(1)}%
         </div>
       </div>
@@ -2328,7 +2328,7 @@ function RaceActivityHeatmap() {
         <div style={{ display: 'grid', gridTemplateColumns: '36px repeat(12, 1fr)', gap: '4px', marginBottom: '6px' }}>
           <div />
           {MONTH_LABELS.map(m => (
-            <div key={m} style={{ fontFamily: 'var(--headline)', fontSize: '9px', fontWeight: 700, letterSpacing: '0.08em', color: 'var(--muted)', textAlign: 'center', textTransform: 'uppercase' }}>
+            <div key={m} style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-xs)', fontWeight: 700, letterSpacing: '0.08em', color: 'var(--muted)', textAlign: 'center', textTransform: 'uppercase' }}>
               {m}
             </div>
           ))}
@@ -2366,7 +2366,7 @@ function RaceActivityHeatmap() {
                   }}
                 >
                   {count > 1 && (
-                    <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 800, color: isSelected ? '#000' : 'rgba(var(--green-ch), 0.9)' }}>
+                    <span style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 800, color: isSelected ? '#000' : 'rgba(var(--green-ch), 0.9)' }}>
                       {count}
                     </span>
                   )}
@@ -2470,7 +2470,7 @@ function MajorsQualifiers() {
             { label: 'ENTRY READY', value: '0' },
           ].map(s => (
             <div key={s.label} style={{ background: 'var(--surface3)', padding: 'var(--sp-3)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <div style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase' }}>
+              <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase' }}>
                 {s.label}
               </div>
               <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-lg)', color: 'var(--white)', lineHeight: 1 }}>
@@ -2685,7 +2685,7 @@ function GoalsSection() {
               <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '4px' }}>
                 {year} · {type === 'km' ? 'KM' : 'RACES'}
               </div>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', color: 'var(--white)', lineHeight: 1 }}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xl)', color: 'var(--white)', lineHeight: 1 }}>
                 {current}
                 <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontWeight: 400 }}> / {target || '—'}{type === 'km' ? ' km' : ''}</span>
               </div>
@@ -3010,7 +3010,7 @@ const st = {
 
   avatarInitials: {
     fontFamily: 'var(--headline)',
-    fontSize: '26px',
+    fontSize: 'var(--text-xl)',
     fontWeight: 900,
     color: 'var(--orange)',
     letterSpacing: '0.04em',
@@ -3026,7 +3026,7 @@ const st = {
 
   athleteName: {
     fontFamily: 'var(--headline)',
-    fontSize: '22px',
+    fontSize: 'var(--text-xl)',
     fontWeight: 900,
     letterSpacing: '0.04em',
     textTransform: 'uppercase',
@@ -3134,7 +3134,7 @@ const st = {
 
   focusDays: {
     fontFamily: 'var(--headline)',
-    fontSize: '15px',
+    fontSize: 'var(--text-base)',
     fontWeight: 800,
     letterSpacing: '0.08em',
     textTransform: 'uppercase',
@@ -3205,7 +3205,7 @@ const st = {
 
   achievementName: {
     fontFamily: 'var(--headline)',
-    fontSize: '9px',
+    fontSize: 'var(--text-xs)',
     fontWeight: 800,
     letterSpacing: '0.06em',
     textTransform: 'uppercase',
@@ -3216,7 +3216,7 @@ const st = {
 
   achievementStatus: {
     fontFamily: 'var(--headline)',
-    fontSize: '9px',
+    fontSize: 'var(--text-xs)',
     fontWeight: 700,
     letterSpacing: '0.08em',
     textTransform: 'uppercase',

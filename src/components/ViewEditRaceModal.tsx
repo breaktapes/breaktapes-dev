@@ -499,7 +499,7 @@ function InfoRow({ label, value, valueColor }: { label: string; value: string; v
 function InfoChip({ label, value }: { label: string; value: string }) {
   return (
     <div style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-sm)', padding: '6px 10px' }}>
-      <div style={{ fontSize: '9px', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</div>
+      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{label}</div>
       <div style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', fontWeight: 600, marginTop: '2px' }}>{value}</div>
     </div>
   )
@@ -1318,7 +1318,7 @@ const st = {
     margin: 0,
     fontFamily: 'var(--headline)',
     fontWeight: 900,
-    fontSize: '22px',
+    fontSize: 'var(--text-xl)',
     letterSpacing: '0.04em',
     color: 'var(--white)',
   } as React.CSSProperties,
@@ -1351,7 +1351,7 @@ const st = {
   } as React.CSSProperties,
 
   statLabel: {
-    fontSize: '9px',
+    fontSize: 'var(--text-xs)',
     color: 'var(--muted)',
     textTransform: 'uppercase' as const,
     letterSpacing: '0.1em',

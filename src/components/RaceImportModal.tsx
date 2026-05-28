@@ -358,7 +358,7 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
                         </div>
                         <div style={{ textAlign: 'right', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
                           {r.time && (
-                            <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: '15px', color: 'var(--orange)', letterSpacing: '0.02em', lineHeight: 1 }}>
+                            <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-base)', color: 'var(--orange)', letterSpacing: '0.02em', lineHeight: 1 }}>
                               {r.time}
                             </div>
                           )}
@@ -367,7 +367,7 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
                               {fmtDateDDMM(r.date)}
                             </div>
                           )}
-                          <div style={{ fontSize: '9px', color: 'var(--muted2)', textTransform: 'uppercase', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em' }}>
+                          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', textTransform: 'uppercase', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em' }}>
                             {r.source}
                           </div>
                         </div>

@@ -62,7 +62,7 @@ const st = {
   } as React.CSSProperties,
   title: {
     fontFamily: 'var(--headline)',
-    fontSize: '22px',
+    fontSize: 'var(--text-xl)',
     fontWeight: 900,
     letterSpacing: '0.06em',
     textTransform: 'uppercase' as const,
@@ -94,7 +94,7 @@ const st = {
   } as React.CSSProperties,
   raceName: {
     fontFamily: 'var(--headline)',
-    fontSize: '15px',
+    fontSize: 'var(--text-base)',
     fontWeight: 800,
     letterSpacing: '0.04em',
     color: 'var(--white)',

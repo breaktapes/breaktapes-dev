@@ -87,7 +87,7 @@ const textInput: React.CSSProperties = {
   border: '1px solid var(--border2)',
   borderRadius: 'var(--radius-sm)',
   color: 'var(--white)',
-  fontSize: '15px',
+  fontSize: 'var(--text-base)',
   padding: '0.65rem 0.85rem',
   fontFamily: 'var(--body)',
   boxSizing: 'border-box' as const,
@@ -422,7 +422,7 @@ export function Train() {
     <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       <h1 style={{
         fontFamily: 'var(--headline)',
-        fontSize: '22px',
+        fontSize: 'var(--text-xl)',
         fontWeight: 900,
         letterSpacing: '0.1em',
         textTransform: 'uppercase',
@@ -847,7 +847,7 @@ export function Train() {
                           placeholder={currentAge ? String(currentAge) : 'e.g. 32'}
                           value={ageCalcCurrentAge}
                           onChange={e => setAgeCalcCurrentAge(e.target.value)}
-                          style={{ ...textInput, fontSize: '15px' }}
+                          style={{ ...textInput, fontSize: 'var(--text-base)' }}
                         />
                         {currentAge && !ageCalcCurrentAge && (
                           <p style={{ margin: '3px 0 0', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>From your profile</p>
@@ -859,7 +859,7 @@ export function Train() {
                           type="number" min={15} max={90}
                           value={ageCalcTargetAge}
                           onChange={e => setAgeCalcTargetAge(e.target.value)}
-                          style={{ ...textInput, fontSize: '15px' }}
+                          style={{ ...textInput, fontSize: 'var(--text-base)' }}
                         />
                       </div>
                     </div>
@@ -1067,7 +1067,7 @@ export function Train() {
                     }}>
                       <div style={{ minWidth: 0 }}>
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--sp-2)', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color: 'var(--white)', letterSpacing: '0.04em' }}>
-                          <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '8px', letterSpacing: '0.06em', color: 'var(--orange)', background: 'rgba(var(--orange-ch),0.12)', borderRadius: 'var(--radius-xs)', padding: '1px 4px' }}>{emoji}</span>
+                          <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xs)', letterSpacing: '0.06em', color: 'var(--orange)', background: 'rgba(var(--orange-ch),0.12)', borderRadius: 'var(--radius-xs)', padding: '1px 4px' }}>{emoji}</span>
                           {label}
                         </span>
                         {sub && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginLeft: '6px' }}>{sub}</span>}
