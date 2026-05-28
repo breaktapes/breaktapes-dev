@@ -100,10 +100,11 @@ export const useRaceStore = create<RaceState>()(
 
       // Remove an upcoming race entirely (no move to past — e.g. replaced by an alternative)
       removeUpcomingRace: (id) => {
-        const { upcomingRaces } = get()
+        const { upcomingRaces, _pendingDeleteIds } = get()
         set({
           upcomingRaces: upcomingRaces.filter(r => r.id !== id),
           focusRaceId: get().focusRaceId === id ? null : get().focusRaceId,
+          _pendingDeleteIds: [..._pendingDeleteIds, id],
         })
         get().promoteNextRace()
         void syncStateToSupabase()
@@ -111,7 +112,7 @@ export const useRaceStore = create<RaceState>()(
 
       // Move a single expired upcoming race to past without requiring a result
       dismissExpiredRace: (id) => {
-        const { upcomingRaces, races } = get()
+        const { upcomingRaces, races, _pendingDeleteIds } = get()
         const race = upcomingRaces.find(r => r.id === id)
         if (!race) return
         const newUpcoming = upcomingRaces.filter(r => r.id !== id)
@@ -119,6 +120,7 @@ export const useRaceStore = create<RaceState>()(
           races: [...races, race],
           upcomingRaces: newUpcoming,
           focusRaceId: get().focusRaceId === id ? null : get().focusRaceId,
+          _pendingDeleteIds: [..._pendingDeleteIds, id],
         })
         get().promoteNextRace()
         void syncStateToSupabase()
