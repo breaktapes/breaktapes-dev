@@ -1888,8 +1888,10 @@ function PacingIQWidget() {
   }, [races])
 
   if (size === 'small') {
-    const abbrev = !analysis ? '—' : analysis.dominant === 'NEGATIVE SPLITTER' ? 'NEG' : analysis.dominant === 'EVEN PACER' ? 'EVN' : 'FDR'
+    const fullLabel = !analysis ? '—' : analysis.dominant === 'NEGATIVE SPLITTER' ? 'NEG SPLIT' : analysis.dominant === 'EVEN PACER' ? 'EVEN' : 'FADER'
     const abbrevColor = !analysis ? 'var(--muted)' : analysis.dominant === 'NEGATIVE SPLITTER' ? 'var(--green)' : analysis.dominant === 'EVEN PACER' ? 'var(--white)' : 'var(--orange)'
+    // Scale font down for longer labels so they fit in small card
+    const labelFont = fullLabel.length > 7 ? '36px' : fullLabel.length > 5 ? '48px' : '64px'
     return (
       <WidgetCard id="pacing-iq" style={st.glowCard}>
         <div>
@@ -1897,8 +1899,8 @@ function PacingIQWidget() {
           <div style={st.widgetTitle}>RACE RHYTHM</div>
         </div>
         <div style={{ marginTop: 'auto' }}>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: abbrevColor, letterSpacing: '-0.02em' }}>
-            {abbrev}
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: labelFont, lineHeight: 1, color: abbrevColor, letterSpacing: '-0.02em' }}>
+            {fullLabel}
           </div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
             {analysis ? analysis.dominant : 'NO DATA'}
@@ -2016,12 +2018,9 @@ function AgeGradeWidget() {
 
   return (
     <WidgetCard id="age-grade" style={st.glowCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
-        <div>
-          <div style={st.widgetLabel}>AGE-GRADE SCORE</div>
-          <div style={st.widgetTitle}>PERFORMANCE CONTEXT</div>
-        </div>
-        <span style={{ ...st.badgePill, background: 'rgba(var(--orange-ch), 0.12)', color: 'var(--orange)', border: '1px solid rgba(var(--orange-ch), 0.3)', flexShrink: 0 }}>WA</span>
+      <div>
+        <div style={st.widgetLabel}>AGE-GRADE SCORE</div>
+        <div style={st.widgetTitle}>PERFORMANCE CONTEXT</div>
       </div>
 
       {!hasProfile ? (
@@ -2035,12 +2034,11 @@ function AgeGradeWidget() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', marginTop: '8px' }}>
           {entries.slice(0, agLimit).map((e, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xs)', color: 'var(--muted)', minWidth: '16px' }}>#{e.rank}</div>
-              <div style={{ flex: 1, overflow: 'hidden' }}>
-                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.race.name ?? e.race.distance}</div>
-                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{distBadge(e.race.distance, e.race.sport)} · {e.race.time}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--white)', wordBreak: 'break-word' as const, lineHeight: 1.3 }}>{e.race.name ?? e.race.distance}</div>
+                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>{distBadge(e.race.distance, e.race.sport)} · {e.race.time}</div>
               </div>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', color: e.ageGrade >= 70 ? 'var(--orange)' : 'var(--white)', minWidth: '44px', textAlign: 'right' }}>{e.ageGrade.toFixed(1)}%</div>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', color: e.ageGrade >= 70 ? 'var(--orange)' : 'var(--white)', minWidth: '44px', textAlign: 'right', flexShrink: 0 }}>{e.ageGrade.toFixed(1)}%</div>
             </div>
           ))}
         </div>
@@ -2173,7 +2171,7 @@ function RaceDNAWidget() {
                 {(dnaSize === 'medium' ? dna.bucketWithPace.filter(b => b.isBest) : dna.bucketWithPace).map(b => (
                   <div key={b.label} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
                     <div style={{ width: '42px', fontSize: 'var(--text-xs)', color: b.isBest ? b.color : 'var(--muted)', fontWeight: b.isBest ? 700 : 500, flexShrink: 0, fontFamily: 'var(--headline)' }}>{b.short}</div>
-                    <div style={{ flex: 1, height: '6px', background: 'var(--surface3)', borderRadius: 'var(--radius-xs)', overflow: 'hidden' }}>
+                    <div style={{ flex: 1, height: '4px', background: 'var(--surface3)', borderRadius: 'var(--radius-xs)', overflow: 'hidden' }}>
                       <div style={{
                         height: '100%',
                         width: b.isBest ? '100%' : `${Math.max(15, 100 - b.delta * 8)}%`,
@@ -2183,8 +2181,8 @@ function RaceDNAWidget() {
                         transition: 'width 0.4s ease',
                       }} />
                     </div>
-                    <div style={{ width: '36px', fontSize: 'var(--text-xs)', color: b.isBest ? b.color : 'var(--muted)', fontWeight: b.isBest ? 700 : 400, textAlign: 'right', flexShrink: 0 }}>
-                      {b.isBest ? '★ BEST' : `+${b.delta}%`}
+                    <div style={{ width: '40px', fontSize: 'var(--text-xs)', color: b.isBest ? b.color : 'var(--muted)', fontWeight: b.isBest ? 700 : 400, textAlign: 'center' as const, flexShrink: 0 }}>
+                      {b.isBest ? 'BEST' : `+${b.delta}%`}
                     </div>
                   </div>
                 ))}
@@ -2249,7 +2247,7 @@ function RaceDNAWidget() {
                 {(dnaSize === 'medium' ? dna.surfaces.slice(0, 1) : dna.surfaces).map((s, i) => (
                   <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
                     <div style={{ width: '44px', fontSize: 'var(--text-xs)', color: i === 0 ? 'var(--white)' : 'var(--muted)', fontWeight: i === 0 ? 600 : 400, flexShrink: 0 }}>{s.label}</div>
-                    <div style={{ flex: 1, height: '6px', background: 'var(--surface3)', borderRadius: 'var(--radius-xs)', overflow: 'hidden' }}>
+                    <div style={{ flex: 1, height: '4px', background: 'var(--surface3)', borderRadius: 'var(--radius-xs)', overflow: 'hidden' }}>
                       <div style={{
                         height: '100%',
                         width: `${s.pct}%`,
@@ -3313,16 +3311,16 @@ function RaceComparerWidget() {
           <select value={safeIdxA} onChange={e => setIdxA(Number(e.target.value))} style={{ ...selStyle, color: 'var(--orange)' }}>
             {filtered.map((r, i) => <option key={r.id} value={i}>{r.name ?? r.date}</option>)}
           </select>
-          <div style={{ fontFamily: 'var(--mono)', fontWeight: 900, fontSize: 'var(--text-xl)', color: comparison?.faster === 'A' ? 'var(--green)' : 'var(--white)', lineHeight: 1.1 }}>{raceA?.time ?? '—'}</div>
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--orange)', marginTop: '3px', fontFamily: 'var(--mono)', fontWeight: 600 }}>{fmtPace(comparison?.paceA ?? null)}</div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'calc(var(--text-xl) - 2px)', color: comparison?.faster === 'A' ? 'var(--green)' : 'var(--white)', lineHeight: 1.1 }}>{raceA?.time ?? '—'}</div>
+          <div style={{ fontSize: 'calc(var(--text-xs) - 2px)', color: 'var(--orange)', marginTop: '3px', fontFamily: 'var(--headline)', fontWeight: 700 }}>{fmtPace(comparison?.paceA ?? null)}</div>
           <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '3px' }}>{fmtDateOrdinal(raceA?.date)}</div>
         </div>
         <div style={{ background: 'var(--surface3)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-2)', borderLeft: comparison?.faster === 'B' ? '2px solid var(--green)' : '2px solid transparent' }}>
           <select value={safeIdxB} onChange={e => setIdxB(Number(e.target.value))} style={{ ...selStyle, color: 'var(--muted)' }}>
             {filtered.map((r, i) => <option key={r.id} value={i}>{r.name ?? r.date}</option>)}
           </select>
-          <div style={{ fontFamily: 'var(--mono)', fontWeight: 900, fontSize: 'var(--text-xl)', color: comparison?.faster === 'B' ? 'var(--green)' : 'var(--white)', lineHeight: 1.1 }}>{raceB?.time ?? '—'}</div>
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--orange)', marginTop: '3px', fontFamily: 'var(--mono)', fontWeight: 600 }}>{fmtPace(comparison?.paceB ?? null)}</div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'calc(var(--text-xl) - 2px)', color: comparison?.faster === 'B' ? 'var(--green)' : 'var(--white)', lineHeight: 1.1 }}>{raceB?.time ?? '—'}</div>
+          <div style={{ fontSize: 'calc(var(--text-xs) - 2px)', color: 'var(--orange)', marginTop: '3px', fontFamily: 'var(--headline)', fontWeight: 700 }}>{fmtPace(comparison?.paceB ?? null)}</div>
           <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '3px' }}>{fmtDateOrdinal(raceB?.date)}</div>
         </div>
       </div>
@@ -3383,7 +3381,7 @@ function WhatToRaceNextWidget() {
           <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 'var(--sp-2) 0', borderBottom: '1px solid var(--border)' }}>
             <div style={{ minWidth: 0, flex: 1 }}>
               <div style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name ?? 'Unnamed Race'}</div>
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 'var(--sp-1)' }}>{r.date} · {distBadge(r.distance) || r.distance}</div>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 'var(--sp-1)' }}>{fmtDateOrdinal(r.date)} · {distBadge(r.distance) || r.distance}</div>
             </div>
             {r.priority && (
               <span style={{ fontSize: 'var(--text-xs)', color: r.priority === 'A' ? 'var(--orange)' : 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, flexShrink: 0, marginLeft: 'var(--sp-2)' }}>
@@ -4716,7 +4714,26 @@ function AddWidgetsSheet({ onClose }: { onClose: () => void }) {
   const zones: Array<'now' | 'recently' | 'trending' | 'context'> = ['now', 'recently', 'trending', 'context']
   // Subscribe directly so toggles reflect instantly without parent useMemo chain
   const widgets         = useDashStore(s => s.widgets)
+  const widgetOrder     = useDashStore(s => s.widgetOrder)
   const setWidgetEnabled = useDashStore(s => s.setWidgetEnabled)
+
+  // Order widgets by widgetOrder so this list mirrors home page order in real time
+  const orderedWidgetsByZone = useMemo(() => {
+    const widgetMap = new Map(widgets.map(w => [w.id, w]))
+    const grouped: Record<string, DashWidget[]> = { now: [], recently: [], trending: [], context: [] }
+    for (const id of widgetOrder) {
+      if (id.startsWith('zone:')) continue
+      const w = widgetMap.get(id)
+      if (!w || EMBEDDED_WIDGET_IDS.has(w.id)) continue
+      grouped[w.zone]?.push(w)
+    }
+    // Append any widget present in store but missing from order (defensive)
+    for (const w of widgets) {
+      if (EMBEDDED_WIDGET_IDS.has(w.id)) continue
+      if (!grouped[w.zone]?.some(x => x.id === w.id)) grouped[w.zone]?.push(w)
+    }
+    return grouped
+  }, [widgets, widgetOrder])
 
   return createPortal((
     <div style={{ position: 'fixed', inset: 0, zIndex: 500, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
@@ -4731,7 +4748,7 @@ function AddWidgetsSheet({ onClose }: { onClose: () => void }) {
         {/* Scrollable list — all widgets, grouped by zone */}
         <div style={{ overflowY: 'auto', paddingBottom: 'calc(var(--safe-bottom, 0px) + var(--sp-4))' }}>
           {zones.map(zone => {
-            const zoneWidgets = widgets.filter(w => w.zone === zone && !EMBEDDED_WIDGET_IDS.has(w.id))
+            const zoneWidgets = orderedWidgetsByZone[zone] ?? []
             if (zoneWidgets.length === 0) return null
             const meta = ZONE_LABELS[`zone:${zone}`] ?? { tag: zone.toUpperCase(), label: '' }
             return (
