@@ -48,7 +48,7 @@ export const WIDGET_SIZES: Record<string, WidgetSize[]> = {
   'gap-to-goal':         ['small', 'medium', 'large'],
   'course-fit':          ['small', 'medium', 'large'],
   'personal-bests':      ['small', 'medium', 'large'],
-  'riegel-predictor':    ['small', 'medium', 'large'],
+  'riegel-predictor':    ['small', 'medium'],
   'boston-qual':         ['small', 'medium', 'large'],
   'age-grade':           ['small', 'medium', 'large'],
   'race-dna':            ['small', 'medium', 'large'],
@@ -56,7 +56,7 @@ export const WIDGET_SIZES: Record<string, WidgetSize[]> = {
   'goal-pace':           ['small', 'medium', 'large'],
   'distance-milestones': ['small', 'medium', 'large'],
   'course-repeats':      ['small', 'medium', 'large'],
-  'recent-races':        ['small', 'medium', 'large'],
+  'recent-races':        ['small', 'medium'],
   'what-to-race-next':   ['small', 'medium', 'large'],
   // small + medium only
   'pb-probability':      ['small', 'medium'],
