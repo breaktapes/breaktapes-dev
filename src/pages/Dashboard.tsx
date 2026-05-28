@@ -2983,6 +2983,9 @@ function CourseFitWidget({ race }: { race: Race | null }) {
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
             {fitLabel}
           </div>
+          <div style={{ height: '3px', background: 'var(--surface3)', borderRadius: 'var(--radius-xs)', marginTop: '10px', overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${result?.score ?? 0}%`, background: scoreColor, borderRadius: 'var(--radius-xs)', transition: 'width 0.5s ease' }} />
+          </div>
         </div>
       </WidgetCard>
     )
@@ -3118,6 +3121,9 @@ function PBProbabilityWidget({ race }: { race: Race | null }) {
           </div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
             PROBABILITY
+          </div>
+          <div style={{ height: '3px', background: 'var(--surface3)', borderRadius: 'var(--radius-xs)', marginTop: '10px', overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${result?.probability ?? 0}%`, background: probColor, borderRadius: 'var(--radius-xs)', transition: 'width 0.5s ease' }} />
           </div>
         </div>
       </WidgetCard>
