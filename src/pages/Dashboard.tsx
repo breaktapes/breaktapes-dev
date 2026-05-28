@@ -1337,6 +1337,7 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
   if (recent.length === 0) {
     return (
       <WidgetCard id="recent-races" style={st.glowCard}>
+        <div style={st.widgetLabel}>YOUR RECAP</div>
         <div style={st.widgetTitle}>RECENT RACES</div>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: '8px' }}>
           No races in the last 3 months.
@@ -1355,6 +1356,7 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
   return (
     <WidgetCard id="recent-races" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 'var(--sp-2)' }}>
+        <div style={st.widgetLabel}>YOUR RECAP</div>
         <div style={st.widgetTitle}>RECENT RACES</div>
         {narrative && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontStyle: 'italic' }}>{narrative}</div>}
       </div>
@@ -1434,10 +1436,10 @@ function StatsStrip() {
             <div style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-lg)', fontWeight: 900, lineHeight: 1, color: 'var(--white)', letterSpacing: '0.02em' }}>
               {s.value}
             </div>
-            <div style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--orange)', marginTop: '3px' }}>
+            <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--orange)', marginTop: '3px' }}>
               {s.label}
             </div>
-            <div style={{ fontSize: '9px', color: 'var(--muted)', marginTop: '1px' }}>{s.sub}</div>
+            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '1px' }}>{s.sub}</div>
           </div>
         ))}
       </div>
@@ -1615,7 +1617,10 @@ function BostonQualWidget() {
     return (
       <WidgetCard id="boston-qual" style={st.glowCard}>
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
-          <div style={st.widgetLabel}>BQ GAP</div>
+          <div>
+            <div style={st.widgetLabel}>BQ STATUS</div>
+            <div style={st.widgetTitle}>BOSTON QUALIFIER</div>
+          </div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', lineHeight: 1, color: gapColor, letterSpacing: '-0.01em' }}>
             {gapStr}
           </div>
@@ -1632,7 +1637,7 @@ function BostonQualWidget() {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
         <div>
-          <div style={st.widgetLabel}>B.A.A.</div>
+          <div style={st.widgetLabel}>BQ STATUS</div>
           <div style={st.widgetTitle}>BOSTON QUALIFIER</div>
         </div>
         <span style={{ ...st.badgePill, background: 'rgba(var(--orange-ch),0.12)', color: 'var(--orange)', border: '1px solid rgba(var(--orange-ch),0.3)', flexShrink: 0 }}>
@@ -1651,7 +1656,7 @@ function BostonQualWidget() {
           {/* BQ standard + safe-buffer target side by side */}
           <div style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'flex-end' }}>
             <div>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '28px', color: 'var(--white)', lineHeight: 1 }}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', color: 'var(--white)', lineHeight: 1 }}>
                 {secsToHMS(bqTarget)}
               </div>
               <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase', marginTop: '3px' }}>
@@ -1769,7 +1774,10 @@ function PacingIQWidget() {
     return (
       <WidgetCard id="pacing-iq" style={st.glowCard}>
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
-          <div style={st.widgetLabel}>PACING IQ</div>
+          <div>
+            <div style={st.widgetLabel}>PACING IQ</div>
+            <div style={st.widgetTitle}>RACE RHYTHM</div>
+          </div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', lineHeight: 1, color: abbrevColor }}>
             {abbrev}
           </div>
@@ -1830,7 +1838,10 @@ function CareerMomentumWidget() {
     return (
       <WidgetCard id="career-momentum" style={st.glowCard}>
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
-          <div style={st.widgetLabel}>MOMENTUM</div>
+          <div>
+            <div style={st.widgetLabel}>CAREER MOMENTUM</div>
+            <div style={st.widgetTitle}>FORM TREND</div>
+          </div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', lineHeight: 1, color: scoreColor }}>
             {races.length < 2 ? '—' : scoreNum}
           </div>
@@ -2244,7 +2255,7 @@ function PatternScanWidget() {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)', marginBottom: '14px' }}>
         <div>
-          <div style={st.widgetLabel}>DEEP TRENDS</div>
+          <div style={st.widgetLabel}>RACE INTEL</div>
           <div style={st.widgetTitle}>PATTERN SCAN</div>
         </div>
         <span style={{ ...st.badgePill, background: 'rgba(var(--orange-ch), 0.12)', color: 'var(--orange)', border: '1px solid rgba(var(--orange-ch), 0.3)', flexShrink: 0 }}>{past.length} RACES</span>
@@ -2382,7 +2393,10 @@ function OnThisDayWidget() {
     return (
       <WidgetCard id="on-this-day" style={st.glowCard}>
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
-          <div style={st.widgetLabel}>ON THIS DAY</div>
+          <div>
+            <div style={st.widgetLabel}>ON THIS DAY</div>
+            <div style={st.widgetTitle}>RACE FLASHBACK</div>
+          </div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', lineHeight: 1, color: 'var(--orange)' }}>
             {race.date.slice(0, 4)}
           </div>
@@ -2395,23 +2409,24 @@ function OnThisDayWidget() {
   }
 
   return (
-    <WidgetCard id="on-this-day" className="" style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-lg)', padding: 'var(--sp-4)', display: 'flex', gap: 'var(--sp-3)', alignItems: 'flex-start' }}>
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ color: 'var(--orange)', flexShrink: 0 }} aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M3 9h18" stroke="currentColor" strokeWidth="1.5"/><path d="M8 2v4M16 2v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-      <div style={{ minWidth: 0 }}>
-        <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-xs)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '4px' }}>
-          On This Day
-        </div>
-        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', color: 'var(--white)', letterSpacing: '0.04em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          {race.name}
-        </div>
-        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '4px' }}>
-          {yearStr}{race.city ? ` · ${race.city}` : ''}{race.country ? `, ${race.country}` : ''}
-        </div>
-        {race.time && (
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', color: 'var(--orange)', marginTop: '4px' }}>
-            {race.time}
+    <WidgetCard id="on-this-day" style={st.glowCard}>
+      <div style={st.widgetLabel}>ON THIS DAY</div>
+      <div style={st.widgetTitle}>RACE FLASHBACK</div>
+      <div style={{ display: 'flex', gap: 'var(--sp-3)', alignItems: 'flex-start', marginTop: 'var(--sp-2)' }}>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ color: 'var(--orange)', flexShrink: 0, marginTop: '2px' }} aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M3 9h18" stroke="currentColor" strokeWidth="1.5"/><path d="M8 2v4M16 2v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', color: 'var(--white)', letterSpacing: '0.04em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {race.name}
           </div>
-        )}
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '4px' }}>
+            {yearStr}{race.city ? ` · ${race.city}` : ''}{race.country ? `, ${race.country}` : ''}
+          </div>
+          {race.time && (
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', color: 'var(--orange)', marginTop: '4px' }}>
+              {race.time}
+            </div>
+          )}
+        </div>
       </div>
     </WidgetCard>
   )
@@ -2444,7 +2459,7 @@ function RaceReadinessWidget() {
     <WidgetCard id="race-readiness" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
         <div>
-          <div style={st.widgetLabel}>READINESS</div>
+          <div style={st.widgetLabel}>FORM CHECK</div>
           <div style={st.widgetTitle}>RACE READINESS</div>
         </div>
         <span style={{ ...st.badgePill, background: `${sigColor}22`, color: sigColor, border: `1px solid ${sigColor}55`, flexShrink: 0 }}>{signal}</span>
@@ -2533,6 +2548,7 @@ function GapToGoalWidget({ race }: { race: Race | null }) {
     return (
       <WidgetCard id="gap-to-goal" style={st.glowCard}>
         <div style={st.widgetLabel}>GAP TO GOAL</div>
+        <div style={st.widgetTitle}>NEXT RACE</div>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginTop: '6px' }}>Add an upcoming race to track your gap to goal.</div>
       </WidgetCard>
     )
@@ -2577,7 +2593,7 @@ function GapToGoalWidget({ race }: { race: Race | null }) {
 
       <div style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'flex-end' }}>
         <div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '28px', color: 'var(--white)', lineHeight: 1 }}>{result.goal}</div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', color: 'var(--white)', lineHeight: 1 }}>{result.goal}</div>
           <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase', marginTop: '3px' }}>GOAL TIME</div>
         </div>
         {result.pb && (
@@ -2659,7 +2675,10 @@ function PressurePerformerWidget() {
     return (
       <WidgetCard id="pressure-performer" style={st.glowCard}>
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
-          <div style={st.widgetLabel}>PRESSURE</div>
+          <div>
+            <div style={st.widgetLabel}>SPOTLIGHT</div>
+            <div style={st.widgetTitle}>A-RACE IQ</div>
+          </div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', lineHeight: 1, color: smallColor }}>
             {shortLabel}
           </div>
@@ -2675,7 +2694,7 @@ function PressurePerformerWidget() {
     <WidgetCard id="pressure-performer" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
         <div>
-          <div style={st.widgetLabel}>PRESSURE PERFORMER</div>
+          <div style={st.widgetLabel}>SPOTLIGHT</div>
           <div style={st.widgetTitle}>A-RACE IQ</div>
         </div>
         {result && <span style={{ ...st.badgePill, background: `${labelColor}22`, color: labelColor, border: `1px solid ${labelColor}55`, flexShrink: 0 }}>{result.label}</span>}
@@ -2748,7 +2767,10 @@ function TravelLoadWidget() {
     return (
       <WidgetCard id="travel-load" style={st.glowCard}>
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
-          <div style={st.widgetLabel}>TRAVEL</div>
+          <div>
+            <div style={st.widgetLabel}>TRAVEL LOAD</div>
+            <div style={st.widgetTitle}>HOME vs AWAY</div>
+          </div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', lineHeight: 1, color: impactColor }}>
             {impactLabel}
           </div>
@@ -2864,7 +2886,10 @@ function CourseFitWidget({ race }: { race: Race | null }) {
     return (
       <WidgetCard id="course-fit" style={st.glowCard}>
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
-          <div style={st.widgetTitle}>COURSE FIT</div>
+          <div>
+            <div style={st.widgetLabel}>COURSE FIT</div>
+            <div style={st.widgetTitle}>NEXT RACE</div>
+          </div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', lineHeight: 1, color: scoreColor }}>
             {scoreStr}
           </div>
@@ -2880,6 +2905,7 @@ function CourseFitWidget({ race }: { race: Race | null }) {
     return (
       <WidgetCard id="course-fit" style={st.glowCard}>
         <div style={st.widgetLabel}>COURSE FIT</div>
+        <div style={st.widgetTitle}>NEXT RACE</div>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginTop: '6px' }}>Add an upcoming race to calculate your course fit score.</div>
       </WidgetCard>
     )
@@ -2996,7 +3022,10 @@ function PBProbabilityWidget({ race }: { race: Race | null }) {
     return (
       <WidgetCard id="pb-probability" style={st.glowCard}>
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
-          <div style={st.widgetTitle}>PB CHANCE</div>
+          <div>
+            <div style={st.widgetLabel}>PB PROBABILITY</div>
+            <div style={st.widgetTitle}>NEXT RACE</div>
+          </div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', lineHeight: 1, color: probColor }}>
             {probStr}
           </div>
@@ -3012,6 +3041,7 @@ function PBProbabilityWidget({ race }: { race: Race | null }) {
     return (
       <WidgetCard id="pb-probability" style={st.glowCard}>
         <div style={st.widgetLabel}>PB PROBABILITY</div>
+        <div style={st.widgetTitle}>NEXT RACE</div>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginTop: '6px' }}>Add an upcoming race to estimate your PB chance.</div>
       </WidgetCard>
     )
@@ -3322,7 +3352,10 @@ function PersonalBestsWidget() {
     return (
       <WidgetCard id="personal-bests" style={st.glowCard}>
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
-          <div style={st.widgetLabel}>PERSONAL BESTS</div>
+          <div>
+            <div style={st.widgetLabel}>PERSONAL BESTS</div>
+            <div style={st.widgetTitle}>TOP TIMES</div>
+          </div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', lineHeight: 1, color: 'var(--green)', letterSpacing: '0.01em' }}>
             {timeDisplay}
           </div>
@@ -3337,7 +3370,8 @@ function PersonalBestsWidget() {
   if (!allDists.length) {
     return (
       <WidgetCard id="personal-bests" style={st.glowCard}>
-        <div style={st.widgetTitle}>PERSONAL BESTS</div>
+        <div style={st.widgetLabel}>PERSONAL BESTS</div>
+        <div style={st.widgetTitle}>TOP TIMES</div>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: '8px' }}>
           Log timed races to build your PB board.
         </div>
@@ -3348,8 +3382,11 @@ function PersonalBestsWidget() {
   return (
     <WidgetCard id="personal-bests" style={st.glowCard} noDetailPreview>
       {/* Header row */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={st.widgetTitle}>PERSONAL BESTS</div>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+        <div>
+          <div style={st.widgetLabel}>PERSONAL BESTS</div>
+          <div style={st.widgetTitle}>TOP TIMES</div>
+        </div>
         {allDists.length > 0 && (
           <button
             onClick={e => { e.stopPropagation(); setShowEdit(v => !v) }}
@@ -3438,7 +3475,7 @@ function PersonalBestsWidget() {
                     {displayKey}
                   </div>
                   {/* Time */}
-                  <div style={{ fontFamily: 'var(--headline)', fontSize: '28px', fontWeight: 900, letterSpacing: '-0.01em', lineHeight: 1, marginBottom: '8px', color: accentColor }}>
+                  <div style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-2xl)', fontWeight: 900, letterSpacing: '-0.01em', lineHeight: 1, marginBottom: '8px', color: accentColor }}>
                     {r.time}
                   </div>
                   {/* Race name */}
@@ -3896,7 +3933,10 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
     return (
       <WidgetCard id="riegel-predictor" style={st.glowCard}>
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
-          <div style={st.widgetLabel}>RIEGEL</div>
+          <div>
+            <div style={st.widgetLabel}>RACE PREDICTOR</div>
+            <div style={st.widgetTitle}>RIEGEL PREDICTOR</div>
+          </div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', lineHeight: 1, color: 'var(--orange)', letterSpacing: '0.01em' }}>
             {targetRow?.predictedTime ?? '—'}
           </div>
@@ -4074,7 +4114,10 @@ function GoalPaceWidget({ race }: { race: Race | null }) {
     return (
       <WidgetCard id="goal-pace" style={st.glowCard}>
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
-          <div style={st.widgetLabel}>GOAL PACE</div>
+          <div>
+            <div style={st.widgetLabel}>GOAL PACE</div>
+            <div style={st.widgetTitle}>TARGET PACE</div>
+          </div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', lineHeight: 1, color: result ? 'var(--orange)' : 'var(--muted)' }}>
             {result ? `${paceStr}/${distUnit(units) === 'KM' ? 'km' : 'mi'}` : '—'}
           </div>
@@ -4089,7 +4132,7 @@ function GoalPaceWidget({ race }: { race: Race | null }) {
   if (!result) return (
     <WidgetCard id="goal-pace" style={st.glowCard}>
       <div style={st.widgetLabel}>GOAL PACE</div>
-      <div style={st.widgetTitle}>GOAL PACE</div>
+      <div style={st.widgetTitle}>TARGET PACE</div>
       <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: 0 }}>
         Set a goal time on {focusRace.name} to see your pace breakdown.
       </p>
@@ -4107,7 +4150,7 @@ function GoalPaceWidget({ race }: { race: Race | null }) {
   return (
     <WidgetCard id="goal-pace" style={st.glowCard}>
       <div style={st.widgetLabel}>GOAL PACE</div>
-      <div style={st.widgetTitle}>GOAL PACE</div>
+      <div style={st.widgetTitle}>TARGET PACE</div>
       <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '-4px' }}>{focusRace.name}</div>
 
       {/* Main pace display */}
@@ -4162,7 +4205,10 @@ function DistanceMilestonesWidget() {
     return (
       <WidgetCard id="distance-milestones" style={st.glowCard}>
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
-          <div style={st.widgetLabel}>MILESTONES</div>
+          <div>
+            <div style={st.widgetLabel}>MILESTONES</div>
+            <div style={st.widgetTitle}>DISTANCE TOTAL</div>
+          </div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', lineHeight: 1, color: 'var(--orange)' }}>
             {result.nextMilestone ? `${result.totalKm.toLocaleString()}/${result.nextMilestone.km.toLocaleString()}` : result.totalKm.toLocaleString()}
           </div>
@@ -4258,8 +4304,11 @@ function CourseRepeatsWidget() {
     return (
       <WidgetCard id="course-repeats" style={st.glowCard}>
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
-          <div style={st.widgetLabel}>REPEATS</div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-3xl)', lineHeight: 1, color: 'var(--orange)' }}>
+          <div>
+            <div style={st.widgetLabel}>HOME TURF</div>
+            <div style={st.widgetTitle}>COURSE REPEATS</div>
+          </div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', lineHeight: 1, color: 'var(--orange)' }}>
             {courses.length || '—'}
           </div>
           <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>
@@ -4272,7 +4321,7 @@ function CourseRepeatsWidget() {
 
   if (!courses.length) return (
     <WidgetCard id="course-repeats" style={st.glowCard}>
-      <div style={st.widgetLabel}>REPEATS</div>
+      <div style={st.widgetLabel}>HOME TURF</div>
       <div style={st.widgetTitle}>COURSE REPEATS</div>
       <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: 0 }}>Run the same race 3+ times to see your course repeat history.</p>
     </WidgetCard>
@@ -4280,7 +4329,7 @@ function CourseRepeatsWidget() {
 
   return (
     <WidgetCard id="course-repeats" style={st.glowCard}>
-      <div style={st.widgetLabel}>REPEATS</div>
+      <div style={st.widgetLabel}>HOME TURF</div>
       <div style={st.widgetTitle}>COURSE REPEATS</div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
         {courses.slice(0, 4).map(c => (
