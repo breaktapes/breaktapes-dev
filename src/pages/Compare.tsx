@@ -157,7 +157,7 @@ function StatRow({
         {a ?? '—'}
       </div>
       <div style={{
-        fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '9px',
+        fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xs)',
         letterSpacing: '0.12em', textTransform: 'uppercase',
         color: 'var(--muted)', textAlign: 'center', whiteSpace: 'nowrap',
       }}>
@@ -207,7 +207,7 @@ function ProfileColumn({ profile }: { profile: AthleteRow | 'private' | 'not_fou
       }}>
         {initials}
       </div>
-      <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '15px', letterSpacing: '0.04em', color: 'var(--white)', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+      <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', letterSpacing: '0.04em', color: 'var(--white)', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
         {name}
       </div>
       <div style={{ fontFamily: 'var(--body)', fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -433,7 +433,7 @@ export function Compare() {
 
             {/* VS divider */}
             <div style={{
-              fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px',
+              fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xl)',
               color: 'var(--orange)', letterSpacing: '0.04em',
             }}>
               VS

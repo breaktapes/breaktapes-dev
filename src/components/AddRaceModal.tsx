@@ -1000,7 +1000,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
                       <DateInput value={date} onChange={setDate} />
                     )}
                     {date && (
-                      <p style={{ margin: '6px 0 0', fontSize: '15px', fontWeight: 600, color: 'var(--white)' }}>
+                      <p style={{ margin: '6px 0 0', fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--white)' }}>
                         {new Date(date + 'T00:00:00').toLocaleDateString('en', { year: 'numeric', month: 'short', day: 'numeric' })}
                       </p>
                     )}
@@ -1234,7 +1234,7 @@ const st = {
   title: {
     fontFamily: 'var(--headline)',
     fontWeight: 900,
-    fontSize: '22px',
+    fontSize: 'var(--text-xl)',
     letterSpacing: '0.06em',
     textTransform: 'uppercase',
     color: 'var(--white)',

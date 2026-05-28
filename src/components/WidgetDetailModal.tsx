@@ -196,13 +196,13 @@ const st = {
     background: 'rgba(var(--orange-ch), 0.1)',
     border: '1px solid rgba(var(--orange-ch), 0.25)',
     borderRadius: 'var(--radius-lg)',
-    fontSize: '22px',
+    fontSize: 'var(--text-xl)',
     flexShrink: 0,
   } as React.CSSProperties,
 
   kicker: {
     fontFamily: 'var(--headline)',
-    fontSize: '9px',
+    fontSize: 'var(--text-xs)',
     fontWeight: 700,
     letterSpacing: '0.16em',
     textTransform: 'uppercase' as const,
@@ -214,14 +214,14 @@ const st = {
     margin: 0,
     fontFamily: 'var(--headline)',
     fontWeight: 900,
-    fontSize: '22px',
+    fontSize: 'var(--text-xl)',
     letterSpacing: '0.04em',
     color: 'var(--white)',
     lineHeight: 1.1,
   } as React.CSSProperties,
 
   proPill: {
-    fontSize: '9px',
+    fontSize: 'var(--text-xs)',
     fontFamily: 'var(--headline)',
     fontWeight: 800,
     letterSpacing: '0.1em',
@@ -374,7 +374,7 @@ const st = {
 
   sectionBody: {
     margin: 0,
-    fontSize: '15px',
+    fontSize: 'var(--text-base)',
     color: 'var(--white)',
     lineHeight: 1.65,
   } as React.CSSProperties,

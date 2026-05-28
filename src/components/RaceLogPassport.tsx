@@ -1058,7 +1058,7 @@ export function RaceLogPassport({ races, athlete, onClose, initialYear = 'all', 
         )}
 
         {drawn && (
-          <div style={{ fontFamily: 'var(--mono)', fontSize: '9px', letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--muted2)', textAlign: 'center' }}>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 'var(--text-xs)', letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--muted2)', textAlign: 'center' }}>
             {currentRatio.W} × {currentRatio.H}px · {year === 'all' ? 'All Time' : year} · {filteredRaces.length} races
           </div>
         )}
