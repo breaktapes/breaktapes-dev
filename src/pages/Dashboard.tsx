@@ -1310,8 +1310,6 @@ function WeatherCard({ race }: { race: Race }) {
 function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
   const races = useRaceStore(selectRaces)
   const today = todayStr()
-  const ctx = useWidgetCardContext()
-  const size = ctx?.getWidgetSize('recent-races') ?? 'medium'
   const pbMap = useMemo(() => buildPBMap(races), [races])
   const recent = useMemo(() => {
     const cutoff = new Date(); cutoff.setMonth(cutoff.getMonth() - 3)
