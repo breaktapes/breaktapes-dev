@@ -2142,6 +2142,44 @@ function RaceDNAWidget() {
     return { bucketWithPace: tempBarsData, surfaces, countryList, travelCount, withSplitsCount: withSplits.length, pacingPersona, pacingPersonaColor, pacingPersonaDesc, faded, negSplit, even, tempRaceCount: withTemp.length }
   }, [past])
 
+  // Small view — best temp + best surface only
+  if (dnaSize === 'small') {
+    const bestTemp = dna?.bucketWithPace.find(b => b.isBest)
+    const bestSurface = dna?.surfaces?.[0]
+    return (
+      <WidgetCard id="race-dna" style={st.glowCard}>
+        <div>
+          <div style={st.widgetLabel}>RACE DNA</div>
+          <div style={st.widgetTitle}>CONDITIONS PROFILE</div>
+        </div>
+        <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+          {bestTemp ? (
+            <div>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-3xl)', lineHeight: 1, color: bestTemp.color, letterSpacing: '-0.02em' }}>
+                {bestTemp.short}
+              </div>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
+                BEST TEMP
+              </div>
+            </div>
+          ) : (
+            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>No weather data yet</div>
+          )}
+          {bestSurface && (
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: 'var(--sp-3)' }}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xl)', color: 'var(--orange)', textTransform: 'uppercase' as const, letterSpacing: '0.04em', lineHeight: 1 }}>
+                {bestSurface.label}
+              </div>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
+                BEST SURFACE · {bestSurface.pct}%
+              </div>
+            </div>
+          )}
+        </div>
+      </WidgetCard>
+    )
+  }
+
   return (
     <WidgetCard id="race-dna" style={st.glowCard}>
       {/* Header */}
@@ -3312,7 +3350,7 @@ function RaceComparerWidget() {
             {filtered.map((r, i) => <option key={r.id} value={i}>{r.name ?? r.date}</option>)}
           </select>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'calc(var(--text-xl) - 2px)', color: comparison?.faster === 'A' ? 'var(--green)' : 'var(--white)', lineHeight: 1.1 }}>{raceA?.time ?? '—'}</div>
-          <div style={{ fontSize: 'calc(var(--text-xs) - 2px)', color: 'var(--orange)', marginTop: '3px', fontFamily: 'var(--headline)', fontWeight: 700 }}>{fmtPace(comparison?.paceA ?? null)}</div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--orange)', marginTop: '3px', fontFamily: 'var(--headline)', fontWeight: 700 }}>{fmtPace(comparison?.paceA ?? null)}</div>
           <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '3px' }}>{fmtDateOrdinal(raceA?.date)}</div>
         </div>
         <div style={{ background: 'var(--surface3)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-2)', borderLeft: comparison?.faster === 'B' ? '2px solid var(--green)' : '2px solid transparent' }}>
@@ -3320,14 +3358,14 @@ function RaceComparerWidget() {
             {filtered.map((r, i) => <option key={r.id} value={i}>{r.name ?? r.date}</option>)}
           </select>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'calc(var(--text-xl) - 2px)', color: comparison?.faster === 'B' ? 'var(--green)' : 'var(--white)', lineHeight: 1.1 }}>{raceB?.time ?? '—'}</div>
-          <div style={{ fontSize: 'calc(var(--text-xs) - 2px)', color: 'var(--orange)', marginTop: '3px', fontFamily: 'var(--headline)', fontWeight: 700 }}>{fmtPace(comparison?.paceB ?? null)}</div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--orange)', marginTop: '3px', fontFamily: 'var(--headline)', fontWeight: 700 }}>{fmtPace(comparison?.paceB ?? null)}</div>
           <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '3px' }}>{fmtDateOrdinal(raceB?.date)}</div>
         </div>
       </div>
 
       {comparison && safeIdxA !== safeIdxB && (
         <div style={{ padding: 'var(--sp-2)', background: 'var(--surface3)', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
-          <span style={{ fontFamily: 'var(--mono)', fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--green)' }}>{secsToHMS(comparison.diffSecs)}</span>
+          <span style={{ fontFamily: 'var(--headline)', fontSize: 'calc(var(--text-xl) - 2px)', fontWeight: 900, color: 'var(--green)' }}>{secsToHMS(comparison.diffSecs)}</span>
           <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginLeft: 'var(--sp-2)' }}>faster · {comparison.faster === 'A' ? (raceA?.name ?? 'Race A') : (raceB?.name ?? 'Race B')}</span>
         </div>
       )}
@@ -4717,12 +4755,56 @@ function Toggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
 // Widgets embedded inside other widgets — hidden from the toggle panel
 const EMBEDDED_WIDGET_IDS = new Set(['race-forecast'])
 
+function SortableWidgetRow({ w, onToggle }: { w: DashWidget; onToggle: () => void }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: w.id })
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    display: 'flex',
+    alignItems: 'center',
+    gap: 'var(--sp-3)',
+    padding: 'var(--sp-3) var(--sp-4)',
+    opacity: isDragging ? 0.5 : (w.enabled ? 1 : 0.6),
+    background: isDragging ? 'rgba(var(--orange-ch), 0.08)' : 'transparent',
+    touchAction: 'none',
+  }
+  return (
+    <div ref={setNodeRef} style={style}>
+      <button
+        {...attributes}
+        {...listeners}
+        aria-label="Drag handle"
+        style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          width: 24, height: 24, padding: 0,
+          background: 'none', border: 'none',
+          color: 'var(--muted)', cursor: 'grab',
+          flexShrink: 0,
+        }}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <circle cx="8" cy="6" r="1.6" /><circle cx="16" cy="6" r="1.6" />
+          <circle cx="8" cy="12" r="1.6" /><circle cx="16" cy="12" r="1.6" />
+          <circle cx="8" cy="18" r="1.6" /><circle cx="16" cy="18" r="1.6" />
+        </svg>
+      </button>
+      <span style={{ flex: 1, fontSize: 'var(--text-compact)', fontWeight: 500, color: 'var(--white)' }}>{w.label}</span>
+      <Toggle on={w.enabled} onToggle={onToggle} />
+    </div>
+  )
+}
+
 function AddWidgetsSheet({ onClose }: { onClose: () => void }) {
   const zones: Array<'now' | 'recently' | 'trending' | 'context'> = ['now', 'recently', 'trending', 'context']
-  // Subscribe directly so toggles reflect instantly without parent useMemo chain
   const widgets         = useDashStore(s => s.widgets)
   const widgetOrder     = useDashStore(s => s.widgetOrder)
   const setWidgetEnabled = useDashStore(s => s.setWidgetEnabled)
+  const setWidgetOrder   = useDashStore(s => s.setWidgetOrder)
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 5 } }),
+  )
 
   // Order widgets by widgetOrder so this list mirrors home page order in real time
   const orderedWidgetsByZone = useMemo(() => {
@@ -4734,7 +4816,6 @@ function AddWidgetsSheet({ onClose }: { onClose: () => void }) {
       if (!w || EMBEDDED_WIDGET_IDS.has(w.id)) continue
       grouped[w.zone]?.push(w)
     }
-    // Append any widget present in store but missing from order (defensive)
     for (const w of widgets) {
       if (EMBEDDED_WIDGET_IDS.has(w.id)) continue
       if (!grouped[w.zone]?.some(x => x.id === w.id)) grouped[w.zone]?.push(w)
@@ -4742,33 +4823,55 @@ function AddWidgetsSheet({ onClose }: { onClose: () => void }) {
     return grouped
   }, [widgets, widgetOrder])
 
+  // Reorder widgetOrder when user drags within a zone
+  const handleDragEnd = useCallback((zone: string) => (e: DragEndEvent) => {
+    const { active, over } = e
+    if (!over || active.id === over.id) return
+    const zoneIds = (orderedWidgetsByZone[zone] ?? []).map(w => w.id)
+    const oldIdx = zoneIds.indexOf(String(active.id))
+    const newIdx = zoneIds.indexOf(String(over.id))
+    if (oldIdx === -1 || newIdx === -1) return
+    const newZoneOrder = arrayMove(zoneIds, oldIdx, newIdx)
+
+    // Splice newZoneOrder back into widgetOrder, preserving zone headers + other zones' order
+    const idsInZone = new Set(zoneIds)
+    let cursor = 0
+    const next = widgetOrder.map(id => {
+      if (idsInZone.has(id)) {
+        return newZoneOrder[cursor++]
+      }
+      return id
+    })
+    setWidgetOrder(next)
+  }, [orderedWidgetsByZone, widgetOrder, setWidgetOrder])
+
   return createPortal((
     <div style={{ position: 'fixed', inset: 0, zIndex: 500, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
       <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.70)' }} onClick={onClose} />
       <div style={{ position: 'relative', background: 'var(--surface2)', borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0', borderTop: '1px solid var(--border2)', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
-        {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 'var(--sp-4)', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>
           <div style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-base)', fontWeight: 700, textTransform: 'uppercase' as const, color: 'var(--white)', letterSpacing: '0.06em' }}>WIDGETS</div>
           <button onClick={onClose} aria-label="Close" style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 'var(--text-base)', cursor: 'pointer', padding: '4px 8px', lineHeight: 1 }}>✕</button>
         </div>
 
-        {/* Scrollable list — all widgets, grouped by zone */}
         <div style={{ overflowY: 'auto', paddingBottom: 'calc(var(--safe-bottom, 0px) + var(--sp-4))' }}>
           {zones.map(zone => {
             const zoneWidgets = orderedWidgetsByZone[zone] ?? []
             if (zoneWidgets.length === 0) return null
             const meta = ZONE_LABELS[`zone:${zone}`] ?? { tag: zone.toUpperCase(), label: '' }
+            const zoneIds = zoneWidgets.map(w => w.id)
             return (
               <div key={zone}>
                 <div style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-xs)', fontWeight: 600, textTransform: 'uppercase' as const, letterSpacing: '0.06em', color: 'var(--muted)', padding: 'var(--sp-3) var(--sp-4) var(--sp-2)', borderTop: '1px solid var(--border)' }}>
                   {meta.tag} · {meta.label}
                 </div>
-                {zoneWidgets.map(w => (
-                  <div key={w.id} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', padding: 'var(--sp-3) var(--sp-4)', opacity: w.enabled ? 1 : 0.6 }}>
-                    <span style={{ flex: 1, fontSize: 'var(--text-compact)', fontWeight: 500, color: 'var(--white)' }}>{w.label}</span>
-                    <Toggle on={w.enabled} onToggle={() => setWidgetEnabled(w.id, !w.enabled)} />
-                  </div>
-                ))}
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd(zone)}>
+                  <SortableContext items={zoneIds} strategy={verticalListSortingStrategy}>
+                    {zoneWidgets.map(w => (
+                      <SortableWidgetRow key={w.id} w={w} onToggle={() => setWidgetEnabled(w.id, !w.enabled)} />
+                    ))}
+                  </SortableContext>
+                </DndContext>
               </div>
             )
           })}
