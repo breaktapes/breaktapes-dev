@@ -3500,8 +3500,8 @@ function PersonalBestsWidget() {
       <WidgetCard id="personal-bests" style={st.glowCard}>
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
           <div>
-            <div style={st.widgetLabel}>PERSONAL BESTS</div>
-            <div style={st.widgetTitle}>TOP TIMES</div>
+            <div style={st.widgetLabel}>ALL TIME</div>
+            <div style={st.widgetTitle}>PERSONAL BESTS</div>
           </div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', lineHeight: 1, color: 'var(--green)', letterSpacing: '0.01em' }}>
             {timeDisplay}
@@ -3517,8 +3517,8 @@ function PersonalBestsWidget() {
   if (!allDists.length) {
     return (
       <WidgetCard id="personal-bests" style={st.glowCard}>
-        <div style={st.widgetLabel}>PERSONAL BESTS</div>
-        <div style={st.widgetTitle}>TOP TIMES</div>
+        <div style={st.widgetLabel}>ALL TIME</div>
+        <div style={st.widgetTitle}>PERSONAL BESTS</div>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: '8px' }}>
           Log timed races to build your PB board.
         </div>
@@ -3531,8 +3531,8 @@ function PersonalBestsWidget() {
       {/* Header row */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
         <div>
-          <div style={st.widgetLabel}>PERSONAL BESTS</div>
-          <div style={st.widgetTitle}>TOP TIMES</div>
+          <div style={st.widgetLabel}>ALL TIME</div>
+          <div style={st.widgetTitle}>PERSONAL BESTS</div>
         </div>
         {allDists.length > 0 && (
           <button
