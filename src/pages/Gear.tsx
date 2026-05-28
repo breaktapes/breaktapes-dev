@@ -308,7 +308,7 @@ function EmptyState({ title, body, cta, onCta }: {
         margin: 0,
         fontFamily: 'var(--headline)',
         fontWeight: 900,
-        fontSize: '15px',
+        fontSize: 'var(--text-base)',
         letterSpacing: '0.06em',
         textTransform: 'uppercase',
         color: 'var(--white)',
@@ -449,7 +449,7 @@ export function Gear() {
       {/* Page heading */}
       <h1 style={{
         fontFamily: 'var(--headline)',
-        fontSize: '22px',
+        fontSize: 'var(--text-xl)',
         fontWeight: 900,
         letterSpacing: '0.1em',
         textTransform: 'uppercase',
@@ -588,7 +588,7 @@ export function Gear() {
                         <div style={{ marginTop: '6px', display: 'flex', gap: '4px', flexWrap: 'wrap', alignItems: 'center' }}>
                           {item.tags.slice(0, 2).map(tag => (
                             <span key={tag} style={{
-                              fontSize: '9px',
+                              fontSize: 'var(--text-xs)',
                               fontFamily: 'var(--headline)',
                               fontWeight: 700,
                               letterSpacing: '0.06em',
@@ -635,7 +635,7 @@ export function Gear() {
           {activeTab === 'library' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <p style={{ margin: 0, fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '15px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>
+                <p style={{ margin: 0, fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>
                   Your Gear Library
                 </p>
                 <button style={{ ...btnGhost, padding: '0.5rem 0.9rem', fontSize: 'var(--text-xs)' }} onClick={openAddCustom}>
@@ -699,7 +699,7 @@ export function Gear() {
                   {/* Custom items first */}
                   {customGear.map(item => (
                     <div key={item.id} style={{ ...card, display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
-                      <div style={{ width: '40px', height: '40px', borderRadius: 'var(--radius-md)', background: 'var(--surface3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--muted)', flexShrink: 0 }}>GEAR</div>
+                      <div style={{ width: '40px', height: '40px', borderRadius: 'var(--radius-md)', background: 'var(--surface3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.04em', color: 'var(--muted)', flexShrink: 0 }}>GEAR</div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--orange)' }}>{item.brand}</div>
                         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', fontWeight: 600 }}>{item.name}</div>
@@ -733,7 +733,7 @@ export function Gear() {
           {activeTab === 'lists' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <p style={{ margin: 0, fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '15px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>
+                <p style={{ margin: 0, fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>
                   Your Gear Lists
                 </p>
                 <button style={{ ...btnGhost, padding: '0.5rem 0.9rem', fontSize: 'var(--text-xs)' }} onClick={() => { setListForm({ name: '', kind: 'Race Day Kit' }); setListModal('new') }}>
@@ -835,7 +835,7 @@ export function Gear() {
           {activeTab === 'stacks' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <p style={{ margin: 0, fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '15px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>
+                <p style={{ margin: 0, fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>
                   Your Race Stacks
                 </p>
                 <button style={{ ...btnGhost, padding: '0.5rem 0.9rem', fontSize: 'var(--text-xs)' }} onClick={() => { setStackForm({ name: '', raceId: '', template: '' }); setStackModal('new') }}>

@@ -441,9 +441,9 @@ function GreetingCard() {
                     <span style={{ fontSize: 'var(--text-md)', lineHeight: 1 }}>{h.icon}</span>
                     {h.temp !== null
                       ? <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-compact)', color: 'var(--white)', letterSpacing: '0.02em' }}>{h.temp}°</span>
-                      : <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '9px', color: 'var(--orange)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{h.isSun === 'rise' ? 'RISE' : 'SET'}</span>
+                      : <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', color: 'var(--orange)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{h.isSun === 'rise' ? 'RISE' : 'SET'}</span>
                     }
-                    <span style={{ fontSize: '9px', color: 'var(--muted)', letterSpacing: '0.02em', textAlign: 'center', whiteSpace: 'nowrap' }}>{h.time}</span>
+                    <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', letterSpacing: '0.02em', textAlign: 'center', whiteSpace: 'nowrap' }}>{h.time}</span>
                   </div>
                 ))}
               </div>
@@ -1373,11 +1373,11 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
               {/* Left: name + meta */}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', flexWrap: 'wrap' }}>
-                  <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '15px', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {r.name ?? 'Untitled'}
                   </span>
                   {isPB && (
-                    <span style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--gold)', background: 'rgba(var(--gold-ch),0.12)', border: '1px solid rgba(var(--gold-ch),0.3)', borderRadius: 'var(--radius-xs)', padding: '2px 6px', flexShrink: 0 }}>PB</span>
+                    <span style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--gold)', background: 'rgba(var(--gold-ch),0.12)', border: '1px solid rgba(var(--gold-ch),0.3)', borderRadius: 'var(--radius-xs)', padding: '2px 6px', flexShrink: 0 }}>PB</span>
                   )}
                 </div>
                 <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>
@@ -1386,7 +1386,7 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
               </div>
               {/* Right: time — monospace for alignment */}
               {r.time && (
-                <div style={{ fontFamily: 'var(--mono)', fontWeight: 700, fontSize: '15px', color: isPB ? 'var(--gold)' : 'var(--orange)', flexShrink: 0, letterSpacing: '0.02em' }}>
+                <div style={{ fontFamily: 'var(--mono)', fontWeight: 700, fontSize: 'var(--text-base)', color: isPB ? 'var(--gold)' : 'var(--orange)', flexShrink: 0, letterSpacing: '0.02em' }}>
                   {toHHMMSS(r.time)}
                 </div>
               )}
@@ -1798,7 +1798,7 @@ function PacingIQWidget() {
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', color: 'var(--green)', letterSpacing: '0.04em' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xl)', color: 'var(--green)', letterSpacing: '0.04em' }}>
             {analysis.dominant}
           </div>
           <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5 }}>
@@ -2467,12 +2467,12 @@ function RaceReadinessWidget() {
           <div style={st.widgetDivider} />
           <div style={{ display: 'flex', gap: 'var(--sp-3)' }}>
             <div style={{ flex: 1, background: 'var(--surface3)', borderRadius: 'var(--radius-sm)', padding: 'var(--sp-3)' }}>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', color: 'var(--white)', lineHeight: 1 }}>{daysSince}d</div>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xl)', color: 'var(--white)', lineHeight: 1 }}>{daysSince}d</div>
               <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted)', textTransform: 'uppercase', marginTop: '4px' }}>SINCE LAST</div>
               {lastDist && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', marginTop: '2px' }}>{distBadge(lastDist)}</div>}
             </div>
             <div style={{ flex: 1, background: 'var(--surface3)', borderRadius: 'var(--radius-sm)', padding: 'var(--sp-3)' }}>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', color: 'var(--white)', lineHeight: 1 }}>{recoveryDays}d</div>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xl)', color: 'var(--white)', lineHeight: 1 }}>{recoveryDays}d</div>
               <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted)', textTransform: 'uppercase', marginTop: '4px' }}>RECOVERY</div>
               <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', marginTop: '2px' }}>WINDOW</div>
             </div>
@@ -2598,13 +2598,13 @@ function GapToGoalWidget({ race }: { race: Race | null }) {
           <div style={{ display: 'flex', gap: 'var(--sp-3)' }}>
             {weeksToRace !== null && (
               <div style={{ flex: 1, background: 'var(--surface3)', borderRadius: 'var(--radius-sm)', padding: 'var(--sp-3)' }}>
-                <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', color: 'var(--white)', lineHeight: 1 }}>{weeksToRace}w</div>
+                <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xl)', color: 'var(--white)', lineHeight: 1 }}>{weeksToRace}w</div>
                 <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted)', textTransform: 'uppercase', marginTop: '4px' }}>WEEKS TO RACE</div>
               </div>
             )}
             {result.gap !== null && (
               <div style={{ flex: 1, background: 'var(--surface3)', borderRadius: 'var(--radius-sm)', padding: 'var(--sp-3)' }}>
-                <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '22px', color: gapColor, lineHeight: 1 }}>{result.gap <= 0 ? `-${secsToHMS(Math.abs(result.gap))}` : `+${secsToHMS(result.gap)}`}</div>
+                <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xl)', color: gapColor, lineHeight: 1 }}>{result.gap <= 0 ? `-${secsToHMS(Math.abs(result.gap))}` : `+${secsToHMS(result.gap)}`}</div>
                 <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted)', textTransform: 'uppercase', marginTop: '4px' }}>PB GAP</div>
               </div>
             )}
@@ -3378,7 +3378,7 @@ function PersonalBestsWidget() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)', marginTop: '10px', padding: '12px', background: 'var(--surface3)', borderRadius: 'var(--radius-md)' }}>
           {pillGroups.map(pg => (
             <div key={pg.sport}>
-              <div style={{ fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted2)', marginBottom: '8px' }}>
+              <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted2)', marginBottom: '8px' }}>
                 {pg.sport}
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
@@ -3656,7 +3656,7 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                           onClick={e => { e.stopPropagation(); setAltsOpenId(isOpen ? null : r.id) }}
                           style={{ background: 'none', border: 'none', padding: '4px 0', cursor: 'pointer', fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '4px' }}
                         >
-                          <span style={{ fontSize: '9px' }}>{isOpen ? '▲' : '▼'}</span>
+                          <span style={{ fontSize: 'var(--text-xs)' }}>{isOpen ? '▲' : '▼'}</span>
                           {isOpen ? 'HIDE ALTERNATIVES' : 'FIND ALTERNATIVES'}
                         </button>
                         {isOpen && (
@@ -4023,7 +4023,7 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 1500, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={() => setShowLinkSheet(false)}>
           <div style={{ ...st.customizeSheet, maxHeight: '60vh' }} onClick={e => e.stopPropagation()}>
             <div style={{ width: '40px', height: '4px', background: 'var(--border2)', borderRadius: 'var(--radius-xs)', margin: '0 auto 16px' }} />
-            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '15px', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)', marginBottom: '4px' }}>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)', marginBottom: '4px' }}>
               Set Goal Pace On Race
             </div>
             <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginBottom: '14px' }}>
@@ -4114,11 +4114,11 @@ function GoalPaceWidget({ race }: { race: Race | null }) {
       <div style={{ display: 'flex', gap: 'var(--sp-3)' }}>
         <div style={{ flex: 1, background: 'var(--surface3)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-4)', border: '1px solid var(--border2)', textAlign: 'center' }}>
           <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, color: 'var(--muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>per KM</div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '26px', color: 'var(--orange)', lineHeight: 1.1, marginTop: '4px' }}>{result.pacePaceStr.split(' ')[0]}</div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xl)', color: 'var(--orange)', lineHeight: 1.1, marginTop: '4px' }}>{result.pacePaceStr.split(' ')[0]}</div>
         </div>
         <div style={{ flex: 1, background: 'var(--surface3)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-4)', border: '1px solid var(--border2)', textAlign: 'center' }}>
           <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, color: 'var(--muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>per MILE</div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '26px', color: 'var(--white)', lineHeight: 1.1, marginTop: '4px' }}>{result.paceMileStr.split(' ')[0]}</div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xl)', color: 'var(--white)', lineHeight: 1.1, marginTop: '4px' }}>{result.paceMileStr.split(' ')[0]}</div>
         </div>
       </div>
 
@@ -4319,7 +4319,7 @@ function CourseRepeatsWidget() {
                         <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)' }}>{fmtDateDDMM(r.date)}</div>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
-                        {isPB && <span style={{ fontSize: '9px', color: 'var(--gold-a)', fontFamily: 'var(--headline)', fontWeight: 700 }}>PB</span>}
+                        {isPB && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--gold-a)', fontFamily: 'var(--headline)', fontWeight: 700 }}>PB</span>}
                         <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', color: isPB ? 'var(--orange)' : 'var(--white)' }}>{r.time}</span>
                       </div>
                     </div>
@@ -5554,7 +5554,7 @@ const st = {
     padding: 'var(--sp-4)',
     fontFamily: 'var(--headline)',
     fontWeight: 900,
-    fontSize: '15px',
+    fontSize: 'var(--text-base)',
     letterSpacing: '0.1em',
     textTransform: 'uppercase' as const,
     cursor: 'pointer',

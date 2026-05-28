@@ -137,7 +137,7 @@ function AuthLoadingScreen() {
     }}>
       <span style={{
         fontFamily: 'var(--headline)',
-        fontSize: '22px',
+        fontSize: 'var(--text-xl)',
         fontWeight: 900,
         letterSpacing: '0.18em',
         textTransform: 'uppercase',
