@@ -2582,7 +2582,7 @@ function GapToGoalWidget({ race }: { race: Race | null }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
           <div style={st.widgetLabel}>GAP TO GOAL</div>
           {nextRace.name
-            ? <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', lineHeight: 1.1 }}>{nextRace.name}</div>
+            ? <div style={st.widgetTitle}>{nextRace.name}</div>
             : <div style={st.widgetTitle}>{distBadge(nextRace.distance) || 'NEXT RACE'}</div>
           }
         </div>
