@@ -1458,7 +1458,7 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
             {r.name ?? 'Untitled'}
           </div>
           {r.time && (
-            <div style={{ fontFamily: 'var(--mono)', fontWeight: 700, fontSize: '64px', color: isPB ? 'var(--gold)' : 'var(--orange)', letterSpacing: '-0.02em', lineHeight: 1, marginTop: '4px' }}>
+            <div style={{ fontFamily: 'var(--mono)', fontWeight: 700, fontSize: 'var(--text-xl)', color: isPB ? 'var(--gold)' : 'var(--orange)', letterSpacing: '-0.02em', lineHeight: 1, marginTop: '4px' }}>
               {toHHMMSS(r.time)}
             </div>
           )}
@@ -3341,6 +3341,8 @@ function WhatToRaceNextWidget() {
   const races = useRaceStore(selectRaces)
   const upcoming = useRaceStore(s => s.upcomingRaces)
   const today = todayStr()
+  const wtrCtx = useWidgetCardContext()
+  const wtrSize = wtrCtx?.getWidgetSize('what-to-race-next') ?? 'medium'
   const past  = useMemo(() => races.filter(r => r.date <= today && r.time), [races, today])
   const futureUpcoming = useMemo(() => upcoming.filter(r => r.date > today).sort((a, b) => a.date.localeCompare(b.date)), [upcoming, today])
 
@@ -3362,6 +3364,8 @@ function WhatToRaceNextWidget() {
     )
   }
 
+  const racesToShow = wtrSize === 'large' ? futureUpcoming : futureUpcoming.slice(0, 3)
+
   return (
     <WidgetCard id="what-to-race-next" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
@@ -3369,15 +3373,14 @@ function WhatToRaceNextWidget() {
           <div style={st.widgetLabel}>WHAT TO RACE NEXT</div>
           <div style={st.widgetTitle}>{futureUpcoming.length} RACE{futureUpcoming.length !== 1 ? 'S' : ''} UPCOMING</div>
         </div>
+        {recommendation && (
+          <span style={{ ...st.badgePill, background: 'rgba(var(--green-ch),0.12)', color: 'var(--green)', border: '1px solid rgba(var(--green-ch),0.3)', flexShrink: 0 }}>
+            {recommendation.toUpperCase()}
+          </span>
+        )}
       </div>
-      {recommendation && (
-        <div style={{ padding: 'var(--sp-2)', background: 'rgba(var(--green-ch),0.08)', border: '1px solid rgba(var(--green-ch),0.2)', borderRadius: 'var(--radius-md)', marginTop: 'var(--sp-2)' }}>
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--green)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>SURFACE MATCH</div>
-          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', marginTop: 'var(--sp-1)' }}>Your PBs align with {recommendation.toLowerCase()} — prioritise {recommendation.toLowerCase()} events.</div>
-        </div>
-      )}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 0, marginTop: 'var(--sp-2)' }}>
-        {futureUpcoming.slice(0, 3).map(r => (
+        {racesToShow.map(r => (
           <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 'var(--sp-2) 0', borderBottom: '1px solid var(--border)' }}>
             <div style={{ minWidth: 0, flex: 1 }}>
               <div style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name ?? 'Unnamed Race'}</div>
@@ -4387,6 +4390,7 @@ function DistanceMilestonesWidget() {
 
   if (size === 'small') {
     const milestoneLabel = result.nextMilestone ? result.nextMilestone.label.toUpperCase() : 'KM RACED'
+    const pct = result.nextMilestone ? Math.min(100, Math.round((result.totalKm / result.nextMilestone.km) * 100)) : 100
     return (
       <WidgetCard id="distance-milestones" style={st.glowCard}>
         <div>
@@ -4395,10 +4399,13 @@ function DistanceMilestonesWidget() {
         </div>
         <div style={{ marginTop: 'auto' }}>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: 'var(--orange)', letterSpacing: '-0.02em' }}>
-            {result.nextMilestone ? `${result.totalKm.toLocaleString()}/${result.nextMilestone.km.toLocaleString()}` : result.totalKm.toLocaleString()}
+            {result.totalKm.toLocaleString()}
           </div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
             {milestoneLabel}
+          </div>
+          <div style={{ height: '3px', background: 'var(--surface3)', borderRadius: 'var(--radius-xs)', marginTop: '10px', overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${pct}%`, background: 'var(--orange)', borderRadius: 'var(--radius-xs)', transition: 'width 0.5s ease' }} />
           </div>
         </div>
       </WidgetCard>
