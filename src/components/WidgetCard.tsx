@@ -186,37 +186,36 @@ export function WidgetCard({
             aria-label="Drag to reorder"
           >≡</span>
 
-          {/* Size chips */}
-          <div style={{ display: 'flex', gap: 4 }}>
-            {(['small', 'medium', 'large'] as WidgetSize[]).map(s => {
-              const supported = supportedSizes.includes(s)
-              const active = currentSize === s
-              return (
-                <button
-                  key={s}
-                  disabled={!supported}
-                  onClick={e => { e.stopPropagation(); if (supported) ctx?.setWidgetSize(id, s) }}
-                  style={{
-                    fontFamily: 'var(--headline)',
-                    fontSize: 'var(--text-xs)',
-                    fontWeight: 700,
-                    textTransform: 'uppercase' as const,
-                    height: 22,
-                    padding: '0 7px',
-                    borderRadius: 4,
-                    border: 'none',
-                    cursor: supported ? 'pointer' : 'not-allowed',
-                    background: active ? 'var(--orange)' : 'var(--surface2)',
-                    color: active ? 'var(--white)' : 'var(--muted)',
-                    opacity: supported ? 1 : 0.25,
-                    transition: 'background 120ms, color 120ms',
-                  }}
-                >
-                  {s[0].toUpperCase()}
-                </button>
-              )
-            })}
-          </div>
+          {/* Size chips — only shown when widget supports multiple sizes */}
+          {supportedSizes.length > 1 && (
+            <div style={{ display: 'flex', gap: 4 }}>
+              {supportedSizes.map(s => {
+                const active = currentSize === s
+                return (
+                  <button
+                    key={s}
+                    onClick={e => { e.stopPropagation(); ctx?.setWidgetSize(id, s) }}
+                    style={{
+                      fontFamily: 'var(--headline)',
+                      fontSize: 'var(--text-xs)',
+                      fontWeight: 700,
+                      textTransform: 'uppercase' as const,
+                      height: 22,
+                      padding: '0 7px',
+                      borderRadius: 4,
+                      border: 'none',
+                      cursor: 'pointer',
+                      background: active ? 'var(--orange)' : 'var(--surface2)',
+                      color: active ? 'var(--white)' : 'var(--muted)',
+                      transition: 'background 120ms, color 120ms',
+                    }}
+                  >
+                    {s[0].toUpperCase()}
+                  </button>
+                )
+              })}
+            </div>
+          )}
 
           {/* Remove button */}
           <button
