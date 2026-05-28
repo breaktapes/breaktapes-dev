@@ -1698,15 +1698,15 @@ function BostonQualWidget() {
     }
     return (
       <WidgetCard id="boston-qual" style={st.glowCard}>
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
-          <div>
-            <div style={st.widgetLabel}>BQ STATUS</div>
-            <div style={st.widgetTitle}>BOSTON QUALIFIER</div>
-          </div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', lineHeight: 1, color: gapColor, letterSpacing: '-0.01em' }}>
+        <div>
+          <div style={st.widgetLabel}>BQ STATUS</div>
+          <div style={st.widgetTitle}>BOSTON QUALIFIER</div>
+        </div>
+        <div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: gapColor, letterSpacing: '-0.02em' }}>
             {gapStr}
           </div>
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
             {subLabel}
           </div>
         </div>
@@ -1855,15 +1855,15 @@ function PacingIQWidget() {
     const abbrevColor = !analysis ? 'var(--muted)' : analysis.dominant === 'NEGATIVE SPLITTER' ? 'var(--green)' : analysis.dominant === 'EVEN PACER' ? 'var(--white)' : 'var(--orange)'
     return (
       <WidgetCard id="pacing-iq" style={st.glowCard}>
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
-          <div>
-            <div style={st.widgetLabel}>PACING IQ</div>
-            <div style={st.widgetTitle}>RACE RHYTHM</div>
-          </div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', lineHeight: 1, color: abbrevColor }}>
+        <div>
+          <div style={st.widgetLabel}>PACING IQ</div>
+          <div style={st.widgetTitle}>RACE RHYTHM</div>
+        </div>
+        <div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: abbrevColor, letterSpacing: '-0.02em' }}>
             {abbrev}
           </div>
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
             {analysis ? analysis.dominant : 'NO DATA'}
           </div>
         </div>
@@ -1919,15 +1919,15 @@ function CareerMomentumWidget() {
     const scoreColor = badge === 'HOT' ? 'var(--green)' : badge === 'RISING' ? 'var(--orange)' : badge === 'NEUTRAL' ? 'var(--white)' : 'var(--muted)'
     return (
       <WidgetCard id="career-momentum" style={st.glowCard}>
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
-          <div>
-            <div style={st.widgetLabel}>CAREER MOMENTUM</div>
-            <div style={st.widgetTitle}>FORM TREND</div>
-          </div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', lineHeight: 1, color: scoreColor }}>
+        <div>
+          <div style={st.widgetLabel}>CAREER MOMENTUM</div>
+          <div style={st.widgetTitle}>FORM TREND</div>
+        </div>
+        <div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: scoreColor, letterSpacing: '-0.02em' }}>
             {races.length < 2 ? '—' : scoreNum}
           </div>
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
             {races.length < 2 ? 'NO DATA' : badge}
           </div>
         </div>
@@ -2474,15 +2474,15 @@ function OnThisDayWidget() {
     const shortName = race.name ?? ''
     return (
       <WidgetCard id="on-this-day" style={st.glowCard}>
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
-          <div>
-            <div style={st.widgetLabel}>ON THIS DAY</div>
-            <div style={st.widgetTitle}>RACE FLASHBACK</div>
-          </div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', lineHeight: 1, color: 'var(--orange)' }}>
+        <div>
+          <div style={st.widgetLabel}>ON THIS DAY</div>
+          <div style={st.widgetTitle}>RACE FLASHBACK</div>
+        </div>
+        <div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: 'var(--orange)', letterSpacing: '-0.02em' }}>
             {race.date.slice(0, 4)}
           </div>
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {shortName}
           </div>
         </div>
@@ -2761,15 +2761,15 @@ function PressurePerformerWidget() {
     const smallColor = !result ? 'var(--muted)' : labelColor
     return (
       <WidgetCard id="pressure-performer" style={st.glowCard}>
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
-          <div>
-            <div style={st.widgetLabel}>SPOTLIGHT</div>
-            <div style={st.widgetTitle}>A-RACE IQ</div>
-          </div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', lineHeight: 1, color: smallColor }}>
+        <div>
+          <div style={st.widgetLabel}>SPOTLIGHT</div>
+          <div style={st.widgetTitle}>A-RACE IQ</div>
+        </div>
+        <div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: smallColor, letterSpacing: '-0.02em' }}>
             {shortLabel}
           </div>
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
             UNDER PRESSURE
           </div>
         </div>
@@ -2853,15 +2853,15 @@ function TravelLoadWidget() {
     const impactColor = diff === null ? 'var(--muted)' : Math.abs(diff) <= 5 ? 'var(--green)' : Math.abs(diff) <= 15 ? 'var(--orange)' : '#ef4444'
     return (
       <WidgetCard id="travel-load" style={st.glowCard}>
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
-          <div>
-            <div style={st.widgetLabel}>TRAVEL LOAD</div>
-            <div style={st.widgetTitle}>HOME vs AWAY</div>
-          </div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', lineHeight: 1, color: impactColor }}>
+        <div>
+          <div style={st.widgetLabel}>TRAVEL LOAD</div>
+          <div style={st.widgetTitle}>HOME vs AWAY</div>
+        </div>
+        <div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: impactColor, letterSpacing: '-0.02em' }}>
             {impactLabel}
           </div>
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
             IMPACT RATING
           </div>
         </div>
@@ -2972,15 +2972,15 @@ function CourseFitWidget({ race }: { race: Race | null }) {
     const fitLabel = result ? result.label : (nextRace ? 'NO DATA' : 'NO RACE')
     return (
       <WidgetCard id="course-fit" style={st.glowCard}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', padding: 0 }}>
-          <div>
-            <div style={st.widgetLabel}>COURSE FIT</div>
-            <div style={st.widgetTitle}>NEXT RACE</div>
-          </div>
+        <div>
+          <div style={st.widgetLabel}>COURSE FIT</div>
+          <div style={st.widgetTitle}>NEXT RACE</div>
+        </div>
+        <div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: scoreColor, letterSpacing: '-0.02em' }}>
             {scoreStr}
           </div>
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.14em' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
             {fitLabel}
           </div>
         </div>
@@ -3108,15 +3108,15 @@ function PBProbabilityWidget({ race }: { race: Race | null }) {
     const probColor = result ? result.color : 'var(--muted)'
     return (
       <WidgetCard id="pb-probability" style={st.glowCard}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', padding: 0 }}>
-          <div>
-            <div style={st.widgetLabel}>PB PROBABILITY</div>
-            <div style={st.widgetTitle}>NEXT RACE</div>
-          </div>
+        <div>
+          <div style={st.widgetLabel}>PB PROBABILITY</div>
+          <div style={st.widgetTitle}>NEXT RACE</div>
+        </div>
+        <div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: probColor, letterSpacing: '-0.02em' }}>
             {probStr}
           </div>
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.14em' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
             PROBABILITY
           </div>
         </div>
@@ -3498,15 +3498,15 @@ function PersonalBestsWidget() {
     const timeDisplay = bestEntry?.r.time ?? '—'
     return (
       <WidgetCard id="personal-bests" style={st.glowCard}>
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
-          <div>
-            <div style={st.widgetLabel}>ALL TIME</div>
-            <div style={st.widgetTitle}>PERSONAL BESTS</div>
-          </div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', lineHeight: 1, color: 'var(--green)', letterSpacing: '0.01em' }}>
+        <div>
+          <div style={st.widgetLabel}>ALL TIME</div>
+          <div style={st.widgetTitle}>PERSONAL BESTS</div>
+        </div>
+        <div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: 'var(--green)', letterSpacing: '-0.02em' }}>
             {timeDisplay}
           </div>
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
             {distLabel}
           </div>
         </div>
@@ -4079,15 +4079,15 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
     const targetRow = table.find(r => !r.isSameAsInput) ?? table[0]
     return (
       <WidgetCard id="riegel-predictor" style={st.glowCard}>
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
-          <div>
-            <div style={st.widgetLabel}>RACE PREDICTOR</div>
-            <div style={st.widgetTitle}>RIEGEL PREDICTOR</div>
-          </div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', lineHeight: 1, color: 'var(--orange)', letterSpacing: '0.01em' }}>
+        <div>
+          <div style={st.widgetLabel}>RACE PREDICTOR</div>
+          <div style={st.widgetTitle}>RIEGEL PREDICTOR</div>
+        </div>
+        <div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: 'var(--orange)', letterSpacing: '-0.02em' }}>
             {targetRow?.predictedTime ?? '—'}
           </div>
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
             {targetRow?.distance ?? 'PREDICTED'}
           </div>
         </div>
@@ -4260,15 +4260,15 @@ function GoalPaceWidget({ race }: { race: Race | null }) {
     const raceName = focusRace.name ?? 'NO GOAL SET'
     return (
       <WidgetCard id="goal-pace" style={st.glowCard}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', padding: 0 }}>
-          <div>
-            <div style={st.widgetLabel}>GOAL PACE</div>
-            <div style={st.widgetTitle}>TARGET PACE</div>
-          </div>
+        <div>
+          <div style={st.widgetLabel}>GOAL PACE</div>
+          <div style={st.widgetTitle}>TARGET PACE</div>
+        </div>
+        <div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: result ? 'var(--orange)' : 'var(--muted)', letterSpacing: '-0.02em' }}>
             {result ? `${paceStr}` : '—'}
           </div>
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.14em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {result ? `/${distUnit(units) === 'KM' ? 'km' : 'mi'} · ${raceName}` : 'NO GOAL SET'}
           </div>
         </div>
@@ -4351,15 +4351,15 @@ function DistanceMilestonesWidget() {
     const milestoneLabel = result.nextMilestone ? result.nextMilestone.label.toUpperCase() : 'KM RACED'
     return (
       <WidgetCard id="distance-milestones" style={st.glowCard}>
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
-          <div>
-            <div style={st.widgetLabel}>MILESTONES</div>
-            <div style={st.widgetTitle}>DISTANCE TOTAL</div>
-          </div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', lineHeight: 1, color: 'var(--orange)' }}>
+        <div>
+          <div style={st.widgetLabel}>MILESTONES</div>
+          <div style={st.widgetTitle}>DISTANCE TOTAL</div>
+        </div>
+        <div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: 'var(--orange)', letterSpacing: '-0.02em' }}>
             {result.nextMilestone ? `${result.totalKm.toLocaleString()}/${result.nextMilestone.km.toLocaleString()}` : result.totalKm.toLocaleString()}
           </div>
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
             {milestoneLabel}
           </div>
         </div>
@@ -4450,15 +4450,15 @@ function CourseRepeatsWidget() {
   if (size === 'small') {
     return (
       <WidgetCard id="course-repeats" style={st.glowCard}>
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
-          <div>
-            <div style={st.widgetLabel}>HOME TURF</div>
-            <div style={st.widgetTitle}>COURSE REPEATS</div>
-          </div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', lineHeight: 1, color: 'var(--orange)' }}>
+        <div>
+          <div style={st.widgetLabel}>HOME TURF</div>
+          <div style={st.widgetTitle}>COURSE REPEATS</div>
+        </div>
+        <div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: 'var(--orange)', letterSpacing: '-0.02em' }}>
             {courses.length || '—'}
           </div>
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
             COURSES
           </div>
         </div>
