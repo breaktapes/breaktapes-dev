@@ -1028,7 +1028,6 @@ function computePersonality(races: Race[]): Array<{ trait: string; score: number
 function AthleteHero({ onEdit }: { onEdit: () => void }) {
   const athlete = useAthleteStore(selectAthlete)
   const races   = useRaceStore(selectRaces)
-  const navigate = useNavigate()
   const units   = useUnits()
   const nextRace = useRaceStore(selectNextRace)
   const { user } = useUser()
@@ -1293,29 +1292,6 @@ function AthleteHero({ onEdit }: { onEdit: () => void }) {
             Share Profile ↗
           </button>
         )}
-        <button
-          style={{
-            background: 'transparent',
-            border: '1px solid var(--border2)',
-            borderRadius: 'var(--radius-md)',
-            color: 'var(--muted)',
-            padding: '10px 16px',
-            fontFamily: 'var(--headline)',
-            fontWeight: 700,
-            fontSize: 'var(--text-xs)',
-            letterSpacing: '0.1em',
-            textTransform: 'uppercase',
-            cursor: 'pointer',
-          }}
-          onClick={() => {
-            const params = athlete?.username && athlete?.isPublic
-              ? `?a=${encodeURIComponent(athlete.username)}`
-              : ''
-            navigate(`/compare${params}`)
-          }}
-        >
-          Compare ↔
-        </button>
       </div>
     </div>
     {copyToast && createPortal(
@@ -1415,7 +1391,17 @@ function MedalWall() {
   const [showAll, setShowAll] = useState(false)
 
   const medalRaces = useMemo(
-    () => races.filter(r => r.medal && r.medal !== '').sort((a, b) => b.date.localeCompare(a.date)),
+    () => {
+      const rank: Record<string, number> = { gold: 0, silver: 1, bronze: 2, finisher: 3 }
+      return races
+        .filter(r => r.medal && r.medal !== '')
+        .sort((a, b) => {
+          const ra = rank[(a.medal ?? '').toLowerCase()] ?? 99
+          const rb = rank[(b.medal ?? '').toLowerCase()] ?? 99
+          if (ra !== rb) return ra - rb
+          return b.date.localeCompare(a.date)
+        })
+    },
     [races],
   )
   const visibleMedalRaces = showAll ? medalRaces : medalRaces.slice(0, 6)
