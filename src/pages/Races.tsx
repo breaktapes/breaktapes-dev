@@ -90,21 +90,6 @@ function distLabel(d: string | undefined): string {
   return distLabelUtil(d)
 }
 
-/** Country code → flag emoji */
-function countryFlag(country: string | undefined): string {
-  if (!country) return ''
-  // Map common full names to ISO-2
-  const nameToCode: Record<string, string> = {
-    'united arab emirates': 'ae', 'south africa': 'za', 'united kingdom': 'gb',
-    'united states': 'us', 'new zealand': 'nz', 'saudi arabia': 'sa',
-    'czech republic': 'cz', 'south korea': 'kr', 'north korea': 'kp',
-  }
-  const lower = country.toLowerCase().trim()
-  let code = nameToCode[lower] ?? (lower.length === 2 ? lower : '')
-  if (!code) return ''
-  return code.toUpperCase().replace(/./g, c => String.fromCodePoint(0x1F1E5 + c.charCodeAt(0)))
-}
-
 /** Zero-pads hours in a time string: "5:09:49" → "05:09:49" */
 function padTime(t: string | undefined): string | undefined {
   if (!t) return t
@@ -271,7 +256,6 @@ function DetailedRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onCli
   const d = new Date(race.date + 'T00:00:00')
   const mon = d.toLocaleString('en', { month: 'short' }).toUpperCase()
   const day = d.getDate()
-  const flag = countryFlag(race.country)
   const placing = parsePlacing(race.placing)
   const label = distLabel(race.distance)
   const nonFinish = race.outcome && race.outcome !== 'Finished'
@@ -294,9 +278,8 @@ function DetailedRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onCli
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-compact)', color: 'var(--white)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {race.name}
           </div>
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            {flag && <span>{flag}</span>}
-            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{[race.city, race.country].filter(Boolean).join(', ')}</span>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {[race.city, race.country].filter(Boolean).join(', ')}
           </div>
         </div>
         <div style={{ textAlign: 'right', flexShrink: 0 }}>
@@ -685,9 +668,11 @@ function MapCitiesPill({
     // Local alias avoids shadowing react-map-gl/maplibre `Map` import
     const CityMap = globalThis.Map as MapConstructor
     const m: Map<string, CityEntry> = new CityMap()
+    // Normalize key so "Ras al-Khaimah" and "Ras Al Khaimah" collapse to one
+    const normKey = (s: string) => s.trim().toLowerCase().replace(/[-_\s]+/g, ' ')
     races.forEach(r => {
       if (!r.city?.trim()) return
-      const key = `${r.city.trim().toLowerCase()}|${(r.country || '').trim().toLowerCase()}`
+      const key = `${normKey(r.city)}|${normKey(r.country || '')}`
       const cur = m.get(key)
       if (!cur) {
         m.set(key, {
