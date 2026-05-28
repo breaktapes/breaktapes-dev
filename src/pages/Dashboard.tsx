@@ -1702,7 +1702,7 @@ function BostonQualWidget() {
           <div style={st.widgetLabel}>BQ STATUS</div>
           <div style={st.widgetTitle}>BOSTON QUALIFIER</div>
         </div>
-        <div>
+        <div style={{ marginTop: 'auto' }}>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: gapColor, letterSpacing: '-0.02em' }}>
             {gapStr}
           </div>
@@ -1859,7 +1859,7 @@ function PacingIQWidget() {
           <div style={st.widgetLabel}>PACING IQ</div>
           <div style={st.widgetTitle}>RACE RHYTHM</div>
         </div>
-        <div>
+        <div style={{ marginTop: 'auto' }}>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: abbrevColor, letterSpacing: '-0.02em' }}>
             {abbrev}
           </div>
@@ -1923,7 +1923,7 @@ function CareerMomentumWidget() {
           <div style={st.widgetLabel}>CAREER MOMENTUM</div>
           <div style={st.widgetTitle}>FORM TREND</div>
         </div>
-        <div>
+        <div style={{ marginTop: 'auto' }}>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: scoreColor, letterSpacing: '-0.02em' }}>
             {races.length < 2 ? '—' : scoreNum}
           </div>
@@ -2478,7 +2478,7 @@ function OnThisDayWidget() {
           <div style={st.widgetLabel}>ON THIS DAY</div>
           <div style={st.widgetTitle}>RACE FLASHBACK</div>
         </div>
-        <div>
+        <div style={{ marginTop: 'auto' }}>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: 'var(--orange)', letterSpacing: '-0.02em' }}>
             {race.date.slice(0, 4)}
           </div>
@@ -2547,7 +2547,7 @@ function RaceReadinessWidget() {
         <span style={{ ...st.badgePill, background: `${sigColor}22`, color: sigColor, border: `1px solid ${sigColor}55`, flexShrink: 0 }}>{signal}</span>
       </div>
 
-      <div>
+      <div style={{ marginTop: 'auto' }}>
         <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: sigColor, letterSpacing: '-0.02em' }}>
           {score}%
         </div>
@@ -2765,7 +2765,7 @@ function PressurePerformerWidget() {
           <div style={st.widgetLabel}>SPOTLIGHT</div>
           <div style={st.widgetTitle}>A-RACE IQ</div>
         </div>
-        <div>
+        <div style={{ marginTop: 'auto' }}>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: smallColor, letterSpacing: '-0.02em' }}>
             {shortLabel}
           </div>
@@ -2857,7 +2857,7 @@ function TravelLoadWidget() {
           <div style={st.widgetLabel}>TRAVEL LOAD</div>
           <div style={st.widgetTitle}>HOME vs AWAY</div>
         </div>
-        <div>
+        <div style={{ marginTop: 'auto' }}>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: impactColor, letterSpacing: '-0.02em' }}>
             {impactLabel}
           </div>
@@ -2976,7 +2976,7 @@ function CourseFitWidget({ race }: { race: Race | null }) {
           <div style={st.widgetLabel}>COURSE FIT</div>
           <div style={st.widgetTitle}>NEXT RACE</div>
         </div>
-        <div>
+        <div style={{ marginTop: 'auto' }}>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: scoreColor, letterSpacing: '-0.02em' }}>
             {scoreStr}
           </div>
@@ -3112,7 +3112,7 @@ function PBProbabilityWidget({ race }: { race: Race | null }) {
           <div style={st.widgetLabel}>PB PROBABILITY</div>
           <div style={st.widgetTitle}>NEXT RACE</div>
         </div>
-        <div>
+        <div style={{ marginTop: 'auto' }}>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: probColor, letterSpacing: '-0.02em' }}>
             {probStr}
           </div>
@@ -3502,7 +3502,7 @@ function PersonalBestsWidget() {
           <div style={st.widgetLabel}>ALL TIME</div>
           <div style={st.widgetTitle}>PERSONAL BESTS</div>
         </div>
-        <div>
+        <div style={{ marginTop: 'auto' }}>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: 'var(--green)', letterSpacing: '-0.02em' }}>
             {timeDisplay}
           </div>
@@ -4083,7 +4083,7 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
           <div style={st.widgetLabel}>RACE PREDICTOR</div>
           <div style={st.widgetTitle}>RIEGEL PREDICTOR</div>
         </div>
-        <div>
+        <div style={{ marginTop: 'auto' }}>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: 'var(--orange)', letterSpacing: '-0.02em' }}>
             {targetRow?.predictedTime ?? '—'}
           </div>
@@ -4264,7 +4264,7 @@ function GoalPaceWidget({ race }: { race: Race | null }) {
           <div style={st.widgetLabel}>GOAL PACE</div>
           <div style={st.widgetTitle}>TARGET PACE</div>
         </div>
-        <div>
+        <div style={{ marginTop: 'auto' }}>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: result ? 'var(--orange)' : 'var(--muted)', letterSpacing: '-0.02em' }}>
             {result ? `${paceStr}` : '—'}
           </div>
@@ -4355,7 +4355,7 @@ function DistanceMilestonesWidget() {
           <div style={st.widgetLabel}>MILESTONES</div>
           <div style={st.widgetTitle}>DISTANCE TOTAL</div>
         </div>
-        <div>
+        <div style={{ marginTop: 'auto' }}>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: 'var(--orange)', letterSpacing: '-0.02em' }}>
             {result.nextMilestone ? `${result.totalKm.toLocaleString()}/${result.nextMilestone.km.toLocaleString()}` : result.totalKm.toLocaleString()}
           </div>
@@ -4454,7 +4454,7 @@ function CourseRepeatsWidget() {
           <div style={st.widgetLabel}>HOME TURF</div>
           <div style={st.widgetTitle}>COURSE REPEATS</div>
         </div>
-        <div>
+        <div style={{ marginTop: 'auto' }}>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: 'var(--orange)', letterSpacing: '-0.02em' }}>
             {courses.length || '—'}
           </div>
