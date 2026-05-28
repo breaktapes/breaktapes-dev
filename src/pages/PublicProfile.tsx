@@ -91,25 +91,25 @@ export function PublicProfile({ profile }: PublicProfileProps) {
   const countries = new Set(races.map(r => r.country).filter(Boolean)).size
 
   const styles = {
-    page: { fontFamily: "'Barlow', sans-serif", background: '#0D0D0D', color: '#F5F5F5', minHeight: '100vh', padding: '1.5rem 1rem' },
-    hero: { background: '#141414', border: '1px solid rgba(245,245,245,0.06)', borderRadius: 'var(--radius-lg)', padding: '1.5rem', marginBottom: '1rem' },
+    page: { fontFamily: "'Barlow', sans-serif", background: 'var(--surface)', color: 'var(--white)', minHeight: '100vh', padding: '1.5rem 1rem' },
+    hero: { background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1.5rem', marginBottom: '1rem' },
     nameRow: { display: 'flex' as const, alignItems: 'center', gap: '1rem', marginBottom: '0.75rem' },
-    avatar: { width: '56px', height: '56px', borderRadius: 'var(--radius-round)', background: '#1A1A1A', border: '2px solid #E84E1B', display: 'flex' as const, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
-    avatarText: { fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: 'var(--text-lg)', color: '#F5F5F5' },
-    name: { fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: '22px', textTransform: 'uppercase' as const, letterSpacing: '0.06em', color: '#F5F5F5', margin: 0 },
-    sub: { fontSize: 'var(--text-sm)', color: 'rgba(245,245,245,0.35)', margin: '2px 0 0' },
-    level: { fontSize: '9px', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, letterSpacing: '0.1em', color: '#E84E1B', background: 'rgba(232,78,27,0.12)', padding: '2px 6px', borderRadius: 'var(--radius-xs)' },
+    avatar: { width: '56px', height: '56px', borderRadius: 'var(--radius-round)', background: 'var(--surface3)', border: '2px solid var(--orange)', display: 'flex' as const, alignItems: 'center', justifyContent: 'center', flexShrink: 0 },
+    avatarText: { fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: 'var(--text-lg)', color: 'var(--white)' },
+    name: { fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: 'var(--text-xl)', textTransform: 'uppercase' as const, letterSpacing: '0.06em', color: 'var(--white)', margin: 0 },
+    sub: { fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: '2px 0 0' },
+    level: { fontSize: 'var(--text-xs)', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, letterSpacing: '0.1em', color: 'var(--orange)', background: 'var(--orange-dim)', padding: '2px 6px', borderRadius: 'var(--radius-xs)' },
     statsGrid: { display: 'grid' as const, gridTemplateColumns: 'repeat(3,1fr)', gap: '0.5rem', marginTop: '1rem' },
-    statCell: { textAlign: 'center' as const, background: '#1A1A1A', borderRadius: 'var(--radius-md)', padding: '0.5rem' },
-    statVal: { fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: '22px', color: '#F5F5F5', display: 'block' },
-    statLabel: { fontSize: '9px', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: 'rgba(245,245,245,0.35)' },
+    statCell: { textAlign: 'center' as const, background: 'var(--surface3)', borderRadius: 'var(--radius-md)', padding: '0.5rem' },
+    statVal: { fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: 'var(--text-xl)', color: 'var(--white)', display: 'block' },
+    statLabel: { fontSize: 'var(--text-xs)', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: 'var(--muted)' },
     section: { marginBottom: '1rem' },
-    sectionTitle: { fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: 'rgba(245,245,245,0.35)', marginBottom: '0.5rem' },
-    raceRow: { display: 'flex' as const, justifyContent: 'space-between', alignItems: 'center', padding: '0.55rem 0', borderBottom: '1px solid rgba(245,245,245,0.04)' },
-    raceName: { fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 'var(--text-compact)', color: '#F5F5F5' },
-    raceMeta: { fontSize: 'var(--text-xs)', color: 'rgba(245,245,245,0.35)' },
-    raceTime: { fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 'var(--text-sm)', color: '#E84E1B', textAlign: 'right' as const },
-    cta: { display: 'block', textAlign: 'center' as const, background: '#E84E1B', color: '#000', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: 'var(--text-compact)', letterSpacing: '0.1em', textTransform: 'uppercase' as const, padding: '0.85rem', borderRadius: 'var(--radius-xs)', textDecoration: 'none', marginTop: '1.5rem' },
+    sectionTitle: { fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: 'var(--muted)', marginBottom: '0.5rem' },
+    raceRow: { display: 'flex' as const, justifyContent: 'space-between', alignItems: 'center', padding: '0.55rem 0', borderBottom: '1px solid var(--border)' },
+    raceName: { fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 'var(--text-compact)', color: 'var(--white)' },
+    raceMeta: { fontSize: 'var(--text-xs)', color: 'var(--muted)' },
+    raceTime: { fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--orange)', textAlign: 'right' as const },
+    cta: { display: 'block', textAlign: 'center' as const, background: 'var(--orange)', color: 'var(--black)', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: 'var(--text-compact)', letterSpacing: '0.1em', textTransform: 'uppercase' as const, padding: '0.85rem', borderRadius: 'var(--radius-xs)', textDecoration: 'none', marginTop: '1.5rem' },
   }
 
   const initials = [firstName?.[0], lastName?.[0]].filter(Boolean).join('').toUpperCase() || username[0].toUpperCase()
@@ -145,8 +145,8 @@ export function PublicProfile({ profile }: PublicProfileProps) {
           ['Olympic', 'OLYMPIC'], ['70.3 / Middle Distance', '70.3 / Middle Distance'], ['IRONMAN', 'IRONMAN'],
         ]
         const cardStyle = (accent: string) => ({
-          background: '#141414',
-          border: '1px solid rgba(245,245,245,0.06)',
+          background: 'var(--surface2)',
+          border: '1px solid var(--border)',
           borderLeft: `2px solid ${accent}`,
           borderRadius: 'var(--radius-lg)',
           padding: '11px 10px 10px',
@@ -157,8 +157,8 @@ export function PublicProfile({ profile }: PublicProfileProps) {
             .filter(([d]) => pbMap[d])
             .map(([d, label]) => (
               <div key={d} style={cardStyle(accent)}>
-                <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 800, fontSize: '8px', letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: 'rgba(232,224,213,0.40)', marginBottom: '4px', lineHeight: 1 }}>{label}</div>
-                <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 'var(--text-lg)', color: '#E84E1B', lineHeight: 1, letterSpacing: '-0.02em' }}>{escapeHtml(pbMap[d].time)}</div>
+                <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 'var(--text-xs)', letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: 'var(--muted2)', marginBottom: '4px', lineHeight: 1 }}>{label}</div>
+                <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 'var(--text-lg)', color: 'var(--orange)', lineHeight: 1, letterSpacing: '-0.02em' }}>{escapeHtml(pbMap[d].time)}</div>
               </div>
             ))
         const runCards = renderCards(RUN_DISTS, '#00FF88')
@@ -168,7 +168,7 @@ export function PublicProfile({ profile }: PublicProfileProps) {
             <p style={styles.sectionTitle}>Personal Bests</p>
             {runCards.length > 0 && (
               <>
-                <p style={{ ...styles.sectionTitle, fontSize: '8px', marginBottom: '6px' }}>Running</p>
+                <p style={{ ...styles.sectionTitle, marginBottom: '6px' }}>Running</p>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 'var(--sp-2)', marginBottom: '12px' }}>
                   {runCards}
                 </div>
@@ -176,7 +176,7 @@ export function PublicProfile({ profile }: PublicProfileProps) {
             )}
             {triCards.length > 0 && (
               <>
-                <p style={{ ...styles.sectionTitle, fontSize: '8px', marginBottom: '6px' }}>Triathlon</p>
+                <p style={{ ...styles.sectionTitle, marginBottom: '6px' }}>Triathlon</p>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 'var(--sp-2)', marginBottom: '4px' }}>
                   {triCards}
                 </div>
@@ -190,7 +190,7 @@ export function PublicProfile({ profile }: PublicProfileProps) {
       {recentRaces.length > 0 && (
         <div style={styles.section}>
           <p style={styles.sectionTitle}>Race History</p>
-          <div style={{ background: '#141414', border: '1px solid rgba(245,245,245,0.06)', borderRadius: 'var(--radius-lg)', padding: '0.75rem 1rem' }}>
+          <div style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '0.75rem 1rem' }}>
             {recentRaces.map(r => (
               <div key={r.id} style={styles.raceRow}>
                 <div>

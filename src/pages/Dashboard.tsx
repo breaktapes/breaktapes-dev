@@ -4914,7 +4914,7 @@ const st = {
   greetingText: {
     fontFamily: 'var(--headline)',
     fontWeight: 900,
-    fontSize: '22px',
+    fontSize: 'var(--text-xl)',
     letterSpacing: '0.04em',
     textTransform: 'uppercase' as const,
     color: 'var(--white)',
@@ -4923,7 +4923,7 @@ const st = {
   greetingName: {
     fontFamily: 'var(--headline)',
     fontWeight: 900,
-    fontSize: '22px',
+    fontSize: 'var(--text-xl)',
     letterSpacing: '0.04em',
     textTransform: 'uppercase' as const,
     color: 'var(--orange)',
@@ -4962,7 +4962,7 @@ const st = {
 
   briefingTitle: {
     fontFamily: 'var(--headline)',
-    fontSize: '22px',
+    fontSize: 'var(--text-xl)',
     fontWeight: 700,
     letterSpacing: '0.06em',
     textTransform: 'uppercase' as const,
@@ -5063,7 +5063,7 @@ const st = {
   countdownRaceName: {
     fontFamily: 'var(--headline)',
     fontWeight: 900,
-    fontSize: '28px',
+    fontSize: 'var(--text-2xl)',
     letterSpacing: '0.03em',
     textTransform: 'uppercase' as const,
     color: 'var(--white)',
@@ -5107,7 +5107,7 @@ const st = {
   countdownUnitLabel: {
     fontFamily: 'var(--headline)',
     fontWeight: 700,
-    fontSize: '9px',
+    fontSize: 'var(--text-xs)',
     letterSpacing: '0.1em',
     textTransform: 'uppercase' as const,
     color: 'var(--muted)',
