@@ -22,7 +22,7 @@ import { WidgetDetailModal } from '@/components/WidgetDetailModal'
 import type { WidgetDynamicContext } from '@/lib/widgetContent'
 import type { Race, DashWidget, WidgetSize } from '@/types'
 import { useUnits, distUnit, computePaceSecPerKm as computePaceSecPerKmFn } from '@/lib/units'
-import { fmtDateDDMM, distLabel as distLabelUtil, normalizeName, racePriorityLabel } from '@/lib/utils'
+import { fmtDateDDMM, fmtDateOrdinal, distLabel as distLabelUtil, normalizeName, racePriorityLabel } from '@/lib/utils'
 import { useRaceCatalog, type CatalogRace } from '@/hooks/useRaceCatalog'
 import {
   bestRiegelTable,
@@ -1355,12 +1355,14 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
 
   return (
     <WidgetCard id="recent-races" style={st.glowCard}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 'var(--sp-2)' }}>
-        <div style={st.widgetLabel}>YOUR RECAP</div>
-        <div style={st.widgetTitle}>RECENT RACES</div>
-        {narrative && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontStyle: 'italic' }}>{narrative}</div>}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-2)' }}>
+        <div>
+          <div style={st.widgetLabel}>YOUR RECAP</div>
+          <div style={st.widgetTitle}>RECENT RACES</div>
+        </div>
+        {narrative && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontStyle: 'italic', textAlign: 'right', flexShrink: 0 }}>{narrative}</div>}
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', marginTop: '4px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
         {recent.map((r, i) => {
           const isPB = !!r.time && pbMap[normalizeDistKey(r.distance)]?.id === r.id
           const dateStr = fmtDateDDMM(r.date)
@@ -1368,30 +1370,29 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
           const cityMeta = [flag && r.city ? `${flag} ${r.city}` : r.city, distBadge(r.distance, r.sport)].filter(Boolean).join(' · ')
           return (
             <div key={r.id} style={{
-              display: 'flex', alignItems: 'center', gap: 'var(--sp-3)',
               padding: '10px 0',
               borderBottom: i < recent.length - 1 ? '1px solid var(--border)' : 'none',
             }}>
-              {/* Left: name + meta */}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', flexWrap: 'wrap' }}>
-                  <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {r.name ?? 'Untitled'}
-                  </span>
-                  {isPB && (
-                    <span style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--gold)', background: 'rgba(var(--gold-ch),0.12)', border: '1px solid rgba(var(--gold-ch),0.3)', borderRadius: 'var(--radius-xs)', padding: '2px 6px', flexShrink: 0 }}>PB</span>
-                  )}
-                </div>
-                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>
-                  {dateStr}{cityMeta ? ` · ${cityMeta}` : ''}
-                </div>
+              {/* Row 1: name + PB badge */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', minWidth: 0 }}>
+                <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>
+                  {r.name ?? 'Untitled'}
+                </span>
+                {isPB && (
+                  <span style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--gold)', background: 'rgba(var(--gold-ch),0.12)', border: '1px solid rgba(var(--gold-ch),0.3)', borderRadius: 'var(--radius-xs)', padding: '2px 6px', flexShrink: 0 }}>PB</span>
+                )}
               </div>
-              {/* Right: time — monospace for alignment */}
-              {r.time && (
-                <div style={{ fontFamily: 'var(--mono)', fontWeight: 700, fontSize: 'var(--text-base)', color: isPB ? 'var(--gold)' : 'var(--orange)', flexShrink: 0, letterSpacing: '0.02em' }}>
-                  {toHHMMSS(r.time)}
-                </div>
-              )}
+              {/* Row 2: time + meta */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', marginTop: '3px' }}>
+                {r.time && (
+                  <span style={{ fontFamily: 'var(--mono)', fontWeight: 700, fontSize: 'var(--text-sm)', color: isPB ? 'var(--gold)' : 'var(--orange)', letterSpacing: '0.02em', flexShrink: 0 }}>
+                    {toHHMMSS(r.time)}
+                  </span>
+                )}
+                <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
+                  {dateStr}{cityMeta ? ` · ${cityMeta}` : ''}
+                </span>
+              </div>
             </div>
           )
         })}
@@ -3088,19 +3089,49 @@ function PBProbabilityWidget({ race }: { race: Race | null }) {
 
 function RaceComparerWidget() {
   const races = useRaceStore(selectRaces)
+  const units = useUnits()
   const today = todayStr()
   const past  = useMemo(() => races.filter(r => r.date <= today && r.time).sort((a, b) => b.date.localeCompare(a.date)), [races, today])
-  const [idxA, setIdxA] = useState(0)
-  const [idxB, setIdxB] = useState(Math.min(1, Math.max(0, past.length - 1)))
-  const raceA = past[idxA]
-  const raceB = past[idxB]
 
-  const diff = useMemo(() => {
+  // All distinct distances that have at least 2 timed races
+  const availableDistances = useMemo(() => {
+    const counts: Record<string, number> = {}
+    for (const r of past) {
+      const key = distLabelUtil(r.distance, r.sport) || r.distance || '—'
+      counts[key] = (counts[key] ?? 0) + 1
+    }
+    return Object.entries(counts).filter(([, n]) => n >= 2).map(([d]) => d)
+  }, [past])
+
+  const [selectedDist, setSelectedDist] = useState<string | null>(null)
+  // Auto-select first available distance on mount / when list changes
+  const effectiveDist = selectedDist ?? availableDistances[0] ?? null
+
+  const filtered = useMemo(() => {
+    if (!effectiveDist) return past
+    return past.filter(r => (distLabelUtil(r.distance, r.sport) || r.distance || '—') === effectiveDist)
+  }, [past, effectiveDist])
+
+  const [idxA, setIdxA] = useState(0)
+  const [idxB, setIdxB] = useState(1)
+
+  // Clamp indices when filtered list changes
+  const safeIdxA = Math.min(idxA, Math.max(0, filtered.length - 1))
+  const safeIdxB = Math.min(idxB, Math.max(0, filtered.length - 1))
+
+  const raceA = filtered[safeIdxA]
+  const raceB = filtered[safeIdxB]
+
+  const comparison = useMemo(() => {
     if (!raceA?.time || !raceB?.time) return null
     const a = parseHMS(raceA.time) ?? 0
     const b = parseHMS(raceB.time) ?? 0
     if (!a || !b) return null
-    return { secs: Math.abs(a - b), faster: a < b ? 'A' : 'B' }
+    const diffSecs = Math.abs(a - b)
+    const faster: 'A' | 'B' = a <= b ? 'A' : 'B'
+    const paceA = computePaceSecPerKmFn(raceA.distance, raceA.time)
+    const paceB = computePaceSecPerKmFn(raceB.distance, raceB.time)
+    return { diffSecs, faster, paceA, paceB }
   }, [raceA, raceB])
 
   if (past.length < 2) {
@@ -3113,7 +3144,22 @@ function RaceComparerWidget() {
     )
   }
 
-  const selStyle: React.CSSProperties = { width: '100%', background: 'transparent', border: 'none', outline: 'none', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 'var(--sp-1)', color: 'inherit' }
+  const selStyle: React.CSSProperties = { width: '100%', background: 'transparent', border: 'none', outline: 'none', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 'var(--sp-1)' }
+
+  const chipBase: React.CSSProperties = { fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-xs)', letterSpacing: '0.08em', textTransform: 'uppercase', padding: '3px 10px', borderRadius: 'var(--radius-xs)', border: '1px solid var(--border2)', cursor: 'pointer', transition: 'all 0.15s' }
+
+  const fmtPace = (secPerKm: number | null) => {
+    if (!secPerKm) return '—'
+    if (units === 'imperial') {
+      const secPerMi = secPerKm * 1.60934
+      const m = Math.floor(secPerMi / 60)
+      const s = Math.round(secPerMi % 60)
+      return `${m}:${String(s).padStart(2, '0')} /mi`
+    }
+    const m = Math.floor(secPerKm / 60)
+    const s = Math.round(secPerKm % 60)
+    return `${m}:${String(s).padStart(2, '0')} /km`
+  }
 
   return (
     <WidgetCard id="race-comparer" style={st.glowCard}>
@@ -3121,26 +3167,49 @@ function RaceComparerWidget() {
         <div style={st.widgetLabel}>RACE COMPARER</div>
         <div style={st.widgetTitle}>SIDE BY SIDE</div>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-2)', marginTop: 'var(--sp-3)' }}>
-        <div style={{ background: 'var(--surface3)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-2)' }}>
-          <select value={idxA} onChange={e => setIdxA(Number(e.target.value))} style={{ ...selStyle, color: 'var(--orange)' }}>
-            {past.map((r, i) => <option key={r.id} value={i}>{r.name ?? r.date}</option>)}
-          </select>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', color: diff?.faster === 'A' ? 'var(--green)' : 'var(--white)' }}>{raceA?.time ?? '—'}</div>
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 'var(--sp-1)' }}>{raceA?.date ?? ''}</div>
+
+      {/* Distance filter chips */}
+      {availableDistances.length > 1 && (
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-1)' }}>
+          {availableDistances.map(d => (
+            <button
+              key={d}
+              onClick={() => { setSelectedDist(d); setIdxA(0); setIdxB(1) }}
+              style={{ ...chipBase, background: effectiveDist === d ? 'var(--orange)' : 'transparent', color: effectiveDist === d ? 'var(--black)' : 'var(--muted)', borderColor: effectiveDist === d ? 'var(--orange)' : 'var(--border2)' }}
+            >
+              {d}
+            </button>
+          ))}
         </div>
-        <div style={{ background: 'var(--surface3)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-2)' }}>
-          <select value={idxB} onChange={e => setIdxB(Number(e.target.value))} style={{ ...selStyle, color: 'var(--muted)' }}>
-            {past.map((r, i) => <option key={r.id} value={i}>{r.name ?? r.date}</option>)}
+      )}
+
+      {/* Race cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-2)' }}>
+        {/* Race A */}
+        <div style={{ background: 'var(--surface3)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-2)', borderLeft: comparison?.faster === 'A' ? '2px solid var(--green)' : '2px solid transparent' }}>
+          <select value={safeIdxA} onChange={e => setIdxA(Number(e.target.value))} style={{ ...selStyle, color: 'var(--orange)' }}>
+            {filtered.map((r, i) => <option key={r.id} value={i}>{r.name ?? r.date}</option>)}
           </select>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', color: diff?.faster === 'B' ? 'var(--green)' : 'var(--white)' }}>{raceB?.time ?? '—'}</div>
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 'var(--sp-1)' }}>{raceB?.date ?? ''}</div>
+          <div style={{ fontFamily: 'var(--mono)', fontWeight: 900, fontSize: 'var(--text-xl)', color: comparison?.faster === 'A' ? 'var(--green)' : 'var(--white)', lineHeight: 1.1 }}>{raceA?.time ?? '—'}</div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--orange)', marginTop: '3px', fontFamily: 'var(--mono)', fontWeight: 600 }}>{fmtPace(comparison?.paceA ?? null)}</div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '3px' }}>{fmtDateOrdinal(raceA?.date)}</div>
+        </div>
+        {/* Race B */}
+        <div style={{ background: 'var(--surface3)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-2)', borderLeft: comparison?.faster === 'B' ? '2px solid var(--green)' : '2px solid transparent' }}>
+          <select value={safeIdxB} onChange={e => setIdxB(Number(e.target.value))} style={{ ...selStyle, color: 'var(--muted)' }}>
+            {filtered.map((r, i) => <option key={r.id} value={i}>{r.name ?? r.date}</option>)}
+          </select>
+          <div style={{ fontFamily: 'var(--mono)', fontWeight: 900, fontSize: 'var(--text-xl)', color: comparison?.faster === 'B' ? 'var(--green)' : 'var(--white)', lineHeight: 1.1 }}>{raceB?.time ?? '—'}</div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--orange)', marginTop: '3px', fontFamily: 'var(--mono)', fontWeight: 600 }}>{fmtPace(comparison?.paceB ?? null)}</div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '3px' }}>{fmtDateOrdinal(raceB?.date)}</div>
         </div>
       </div>
-      {diff && (
-        <div style={{ marginTop: 'var(--sp-2)', padding: 'var(--sp-2)', background: 'var(--surface3)', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
-          <span style={{ fontFamily: 'var(--mono)', fontSize: 'var(--text-base)', fontWeight: 600, color: 'var(--green)' }}>{secsToHMS(diff.secs)}</span>
-          <span style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginLeft: 'var(--sp-2)' }}>faster in Race {diff.faster}</span>
+
+      {/* Difference row */}
+      {comparison && safeIdxA !== safeIdxB && (
+        <div style={{ padding: 'var(--sp-2)', background: 'var(--surface3)', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 'var(--text-base)', fontWeight: 700, color: 'var(--green)' }}>{secsToHMS(comparison.diffSecs)}</span>
+          <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginLeft: 'var(--sp-2)' }}>faster · Race {comparison.faster === 'A' ? (raceA?.name ?? 'A') : (raceB?.name ?? 'B')}</span>
         </div>
       )}
     </WidgetCard>
@@ -3353,8 +3422,8 @@ function PersonalBestsWidget() {
       <WidgetCard id="personal-bests" style={st.glowCard}>
         <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between', gap: 'var(--sp-2)', padding: 0 }}>
           <div>
-            <div style={st.widgetLabel}>PERSONAL BESTS</div>
-            <div style={st.widgetTitle}>TOP TIMES</div>
+            <div style={st.widgetLabel}>ALL TIME</div>
+            <div style={st.widgetTitle}>PERSONAL BESTS</div>
           </div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', lineHeight: 1, color: 'var(--green)', letterSpacing: '0.01em' }}>
             {timeDisplay}
@@ -3370,8 +3439,8 @@ function PersonalBestsWidget() {
   if (!allDists.length) {
     return (
       <WidgetCard id="personal-bests" style={st.glowCard}>
-        <div style={st.widgetLabel}>PERSONAL BESTS</div>
-        <div style={st.widgetTitle}>TOP TIMES</div>
+        <div style={st.widgetLabel}>ALL TIME</div>
+        <div style={st.widgetTitle}>PERSONAL BESTS</div>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: '8px' }}>
           Log timed races to build your PB board.
         </div>
@@ -3384,8 +3453,8 @@ function PersonalBestsWidget() {
       {/* Header row */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
         <div>
-          <div style={st.widgetLabel}>PERSONAL BESTS</div>
-          <div style={st.widgetTitle}>TOP TIMES</div>
+          <div style={st.widgetLabel}>ALL TIME</div>
+          <div style={st.widgetTitle}>PERSONAL BESTS</div>
         </div>
         {allDists.length > 0 && (
           <button
@@ -3977,11 +4046,13 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
     <>
       <WidgetCard id="riegel-predictor" style={st.glowCard}>
         {/* data-no-widget-detail on the wrapper prevents any click inside from opening the widget detail popup */}
-        <div data-no-widget-detail style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
-        <div style={{ ...st.widgetLabel, marginBottom: 0 }}>RACE PREDICTOR</div>
-        <div style={st.widgetTitle}>RIEGEL PREDICTOR</div>
-        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
-          Based on {race.name} · {fmtDateDDMM(race.date)}
+        <div data-no-widget-detail style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+        <div>
+          <div style={st.widgetLabel}>RACE PREDICTOR</div>
+          <div style={st.widgetTitle}>RIEGEL PREDICTOR</div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>
+            Based on {race.name} · {fmtDateDDMM(race.date)}
+          </div>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
           {table.map(row => {

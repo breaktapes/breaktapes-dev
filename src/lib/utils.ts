@@ -21,6 +21,7 @@ export function racePriorityLabel(p: string | undefined): string {
  * internal comparisons MUST stay in YYYY-MM-DD.
  */
 const _MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+const _MONTHS_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December']
 
 export function fmtDateDDMM(d: string | undefined | null): string {
   if (!d) return ''
@@ -28,6 +29,22 @@ export function fmtDateDDMM(d: string | undefined | null): string {
   if (!m) return String(d)
   const mon = _MONTHS[parseInt(m[2], 10) - 1] ?? m[2]
   return `${m[3]} ${mon} ${m[1]}`
+}
+
+function ordinalSuffix(n: number): string {
+  const s = ['th','st','nd','rd']
+  const v = n % 100
+  return n + (s[(v - 20) % 10] ?? s[v] ?? s[0])
+}
+
+/** "27th February 2026" — full ordinal date for display in widgets */
+export function fmtDateOrdinal(d: string | undefined | null): string {
+  if (!d) return ''
+  const m = String(d).match(/^(\d{4})-(\d{2})-(\d{2})/)
+  if (!m) return String(d)
+  const day = parseInt(m[3], 10)
+  const mon = _MONTHS_FULL[parseInt(m[2], 10) - 1] ?? m[2]
+  return `${ordinalSuffix(day)} ${mon} ${m[1]}`
 }
 
 const SPONSOR_RE = /\b(tcs|bmo|bmw|virgin money|adnoc|asics|zurich|bank of america)\b/g
