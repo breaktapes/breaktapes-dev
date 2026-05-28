@@ -31,7 +31,7 @@ import {
   distanceMilestones, secsToHMS as fSecsToHMS,
   findCourseRepeats, personalLeagueTable,
 } from '@/lib/raceFormulas'
-import { supabase } from '@/lib/supabase'
+import { supabase, getClerkToken } from '@/lib/supabase'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -779,6 +779,7 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
   })
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [startTime, setStartTime] = useState<string>(race.startTime ?? '')
+  const [submitCatalogStatus, setSubmitCatalogStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
 
   // Parse existing goalTime string (H:MM:SS) into HMS for the wheel
   const [goalHMS, setGoalHMS] = useState<HMS>(() => {
@@ -828,6 +829,41 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
   function handleDelete() {
     deleteRace(race.id)
     onClose()
+  }
+
+  async function handleSubmitToCatalog() {
+    if (!race.name || !race.city) return
+    setSubmitCatalogStatus('loading')
+    try {
+      const effectiveDist = distance === '__custom__' ? customDist : distance
+      const dateParts = race.date ? race.date.split('-').map(Number) : []
+      const year  = dateParts[0] ?? null
+      const month = dateParts[1] ?? null
+      const day   = dateParts[2] ?? null
+      const token = getClerkToken()
+      const res = await fetch('/api/catalog/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          name:       race.name,
+          city:       race.city,
+          country:    race.country ?? '',
+          sport,
+          dist_label: distLabelUtil(effectiveDist, sport) || effectiveDist || null,
+          dist_km:    effectiveDist ? parseFloat(effectiveDist) || null : null,
+          year,
+          event_date: race.date ?? null,
+          month,
+          day,
+        }),
+      })
+      setSubmitCatalogStatus(res.ok ? 'success' : 'error')
+    } catch {
+      setSubmitCatalogStatus('error')
+    }
   }
 
   const PRIORITIES = [
@@ -967,6 +1003,49 @@ function EditUpcomingRaceSheet({ race, onClose, zIndex = 900 }: { race: Race; on
               Local race-city time · Shared to race catalog
             </div>
           </div>
+
+          {/* Submit to Catalog */}
+          {race.name && race.city && (
+            <div>
+              <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '10px' }}>
+                RACE CATALOG
+              </div>
+              {submitCatalogStatus === 'success' ? (
+                <div style={{ background: 'rgba(0,255,136,0.08)', border: '1.5px solid rgba(0,255,136,0.3)', borderRadius: 'var(--radius-lg)', padding: 'var(--sp-3)', display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', fontSize: 'var(--text-sm)', color: 'var(--green)', fontFamily: 'var(--headline)', fontWeight: 700 }}>
+                  ✓ Submitted — thanks for contributing!
+                </div>
+              ) : submitCatalogStatus === 'error' ? (
+                <div style={{ background: 'rgba(255,80,80,0.08)', border: '1.5px solid rgba(255,80,80,0.25)', borderRadius: 'var(--radius-lg)', padding: 'var(--sp-3)', fontSize: 'var(--text-sm)', color: 'var(--error)' }}>
+                  Submission failed — try again later
+                </div>
+              ) : (
+                <button
+                  onClick={handleSubmitToCatalog}
+                  disabled={submitCatalogStatus === 'loading'}
+                  style={{
+                    width: '100%',
+                    background: 'transparent',
+                    border: '1.5px solid var(--border2)',
+                    borderRadius: 'var(--radius-lg)',
+                    color: 'var(--muted)',
+                    fontFamily: 'var(--headline)',
+                    fontWeight: 700,
+                    fontSize: 'var(--text-sm)',
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    padding: 'var(--sp-3)',
+                    cursor: submitCatalogStatus === 'loading' ? 'default' : 'pointer',
+                    opacity: submitCatalogStatus === 'loading' ? 0.5 : 1,
+                  }}
+                >
+                  {submitCatalogStatus === 'loading' ? 'Submitting…' : '+ Submit to Race Catalog'}
+                </button>
+              )}
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', marginTop: '6px' }}>
+                Suggest this race for discovery by other athletes · Admin-reviewed
+              </div>
+            </div>
+          )}
 
           {/* Delete */}
           {!confirmDelete ? (
