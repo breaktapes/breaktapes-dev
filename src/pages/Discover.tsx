@@ -1,8 +1,9 @@
 import { useState, useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import { useRaceCatalog } from '@/hooks/useRaceCatalog'
 import type { CatalogRace } from '@/hooks/useRaceCatalog'
 import { useRaceStore } from '@/stores/useRaceStore'
-import { AddRaceModal } from '@/components/AddRaceModal'
+import { TimePickerWheel, type HMS } from '@/components/TimePickerWheel'
 import { posthog } from '@/lib/posthog'
 import type { Race } from '@/types'
 
@@ -138,6 +139,187 @@ function catalogToRace(r: CatalogRace): Race {
   }
 }
 
+// ── Quick Plan Sheet ──────────────────────────────────────────────────────────
+
+function QuickPlanSheet({
+  race,
+  onClose,
+  onSave,
+}: {
+  race: Race
+  onClose: () => void
+  onSave: (goalTime: string | undefined, priority: 'A' | 'B' | 'C' | undefined) => void
+}) {
+  const [goalHMS, setGoalHMS] = useState<HMS>({ h: 0, m: 0, s: 0 })
+  const [priority, setPriority] = useState<'A' | 'B' | 'C' | ''>('')
+
+  function handleSave() {
+    const totalSecs = goalHMS.h * 3600 + goalHMS.m * 60 + goalHMS.s
+    const goalTime = totalSecs > 0
+      ? `${goalHMS.h}:${String(goalHMS.m).padStart(2, '0')}:${String(goalHMS.s).padStart(2, '0')}`
+      : undefined
+    onSave(goalTime, (priority as 'A' | 'B' | 'C') || undefined)
+  }
+
+  // Format date for display
+  const dateDisplay = race.date
+    ? new Date(race.date + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+    : ''
+
+  return createPortal(
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 800,
+        background: 'rgba(0,0,0,0.6)',
+        display: 'flex', alignItems: 'flex-end',
+      }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          width: '100%',
+          background: 'var(--surface)',
+          borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0',
+          border: '1px solid var(--border2)',
+          padding: '1.25rem 1rem 2rem',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '1.25rem',
+        }}
+      >
+        {/* Drag handle */}
+        <div style={{
+          width: 36, height: 4, borderRadius: 2,
+          background: 'var(--border2)',
+          alignSelf: 'center',
+          marginBottom: '0.25rem',
+        }} />
+
+        {/* Race info header */}
+        <div>
+          <div style={{
+            fontFamily: 'var(--headline)',
+            fontWeight: 900,
+            fontSize: 'var(--text-lg)',
+            letterSpacing: '0.04em',
+            textTransform: 'uppercase',
+            color: 'var(--white)',
+          }}>
+            {race.name}
+          </div>
+          <div style={{
+            fontFamily: 'var(--body)',
+            fontSize: 'var(--text-sm)',
+            color: 'var(--muted)',
+            marginTop: '0.2rem',
+          }}>
+            {[race.city, race.country].filter(Boolean).join(' · ')}
+            {dateDisplay ? <span style={{ color: 'var(--orange)', marginLeft: '0.5rem' }}>{dateDisplay}</span> : null}
+          </div>
+        </div>
+
+        {/* Goal time */}
+        <div>
+          <div style={{
+            fontFamily: 'var(--headline)',
+            fontWeight: 800,
+            fontSize: 'var(--text-xs)',
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            color: 'var(--muted)',
+            marginBottom: '0.5rem',
+          }}>
+            Goal Time <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
+          </div>
+          <TimePickerWheel value={goalHMS} onChange={setGoalHMS} maxHours={99} />
+          <div style={{
+            fontFamily: 'var(--body)',
+            fontSize: 'var(--text-xs)',
+            color: 'var(--muted)',
+            marginTop: '0.4rem',
+          }}>
+            Used by Gap to Goal widget
+          </div>
+        </div>
+
+        {/* Priority */}
+        <div>
+          <div style={{
+            fontFamily: 'var(--headline)',
+            fontWeight: 800,
+            fontSize: 'var(--text-xs)',
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            color: 'var(--muted)',
+            marginBottom: '0.5rem',
+          }}>
+            Race Priority <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            {(['A', 'B', 'C'] as const).map(p => {
+              const desc = p === 'A' ? 'Peak — full taper' : p === 'B' ? 'Key — partial taper' : 'Training — no taper'
+              const active = priority === p
+              return (
+                <button
+                  key={p}
+                  onClick={() => setPriority(active ? '' : p)}
+                  style={{
+                    flex: 1,
+                    padding: '10px 8px',
+                    borderRadius: 'var(--radius-md)',
+                    border: `1px solid ${active ? 'var(--orange)' : 'var(--border2)'}`,
+                    background: active ? 'rgba(var(--orange-ch),0.12)' : 'var(--surface2)',
+                    color: active ? 'var(--orange)' : 'var(--white)',
+                    cursor: 'pointer',
+                    fontFamily: 'var(--body)',
+                    textAlign: 'center',
+                    transition: 'background 0.15s, border-color 0.15s',
+                  }}
+                >
+                  <div style={{
+                    fontFamily: 'var(--headline)',
+                    fontWeight: 900,
+                    fontSize: 'var(--text-lg)',
+                    letterSpacing: '0.04em',
+                  }}>{p}</div>
+                  <div style={{
+                    fontSize: 'var(--text-xs)',
+                    color: active ? 'var(--orange)' : 'var(--muted)',
+                    marginTop: '2px',
+                  }}>{desc}</div>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Save */}
+        <button
+          onClick={handleSave}
+          style={{
+            width: '100%',
+            padding: '14px',
+            borderRadius: 'var(--radius-md)',
+            border: 'none',
+            background: 'var(--orange)',
+            color: '#000',
+            fontFamily: 'var(--headline)',
+            fontWeight: 900,
+            fontSize: 'var(--text-base)',
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            cursor: 'pointer',
+          }}
+        >
+          Add to Calendar
+        </button>
+      </div>
+    </div>,
+    document.body,
+  )
+}
+
 // ── Components ────────────────────────────────────────────────────────────────
 
 function FilterChip({
@@ -174,11 +356,13 @@ function RaceCard({
   isWishlisted,
   onWishlist,
   onPlan,
+  isPlanned,
 }: {
   race: CatalogRace
   isWishlisted: boolean
   onWishlist: () => void
   onPlan: () => void
+  isPlanned?: boolean
 }) {
   const dateStr = raceDate(race)
   return (
@@ -270,8 +454,9 @@ function RaceCard({
         </button>
         <button
           onClick={onPlan}
+          disabled={isPlanned}
           style={{
-            background: 'var(--surface3)',
+            background: isPlanned ? 'rgba(0,255,136,0.12)' : 'var(--surface3)',
             color: 'var(--green)',
             border: '1px solid rgba(var(--green-ch),0.25)',
             borderRadius: 'var(--radius-sm)',
@@ -281,10 +466,11 @@ function RaceCard({
             fontSize: 'var(--text-xs)',
             letterSpacing: '0.08em',
             textTransform: 'uppercase',
-            cursor: 'pointer',
+            cursor: isPlanned ? 'default' : 'pointer',
+            opacity: isPlanned ? 0.9 : 1,
           }}
         >
-          + Plan
+          {isPlanned ? '✓ Planned' : '+ Plan'}
         </button>
       </div>
     </div>
@@ -303,6 +489,9 @@ export function Discover() {
   const [distFilterIdx, setDistFilterIdx] = useState(0)
   const [countryFilter, setCountryFilter] = useState('')
   const [monthFilter, setMonthFilter] = useState(0) // 0 = all, 1–12 = month
+
+  const addUpcomingRace = useRaceStore(s => s.addUpcomingRace)
+  const upcomingRaces = useRaceStore(s => s.upcomingRaces)
 
   const [planRace, setPlanRace] = useState<Race | null>(null)
 
@@ -323,13 +512,33 @@ export function Discover() {
     [wishlistRaces],
   )
 
-  const PRIORITY_RANK: Record<string, number> = { A: 0, B: 1, C: 2 }
-
   const filtered = useMemo(() => {
     if (!catalog) return []
+    const now = new Date()
+    const cy = now.getFullYear()
+    const cm = now.getMonth() + 1
+    const cd = now.getDate()
+
+    // Build a numeric sort key (YYYYMMDD) for a catalog race.
+    // Month-only recurring entries: use current year if month >= current month, else next year.
+    // No date info → sort last.
+    function dateKey(r: CatalogRace): number {
+      if (r.year && r.month) {
+        return r.year * 10000 + r.month * 100 + (r.day ?? 1)
+      }
+      if (r.month) {
+        const y = r.month >= cm ? cy : cy + 1
+        // Same month recurring → sort at today's date so it leads the list
+        const d = (r.month === cm && y === cy) ? cd : (r.day ?? 1)
+        return y * 10000 + r.month * 100 + d
+      }
+      return 99999999
+    }
+
+    const todayKey = cy * 10000 + cm * 100 + cd
+
     return catalog
       .filter(r => {
-        // Upcoming only
         if (!isUpcoming(r)) return false
         if (sportFilter && r.type !== sportFilter) return false
         if (!distFilters[distFilterIdx]?.match(r)) return false
@@ -338,18 +547,44 @@ export function Discover() {
           if (!r.country?.toLowerCase().includes(q) && !r.city?.toLowerCase().includes(q)) return false
         }
         if (monthFilter && r.month !== monthFilter) return false
+        // Exclude day-precise races already past today
+        if (r.year && r.month && r.day && dateKey(r) < todayKey) return false
         return true
       })
-      .sort((a, b) => {
-        // A-priority first, then B, then C; within same priority sort by month
-        const pa = PRIORITY_RANK[a.priority ?? 'C'] ?? 2
-        const pb = PRIORITY_RANK[b.priority ?? 'C'] ?? 2
-        if (pa !== pb) return pa - pb
-        return (a.month ?? 99) - (b.month ?? 99)
-      })
+      .sort((a, b) => dateKey(a) - dateKey(b))
   }, [catalog, sportFilter, distFilterIdx, distFilters, countryFilter, monthFilter])
 
   const visible = filtered.slice(0, 100)
+
+  // Set of already-planned race names (date-keyed for dedupe)
+  const plannedKeys = useMemo(
+    () => new Set(upcomingRaces.map(r => `${r.name.toLowerCase()}|${r.date}`)),
+    [upcomingRaces],
+  )
+
+  function isAlreadyPlanned(r: CatalogRace): boolean {
+    const race = catalogToRace(r)
+    return plannedKeys.has(`${race.name.toLowerCase()}|${race.date}`)
+  }
+
+  function handleQuickPlanSave(
+    goalTime: string | undefined,
+    priority: 'A' | 'B' | 'C' | undefined,
+  ) {
+    if (!planRace) return
+    const race: Race = {
+      ...planRace,
+      ...(goalTime ? { goalTime } : {}),
+      ...(priority ? { priority } : {}),
+    }
+    addUpcomingRace(race)
+    posthog.capture('race planned', {
+      race_name: race.name,
+      race_priority: priority ?? null,
+      has_goal_time: !!goalTime,
+    })
+    setPlanRace(null)
+  }
 
   function handleWishlist(r: CatalogRace) {
     const key = r.name.toLowerCase()
@@ -519,7 +754,10 @@ export function Discover() {
             race={r}
             isWishlisted={wishlistNames.has(r.name.toLowerCase())}
             onWishlist={() => handleWishlist(r)}
-            onPlan={() => setPlanRace(catalogToRace(r))}
+            onPlan={() => {
+              if (!isAlreadyPlanned(r)) setPlanRace(catalogToRace(r))
+            }}
+            isPlanned={isAlreadyPlanned(r)}
           />
         ))}
 
@@ -536,12 +774,11 @@ export function Discover() {
         )}
       </div>
 
-      {/* AddRaceModal in upcoming mode */}
       {planRace && (
-        <AddRaceModal
-          defaultMode="upcoming"
-          prefill={planRace}
+        <QuickPlanSheet
+          race={planRace}
           onClose={() => setPlanRace(null)}
+          onSave={handleQuickPlanSave}
         />
       )}
     </div>
