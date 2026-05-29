@@ -4452,8 +4452,10 @@ function DistanceMilestonesWidget() {
 
   return (
     <WidgetCard id="distance-milestones" style={st.glowCard}>
-      <div style={st.widgetLabel}>MILESTONES</div>
-      <div style={st.widgetTitle}>DISTANCE TOTAL</div>
+      <div>
+        <div style={st.widgetLabel}>MILESTONES</div>
+        <div style={st.widgetTitle}>DISTANCE TOTAL</div>
+      </div>
 
       {/* Hero number */}
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 'var(--sp-2)' }}>
