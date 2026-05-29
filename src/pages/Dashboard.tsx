@@ -28,7 +28,7 @@ import {
   bestRiegelTable,
   bestVDOT, vdotEquivTime,
   goalPaceCalc, parseTimeSecs as fParseTimeSecs, parseDistKm as fParseDistKm,
-  distanceMilestones, secsToHMS as fSecsToHMS,
+  distanceMilestones, distanceLadder, categoricalBadges, closestUnlocks, secsToHMS as fSecsToHMS,
   findCourseRepeats, personalLeagueTable,
 } from '@/lib/raceFormulas'
 import { supabase, getClerkToken } from '@/lib/supabase'
@@ -4450,6 +4450,13 @@ function DistanceMilestonesWidget() {
     )
   }
 
+  const ladder = useMemo(() => distanceLadder(races), [races])
+  const allBadges = useMemo(() => categoricalBadges(races), [races])
+  const unlocks = useMemo(() => closestUnlocks(races, 3), [races])
+  const earnedBadges = useMemo(() => allBadges.filter(b => b.achieved), [allBadges])
+  const earnedPreview = earnedBadges.slice(0, 6)
+  const moreCount = earnedBadges.length - earnedPreview.length
+
   return (
     <WidgetCard id="distance-milestones" style={st.glowCard}>
       <div>
@@ -4489,6 +4496,100 @@ function DistanceMilestonesWidget() {
       <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontStyle: 'italic', padding: '8px 10px', background: 'var(--surface3)', borderRadius: 'var(--radius-sm)', borderLeft: '2px solid var(--orange)' }}>
         {result.funFact}
       </div>
+
+      {size === 'large' && (
+        <>
+          {/* ── SECTION 1: Distance ladder ──────────────────────────── */}
+          <div style={{ borderTop: '1px solid var(--border)', paddingTop: 'var(--sp-3)' }}>
+            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
+              DISTANCE LADDER
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+              {ladder.map(rung => (
+                <div key={rung.km} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', padding: '6px 0' }}>
+                  <div style={{
+                    width: 20, height: 20, borderRadius: '50%',
+                    border: `1.5px solid ${rung.achieved ? 'var(--orange)' : 'var(--border2)'}`,
+                    background: rung.achieved ? 'var(--orange)' : 'transparent',
+                    color: 'var(--black)',
+                    fontSize: 'var(--text-xs)', fontWeight: 900,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0,
+                  }}>
+                    {rung.achieved ? '✓' : ''}
+                  </div>
+                  <div style={{ flex: 1, fontSize: 'var(--text-sm)', color: rung.achieved ? 'var(--white)' : 'var(--muted)', fontWeight: rung.achieved ? 600 : 400 }}>
+                    {rung.label}
+                  </div>
+                  {rung.achieved && rung.isCurrent && (
+                    <span style={{ fontSize: 'var(--text-xs)', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em' }}>CURRENT</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ── SECTION 2: Categorical badges grid ──────────────────── */}
+          {earnedPreview.length > 0 && (
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: 'var(--sp-3)' }}>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
+                BADGES EARNED · {earnedBadges.length}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--sp-2)' }}>
+                {earnedPreview.map(b => (
+                  <div key={b.id} style={{
+                    padding: '8px',
+                    background: 'rgba(var(--orange-ch),0.08)',
+                    border: '1px solid rgba(var(--orange-ch),0.2)',
+                    borderRadius: 'var(--radius-sm)',
+                    display: 'flex', flexDirection: 'column', gap: '2px',
+                  }}>
+                    <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase' as const, letterSpacing: '0.05em' }}>{b.category}</div>
+                    <div style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', fontWeight: 600 }}>{b.label}</div>
+                  </div>
+                ))}
+                {moreCount > 0 && (
+                  <div style={{
+                    padding: '8px',
+                    background: 'var(--surface3)',
+                    border: '1px solid var(--border2)',
+                    borderRadius: 'var(--radius-sm)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700,
+                  }}>
+                    +{moreCount} MORE
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ── SECTION 3: Closest unlocks ──────────────────────────── */}
+          {unlocks.length > 0 && (
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: 'var(--sp-3)' }}>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
+                NEXT UNLOCKS
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+                {unlocks.map(u => (
+                  <div key={u.id}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '4px' }}>
+                      <div style={{ fontSize: 'var(--text-sm)', color: 'var(--white)' }}>
+                        <span style={{ color: 'var(--muted)', fontSize: 'var(--text-xs)', textTransform: 'uppercase' as const, marginRight: '6px', letterSpacing: '0.05em' }}>{u.category}</span>
+                        {u.label}
+                      </div>
+                      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 700 }}>{u.progress ?? ''}</div>
+                    </div>
+                    <div style={{ height: '3px', background: 'var(--surface3)', borderRadius: 'var(--radius-xs)', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${u.progressPct ?? 0}%`, background: 'var(--orange)', borderRadius: 'var(--radius-xs)', transition: 'width 0.5s ease' }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </WidgetCard>
   )
 }

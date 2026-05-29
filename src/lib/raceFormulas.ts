@@ -546,25 +546,37 @@ export function completionStats(races: Race[]): CompletionStats {
 // ─── Distance Milestones ──────────────────────────────────────────────────────
 
 const MILESTONES = [
-  { km: 100,   label: '100 KM' },
-  { km: 500,   label: '500 KM' },
-  { km: 1000,  label: '1,000 KM' },
-  { km: 2500,  label: '2,500 KM' },
-  { km: 5000,  label: '5,000 KM' },
-  { km: 10000, label: '10,000 KM' },
-  { km: 20000, label: '20,000 KM' },
-  { km: 42195, label: 'Moon Shot (42,195 KM)' },
+  { km: 100,    label: '100 KM' },
+  { km: 250,    label: '250 KM' },
+  { km: 500,    label: '500 KM' },
+  { km: 750,    label: '750 KM' },
+  { km: 1000,   label: '1,000 KM' },
+  { km: 1500,   label: '1,500 KM' },
+  { km: 2500,   label: '2,500 KM' },
+  { km: 5000,   label: '5,000 KM' },
+  { km: 7500,   label: '7,500 KM' },
+  { km: 10000,  label: '10,000 KM' },
+  { km: 15000,  label: '15,000 KM' },
+  { km: 20000,  label: '20,000 KM' },
+  { km: 30000,  label: '30,000 KM' },
+  { km: 40075,  label: 'Equator (40,075 KM)' },
 ]
 
 const FUN_FACTS: Record<number, string> = {
   100:   'You\'ve run the length of Iceland',
-  500:   'That\'s London → Madrid on foot',
-  1000:  'The distance from Paris to Warsaw',
-  2500:  'New York City → Los Angeles distance',
+  250:   'Length of Switzerland',
+  500:   'London → Madrid on foot',
+  750:   'London → Berlin',
+  1000:  'Paris → Warsaw',
+  1500:  'California coast end to end',
+  2500:  'New York City → Los Angeles',
   5000:  'Coast of Spain + Portugal + France',
-  10000: '¼ of the Earth\'s circumference',
+  7500:  'Pole to equator',
+  10000: '¼ of Earth\'s circumference',
+  15000: 'Cairo → Cape Town and back',
   20000: 'Halfway around the world',
-  42195: 'Distance to the Moon',
+  30000: '¾ of Earth\'s circumference',
+  40075: 'Once around the equator',
 }
 
 export interface MilestoneResult {
@@ -600,6 +612,168 @@ export function distanceMilestones(races: Race[]): MilestoneResult {
     kmToNext,
     funFact: next ? (FUN_FACTS[next.km] ?? `${next.label} total`) : 'You\'ve run the world!',
   }
+}
+
+// ─── Distance ladder (3 nearest milestones: 1 last + 2 upcoming) ────────────
+
+export interface LadderEntry {
+  km: number
+  label: string
+  achieved: boolean
+  isCurrent: boolean
+}
+
+export function distanceLadder(races: Race[]): LadderEntry[] {
+  const totalKm = races.reduce((s, r) => {
+    const km = parseDistKm(r.distance)
+    return km > 0 ? s + km : s
+  }, 0)
+  const lastIdx = MILESTONES.map(m => m.km <= totalKm).lastIndexOf(true)
+  // Always show 3: [last achieved, next, next+1]
+  const start = Math.max(0, lastIdx)
+  const slice = MILESTONES.slice(start, start + 3)
+  return slice.map((m, i) => ({
+    km: m.km,
+    label: m.label,
+    achieved: m.km <= totalKm,
+    isCurrent: i === 0 && lastIdx >= 0,
+  }))
+}
+
+// ─── Categorical Badges ───────────────────────────────────────────────────────
+
+export interface Badge {
+  id: string
+  category: string
+  label: string
+  achieved: boolean
+  progress?: string  // e.g. "8/10" or "32 km to go"
+  progressPct?: number  // 0-100 for sorting unlocks
+}
+
+function isRunning(r: Race): boolean {
+  const s = (r.sport ?? '').toLowerCase()
+  return s === '' || s === 'running' || s === 'run'
+}
+
+function isTri(r: Race): boolean {
+  const s = (r.sport ?? '').toLowerCase()
+  return s.includes('tri') || s.includes('iron')
+}
+
+function distKm(r: Race): number {
+  return parseDistKm(r.distance)
+}
+
+export function categoricalBadges(races: Race[]): Badge[] {
+  const badges: Badge[] = []
+  const finished = races.filter(r => r.outcome !== 'DNF' && r.outcome !== 'DSQ' && r.outcome !== 'DNS')
+
+  // Race count
+  const raceCounts = [1, 10, 25, 50, 100, 250]
+  for (const n of raceCounts) {
+    const achieved = finished.length >= n
+    badges.push({
+      id: `races_${n}`,
+      category: 'Race count',
+      label: n === 1 ? 'First Race' : `${n} Races`,
+      achieved,
+      progress: achieved ? undefined : `${finished.length}/${n}`,
+      progressPct: Math.min(100, Math.round((finished.length / n) * 100)),
+    })
+  }
+
+  // Marathons
+  const marathons = finished.filter(r => isRunning(r) && distKm(r) >= 42 && distKm(r) <= 42.5).length
+  for (const n of [1, 10, 25]) {
+    const achieved = marathons >= n
+    badges.push({
+      id: `marathons_${n}`,
+      category: 'Marathons',
+      label: n === 1 ? 'First Marathon' : `${n} Marathons`,
+      achieved,
+      progress: achieved ? undefined : `${marathons}/${n}`,
+      progressPct: Math.min(100, Math.round((marathons / n) * 100)),
+    })
+  }
+
+  // Ultra ladder
+  const ultras = finished.filter(r => isRunning(r) && distKm(r) > 42.5)
+  const has50K = ultras.some(r => distKm(r) >= 50)
+  const has50Mi = ultras.some(r => distKm(r) >= 80)
+  const has100K = ultras.some(r => distKm(r) >= 100)
+  const has100Mi = ultras.some(r => distKm(r) >= 160)
+  badges.push({ id: 'ultra_50k', category: 'Ultras', label: 'First 50K', achieved: has50K })
+  badges.push({ id: 'ultra_50mi', category: 'Ultras', label: '50 Miler', achieved: has50Mi })
+  badges.push({ id: 'ultra_100k', category: 'Ultras', label: '100K Finisher', achieved: has100K })
+  badges.push({ id: 'ultra_100mi', category: 'Ultras', label: '100 Miler', achieved: has100Mi })
+
+  // Triathlon ladder
+  const tris = finished.filter(isTri)
+  const hasSprint = tris.some(r => { const d = distKm(r); return d >= 20 && d < 40 })
+  const hasOly = tris.some(r => { const d = distKm(r); return d >= 45 && d < 60 })
+  const has703 = tris.some(r => { const d = distKm(r); return d >= 110 && d < 120 })
+  const hasIM = tris.some(r => { const d = distKm(r); return d >= 220 && d < 230 })
+  badges.push({ id: 'tri_sprint', category: 'Triathlon', label: 'Sprint Tri', achieved: hasSprint })
+  badges.push({ id: 'tri_oly', category: 'Triathlon', label: 'Olympic Tri', achieved: hasOly })
+  badges.push({ id: 'tri_703', category: 'Triathlon', label: '70.3 Finisher', achieved: has703 })
+  badges.push({ id: 'tri_im', category: 'Triathlon', label: 'IRONMAN', achieved: hasIM })
+
+  // Countries
+  const countries = new Set(finished.map(r => (r.country ?? '').trim().toLowerCase()).filter(Boolean))
+  for (const n of [5, 10, 20]) {
+    const achieved = countries.size >= n
+    badges.push({
+      id: `countries_${n}`,
+      category: 'Countries',
+      label: `${n} Countries`,
+      achieved,
+      progress: achieved ? undefined : `${countries.size}/${n}`,
+      progressPct: Math.min(100, Math.round((countries.size / n) * 100)),
+    })
+  }
+
+  // Sub-time PBs (running)
+  const pbCheck = (km: number, tol: number, secsLimit: number) => {
+    const matches = finished.filter(r => isRunning(r) && Math.abs(distKm(r) - km) <= tol && r.time)
+    return matches.some(r => {
+      const s = parseTimeSecs(r.time)
+      return s !== null && s < secsLimit
+    })
+  }
+  badges.push({ id: 'sub_5k_20', category: 'PBs', label: 'Sub-20 5K', achieved: pbCheck(5, 0.2, 1200) })
+  badges.push({ id: 'sub_10k_40', category: 'PBs', label: 'Sub-40 10K', achieved: pbCheck(10, 0.3, 2400) })
+  badges.push({ id: 'sub_half_90', category: 'PBs', label: 'Sub-1:30 Half', achieved: pbCheck(21.0975, 0.3, 5400) })
+  badges.push({ id: 'sub_mar_3h', category: 'PBs', label: 'Sub-3 Marathon', achieved: pbCheck(42.195, 0.3, 10800) })
+
+  // Annual volume
+  const byYear: Record<string, number> = {}
+  for (const r of finished) {
+    const year = r.date?.slice(0, 4)
+    if (!year) continue
+    byYear[year] = (byYear[year] ?? 0) + distKm(r)
+  }
+  const maxYearKm = Math.max(0, ...Object.values(byYear))
+  for (const n of [1000, 2500, 5000]) {
+    const achieved = maxYearKm >= n
+    badges.push({
+      id: `volume_year_${n}`,
+      category: 'Annual volume',
+      label: `${n.toLocaleString()} km year`,
+      achieved,
+      progress: achieved ? undefined : `${Math.round(maxYearKm).toLocaleString()}/${n.toLocaleString()}`,
+      progressPct: Math.min(100, Math.round((maxYearKm / n) * 100)),
+    })
+  }
+
+  return badges
+}
+
+export function closestUnlocks(races: Race[], n = 3): Badge[] {
+  return categoricalBadges(races)
+    .filter(b => !b.achieved && (b.progressPct ?? 0) > 0)
+    .sort((a, b) => (b.progressPct ?? 0) - (a.progressPct ?? 0))
+    .slice(0, n)
 }
 
 // ─── Distance Distribution ────────────────────────────────────────────────────
