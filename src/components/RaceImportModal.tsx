@@ -16,8 +16,42 @@ interface ImportResult {
   time?: string
   source: 'ultrasignup' | 'marathonview' | 'athlinks' | 'runsignup'
   distance_m?: number
+  city?: string
+  /** UltraSignup region: a US 2-letter state OR a 3-letter country code. */
+  state?: string
   country?: string
   raw?: string[]
+}
+
+// Resolve a display country from what the scrapers actually return: MarathonView
+// /Athlinks give a `country` (name or code); UltraSignup gives a `state` that is
+// either a US 2-letter state or a 3-letter country code. Without this the
+// imported races have no country and the city was hardcoded empty.
+const _ISO3_COUNTRY: Record<string, string> = {
+  USA: 'United States', GBR: 'United Kingdom', FRA: 'France', ESP: 'Spain',
+  ITA: 'Italy', DEU: 'Germany', GER: 'Germany', CAN: 'Canada', AUS: 'Australia',
+  NZL: 'New Zealand', JPN: 'Japan', CHN: 'China', ZAF: 'South Africa',
+  RSA: 'South Africa', KEN: 'Kenya', ETH: 'Ethiopia', NLD: 'Netherlands',
+  NED: 'Netherlands', BEL: 'Belgium', CHE: 'Switzerland', AUT: 'Austria',
+  SWE: 'Sweden', NOR: 'Norway', DNK: 'Denmark', DEN: 'Denmark', FIN: 'Finland',
+  PRT: 'Portugal', POR: 'Portugal', GRC: 'Greece', GRE: 'Greece', BRA: 'Brazil',
+  MEX: 'Mexico', ARG: 'Argentina', CHL: 'Chile', CHI: 'Chile', IND: 'India',
+  ARE: 'United Arab Emirates', UAE: 'United Arab Emirates', OMN: 'Oman',
+  BHR: 'Bahrain', QAT: 'Qatar', SAU: 'Saudi Arabia', KSA: 'Saudi Arabia',
+  MAR: 'Morocco', EGY: 'Egypt', SGP: 'Singapore', THA: 'Thailand',
+  MYS: 'Malaysia', IDN: 'Indonesia', POL: 'Poland', CZE: 'Czechia',
+  HUN: 'Hungary', IRL: 'Ireland', ISL: 'Iceland', TUR: 'Turkey', HRV: 'Croatia',
+  SVN: 'Slovenia', LUX: 'Luxembourg', AND: 'Andorra',
+}
+const _US_STATES = new Set(['AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ','NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT','VA','WA','WV','WI','WY','DC'])
+
+function deriveImportCountry(country?: string, state?: string): string {
+  const c = (country ?? '').trim()
+  if (c) return _ISO3_COUNTRY[c.toUpperCase()] ?? c
+  const s = (state ?? '').trim().toUpperCase()
+  if (!s) return ''
+  if (s.length === 2 && _US_STATES.has(s)) return 'United States'
+  return _ISO3_COUNTRY[s] ?? s
 }
 
 // Scrapers return "0" / "0:00:00" as the finish time for races with no result
@@ -111,7 +145,7 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
     if (us.status === 'fulfilled' && us.value.status === 'ok') {
       for (const r of (us.value.results ?? [])) {
         if (!r.raceName || r.raceName.length < 3) continue
-        all.push({ raceName: r.raceName, date: r.date ?? '', time: normalizeImportTime(r.time), source: 'ultrasignup' })
+        all.push({ raceName: r.raceName, date: r.date ?? '', time: normalizeImportTime(r.time), city: r.city || undefined, state: r.state || undefined, source: 'ultrasignup' })
       }
     } else if (us.status === 'rejected' || (us.status === 'fulfilled' && us.value?.status === 'error')) {
       errs.ultrasignup = true
@@ -190,8 +224,8 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
         time:     normalizeImportTime(r.time),
         distance,
         sport:    'Running',
-        city:     '',
-        country:  r.country ? r.country.toUpperCase() : '',
+        city:     r.city ?? '',
+        country:  deriveImportCountry(r.country, r.state),
       }
       addRace(race)
     }
