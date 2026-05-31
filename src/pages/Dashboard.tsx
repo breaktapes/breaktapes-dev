@@ -20,7 +20,7 @@ import { CustomDistInput } from '@/components/CustomDistInput'
 import { WidgetCard, WidgetCardContext, DragListenersContext, useWidgetCardContext, type WidgetCardActions } from '@/components/WidgetCard'
 import { WidgetDetailModal } from '@/components/WidgetDetailModal'
 import type { WidgetDynamicContext } from '@/lib/widgetContent'
-import type { Race, DashWidget, WidgetSize } from '@/types'
+import type { Race, DashWidget, WidgetSize, Split } from '@/types'
 import { useUnits, distUnit, computePaceSecPerKm as computePaceSecPerKmFn } from '@/lib/units'
 import { fmtDateDDMM, fmtDateOrdinal, distLabel as distLabelUtil, normalizeName, racePriorityLabel } from '@/lib/utils'
 import { useRaceCatalog, type CatalogRace } from '@/hooks/useRaceCatalog'
@@ -177,6 +177,45 @@ function parsePlacing(str: string | undefined): { pos: number; total: number; pe
   const total = parseInt(m[2], 10)
   if (!pos || !total || total === 0) return null
   return { pos, total, percentile: Math.round((1 - (pos - 1) / total) * 100) }
+}
+
+// Best available placing percentile for a race — tries overall, then gender,
+// then age-group placing. Many races report only gender or AG placement, so
+// gating purely on `r.placing` (overall) hides widgets for athletes who only
+// recorded their category result.
+function bestPlacingPct(r: Race): number | null {
+  return parsePlacing(r.placing)?.percentile
+    ?? parsePlacing(r.genderPlacing)?.percentile
+    ?? parsePlacing(r.agPlacing)?.percentile
+    ?? null
+}
+
+// True if a race carries any placing data at all (overall / gender / AG).
+function hasAnyPlacing(r: Race): boolean {
+  return !!(r.placing || r.genderPlacing || r.agPlacing)
+}
+
+// Comparable per-segment split times for a race. Prefers explicit per-segment
+// `split` times; if a race only stored cumulative checkpoint times (common for
+// screenshot imports and checkpoint-style entry, where the per-segment column
+// is left blank), derives segment times from the cumulative deltas so pacing
+// analysis still works instead of reporting "no split data".
+function segmentTimes(splits: Split[] | undefined): number[] {
+  if (!splits || !splits.length) return []
+  const hasPer = splits.some(s => s.split)
+  if (hasPer) {
+    return splits
+      .map(s => (s.split ? parseHMS(s.split) : null))
+      .filter((v): v is number => v != null && v > 0)
+  }
+  const cums = splits
+    .map(s => (s.cumulative ? parseHMS(s.cumulative) : null))
+    .filter((v): v is number => v != null)
+  const segs: number[] = []
+  for (let i = 0; i < cums.length; i++) {
+    segs.push(i === 0 ? cums[i] : cums[i] - cums[i - 1])
+  }
+  return segs.filter(v => v > 0)
 }
 
 function computeMomentum(races: Race[]): { score: number; badge: string } {
@@ -1870,14 +1909,12 @@ function PacingIQWidget() {
   const size = ctx?.getWidgetSize('pacing-iq') ?? 'medium'
 
   const analysis = useMemo(() => {
-    const withSplits = races.filter(r => r.splits && r.splits.length >= 2)
-    if (!withSplits.length) return null
     let faded = 0, negative = 0, even = 0
-    for (const r of withSplits) {
-      const splits = (r.splits ?? []).filter(s => s.split)
-      if (splits.length < 2) continue
-      const first = parseHMS(splits[0].split!) ?? 0
-      const last  = parseHMS(splits[splits.length - 1].split!) ?? 0
+    for (const r of races) {
+      const segs = segmentTimes(r.splits)
+      if (segs.length < 2) continue
+      const first = segs[0]
+      const last  = segs[segs.length - 1]
       if (last > first * 1.02) faded++
       else if (last < first * 0.98) negative++
       else even++
@@ -2115,13 +2152,13 @@ function RaceDNAWidget() {
     const travelCount = Object.keys(countryMap).length
 
     // ── Pacing (from splits where available) ─────────────────────────────
-    const withSplits = past.filter(r => (r.splits ?? []).filter(x => x.split).length >= 2)
+    const withSplits = past.filter(r => segmentTimes(r.splits).length >= 2)
     let faded = 0, negSplit = 0
     for (const r of withSplits) {
-      const s = (r.splits ?? []).filter(x => x.split)
-      const half = Math.floor(s.length / 2)
-      const firstHalf = s.slice(0, half).map(x => parseHMS(x.split!) ?? 0)
-      const secondHalf = s.slice(half).map(x => parseHMS(x.split!) ?? 0)
+      const segs = segmentTimes(r.splits)
+      const half = Math.floor(segs.length / 2)
+      const firstHalf = segs.slice(0, half)
+      const secondHalf = segs.slice(half)
       const avgFirst = firstHalf.reduce((a, b) => a + b, 0) / (firstHalf.length || 1)
       const avgSecond = secondHalf.reduce((a, b) => a + b, 0) / (secondHalf.length || 1)
       if (avgSecond > avgFirst * 1.03) faded++
@@ -2400,8 +2437,8 @@ function PatternScanWidget() {
     const volumeColor = volumeTrend === null ? 'var(--muted)' : volumeTrend > 0 ? '#34D399' : volumeTrend < 0 ? '#F87171' : 'var(--orange)'
 
     // ── Podium / top-25% rate ─────────────────────────────────────────────
-    const withPlacing = past.filter(r => r.placing)
-    const top25 = withPlacing.filter(r => (parsePlacing(r.placing)?.percentile ?? 0) >= 75)
+    const withPlacing = past.filter(r => hasAnyPlacing(r))
+    const top25 = withPlacing.filter(r => (bestPlacingPct(r) ?? 0) >= 75)
     const podiumRate = withPlacing.length ? Math.round((top25.length / withPlacing.length) * 100) : null
 
     return { seasonBars, bestSeason, worstSeason, finishRate, dnfCount, topDist, maxDistCount, podiumRate, top25Count: top25.length, withPlacingCount: withPlacing.length, countThisYear, countLastYear, volumeTrend, volumeColor }
@@ -2802,14 +2839,14 @@ function PressurePerformerWidget() {
   const size = ctx?.getWidgetSize('pressure-performer') ?? 'medium'
 
   const result = useMemo(() => {
-    const past = races.filter(r => r.date <= today && r.placing)
+    const past = races.filter(r => r.date <= today && hasAnyPlacing(r))
     if (past.length < 3) return null
 
     const aRaces = past.filter(r => r.priority === 'A' || r.isArace)
     const otherRaces = past.filter(r => r.priority !== 'A' && !r.isArace)
 
     const avgPct = (list: Race[]) => {
-      const ps = list.map(r => parsePlacing(r.placing)?.percentile ?? null).filter((p): p is number => p !== null)
+      const ps = list.map(r => bestPlacingPct(r)).filter((p): p is number => p !== null)
       if (!ps.length) return null
       return Math.round(ps.reduce((a, b) => a + b, 0) / ps.length)
     }
@@ -2901,7 +2938,7 @@ function TravelLoadWidget() {
   const size = ctx?.getWidgetSize('travel-load') ?? 'medium'
 
   const result = useMemo(() => {
-    const past = races.filter(r => r.date <= today && r.placing)
+    const past = races.filter(r => r.date <= today && hasAnyPlacing(r))
     if (past.length < 3) return null
 
     const homeCountry = (athlete?.country ?? '').toLowerCase().trim()
@@ -2909,7 +2946,7 @@ function TravelLoadWidget() {
     const away  = past.filter(r => !homeCountry || r.country?.toLowerCase().trim() !== homeCountry)
 
     const avgPct = (list: Race[]) => {
-      const ps = list.map(r => parsePlacing(r.placing)?.percentile ?? null).filter((p): p is number => p !== null)
+      const ps = list.map(r => bestPlacingPct(r)).filter((p): p is number => p !== null)
       if (!ps.length) return null
       return Math.round(ps.reduce((a, b) => a + b, 0) / ps.length)
     }
@@ -3010,14 +3047,14 @@ function CourseFitWidget({ race }: { race: Race | null }) {
 
   const result = useMemo(() => {
     if (!nextRace) return null
-    const past = races.filter(r => r.date <= today && r.placing)
+    const past = races.filter(r => r.date <= today && hasAnyPlacing(r))
     if (past.length < 3) return null
 
     // Surface fit: how well does athlete do on this surface?
     const nextSurface = (nextRace.surface ?? 'road').toLowerCase()
     const surfaceRaces = past.filter(r => (r.surface ?? 'road').toLowerCase() === nextSurface)
-    const allPcts = past.map(r => parsePlacing(r.placing)?.percentile ?? null).filter((p): p is number => p !== null)
-    const surfPcts = surfaceRaces.map(r => parsePlacing(r.placing)?.percentile ?? null).filter((p): p is number => p !== null)
+    const allPcts = past.map(r => bestPlacingPct(r)).filter((p): p is number => p !== null)
+    const surfPcts = surfaceRaces.map(r => bestPlacingPct(r)).filter((p): p is number => p !== null)
 
     const overallAvg = allPcts.length ? allPcts.reduce((a, b) => a + b, 0) / allPcts.length : 50
     const surfAvg = surfPcts.length ? surfPcts.reduce((a, b) => a + b, 0) / surfPcts.length : overallAvg
@@ -3028,8 +3065,8 @@ function CourseFitWidget({ race }: { race: Race | null }) {
       const isHilly = nextRace.elevation > 300
       const hillyRaces = past.filter(r => typeof r.elevation === 'number' && r.elevation > 300)
       const flatRaces  = past.filter(r => typeof r.elevation === 'number' && r.elevation <= 300)
-      const hillyPcts  = hillyRaces.map(r => parsePlacing(r.placing)?.percentile ?? null).filter((p): p is number => p !== null)
-      const flatPcts   = flatRaces.map(r => parsePlacing(r.placing)?.percentile ?? null).filter((p): p is number => p !== null)
+      const hillyPcts  = hillyRaces.map(r => bestPlacingPct(r)).filter((p): p is number => p !== null)
+      const flatPcts   = flatRaces.map(r => bestPlacingPct(r)).filter((p): p is number => p !== null)
       if (isHilly && hillyPcts.length) elevFit = hillyPcts.reduce((a, b) => a + b, 0) / hillyPcts.length
       else if (!isHilly && flatPcts.length) elevFit = flatPcts.reduce((a, b) => a + b, 0) / flatPcts.length
     }
@@ -3151,12 +3188,12 @@ function PBProbabilityWidget({ race }: { race: Race | null }) {
 
     // Surface fit (25%) — how often they race well on this surface
     const nextSurface = (nextRace.surface ?? 'road').toLowerCase()
-    const surfRaces = past.filter(r => (r.surface ?? 'road').toLowerCase() === nextSurface && r.placing)
-    const allRacesWithPlacing = past.filter(r => r.placing)
+    const surfRaces = past.filter(r => (r.surface ?? 'road').toLowerCase() === nextSurface && hasAnyPlacing(r))
+    const allRacesWithPlacing = past.filter(r => hasAnyPlacing(r))
     const surfPct = surfRaces.length
-      ? surfRaces.map(r => parsePlacing(r.placing)?.percentile ?? 50).reduce((a, b) => a + b, 0) / surfRaces.length
+      ? surfRaces.map(r => bestPlacingPct(r) ?? 50).reduce((a, b) => a + b, 0) / surfRaces.length
       : allRacesWithPlacing.length
-        ? allRacesWithPlacing.map(r => parsePlacing(r.placing)?.percentile ?? 50).reduce((a, b) => a + b, 0) / allRacesWithPlacing.length
+        ? allRacesWithPlacing.map(r => bestPlacingPct(r) ?? 50).reduce((a, b) => a + b, 0) / allRacesWithPlacing.length
         : 50
     const surfScore = Math.round(surfPct)
 
