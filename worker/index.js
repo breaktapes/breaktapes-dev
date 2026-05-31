@@ -125,10 +125,14 @@ function medalEmoji(medal) {
 }
 
 function totalKm(races) {
-  return Math.round(races.reduce((s, r) => {
-    const k = parseFloat(r.distance);
-    return s + (isNaN(k) ? 0 : k);
-  }, 0));
+  return Math.round(
+    races
+      .filter(r => !r.outcome || r.outcome === 'Finished')
+      .reduce((s, r) => {
+        const k = parseFloat(r.distance);
+        return s + (isNaN(k) ? 0 : k);
+      }, 0)
+  );
 }
 
 function yearsRacing(races) {
