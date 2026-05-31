@@ -120,6 +120,12 @@ function useClerkSync() {
 export function AuthGate({ children }: { children: React.ReactNode }) {
   const { isLoaded, isSignedIn, user } = useUser()
   const navigate = useNavigate()
+  // Route a new user to /you onboarding AT MOST ONCE per app session. Without
+  // this guard the effect below re-fires on every Clerk token refresh (the
+  // `user` object identity changes ~every 50s), and the `hasFlag` branch would
+  // yank the user back to /you mid-task — trapping anyone who navigated to the
+  // dashboard to log a race before completing their profile.
+  const didRouteNewUser = useRef(false)
 
   useClerkSync()
 
@@ -128,6 +134,7 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   // subsequent renders don't keep redirecting.
   useEffect(() => {
     if (!isSignedIn || !user) return
+    if (didRouteNewUser.current) return
 
     const createdMs = user.createdAt ? new Date(user.createdAt).getTime() : 0
     const isFreshSignup = createdMs > 0 && Date.now() - createdMs < 120_000
@@ -135,8 +142,10 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
 
     if (isFreshSignup && !hasFlag) {
       localStorage.setItem('bt_new_user', '1')
+      didRouteNewUser.current = true
       navigate('/you', { replace: true })
     } else if (hasFlag) {
+      didRouteNewUser.current = true
       navigate('/you', { replace: true })
     }
   }, [isSignedIn, user, navigate])
