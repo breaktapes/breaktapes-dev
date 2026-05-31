@@ -2216,14 +2216,12 @@ function RaceDNAWidget() {
           ) : (
             <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>No weather data yet</div>
           )}
+          {/* Surface breakdown is secondary — shown in medium/large only. The
+              square small card fits one headline metric (best temp) without
+              overflowing; stacking the surface block clipped it at the edge. */}
           {bestSurface && (
-            <div style={{ borderTop: '1px solid var(--border)', paddingTop: 'var(--sp-3)' }}>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xl)', color: 'var(--orange)', textTransform: 'uppercase' as const, letterSpacing: '0.04em', lineHeight: 1 }}>
-                {bestSurface.label}
-              </div>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
-                BEST SURFACE · {bestSurface.pct}%
-              </div>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)' }}>
+              {bestSurface.label} · {bestSurface.pct}%
             </div>
           )}
         </div>
