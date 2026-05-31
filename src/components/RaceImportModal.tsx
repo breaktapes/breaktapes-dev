@@ -20,6 +20,16 @@ interface ImportResult {
   raw?: string[]
 }
 
+// Scrapers return "0" / "0:00:00" as the finish time for races with no result
+// (e.g. an upcoming registration). Treat those as no-time so we neither display
+// "0" nor save a bogus 0:00 finish time onto the imported race.
+function normalizeImportTime(t: string | undefined): string | undefined {
+  if (!t) return undefined
+  const trimmed = t.trim()
+  if (!trimmed || /^0(:00)*$/.test(trimmed)) return undefined
+  return trimmed
+}
+
 function kmToDistLabel(km: number): string {
   if (km <= 0) return ''
   if (Math.abs(km - 42.195) < 0.1) return 'Marathon'
@@ -101,7 +111,7 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
     if (us.status === 'fulfilled' && us.value.status === 'ok') {
       for (const r of (us.value.results ?? [])) {
         if (!r.raceName || r.raceName.length < 3) continue
-        all.push({ raceName: r.raceName, date: r.date ?? '', time: r.time || undefined, source: 'ultrasignup' })
+        all.push({ raceName: r.raceName, date: r.date ?? '', time: normalizeImportTime(r.time), source: 'ultrasignup' })
       }
     } else if (us.status === 'rejected' || (us.status === 'fulfilled' && us.value?.status === 'error')) {
       errs.ultrasignup = true
@@ -177,7 +187,7 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
         id:       crypto.randomUUID(),
         name:     r.raceName,
         date,
-        time:     r.time || undefined,
+        time:     normalizeImportTime(r.time),
         distance,
         sport:    'Running',
         city:     '',
@@ -357,9 +367,9 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
                           )}
                         </div>
                         <div style={{ textAlign: 'right', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
-                          {r.time && (
+                          {normalizeImportTime(r.time) && (
                             <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-base)', color: 'var(--orange)', letterSpacing: '0.02em', lineHeight: 1 }}>
-                              {r.time}
+                              {normalizeImportTime(r.time)}
                             </div>
                           )}
                           {r.date && (
