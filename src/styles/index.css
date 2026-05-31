@@ -1046,3 +1046,15 @@ body::after {
     margin: 0 auto;
   }
 }
+
+/* ── iOS focus-zoom guard ─────────────────────────────────────────────────────
+   iOS Safari auto-zooms (and shifts the whole layout sideways) whenever a form
+   control with a font-size under 16px receives focus. Many inputs set their
+   font-size inline via var(--text-sm) = 13px, so !important is required to win
+   over the inline style. Excludes non-text controls (checkbox/radio/range)
+   which never trigger the zoom. Also makes every form field more readable. */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+select,
+textarea {
+  font-size: 16px !important;
+}
