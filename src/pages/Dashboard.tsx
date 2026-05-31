@@ -134,7 +134,9 @@ function uniqueCountries(races: Race[]) {
   return new Set(races.map(r => r.country).filter(Boolean)).size
 }
 function totalKm(races: Race[]) {
-  return races.reduce((s, r) => s + distanceToKm(r.distance), 0)
+  return races
+    .filter(r => !r.outcome || r.outcome === 'Finished')
+    .reduce((s, r) => s + distanceToKm(r.distance), 0)
 }
 function medalCount(races: Race[]) {
   const finisher = races.filter(r => r.medal && r.medal !== '').length
