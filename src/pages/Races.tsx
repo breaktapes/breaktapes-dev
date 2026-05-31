@@ -85,9 +85,10 @@ function distanceToKm(d: string | undefined): number {
   return DIST_LABEL_KM[d.toLowerCase().trim()] ?? 0
 }
 
-/** Human-readable distance label for display */
-function distLabel(d: string | undefined): string {
-  return distLabelUtil(d)
+/** Human-readable distance label for display. Pass sport so tri distances
+ *  (Olympic/70.3/IRONMAN) only apply to triathlons, not same-km ultra runs. */
+function distLabel(d: string | undefined, sport?: string): string {
+  return distLabelUtil(d, sport)
 }
 
 /** Zero-pads hours in a time string: "5:09:49" → "05:09:49" */
@@ -213,7 +214,7 @@ function CompactRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onClic
   const mon = d.toLocaleString('en', { month: 'short' }).toUpperCase()
   const day = d.getDate()
   const city = [race.city, race.country].filter(Boolean).join(', ')
-  const label = distLabel(race.distance)
+  const label = distLabel(race.distance, race.sport)
   const nonFinish = race.outcome && race.outcome !== 'Finished'
     ? race.outcome.toUpperCase()
     : null
@@ -257,7 +258,7 @@ function DetailedRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onCli
   const mon = d.toLocaleString('en', { month: 'short' }).toUpperCase()
   const day = d.getDate()
   const placing = parsePlacing(race.placing)
-  const label = distLabel(race.distance)
+  const label = distLabel(race.distance, race.sport)
   const nonFinish = race.outcome && race.outcome !== 'Finished'
     ? race.outcome.toUpperCase()
     : null
@@ -331,7 +332,7 @@ function WishlistRow({ race, onPlan, onRemove }: {
           {race.name}
         </div>
         <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>
-          {[race.distance ? distLabel(race.distance) : null, race.city, race.country].filter(Boolean).join(' · ')}
+          {[race.distance ? distLabel(race.distance, race.sport) : null, race.city, race.country].filter(Boolean).join(' · ')}
         </div>
         {race.date && (
           <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>

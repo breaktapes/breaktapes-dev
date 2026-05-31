@@ -99,12 +99,20 @@ export function distLabel(d: string | undefined, sport?: string): string {
   if (lower === 'hyrox') return 'HYROX'
   const n = parseFloat(d)
   if (isNaN(n)) return d
-  if (n >= 220 && n <= 230) return 'IRONMAN / Full Distance'
-  if (n >= 108 && n <= 116) return '70.3 / Middle Distance'
-  if (n >= 99.5 && n <= 100.5) return 'PTO 100'
-  if (n >= 50 && n <= 53) return 'Olympic'
-  if (n >= 24 && n <= 27) return 'Sprint'
-  if (n >= 12.5 && n <= 13.5) return 'Super Sprint'
+  const s = (sport ?? '').toLowerCase()
+  const isTri = s.includes('tri') || s.includes('iron')
+  // Triathlon-specific numeric distances — ONLY when the sport is a triathlon.
+  // Otherwise a 50km or 100km RUN matches "Olympic" / "PTO 100" by km range and
+  // gets mislabelled as a tri distance instead of an ultra.
+  if (isTri) {
+    if (n >= 220 && n <= 230) return 'IRONMAN / Full Distance'
+    if (n >= 108 && n <= 116) return '70.3 / Middle Distance'
+    if (n >= 99.5 && n <= 100.5) return 'PTO 100'
+    if (n >= 50 && n <= 53) return 'Olympic'
+    if (n >= 24 && n <= 27) return 'Sprint'
+    if (n >= 12.5 && n <= 13.5) return 'Super Sprint'
+  }
+  // Standard running road distances (unambiguous across sports)
   if (n >= 42.0 && n <= 42.3) return 'Marathon'
   if (n >= 21.0 && n <= 21.2) return 'Half Marathon'
   if (n >= 16.0 && n <= 16.2) return '10 Mile'
@@ -112,9 +120,8 @@ export function distLabel(d: string | undefined, sport?: string): string {
   if (n >= 5 && n <= 5.1) return '5K'
   if (n > 42.3) {
     // Only label as Ultra for running — triathlon/cycling/swim custom distances are not ultra runs
-    const s = (sport ?? '').toLowerCase()
-    const isTri = s.includes('tri') || s.includes('iron') || s === 'cycling' || s === 'swimming'
-    if (!isTri) return 'Ultra'
+    const isEndurance = isTri || s === 'cycling' || s === 'swimming'
+    if (!isEndurance) return 'Ultra'
     return `${n} km`
   }
   // Short distances: show as "3K", "1K" etc (whole km values)
