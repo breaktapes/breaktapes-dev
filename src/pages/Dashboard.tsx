@@ -4380,7 +4380,7 @@ function GoalPaceWidget({ race }: { race: Race | null }) {
       <WidgetCard id="goal-pace" style={st.glowCard}>
         <div>
           <div style={st.widgetLabel}>GOAL PACE</div>
-          <div style={st.widgetTitle}>TARGET PACE</div>
+          <div style={st.widgetTitle}>{(focusRace.name ?? 'TARGET PACE').toUpperCase()}</div>
         </div>
         <div style={{ marginTop: 'auto' }}>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: result ? 'var(--orange)' : 'var(--muted)', letterSpacing: '-0.02em' }}>
@@ -4397,7 +4397,7 @@ function GoalPaceWidget({ race }: { race: Race | null }) {
   if (!result) return (
     <WidgetCard id="goal-pace" style={st.glowCard}>
       <div style={st.widgetLabel}>GOAL PACE</div>
-      <div style={st.widgetTitle}>TARGET PACE</div>
+      <div style={st.widgetTitle}>{(focusRace.name ?? 'TARGET PACE').toUpperCase()}</div>
       <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: 0 }}>
         Set a goal time on {focusRace.name} to see your pace breakdown.
       </p>
@@ -4415,8 +4415,7 @@ function GoalPaceWidget({ race }: { race: Race | null }) {
   return (
     <WidgetCard id="goal-pace" style={st.glowCard}>
       <div style={st.widgetLabel}>GOAL PACE</div>
-      <div style={st.widgetTitle}>TARGET PACE</div>
-      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '-4px' }}>{focusRace.name}</div>
+      <div style={st.widgetTitle}>{(focusRace.name ?? 'TARGET PACE').toUpperCase()}</div>
 
       {/* Main pace display */}
       <div style={{ display: 'flex', gap: 'var(--sp-3)' }}>
