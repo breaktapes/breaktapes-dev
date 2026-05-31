@@ -218,6 +218,18 @@ function segmentTimes(splits: Split[] | undefined): number[] {
   return segs.filter(v => v > 0)
 }
 
+// Length-aware font size for the big metric in a small (1-col) widget. A fixed
+// 64px clips H:MM:SS times ("1:28:00", "+0:05:00") past the ~165px card edge, so
+// scale down as the string grows. Short values (%, scores) stay at the full 64px.
+function smMetricFont(v: string | number): string {
+  const n = String(v ?? '').length
+  if (n >= 8) return '34px'
+  if (n >= 7) return '40px'
+  if (n >= 6) return '48px'
+  if (n >= 5) return '54px'
+  return '64px'
+}
+
 function computeMomentum(races: Race[]): { score: number; badge: string } {
   const past = races.filter(r => r.date <= todayStr() && r.time && r.distance)
     .sort((a, b) => b.date.localeCompare(a.date))
@@ -1781,7 +1793,7 @@ function BostonQualWidget() {
           <div style={st.widgetTitle}>BOSTON QUALIFIER</div>
         </div>
         <div style={{ marginTop: 'auto' }}>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: gapColor, letterSpacing: '-0.02em' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: smMetricFont(gapStr), lineHeight: 1, color: gapColor, letterSpacing: '-0.02em' }}>
             {gapStr}
           </div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
@@ -2787,7 +2799,7 @@ function GapToGoalWidget({ race }: { race: Race | null }) {
 
       <div style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'flex-end' }}>
         <div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', color: 'var(--white)', lineHeight: 1, letterSpacing: '-0.02em' }}>{result.goal}</div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: smMetricFont(result.goal), color: 'var(--white)', lineHeight: 1, letterSpacing: '-0.02em' }}>{result.goal}</div>
           <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase', marginTop: '4px' }}>GOAL TIME</div>
         </div>
         {result.pb && (
@@ -3624,7 +3636,7 @@ function PersonalBestsWidget() {
           <div style={st.widgetTitle}>PERSONAL BESTS</div>
         </div>
         <div style={{ marginTop: 'auto' }}>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: 'var(--green)', letterSpacing: '-0.02em' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: smMetricFont(timeDisplay), lineHeight: 1, color: 'var(--green)', letterSpacing: '-0.02em' }}>
             {timeDisplay}
           </div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
@@ -4205,7 +4217,7 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
           <div style={st.widgetTitle}>RIEGEL PREDICTOR</div>
         </div>
         <div style={{ marginTop: 'auto' }}>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: 'var(--orange)', letterSpacing: '-0.02em' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: smMetricFont(targetRow?.predictedTime ?? '—'), lineHeight: 1, color: 'var(--orange)', letterSpacing: '-0.02em' }}>
             {targetRow?.predictedTime ?? '—'}
           </div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
@@ -4383,7 +4395,7 @@ function GoalPaceWidget({ race }: { race: Race | null }) {
           <div style={st.widgetTitle}>{(focusRace.name ?? 'TARGET PACE').toUpperCase()}</div>
         </div>
         <div style={{ marginTop: 'auto' }}>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: result ? 'var(--orange)' : 'var(--muted)', letterSpacing: '-0.02em' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: smMetricFont(result ? paceStr : '—'), lineHeight: 1, color: result ? 'var(--orange)' : 'var(--muted)', letterSpacing: '-0.02em' }}>
             {result ? `${paceStr}` : '—'}
           </div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -4474,7 +4486,7 @@ function DistanceMilestonesWidget() {
           <div style={st.widgetTitle}>DISTANCE TOTAL</div>
         </div>
         <div style={{ marginTop: 'auto' }}>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: 'var(--orange)', letterSpacing: '-0.02em' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: smMetricFont(result.totalKm.toLocaleString()), lineHeight: 1, color: 'var(--orange)', letterSpacing: '-0.02em' }}>
             {result.totalKm.toLocaleString()}
           </div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
