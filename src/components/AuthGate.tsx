@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { useUser, useAuth, SignIn, SignUp } from '@clerk/clerk-react'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
+import { useRaceStore } from '@/stores/useRaceStore'
 import { setClerkToken } from '@/lib/supabase'
-import { syncStateToSupabase } from '@/lib/syncState'
+import { syncStateToSupabase, resetRemotePullGate } from '@/lib/syncState'
 import { IS_STAGING } from '@/env'
 import { posthog } from '@/lib/posthog'
 
@@ -30,6 +31,10 @@ function useClerkSync() {
       setAuthUser(null)
       setClerkToken(null)
       didBootstrapSync.current = false
+      // Re-arm the write gate so the next signed-in user defers writes until
+      // their own remote pull lands (prevents the previous session's empty
+      // state, or a fresh-device empty state, from overwriting their row).
+      resetRemotePullGate()
       posthog.reset()
       return
     }
@@ -80,9 +85,25 @@ function useClerkSync() {
         // a successful upsert (anyone who first signed in between the
         // 2026-04-23 truncate and the 2026-04-26 state_json migration).
         // Without this, the row stays missing until the next mutation.
+        //
+        // CRITICAL: only backfill when local state actually has data to push.
+        // On a fresh device / cleared cache / incognito / new browser, the
+        // stores are empty. Writing empty state here would OVERWRITE the
+        // user's server row (full state_json replace) and wipe their entire
+        // race history + profile before the remote pull (useSyncState) has a
+        // chance to populate local. A backfill of nothing is never correct —
+        // if local is empty there is nothing to back up, so skip the write
+        // and let the pull hydrate from the server.
         if (!didBootstrapSync.current) {
           didBootstrapSync.current = true
-          void syncStateToSupabase()
+          const { races, upcomingRaces, wishlistRaces } = useRaceStore.getState()
+          const { athlete } = useAthleteStore.getState()
+          const hasLocalData =
+            races.length > 0 ||
+            upcomingRaces.length > 0 ||
+            wishlistRaces.length > 0 ||
+            !!(athlete && (athlete.firstName || athlete.lastName || athlete.username || athlete.city || athlete.bio))
+          if (hasLocalData) void syncStateToSupabase()
         }
       } catch {
         // Leave authUser null on token failure — better to show landing

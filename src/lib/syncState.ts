@@ -16,9 +16,50 @@ import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { APP_URL } from '@/env'
 
+// ── Write gate: never write to the server before the initial remote pull has
+// been applied to local state. ──────────────────────────────────────────────
+//
+// Root cause of a cross-device data-loss bug: on a fresh device / cleared
+// cache / new browser / incognito, the local Zustand stores start empty. Two
+// mount-time paths fire syncStateToSupabase() before the remote pull
+// (useSyncState) hydrates local — the bootstrap backfill in AuthGate, and the
+// Clerk username/photo sync (updateAthlete → sync). Because the write is a
+// FULL state_json replace, an empty local state overwrites the user's entire
+// server row (races, profile, public flag) before they ever see their data.
+//
+// This gate blocks every write until markRemotePullComplete() is called by
+// useSyncState once the pull has settled. Writes attempted before then are
+// coalesced into a single pending flush that runs right after the pull applies
+// — so the flushed write carries the real (merged) data, not empty state.
+let _pullComplete = false
+let _pendingSync = false
+
+/** Called by useSyncState once the initial remote pull has been applied. */
+export function markRemotePullComplete() {
+  if (_pullComplete) return
+  _pullComplete = true
+  if (_pendingSync) {
+    _pendingSync = false
+    void syncStateToSupabase()
+  }
+}
+
+/** Re-arm the gate on sign-out so the next user re-gates before their pull. */
+export function resetRemotePullGate() {
+  _pullComplete = false
+  _pendingSync = false
+}
+
 export async function syncStateToSupabase() {
   const { authUser, setSyncStatus } = useAuthStore.getState()
   if (!authUser) return
+
+  // Block writes until the first remote pull has hydrated local state.
+  // Coalesce any attempts into a single deferred flush (see markRemotePullComplete).
+  if (!_pullComplete) {
+    _pendingSync = true
+    return
+  }
 
   setSyncStatus('syncing')
   const token = getClerkToken()

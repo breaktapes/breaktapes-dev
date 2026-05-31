@@ -5,6 +5,7 @@ import { useAuthStore } from '@/stores/useAuthStore'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { APP_URL, IS_STAGING } from '@/env'
+import { markRemotePullComplete } from '@/lib/syncState'
 import type { Race, Athlete, SeasonPlan } from '@/types'
 
 const PROD_URL = 'https://app.breaktapes.com'
@@ -63,7 +64,7 @@ export function useSyncState() {
     if (Array.isArray(remote.season_plans)) setSeasonPlans(remote.season_plans)
   }
 
-  return useQuery({
+  const query = useQuery({
     queryKey: ['sync-state', authUser?.id],
     queryFn: async () => {
       if (!authUser) return null
@@ -142,6 +143,26 @@ export function useSyncState() {
     staleTime: 0,  // always refetch on mount — remote state must be fresh
     retry: 1,
   })
+
+  // Open the write gate once the pull settles successfully (data row OR a
+  // confirmed no-row null). Until this fires, syncStateToSupabase() defers
+  // every write so an empty fresh-device state can't overwrite the server.
+  useEffect(() => {
+    if (query.isSuccess) markRemotePullComplete()
+  }, [query.isSuccess])
+
+  // Offline / persistent-error fallback: don't block writes forever if the
+  // pull never succeeds (no network). After 8s, open the gate so a user who
+  // is offline can still persist locally-made changes when they reconnect.
+  // 8s is far longer than a normal online pull (~500ms), so online devices
+  // always let the pull win first.
+  useEffect(() => {
+    if (!authUser) return
+    const t = setTimeout(() => markRemotePullComplete(), 8000)
+    return () => clearTimeout(t)
+  }, [authUser])
+
+  return query
 }
 
 /**
