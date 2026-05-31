@@ -2736,7 +2736,7 @@ function GapToGoalWidget({ race }: { race: Race | null }) {
   return (
     <WidgetCard id="gap-to-goal" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 0, minWidth: 0 }}>
           <div style={st.widgetLabel}>GAP TO GOAL</div>
           {nextRace.name
             ? <div style={st.widgetTitle}>{nextRace.name}</div>
@@ -3079,7 +3079,7 @@ function CourseFitWidget({ race }: { race: Race | null }) {
   return (
     <WidgetCard id="course-fit" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
-        <div>
+        <div style={{ minWidth: 0 }}>
           <div style={st.widgetLabel}>COURSE FIT</div>
           <div style={st.widgetTitle}>{(nextRace.name ?? 'NEXT RACE').toUpperCase()}</div>
         </div>
@@ -3218,7 +3218,7 @@ function PBProbabilityWidget({ race }: { race: Race | null }) {
   return (
     <WidgetCard id="pb-probability" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
-        <div>
+        <div style={{ minWidth: 0 }}>
           <div style={st.widgetLabel}>PB PROBABILITY</div>
           <div style={st.widgetTitle}>{(nextRace.name ?? 'NEXT RACE').toUpperCase()}</div>
         </div>
@@ -5800,6 +5800,9 @@ const st = {
     boxSizing: 'border-box' as const,
   } as React.CSSProperties,
 
+  // Widget eyebrow label — always renders on a single line (see widgetTitle).
+  // whiteSpace:nowrap + overflow guard keeps short fixed labels ("ALL TIME",
+  // "PACING IQ") from ever wrapping in the narrow 2-col small grid.
   widgetLabel: {
     fontFamily: 'var(--headline)',
     fontSize: 'var(--text-xs)',
@@ -5808,8 +5811,15 @@ const st = {
     textTransform: 'uppercase' as const,
     color: 'var(--orange)',
     marginBottom: '2px',
+    whiteSpace: 'nowrap' as const,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
   } as React.CSSProperties,
 
+  // Widget title — single line directly below the label, regardless of widget
+  // size. Dynamic titles (race names) truncate with an ellipsis instead of
+  // wrapping to a second line. minWidth:0 lets the ellipsis engage inside flex
+  // header rows (e.g. PERSONAL BESTS, which pairs the title with an edit button).
   widgetTitle: {
     fontFamily: 'var(--headline)',
     fontWeight: 900,
@@ -5818,6 +5828,10 @@ const st = {
     textTransform: 'uppercase' as const,
     color: 'var(--white)',
     lineHeight: 1.1,
+    whiteSpace: 'nowrap' as const,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    minWidth: 0,
   } as React.CSSProperties,
 
   badgePill: {
