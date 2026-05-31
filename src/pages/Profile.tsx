@@ -116,9 +116,11 @@ const DIST_LABEL_KM: Record<string, number> = {
   'marathon': 42.195, 'full marathon': 42.195,
   'half marathon': 21.0975, 'half': 21.0975,
   'ironman': 226, 'full ironman': 226, 'full distance': 226,
+  'ironman / full distance': 226, 'im': 226,
   'half ironman': 113, '70.3': 113, 'middle distance': 113,
-  'olympic': 51.5, 'olympic triathlon': 51.5,
-  'sprint': 25.75, 'sprint triathlon': 25.75,
+  '70.3 / middle distance': 113, 'im 70.3': 113,
+  'olympic': 51.5, 'olympic triathlon': 51.5, 'olympic tri': 51.5,
+  'sprint': 25.75, 'sprint triathlon': 25.75, 'sprint tri': 25.75,
   '5k': 5, '10k': 10, '15k': 15, '20k': 20, '25k': 25, '30k': 30,
   '50k': 50, '60k': 60, '80k': 80, '90k': 90, '100k': 100,
   '160k': 160, '50mi': 80.47, '100mi': 160.93,
@@ -445,7 +447,7 @@ function getPBSecsForDist(races: Race[], minKm: number, maxKm: number, sport?: s
   let best: number | null = null
   for (const r of races) {
     if (!r.time) continue
-    const km = parseFloat(r.distance)
+    const km = distToKm(r.distance)
     if (isNaN(km) || km < minKm || km > maxKm) continue
     if (sport && (r.sport ?? '').toLowerCase() !== sport.toLowerCase()) continue
     const secs = parseHMS(r.time)
@@ -711,47 +713,47 @@ const ACHIEVEMENTS: Achievement[] = [
   {
     id: 'sprint_specialist', icon: '💨', name: 'SPRINT SPECIALIST', group: 'special',
     description: '5 x 5K races (exact 5K distance).',
-    check: r => r.filter(x => { const km = parseFloat(x.distance); return km >= 4.9 && km <= 5.1 }).length >= 5,
+    check: r => r.filter(x => { const km = distToKm(x.distance); return km >= 4.9 && km <= 5.1 }).length >= 5,
   },
   {
     id: 'half_collector', icon: '🌓', name: 'HALF COLLECTOR', group: 'special',
     description: '10 half marathons (exactly 21.1 km).',
-    check: r => r.filter(x => { const km = parseFloat(x.distance); return km >= 21.0 && km <= 21.2 }).length >= 10,
+    check: r => r.filter(x => { const km = distToKm(x.distance); return km >= 21.0 && km <= 21.2 }).length >= 10,
   },
   {
     id: 'marathoner_plus', icon: '🏛️', name: 'MARATHONER+', group: 'special',
     description: '5 full marathons (exactly 42.2 km).',
-    check: r => r.filter(x => { const km = parseFloat(x.distance); return km >= 42.1 && km <= 42.3 }).length >= 5,
+    check: r => r.filter(x => { const km = distToKm(x.distance); return km >= 42.1 && km <= 42.3 }).length >= 5,
   },
   {
     id: 'ultra_initiate', icon: '🏔️', name: 'ULTRA INITIATE', group: 'special',
     description: 'First 50K+ running finish. Sport field must be filled in.',
-    check: r => r.some(x => x.sport && isRunningRace(x) && parseFloat(x.distance) >= 50),
-    findSourceRace: r => r.filter(x => x.sport && isRunningRace(x) && parseFloat(x.distance) >= 50).sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance))[0] ?? null,
+    check: r => r.some(x => x.sport && isRunningRace(x) && distToKm(x.distance) >= 50),
+    findSourceRace: r => r.filter(x => x.sport && isRunningRace(x) && distToKm(x.distance) >= 50).sort((a, b) => distToKm(a.distance) - distToKm(b.distance))[0] ?? null,
   },
   {
     id: 'ultra_elite', icon: '🦅', name: 'ULTRA ELITE', group: 'special',
     description: '100K+ running completed. Includes any running race ≥ 90 km.',
-    check: r => r.some(x => x.sport && isRunningRace(x) && parseFloat(x.distance) >= 90),
-    findSourceRace: r => r.filter(x => x.sport && isRunningRace(x) && parseFloat(x.distance) >= 90).sort((a, b) => parseFloat(a.distance) - parseFloat(b.distance))[0] ?? null,
+    check: r => r.some(x => x.sport && isRunningRace(x) && distToKm(x.distance) >= 90),
+    findSourceRace: r => r.filter(x => x.sport && isRunningRace(x) && distToKm(x.distance) >= 90).sort((a, b) => distToKm(a.distance) - distToKm(b.distance))[0] ?? null,
   },
   {
     id: 'hundred_miler', icon: '💯', name: 'HUNDRED MILER', group: 'special',
     description: '100-mile running finish (161 km+). Sport field must be filled in.',
-    check: r => r.some(x => x.sport && isRunningRace(x) && parseFloat(x.distance) >= 161),
-    findSourceRace: r => r.find(x => x.sport && isRunningRace(x) && parseFloat(x.distance) >= 161) ?? null,
+    check: r => r.some(x => x.sport && isRunningRace(x) && distToKm(x.distance) >= 161),
+    findSourceRace: r => r.find(x => x.sport && isRunningRace(x) && distToKm(x.distance) >= 161) ?? null,
   },
   {
     id: 'iron_mind', icon: '🔱', name: 'IRON MIND', group: 'special',
     description: 'Finished a 70.3 triathlon (113 km, exact distance).',
-    check: r => r.some(x => isTriRace(x) && parseFloat(x.distance) >= 112 && parseFloat(x.distance) <= 114),
-    findSourceRace: r => r.find(x => isTriRace(x) && parseFloat(x.distance) >= 112 && parseFloat(x.distance) <= 114) ?? null,
+    check: r => r.some(x => isTriRace(x) && distToKm(x.distance) >= 112 && distToKm(x.distance) <= 114),
+    findSourceRace: r => r.find(x => isTriRace(x) && distToKm(x.distance) >= 112 && distToKm(x.distance) <= 114) ?? null,
   },
   {
     id: 'full_send', icon: '🛡️', name: 'FULL SEND', group: 'special',
     description: 'Completed a full Ironman (226 km, exact distance).',
-    check: r => r.some(x => isTriRace(x) && parseFloat(x.distance) >= 225 && parseFloat(x.distance) <= 228),
-    findSourceRace: r => r.find(x => isTriRace(x) && parseFloat(x.distance) >= 225 && parseFloat(x.distance) <= 228) ?? null,
+    check: r => r.some(x => isTriRace(x) && distToKm(x.distance) >= 225 && distToKm(x.distance) <= 228),
+    findSourceRace: r => r.find(x => isTriRace(x) && distToKm(x.distance) >= 225 && distToKm(x.distance) <= 228) ?? null,
   },
   {
     id: 'swim_survivor', icon: '🏊', name: 'SWIM SURVIVOR', group: 'special',
@@ -829,7 +831,7 @@ const ACHIEVEMENTS: Achievement[] = [
     id: 'back_to_back_ultra', icon: '🧱', name: 'BACK-TO-BACK ULTRA', group: 'special',
     description: '2 running ultras (50K+) in the same calendar week. Running only.',
     check: r => {
-      const ultras = r.filter(x => x.sport && isRunningRace(x) && parseFloat(x.distance) >= 50 && x.date)
+      const ultras = r.filter(x => x.sport && isRunningRace(x) && distToKm(x.distance) >= 50 && x.date)
       const weekMap: Record<string, number> = {}
       for (const u of ultras) { const w = isoWeek(u.date); weekMap[w] = (weekMap[w] ?? 0) + 1 }
       return Object.values(weekMap).some(c => c >= 2)
@@ -864,7 +866,7 @@ const ACHIEVEMENTS: Achievement[] = [
   },
 
   // ── 10K Ladder (7 tiers) ──────────────────────────────────────────────────
-  { id: '10k_first_gear',     icon: '🏁', name: 'FIRST GEAR',     group: 'ladder', family: '10k', tier: 1, description: '10K under 60 min.',        check: r => { const pb = getPBSecsForDist(r, 9.5, 11); return pb !== null && pb < 3600 }, findSourceRace: r => r.filter(x => { const km = parseFloat(x.distance); return km >= 9.5 && km <= 11 && x.time && (parseHMS(x.time) ?? Infinity) < 3600 }).sort((a, b) => (a.time ?? '').localeCompare(b.time ?? ''))[0] ?? null },
+  { id: '10k_first_gear',     icon: '🏁', name: 'FIRST GEAR',     group: 'ladder', family: '10k', tier: 1, description: '10K under 60 min.',        check: r => { const pb = getPBSecsForDist(r, 9.5, 11); return pb !== null && pb < 3600 }, findSourceRace: r => r.filter(x => { const km = distToKm(x.distance); return km >= 9.5 && km <= 11 && x.time && (parseHMS(x.time) ?? Infinity) < 3600 }).sort((a, b) => (a.time ?? '').localeCompare(b.time ?? ''))[0] ?? null },
   { id: '10k_steady_roll',    icon: '🏁', name: 'STEADY ROLL',    group: 'ladder', family: '10k', tier: 2, description: '10K under 55 min.',        check: r => { const pb = getPBSecsForDist(r, 9.5, 11); return pb !== null && pb < 3300 } },
   { id: '10k_breaking_rhythm',icon: '🏁', name: 'BREAKING RHYTHM',group: 'ladder', family: '10k', tier: 3, description: '10K under 50 min.',        check: r => { const pb = getPBSecsForDist(r, 9.5, 11); return pb !== null && pb < 3000 } },
   { id: '10k_locked_in',      icon: '🏁', name: 'LOCKED IN',      group: 'ladder', family: '10k', tier: 4, description: '10K under 45 min.',        check: r => { const pb = getPBSecsForDist(r, 9.5, 11); return pb !== null && pb < 2700 } },
@@ -937,8 +939,8 @@ const ACHIEVEMENTS: Achievement[] = [
 
   // ── 70.3 Ladder (7 tiers) ─────────────────────────────────────────────────
   { id: 'tri703_finisher',         icon: '🔱', name: '70.3 FINISHER',    group: 'ladder', family: 'tri703', tier: 0, description: 'Completed a 70.3 triathlon (113 km).',
-    check: r => r.some(x => isTriRace(x) && parseFloat(x.distance) >= 112 && parseFloat(x.distance) <= 114 && !!x.time),
-    findSourceRace: r => r.find(x => isTriRace(x) && parseFloat(x.distance) >= 112 && parseFloat(x.distance) <= 114 && !!x.time) ?? null,
+    check: r => r.some(x => isTriRace(x) && distToKm(x.distance) >= 112 && distToKm(x.distance) <= 114 && !!x.time),
+    findSourceRace: r => r.find(x => isTriRace(x) && distToKm(x.distance) >= 112 && distToKm(x.distance) <= 114 && !!x.time) ?? null,
   },
   { id: 'tri703_half_iron_entry',  icon: '🔱', name: 'HALF IRON ENTRY',  group: 'ladder', family: 'tri703', tier: 1, description: '70.3 under 6:00.',   check: r => { const pb = getPBSecsForDist(r, 112, 114, 'triathlon'); return pb !== null && pb < 21600 } },
   { id: 'tri703_building_strength',icon: '🔱', name: 'BUILDING STRENGTH',group: 'ladder', family: 'tri703', tier: 2, description: '70.3 under 5:30.',   check: r => { const pb = getPBSecsForDist(r, 112, 114, 'triathlon'); return pb !== null && pb < 19800 } },
@@ -950,8 +952,8 @@ const ACHIEVEMENTS: Achievement[] = [
 
   // ── Full Ironman Ladder (7 tiers) ─────────────────────────────────────────
   { id: 'ironman_finisher',           icon: '🛡️', name: 'IRONMAN FINISHER', group: 'ladder', family: 'iron', tier: 0, description: 'Completed a full Ironman (226 km).',
-    check: r => r.some(x => isTriRace(x) && parseFloat(x.distance) >= 225 && parseFloat(x.distance) <= 228 && !!x.time),
-    findSourceRace: r => r.find(x => isTriRace(x) && parseFloat(x.distance) >= 225 && parseFloat(x.distance) <= 228 && !!x.time) ?? null,
+    check: r => r.some(x => isTriRace(x) && distToKm(x.distance) >= 225 && distToKm(x.distance) <= 228 && !!x.time),
+    findSourceRace: r => r.find(x => isTriRace(x) && distToKm(x.distance) >= 225 && distToKm(x.distance) <= 228 && !!x.time) ?? null,
   },
   { id: 'ironman_full_iron_finisher', icon: '🛡️', name: 'IRON FINISHER',  group: 'ladder', family: 'iron', tier: 1, description: 'Full Ironman under 12:00.', check: r => { const pb = getPBSecsForDist(r, 225, 228, 'triathlon'); return pb !== null && pb < 43200 } },
   { id: 'ironman_full_iron_builder',  icon: '🛡️', name: 'IRON BUILDER',   group: 'ladder', family: 'iron', tier: 2, description: 'Full Ironman under 11:30.', check: r => { const pb = getPBSecsForDist(r, 225, 228, 'triathlon'); return pb !== null && pb < 41400 } },
@@ -1008,7 +1010,7 @@ function computePersonality(races: Race[]): Array<{ trait: string; score: number
   const starterScore = Math.round((1 - fadeRate) * 100)
 
   // DIESEL: proportion of long races
-  const longRaces = past.filter(r => parseFloat(r.distance) >= 21).length
+  const longRaces = past.filter(r => distToKm(r.distance) >= 21).length
   const dieselScore = total > 0 ? Math.min(100, Math.round((longRaces / total) * 100 + (total >= 3 ? 35 : 0))) : 0
 
   // BIG-DAY PERFORMER: PBs + race count milestones
@@ -2186,12 +2188,12 @@ function computeTimeline(races: Race[]): TimelineYear[] {
       const timed = yr.filter(r => r.time && r.distance)
       const speeds = timed.map(r => {
         const secs = parseTimeToSecs(r.time)
-        const km   = parseFloat(r.distance) || 0
+        const km   = distToKm(r.distance) || 0
         return secs && km ? km / (secs / 3600) : null
       }).filter((v): v is number => v !== null && isFinite(v))
 
       const avgSpeed = speeds.length ? speeds.reduce((a, b) => a + b, 0) / speeds.length : 0
-      const avgDist  = yr.reduce((sum, r) => sum + (parseFloat(r.distance) || 0), 0) / yr.length
+      const avgDist  = yr.reduce((sum, r) => sum + (distToKm(r.distance) || 0), 0) / yr.length
 
       return {
         year,
@@ -2579,7 +2581,7 @@ function GoalsSection() {
       '5K': 5, '10K': 10, '10 Mile': 16.1, 'Half Marathon': 21.1, 'Marathon': 42.2,
       '50K': 50, '50 Mile': 80.5, '100K': 100, '100 Mile': 161,
     }
-    return sum + (KM_MAP[r.distance] ?? parseFloat(r.distance) ?? 0)
+    return sum + (KM_MAP[r.distance] ?? distToKm(r.distance) ?? 0)
   }, 0)
 
   // Per-distance PBs for dist goals
