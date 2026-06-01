@@ -1,11 +1,18 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
+import { useWearableStore } from '@/stores/useWearableStore'
 import { handleGarminCallback } from '@/lib/garmin'
 import { computeVDOT, paceZones, parseDistKm, parseTimeSecs, secsToHMS } from '@/lib/raceFormulas'
 import { useUnits } from '@/lib/units'
 import { TimePickerWheel } from '@/components/TimePickerWheel'
+import {
+  ensureOWUser, getOAuthUrl, getConnections, disconnectProvider, fetchOWWorkouts, fetchOWRecovery,
+  avgHRV, latestRecoveryScore, owProviderLabel,
+  type OWProvider,
+} from '@/lib/openWearables'
+import { useUser } from '@clerk/clerk-react'
 import type { HMS } from '@/components/TimePickerWheel'
 import type { Race } from '@/types'
 
@@ -184,6 +191,335 @@ const TAB_LABELS: { id: Tab; label: string }[] = [
   { id: 'activities', label: 'Activities' },
   { id: 'readiness',  label: 'Readiness' },
 ]
+
+// ─── OW provider config ───────────────────────────────────────────────────────
+
+// Live = credentials exist + OW configured. Coming soon = pending developer approval.
+const OW_PROVIDERS: { id: OWProvider; label: string; icon: string; note?: string; comingSoon?: boolean }[] = [
+  { id: 'whoop',       label: 'WHOOP',       icon: '🔴' },
+  { id: 'strava',      label: 'Strava',      icon: '🟠' },
+  { id: 'garmin',      label: 'Garmin',      icon: '⌚', comingSoon: true },
+  { id: 'polar',       label: 'Polar',       icon: '🔵', comingSoon: true },
+  { id: 'suunto',      label: 'Suunto',      icon: '⬛', comingSoon: true },
+  { id: 'ultrahuman',  label: 'Ultrahuman',  icon: '💍', comingSoon: true },
+]
+
+// ─── useOW — shared hook for OW state ────────────────────────────────────────
+
+function useOW() {
+  const { user } = useUser()
+  const owUserId     = useWearableStore(s => s.owUserId)
+  const owWorkouts   = useWearableStore(s => s.owWorkouts)
+  const owRecovery   = useWearableStore(s => s.owRecovery)
+  const owConnections = useWearableStore(s => s.owConnections)
+  const setOwUserId      = useWearableStore(s => s.setOwUserId)
+  const setOwWorkouts    = useWearableStore(s => s.setOwWorkouts)
+  const setOwRecovery    = useWearableStore(s => s.setOwRecovery)
+  const setOwConnections = useWearableStore(s => s.setOwConnections)
+  const updateAthlete = useAthleteStore(s => s.updateAthlete)
+
+  const [loading, setLoading] = useState(false)
+  const [error, setError]     = useState<string | null>(null)
+
+  // Ensure an OW user exists for this Breaktapes user
+  const ensureUser = useCallback(async () => {
+    if (owUserId) return owUserId
+    if (!user?.id || !user?.primaryEmailAddress?.emailAddress) return null
+    try {
+      const id = await ensureOWUser(user.id, user.primaryEmailAddress.emailAddress)
+      setOwUserId(id)
+      updateAthlete({ owUserId: id })
+      return id
+    } catch {
+      return null
+    }
+  }, [user, owUserId, setOwUserId, updateAthlete])
+
+  // Load connections + recent data
+  const refresh = useCallback(async (uid?: string) => {
+    const id = uid ?? owUserId
+    if (!id) return
+    setLoading(true)
+    try {
+      const [conns, workouts, recovery] = await Promise.all([
+        getConnections(id),
+        fetchOWWorkouts(id, 60),
+        fetchOWRecovery(id, 14),
+      ])
+      setOwConnections(conns)
+      setOwWorkouts(workouts)
+      setOwRecovery(recovery)
+    } catch {
+      // non-fatal
+    } finally {
+      setLoading(false)
+    }
+  }, [owUserId, setOwConnections, setOwWorkouts, setOwRecovery])
+
+  // Connect a provider via OW OAuth
+  const connect = useCallback(async (provider: OWProvider) => {
+    setError(null)
+    try {
+      const id = await ensureUser()
+      if (!id) { setError('Sign in required'); return }
+      const redirectUri = `${window.location.origin}/train?ow_provider=${provider}`
+      const authUrl = await getOAuthUrl(id, provider, redirectUri)
+      window.location.href = authUrl
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Connection failed')
+    }
+  }, [ensureUser])
+
+  // Disconnect a provider
+  const disconnect = useCallback(async (provider: OWProvider) => {
+    if (!owUserId) return
+    try {
+      await disconnectProvider(owUserId, provider)
+      await refresh()
+    } catch {
+      // non-fatal
+    }
+  }, [owUserId, refresh])
+
+  return { owUserId, owWorkouts, owRecovery, owConnections, loading, error, ensureUser, refresh, connect, disconnect }
+}
+
+// ─── Activities Tab ───────────────────────────────────────────────────────────
+
+function ActivitiesTab() {
+  const [searchParams] = useSearchParams()
+  const { owUserId, owWorkouts, owConnections, loading, error, ensureUser, refresh, connect, disconnect } = useOW()
+
+  // Handle OW OAuth callback: ?ow_provider=garmin
+  useEffect(() => {
+    const provider = searchParams.get('ow_provider') as OWProvider | null
+    if (!provider) return
+    window.history.replaceState({}, '', window.location.pathname)
+    refresh()
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Load connections on mount
+  useEffect(() => {
+    if (owUserId) { refresh() }
+    else { ensureUser().then(id => { if (id) refresh(id) }) }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const connectedIds = new Set(owConnections.filter(c => c.connected).map(c => c.provider))
+  const hasAny = connectedIds.size > 0
+  const recentWorkouts = owWorkouts.slice(0, 20)
+
+  function sportIcon(sport: string): string {
+    const s = sport.toLowerCase()
+    if (s.includes('run') || s.includes('jog')) return '🏃'
+    if (s.includes('cycl') || s.includes('bike') || s.includes('ride')) return '🚴'
+    if (s.includes('swim')) return '🏊'
+    if (s.includes('tri')) return '🏅'
+    if (s.includes('hike') || s.includes('walk')) return '🚶'
+    if (s.includes('strength') || s.includes('weight')) return '🏋️'
+    return '⚡'
+  }
+
+  function fmtDuration(secs: number): string {
+    const h = Math.floor(secs / 3600)
+    const m = Math.floor((secs % 3600) / 60)
+    return h > 0 ? `${h}h ${m}m` : `${m}m`
+  }
+
+  function fmtDist(meters: number | null): string {
+    if (!meters) return ''
+    const km = meters / 1000
+    return km >= 1 ? `${km.toFixed(1)} km` : `${Math.round(meters)} m`
+  }
+
+  const cardStyle: React.CSSProperties = {
+    background: 'var(--surface2)', borderRadius: 'var(--radius-md)',
+    padding: 'var(--sp-4)', border: '1px solid var(--border)',
+  }
+
+  return (
+    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
+
+      {/* Provider connect cards */}
+      <div>
+        <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 'var(--sp-3)' }}>
+          CONNECTED DEVICES
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+          {OW_PROVIDERS.map(p => {
+            const connected = connectedIds.has(p.id)
+            const connInfo = owConnections.find(c => c.provider === p.id)
+            return (
+              <div key={p.id} style={{ ...cardStyle, display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
+                <span style={{ fontSize: 'var(--text-base)', width: '28px', textAlign: 'center', flexShrink: 0 }}>{p.icon}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--white)' }}>{p.label}</div>
+                  {p.note && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)' }}>{p.note}</div>}
+                  {connected && connInfo?.last_sync && (
+                    <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)' }}>
+                      Synced {new Date(connInfo.last_sync).toLocaleDateString()}
+                    </div>
+                  )}
+                </div>
+                {p.comingSoon ? (
+                  <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '4px 10px', flexShrink: 0 }}>
+                    Soon
+                  </span>
+                ) : connected ? (
+                  <button
+                    onClick={() => disconnect(p.id)}
+                    style={{ background: 'transparent', border: '1px solid var(--border2)', borderRadius: 'var(--radius-sm)', color: 'var(--muted)', fontSize: 'var(--text-xs)', padding: '4px 10px', cursor: 'pointer', flexShrink: 0 }}
+                  >
+                    Disconnect
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => connect(p.id)}
+                    style={{ background: 'var(--orange)', border: 'none', borderRadius: 'var(--radius-sm)', color: '#fff', fontSize: 'var(--text-xs)', fontWeight: 700, padding: '4px 12px', cursor: 'pointer', flexShrink: 0 }}
+                  >
+                    Connect
+                  </button>
+                )}
+              </div>
+            )
+          })}
+        </div>
+        {error && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--orange)', marginTop: 'var(--sp-2)' }}>{error}</div>}
+      </div>
+
+      {/* Recent activity feed */}
+      {hasAny && (
+        <div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 'var(--sp-3)' }}>
+            RECENT ACTIVITY
+          </div>
+          {loading && <div style={{ color: 'var(--muted)', fontSize: 'var(--text-compact)', padding: 'var(--sp-3) 0' }}>Loading…</div>}
+          {!loading && recentWorkouts.length === 0 && (
+            <div style={{ color: 'var(--muted)', fontSize: 'var(--text-compact)' }}>No activities synced yet. Data may take a minute to appear after connecting.</div>
+          )}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+            {recentWorkouts.map(w => (
+              <div key={w.id} style={{ ...cardStyle, display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
+                <span style={{ fontSize: 'var(--text-base)', width: '24px', textAlign: 'center', flexShrink: 0 }}>{sportIcon(w.sport_type)}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {w.name ?? owProviderLabel(w.provider as OWProvider)}
+                  </div>
+                  <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)' }}>
+                    {new Date(w.started_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                    {w.distance_meters ? ` · ${fmtDist(w.distance_meters)}` : ''}
+                    {w.duration_seconds ? ` · ${fmtDuration(w.duration_seconds)}` : ''}
+                  </div>
+                </div>
+                {w.average_heart_rate && (
+                  <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color: 'var(--muted)', flexShrink: 0 }}>
+                    {Math.round(w.average_heart_rate)} <span style={{ fontSize: 'var(--text-xs)' }}>bpm</span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {!hasAny && !loading && (
+        <div style={{ textAlign: 'center', color: 'var(--muted)', fontSize: 'var(--text-compact)', padding: 'var(--sp-4) 0' }}>
+          Connect a device above to see your training activity here.
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Readiness Tab ────────────────────────────────────────────────────────────
+
+function ReadinessTab() {
+  const { owUserId, owRecovery, owConnections, loading, ensureUser, refresh } = useOW()
+
+  useEffect(() => {
+    if (owUserId) { refresh() }
+    else { ensureUser().then(id => { if (id) refresh(id) }) }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const connectedIds = new Set(owConnections.filter(c => c.connected).map(c => c.provider))
+  const hasAny = connectedIds.size > 0
+
+  const hrvAvg  = avgHRV(owRecovery, 7)
+  const score   = latestRecoveryScore(owRecovery)
+  const latestRHR = [...owRecovery].sort((a, b) => b.date.localeCompare(a.date))[0]?.resting_heart_rate ?? null
+
+  const cardStyle: React.CSSProperties = {
+    background: 'var(--surface2)', borderRadius: 'var(--radius-md)',
+    padding: 'var(--sp-4)', border: '1px solid var(--border)',
+  }
+
+  function metricCard(label: string, value: string | null, unit: string, color = 'var(--white)') {
+    return (
+      <div style={{ ...cardStyle, textAlign: 'center' }}>
+        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', lineHeight: 1, color }}>
+          {value ?? '—'}
+        </div>
+        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: 'var(--headline)', fontWeight: 700 }}>
+          {label}
+        </div>
+        {value && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', marginTop: '2px' }}>{unit}</div>}
+      </div>
+    )
+  }
+
+  if (loading) {
+    return <div style={{ padding: '24px 16px', color: 'var(--muted)', fontSize: 'var(--text-compact)' }}>Loading…</div>
+  }
+
+  if (!hasAny) {
+    return (
+      <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--muted)', fontSize: 'var(--text-compact)' }}>
+        <p style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)', marginBottom: '8px' }}>Readiness</p>
+        <p style={{ margin: 0 }}>Connect Garmin, WHOOP, or Suunto on the Activities tab to see HRV and recovery data.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
+      <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)' }}>
+        LAST 7 DAYS
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--sp-2)' }}>
+        {metricCard('HRV', hrvAvg !== null ? String(hrvAvg) : null, 'ms RMSSD', 'var(--green)')}
+        {metricCard('RESTING HR', latestRHR !== null ? String(Math.round(latestRHR)) : null, 'bpm', 'var(--orange)')}
+        {metricCard('RECOVERY', score !== null ? String(Math.round(score)) : null, '/ 100', score !== null && score >= 67 ? 'var(--green)' : score !== null && score >= 34 ? 'var(--gold)' : 'var(--orange)')}
+      </div>
+
+      {/* 7-day HRV sparkline */}
+      {owRecovery.length > 1 && (
+        <div style={cardStyle}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 'var(--sp-3)' }}>
+            HRV TREND
+          </div>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: '4px', height: '48px' }}>
+            {owRecovery.slice(-7).map((r, i) => {
+              const val = r.hrv_rmssd
+              const maxHrv = Math.max(...owRecovery.slice(-7).map(x => x.hrv_rmssd ?? 0))
+              const pct = val && maxHrv ? (val / maxHrv) : 0
+              return (
+                <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                  <div style={{ width: '100%', background: val ? 'var(--green)' : 'var(--surface3)', borderRadius: '2px 2px 0 0', height: `${Math.max(4, Math.round(pct * 40))}px`, opacity: val ? 1 : 0.3 }} />
+                  <div style={{ fontSize: '9px', color: 'var(--muted2)' }}>{r.date.slice(5)}</div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {owRecovery.length === 0 && (
+        <div style={{ color: 'var(--muted)', fontSize: 'var(--text-compact)' }}>
+          No recovery data yet. Data syncs automatically from connected devices.
+        </div>
+      )}
+    </div>
+  )
+}
 
 // ─── Triathlon result type ────────────────────────────────────────────────────
 
@@ -1184,20 +1520,10 @@ export function Train() {
       )}
 
       {/* ══════════════════════ ACTIVITIES TAB ════════════════════════════════ */}
-      {activeTab === 'activities' && (
-        <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--muted)', fontSize: 'var(--text-compact)' }}>
-          <p style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)', marginBottom: '8px' }}>Activity Sync</p>
-          <p style={{ margin: 0 }}>Strava, WHOOP, Garmin and more — coming soon</p>
-        </div>
-      )}
+      {activeTab === 'activities' && <ActivitiesTab />}
 
       {/* ══════════════════════ READINESS TAB ═════════════════════════════════ */}
-      {activeTab === 'readiness' && (
-        <div style={{ padding: '24px 16px', textAlign: 'center', color: 'var(--muted)', fontSize: 'var(--text-compact)' }}>
-          <p style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)', marginBottom: '8px' }}>Readiness Sync</p>
-          <p style={{ margin: 0 }}>WHOOP, Garmin and more — coming soon</p>
-        </div>
-      )}
+      {activeTab === 'readiness' && <ReadinessTab />}
     </div>
   )
 }
