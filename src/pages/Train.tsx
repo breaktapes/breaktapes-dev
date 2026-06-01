@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { useSearchParams } from 'react-router-dom'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
@@ -9,10 +10,11 @@ import { useUnits } from '@/lib/units'
 import { TimePickerWheel } from '@/components/TimePickerWheel'
 import {
   ensureOWUser, getOAuthUrl, getConnections, disconnectProvider, fetchOWWorkouts, fetchOWRecovery,
-  avgHRV, latestRecoveryScore, owProviderLabel,
-  type OWProvider,
+  deleteProviderData, avgHRV, latestRecoveryScore, owProviderLabel,
+  type OWProvider, type OWWorkout,
 } from '@/lib/openWearables'
 import { useUser } from '@clerk/clerk-react'
+import { ProviderLogo } from '@/components/ProviderLogo'
 import type { HMS } from '@/components/TimePickerWheel'
 import type { Race } from '@/types'
 
@@ -305,6 +307,7 @@ function useOW() {
 function ActivitiesTab() {
   const [searchParams] = useSearchParams()
   const { owUserId, owWorkouts, owConnections, loading, error, ensureUser, refresh, connect, disconnect } = useOW()
+  const [settingsProvider, setSettingsProvider] = useState<OWProvider | null>(null)
 
   // Handle OW OAuth callback: ?ow_provider=garmin
   useEffect(() => {
@@ -366,9 +369,9 @@ function ActivitiesTab() {
             const connInfo = owConnections.find(c => c.provider === p.id)
             return (
               <div key={p.id} style={{ ...cardStyle, display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
-                <span style={{ fontSize: 'var(--text-base)', width: '28px', textAlign: 'center', flexShrink: 0 }}>{p.icon}</span>
+                <span style={{ width: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><ProviderLogo provider={p.id} size={26} /></span>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--white)' }}>{p.label}</div>
+                  <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: '15px', color: 'var(--white)' }}>{p.label}</div>
                   {p.note && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)' }}>{p.note}</div>}
                   {connected && connInfo?.last_sync && (
                     <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)' }}>
@@ -381,12 +384,21 @@ function ActivitiesTab() {
                     Soon
                   </span>
                 ) : connected ? (
-                  <button
-                    onClick={() => disconnect(p.id)}
-                    style={{ background: 'transparent', border: '1px solid var(--border2)', borderRadius: 'var(--radius-sm)', color: 'var(--muted)', fontSize: 'var(--text-xs)', padding: '4px 10px', cursor: 'pointer', flexShrink: 0 }}
-                  >
-                    Disconnect
-                  </button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', flexShrink: 0 }}>
+                    <button
+                      aria-label={`${p.label} settings`}
+                      onClick={() => setSettingsProvider(p.id)}
+                      style={{ background: 'transparent', border: '1px solid var(--border2)', borderRadius: 'var(--radius-sm)', color: 'var(--muted)', fontSize: 'var(--text-base)', width: '30px', height: '28px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}
+                    >
+                      ⚙
+                    </button>
+                    <button
+                      onClick={() => disconnect(p.id)}
+                      style={{ background: 'transparent', border: '1px solid var(--border2)', borderRadius: 'var(--radius-sm)', color: 'var(--muted)', fontSize: 'var(--text-xs)', padding: '4px 10px', cursor: 'pointer' }}
+                    >
+                      Disconnect
+                    </button>
+                  </div>
                 ) : (
                   <button
                     onClick={() => connect(p.id)}
@@ -442,7 +454,151 @@ function ActivitiesTab() {
           Connect a device above to see your training activity here.
         </div>
       )}
+
+      {settingsProvider && owUserId && (
+        <ProviderSettingsSheet
+          provider={settingsProvider}
+          owUserId={owUserId}
+          workouts={owWorkouts.filter(w => w.provider === settingsProvider)}
+          onClose={() => setSettingsProvider(null)}
+          onDeleted={() => { setSettingsProvider(null); refresh() }}
+        />
+      )}
     </div>
+  )
+}
+
+// ─── Per-provider settings sheet ──────────────────────────────────────────────
+
+function ProviderSettingsSheet({ provider, owUserId, workouts, onClose, onDeleted }: {
+  provider: OWProvider
+  owUserId: string
+  workouts: OWWorkout[]
+  onClose: () => void
+  onDeleted: () => void
+}) {
+  const hiddenSports = useWearableStore(s => s.hiddenSports)
+  const toggleHiddenSport = useWearableStore(s => s.toggleHiddenSport)
+  const [deleting, setDeleting] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [delError, setDelError] = useState<string | null>(null)
+
+  // Distinct sport types this provider has synced.
+  const sportTypes = Array.from(new Set(workouts.map(w => w.sport_type).filter(Boolean))).sort()
+  const hidden = hiddenSports[provider] ?? []
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = '' }
+  }, [])
+
+  async function handleDelete() {
+    setDeleting(true); setDelError(null)
+    try {
+      const ok = await deleteProviderData(owUserId, provider)
+      if (!ok) { setDelError('Could not delete data. Try again.'); setDeleting(false); return }
+      onDeleted()
+    } catch (e) {
+      setDelError(e instanceof Error ? e.message : 'Delete failed')
+      setDeleting(false)
+    }
+  }
+
+  const card: React.CSSProperties = { background: 'var(--surface2)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-4)', border: '1px solid var(--border)' }
+
+  return createPortal(
+    <div
+      onClick={onClose}
+      style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{ width: '100%', maxWidth: '560px', maxHeight: '88vh', overflowY: 'auto', background: 'var(--surface)', borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0', padding: 'var(--sp-5) var(--sp-4) calc(var(--safe-bottom) + var(--sp-5))', display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
+          <ProviderLogo provider={provider} size={30} />
+          <div style={{ flex: 1, fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-md)', color: 'var(--white)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+            {owProviderLabel(provider)}
+          </div>
+          <button onClick={onClose} aria-label="Close" style={{ background: 'transparent', border: 'none', color: 'var(--muted)', fontSize: 'var(--text-lg)', cursor: 'pointer', padding: '4px' }}>✕</button>
+        </div>
+
+        {/* Read-only assurance */}
+        <div style={{ ...card, display: 'flex', gap: 'var(--sp-3)', alignItems: 'flex-start' }}>
+          <span style={{ fontSize: 'var(--text-base)', flexShrink: 0 }}>🔒</span>
+          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5 }}>
+            Read-only access. BREAKTAPES never writes to or changes anything on your {owProviderLabel(provider)} account — we only read your activities to show them here.
+          </div>
+        </div>
+
+        {/* Activity types — show/hide in app */}
+        <div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 'var(--sp-3)' }}>
+            ACTIVITY TYPES — SHOW IN APP
+          </div>
+          {sportTypes.length === 0 ? (
+            <div style={{ ...card, fontSize: 'var(--text-sm)', color: 'var(--muted2)' }}>
+              No activities synced yet. Types will appear here once your {owProviderLabel(provider)} data syncs.
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+              {sportTypes.map(st => {
+                const isShown = !hidden.includes(st)
+                return (
+                  <div key={st} style={{ ...card, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', textTransform: 'capitalize' }}>{st.replace(/_/g, ' ')}</span>
+                    <button
+                      onClick={() => toggleHiddenSport(provider, st)}
+                      aria-pressed={isShown}
+                      style={{ width: '44px', height: '24px', borderRadius: '12px', border: 'none', cursor: 'pointer', background: isShown ? 'var(--green)' : 'var(--surface3)', position: 'relative', flexShrink: 0, transition: 'background 0.2s' }}
+                    >
+                      <span style={{ position: 'absolute', top: '2px', left: isShown ? '22px' : '2px', width: '20px', height: '20px', borderRadius: '50%', background: '#fff', transition: 'left 0.2s' }} />
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Danger zone — delete data */}
+        <div style={{ ...card, border: '1px solid rgba(255,77,0,0.25)' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--orange)', marginBottom: 'var(--sp-2)' }}>
+            DELETE DATA
+          </div>
+          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginBottom: 'var(--sp-3)' }}>
+            Permanently delete all {owProviderLabel(provider)} activities stored in BREAKTAPES. This cannot be undone. Your {owProviderLabel(provider)} account and its data are not affected.
+          </div>
+          {!confirmDelete ? (
+            <button
+              onClick={() => setConfirmDelete(true)}
+              style={{ background: 'transparent', border: '1px solid var(--orange)', borderRadius: 'var(--radius-sm)', color: 'var(--orange)', fontSize: 'var(--text-sm)', fontWeight: 700, padding: '8px 14px', cursor: 'pointer', width: '100%' }}
+            >
+              Delete my {owProviderLabel(provider)} data
+            </button>
+          ) : (
+            <div style={{ display: 'flex', gap: 'var(--sp-2)' }}>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                style={{ flex: 1, background: 'var(--orange)', border: 'none', borderRadius: 'var(--radius-sm)', color: '#fff', fontSize: 'var(--text-sm)', fontWeight: 700, padding: '8px 14px', cursor: deleting ? 'default' : 'pointer', opacity: deleting ? 0.6 : 1 }}
+              >
+                {deleting ? 'Deleting…' : 'Yes, delete permanently'}
+              </button>
+              <button
+                onClick={() => setConfirmDelete(false)}
+                disabled={deleting}
+                style={{ flex: 1, background: 'transparent', border: '1px solid var(--border2)', borderRadius: 'var(--radius-sm)', color: 'var(--muted)', fontSize: 'var(--text-sm)', padding: '8px 14px', cursor: 'pointer' }}
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+          {delError && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--orange)', marginTop: 'var(--sp-2)' }}>{delError}</div>}
+        </div>
+      </div>
+    </div>,
+    document.body,
   )
 }
 
