@@ -10,7 +10,7 @@ import { TimePickerWheel } from '@/components/TimePickerWheel'
 import {
   ensureOWUser, getOAuthUrl, getConnections, disconnectProvider, fetchOWWorkouts, fetchOWRecovery,
   avgHRV, latestRecoveryScore, owProviderLabel,
-  type OWProvider, type OWWorkout, type OWRecovery, type OWConnection,
+  type OWProvider,
 } from '@/lib/openWearables'
 import { useUser } from '@clerk/clerk-react'
 import type { HMS } from '@/components/TimePickerWheel'
@@ -216,7 +216,6 @@ function useOW() {
   const setOwWorkouts    = useWearableStore(s => s.setOwWorkouts)
   const setOwRecovery    = useWearableStore(s => s.setOwRecovery)
   const setOwConnections = useWearableStore(s => s.setOwConnections)
-  const athlete = useAthleteStore(s => s.athlete)
   const updateAthlete = useAthleteStore(s => s.updateAthlete)
 
   const [loading, setLoading] = useState(false)
@@ -302,7 +301,7 @@ function ActivitiesTab() {
   // Load connections on mount
   useEffect(() => {
     if (owUserId) { refresh() }
-    else { ensureUser().then(id => id && refresh(id)) }
+    else { ensureUser().then(id => { if (id) refresh(id) }) }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const connectedIds = new Set(owConnections.filter(c => c.connected).map(c => c.provider))
@@ -438,7 +437,7 @@ function ReadinessTab() {
 
   useEffect(() => {
     if (owUserId) { refresh() }
-    else { ensureUser().then(id => id && refresh(id)) }
+    else { ensureUser().then(id => { if (id) refresh(id) }) }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const connectedIds = new Set(owConnections.filter(c => c.connected).map(c => c.provider))

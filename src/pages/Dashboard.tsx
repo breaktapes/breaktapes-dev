@@ -2747,7 +2747,7 @@ function RaceReadinessWidget() {
             {hasWearable ? (
               <div style={{ flex: 1, background: 'var(--surface3)', borderRadius: 'var(--radius-sm)', padding: 'var(--sp-3)' }}>
                 <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xl)', color: 'var(--green)', lineHeight: 1 }}>
-                  {hrvAvg !== null ? `${hrvAvg}ms` : `${Math.round(latestRecoveryScore([]) ?? 0)}`}
+                  {hrvAvg !== null ? `${hrvAvg}ms` : `${Math.round(recoveryScore ?? 0)}`}
                 </div>
                 <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted)', textTransform: 'uppercase', marginTop: '4px' }}>
                   {hrvAvg !== null ? 'HRV 7D AVG' : 'RECOVERY'}
