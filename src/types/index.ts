@@ -5,6 +5,9 @@
 
 export interface Race {
   id: string
+  /** Epoch ms of the last local mutation. Drives cross-device last-write-wins
+   *  merge. Absent on legacy races (predates the feature) — treated as oldest. */
+  updatedAt?: number
   name: string
   date: string           // YYYY-MM-DD
   city: string

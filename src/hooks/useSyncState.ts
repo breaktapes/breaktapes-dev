@@ -6,6 +6,7 @@ import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { APP_URL, IS_STAGING } from '@/env'
 import { markRemotePullComplete } from '@/lib/syncState'
+import { mergeRaceLists, mergeTombstones, type Tomb } from '@/lib/mergeRaces'
 import type { Race, Athlete, SeasonPlan } from '@/types'
 
 const PROD_URL = 'https://app.breaktapes.com'
@@ -18,6 +19,7 @@ interface RemoteState {
   season_plans?: SeasonPlan[]
   next_race?: Race | null
   focus_race_id?: string | null
+  deleted_race_ids?: Tomb[]
 }
 
 /**
@@ -36,27 +38,37 @@ export function useSyncState() {
   const setWishlistRaces = useRaceStore(s => s.setWishlistRaces)
   const promoteNextRace = useRaceStore(s => s.promoteNextRace)
   const setFocusRaceId = useRaceStore(s => s.setFocusRaceId)
+  const setDeletedRaceIds = useRaceStore(s => s.setDeletedRaceIds)
   const setAthlete = useAthleteStore(s => s.setAthlete)
   const setSeasonPlans = useAthleteStore(s => s.setSeasonPlans)
 
-  // Merge remote state without clobbering races added locally while sync was broken.
-  // Union by race ID: keep all local races + add remote races not present locally.
-  // This prevents a stale Supabase snapshot from silently deleting locally-added races.
-  // Explicit user deletes write to Supabase immediately so they propagate correctly.
+  // Cross-device merge (see src/lib/mergeRaces.ts, unit-tested):
+  //  - last-write-wins by updatedAt → EDITS propagate, ties prefer local
+  //  - tombstones (deleted_race_ids) → DELETES propagate
+  //  - empty/stale remote can never wipe local (union of ids, local wins ties)
+  // Replaces the old union-only merge that never reflected remote edits/deletes.
   function applyRemoteSafe(remote: RemoteState) {
-    const { races: localRaces, upcomingRaces: localUpcoming, _pendingDeleteIds } = useRaceStore.getState()
-    const pendingDeletes = new Set(_pendingDeleteIds)
+    const { races: localRaces, upcomingRaces: localUpcoming, deletedRaceIds: localTombs } = useRaceStore.getState()
 
-    if (Array.isArray(remote.races)) {
-      const localIds = new Set(localRaces.map(r => r.id))
-      const merged = [...localRaces, ...remote.races.filter(r => !localIds.has(r.id) && !pendingDeletes.has(r.id))]
-      setRaces(merged)
-    }
-    if (Array.isArray(remote.upcoming_races)) {
-      const localIds = new Set(localUpcoming.map(r => r.id))
-      const merged = [...localUpcoming, ...remote.upcoming_races.filter(r => !localIds.has(r.id) && !pendingDeletes.has(r.id))]
-      setUpcomingRaces(merged)
-    }
+    // Merge + persist tombstones so a delete made on another device sticks here
+    // and re-propagates outward on the next sync.
+    const tombs = mergeTombstones(localTombs ?? [], remote.deleted_race_ids ?? [], Date.now())
+    setDeletedRaceIds(tombs)
+
+    const mergedRaces = Array.isArray(remote.races)
+      ? mergeRaceLists(localRaces, remote.races, tombs)
+      : mergeRaceLists(localRaces, [], tombs)
+    let mergedUpcoming = Array.isArray(remote.upcoming_races)
+      ? mergeRaceLists(localUpcoming, remote.upcoming_races, tombs)
+      : mergeRaceLists(localUpcoming, [], tombs)
+    // Past wins for a moved race: an id that now lives in `races` (moved from
+    // upcoming) must not be re-added to upcoming from a stale remote snapshot.
+    const pastIds = new Set(mergedRaces.map(r => r.id))
+    mergedUpcoming = mergedUpcoming.filter(u => !pastIds.has(u.id))
+
+    setRaces(mergedRaces)
+    setUpcomingRaces(mergedUpcoming)
+
     if (Array.isArray(remote.wishlist_races)) setWishlistRaces(remote.wishlist_races)
     promoteNextRace()
     if ('focus_race_id' in remote) {

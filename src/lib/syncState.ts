@@ -64,7 +64,7 @@ export async function syncStateToSupabase() {
   setSyncStatus('syncing')
   const token = getClerkToken()
 
-  const { races, upcomingRaces, wishlistRaces, nextRace, focusRaceId } = useRaceStore.getState()
+  const { races, upcomingRaces, wishlistRaces, nextRace, focusRaceId, deletedRaceIds } = useRaceStore.getState()
   const { athlete, seasonPlans } = useAthleteStore.getState()
 
   const stateJson = {
@@ -73,6 +73,7 @@ export async function syncStateToSupabase() {
     wishlist_races: wishlistRaces,
     next_race: nextRace,
     focus_race_id: focusRaceId,
+    deleted_race_ids: deletedRaceIds,
     season_plans: seasonPlans,
     athlete,
   }

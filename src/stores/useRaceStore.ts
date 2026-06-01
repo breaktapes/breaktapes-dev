@@ -2,7 +2,13 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Race } from '@/types'
 import { syncStateToSupabase } from '@/lib/syncState'
+import type { Tomb } from '@/lib/mergeRaces'
 import { posthog } from '@/lib/posthog'
+
+/** Mark a race as locally edited now — drives cross-device last-write-wins. */
+function stamp(r: Race): Race {
+  return { ...r, updatedAt: Date.now() }
+}
 
 export interface RaceState {
   races: Race[]
@@ -12,6 +18,9 @@ export interface RaceState {
   focusRaceId: string | null
   // IDs deleted in this session — prevents realtime re-adding them before sync completes
   _pendingDeleteIds: string[]
+  // Tombstones for genuinely deleted races — synced so deletes propagate across devices
+  deletedRaceIds: Tomb[]
+  setDeletedRaceIds: (tombs: Tomb[]) => void
   addRace: (race: Race) => void
   addUpcomingRace: (race: Race) => void
   autoMoveExpiredUpcoming: () => void
@@ -63,9 +72,13 @@ export const useRaceStore = create<RaceState>()(
       nextRace: null,
       focusRaceId: null,
       _pendingDeleteIds: [],
+      deletedRaceIds: [],
+
+      // Silent setter for the remote-pull path (does not echo back to the server).
+      setDeletedRaceIds: (deletedRaceIds) => set({ deletedRaceIds }),
 
       addRace: (race) => {
-        set(s => ({ races: [...s.races, race] }))
+        set(s => ({ races: [...s.races, stamp(race)] }))
         void syncStateToSupabase()
         posthog.capture('race_logged', {
           sport: race.sport,
@@ -76,7 +89,7 @@ export const useRaceStore = create<RaceState>()(
       },
 
       addUpcomingRace: (race) => {
-        set(s => ({ upcomingRaces: [...s.upcomingRaces, race] }))
+        set(s => ({ upcomingRaces: [...s.upcomingRaces, stamp(race)] }))
         get().promoteNextRace()
         void syncStateToSupabase()
         posthog.capture('race_planned', {
@@ -90,8 +103,10 @@ export const useRaceStore = create<RaceState>()(
         const { upcomingRaces, races } = get()
         const expired = upcomingRaces.filter(r => r.date < today)
         if (expired.length === 0) return
+        // Moved, not deleted — stamp so the past copy wins over a stale remote
+        // upcoming copy of the same id (cross-list dedup in the pull keeps past).
         set({
-          races: [...races, ...expired],
+          races: [...races, ...expired.map(stamp)],
           upcomingRaces: upcomingRaces.filter(r => r.date >= today),
         })
         get().promoteNextRace()
@@ -100,11 +115,12 @@ export const useRaceStore = create<RaceState>()(
 
       // Remove an upcoming race entirely (no move to past — e.g. replaced by an alternative)
       removeUpcomingRace: (id) => {
-        const { upcomingRaces, _pendingDeleteIds } = get()
+        const { upcomingRaces, _pendingDeleteIds, deletedRaceIds } = get()
         set({
           upcomingRaces: upcomingRaces.filter(r => r.id !== id),
           focusRaceId: get().focusRaceId === id ? null : get().focusRaceId,
           _pendingDeleteIds: [..._pendingDeleteIds, id],
+          deletedRaceIds: [...deletedRaceIds, { id, at: Date.now() }],
         })
         get().promoteNextRace()
         void syncStateToSupabase()
@@ -116,8 +132,9 @@ export const useRaceStore = create<RaceState>()(
         const race = upcomingRaces.find(r => r.id === id)
         if (!race) return
         const newUpcoming = upcomingRaces.filter(r => r.id !== id)
+        // Moved to past (same id), NOT deleted — stamp, no tombstone.
         set({
-          races: [...races, race],
+          races: [...races, stamp(race)],
           upcomingRaces: newUpcoming,
           focusRaceId: get().focusRaceId === id ? null : get().focusRaceId,
           _pendingDeleteIds: [..._pendingDeleteIds, id],
@@ -127,11 +144,12 @@ export const useRaceStore = create<RaceState>()(
       },
 
       updateRace: (id, patch) => {
+        const now = Date.now()
         set(s => ({
-          races: s.races.map(r => r.id === id ? { ...r, ...patch } : r),
-          upcomingRaces: s.upcomingRaces.map(r => r.id === id ? { ...r, ...patch } : r),
+          races: s.races.map(r => r.id === id ? { ...r, ...patch, updatedAt: now } : r),
+          upcomingRaces: s.upcomingRaces.map(r => r.id === id ? { ...r, ...patch, updatedAt: now } : r),
           // Keep nextRace in sync — otherwise goal time / priority edits don't surface in dashboard widgets
-          nextRace: s.nextRace?.id === id ? { ...s.nextRace, ...patch } : s.nextRace,
+          nextRace: s.nextRace?.id === id ? { ...s.nextRace, ...patch, updatedAt: now } : s.nextRace,
         }))
         void syncStateToSupabase()
       },
@@ -147,6 +165,8 @@ export const useRaceStore = create<RaceState>()(
             nextRace: newNextRace,
             focusRaceId: s.focusRaceId === id ? null : s.focusRaceId,
             _pendingDeleteIds: [...s._pendingDeleteIds, id],
+            // Tombstone so the delete propagates to other devices.
+            deletedRaceIds: [...s.deletedRaceIds, { id, at: Date.now() }],
           }
         })
         void syncStateToSupabase()
@@ -214,6 +234,7 @@ export const useRaceStore = create<RaceState>()(
         wishlistRaces: s.wishlistRaces,
         nextRace: s.nextRace,
         focusRaceId: s.focusRaceId,
+        deletedRaceIds: s.deletedRaceIds,  // tombstones persist so deletes survive reloads + propagate
         // _pendingDeleteIds intentionally excluded — session-only, not persisted
       }),
       // Migrate old SPA format: raw array stored directly, not wrapped in {state:{...}}
