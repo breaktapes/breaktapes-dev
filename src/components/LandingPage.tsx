@@ -456,6 +456,80 @@ function WearablesMockup() {
   )
 }
 
+/* Analytics screen for the phone-scroll stage — compact bars + sparkline. */
+function AnalyticsMockup() {
+  const bars = [42, 64, 51, 78, 88, 70, 95]
+  return (
+    <div style={{ width: '100%', maxWidth: 300, padding: 'var(--sp-4)', ...cardSurface, display: 'grid', gap: 'var(--sp-3)' }}>
+      <div>
+        <div style={{ fontFamily: 'var(--body)', fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 8 }}>Form trend</div>
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 5, height: 70 }}>
+          {bars.map((b, i) => (
+            <div key={i} style={{ flex: 1, height: `${b}%`, borderRadius: '3px 3px 0 0',
+              background: i === bars.length - 1 ? 'var(--green)' : 'rgba(var(--orange-ch),0.55)' }} />
+          ))}
+        </div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-2)' }}>
+        {[['72.4', 'AGE GRADE %'], ['HOT', 'MOMENTUM']].map(([v, l]) => (
+          <div key={l} style={{ ...cardSurface, padding: 'var(--sp-3)', background: 'var(--surface3)' }}>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 22, color: l === 'MOMENTUM' ? 'var(--green)' : 'var(--white)' }}>{v}</div>
+            <div style={{ fontFamily: 'var(--body)', fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)' }}>{l}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ ...cardSurface, padding: 'var(--sp-3)', background: 'var(--surface3)' }}>
+        <div style={{ fontFamily: 'var(--body)', fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 6 }}>Pacing IQ · Negative splitter</div>
+        <svg viewBox="0 0 240 32" width="100%" height="26" preserveAspectRatio="none">
+          <path d="M0 24 L48 22 L96 18 L144 14 L192 10 L240 6" fill="none" stroke="var(--green)" strokeWidth="2.5" strokeLinecap="round" />
+        </svg>
+      </div>
+    </div>
+  )
+}
+
+/* =====================================================================
+   PHONE-SCROLL STAGE — a pinned device cycles through screens on scroll.
+   ===================================================================== */
+const STAGE_SCREENS = [
+  { key: 'home', title: 'Your dashboard', line: 'Race-day briefing, next-race countdown, and live form — the moment you open the app.', render: () => <DashboardMockup /> },
+  { key: 'medals', title: 'Your medal wall', line: 'Every medal you’ve earned, photo-first and tier by tier. Tap any one for the story.', render: () => <MedalWallMockup /> },
+  { key: 'map', title: 'Your race map', line: 'Every finish line you’ve crossed, mapped across the world and connected in order.', render: () => <RaceMapMockup /> },
+  { key: 'analytics', title: 'Your analytics', line: 'Pacing IQ, age-grade and momentum — the numbers behind every result, computed for you.', render: () => <AnalyticsMockup /> },
+] as const
+
+function PhoneStage({ screen, stageRef }: { screen: number; stageRef: React.RefObject<HTMLDivElement | null> }) {
+  return (
+    <section className="pl-stage" ref={stageRef}>
+      <div className="pl-stage-pin">
+        <div className="pl-stage-inner">
+          <div className="pl-stage-copy">
+            <p className="pl-eyebrow">The whole app</p>
+            <h2 className="pl-stage-title">{STAGE_SCREENS[screen].title}</h2>
+            <p className="pl-stage-line">{STAGE_SCREENS[screen].line}</p>
+            <div className="pl-stage-dots" aria-hidden="true">
+              {STAGE_SCREENS.map((s, i) => <span key={s.key} className={i === screen ? 'on' : ''} />)}
+            </div>
+          </div>
+          <div className="pl-phone">
+            <div className="pl-phone-notch" />
+            <div className="pl-phone-screen">
+              {STAGE_SCREENS.map((s, i) => (
+                <motion.div key={s.key} className="pl-phone-slide"
+                  animate={{ opacity: i === screen ? 1 : 0, scale: i === screen ? 1 : 0.96 }}
+                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                  style={{ pointerEvents: i === screen ? 'auto' : 'none' }}>
+                  {s.render()}
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 /* =====================================================================
    FEATURE SHOWCASE ROW  (alternating copy + mockup; reveals + GSAP parallax)
    ===================================================================== */
@@ -503,6 +577,8 @@ export default function LandingPage({ onSignUp, onSignIn }: LandingPageProps) {
   const [navVisible, setNavVisible] = useState(false)
   const [progress, setProgress] = useState(0)
   const [audience, setAudience] = useState<Audience>('all')
+  const [screen, setScreen] = useState(0)
+  const stageRef = useRef<HTMLDivElement>(null)
 
   const handleSignUp = useCallback(() => { track('landing_cta_click', { cta: 'get_started' }); onSignUp() }, [onSignUp])
   const handleSignIn = useCallback(() => { track('landing_cta_click', { cta: 'sign_in' }); onSignIn() }, [onSignIn])
@@ -541,6 +617,14 @@ export default function LandingPage({ onSignUp, onSignIn }: LandingPageProps) {
         const p = max > 0 ? el.scrollTop / max : 0
         setProgress(p)
         setNavVisible(p > 0.06)
+        // Drive the pinned phone-stage screen index from scroll within its section.
+        const stage = stageRef.current
+        if (stage) {
+          const dur = stage.offsetHeight - el.clientHeight
+          const sp = dur > 0 ? (el.scrollTop - stage.offsetTop) / dur : 0
+          const idx = Math.max(0, Math.min(STAGE_SCREENS.length - 1, Math.floor(sp * STAGE_SCREENS.length)))
+          setScreen(idx)
+        }
       })
     }
     el.addEventListener('scroll', onScroll, { passive: true })
@@ -624,6 +708,9 @@ export default function LandingPage({ onSignUp, onSignIn }: LandingPageProps) {
         bullets={['WHOOP live now — recovery & workouts', 'Strava, Garmin, Apple Health coming soon', 'Training load vs race performance']}
         mockup={<WearablesMockup />}
       />
+
+      {/* ---------------- PHONE-SCROLL CENTERPIECE ---------------- */}
+      <PhoneStage screen={screen} stageRef={stageRef} />
 
       {/* ---------------- STATS BAND ---------------- */}
       <motion.section className="pl-stats" variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}>

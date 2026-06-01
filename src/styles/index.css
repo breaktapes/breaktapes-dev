@@ -393,6 +393,51 @@ body::after {
 .pl-reverse::before { --spot: 70%; }
 .pl-eyebrow-tag { font-weight: 800; }
 
+/* ---- phone-scroll centerpiece ---- */
+.pl-stage { position: relative; height: 360vh; }
+.pl-stage-pin {
+  position: sticky; top: 0; height: 100vh; height: 100dvh;
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+}
+.pl-stage-pin::before {
+  content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse 55% 60% at 72% 50%, rgba(var(--orange-ch),0.10), transparent 65%);
+}
+.pl-stage-inner {
+  position: relative; z-index: 1;
+  display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 4rem;
+  max-width: 1040px; width: 100%; padding: 0 1.5rem; text-align: left;
+}
+.pl-stage-title {
+  font-family: var(--headline); font-weight: 900;
+  font-size: clamp(2rem, 5vw, 3.2rem); line-height: 1; text-transform: uppercase;
+  color: var(--white); margin: 0 0 1rem; min-height: 2.2em;
+}
+.pl-stage-line { font-size: var(--text-base); line-height: 1.6; color: var(--muted); margin: 0 0 1.75rem; max-width: 420px; }
+.pl-stage-dots { display: flex; gap: 8px; }
+.pl-stage-dots span { width: 8px; height: 8px; border-radius: 50%; background: var(--muted2); transition: all 0.3s; }
+.pl-stage-dots span.on { width: 26px; border-radius: 4px; background: var(--orange); }
+
+/* device frame */
+.pl-phone {
+  position: relative; width: 300px; height: 600px; flex-shrink: 0;
+  background: linear-gradient(160deg, #1c1c1c, #0a0a0a);
+  border: 1px solid var(--border2); border-radius: 42px;
+  padding: 12px; box-shadow: 0 40px 90px rgba(0,0,0,0.7), inset 0 0 0 2px rgba(0,0,0,0.6);
+}
+.pl-phone-notch {
+  position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+  width: 110px; height: 22px; background: #000; border-radius: 0 0 14px 14px; z-index: 3;
+}
+.pl-phone-screen {
+  position: relative; width: 100%; height: 100%;
+  background: var(--surface); border-radius: 30px; overflow: hidden;
+}
+.pl-phone-slide {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center; padding: 22px 16px;
+}
+
 /* =============================================
    LANDING FOOTER
    ============================================= */
@@ -446,6 +491,14 @@ body::after {
   .pl-bullets li { justify-content: center; text-align: left; }
   .pl-stats-grid { grid-template-columns: repeat(2, 1fr); gap: var(--sp-6) var(--sp-4); }
   .pl-scroll-hint { display: none; }
+  /* phone stage: phone on top, copy below, centered */
+  .pl-stage-inner { grid-template-columns: 1fr; justify-items: center; gap: 1.75rem; text-align: center; }
+  .pl-stage-copy { order: 2; display: flex; flex-direction: column; align-items: center; }
+  .pl-phone { order: 1; width: 220px; height: 440px; border-radius: 32px; padding: 9px; }
+  .pl-phone-screen { border-radius: 24px; }
+  .pl-phone-notch { width: 84px; height: 17px; top: 11px; }
+  .pl-stage-line { max-width: 440px; }
+  .pl-stage-title { min-height: auto; }
 }
 
 /* Respect reduced-motion: framer-motion honours this via useReducedMotion(),
