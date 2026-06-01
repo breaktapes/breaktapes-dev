@@ -3,6 +3,14 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.6.14.3] - 2026-06-01
+
+### Fixed
+- **Profile data now loads correctly on new devices** — signing in on a second device now shows your full profile (name, bio, clubs, teams, etc.) instead of a blank profile. Root cause: Clerk identity fields were stamping `updatedAt` to the current time, causing the last-write-wins merge to reject the server-side profile in favor of the empty new-device state.
+- **Username changes propagate to public profile** — changing your Clerk username now syncs to Supabase so your public `/u/username` profile URL updates immediately.
+- **Goals (You page) now persist across devices and relaunches** — annual KM/race targets and distance time goals are included in the Supabase sync payload, so they survive new device sign-ins and are never lost.
+- **Dashboard widgets default to medium size for new users** — all resizable widgets now start at medium; previously some were small or large, leading to an inconsistent first impression.
+
 ## [0.6.14.1] - 2026-05-25
 
 ### Added
