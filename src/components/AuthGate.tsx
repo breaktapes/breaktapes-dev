@@ -8,6 +8,7 @@ import { setClerkToken } from '@/lib/supabase'
 import { syncStateToSupabase, resetRemotePullGate } from '@/lib/syncState'
 import { IS_STAGING } from '@/env'
 import { posthog } from '@/lib/posthog'
+import LandingPage from '@/components/LandingPage'
 
 type AuthView = 'signin' | 'signup'
 
@@ -232,28 +233,7 @@ function LandingScreen() {
 
   return (
     <>
-      <div id="landing-screen">
-        <div className="landing-wordmark">BREAK<span className="slash">/</span>TAPES</div>
-        <h1 className="landing-headline">
-          Your Races.<br /><em>All of Them.</em>
-        </h1>
-        <p className="landing-sub">Log every finish line. Track PRs, medals, and race history in one place.</p>
-        <div className="landing-actions">
-          <button className="btn-main" onClick={() => setView('signup')}>
-            Get Started — It's Free
-          </button>
-          <button className="landing-sign-in-link" onClick={() => setView('signin')}>
-            Already have an account? Sign in
-          </button>
-        </div>
-        <div className="landing-proof">
-          <span className="landing-proof-stat"><strong>Race history</strong> · every finish line</span>
-          <span className="landing-proof-dot" aria-hidden="true">·</span>
-          <span className="landing-proof-stat"><strong>Auto PRs</strong> · all distances</span>
-          <span className="landing-proof-dot" aria-hidden="true">·</span>
-          <span className="landing-proof-stat"><strong>Medal wall</strong> · photo-first</span>
-        </div>
-      </div>
+      <LandingPage onSignUp={() => setView('signup')} onSignIn={() => setView('signin')} />
 
       {view && (
         <div

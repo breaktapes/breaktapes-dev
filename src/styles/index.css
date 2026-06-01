@@ -122,26 +122,13 @@ body::after {
 #landing-screen {
   position: fixed; inset: 0; z-index: 600;
   background:
-    linear-gradient(180deg, #050505 0%, #070707 60%, #130905 84%, #1c0b06 100%);
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  min-height: 100vh;
-  min-height: 100dvh;
-  padding: 2rem 1.5rem 2rem;
+    linear-gradient(180deg, #000000 0%, #030303 45%, #070303 78%, #120705 100%);
+  overflow-y: auto; overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
   text-align: center;
   transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.4,0,0.2,1);
-  overflow: hidden;
 }
-/* Radial glow */
-#landing-screen::before {
-  content: '';
-  position: absolute; inset: 0; z-index: 0;
-  background:
-    radial-gradient(ellipse 92% 56% at 50% 112%, rgba(var(--orange-ch),0.24) 0%, rgba(var(--orange-ch),0.14) 38%, rgba(var(--orange-ch),0.04) 66%, transparent 82%),
-    radial-gradient(ellipse 46% 30% at 82% 10%, rgba(var(--orange-ch),0.07) 0%, transparent 62%);
-  pointer-events: none;
-}
-/* Grain texture */
+/* Grain texture — spans the full scrollable page */
 #landing-screen::after {
   content: '';
   position: absolute; inset: 0; z-index: 1;
@@ -149,37 +136,35 @@ body::after {
   opacity: 0.035; mix-blend-mode: overlay; pointer-events: none;
 }
 #landing-screen > * { position: relative; z-index: 2; }
+/* Fixed chrome must escape the blanket `position: relative` above — its ID
+   specificity (1,0,0) would otherwise beat the .pl-* class rules and drop the
+   loader / nav / progress bar back into document flow. */
+#landing-screen > .pl-loader { position: fixed; z-index: 800; }
+#landing-screen > .pl-progress { position: fixed; z-index: 760; }
+#landing-screen > .pl-nav { position: fixed; z-index: 750; }
 #landing-screen.out { opacity: 0; transform: translateY(-24px); pointer-events: none; }
+
+/* ---- shared hero text utilities (used by pitch-deck hero) ---- */
 .landing-wordmark {
   font-family: var(--headline);
   font-size: clamp(14px, 4vw, 18px);
   font-weight: 900; letter-spacing: 0.18em;
   text-transform: uppercase; color: var(--muted);
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 .landing-wordmark .slash { color: var(--orange); }
 .landing-headline {
   font-family: var(--headline);
-  font-size: clamp(3.2rem, 14vw, 6rem);
+  font-size: clamp(3rem, 12vw, 5.5rem);
   font-weight: 900; line-height: 0.9;
   text-transform: uppercase; letter-spacing: 0.01em;
   color: var(--white); margin-bottom: 1rem;
 }
-.landing-headline em {
-  font-style: normal; color: var(--orange);
-}
+.landing-headline em { font-style: normal; color: var(--orange); }
 .landing-sub {
   font-size: 15px; color: var(--muted);
-  max-width: 280px; line-height: 1.65;
-  margin: 0 auto 2.25rem;
+  line-height: 1.65; margin: 0 0 2rem;
 }
-.landing-actions {
-  display: flex; flex-direction: column;
-  gap: 0.6rem; align-items: center;
-  width: 100%; max-width: 300px;
-  margin-bottom: 2.5rem;
-}
-.landing-actions .btn-main { width: 100%; font-size: 15px; padding: 0.85rem 1.5rem; letter-spacing: 0.1em; }
 .landing-sign-in-link {
   font-size: 13px; color: var(--muted);
   background: none; border: none; cursor: pointer;
@@ -188,19 +173,285 @@ body::after {
   min-height: 44px; display: inline-flex; align-items: center;
 }
 .landing-sign-in-link:hover { color: var(--white); }
-/* 3-column proof grid */
 .landing-proof {
   display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
-  gap: 0.4rem 0.6rem; width: 100%; max-width: 420px;
+  gap: 0.4rem 0.6rem; max-width: 460px;
 }
-.landing-proof-stat {
-  font-size: 12px; color: var(--muted); line-height: 1.4;
+.landing-proof-stat { font-size: 12px; color: var(--muted); line-height: 1.4; }
+.landing-proof-stat strong { color: var(--white); font-weight: 600; }
+.landing-proof-dot { color: var(--muted2); font-size: 12px; user-select: none; }
+
+/* =============================================
+   PITCH-DECK LANDING (animated showcase)
+   ============================================= */
+.pl-hero {
+  position: relative;
+  display: grid; grid-template-columns: 1.05fr 0.95fr;
+  align-items: center; gap: 3rem;
+  min-height: 100dvh; max-width: 1120px;
+  margin: 0 auto; padding: 4rem 1.5rem; text-align: left;
 }
-.landing-proof-stat strong {
-  color: var(--white); font-weight: 600;
+.pl-hero::before {
+  content: ''; position: absolute; inset: 0; z-index: 0;
+  background:
+    radial-gradient(ellipse 70% 50% at 30% 80%, rgba(var(--orange-ch),0.20) 0%, rgba(var(--orange-ch),0.06) 45%, transparent 72%),
+    radial-gradient(ellipse 50% 40% at 90% 10%, rgba(var(--orange-ch),0.10) 0%, transparent 60%);
+  pointer-events: none;
 }
-.landing-proof-dot {
-  color: var(--muted2); font-size: 12px; user-select: none;
+.pl-hero > * { position: relative; z-index: 2; }
+.pl-hero-actions {
+  display: flex; flex-direction: column; gap: 0.6rem;
+  align-items: flex-start; max-width: 340px; margin: 2rem 0 1.5rem;
+}
+.pl-hero-actions .btn-main { width: 100%; font-size: 15px; padding: 0.9rem 1.5rem; letter-spacing: 0.1em; }
+.pl-hero-art { display: flex; justify-content: center; }
+.pl-scroll-hint {
+  position: absolute; bottom: 1.25rem; left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 2px; z-index: 3;
+  font-family: var(--headline); font-size: 10px; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--muted2);
+}
+.pl-eyebrow {
+  font-family: var(--headline); font-size: var(--text-sm); font-weight: 700;
+  letter-spacing: 0.16em; text-transform: uppercase; color: var(--orange); margin: 0 0 0.6rem;
+}
+
+/* feature showcase rows */
+.pl-showcase {
+  display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 3.5rem;
+  max-width: 1080px; margin: 0 auto; padding: 5rem 1.5rem; text-align: left;
+}
+.pl-reverse .pl-showcase-copy { order: 2; }
+.pl-reverse .pl-showcase-art { order: 1; }
+.pl-showcase-title {
+  font-family: var(--headline); font-size: clamp(1.9rem, 5vw, 2.8rem);
+  font-weight: 900; line-height: 1.02; text-transform: uppercase;
+  color: var(--white); margin: 0 0 1rem;
+}
+.pl-showcase-desc {
+  font-size: var(--text-base); line-height: 1.6; color: var(--muted);
+  margin: 0 0 1.5rem; max-width: 460px;
+}
+.pl-bullets { list-style: none; padding: 0; margin: 0; display: grid; gap: 0.6rem; }
+.pl-bullets li {
+  display: flex; align-items: flex-start; gap: 0.5rem;
+  font-size: var(--text-sm); color: var(--white); line-height: 1.5;
+}
+.pl-bullet-dot { color: var(--orange); flex-shrink: 0; }
+.pl-showcase-art { display: flex; justify-content: center; align-items: center; }
+
+/* stats band */
+.pl-stats { max-width: 1000px; margin: 0 auto; padding: 4rem 1.5rem; text-align: center; }
+.pl-stats-title {
+  font-family: var(--headline); font-size: clamp(1.8rem, 5vw, 2.6rem);
+  font-weight: 900; text-transform: uppercase; color: var(--white); margin: 0 0 2.5rem;
+}
+.pl-stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--sp-5); }
+.pl-stat-num {
+  font-family: var(--headline); font-weight: 900;
+  font-size: clamp(2.2rem, 6vw, 3.2rem); color: var(--orange); line-height: 1;
+}
+.pl-stat-label {
+  font-size: var(--text-xs); text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--muted); margin-top: 0.4rem;
+}
+
+/* final CTA */
+.pl-cta { position: relative; text-align: center; padding: 6rem 1.5rem; overflow: hidden; }
+.pl-cta::before {
+  content: ''; position: absolute; inset: 0; z-index: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% 120%, rgba(var(--orange-ch),0.22) 0%, transparent 70%);
+  pointer-events: none;
+}
+.pl-cta > * { position: relative; z-index: 2; }
+.pl-cta-title {
+  font-family: var(--headline); font-size: clamp(2.4rem, 9vw, 4.5rem);
+  font-weight: 900; line-height: 0.95; text-transform: uppercase;
+  color: var(--white); margin: 0 0 1rem;
+}
+.pl-cta-title em { font-style: normal; color: var(--orange); }
+.pl-cta-sub { font-size: var(--text-base); color: var(--muted); margin: 0 0 2rem; }
+.pl-cta-actions {
+  display: flex; flex-direction: column; gap: 0.6rem;
+  align-items: center; max-width: 340px; margin: 0 auto;
+}
+.pl-cta-actions .btn-main { width: 100%; font-size: 15px; padding: 0.9rem 2rem; letter-spacing: 0.1em; }
+
+/* =============================================
+   PHASE A — loader, nav, progress, audience selector, cinematic mood
+   ============================================= */
+
+/* ---- intro loader: finish tape + stopwatch ---- */
+.pl-loader {
+  position: fixed; inset: 0; z-index: 800;
+  background: #000; color: var(--white);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; overflow: hidden;
+}
+.pl-loader-inner { display: flex; flex-direction: column; align-items: center; gap: 1.5rem; width: 100%; }
+.pl-loader-clock {
+  font-family: var(--headline); font-weight: 900;
+  font-size: clamp(2.5rem, 12vw, 5rem); letter-spacing: 0.02em;
+  color: var(--white); font-variant-numeric: tabular-nums;
+}
+.pl-loader-tape-track { position: relative; width: 100%; height: 44px; overflow: hidden; }
+.pl-loader-tape {
+  position: absolute; top: 0; height: 44px; width: 52%;
+  display: flex; align-items: center; overflow: hidden;
+  background: var(--orange); color: #000;
+  font-family: var(--headline); font-weight: 800; font-size: 13px;
+  letter-spacing: 0.22em; white-space: nowrap;
+  box-shadow: 0 0 30px rgba(var(--orange-ch),0.5);
+}
+.pl-loader-tape-l { left: 0; justify-content: flex-end; padding-right: 4px; }
+.pl-loader-tape-r { right: 0; justify-content: flex-start; padding-left: 4px; }
+.pl-loader-tape span { opacity: 0.9; }
+.pl-loader-flash {
+  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 4px; height: 44px; background: #fff;
+  box-shadow: 0 0 40px 12px rgba(255,255,255,0.8); transform-origin: center;
+}
+.pl-loader-word {
+  font-family: var(--headline); font-weight: 900;
+  font-size: clamp(13px, 4vw, 16px); letter-spacing: 0.22em;
+  text-transform: uppercase; color: var(--muted);
+}
+.pl-loader-word .slash { color: var(--orange); }
+
+/* ---- scroll progress bar ---- */
+.pl-progress {
+  position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 760;
+  background: var(--orange); transform-origin: 0 50%; transform: scaleX(0);
+  box-shadow: 0 0 12px rgba(var(--orange-ch),0.6);
+}
+
+/* ---- floating top nav ---- */
+.pl-nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 750;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.85rem 1.25rem;
+  padding-top: calc(0.85rem + env(safe-area-inset-top, 0px));
+  background: rgba(5,5,5,0.72); backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+}
+.pl-nav-word {
+  font-family: var(--headline); font-weight: 900; font-size: 15px;
+  letter-spacing: 0.16em; text-transform: uppercase; color: var(--white);
+}
+.pl-nav-word .slash { color: var(--orange); }
+.pl-nav-actions { display: flex; align-items: center; gap: 0.5rem; }
+.pl-nav-ghost {
+  font-family: var(--body); font-size: 13px; color: var(--muted);
+  background: none; border: none; cursor: pointer; padding: 0.5rem 0.75rem;
+  min-height: 40px;
+}
+.pl-nav-ghost:hover { color: var(--white); }
+.pl-nav-cta {
+  font-family: var(--headline); font-weight: 800; font-size: 13px;
+  letter-spacing: 0.06em; text-transform: uppercase; color: #000;
+  background: var(--orange); border: none; cursor: pointer;
+  padding: 0.6rem 1.1rem; border-radius: var(--radius-sm); min-height: 40px;
+}
+.pl-nav-cta:hover { filter: brightness(1.1); box-shadow: 0 4px 18px var(--orange-glow); }
+
+/* ---- audience selector ---- */
+.pl-audience { max-width: 760px; margin: 0 auto; padding: 4.5rem 1.5rem 2rem; text-align: center; }
+.pl-audience-title {
+  font-family: var(--headline); font-weight: 900;
+  font-size: clamp(1.8rem, 6vw, 2.8rem); text-transform: uppercase;
+  color: var(--white); margin: 0 0 1.5rem;
+}
+.pl-audience-pills { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--sp-2); }
+.pl-audience-pill {
+  font-family: var(--headline); font-weight: 700; font-size: var(--text-sm);
+  letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--muted); background: var(--surface2);
+  border: 1px solid var(--border2); border-radius: var(--radius-pill);
+  padding: 0.6rem 1.1rem; cursor: pointer; min-height: 44px;
+  transition: color 0.2s, border-color 0.2s, background 0.2s, transform 0.15s;
+}
+.pl-audience-pill:hover { color: var(--white); transform: translateY(-1px); }
+.pl-audience-pill.active {
+  color: #000; background: var(--orange); border-color: var(--orange);
+  box-shadow: 0 4px 18px var(--orange-glow);
+}
+
+/* ---- showcase highlight (audience match) ---- */
+.pl-showcase.pl-highlight .pl-showcase-art { position: relative; }
+.pl-showcase.pl-highlight .pl-eyebrow-tag { color: var(--green); }
+.pl-showcase.pl-highlight {
+  background: radial-gradient(ellipse 60% 70% at 50% 50%, rgba(var(--orange-ch),0.06), transparent 70%);
+  border-radius: var(--radius-lg);
+}
+
+/* ---- cinematic section spotlights ---- */
+.pl-showcase { position: relative; }
+.pl-showcase::before {
+  content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: radial-gradient(ellipse 50% 60% at var(--spot, 30%) 50%, rgba(var(--orange-ch),0.05), transparent 60%);
+}
+.pl-reverse::before { --spot: 70%; }
+.pl-eyebrow-tag { font-weight: 800; }
+
+/* =============================================
+   LANDING FOOTER
+   ============================================= */
+.landing-footer {
+  border-top: 1px solid var(--border);
+  padding: 3rem 1.5rem calc(2rem + env(safe-area-inset-bottom));
+  display: flex; flex-direction: column; align-items: center;
+  gap: 0.5rem;
+}
+.landing-footer-wordmark {
+  font-family: var(--headline);
+  font-size: var(--text-md); font-weight: 900;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--muted);
+}
+.landing-footer-wordmark .slash { color: var(--orange); }
+.landing-footer-tag {
+  font-size: var(--text-sm); color: var(--muted2); margin: 0;
+}
+.landing-footer-links {
+  display: flex; align-items: center; gap: 0.6rem;
+  margin-top: 0.5rem;
+}
+.landing-footer-links a {
+  font-size: var(--text-sm); color: var(--muted);
+  text-decoration: none;
+}
+.landing-footer-links a:hover { color: var(--white); }
+.landing-footer-links span { color: var(--muted2); }
+.landing-footer-copy {
+  font-size: var(--text-xs); color: var(--muted2);
+  margin: 0.75rem 0 0;
+}
+
+/* Pitch-deck responsive — stack on tablet/mobile */
+@media (max-width: 860px) {
+  .pl-hero {
+    grid-template-columns: 1fr; min-height: auto;
+    gap: 2.5rem; padding: 5rem 1.5rem 3rem; text-align: center;
+  }
+  .pl-hero-copy { display: flex; flex-direction: column; align-items: center; }
+  .pl-hero-copy .landing-headline, .pl-hero-copy .landing-sub { text-align: center; }
+  .pl-hero-actions { align-items: center; }
+  .pl-hero .landing-proof { justify-content: center !important; }
+  .pl-showcase {
+    grid-template-columns: 1fr; gap: 2rem; padding: 3.5rem 1.5rem; text-align: center;
+  }
+  .pl-reverse .pl-showcase-copy, .pl-reverse .pl-showcase-art { order: initial; }
+  .pl-showcase-copy { display: flex; flex-direction: column; align-items: center; }
+  .pl-showcase-desc { max-width: 520px; }
+  .pl-bullets li { justify-content: center; text-align: left; }
+  .pl-stats-grid { grid-template-columns: repeat(2, 1fr); gap: var(--sp-6) var(--sp-4); }
+  .pl-scroll-hint { display: none; }
+}
+
+/* Respect reduced-motion: framer-motion honours this via useReducedMotion(),
+   this also kills any CSS smooth-scroll for consistency. */
+@media (prefers-reduced-motion: reduce) {
+  #landing-screen { scroll-behavior: auto; }
 }
 
 /* =============================================
