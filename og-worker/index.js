@@ -61,16 +61,32 @@ function truncate(str, max) {
   return str.length > max ? str.slice(0, max - 1) + '…' : str;
 }
 
+function distLabelOG(d) {
+  const map = { '5': '5K', '10': '10K', '21.1': 'Half Marathon', '21.0975': 'Half Marathon',
+    '42.2': 'Marathon', '42.195': 'Marathon', '113': '70.3', '226': 'IRONMAN', '50': '50K', '100': '100K' };
+  if (map[d]) return map[d];
+  const lc = String(d).toLowerCase();
+  if (lc.includes('marathon') && !lc.includes('half')) return 'Marathon';
+  if (lc.includes('half')) return 'Half Marathon';
+  if (lc.includes('70.3') || lc.includes('middle')) return '70.3';
+  if (lc.includes('ironman') || lc.includes('full')) return 'IRONMAN';
+  if (lc === '5k') return '5K';
+  if (lc === '10k') return '10K';
+  return d;
+}
+
 function computePBs(races) {
   const pb = {};
-  const PRIORITY = ['Marathon', 'Half Marathon', '10K', '5K', '70.3 / Half Ironman', 'Ironman / Full'];
+  // Key by canonical LABEL — the old code keyed by raw distance ("42.2") but
+  // filtered by labels ("Marathon"), so PBs never matched and cards were blank.
+  const PRIORITY = ['Marathon', 'Half Marathon', '10K', '5K', '70.3', 'IRONMAN'];
   for (const r of races) {
     if (!r.time || !r.distance) continue;
+    if (r.outcome && r.outcome !== 'Finished') continue; // not a PB
     const secs = timeToSecs(r.time);
-    if (secs === Infinity) continue;
-    if (!pb[r.distance] || secs < pb[r.distance].secs) {
-      pb[r.distance] = { secs, time: r.time };
-    }
+    if (!isFinite(secs) || secs <= 0) continue;
+    const label = distLabelOG(r.distance);
+    if (!pb[label] || secs < pb[label].secs) pb[label] = { secs, time: r.time };
   }
   return PRIORITY.filter(d => pb[d]).slice(0, 3).map(d => ({ dist: d, time: fmtTime(pb[d].time) }));
 }
@@ -369,13 +385,18 @@ export default {
                 : Array.isArray(row.races)        ? row.races
                 : [];
 
+    // Post-Clerk athletes store firstName/lastName + mainSport (the SSR worker
+    // uses these). The old name/primary fields are blank, so cards showed the
+    // bare username + no sport. Mirror the SSR worker's field resolution.
+    const fullName = [athlete.firstName, athlete.lastName].filter(Boolean).join(' ') || athlete.name || username;
+    const finished = races.filter(r => !r.outcome || r.outcome === 'Finished');
     const cardData = {
       username,
-      name: truncate(athlete.name || username, 36),
+      name: truncate(fullName, 36),
       location: [athlete.city, athlete.country].filter(Boolean).join(', '),
-      sport: athlete.primary || '',
+      sport: athlete.mainSport || athlete.primary || '',
       totalRaces: races.length,
-      totalMedals: races.filter(r => r.medal && r.medal !== 'none' && r.medal !== '').length,
+      totalMedals: finished.filter(r => r.medal && r.medal !== 'none' && r.medal !== '').length,
       countries: uniqueCountries(races),
       pbs: computePBs(races),
     };
