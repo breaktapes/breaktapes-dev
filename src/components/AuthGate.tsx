@@ -234,9 +234,9 @@ function LandingScreen() {
     <>
       <div id="landing-screen">
         <div className="landing-wordmark">BREAK<span className="slash">/</span>TAPES</div>
-        <div className="landing-headline">
+        <h1 className="landing-headline">
           Your Races.<br /><em>All of Them.</em>
-        </div>
+        </h1>
         <p className="landing-sub">Log every finish line. Track PRs, medals, and race history in one place.</p>
         <div className="landing-actions">
           <button className="btn-main" onClick={() => setView('signup')}>
