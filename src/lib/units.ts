@@ -102,7 +102,8 @@ export function computePaceSecPerKm(distKm: string, finishTime: string): number 
   // Label-aware: "Marathon"/"70.3 / Middle Distance"/"Ultra" must resolve to
   // their real km, not parseFloat (which yields NaN or a wrong number like 70.3).
   const km = resolveDistKm(distKm) ?? NaN
-  if (!km || isNaN(km)) return null
+  // Guard 0, NaN AND negative (a "-5" custom distance returned a negative pace).
+  if (!(km > 0) || isNaN(km)) return null
   const parts = finishTime.split(':').map(Number)
   if (parts.some(isNaN)) return null
   const secs = parts.length === 3

@@ -10,8 +10,19 @@ export function parseTimeSecs(time: string | undefined): number | null {
   if (!time) return null
   const parts = time.trim().split(':').map(Number)
   if (parts.some(isNaN)) return null
-  if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2]
-  if (parts.length === 2) return parts[0] * 60 + parts[1]
+  if (parts.some(p => p < 0)) return null
+  // Reject out-of-range mins/secs ("99:99:99", "1:75:00") so imported/legacy/AI
+  // garbage can't produce absurd seconds that poison PBs and predictions.
+  if (parts.length === 3) {
+    const [h, m, s] = parts
+    if (m > 59 || s > 59) return null
+    return h * 3600 + m * 60 + s
+  }
+  if (parts.length === 2) {
+    const [m, s] = parts
+    if (s > 59) return null
+    return m * 60 + s
+  }
   return null
 }
 
@@ -423,7 +434,7 @@ export function bestWeatherImpact(races: Race[]): { race: Race; impact: WeatherI
 export function findCourseRepeats(races: Race[]): Map<string, Race[]> {
   const groups = new Map<string, Race[]>()
   for (const r of races) {
-    const nameKey = r.name.toLowerCase()
+    const nameKey = (r.name ?? "").toLowerCase()
       .replace(/\b(20\d{2}|19\d{2})\b/g, '')
       .replace(/[^\w\s]/g, '')
       .trim()
@@ -444,13 +455,13 @@ export function findCourseRepeats(races: Race[]): Map<string, Race[]> {
 }
 
 export function findPriorResult(upcoming: Race, allRaces: Race[]): Race | null {
-  const upKey = upcoming.name.toLowerCase()
+  const upKey = (upcoming.name ?? "").toLowerCase()
     .replace(/\b(20\d{2}|19\d{2})\b/g, '')
     .replace(/[^\w\s]/g, '').trim().replace(/\s+/g, ' ')
   const match = allRaces
     .filter(r => r.time && r.date < upcoming.date)
     .find(r => {
-      const k = r.name.toLowerCase()
+      const k = (r.name ?? "").toLowerCase()
         .replace(/\b(20\d{2}|19\d{2})\b/g, '')
         .replace(/[^\w\s]/g, '').trim().replace(/\s+/g, ' ')
       return k === upKey

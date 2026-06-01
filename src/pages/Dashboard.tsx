@@ -35,7 +35,12 @@ import { supabase, getClerkToken } from '@/lib/supabase'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function todayStr() { return new Date().toISOString().split('T')[0] }
+// LOCAL date (not UTC) — must match useRaceStore.localToday() so a race dated
+// "today" isn't classified past by one and future by the other in UTC+/- zones.
+function todayStr() {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
 
 function daysUntil(dateStr: string): number {
   const now = new Date(); now.setHours(0, 0, 0, 0)
@@ -149,8 +154,11 @@ function totalKm(races: Race[]) {
     .reduce((s, r) => s + distanceToKm(r.distance), 0)
 }
 function medalCount(races: Race[]) {
-  const finisher = races.filter(r => r.medal && r.medal !== '').length
-  const podium   = races.filter(r => r.medal === 'gold' || r.medal === 'silver' || r.medal === 'bronze').length
+  // You can't earn a medal in a race you didn't finish — exclude DNF/DSQ/DNS
+  // (matches the Races-page StatsStrip).
+  const finished = races.filter(r => !r.outcome || r.outcome === 'Finished')
+  const finisher = finished.filter(r => r.medal && r.medal !== '').length
+  const podium   = finished.filter(r => r.medal === 'gold' || r.medal === 'silver' || r.medal === 'bronze').length
   return finisher + podium
 }
 
@@ -166,9 +174,10 @@ function computeAge(dob: string | undefined): number | null {
 
 function parseHMS(str: string): number | null {
   const p = str.trim().split(':').map(Number)
-  if (p.some(isNaN)) return null
-  if (p.length === 3) return p[0] * 3600 + p[1] * 60 + p[2]
-  if (p.length === 2) return p[0] * 60 + p[1]
+  if (p.some(isNaN) || p.some(v => v < 0)) return null
+  // Reject out-of-range mins/secs so garbage times can't poison PB/pace math.
+  if (p.length === 3) return (p[1] > 59 || p[2] > 59) ? null : p[0] * 3600 + p[1] * 60 + p[2]
+  if (p.length === 2) return p[1] > 59 ? null : p[0] * 60 + p[1]
   return null
 }
 
@@ -185,8 +194,9 @@ function parsePlacing(str: string | undefined): { pos: number; total: number; pe
   if (!m) return null
   const pos = parseInt(m[1], 10)
   const total = parseInt(m[2], 10)
-  if (!pos || !total || total === 0) return null
-  return { pos, total, percentile: Math.round((1 - (pos - 1) / total) * 100) }
+  if (!pos || !total || total === 0 || pos > total) return null  // reject "5000/1"
+  const percentile = Math.max(0, Math.min(100, Math.round((1 - (pos - 1) / total) * 100)))
+  return { pos, total, percentile }
 }
 
 // Best available placing percentile for a race — tries overall, then gender,
@@ -1595,7 +1605,9 @@ function StatsStrip() {
       : Math.round(km).toLocaleString()
     const pbCount = Object.keys(buildPBMap(races)).length
     const avgTime = (() => {
-      const timed = races.filter(r => r.time)
+      // Completed past races only — a future placeholder time or a DNF partial
+      // time would skew the average.
+      const timed = races.filter(r => r.time && r.date <= todayStr() && (!r.outcome || r.outcome === 'Finished') && parseHMS(r.time) != null)
       if (!timed.length) return null
       const avg = timed.reduce((s, r) => s + (parseHMS(r.time!) ?? 0), 0) / timed.length
       return secsToHMS(Math.round(avg))
@@ -1769,7 +1781,8 @@ function BostonQualWidget() {
 
   // Fastest time among qualifying-window races
   const bestQual = useMemo(() =>
-    [...qualRaces].sort((a, b) => (a.time ?? '').localeCompare(b.time ?? ''))[0] ?? null,
+    // Fastest qualifying marathon — compare in seconds, not lexicographically.
+    [...qualRaces].sort((a, b) => (parseHMS(a.time ?? '') ?? Infinity) - (parseHMS(b.time ?? '') ?? Infinity))[0] ?? null,
     [qualRaces],
   )
 
@@ -2121,7 +2134,9 @@ function AgeGradeWidget() {
 function RaceDNAWidget() {
   const races  = useRaceStore(selectRaces)
   const today  = todayStr()
-  const past   = useMemo(() => races.filter(r => r.date <= today), [races, today])
+  // Conditions profile reflects completed races — a DNF carries a partial time
+  // (skews temp-bucket pace) and shouldn't count toward surface/country mix.
+  const past   = useMemo(() => races.filter(r => r.date <= today && (!r.outcome || r.outcome === 'Finished')), [races, today])
   const dnaCtx  = useWidgetCardContext()
   const dnaSize = dnaCtx?.getWidgetSize('race-dna') ?? 'medium'
 

@@ -296,9 +296,9 @@ function getAgeGradeStandard(gender: string, distLabel: string, age: number): nu
 function parseTimeToSecs(str: string | undefined): number | null {
   if (!str) return null
   const p = str.trim().split(':').map(Number)
-  if (p.some(isNaN) || p.length === 0) return null
-  if (p.length === 3) return p[0] * 3600 + p[1] * 60 + p[2]
-  if (p.length === 2) return p[0] * 60 + p[1]
+  if (p.some(isNaN) || p.some(v => v < 0) || p.length === 0) return null
+  if (p.length === 3) return (p[1] > 59 || p[2] > 59) ? null : p[0] * 3600 + p[1] * 60 + p[2]
+  if (p.length === 2) return p[1] > 59 ? null : p[0] * 60 + p[1]
   return null
 }
 
@@ -331,11 +331,16 @@ function computeSignatureDistances(
   gender: string | undefined,
   age: number | null,
 ): SigDistEntry[] {
-  // build PBs by distance
+  // build PBs by distance — completed races only, compared in SECONDS (string
+  // compare ranks "10:01:00" before "9:59:00" for ultras/IRONMAN over 10h).
   const pbMap: Record<string, Race> = {}
   for (const r of races) {
     if (!r.time || !r.distance) continue
-    if (!pbMap[r.distance] || r.time < pbMap[r.distance].time!) pbMap[r.distance] = r
+    if (r.outcome && r.outcome !== 'Finished') continue
+    const rs = parseTimeToSecs(r.time)
+    if (rs == null) continue
+    const cur = pbMap[r.distance]
+    if (!cur || rs < (parseTimeToSecs(cur.time!) ?? Infinity)) pbMap[r.distance] = r
   }
 
   const entries: SigDistEntry[] = []
@@ -382,6 +387,7 @@ function buildPBByDist(races: Race[]): Array<{ key: string; label: string; race:
     const distToMatch = entry.distValue ?? entry.key
     for (const r of races) {
       if (!r.time || !r.distance) continue
+      if (r.outcome && r.outcome !== 'Finished') continue  // DNF/DSQ/DNS isn't a PB
       if (r.distance !== distToMatch) continue
       if (entry.sportMatch) {
         const rSport = (r.sport ?? '').toLowerCase()
@@ -393,15 +399,16 @@ function buildPBByDist(races: Race[]): Array<{ key: string; label: string; race:
         // No sportMatch and key differs from distance → skip (composite key with no filter)
         continue
       }
-      if (!map[entry.key] || r.time < map[entry.key].time!) map[entry.key] = r
+      { const _rs = parseTimeToSecs(r.time); const _cur = map[entry.key]; if (_rs != null && (!_cur || _rs < (parseTimeToSecs(_cur.time!) ?? Infinity))) map[entry.key] = r }
     }
     // HYROX: match any distance as long as sport matches
     if (entry.key === 'hyrox') {
       for (const r of races) {
         if (!r.time) continue
+        if (r.outcome && r.outcome !== 'Finished') continue
         const rSport = (r.sport ?? '').toLowerCase()
         if (!rSport.includes('hyrox')) continue
-        if (!map[entry.key] || r.time < map[entry.key].time!) map[entry.key] = r
+        { const _rs = parseTimeToSecs(r.time); const _cur = map[entry.key]; if (_rs != null && (!_cur || _rs < (parseTimeToSecs(_cur.time!) ?? Infinity))) map[entry.key] = r }
       }
     }
   }
@@ -1415,7 +1422,10 @@ function MedalWall() {
     const map: Record<string, string> = {} // distance → best time
     for (const r of races) {
       if (!r.time || !r.distance) continue
-      if (!map[r.distance] || r.time < map[r.distance]) map[r.distance] = r.time
+      if (r.outcome && r.outcome !== 'Finished') continue
+      const rs = parseTimeToSecs(r.time)
+      if (rs == null) continue
+      if (!map[r.distance] || rs < (parseTimeToSecs(map[r.distance]) ?? Infinity)) map[r.distance] = r.time
     }
     return map
   }, [races])

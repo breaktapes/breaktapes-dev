@@ -727,6 +727,16 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
     const effectiveDist = isCustomDist ? customDist : distance
     const effectiveMedal = medal === '__custom__' ? customMedal : medal
     const hasGoalHMS = goalHMS.h > 0 || goalHMS.m > 0 || goalHMS.s > 0
+    // Required fields — blank name/distance would later crash widgets that do
+    // r.name.toLowerCase() / parse the distance, and the race would vanish from
+    // every distance-based widget. Block the save (the Add flow already does this).
+    if (!name.trim()) { alert('Race name is required.'); return }
+    if (!effectiveDist || !effectiveDist.trim()) { alert('Distance is required.'); return }
+    // Custom distance must be a sane positive number
+    if (isCustomDist) {
+      const km = parseFloat(customDist)
+      if (!isFinite(km) || km <= 0 || km > 5000) { alert('Enter a valid distance (0–5000 km).'); return }
+    }
     // Sport required for ultra distances (>42.3km) — otherwise ultra achievements can't unlock
     if (!isUpcoming && parseFloat(effectiveDist) > 42.3 && !sport) {
       alert('Sport is required for ultra distances (>42km). Please select a sport.')

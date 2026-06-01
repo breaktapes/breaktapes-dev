@@ -138,8 +138,8 @@ function parsePlacing(str: string | undefined): { pos: number; total: number; pc
   const m = str.match(/(\d+)\s*[/\\]\s*(\d+)/)
   if (!m) return null
   const pos = parseInt(m[1], 10), total = parseInt(m[2], 10)
-  if (!pos || !total) return null
-  return { pos, total, pct: Math.round((1 - (pos - 1) / total) * 100) }
+  if (!pos || !total || pos > total) return null
+  return { pos, total, pct: Math.max(0, Math.min(100, Math.round((1 - (pos - 1) / total) * 100))) }
 }
 
 // ── Year-filter tabs ──────────────────────────────────────────────────────────
