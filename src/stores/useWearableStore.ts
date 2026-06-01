@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { WearableToken } from '@/types'
+import type { OWWorkout, OWRecovery, OWConnection } from '@/lib/openWearables'
 
 interface WhoopActivity {
   id: string
@@ -40,6 +41,7 @@ interface AppleHealthSummary {
 }
 
 interface WearableState {
+  // Legacy per-provider tokens (Strava still uses direct OAuth)
   whoopToken: WearableToken | null
   garminToken: WearableToken | null
   stravaToken: WearableToken | null
@@ -48,6 +50,14 @@ interface WearableState {
   whoopRecovery: WhoopRecovery[]
   garminActivities: GarminActivity[]
   appleHealthSummary: AppleHealthSummary | null
+
+  // Open Wearables unified layer
+  owUserId: string | null
+  owWorkouts: OWWorkout[]
+  owRecovery: OWRecovery[]
+  owConnections: OWConnection[]
+
+  // Legacy actions
   setToken: (provider: WearableToken['provider'], token: WearableToken | null) => void
   setStravaExpired: (expired: boolean) => void
   setWhoopActivities: (activities: WhoopActivity[]) => void
@@ -55,6 +65,12 @@ interface WearableState {
   setGarminActivities: (activities: GarminActivity[]) => void
   setAppleHealthSummary: (summary: AppleHealthSummary | null) => void
   clearToken: (provider: WearableToken['provider']) => void
+
+  // OW actions
+  setOwUserId: (id: string | null) => void
+  setOwWorkouts: (workouts: OWWorkout[]) => void
+  setOwRecovery: (recovery: OWRecovery[]) => void
+  setOwConnections: (connections: OWConnection[]) => void
 }
 
 export const useWearableStore = create<WearableState>()(
@@ -68,6 +84,11 @@ export const useWearableStore = create<WearableState>()(
       whoopRecovery: [],
       garminActivities: [],
       appleHealthSummary: null,
+
+      owUserId: null,
+      owWorkouts: [],
+      owRecovery: [],
+      owConnections: [],
 
       setToken: (provider, token) => {
         if (provider === 'whoop')  set({ whoopToken: token })
@@ -87,12 +108,14 @@ export const useWearableStore = create<WearableState>()(
         if (provider === 'garmin') set({ garminToken: null, garminActivities: [] })
         if (provider === 'strava') set({ stravaToken: null })
       },
+
+      setOwUserId: (owUserId) => set({ owUserId }),
+      setOwWorkouts: (owWorkouts) => set({ owWorkouts }),
+      setOwRecovery: (owRecovery) => set({ owRecovery }),
+      setOwConnections: (owConnections) => set({ owConnections }),
     }),
     {
-      name: 'fl2_strava',  // must match existing localStorage key (primary wearable key)
-      // The original code also used fl2_whoop and fl2_garmin as separate keys.
-      // We consolidate here — the key name is for the merged store.
-      // TODO Phase 2: verify if split keys are needed for compatibility with existing data.
+      name: 'fl2_strava',  // existing localStorage key — stable across versions
     },
   ),
 )

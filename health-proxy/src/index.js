@@ -623,7 +623,227 @@ export default {
       }
     }
 
-    // ── OW API proxy (GET only, legacy) ───────────────────────────────────
+    // ══════════════════════════════════════════════════════════════════════
+    // ── Open Wearables unified API routes ─────────────────────────────────
+    // All /ow/* routes proxy to the self-hosted OW instance on Railway.
+    // OW_BASE_URL and OW_API_KEY are Worker secrets — never exposed to client.
+    // ══════════════════════════════════════════════════════════════════════
+
+    if (path.startsWith('/ow/')) {
+      if (!env.OW_BASE_URL || !env.OW_API_KEY) {
+        return json({ error: 'OW not configured — set OW_BASE_URL and OW_API_KEY secrets' }, 503, origin);
+      }
+
+      const ow = env.OW_BASE_URL.replace(/\/$/, '');
+      const owKey = env.OW_API_KEY;
+
+      // ── POST /ow/user — create or retrieve OW user ──────────────────────
+      // Body: { clerk_user_id, email }
+      // Returns: { id, external_user_id, email }
+      if (path === '/ow/user' && request.method === 'POST') {
+        try {
+          const { clerk_user_id, email } = await request.json().catch(() => ({}));
+          if (!clerk_user_id || !email) {
+            return json({ error: 'clerk_user_id and email required' }, 400, origin);
+          }
+          // Try to find existing user first (OW does not deduplicate on external_user_id automatically)
+          const listRes = await fetch(`${ow}/api/v1/users?search=${encodeURIComponent(email)}`, {
+            headers: { 'X-Open-Wearables-API-Key': owKey },
+          });
+          if (listRes.ok) {
+            const listData = await listRes.json();
+            const existing = (listData.users ?? listData ?? []).find(
+              u => u.external_user_id === clerk_user_id
+            );
+            if (existing) return json({ id: existing.id, email: existing.email }, 200, origin);
+          }
+          // Create new
+          const createRes = await fetch(`${ow}/api/v1/users`, {
+            method: 'POST',
+            headers: { 'X-Open-Wearables-API-Key': owKey, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, external_user_id: clerk_user_id }),
+          });
+          const created = await createRes.json().catch(() => ({}));
+          return json(created, createRes.status, origin);
+        } catch (e) {
+          return json({ error: e.message }, 502, origin);
+        }
+      }
+
+      // ── GET /ow/connect — initiate provider OAuth ───────────────────────
+      // Query: ow_user_id, provider, redirect_uri
+      // Returns: { authorization_url }
+      if (path === '/ow/connect' && request.method === 'GET') {
+        const owUserId    = url.searchParams.get('ow_user_id');
+        const provider    = url.searchParams.get('provider');
+        const redirectUri = url.searchParams.get('redirect_uri');
+        if (!owUserId || !provider || !redirectUri) {
+          return json({ error: 'ow_user_id, provider, redirect_uri required' }, 400, origin);
+        }
+        try {
+          const authRes = await fetch(
+            `${ow}/api/v1/oauth/${provider}/authorize?user_id=${owUserId}&redirect_uri=${encodeURIComponent(redirectUri)}`,
+            { headers: { 'X-Open-Wearables-API-Key': owKey } },
+          );
+          const authData = await authRes.json().catch(() => ({}));
+          return json(authData, authRes.status, origin);
+        } catch (e) {
+          return json({ error: e.message }, 502, origin);
+        }
+      }
+
+      // ── POST /ow/disconnect — revoke a provider connection ──────────────
+      // Body: { ow_user_id, provider }
+      if (path === '/ow/disconnect' && request.method === 'POST') {
+        try {
+          const { ow_user_id, provider } = await request.json().catch(() => ({}));
+          if (!ow_user_id || !provider) {
+            return json({ error: 'ow_user_id and provider required' }, 400, origin);
+          }
+          const res = await fetch(`${ow}/api/v1/connections/${provider}/users/${ow_user_id}`, {
+            method: 'DELETE',
+            headers: { 'X-Open-Wearables-API-Key': owKey },
+          });
+          return json({ ok: res.ok }, res.ok ? 200 : res.status, origin);
+        } catch (e) {
+          return json({ error: e.message }, 502, origin);
+        }
+      }
+
+      // ── GET /ow/connections — list connected providers for a user ───────
+      // Query: ow_user_id
+      // Returns: { connections: [{ provider, connected, last_sync }] }
+      if (path === '/ow/connections' && request.method === 'GET') {
+        const owUserId = url.searchParams.get('ow_user_id');
+        if (!owUserId) return json({ error: 'ow_user_id required' }, 400, origin);
+        try {
+          const res = await fetch(`${ow}/api/v1/users/${owUserId}/connections`, {
+            headers: { 'X-Open-Wearables-API-Key': owKey },
+          });
+          const data = await res.json().catch(() => ({ connections: [] }));
+          // Normalize: OW returns enriched connection objects
+          const connections = (data.connections ?? data ?? []).map(c => ({
+            provider: c.provider_key ?? c.provider ?? 'unknown',
+            connected: c.is_connected ?? true,
+            last_sync: c.last_sync_at ?? null,
+          }));
+          return json({ connections }, 200, origin);
+        } catch (e) {
+          return json({ connections: [] }, 200, origin);
+        }
+      }
+
+      // ── GET /ow/workouts — normalized workouts across all providers ──────
+      // Query: ow_user_id, since (ISO), limit (default 200)
+      // Returns: { workouts: OWWorkout[] }
+      if (path === '/ow/workouts' && request.method === 'GET') {
+        const owUserId = url.searchParams.get('ow_user_id');
+        if (!owUserId) return json({ error: 'ow_user_id required' }, 400, origin);
+        const since = url.searchParams.get('since') ?? new Date(Date.now() - 60 * 86400000).toISOString();
+        const limit = url.searchParams.get('limit') ?? '200';
+        try {
+          const res = await fetch(
+            `${ow}/api/v1/users/${owUserId}/events/workouts?start_date=${encodeURIComponent(since)}&limit=${limit}`,
+            { headers: { 'X-Open-Wearables-API-Key': owKey } },
+          );
+          const data = await res.json().catch(() => ({ workouts: [] }));
+          const raw = data.workouts ?? data.results ?? data ?? [];
+          // Normalize to OWWorkout shape
+          const workouts = raw.map(w => ({
+            id: w.id ?? w.external_id ?? String(Math.random()),
+            provider: w.provider ?? 'unknown',
+            sport_type: w.sport_type ?? w.activity_type ?? 'other',
+            started_at: w.started_at ?? w.start_time ?? w.start_date ?? '',
+            duration_seconds: w.duration_seconds ?? w.duration ?? 0,
+            distance_meters: w.distance_meters ?? w.distance ?? null,
+            average_heart_rate: w.average_heart_rate ?? w.avg_hr ?? null,
+            name: w.name ?? w.title ?? null,
+          }));
+          return json({ workouts }, 200, origin);
+        } catch (e) {
+          return json({ workouts: [] }, 200, origin);
+        }
+      }
+
+      // ── GET /ow/recovery — daily HRV + resting HR + recovery score ───────
+      // Query: ow_user_id, days (default 14)
+      // Returns: { recovery: OWRecovery[] }
+      if (path === '/ow/recovery' && request.method === 'GET') {
+        const owUserId = url.searchParams.get('ow_user_id');
+        if (!owUserId) return json({ error: 'ow_user_id required' }, 400, origin);
+        const days = parseInt(url.searchParams.get('days') ?? '14', 10);
+        const since = new Date(Date.now() - days * 86400000).toISOString();
+        try {
+          const res = await fetch(
+            `${ow}/api/v1/users/${owUserId}/summaries/recovery?start_time=${encodeURIComponent(since)}`,
+            { headers: { 'X-Open-Wearables-API-Key': owKey } },
+          );
+          const data = await res.json().catch(() => ({ days: [] }));
+          const raw = data.days ?? data.results ?? data ?? [];
+          const recovery = raw.map(d => ({
+            date: (d.date ?? d.day ?? '').slice(0, 10),
+            hrv_rmssd: d.hrv_rmssd ?? d.hrv_rmssd_milli != null ? d.hrv_rmssd_milli / 1 : null,
+            resting_heart_rate: d.resting_heart_rate ?? d.rhr ?? null,
+            recovery_score: d.recovery_score ?? null,
+            spo2: d.oxygen_saturation ?? d.spo2 ?? null,
+          })).filter(d => d.date);
+          return json({ recovery }, 200, origin);
+        } catch (e) {
+          return json({ recovery: [] }, 200, origin);
+        }
+      }
+
+      // ── GET /ow/activity — daily steps + calories ─────────────────────────
+      // Query: ow_user_id, days (default 14)
+      if (path === '/ow/activity' && request.method === 'GET') {
+        const owUserId = url.searchParams.get('ow_user_id');
+        if (!owUserId) return json({ error: 'ow_user_id required' }, 400, origin);
+        const days = parseInt(url.searchParams.get('days') ?? '14', 10);
+        const since = new Date(Date.now() - days * 86400000).toISOString();
+        try {
+          const res = await fetch(
+            `${ow}/api/v1/users/${owUserId}/summaries/activity?start_time=${encodeURIComponent(since)}`,
+            { headers: { 'X-Open-Wearables-API-Key': owKey } },
+          );
+          const data = await res.json().catch(() => ({ days: [] }));
+          const raw = data.days ?? data.results ?? data ?? [];
+          const activity = raw.map(d => ({
+            date: (d.date ?? d.day ?? '').slice(0, 10),
+            steps: d.steps ?? null,
+            energy_kcal: d.energy ?? d.active_energy ?? null,
+            distance_meters: d.distance ?? d.distance_meters ?? null,
+          })).filter(d => d.date);
+          return json({ activity }, 200, origin);
+        } catch (e) {
+          return json({ activity: [] }, 200, origin);
+        }
+      }
+
+      // ── POST /ow/sync — trigger a manual sync for a user ─────────────────
+      // Body: { ow_user_id, provider (optional) }
+      if (path === '/ow/sync' && request.method === 'POST') {
+        try {
+          const { ow_user_id, provider } = await request.json().catch(() => ({}));
+          if (!ow_user_id) return json({ error: 'ow_user_id required' }, 400, origin);
+          const syncPath = provider
+            ? `${ow}/api/v1/providers/${provider}/users/${ow_user_id}/sync`
+            : `${ow}/api/v1/users/${ow_user_id}/sync`;
+          const res = await fetch(syncPath, {
+            method: 'POST',
+            headers: { 'X-Open-Wearables-API-Key': owKey },
+          });
+          const data = await res.json().catch(() => ({}));
+          return json(data, res.status, origin);
+        } catch (e) {
+          return json({ error: e.message }, 502, origin);
+        }
+      }
+
+      // Unknown /ow/* route
+      return json({ error: `Unknown OW route: ${path}` }, 404, origin);
+    }
+
+    // ── Legacy GET proxy (catchall — kept for backwards compat) ───────────
     if (request.method !== 'GET') {
       return json({ error: 'Method not allowed' }, 405, origin);
     }
