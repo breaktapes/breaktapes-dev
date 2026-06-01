@@ -8,6 +8,7 @@ import { APP_URL, IS_STAGING } from '@/env'
 import { markRemotePullComplete } from '@/lib/syncState'
 import { mergeRaceLists, mergeTombstones, type Tomb } from '@/lib/mergeRaces'
 import type { Race, Athlete, SeasonPlan } from '@/types'
+import type { GoalsState } from '@/stores/useAthleteStore'
 
 const PROD_URL = 'https://app.breaktapes.com'
 
@@ -17,6 +18,7 @@ interface RemoteState {
   wishlist_races?: Race[]
   athlete?: Athlete
   season_plans?: SeasonPlan[]
+  goals?: GoalsState
   next_race?: Race | null
   focus_race_id?: string | null
   deleted_race_ids?: Tomb[]
@@ -41,6 +43,7 @@ export function useSyncState() {
   const setDeletedRaceIds = useRaceStore(s => s.setDeletedRaceIds)
   const setAthlete = useAthleteStore(s => s.setAthlete)
   const setSeasonPlans = useAthleteStore(s => s.setSeasonPlans)
+  const setGoals = useAthleteStore(s => s.setGoals)
 
   // Cross-device merge (see src/lib/mergeRaces.ts, unit-tested):
   //  - last-write-wins by updatedAt → EDITS propagate, ties prefer local
@@ -97,6 +100,16 @@ export function useSyncState() {
       }
     }
     if (Array.isArray(remote.season_plans)) setSeasonPlans(remote.season_plans)
+    // Goals: prefer remote when local is empty; never overwrite local goals with
+    // an empty remote (fresh device must not wipe goals that were set on another).
+    if (remote.goals) {
+      const localGoals = useAthleteStore.getState().goals
+      const localEmpty = !localGoals ||
+        (!Object.keys(localGoals.annual ?? {}).length && !(localGoals.distGoals ?? []).length)
+      const remoteHasData =
+        Object.keys(remote.goals.annual ?? {}).length > 0 || (remote.goals.distGoals ?? []).length > 0
+      if (localEmpty && remoteHasData) setGoals(remote.goals)
+    }
 
     // Null out a focus/next pointer that no longer resolves after the merge
     // (e.g. the focused race was deleted on another device).

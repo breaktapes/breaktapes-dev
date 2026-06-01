@@ -115,26 +115,32 @@ export const useAthleteStore = create<AthleteState>()(
 
       setGoals: (goals) => set({ goals }),
 
-      setAnnualGoal: (year, partial) =>
+      setAnnualGoal: (year, partial) => {
         set(s => ({
           goals: {
             ...s.goals,
             annual: { ...s.goals.annual, [String(year)]: { ...s.goals.annual[String(year)], ...partial } },
           },
-        })),
+        }))
+        void syncStateToSupabase()
+      },
 
-      addDistGoal: (goal) =>
+      addDistGoal: (goal) => {
         set(s => ({
           goals: {
             ...s.goals,
             distGoals: [...s.goals.distGoals, { ...goal, id: crypto.randomUUID() }],
           },
-        })),
+        }))
+        void syncStateToSupabase()
+      },
 
-      deleteDistGoal: (id) =>
+      deleteDistGoal: (id) => {
         set(s => ({
           goals: { ...s.goals, distGoals: s.goals.distGoals.filter(g => g.id !== id) },
-        })),
+        }))
+        void syncStateToSupabase()
+      },
     }),
     {
       name: 'fl2_ath',  // must match existing localStorage key
