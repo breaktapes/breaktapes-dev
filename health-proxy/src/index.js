@@ -556,7 +556,14 @@ export default {
         // RunSignup requires race_id for result lookup, but we can search for a participant
         // across races using their public participant search API.
         const searchUrl = `https://runsignup.com/Rest/race/results/search-participants?format=json&tmp=1&search_word=${encodeURIComponent(firstName + ' ' + lastName)}&results_per_page=50`;
-        const searchRes = await fetch(searchUrl, { headers: { 'Accept': 'application/json' } });
+        // The 404 endpoint hangs ~39s before responding; the wizard waits for all
+        // sources, so bound this fetch to 6s and degrade gracefully on timeout.
+        let searchRes;
+        try {
+          searchRes = await fetch(searchUrl, { headers: { 'Accept': 'application/json' }, signal: AbortSignal.timeout(6000) });
+        } catch {
+          return json({ results: [], status: 'ok', note: 'runsignup_timeout' }, 200, origin);
+        }
         if (!searchRes.ok) {
           // RunSignup has no keyless cross-race results search (this path 404s);
           // a real integration needs an api_key/api_secret. Degrade gracefully —
