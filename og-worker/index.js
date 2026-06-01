@@ -390,15 +390,22 @@ export default {
     // bare username + no sport. Mirror the SSR worker's field resolution.
     const fullName = [athlete.firstName, athlete.lastName].filter(Boolean).join(' ') || athlete.name || username;
     const finished = races.filter(r => !r.outcome || r.outcome === 'Finished');
+    // Respect the owner's per-section visibility toggles (default OFF). The OG
+    // card previously rendered every section regardless, leaking stats/medals/PBs
+    // a user had explicitly hidden on their public profile.
+    const pv = (athlete.profileVisibility && typeof athlete.profileVisibility === 'object') ? athlete.profileVisibility : {};
+    const showStats  = pv.stats  === true;
+    const showMedals = pv.medals === true;
+    const showPbs    = pv.pbs    === true;
     const cardData = {
       username,
       name: truncate(fullName, 36),
       location: [athlete.city, athlete.country].filter(Boolean).join(', '),
       sport: athlete.mainSport || athlete.primary || '',
-      totalRaces: races.length,
-      totalMedals: finished.filter(r => r.medal && r.medal !== 'none' && r.medal !== '').length,
-      countries: uniqueCountries(races),
-      pbs: computePBs(races),
+      totalRaces: showStats ? races.length : 0,
+      totalMedals: showMedals ? finished.filter(r => r.medal && r.medal !== 'none' && r.medal !== '').length : 0,
+      countries: showStats ? uniqueCountries(races) : 0,
+      pbs: showPbs ? computePBs(races) : [],
     };
 
     // Generate PNG
