@@ -212,9 +212,14 @@ const OW_PROVIDERS: { id: OWProvider; label: string; icon: string; note?: string
 function useOW() {
   const { user } = useUser()
   const owUserId     = useWearableStore(s => s.owUserId)
-  const owWorkouts   = useWearableStore(s => s.owWorkouts)
-  const owRecovery   = useWearableStore(s => s.owRecovery)
-  const owConnections = useWearableStore(s => s.owConnections)
+  // Coerce to arrays — a stale/corrupt persisted store could hold non-arrays,
+  // which would crash the .filter/.map/.find consumers on mount.
+  const owWorkoutsRaw    = useWearableStore(s => s.owWorkouts)
+  const owRecoveryRaw    = useWearableStore(s => s.owRecovery)
+  const owConnectionsRaw = useWearableStore(s => s.owConnections)
+  const owWorkouts    = Array.isArray(owWorkoutsRaw) ? owWorkoutsRaw : []
+  const owRecovery    = Array.isArray(owRecoveryRaw) ? owRecoveryRaw : []
+  const owConnections = Array.isArray(owConnectionsRaw) ? owConnectionsRaw : []
   const setOwUserId      = useWearableStore(s => s.setOwUserId)
   const setOwWorkouts    = useWearableStore(s => s.setOwWorkouts)
   const setOwRecovery    = useWearableStore(s => s.setOwRecovery)
