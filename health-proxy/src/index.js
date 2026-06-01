@@ -652,9 +652,9 @@ export default {
           });
           if (listRes.ok) {
             const listData = await listRes.json();
-            const existing = (listData.users ?? listData ?? []).find(
-              u => u.external_user_id === clerk_user_id
-            );
+            // OW paginates: { items: [...], total, page, ... }
+            const items = Array.isArray(listData) ? listData : (listData.items ?? listData.users ?? []);
+            const existing = items.find(u => u.external_user_id === clerk_user_id);
             if (existing) return json({ id: existing.id, email: existing.email }, 200, origin);
           }
           // Create new
@@ -700,7 +700,8 @@ export default {
           if (!ow_user_id || !provider) {
             return json({ error: 'ow_user_id and provider required' }, 400, origin);
           }
-          const res = await fetch(`${ow}/api/v1/connections/${provider}/users/${ow_user_id}`, {
+          // OW path: DELETE /api/v1/users/{user_id}/connections/{provider}
+          const res = await fetch(`${ow}/api/v1/users/${ow_user_id}/connections/${provider}`, {
             method: 'DELETE',
             headers: { 'X-Open-Wearables-API-Key': owKey },
           });
@@ -720,12 +721,14 @@ export default {
           const res = await fetch(`${ow}/api/v1/users/${owUserId}/connections`, {
             headers: { 'X-Open-Wearables-API-Key': owKey },
           });
-          const data = await res.json().catch(() => ({ connections: [] }));
-          // Normalize: OW returns enriched connection objects
-          const connections = (data.connections ?? data ?? []).map(c => ({
-            provider: c.provider_key ?? c.provider ?? 'unknown',
-            connected: c.is_connected ?? true,
-            last_sync: c.last_sync_at ?? null,
+          const body = await res.json().catch(() => ([]));
+          // OW returns a bare array of UserConnectionRead:
+          //   { provider, status: 'active'|'revoked'|'expired', last_synced_at }
+          const raw = Array.isArray(body) ? body : (body.connections ?? body.data ?? []);
+          const connections = raw.map(c => ({
+            provider: c.provider ?? 'unknown',
+            connected: c.status === 'active',
+            last_sync: c.last_synced_at ?? null,
           }));
           return json({ connections }, 200, origin);
         } catch (e) {
@@ -736,24 +739,28 @@ export default {
       // ── GET /ow/workouts — normalized workouts across all providers ──────
       // Query: ow_user_id, since (ISO), limit (default 200)
       // Returns: { workouts: OWWorkout[] }
+      // OW: GET /api/v1/users/{id}/events/workouts — start_date AND end_date
+      //     both required; array is in response.data; paginated.
       if (path === '/ow/workouts' && request.method === 'GET') {
         const owUserId = url.searchParams.get('ow_user_id');
         if (!owUserId) return json({ error: 'ow_user_id required' }, 400, origin);
         const since = url.searchParams.get('since') ?? new Date(Date.now() - 60 * 86400000).toISOString();
+        const end   = new Date().toISOString();
         const limit = url.searchParams.get('limit') ?? '200';
         try {
+          const qs = new URLSearchParams({ start_date: since, end_date: end, limit });
           const res = await fetch(
-            `${ow}/api/v1/users/${owUserId}/events/workouts?start_date=${encodeURIComponent(since)}&limit=${limit}`,
+            `${ow}/api/v1/users/${owUserId}/events/workouts?${qs}`,
             { headers: { 'X-Open-Wearables-API-Key': owKey } },
           );
-          const data = await res.json().catch(() => ({ workouts: [] }));
-          const raw = data.workouts ?? data.results ?? data ?? [];
+          const body = await res.json().catch(() => ({ data: [] }));
+          const raw = body.data ?? body.workouts ?? body.results ?? [];
           // Normalize to OWWorkout shape
           const workouts = raw.map(w => ({
             id: w.id ?? w.external_id ?? String(Math.random()),
-            provider: w.provider ?? 'unknown',
-            sport_type: w.sport_type ?? w.activity_type ?? 'other',
-            started_at: w.started_at ?? w.start_time ?? w.start_date ?? '',
+            provider: w.provider ?? w.data_source ?? 'unknown',
+            sport_type: w.sport_type ?? w.activity_type ?? w.type ?? 'other',
+            started_at: w.started_at ?? w.start_time ?? w.start_datetime ?? w.start_date ?? '',
             duration_seconds: w.duration_seconds ?? w.duration ?? 0,
             distance_meters: w.distance_meters ?? w.distance ?? null,
             average_heart_rate: w.average_heart_rate ?? w.avg_hr ?? null,
@@ -768,25 +775,43 @@ export default {
       // ── GET /ow/recovery — daily HRV + resting HR + recovery score ───────
       // Query: ow_user_id, days (default 14)
       // Returns: { recovery: OWRecovery[] }
+      // OW's /summaries/recovery is "Not implemented" in current build. Recovery
+      // metrics flow through /timeseries as typed samples. We pull the relevant
+      // types and aggregate to one record per day (last sample wins per type).
+      // NOTE: timeseries uses start_time/end_time (NOT start_date like summaries).
       if (path === '/ow/recovery' && request.method === 'GET') {
         const owUserId = url.searchParams.get('ow_user_id');
         if (!owUserId) return json({ error: 'ow_user_id required' }, 400, origin);
         const days = parseInt(url.searchParams.get('days') ?? '14', 10);
         const since = new Date(Date.now() - days * 86400000).toISOString();
+        const end   = new Date().toISOString();
         try {
+          const qs = new URLSearchParams({ start_time: since, end_time: end });
+          // types is a repeated query param
+          ['heart_rate_variability_rmssd', 'resting_heart_rate', 'recovery_score', 'oxygen_saturation']
+            .forEach(t => qs.append('types', t));
           const res = await fetch(
-            `${ow}/api/v1/users/${owUserId}/summaries/recovery?start_time=${encodeURIComponent(since)}`,
+            `${ow}/api/v1/users/${owUserId}/timeseries?${qs}`,
             { headers: { 'X-Open-Wearables-API-Key': owKey } },
           );
-          const data = await res.json().catch(() => ({ days: [] }));
-          const raw = data.days ?? data.results ?? data ?? [];
-          const recovery = raw.map(d => ({
-            date: (d.date ?? d.day ?? '').slice(0, 10),
-            hrv_rmssd: d.hrv_rmssd ?? d.hrv_rmssd_milli != null ? d.hrv_rmssd_milli / 1 : null,
-            resting_heart_rate: d.resting_heart_rate ?? d.rhr ?? null,
-            recovery_score: d.recovery_score ?? null,
-            spo2: d.oxygen_saturation ?? d.spo2 ?? null,
-          })).filter(d => d.date);
+          const body = await res.json().catch(() => ({ data: [] }));
+          const samples = body.data ?? [];
+          // Aggregate samples → { date: { type: value } }, last sample wins
+          const byDate = {};
+          for (const s of samples) {
+            const date = (s.timestamp ?? '').slice(0, 10);
+            if (!date) continue;
+            (byDate[date] ??= {})[s.type] = s.value;
+          }
+          const recovery = Object.entries(byDate)
+            .sort((a, b) => a[0].localeCompare(b[0]))
+            .map(([date, v]) => ({
+              date,
+              hrv_rmssd: v.heart_rate_variability_rmssd ?? null,
+              resting_heart_rate: v.resting_heart_rate ?? null,
+              recovery_score: v.recovery_score ?? null,
+              spo2: v.oxygen_saturation ?? null,
+            }));
           return json({ recovery }, 200, origin);
         } catch (e) {
           return json({ recovery: [] }, 200, origin);
@@ -795,20 +820,24 @@ export default {
 
       // ── GET /ow/activity — daily steps + calories ─────────────────────────
       // Query: ow_user_id, days (default 14)
+      // OW: GET /api/v1/users/{id}/summaries/activity — start_date AND end_date
+      //     both required; array is in response.data.
       if (path === '/ow/activity' && request.method === 'GET') {
         const owUserId = url.searchParams.get('ow_user_id');
         if (!owUserId) return json({ error: 'ow_user_id required' }, 400, origin);
         const days = parseInt(url.searchParams.get('days') ?? '14', 10);
         const since = new Date(Date.now() - days * 86400000).toISOString();
+        const end   = new Date().toISOString();
         try {
+          const qs = new URLSearchParams({ start_date: since, end_date: end });
           const res = await fetch(
-            `${ow}/api/v1/users/${owUserId}/summaries/activity?start_time=${encodeURIComponent(since)}`,
+            `${ow}/api/v1/users/${owUserId}/summaries/activity?${qs}`,
             { headers: { 'X-Open-Wearables-API-Key': owKey } },
           );
-          const data = await res.json().catch(() => ({ days: [] }));
-          const raw = data.days ?? data.results ?? data ?? [];
+          const body = await res.json().catch(() => ({ data: [] }));
+          const raw = body.data ?? body.days ?? body.results ?? [];
           const activity = raw.map(d => ({
-            date: (d.date ?? d.day ?? '').slice(0, 10),
+            date: (d.date ?? d.day ?? d.summary_date ?? '').slice(0, 10),
             steps: d.steps ?? null,
             energy_kcal: d.energy ?? d.active_energy ?? null,
             distance_meters: d.distance ?? d.distance_meters ?? null,
