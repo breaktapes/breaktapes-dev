@@ -194,14 +194,14 @@ const TAB_LABELS: { id: Tab; label: string }[] = [
 
 // ─── OW provider config ───────────────────────────────────────────────────────
 
-const OW_PROVIDERS: { id: OWProvider; label: string; icon: string; note?: string }[] = [
-  { id: 'garmin',      label: 'Garmin',      icon: '⌚' },
+// Live = credentials exist + OW configured. Coming soon = pending developer approval.
+const OW_PROVIDERS: { id: OWProvider; label: string; icon: string; note?: string; comingSoon?: boolean }[] = [
   { id: 'whoop',       label: 'WHOOP',       icon: '🔴' },
   { id: 'strava',      label: 'Strava',      icon: '🟠' },
-  { id: 'polar',       label: 'Polar',       icon: '🔵' },
-  { id: 'suunto',      label: 'Suunto',      icon: '⬛' },
-  { id: 'fitbit',      label: 'Fitbit',      icon: '💙' },
-  { id: 'ultrahuman',  label: 'Ultrahuman',  icon: '💍', note: 'No workouts' },
+  { id: 'garmin',      label: 'Garmin',      icon: '⌚', comingSoon: true },
+  { id: 'polar',       label: 'Polar',       icon: '🔵', comingSoon: true },
+  { id: 'suunto',      label: 'Suunto',      icon: '⬛', comingSoon: true },
+  { id: 'ultrahuman',  label: 'Ultrahuman',  icon: '💍', comingSoon: true },
 ]
 
 // ─── useOW — shared hook for OW state ────────────────────────────────────────
@@ -361,7 +361,11 @@ function ActivitiesTab() {
                     </div>
                   )}
                 </div>
-                {connected ? (
+                {p.comingSoon ? (
+                  <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '4px 10px', flexShrink: 0 }}>
+                    Soon
+                  </span>
+                ) : connected ? (
                   <button
                     onClick={() => disconnect(p.id)}
                     style={{ background: 'transparent', border: '1px solid var(--border2)', borderRadius: 'var(--radius-sm)', color: 'var(--muted)', fontSize: 'var(--text-xs)', padding: '4px 10px', cursor: 'pointer', flexShrink: 0 }}
