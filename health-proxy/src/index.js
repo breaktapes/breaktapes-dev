@@ -321,6 +321,7 @@ export default {
         const url = `https://ultrasignup.com/service/events.svc/historybyname/${f}/${l}/`;
         const resp = await fetch(url, {
           headers: { 'Accept': 'application/json', 'User-Agent': 'Mozilla/5.0' },
+          signal: AbortSignal.timeout(6000),
         });
         if (!resp.ok) throw new Error(`UltraSignup ${resp.status}`);
         const persons = await resp.json();
@@ -382,6 +383,7 @@ export default {
 
         const pageUrl = `https://www.athlinks.com/athletes/${athleteId}/results`;
         const resp = await fetch(pageUrl, {
+          signal: AbortSignal.timeout(6000),
           headers: {
             'Accept': 'text/html,application/xhtml+xml',
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
@@ -465,6 +467,7 @@ export default {
         const url = `https://marathonview.net/query/${encodeURIComponent(trimmed)}`;
         const resp = await fetch(url, {
           headers: { 'Accept': 'text/html', 'User-Agent': 'Mozilla/5.0' },
+          signal: AbortSignal.timeout(6000),
         });
         if (!resp.ok) throw new Error(`MarathonView ${resp.status}`);
         const html = await resp.text();

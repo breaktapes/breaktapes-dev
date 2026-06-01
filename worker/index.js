@@ -372,7 +372,7 @@ function renderProfile(row, username) {
   // Bio + clubs
   const bioHtml = athlete.bio
     ? `<div class="athlete-bio">"${escapeHtml(athlete.bio)}"</div>` : '';
-  const clubPills = (athlete.clubs || []).map(c =>
+  const clubPills = (Array.isArray(athlete.clubs) ? athlete.clubs : []).map(c =>
     `<span class="club-pill">${escapeHtml(c)}</span>`
   ).join('');
 
@@ -1565,6 +1565,20 @@ async function handleApiState(request, env) {
 
 export default {
   async fetch(request, env) {
+    try {
+      return await handleRequest(request, env);
+    } catch (err) {
+      // Top-level guard: any throw in SSR / API / scraper paths would otherwise
+      // become an unhandled rejection → Cloudflare's generic 1101 error page.
+      // For profile/race SSR routes, degrade to a clean 404; otherwise 500.
+      const p = new URL(request.url).pathname;
+      if (p.startsWith('/u/')) return notFoundPage(p.split('/')[2] || '');
+      return new Response('Internal error', { status: 500, headers: { 'Access-Control-Allow-Origin': '*' } });
+    }
+  },
+};
+
+async function handleRequest(request, env) {
     const url = new URL(request.url);
     const path = url.pathname;
 
@@ -1683,5 +1697,4 @@ export default {
     }
 
     return env.ASSETS.fetch(request);
-  },
-};
+}
