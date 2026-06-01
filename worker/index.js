@@ -1179,6 +1179,70 @@ function decodeJwtPayload(token) {
   }
 }
 
+// ── Cryptographic Clerk JWT verification (RS256 via JWKS) ────────────────────
+// decodeJwtPayload above only base64-decodes — an attacker could forge a token
+// with any `sub` (read/write ANY user's data via the service-role key). This
+// verifies the signature against Clerk's JWKS, with the issuer PINNED to known
+// Clerk instances (so an attacker can't point us at their own JWKS).
+const ALLOWED_ISS = new Set([
+  'https://clerk.breaktapes.com',
+  'https://accounts.breaktapes.com',
+  'https://elegant-snipe-62.clerk.accounts.dev', // dev/local instance
+]);
+const _jwksCache = new Map(); // iss -> { keys, fetchedAt }
+
+function _b64urlToBytes(b64url) {
+  const b64 = b64url.replace(/-/g, '+').replace(/_/g, '/');
+  const pad = b64.length % 4 ? '='.repeat(4 - (b64.length % 4)) : '';
+  const bin = atob(b64 + pad);
+  const arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return arr;
+}
+
+async function _getJwks(iss, force) {
+  const cached = _jwksCache.get(iss);
+  if (!force && cached && Date.now() - cached.fetchedAt < 3600_000) return cached.keys;
+  const res = await fetch(`${iss}/.well-known/jwks.json`);
+  if (!res.ok) throw new Error(`jwks ${res.status}`);
+  const { keys } = await res.json();
+  _jwksCache.set(iss, { keys, fetchedAt: Date.now() });
+  return keys;
+}
+
+// Returns the verified payload, or null. Fails CLOSED on any error.
+async function verifyClerkJwt(token) {
+  try {
+    const parts = String(token || '').split('.');
+    if (parts.length !== 3) return null;
+    const [h, p, s] = parts;
+    const header = JSON.parse(atob(h.replace(/-/g, '+').replace(/_/g, '/')));
+    if (header.alg !== 'RS256' || !header.kid) return null;
+    const payload = JSON.parse(atob(p.replace(/-/g, '+').replace(/_/g, '/')));
+    const iss = String(payload.iss ?? '');
+    if (!ALLOWED_ISS.has(iss)) return null;
+    if (!payload.sub || !String(payload.sub).startsWith('user_')) return null;
+    const nowS = Math.floor(Date.now() / 1000);
+    if (payload.exp && nowS > payload.exp) return null;
+    if (payload.nbf && nowS + 5 < payload.nbf) return null;
+
+    let keys = await _getJwks(iss, false);
+    let jwk = keys.find(k => k.kid === header.kid);
+    if (!jwk) { keys = await _getJwks(iss, true); jwk = keys.find(k => k.kid === header.kid); } // key rotation
+    if (!jwk) return null;
+
+    const key = await crypto.subtle.importKey(
+      'jwk', jwk, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['verify'],
+    );
+    const ok = await crypto.subtle.verify(
+      'RSASSA-PKCS1-v1_5', key, _b64urlToBytes(s), new TextEncoder().encode(`${h}.${p}`),
+    );
+    return ok ? payload : null;
+  } catch {
+    return null;
+  }
+}
+
 // ── Admin helpers ────────────────────────────────────────────────────────────
 
 const ADMIN_CORS = {
@@ -1192,18 +1256,14 @@ function adminCors() {
   return new Response(null, { headers: ADMIN_CORS });
 }
 
-/** Decode Clerk token and return userId if valid admin, else null. */
-function resolveAdminUserId(request, env) {
+/** Verify Clerk token (signature) and return userId if valid admin, else null. */
+async function resolveAdminUserId(request, env) {
   const authHeader = request.headers.get('Authorization') ?? '';
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
   if (!token) return null;
-  const payload = decodeJwtPayload(token);
+  const payload = await verifyClerkJwt(token);
   if (!payload || !payload.sub) return null;
-  if (payload.exp && Math.floor(Date.now() / 1000) > payload.exp) return null;
-  const iss = String(payload.iss ?? '');
-  if (!iss.includes('clerk') && !iss.includes('breaktapes')) return null;
   const userId = payload.sub;
-  if (!userId.startsWith('user_')) return null;
   // Check against ADMIN_USER_IDS env var (comma-separated Clerk IDs)
   const adminIds = (env.ADMIN_USER_IDS ?? '').split(',').map(s => s.trim()).filter(Boolean);
   if (!adminIds.includes(userId)) return null;
@@ -1218,13 +1278,9 @@ async function handleCatalogSubmit(request, env) {
   const authHeader = request.headers.get('Authorization') ?? '';
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
   if (!token) return new Response('Unauthorized', { status: 401, headers: ADMIN_CORS });
-  const payload = decodeJwtPayload(token);
+  const payload = await verifyClerkJwt(token);
   if (!payload || !payload.sub) return new Response('Invalid token', { status: 401, headers: ADMIN_CORS });
-  if (payload.exp && Math.floor(Date.now() / 1000) > payload.exp) return new Response('Token expired', { status: 401, headers: ADMIN_CORS });
-  const iss = String(payload.iss ?? '');
-  if (!iss.includes('clerk') && !iss.includes('breaktapes')) return new Response('Invalid issuer', { status: 401, headers: ADMIN_CORS });
   const userId = payload.sub;
-  if (!userId.startsWith('user_')) return new Response('Invalid user ID format', { status: 401, headers: ADMIN_CORS });
 
   let body;
   try { body = await request.json(); } catch { return new Response('Invalid JSON', { status: 400, headers: ADMIN_CORS }); }
@@ -1269,7 +1325,7 @@ async function handleCatalogSubmit(request, env) {
 async function handleAdminListContributions(request, env) {
   if (request.method === 'OPTIONS') return adminCors();
 
-  const userId = resolveAdminUserId(request, env);
+  const userId = await resolveAdminUserId(request, env);
   if (!userId) return new Response('Forbidden', { status: 403, headers: ADMIN_CORS });
 
   const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
@@ -1291,7 +1347,7 @@ async function handleAdminListContributions(request, env) {
 async function handleAdminAction(request, env, id, action) {
   if (request.method === 'OPTIONS') return adminCors();
 
-  const userId = resolveAdminUserId(request, env);
+  const userId = await resolveAdminUserId(request, env);
   if (!userId) return new Response('Forbidden', { status: 403, headers: ADMIN_CORS });
 
   const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
@@ -1376,23 +1432,10 @@ async function handleApiSync(request, env) {
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
   if (!token) return new Response('Unauthorized', { status: 401 });
 
-  const payload = decodeJwtPayload(token);
+  // Cryptographically verify the Clerk JWT signature (not just decode it).
+  const payload = await verifyClerkJwt(token);
   if (!payload || !payload.sub) return new Response('Invalid token', { status: 401 });
-
-  // Expiry check
-  if (payload.exp && Math.floor(Date.now() / 1000) > payload.exp) {
-    return new Response('Token expired', { status: 401 });
-  }
-
-  // Issuer must be from Clerk
-  const iss = String(payload.iss ?? '');
-  if (!iss.includes('clerk') && !iss.includes('breaktapes')) {
-    return new Response('Invalid issuer', { status: 401 });
-  }
-
-  // Clerk user IDs always start with "user_"
   const userId = payload.sub;
-  if (!userId.startsWith('user_')) return new Response('Invalid user ID format', { status: 401 });
 
   // Parse body
   let body;
@@ -1481,20 +1524,9 @@ async function handleApiState(request, env) {
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
   if (!token) return new Response('Unauthorized', { status: 401 });
 
-  const payload = decodeJwtPayload(token);
+  const payload = await verifyClerkJwt(token);
   if (!payload || !payload.sub) return new Response('Invalid token', { status: 401 });
-
-  if (payload.exp && Math.floor(Date.now() / 1000) > payload.exp) {
-    return new Response('Token expired', { status: 401 });
-  }
-
-  const iss = String(payload.iss ?? '');
-  if (!iss.includes('clerk') && !iss.includes('breaktapes')) {
-    return new Response('Invalid issuer', { status: 401 });
-  }
-
   const userId = payload.sub;
-  if (!userId.startsWith('user_')) return new Response('Invalid user ID format', { status: 401 });
 
   const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
   if (!serviceKey) return new Response('Service unavailable', { status: 503 });
