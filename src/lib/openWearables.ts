@@ -92,7 +92,10 @@ export async function getOAuthUrl(
 export async function getConnections(owUserId: string): Promise<OWConnection[]> {
   const res = await owFetch(`/connections?ow_user_id=${owUserId}`)
   if (!res.ok) return []
-  return res.json()
+  const data = await res.json().catch(() => ([]))
+  // health-proxy wraps as { connections: [...] }; tolerate a bare array too.
+  const list = Array.isArray(data) ? data : (data.connections ?? [])
+  return Array.isArray(list) ? list : []
 }
 
 /** Disconnect a provider — revokes OW's stored tokens. */
@@ -114,8 +117,9 @@ export async function fetchOWWorkouts(owUserId: string, days = 60): Promise<OWWo
   const params = new URLSearchParams({ ow_user_id: owUserId, since, limit: '200' })
   const res = await owFetch(`/workouts?${params}`)
   if (!res.ok) return []
-  const data = await res.json()
-  return (data.workouts ?? data ?? []) as OWWorkout[]
+  const data = await res.json().catch(() => ([]))
+  const list = Array.isArray(data) ? data : (data.workouts ?? [])
+  return (Array.isArray(list) ? list : []) as OWWorkout[]
 }
 
 /**
@@ -126,8 +130,9 @@ export async function fetchOWRecovery(owUserId: string, days = 14): Promise<OWRe
   const params = new URLSearchParams({ ow_user_id: owUserId, days: String(days) })
   const res = await owFetch(`/recovery?${params}`)
   if (!res.ok) return []
-  const data = await res.json()
-  return (data.recovery ?? data ?? []) as OWRecovery[]
+  const data = await res.json().catch(() => ([]))
+  const list = Array.isArray(data) ? data : (data.recovery ?? [])
+  return (Array.isArray(list) ? list : []) as OWRecovery[]
 }
 
 /**
@@ -137,14 +142,16 @@ export async function fetchOWActivity(owUserId: string, days = 14): Promise<OWAc
   const params = new URLSearchParams({ ow_user_id: owUserId, days: String(days) })
   const res = await owFetch(`/activity?${params}`)
   if (!res.ok) return []
-  const data = await res.json()
-  return (data.activity ?? data ?? []) as OWActivitySummary[]
+  const data = await res.json().catch(() => ([]))
+  const list = Array.isArray(data) ? data : (data.activity ?? [])
+  return (Array.isArray(list) ? list : []) as OWActivitySummary[]
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 /** Compute 7-day average HRV from recovery records. Returns null if no data. */
 export function avgHRV(records: OWRecovery[], days = 7): number | null {
+  if (!Array.isArray(records)) return null
   const cutoff = new Date(Date.now() - days * 86_400_000).toISOString().slice(0, 10)
   const vals = records
     .filter(r => r.date >= cutoff && r.hrv_rmssd !== null)
@@ -155,6 +162,7 @@ export function avgHRV(records: OWRecovery[], days = 7): number | null {
 
 /** Latest recovery score (0-100). Returns null if no data. */
 export function latestRecoveryScore(records: OWRecovery[]): number | null {
+  if (!Array.isArray(records) || records.length === 0) return null
   const sorted = [...records].sort((a, b) => b.date.localeCompare(a.date))
   return sorted[0]?.recovery_score ?? null
 }
