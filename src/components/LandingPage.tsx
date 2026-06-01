@@ -10,6 +10,7 @@ import {
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { posthog } from '@/lib/posthog'
+import { WORLD_MAP_PATH, projectLngLat } from '@/lib/worldMap'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -167,6 +168,71 @@ const AUDIENCES: { id: Audience; label: string }[] = [
   { id: 'triathlete', label: 'Triathlete' },
   { id: 'everyday', label: 'Everyday runner' },
 ]
+
+/* ---------- per-audience content (mockups + copy react to the selector) ---------- */
+interface HeroData { tag: string; race: string; goal: string; races: string; pr: [string, string] }
+const HERO_DATA: Record<Audience, HeroData> = {
+  all:        { tag: 'Next Race · 12 days', race: 'Berlin Marathon', goal: 'Goal 3:15 · 12-week taper on track', races: '42', pr: ['3:21', 'MARATHON PR'] },
+  marathoner: { tag: 'Next Race · 12 days', race: 'Berlin Marathon', goal: 'Goal 3:15 · 12-week taper on track', races: '42', pr: ['3:21', 'MARATHON PR'] },
+  triathlete: { tag: 'Next Race · 26 days', race: 'IRONMAN Nice',    goal: 'Goal 10:30 · bike block peaking',     races: '38', pr: ['10:42', 'IRONMAN PR'] },
+  everyday:   { tag: 'Next Race · 9 days',  race: 'City Autumn 10K', goal: 'Goal sub-55 · first sub-55 attempt',  races: '12', pr: ['52:18', '10K PR'] },
+}
+
+// PR rows: [label, big, small]
+const PR_DATA: Record<Audience, [string, string, string][]> = {
+  all:        [['5K', '18', ':42'], ['HALF', '1:24', ':10'], ['MARATHON', '3:21', ':05']],
+  marathoner: [['5K', '18', ':42'], ['HALF', '1:24', ':10'], ['MARATHON', '3:21', ':05']],
+  triathlete: [['OLYMPIC', '2:14', ':30'], ['70.3', '4:58', ':12'], ['IRONMAN', '10:42', ':05']],
+  everyday:   [['5K', '26', ':30'], ['10K', '52', ':18'], ['HALF', '2:05', ':40']],
+}
+
+// Real city coordinates (lng, lat) so they project accurately onto the world map.
+interface RaceCity { name: string; lng: number; lat: number }
+const RACE_CITIES: Record<Audience, RaceCity[]> = {
+  all: [
+    { name: 'London', lng: -0.13, lat: 51.51 }, { name: 'Berlin', lng: 13.40, lat: 52.52 },
+    { name: 'Boston', lng: -71.06, lat: 42.36 }, { name: 'Tokyo', lng: 139.65, lat: 35.68 },
+    { name: 'Sydney', lng: 151.21, lat: -33.87 },
+  ],
+  marathoner: [ // World Marathon Majors
+    { name: 'Boston', lng: -71.06, lat: 42.36 }, { name: 'Chicago', lng: -87.63, lat: 41.88 },
+    { name: 'London', lng: -0.13, lat: 51.51 }, { name: 'Berlin', lng: 13.40, lat: 52.52 },
+    { name: 'Tokyo', lng: 139.65, lat: 35.68 },
+  ],
+  triathlete: [ // iconic triathlon venues
+    { name: 'Kona', lng: -155.99, lat: 19.64 }, { name: 'Nice', lng: 7.27, lat: 43.70 },
+    { name: 'Roth', lng: 11.09, lat: 49.14 }, { name: 'Cairns', lng: 145.77, lat: -16.92 },
+    { name: 'Taupō', lng: 176.07, lat: -38.69 },
+  ],
+  everyday: [
+    { name: 'London', lng: -0.13, lat: 51.51 }, { name: 'Paris', lng: 2.35, lat: 48.86 },
+    { name: 'Amsterdam', lng: 4.90, lat: 52.37 }, { name: 'Berlin', lng: 13.40, lat: 52.52 },
+    { name: 'New York', lng: -74.01, lat: 40.71 },
+  ],
+}
+
+// Per-showcase description override by audience (falls back to the base desc).
+const SHOWCASE_DESC: Record<string, Partial<Record<Audience, string>>> = {
+  'race-history': {
+    marathoner: 'Every marathon and major on one map — splits, placing, and the weather you ran through, kept for good.',
+    triathlete: 'Every swim-bike-run venue you’ve raced, mapped and timed — from local olympics to the iconic courses.',
+    everyday: 'Every finish line you’ve crossed on one map — from your first 5K to your latest weekend race.',
+  },
+  'auto-prs': {
+    marathoner: 'Log a marathon and your bests recompute across 5K, 10K, half and the full — instantly, no spreadsheet.',
+    triathlete: 'Bests across olympic, 70.3 and full — overall and by leg, recalculated the moment you log a race.',
+    everyday: 'Every distance counts. Log a parkrun or a 10K and your personal bests update on the spot.',
+  },
+  'medal-wall': {
+    triathlete: 'Every finisher medal and podium from sprint to IRONMAN — laid out the way they deserve.',
+    everyday: 'Every medal you’ve earned, photo-first. Your first finisher medal belongs on the wall too.',
+  },
+  'wearables': {
+    triathlete: 'Connect WHOOP today and see swim-bike-run load next to every race result. More integrations on the way.',
+    everyday: 'Connect WHOOP and see the training behind every finish. Strava, Garmin & Apple Health are coming.',
+  },
+}
+const descFor = (id: string, a: Audience, base: string) => SHOWCASE_DESC[id]?.[a] ?? base
 function AudienceSelector({ value, onChange }: { value: Audience; onChange: (a: Audience) => void }) {
   return (
     <motion.section className="pl-audience" variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}>
@@ -194,7 +260,8 @@ const cardSurface: React.CSSProperties = {
   borderRadius: 'var(--radius-md)',
 }
 
-function DashboardMockup() {
+function DashboardMockup({ audience = 'all' }: { audience?: Audience }) {
+  const d = HERO_DATA[audience]
   return (
     <div style={{
       width: '100%', maxWidth: 320, padding: 'var(--sp-4)',
@@ -210,16 +277,16 @@ function DashboardMockup() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
           <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--orange)' }} />
           <span style={{ fontFamily: 'var(--body)', fontSize: 10, letterSpacing: '0.14em',
-            textTransform: 'uppercase', color: 'var(--orange)' }}>Next Race · 12 days</span>
+            textTransform: 'uppercase', color: 'var(--orange)' }}>{d.tag}</span>
         </div>
         <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 22,
-          textTransform: 'uppercase', color: 'var(--white)', lineHeight: 1 }}>Berlin Marathon</div>
+          textTransform: 'uppercase', color: 'var(--white)', lineHeight: 1 }}>{d.race}</div>
         <div style={{ fontFamily: 'var(--body)', fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>
-          Goal 3:15 · 12-week taper on track
+          {d.goal}
         </div>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-2)', marginBottom: 'var(--sp-3)' }}>
-        {[['42', 'RACES'], ['3:21', 'MARATHON PR']].map(([v, l]) => (
+        {[[d.races, 'RACES'], [d.pr[0], d.pr[1]]].map(([v, l]) => (
           <div key={l} style={{ ...cardSurface, padding: 'var(--sp-3)' }}>
             <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 26, color: 'var(--white)' }}>{v}</div>
             <div style={{ fontFamily: 'var(--body)', fontSize: 9, letterSpacing: '0.1em',
@@ -243,45 +310,58 @@ function DashboardMockup() {
   )
 }
 
-function RaceMapMockup() {
-  const dots: [number, number, string][] = [
-    [40, 150, 'LON'], [120, 90, 'BER'], [200, 130, 'NYC'], [270, 70, 'TOK'], [310, 170, 'SYD'],
-  ]
-  const arcs = [
-    'M40 150 Q80 70 120 90', 'M120 90 Q160 60 200 130', 'M200 130 Q235 50 270 70', 'M270 70 Q290 90 310 170',
-  ]
+function RaceMapMockup({ audience = 'all' }: { audience?: Audience }) {
+  // Sort west→east so the connecting arcs hop between neighbours, not across the map.
+  const cities = [...RACE_CITIES[audience]].sort((a, b) => a.lng - b.lng)
+  const pts = cities.map(c => ({ name: c.name, p: projectLngLat(c.lng, c.lat) }))
+  const arcs: string[] = []
+  for (let i = 0; i < pts.length - 1; i++) {
+    const [x1, y1] = pts[i].p
+    const [x2, y2] = pts[i + 1].p
+    const dist = Math.hypot(x2 - x1, y2 - y1)
+    const cx = (x1 + x2) / 2
+    const cy = (y1 + y2) / 2 - dist * 0.22 // lift the control point for a great-circle feel
+    arcs.push(`M${x1} ${y1} Q${cx} ${cy} ${x2} ${y2}`)
+  }
   return (
     <div style={{
-      width: '100%', maxWidth: 380, aspectRatio: '4 / 3', padding: 'var(--sp-4)',
-      background: 'radial-gradient(ellipse at 50% 40%, var(--surface3), var(--surface))',
+      width: '100%', maxWidth: 460, aspectRatio: '1000 / 360', padding: 'var(--sp-3)',
+      background: 'radial-gradient(ellipse at 50% 45%, var(--surface3), var(--surface))',
       border: '1px solid var(--border2)', borderRadius: 'var(--radius-lg)',
-      boxShadow: '0 24px 60px rgba(0,0,0,0.5)', position: 'relative', overflow: 'hidden',
+      boxShadow: '0 24px 60px rgba(0,0,0,0.5)', overflow: 'hidden',
     }}>
-      <svg viewBox="0 0 350 240" width="100%" height="100%">
-        {[60, 120, 180].map(y => <line key={y} x1="0" y1={y} x2="350" y2={y} stroke="var(--border)" strokeWidth="1" />)}
+      {/* viewBox windows the equirectangular 1000×500 space to the inhabited band. */}
+      <svg viewBox="0 40 1000 380" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+        <path d={WORLD_MAP_PATH} fill="rgba(232,224,213,0.10)"
+          stroke="rgba(232,224,213,0.28)" strokeWidth="0.9" strokeLinejoin="round" />
         {arcs.map((d, i) => (
-          <motion.path key={i} d={d} fill="none" stroke="var(--orange)" strokeWidth="2" strokeLinecap="round"
-            initial={{ pathLength: 0, opacity: 0 }} whileInView={{ pathLength: 1, opacity: 0.9 }}
-            viewport={{ once: true }} transition={{ duration: 1, delay: 0.2 + i * 0.25, ease: 'easeInOut' }} />
+          <motion.path key={i} d={d} fill="none" stroke="var(--orange)" strokeWidth="3" strokeLinecap="round"
+            initial={{ pathLength: 0, opacity: 0 }} whileInView={{ pathLength: 1, opacity: 1 }}
+            viewport={{ once: true }} transition={{ duration: 1, delay: 0.3 + i * 0.22, ease: 'easeInOut' }} />
         ))}
-        {dots.map(([x, y, label], i) => (
-          <motion.g key={label} initial={{ opacity: 0, scale: 0 }} whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }} transition={{ duration: 0.4, delay: 0.1 + i * 0.18 }}>
-            <circle cx={x} cy={y} r="4.5" fill="var(--orange)" />
-            <circle cx={x} cy={y} r="9" fill="none" stroke="rgba(var(--orange-ch),0.35)" strokeWidth="1.5" />
-            <text x={x + 10} y={y + 3} fill="var(--muted)" fontSize="10"
-              fontFamily="var(--headline)" fontWeight="700">{label}</text>
-          </motion.g>
-        ))}
+        {pts.map((c, i) => {
+          const [x, y] = c.p
+          return (
+            <motion.g key={c.name} initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
+              viewport={{ once: true }} transition={{ duration: 0.4, delay: 0.15 + i * 0.16 }}>
+              <circle cx={x} cy={y} r="16" fill="none" stroke="rgba(var(--orange-ch),0.4)" strokeWidth="2">
+                <animate attributeName="r" values="9;18;9" dur="2.4s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values="0.7;0;0.7" dur="2.4s" repeatCount="indefinite" />
+              </circle>
+              <circle cx={x} cy={y} r="8" fill="var(--orange)" stroke="#000" strokeWidth="1.5" />
+              <text x={x + 20} y={y + 6} fill="var(--white)" fontSize="20"
+                fontFamily="var(--headline)" fontWeight="800" stroke="#000" strokeWidth="0.5"
+                paintOrder="stroke">{c.name}</text>
+            </motion.g>
+          )
+        })}
       </svg>
     </div>
   )
 }
 
-function PRMockup() {
-  const prs: [string, string, string][] = [
-    ['5K', '18', ':42'], ['HALF', '1:24', ':10'], ['MARATHON', '3:21', ':05'],
-  ]
+function PRMockup({ audience = 'all' }: { audience?: Audience }) {
+  const prs = PR_DATA[audience]
   return (
     <div style={{ width: '100%', maxWidth: 360, display: 'grid', gap: 'var(--sp-3)' }}>
       {prs.map(([dist, big, small], i) => (
@@ -502,7 +582,7 @@ export default function LandingPage({ onSignUp, onSignIn }: LandingPageProps) {
           <motion.div
             initial={{ opacity: 0, y: 40, rotate: -2 }} animate={loaded ? { opacity: 1, y: 0, rotate: -2 } : {}}
             transition={{ duration: 0.9, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}>
-            <DashboardMockup />
+            <DashboardMockup audience={audience} />
           </motion.div>
         </div>
         <motion.div className="pl-scroll-hint" initial={{ opacity: 0 }} animate={loaded ? { opacity: 1 } : {}}
@@ -519,28 +599,28 @@ export default function LandingPage({ onSignUp, onSignIn }: LandingPageProps) {
       <FeatureShowcase
         id="race-history" active={audience} audiences={['marathoner', 'everyday']}
         eyebrow="Race History" title="Every finish line, mapped"
-        desc="Your whole racing life on one interactive map. Times, splits, placing, terrain, and the weather you ran through — kept for good."
-        bullets={['Great-circle map of every race city', 'Splits, placing & conditions per race', 'Year-by-year history and filters']}
-        mockup={<RaceMapMockup />}
+        desc={descFor('race-history', audience, 'Your whole racing life on one interactive map. Times, splits, placing, terrain, and the weather you ran through — kept for good.')}
+        bullets={['Real world map of every race city', 'Splits, placing & conditions per race', 'Year-by-year history and filters']}
+        mockup={<RaceMapMockup audience={audience} />}
       />
       <FeatureShowcase
         id="auto-prs" reverse active={audience} audiences={['marathoner']}
         eyebrow="Auto PRs" title="Personal bests, computed for you"
-        desc="The moment you log a race, BREAKTAPES recomputes your bests across every distance. No spreadsheets, no manual tracking."
+        desc={descFor('auto-prs', audience, 'The moment you log a race, BREAKTAPES recomputes your bests across every distance. No spreadsheets, no manual tracking.')}
         bullets={['PRs across 5K → ultra & triathlon', 'Instant recalculation on every log', 'Age-grade & momentum scoring']}
-        mockup={<PRMockup />}
+        mockup={<PRMockup audience={audience} />}
       />
       <FeatureShowcase
         id="medal-wall" active={audience} audiences={['everyday']}
         eyebrow="Medal Wall" title="Show off the hardware"
-        desc="A photo-first wall of every medal you've earned. Gold, silver, bronze, finisher — laid out the way they deserve."
+        desc={descFor('medal-wall', audience, "A photo-first wall of every medal you've earned. Gold, silver, bronze, finisher — laid out the way they deserve.")}
         bullets={['Photo-first medal display', 'Tier badges & PR shimmer', 'Community medal photo library']}
         mockup={<MedalWallMockup />}
       />
       <FeatureShowcase
         id="wearables" reverse active={audience} audiences={['triathlete']}
         eyebrow="Training & Wearables" title="Your training, side by side"
-        desc="Connect WHOOP today and see the training that built every result, right next to the race. More integrations are on the way."
+        desc={descFor('wearables', audience, 'Connect WHOOP today and see the training that built every result, right next to the race. More integrations are on the way.')}
         bullets={['WHOOP live now — recovery & workouts', 'Strava, Garmin, Apple Health coming soon', 'Training load vs race performance']}
         mockup={<WearablesMockup />}
       />
