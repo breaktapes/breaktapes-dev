@@ -692,6 +692,65 @@ export default {
         }
       }
 
+      // ── POST /ow/purge — delete a provider's synced data + disconnect ────
+      // Body: { ow_user_id, provider }
+      // OW has no bulk per-provider purge, so we list the provider's events
+      // (workouts + sleep) and delete each, then revoke the connection. The
+      // user's source account is never touched (read-only). Timeseries samples
+      // are not individually deletable via OW's API — full purge happens on
+      // account deletion (DELETE user).
+      if (path === '/ow/purge' && request.method === 'POST') {
+        try {
+          const { ow_user_id, provider } = await request.json().catch(() => ({}));
+          if (!ow_user_id || !provider) {
+            return json({ error: 'ow_user_id and provider required' }, 400, origin);
+          }
+          const start = new Date(Date.now() - 5 * 365 * 86400000).toISOString();
+          const end   = new Date().toISOString();
+          const hdr   = { 'X-Open-Wearables-API-Key': owKey };
+          let deleted = 0;
+
+          // Delete workouts for this provider
+          try {
+            const wRes = await fetch(
+              `${ow}/api/v1/users/${ow_user_id}/events/workouts?start_date=${encodeURIComponent(start)}&end_date=${encodeURIComponent(end)}&limit=1000`,
+              { headers: hdr },
+            );
+            const wBody = await wRes.json().catch(() => ({ data: [] }));
+            const workouts = (wBody.data ?? wBody.workouts ?? []).filter(w => (w.provider ?? w.data_source) === provider);
+            for (const w of workouts) {
+              const id = w.id ?? w.external_id;
+              if (!id) continue;
+              const dr = await fetch(`${ow}/api/v1/users/${ow_user_id}/events/workouts/${id}`, { method: 'DELETE', headers: hdr });
+              if (dr.ok) deleted++;
+            }
+          } catch { /* best-effort */ }
+
+          // Delete sleep sessions for this provider
+          try {
+            const sRes = await fetch(
+              `${ow}/api/v1/users/${ow_user_id}/events/sleep?start_date=${encodeURIComponent(start)}&end_date=${encodeURIComponent(end)}&limit=1000`,
+              { headers: hdr },
+            );
+            const sBody = await sRes.json().catch(() => ({ data: [] }));
+            const sleeps = (sBody.data ?? sBody.sleep ?? []).filter(x => (x.provider ?? x.data_source) === provider);
+            for (const s of sleeps) {
+              const id = s.id ?? s.external_id;
+              if (!id) continue;
+              const dr = await fetch(`${ow}/api/v1/users/${ow_user_id}/events/sleep/${id}`, { method: 'DELETE', headers: hdr });
+              if (dr.ok) deleted++;
+            }
+          } catch { /* best-effort */ }
+
+          // Revoke the connection
+          await fetch(`${ow}/api/v1/users/${ow_user_id}/connections/${provider}`, { method: 'DELETE', headers: hdr }).catch(() => {});
+
+          return json({ ok: true, deleted }, 200, origin);
+        } catch (e) {
+          return json({ error: e.message }, 502, origin);
+        }
+      }
+
       // ── POST /ow/disconnect — revoke a provider connection ──────────────
       // Body: { ow_user_id, provider }
       if (path === '/ow/disconnect' && request.method === 'POST') {
