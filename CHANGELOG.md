@@ -3,6 +3,12 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.6.14.3] - 2026-06-01
+
+### Fixed
+- **Profile data now loads correctly on new devices** — signing in on a second device now shows your full profile (name, bio, clubs, teams, etc.) instead of a blank profile. Root cause: Clerk identity fields were stamping `updatedAt` to the current time, causing the last-write-wins merge to reject the server-side profile in favor of the empty new-device state.
+- **Username changes propagate to public profile** — changing your Clerk username now syncs to Supabase so your public `/u/username` profile URL updates immediately.
+
 ## [0.6.14.1] - 2026-05-25
 
 ### Added
