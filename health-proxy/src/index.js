@@ -558,7 +558,12 @@ export default {
         const searchUrl = `https://runsignup.com/Rest/race/results/search-participants?format=json&tmp=1&search_word=${encodeURIComponent(firstName + ' ' + lastName)}&results_per_page=50`;
         const searchRes = await fetch(searchUrl, { headers: { 'Accept': 'application/json' } });
         if (!searchRes.ok) {
-          return json({ results: [], status: 'error', message: `RunSignup returned ${searchRes.status}` }, 502, origin);
+          // RunSignup has no keyless cross-race results search (this path 404s);
+          // a real integration needs an api_key/api_secret. Degrade gracefully —
+          // return an empty OK so the import wizard doesn't flag RunSignup as a
+          // failed source (it just contributes nothing alongside the working
+          // UltraSignup + MarathonView scrapers).
+          return json({ results: [], status: 'ok', note: 'runsignup_api_key_required' }, 200, origin);
         }
         const data = await searchRes.json().catch(() => null);
 
