@@ -81,11 +81,20 @@ export function useSyncState() {
     }
     // Last-write-wins for athlete (was a blind replace → a stale remote profile
     // clobbered a fresh local edit). Keep local unless remote is strictly newer.
+    // When remote wins, overlay the current Clerk-derived identity fields (username,
+    // imageUrl) so a stale server snapshot doesn't reset them — Clerk is always the
+    // source of truth for those two fields.
     if (remote.athlete) {
       const localAthlete = useAthleteStore.getState().athlete
       const lu = localAthlete?.updatedAt ?? 0
       const ru = remote.athlete.updatedAt ?? 0
-      if (!localAthlete || ru > lu) setAthlete(remote.athlete)
+      if (!localAthlete || ru > lu) {
+        setAthlete({
+          ...remote.athlete,
+          ...(localAthlete?.username ? { username: localAthlete.username } : {}),
+          ...(localAthlete?.imageUrl ? { imageUrl: localAthlete.imageUrl } : {}),
+        })
+      }
     }
     if (Array.isArray(remote.season_plans)) setSeasonPlans(remote.season_plans)
 

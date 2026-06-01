@@ -21,7 +21,7 @@ function useClerkSync() {
   const { getToken } = useAuth()
   const setAuthUser = useAuthStore(s => s.setAuthUser)
   const setProAccess = useAuthStore(s => s.setProAccess)
-  const updateAthlete = useAthleteStore(s => s.updateAthlete)
+  const applyClerkIdentity = useAthleteStore(s => s.applyClerkIdentity)
   const didBootstrapSync = useRef(false)
 
   useEffect(() => {
@@ -41,10 +41,14 @@ function useClerkSync() {
 
     // Sync Clerk username + photo → athlete store so public profile SSR has them.
     // Clerk is the source of truth; athlete store follows.
-    const athleteUpdate: Record<string, string> = {}
+    // Uses applyClerkIdentity (not updateAthlete) so updatedAt is NOT stamped —
+    // a fresh-device athlete created solely from Clerk fields must not beat the
+    // remote pull (which carries firstName/lastName/bio/clubs etc.) in the
+    // last-write-wins check inside applyRemoteSafe.
+    const athleteUpdate: { username?: string; imageUrl?: string } = {}
     if (user.username) athleteUpdate.username = user.username
     if (user.imageUrl) athleteUpdate.imageUrl = user.imageUrl
-    if (Object.keys(athleteUpdate).length) updateAthlete(athleteUpdate)
+    if (Object.keys(athleteUpdate).length) applyClerkIdentity(athleteUpdate)
 
     let cancelled = false
 
@@ -114,7 +118,7 @@ function useClerkSync() {
     refresh()
     const interval = setInterval(refresh, 50_000)
     return () => { cancelled = true; clearInterval(interval) }
-  }, [isLoaded, isSignedIn, user, getToken, setAuthUser, setProAccess, updateAthlete])
+  }, [isLoaded, isSignedIn, user, getToken, setAuthUser, setProAccess, applyClerkIdentity])
 }
 
 export function AuthGate({ children }: { children: React.ReactNode }) {
