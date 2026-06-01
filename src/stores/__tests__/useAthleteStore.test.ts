@@ -46,6 +46,59 @@ describe('useAthleteStore — updateAthlete', () => {
   })
 })
 
+// ── applyClerkIdentity ────────────────────────────────────────────────────────
+
+describe('useAthleteStore — applyClerkIdentity', () => {
+  it('creates skeleton with updatedAt=0 when athlete is null (fresh device)', () => {
+    // The critical invariant: updatedAt=0 ensures remote pull always wins LWW.
+    useAthleteStore.getState().applyClerkIdentity({ username: 'alice', imageUrl: 'https://img' })
+    const a = useAthleteStore.getState().athlete
+    expect(a?.username).toBe('alice')
+    expect(a?.imageUrl).toBe('https://img')
+    expect(a?.updatedAt).toBe(0)
+  })
+
+  it('skeleton contains only Clerk fields — no fabricated profile data', () => {
+    useAthleteStore.getState().applyClerkIdentity({ username: 'alice' })
+    const a = useAthleteStore.getState().athlete!
+    expect(a.firstName).toBeUndefined()
+    expect(a.lastName).toBeUndefined()
+    expect(a.bio).toBeUndefined()
+  })
+
+  it('patches existing athlete without touching updatedAt', () => {
+    const originalUpdatedAt = 1_700_000_000_000
+    useAthleteStore.setState({
+      athlete: { firstName: 'John', username: 'old', updatedAt: originalUpdatedAt } as Athlete,
+    })
+    useAthleteStore.getState().applyClerkIdentity({ username: 'new' })
+    const a = useAthleteStore.getState().athlete!
+    expect(a.username).toBe('new')
+    expect(a.firstName).toBe('John')       // existing profile data preserved
+    expect(a.updatedAt).toBe(originalUpdatedAt)  // NOT stamped to Date.now()
+  })
+
+  it('no-op when Clerk fields are already up to date', () => {
+    useAthleteStore.setState({
+      athlete: { username: 'alice', updatedAt: 500 } as Athlete,
+    })
+    useAthleteStore.getState().applyClerkIdentity({ username: 'alice' })
+    expect(useAthleteStore.getState().athlete?.updatedAt).toBe(500)
+  })
+
+  it('existing athlete: username change patches store without touching updatedAt', () => {
+    const originalUpdatedAt = 1_700_000_000_000
+    useAthleteStore.setState({
+      athlete: { firstName: 'John', username: 'old-name', updatedAt: originalUpdatedAt } as Athlete,
+    })
+    useAthleteStore.getState().applyClerkIdentity({ username: 'new-name' })
+    const a = useAthleteStore.getState().athlete!
+    expect(a.username).toBe('new-name')
+    expect(a.updatedAt).toBe(originalUpdatedAt)   // updatedAt NOT changed even when username changes
+    expect(a.firstName).toBe('John')              // profile data preserved
+  })
+})
+
 // ── seasonPlans ───────────────────────────────────────────────────────────────
 
 describe('useAthleteStore — seasonPlans', () => {

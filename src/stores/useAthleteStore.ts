@@ -26,6 +26,12 @@ export interface AthleteState {
   goals: GoalsState
   setAthlete: (athlete: Athlete | null) => void
   updateAthlete: (partial: Partial<Athlete>) => void
+  /** Patch only Clerk-derived identity fields (username, imageUrl) without
+   *  touching updatedAt and without triggering a sync. On a fresh device where
+   *  athlete is null, creates a skeleton with updatedAt=0 so the remote pull
+   *  (which carries the real profile data) always wins the last-write-wins check
+   *  in applyRemoteSafe. */
+  applyClerkIdentity: (partial: { username?: string; imageUrl?: string }) => void
   setSeasonPlans: (plans: SeasonPlan[]) => void
   addSeasonPlan: (plan: SeasonPlan) => void
   deleteSeasonPlan: (id: string) => void
@@ -43,6 +49,28 @@ export const useAthleteStore = create<AthleteState>()(
       goals: { annual: {}, distGoals: [] },
 
       setAthlete: (athlete) => set({ athlete }),
+
+      applyClerkIdentity: (partial) => {
+        const current = get().athlete
+        const changed = Object.keys(partial).some(
+          k => (current as Record<string, unknown> | null)?.[k] !== (partial as Record<string, unknown>)[k]
+        )
+        if (!changed) return
+        if (!current) {
+          // Fresh device — create a skeleton with updatedAt=0 so the remote pull
+          // (which carries firstName/lastName/bio/clubs etc.) always wins.
+          set({ athlete: { ...partial, updatedAt: 0 } as unknown as Athlete })
+        } else {
+          // Patch existing athlete without touching updatedAt — Clerk identity syncs
+          // are not user-initiated profile edits and must not beat a remote pull.
+          set({ athlete: { ...current, ...partial } })
+          // Username changes must reach Supabase so the public profile Worker SSR
+          // serves the correct /u/:username route. imageUrl is client-only; skip.
+          if (partial.username && partial.username !== current.username) {
+            void syncStateToSupabase()
+          }
+        }
+      },
 
       updateAthlete: (partial) => {
         const current = get().athlete
@@ -87,26 +115,32 @@ export const useAthleteStore = create<AthleteState>()(
 
       setGoals: (goals) => set({ goals }),
 
-      setAnnualGoal: (year, partial) =>
+      setAnnualGoal: (year, partial) => {
         set(s => ({
           goals: {
             ...s.goals,
             annual: { ...s.goals.annual, [String(year)]: { ...s.goals.annual[String(year)], ...partial } },
           },
-        })),
+        }))
+        void syncStateToSupabase()
+      },
 
-      addDistGoal: (goal) =>
+      addDistGoal: (goal) => {
         set(s => ({
           goals: {
             ...s.goals,
             distGoals: [...s.goals.distGoals, { ...goal, id: crypto.randomUUID() }],
           },
-        })),
+        }))
+        void syncStateToSupabase()
+      },
 
-      deleteDistGoal: (id) =>
+      deleteDistGoal: (id) => {
         set(s => ({
           goals: { ...s.goals, distGoals: s.goals.distGoals.filter(g => g.id !== id) },
-        })),
+        }))
+        void syncStateToSupabase()
+      },
     }),
     {
       name: 'fl2_ath',  // must match existing localStorage key
