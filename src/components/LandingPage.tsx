@@ -568,6 +568,165 @@ function FeatureShowcase({ eyebrow, title, desc, bullets, mockup, reverse, audie
 }
 
 /* =====================================================================
+   HOW IT WORKS — 3 numbered steps + mini-mockups
+   ===================================================================== */
+function StepMiniSignup() {
+  return (
+    <div style={{ ...cardSurface, padding: 'var(--sp-3)', width: '100%', maxWidth: 230, display: 'grid', gap: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--grad-primary)' }} />
+        <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 13, color: 'var(--white)' }}>Your Name</span>
+      </div>
+      {['Email', 'Password'].map(f => (
+        <div key={f} style={{ height: 26, borderRadius: 'var(--radius-sm)', background: 'var(--surface3)',
+          border: '1px solid var(--border)', display: 'flex', alignItems: 'center', padding: '0 8px',
+          fontFamily: 'var(--body)', fontSize: 10, color: 'var(--muted2)' }}>{f}</div>
+      ))}
+      <div style={{ height: 28, borderRadius: 'var(--radius-sm)', background: 'var(--orange)', display: 'flex',
+        alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--headline)', fontWeight: 800,
+        fontSize: 11, letterSpacing: '0.08em', color: '#000' }}>CREATE ACCOUNT</div>
+    </div>
+  )
+}
+function StepMiniLog() {
+  return (
+    <div style={{ ...cardSurface, padding: 'var(--sp-3)', width: '100%', maxWidth: 230, display: 'grid', gap: 8 }}>
+      <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 12, letterSpacing: '0.06em',
+        textTransform: 'uppercase', color: 'var(--orange)' }}>🏁 Log a race</div>
+      <div style={{ height: 26, borderRadius: 'var(--radius-sm)', background: 'var(--surface3)', border: '1px solid var(--border)',
+        display: 'flex', alignItems: 'center', padding: '0 8px', fontFamily: 'var(--body)', fontSize: 10, color: 'var(--white)' }}>Berlin Marathon</div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+        {['3:21:05', 'Marathon'].map(v => (
+          <div key={v} style={{ height: 26, borderRadius: 'var(--radius-sm)', background: 'var(--surface3)', border: '1px solid var(--border)',
+            display: 'flex', alignItems: 'center', padding: '0 8px', fontFamily: 'var(--body)', fontSize: 10, color: 'var(--white)' }}>{v}</div>
+        ))}
+      </div>
+    </div>
+  )
+}
+function StepMiniTrack() {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, width: '100%', maxWidth: 230 }}>
+      {[['42', 'RACES'], ['3:21', 'PR'], ['18', 'MEDALS'], ['HOT', 'FORM']].map(([v, l]) => (
+        <div key={l} style={{ ...cardSurface, padding: 'var(--sp-2)' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 18, color: l === 'FORM' ? 'var(--green)' : 'var(--white)' }}>{v}</div>
+          <div style={{ fontFamily: 'var(--body)', fontSize: 8, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)' }}>{l}</div>
+        </div>
+      ))}
+    </div>
+  )
+}
+const STEPS = [
+  { n: '01', title: 'Sign up', line: 'Create your athlete profile in under a minute. No AI key, no setup — just you.', mock: <StepMiniSignup /> },
+  { n: '02', title: 'Log your races', line: 'Add a finish line in seconds — search the catalog or enter it by hand. Times, splits, medals, photos.', mock: <StepMiniLog /> },
+  { n: '03', title: 'Track everything', line: 'PRs, medals, history, analytics and your race map all build automatically as you log.', mock: <StepMiniTrack /> },
+]
+function HowItWorks() {
+  return (
+    <motion.section className="pl-how" variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-10% 0px' }}>
+      <motion.p className="pl-eyebrow" variants={fadeUp} style={{ textAlign: 'center' }}>How it works</motion.p>
+      <motion.h2 className="pl-how-title" variants={fadeUp}>Up and running in three steps</motion.h2>
+      <div className="pl-how-grid">
+        {STEPS.map(s => (
+          <motion.div className="pl-how-step" key={s.n} variants={fadeUp}>
+            <div className="pl-how-num">{s.n}</div>
+            <h3 className="pl-how-step-title">{s.title}</h3>
+            <p className="pl-how-step-line">{s.line}</p>
+            <div className="pl-how-mock">{s.mock}</div>
+          </motion.div>
+        ))}
+      </div>
+    </motion.section>
+  )
+}
+
+/* =====================================================================
+   TESTIMONIALS — rotating spotlight (placeholder quotes, swap later)
+   ===================================================================== */
+const TESTIMONIALS = [
+  { quote: 'Finally everything in one place. I deleted three spreadsheets the day I signed up.', name: 'A. Rivera', role: 'Marathoner · 38 races' },
+  { quote: 'The medal wall alone sold me. Seeing every finish laid out like that hits different.', name: 'J. Kemp', role: 'Everyday runner' },
+  { quote: 'Auto PRs across every distance, no manual tracking. It just knows when I’ve gone faster.', name: 'M. Sato', role: 'Triathlete · 70.3' },
+  { quote: 'The race map turned my training log into something I actually want to show people.', name: 'L. Novak', role: 'Trail & ultra' },
+  { quote: 'WHOOP recovery sitting right next to my race results changed how I taper.', name: 'D. Osei', role: 'Marathoner · BQ chaser' },
+]
+function Testimonials() {
+  const [i, setI] = useState(0)
+  const reduce = useReducedMotion()
+  useEffect(() => {
+    if (reduce) return
+    const id = window.setInterval(() => setI(v => (v + 1) % TESTIMONIALS.length), 5200)
+    return () => window.clearInterval(id)
+  }, [reduce])
+  const t = TESTIMONIALS[i]
+  const initials = t.name.split(/[ .]+/).filter(Boolean).map(w => w[0]).slice(0, 2).join('')
+  return (
+    <motion.section className="pl-quotes" variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}>
+      <motion.p className="pl-eyebrow" variants={fadeUp}>What athletes say</motion.p>
+      <div className="pl-quote-stage">
+        <AnimatePresence mode="wait">
+          <motion.blockquote className="pl-quote" key={i}
+            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}>
+            <span className="pl-quote-mark">“</span>{t.quote}
+            <footer className="pl-quote-author">
+              <span className="pl-quote-avatar">{initials}</span>
+              <span><strong>{t.name}</strong><br />{t.role}</span>
+            </footer>
+          </motion.blockquote>
+        </AnimatePresence>
+      </div>
+      <div className="pl-quote-dots">
+        {TESTIMONIALS.map((_, idx) => (
+          <button key={idx} aria-label={`Testimonial ${idx + 1}`}
+            className={idx === i ? 'on' : ''} onClick={() => setI(idx)} />
+        ))}
+      </div>
+    </motion.section>
+  )
+}
+
+/* =====================================================================
+   FAQ — accordion
+   ===================================================================== */
+const FAQS = [
+  { q: 'Is BREAKTAPES free?', a: 'Yes — free to start. Core tracking (races, PRs, medals, history, your race map) is free. A Pro tier with advanced analytics and themes is coming later.' },
+  { q: 'Do I need an AI or API key?', a: 'No. BREAKTAPES works fully without any AI key or external setup. Just sign up and start logging.' },
+  { q: 'Which wearables can I connect?', a: 'WHOOP is live today — recovery and workouts sync straight in. Strava, Garmin, Apple Health, COROS and Oura are on the way.' },
+  { q: 'Is my data private, and can I export it?', a: 'Your data is yours. Your profile is private by default — you choose what (if anything) to make public — and you can export everything any time.' },
+]
+function FAQItem({ q, a }: { q: string; a: string }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className={`pl-faq-item${open ? ' open' : ''}`}>
+      <button className="pl-faq-q" aria-expanded={open}
+        onClick={() => { setOpen(o => !o); if (!open) track('landing_faq_open', { q }) }}>
+        <span>{q}</span><span className="pl-faq-icon" aria-hidden="true">{open ? '–' : '+'}</span>
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div className="pl-faq-a" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}>
+            <p>{a}</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+function FAQ() {
+  return (
+    <motion.section className="pl-faq" variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}>
+      <motion.p className="pl-eyebrow" variants={fadeUp} style={{ textAlign: 'center' }}>FAQ</motion.p>
+      <motion.h2 className="pl-faq-title" variants={fadeUp}>Questions, answered</motion.h2>
+      <motion.div className="pl-faq-list" variants={fadeUp}>
+        {FAQS.map(f => <FAQItem key={f.q} q={f.q} a={f.a} />)}
+      </motion.div>
+    </motion.section>
+  )
+}
+
+/* =====================================================================
    PAGE
    ===================================================================== */
 export default function LandingPage({ onSignUp, onSignIn }: LandingPageProps) {
@@ -712,6 +871,9 @@ export default function LandingPage({ onSignUp, onSignIn }: LandingPageProps) {
       {/* ---------------- PHONE-SCROLL CENTERPIECE ---------------- */}
       <PhoneStage screen={screen} stageRef={stageRef} />
 
+      {/* ---------------- HOW IT WORKS ---------------- */}
+      <HowItWorks />
+
       {/* ---------------- STATS BAND ---------------- */}
       <motion.section className="pl-stats" variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}>
         <motion.h2 className="pl-stats-title" variants={fadeUp}>Built for people who actually race</motion.h2>
@@ -729,6 +891,12 @@ export default function LandingPage({ onSignUp, onSignIn }: LandingPageProps) {
           ))}
         </div>
       </motion.section>
+
+      {/* ---------------- TESTIMONIALS ---------------- */}
+      <Testimonials />
+
+      {/* ---------------- FAQ ---------------- */}
+      <FAQ />
 
       {/* ---------------- FINAL CTA ---------------- */}
       <motion.section className="pl-cta" variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}>
