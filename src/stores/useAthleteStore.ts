@@ -52,15 +52,20 @@ export const useAthleteStore = create<AthleteState>()(
           Object.entries(partial).filter(([, v]) => v !== undefined)
         ) as Partial<Athlete>
         // No-op guard: AuthGate re-applies the Clerk username/photo on every token
-        // refresh (~50s). Without this, each refresh wrote the full state to the
-        // server with no change — an echo-write storm. Skip when nothing changed.
-        const changed = !current || Object.keys(defined).some(
-          k => (current as Record<string, unknown>)[k] !== (defined as Record<string, unknown>)[k]
-        )
+        // refresh (~50s). Skip when nothing changed (echo-write storm). Deep-compare
+        // object/array fields (profileVisibility, pbHiddenKeys, clubs) — a shallow
+        // !== would skip a genuine mutated-in-place change to those.
+        const changed = !current || Object.keys(defined).some(k => {
+          const a = (current as Record<string, unknown>)[k]
+          const b = (defined as Record<string, unknown>)[k]
+          return (b !== null && typeof b === 'object') ? JSON.stringify(a) !== JSON.stringify(b) : a !== b
+        })
+        // Stamp updatedAt on a real change so cross-device last-write-wins can pick
+        // the freshest profile (athlete used to be blind-replaced from remote).
         if (!current) {
-          set({ athlete: defined as Athlete })
+          set({ athlete: { ...defined, updatedAt: Date.now() } as Athlete })
         } else if (changed) {
-          set({ athlete: { ...current, ...defined } })
+          set({ athlete: { ...current, ...defined, updatedAt: Date.now() } })
         }
         // Persist athlete edits — without this, username / isPublic / units
         // never reach Supabase, and the user_state row is never seeded for

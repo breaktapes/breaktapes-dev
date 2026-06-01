@@ -79,8 +79,21 @@ export function useSyncState() {
       const { focusRaceId: localFocus } = useRaceStore.getState()
       if (remoteFocus || !localFocus) setFocusRaceId(remoteFocus)
     }
-    if (remote.athlete) setAthlete(remote.athlete)
+    // Last-write-wins for athlete (was a blind replace → a stale remote profile
+    // clobbered a fresh local edit). Keep local unless remote is strictly newer.
+    if (remote.athlete) {
+      const localAthlete = useAthleteStore.getState().athlete
+      const lu = localAthlete?.updatedAt ?? 0
+      const ru = remote.athlete.updatedAt ?? 0
+      if (!localAthlete || ru > lu) setAthlete(remote.athlete)
+    }
     if (Array.isArray(remote.season_plans)) setSeasonPlans(remote.season_plans)
+
+    // Null out a focus/next pointer that no longer resolves after the merge
+    // (e.g. the focused race was deleted on another device).
+    const finalIds = new Set([...mergedRaces, ...mergedUpcoming].map(r => r.id))
+    const { focusRaceId: f } = useRaceStore.getState()
+    if (f && !finalIds.has(f)) setFocusRaceId(null)
   }
 
   const query = useQuery({
@@ -170,16 +183,18 @@ export function useSyncState() {
     if (query.isSuccess) markRemotePullComplete()
   }, [query.isSuccess])
 
-  // Offline / persistent-error fallback: don't block writes forever if the
-  // pull never succeeds (no network). After 8s, open the gate so a user who
-  // is offline can still persist locally-made changes when they reconnect.
-  // 8s is far longer than a normal online pull (~500ms), so online devices
-  // always let the pull win first.
+  // Offline / persistent-error fallback: don't block writes forever if the pull
+  // never succeeds. After 8s open the gate — BUT only if the pull is no longer
+  // in flight (errored/settled). Opening it while a slow cold-start pull is still
+  // pending would let an empty local state overwrite the server (the exact
+  // data-loss class the gate exists to prevent).
   useEffect(() => {
     if (!authUser) return
-    const t = setTimeout(() => markRemotePullComplete(), 8000)
+    const t = setTimeout(() => {
+      if (!query.isLoading && !query.isFetching) markRemotePullComplete()
+    }, 8000)
     return () => clearTimeout(t)
-  }, [authUser])
+  }, [authUser, query.isLoading, query.isFetching])
 
   return query
 }

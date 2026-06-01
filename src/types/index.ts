@@ -59,6 +59,8 @@ export interface RaceWeather {
 }
 
 export interface Athlete {
+  /** Epoch ms of the last local profile edit — cross-device last-write-wins. */
+  updatedAt?: number
   firstName?: string
   lastName?: string
   dob?: string          // YYYY-MM-DD

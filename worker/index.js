@@ -1406,6 +1406,34 @@ async function handleApiSync(request, env) {
 
   // Upsert via service role (bypasses RLS)
   const supabaseUrl = env.SUPABASE_URL || 'https://kmdpufauamadwavqsinj.supabase.co';
+
+  // Server-side UNION of delete tombstones. The write is a full state_json
+  // replace, so a device that never pulled a delete would otherwise wipe the
+  // tombstone and the deleted race would resurrect. Read the current row's
+  // tombstones, merge with the incoming (newest per id, prune >90d), and write
+  // the union back. Best-effort: on any error, fall back to the incoming set.
+  let stateJson = body.state_json ?? {};
+  try {
+    const cur = await fetch(`${supabaseUrl}/rest/v1/user_state?user_id=eq.${encodeURIComponent(userId)}&select=state_json`, {
+      headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` },
+    });
+    if (cur.ok) {
+      const rows = await cur.json().catch(() => []);
+      const existing = Array.isArray(rows?.[0]?.state_json?.deleted_race_ids) ? rows[0].state_json.deleted_race_ids : [];
+      const incoming = Array.isArray(stateJson.deleted_race_ids) ? stateJson.deleted_race_ids : [];
+      const m = new Map();
+      for (const t of [...existing, ...incoming]) {
+        if (t && typeof t.id === 'string' && typeof t.at === 'number') {
+          m.set(t.id, Math.max(m.get(t.id) ?? 0, t.at));
+        }
+      }
+      const NINETY = 90 * 24 * 60 * 60 * 1000, now = Date.now();
+      const merged = [];
+      for (const [id, at] of m) { if (now - at < NINETY) merged.push({ id, at }); }
+      stateJson = { ...stateJson, deleted_race_ids: merged };
+    }
+  } catch { /* fall back to incoming tombstones */ }
+
   const res = await fetch(`${supabaseUrl}/rest/v1/user_state`, {
     method: 'POST',
     headers: {
@@ -1418,7 +1446,7 @@ async function handleApiSync(request, env) {
       user_id:    userId,
       username:   body.username   ?? null,
       is_public:  body.is_public  ?? false,
-      state_json: body.state_json ?? {},
+      state_json: stateJson,
     }),
   });
 

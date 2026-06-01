@@ -100,14 +100,18 @@ export const useRaceStore = create<RaceState>()(
 
       autoMoveExpiredUpcoming: () => {
         const today = localToday()
-        const { upcomingRaces, races } = get()
+        const { upcomingRaces, races, deletedRaceIds } = get()
         const expired = upcomingRaces.filter(r => r.date < today)
         if (expired.length === 0) return
         // Moved, not deleted — stamp so the past copy wins over a stale remote
         // upcoming copy of the same id (cross-list dedup in the pull keeps past).
+        // Clear any tombstone for a moved id: a move means "this race is alive",
+        // so it must beat a stale delete from another device (else the result is lost).
+        const movedIds = new Set(expired.map(r => r.id))
         set({
           races: [...races, ...expired.map(stamp)],
           upcomingRaces: upcomingRaces.filter(r => r.date >= today),
+          deletedRaceIds: deletedRaceIds.filter(t => !movedIds.has(t.id)),
         })
         get().promoteNextRace()
         void syncStateToSupabase()
@@ -128,16 +132,19 @@ export const useRaceStore = create<RaceState>()(
 
       // Move a single expired upcoming race to past without requiring a result
       dismissExpiredRace: (id) => {
-        const { upcomingRaces, races, _pendingDeleteIds } = get()
+        const { upcomingRaces, races, _pendingDeleteIds, deletedRaceIds } = get()
         const race = upcomingRaces.find(r => r.id === id)
         if (!race) return
         const newUpcoming = upcomingRaces.filter(r => r.id !== id)
-        // Moved to past (same id), NOT deleted — stamp, no tombstone.
+        // Moved to past (same id), NOT deleted — stamp, and clear any stale
+        // tombstone for this id so a delete from another device can't kill the
+        // race the user just moved + is about to log a result for.
         set({
           races: [...races, stamp(race)],
           upcomingRaces: newUpcoming,
           focusRaceId: get().focusRaceId === id ? null : get().focusRaceId,
           _pendingDeleteIds: [..._pendingDeleteIds, id],
+          deletedRaceIds: deletedRaceIds.filter(t => t.id !== id),
         })
         get().promoteNextRace()
         void syncStateToSupabase()
