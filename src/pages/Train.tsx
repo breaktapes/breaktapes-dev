@@ -13,6 +13,7 @@ import {
   type OWProvider,
 } from '@/lib/openWearables'
 import { useUser } from '@clerk/clerk-react'
+import { IS_STAGING } from '@/env'
 import type { HMS } from '@/components/TimePickerWheel'
 import type { Race } from '@/types'
 
@@ -195,9 +196,11 @@ const TAB_LABELS: { id: Tab; label: string }[] = [
 // ─── OW provider config ───────────────────────────────────────────────────────
 
 // Live = credentials exist + OW configured. Coming soon = pending developer approval.
-const OW_PROVIDERS: { id: OWProvider; label: string; icon: string; note?: string; comingSoon?: boolean }[] = [
+// stagingOnly = hidden on production until the provider's app exits dev limits
+// (Strava: 1-athlete cap until Strava approves a higher rate limit).
+const OW_PROVIDERS: { id: OWProvider; label: string; icon: string; note?: string; comingSoon?: boolean; stagingOnly?: boolean }[] = [
   { id: 'whoop',       label: 'WHOOP',       icon: '🔴' },
-  { id: 'strava',      label: 'Strava',      icon: '🟠' },
+  { id: 'strava',      label: 'Strava',      icon: '🟠', stagingOnly: true },
   { id: 'garmin',      label: 'Garmin',      icon: '⌚', comingSoon: true },
   { id: 'polar',       label: 'Polar',       icon: '🔵', comingSoon: true },
   { id: 'suunto',      label: 'Suunto',      icon: '⬛', comingSoon: true },
@@ -345,7 +348,7 @@ function ActivitiesTab() {
           CONNECTED DEVICES
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
-          {OW_PROVIDERS.map(p => {
+          {OW_PROVIDERS.filter(p => IS_STAGING || !p.stagingOnly).map(p => {
             const connected = connectedIds.has(p.id)
             const connInfo = owConnections.find(c => c.provider === p.id)
             return (
