@@ -95,21 +95,20 @@ function countDistance(races: PublicRace[], distNorm: string): number {
 // ── Supabase fetch ────────────────────────────────────────────────────────────
 
 async function fetchPublicProfile(username: string): Promise<AthleteRow | 'private' | 'not_found'> {
-  const { data, error } = await supabase
-    .from('user_state')
-    .select('races, athlete, username, is_public')
-    .eq('username', username)
-    .limit(1)
-    .single()
+  // Visibility-filtered RPC (anon can't read raw user_state). Returns null for
+  // a private/missing profile, else { username, athlete, races? }. `races` is
+  // present only when the owner made the race history public — reads the canonical
+  // state_json (the old query read stale legacy races/athlete columns).
+  const { data, error } = await supabase.rpc('get_public_card', { p_username: username })
+  if (error) return 'not_found'
+  if (!data) return 'not_found' // null = no public profile with that username
 
-  if (error || !data) return 'not_found'
-  if (!data.is_public) return 'private'
-
-  const athlete = data.athlete as Record<string, unknown> ?? {}
-  const races: PublicRace[] = (data.races as PublicRace[] ?? []).filter((r: PublicRace) => r.time) // only races with results
+  const card = data as Record<string, unknown>
+  const athlete = (card.athlete as Record<string, unknown>) ?? {}
+  const races: PublicRace[] = ((card.races as PublicRace[]) ?? []).filter((r: PublicRace) => r.time)
 
   return {
-    username: data.username,
+    username: card.username as string,
     firstName: athlete.firstName as string | undefined,
     lastName: athlete.lastName as string | undefined,
     city: athlete.city as string | undefined,

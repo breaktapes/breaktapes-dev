@@ -248,6 +248,10 @@ function uniqueCountries(races) {
 // ── Supabase fetch helper ────────────────────────────────────────────────────
 
 async function fetchProfile(username, env) {
+  // Use the SERVICE-ROLE key (server-side only) so anon's SELECT on user_state
+  // can be revoked — the raw row must not be readable with the public anon key.
+  // Visibility is still enforced below in renderProfile().
+  const key = env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_ANON_KEY;
   const url = new URL(`${env.SUPABASE_URL}/rest/v1/user_state`);
   url.searchParams.set('username', `eq.${username}`);
   url.searchParams.set('is_public', 'eq.true');
@@ -256,8 +260,8 @@ async function fetchProfile(username, env) {
 
   const res = await fetch(url.toString(), {
     headers: {
-      apikey: env.SUPABASE_ANON_KEY,
-      Authorization: `Bearer ${env.SUPABASE_ANON_KEY}`,
+      apikey: key,
+      Authorization: `Bearer ${key}`,
       Accept: 'application/json',
     },
   });

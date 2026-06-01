@@ -98,23 +98,26 @@ function uniqueCountries(races) {
 // ── Supabase fetch ────────────────────────────────────────────────────────────
 
 async function fetchProfile(username, env) {
-  const url = new URL(`${env.SUPABASE_URL}/rest/v1/user_state`);
-  url.searchParams.set('username', `eq.${username}`);
-  url.searchParams.set('is_public', 'eq.true');
-  url.searchParams.set('select', 'state_json,races,athlete');
-  url.searchParams.set('limit', '1');
-
-  const res = await fetch(url.toString(), {
+  // Call the visibility-filtered RPC instead of reading the raw user_state row,
+  // so anon's table SELECT can be revoked. The RPC returns only the sections the
+  // owner made public ({ username, athlete, races?, upcoming_races? }).
+  const res = await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/get_public_card`, {
+    method: 'POST',
     headers: {
       apikey: env.SUPABASE_ANON_KEY,
       Authorization: `Bearer ${env.SUPABASE_ANON_KEY}`,
+      'Content-Type': 'application/json',
       Accept: 'application/json',
     },
+    body: JSON.stringify({ p_username: username }),
+    signal: AbortSignal.timeout(8000),
   });
 
   if (!res.ok) return null;
-  const rows = await res.json();
-  return rows && rows.length > 0 ? rows[0] : null;
+  const card = await res.json().catch(() => null);
+  if (!card) return null;
+  // Adapt to the shape the renderer expects (it reads row.state_json).
+  return { state_json: card };
 }
 
 // ── Font loader ───────────────────────────────────────────────────────────────
