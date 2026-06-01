@@ -3,6 +3,7 @@ import type { SyntheticListenerMap } from '@dnd-kit/core/dist/hooks/utilities'
 import type { WidgetDynamicContext } from '@/lib/widgetContent'
 import type { WidgetSize } from '@/types'
 import { WIDGET_SIZES } from '@/stores/useDashStore'
+import { posthog } from '@/lib/posthog'
 
 class WidgetBoundary extends Component<
   { id: string; children: React.ReactNode },
@@ -12,6 +13,18 @@ class WidgetBoundary extends Component<
   static getDerivedStateFromError(error: Error) { return { error } }
   componentDidCatch(error: Error, info: React.ErrorInfo) {
     console.error(`[Widget:${this.props.id}]`, error, info.componentStack)
+    // Capture in PostHog so a real-user widget crash (incl. the unreproduced
+    // "Maximum update depth" render loop) is observable and root-causable
+    // instead of silently contained. The boundary already keeps the rest of
+    // the page alive; this gives us the telemetry to find the cause if it recurs.
+    try {
+      posthog.capture('widget_error', {
+        widget_id: this.props.id,
+        message: String(error?.message ?? error).slice(0, 300),
+        is_update_depth: String(error?.message ?? '').includes('Maximum update depth'),
+        component_stack: String(info?.componentStack ?? '').slice(0, 800),
+      })
+    } catch { /* never let telemetry break the boundary */ }
   }
   render() {
     if (this.state.error) {
