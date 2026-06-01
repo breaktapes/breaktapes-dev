@@ -11,6 +11,7 @@
  */
 
 import { useAthleteStore } from '@/stores/useAthleteStore'
+import { resolveDistKm } from '@/lib/utils'
 
 export type UnitSystem = 'metric' | 'imperial'
 
@@ -98,7 +99,9 @@ export function fmtSpeedKmh(kmh: number, units: UnitSystem): string {
  * Returns null if either is missing or invalid.
  */
 export function computePaceSecPerKm(distKm: string, finishTime: string): number | null {
-  const km = parseFloat(distKm)
+  // Label-aware: "Marathon"/"70.3 / Middle Distance"/"Ultra" must resolve to
+  // their real km, not parseFloat (which yields NaN or a wrong number like 70.3).
+  const km = resolveDistKm(distKm) ?? NaN
   if (!km || isNaN(km)) return null
   const parts = finishTime.split(':').map(Number)
   if (parts.some(isNaN)) return null

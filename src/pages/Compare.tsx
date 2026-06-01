@@ -10,6 +10,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { APP_URL } from '@/env'
+import { resolveDistKm } from '@/lib/utils'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -49,18 +50,11 @@ function parseHMS(str: string | undefined): number | null {
   return null
 }
 
-const DIST_KM: Record<string, number> = {
-  marathon: 42.195, 'full marathon': 42.195,
-  'half marathon': 21.0975, half: 21.0975,
-  ironman: 226, '70.3': 113,
-  '5k': 5, '10k': 10,
-}
-
+// Label-aware via the shared resolver — a local 6-entry map silently dropped
+// Olympic / Sprint / 50K / 100 Mile / "70.3 / Middle Distance" PBs from the
+// comparison (they returned 0 and never matched a comparison bucket).
 function distToKm(d: string | undefined): number {
-  if (!d) return 0
-  const n = parseFloat(d)
-  if (!isNaN(n)) return n
-  return DIST_KM[d.toLowerCase().trim()] ?? 0
+  return resolveDistKm(d ?? '') ?? 0
 }
 
 

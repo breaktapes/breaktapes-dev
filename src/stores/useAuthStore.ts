@@ -26,5 +26,7 @@ export const useAuthStore = create<AuthState>()((set) => ({
   lastSyncAt: null,
   setAuthUser: (authUser) => set({ authUser }),
   setProAccess: (proAccessGranted) => set({ proAccessGranted }),
-  setSyncStatus: (syncStatus) => set({ syncStatus, lastSyncAt: syncStatus === 'ok' ? Date.now() : undefined }),
+  // Stamp lastSyncAt only on a successful sync; preserve the prior timestamp on
+  // 'syncing'/'error'/'idle' so "last synced 2m ago" UI doesn't reset mid-sync.
+  setSyncStatus: (syncStatus) => set(s => ({ syncStatus, lastSyncAt: syncStatus === 'ok' ? Date.now() : s.lastSyncAt })),
 }))

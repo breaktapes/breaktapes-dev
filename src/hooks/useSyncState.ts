@@ -59,7 +59,14 @@ export function useSyncState() {
     }
     if (Array.isArray(remote.wishlist_races)) setWishlistRaces(remote.wishlist_races)
     promoteNextRace()
-    if ('focus_race_id' in remote) setFocusRaceId(remote.focus_race_id ?? null)
+    if ('focus_race_id' in remote) {
+      // Don't let a stale/empty remote snapshot wipe a focus race the user just
+      // pinned locally (focusRaceId has no union-merge guard like races do).
+      // Adopt the remote pin only when it's set, or when we have none locally.
+      const remoteFocus = remote.focus_race_id ?? null
+      const { focusRaceId: localFocus } = useRaceStore.getState()
+      if (remoteFocus || !localFocus) setFocusRaceId(remoteFocus)
+    }
     if (remote.athlete) setAthlete(remote.athlete)
     if (Array.isArray(remote.season_plans)) setSeasonPlans(remote.season_plans)
   }

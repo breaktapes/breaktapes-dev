@@ -10,6 +10,7 @@
  */
 import { useRef, useState, useCallback, useEffect } from 'react'
 import type { Race, Athlete } from '@/types'
+import { resolveDistKm } from '@/lib/utils'
 
 // ── Runtime CSS var reader ─────────────────────────────────────────────────────
 function readCssPalette() {
@@ -251,10 +252,11 @@ function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
   const location = [athlete?.city, athlete?.country].filter(Boolean).join(', ')
   const raceCount = races.length
   const countryCount = new Set(races.map(r => r.country).filter(Boolean)).size
-  const medalCount = races.filter(r => r.medal && r.medal !== 'none').length
+  const medalCount = races.filter(r => r.medal && r.medal !== 'none' && (!r.outcome || r.outcome === 'Finished')).length
   const kmTotal = Math.round(races.reduce((s, r) => {
-    const n = parseFloat(r.distance) || 0
-    return s + n
+    // Completed distance only, label-aware (parseFloat dropped "Marathon"/"IRONMAN" to 0).
+    if (r.outcome && r.outcome !== 'Finished') return s
+    return s + (resolveDistKm(r.distance) ?? 0)
   }, 0))
   // Lifetime PBs computed across ALL races; filter to year when chosen.
   // Same set of race IDs used to highlight gold rows in the Mission Log

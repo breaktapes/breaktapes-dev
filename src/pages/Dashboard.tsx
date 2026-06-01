@@ -115,10 +115,20 @@ function distBadge(d: string | undefined, sport?: string): string {
 
 function buildPBMap(races: Race[]): Record<string, Race> {
   const pb: Record<string, Race> = {}
+  const today = todayStr()
   for (const r of races) {
     if (!r.time || !r.distance) continue
+    // A PB must be a completed past race. DNF/DSQ/DNS may carry a partial time,
+    // and future races may carry a placeholder time — neither is a personal best.
+    if (r.outcome && r.outcome !== 'Finished') continue
+    if (r.date > today) continue
     const key = normalizeDistKey(r.distance)
-    if (!pb[key] || r.time < pb[key].time!) pb[key] = r
+    // Compare in seconds, not lexicographically: string "10:01:00" < "9:59:00"
+    // would wrongly rank a 10h ultra faster than a 9h one.
+    const rs = parseHMS(r.time)
+    if (rs == null) continue
+    const cur = pb[key]
+    if (!cur || rs < (parseHMS(cur.time!) ?? Infinity)) pb[key] = r
   }
   return pb
 }
@@ -230,20 +240,20 @@ function smMetricFont(v: string | number): string {
   return '64px'
 }
 
-function computeMomentum(races: Race[]): { score: number; badge: string } {
-  const past = races.filter(r => r.date <= todayStr() && r.time && r.distance)
+function computeMomentum(races: Race[]): { score: number; badge: string; hasData: boolean } {
+  const past = races.filter(r => r.date <= todayStr() && r.time && r.distance && (!r.outcome || r.outcome === 'Finished'))
     .sort((a, b) => b.date.localeCompare(a.date))
-  if (past.length < 2) return { score: 1.0, badge: 'NEUTRAL' }
+  if (past.length < 2) return { score: 1.0, badge: 'NEUTRAL', hasData: false }
   const pbMap = buildPBMap(past)
   const last = past[0]
   const pb = pbMap[normalizeDistKey(last.distance)]
-  if (!pb?.time || !last.time) return { score: 1.0, badge: 'NEUTRAL' }
+  if (!pb?.time || !last.time) return { score: 1.0, badge: 'NEUTRAL', hasData: false }
   const lastSecs = parseHMS(last.time)
   const pbSecs = parseHMS(pb.time)
-  if (!lastSecs || !pbSecs || pbSecs === 0) return { score: 1.0, badge: 'NEUTRAL' }
+  if (!lastSecs || !pbSecs || pbSecs === 0) return { score: 1.0, badge: 'NEUTRAL', hasData: false }
   const ratio = Math.min(1.0, pbSecs / lastSecs)
   const badge = ratio >= 1.0 ? 'HOT' : ratio >= 0.97 ? 'RISING' : ratio >= 0.93 ? 'NEUTRAL' : 'COOLING'
-  return { score: parseFloat(ratio.toFixed(2)), badge }
+  return { score: parseFloat(ratio.toFixed(2)), badge, hasData: true }
 }
 
 // Official BAA qualifying standards (seconds) by Boston year.
@@ -717,7 +727,7 @@ function PreRaceBriefing({ onAddRace, onEditRace, onComplete }: { onAddRace: () 
 
   const lastPill = useMemo(() => {
     if (!lastRace?.time) return null
-    const isPB = pbMap[lastRace.distance]?.id === lastRace.id
+    const isPB = pbMap[normalizeDistKey(lastRace.distance)]?.id === lastRace.id
     return { text: `Last: ${lastRace.time} ${distBadge(lastRace.distance)}`, isPB }
   }, [lastRace, pbMap])
 
@@ -1747,6 +1757,9 @@ function BostonQualWidget() {
   const qualRaces = useMemo(() =>
     races
       .filter(r => {
+        // A Boston qualifier must be a completed marathon — a DNF marathon with
+        // a recorded partial time is not a qualifying performance.
+        if (r.outcome && r.outcome !== 'Finished') return false
         const d = distanceToKm(r.distance)
         return d >= 42 && d <= 42.3 && !!r.time && r.date >= qualStart && r.date <= qualEnd
       })
@@ -1921,8 +1934,13 @@ function PacingIQWidget() {
   const size = ctx?.getWidgetSize('pacing-iq') ?? 'medium'
 
   const analysis = useMemo(() => {
+    const today = todayStr()
     let faded = 0, negative = 0, even = 0
     for (const r of races) {
+      // Pacing pattern reflects completed past races — a future race with
+      // manually entered splits, or a DNF blow-up, would skew the persona.
+      if (r.date > today) continue
+      if (r.outcome && r.outcome !== 'Finished') continue
       const segs = segmentTimes(r.splits)
       if (segs.length < 2) continue
       const first = segs[0]
@@ -1999,7 +2017,7 @@ function CareerMomentumWidget() {
   const ctx = useWidgetCardContext()
   const size = ctx?.getWidgetSize('career-momentum') ?? 'medium'
 
-  const { score, badge } = useMemo(() => computeMomentum(races), [races])
+  const { score, badge, hasData } = useMemo(() => computeMomentum(races), [races])
 
   const bc = badge === 'HOT' ? 'var(--orange)' : badge === 'RISING' ? 'var(--gold)' :
     badge === 'NEUTRAL' ? 'var(--muted)' : 'rgba(var(--orange-ch), 0.4)'
@@ -2015,10 +2033,10 @@ function CareerMomentumWidget() {
         </div>
         <div style={{ marginTop: 'auto' }}>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: scoreColor, letterSpacing: '-0.02em' }}>
-            {races.length < 2 ? '—' : scoreNum}
+            {hasData ? scoreNum : '—'}
           </div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
-            {races.length < 2 ? 'NO DATA' : badge}
+            {hasData ? badge : 'NO DATA'}
           </div>
         </div>
       </WidgetCard>
@@ -2722,7 +2740,7 @@ function GapToGoalWidget({ race }: { race: Race | null }) {
     let coursePBRace: Race | null = null
     if (nextRace.name) {
       const normTarget = normalizeName(nextRace.name)
-      const courseRaces = past.filter(r => r.name && normalizeName(r.name) === normTarget && r.time)
+      const courseRaces = past.filter(r => r.name && normalizeName(r.name) === normTarget && r.time && (!r.outcome || r.outcome === 'Finished'))
       if (courseRaces.length > 0) {
         coursePBRace = courseRaces.reduce((best, r) => {
           const bs = parseHMS(best.time ?? '') ?? Infinity
@@ -2919,7 +2937,7 @@ function PressurePerformerWidget() {
           {result.aPct !== null && (
             <div>
               <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', color: 'var(--white)', lineHeight: 1 }}>
-                Top {100 - result.aPct + 1}%
+                Top {Math.min(100, 101 - result.aPct)}%
               </div>
               <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted)', textTransform: 'uppercase', marginTop: '3px' }}>A-RACES ({result.aCount})</div>
             </div>
@@ -2927,7 +2945,7 @@ function PressurePerformerWidget() {
           {result.otherPct !== null && (
             <div style={{ paddingBottom: '2px' }}>
               <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-lg)', color: 'var(--muted)', lineHeight: 1 }}>
-                Top {100 - result.otherPct + 1}%
+                Top {Math.min(100, 101 - result.otherPct)}%
               </div>
               <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted2)', textTransform: 'uppercase', marginTop: '3px' }}>B/C RACES ({result.otherCount})</div>
             </div>
@@ -3011,7 +3029,7 @@ function TravelLoadWidget() {
           {result.localPct !== null && (
             <div>
               <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', color: 'var(--green)', lineHeight: 1 }}>
-                Top {100 - result.localPct + 1}%
+                Top {Math.min(100, 101 - result.localPct)}%
               </div>
               <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted)', textTransform: 'uppercase', marginTop: '3px' }}>
                 HOME ({result.localCount})
@@ -3021,7 +3039,7 @@ function TravelLoadWidget() {
           {result.awayPct !== null && (
             <div style={{ paddingBottom: '2px' }}>
               <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-lg)', color: 'var(--muted)', lineHeight: 1 }}>
-                Top {100 - result.awayPct + 1}%
+                Top {Math.min(100, 101 - result.awayPct)}%
               </div>
               <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted2)', textTransform: 'uppercase', marginTop: '3px' }}>
                 AWAY ({result.awayCount})

@@ -51,15 +51,21 @@ export const useAthleteStore = create<AthleteState>()(
         const defined = Object.fromEntries(
           Object.entries(partial).filter(([, v]) => v !== undefined)
         ) as Partial<Athlete>
+        // No-op guard: AuthGate re-applies the Clerk username/photo on every token
+        // refresh (~50s). Without this, each refresh wrote the full state to the
+        // server with no change — an echo-write storm. Skip when nothing changed.
+        const changed = !current || Object.keys(defined).some(
+          k => (current as Record<string, unknown>)[k] !== (defined as Record<string, unknown>)[k]
+        )
         if (!current) {
           set({ athlete: defined as Athlete })
-        } else {
+        } else if (changed) {
           set({ athlete: { ...current, ...defined } })
         }
         // Persist athlete edits — without this, username / isPublic / units
         // never reach Supabase, and the user_state row is never seeded for
         // users whose only mutation has been to their profile.
-        void syncStateToSupabase()
+        if (changed) void syncStateToSupabase()
       },
 
       setSeasonPlans: (seasonPlans) => set({ seasonPlans }),

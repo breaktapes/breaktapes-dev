@@ -342,7 +342,7 @@ function computeSignatureDistances(
   for (const [, race] of Object.entries(pbMap)) {
     const ageGrade = computeAgeGradeForRace(race, gender, age)
     const secs = parseTimeToSecs(race.time)
-    const distKm = parseFloat(race.distance) || 0
+    const distKm = distToKm(race.distance)
     const isRunning = ['run', 'ultra', 'hyrox'].includes(race.sport ?? 'run')
     const speedScore = secs && distKm ? distKm / (secs / 3600) : 0
     const paceSecsPerKm = isRunning && distKm > 0 && secs ? secs / distKm : 0
@@ -447,6 +447,8 @@ function getPBSecsForDist(races: Race[], minKm: number, maxKm: number, sport?: s
   let best: number | null = null
   for (const r of races) {
     if (!r.time) continue
+    // PBs come from completed races only — a DNF/DSQ/DNS can carry a partial time.
+    if (r.outcome && r.outcome !== 'Finished') continue
     const km = distToKm(r.distance)
     if (isNaN(km) || km < minKm || km > maxKm) continue
     if (sport && (r.sport ?? '').toLowerCase() !== sport.toLowerCase()) continue
@@ -918,7 +920,7 @@ const ACHIEVEMENTS: Achievement[] = [
       if (getPBSecsForDist(running, 99, 99999) !== null) return true
       // 100K split recorded in a longer race (cumulative time present)
       return running.some(race => {
-        const distKm = parseFloat(race.distance)
+        const distKm = distToKm(race.distance)
         if (!isFinite(distKm) || distKm <= 101) return false
         const split100k = race.splits?.find(s => (s.label ?? '').toUpperCase() === '100K')
         return !!split100k?.cumulative && parseHMS(split100k.cumulative) !== null
@@ -2575,14 +2577,11 @@ function GoalsSection() {
 
   const yrRaces = races.filter(r => (r.date ?? '').startsWith(String(year)))
   const yrCount = yrRaces.length
-  const yrKm = yrRaces.reduce((sum, r) => {
-    // resolve distance to km
-    const KM_MAP: Record<string, number> = {
-      '5K': 5, '10K': 10, '10 Mile': 16.1, 'Half Marathon': 21.1, 'Marathon': 42.2,
-      '50K': 50, '50 Mile': 80.5, '100K': 100, '100 Mile': 161,
-    }
-    return sum + (KM_MAP[r.distance] ?? distToKm(r.distance) ?? 0)
-  }, 0)
+  // Annual distance goal counts completed distance only — exclude DNF/DSQ/DNS.
+  // distToKm is label-aware, so the redundant local KM_MAP is gone.
+  const yrKm = yrRaces.reduce((sum, r) =>
+    (r.outcome && r.outcome !== 'Finished') ? sum : sum + distToKm(r.distance)
+  , 0)
 
   // Per-distance PBs for dist goals
   const pbByDist: Record<string, number> = {}

@@ -141,10 +141,13 @@ const DIST_KM: Record<string, number> = {
   '50 mile': 80.47,
   '100k': 100, '100km': 100,
   '100 mile': 160.93,
-  'sprint triathlon': 25.75,
-  'olympic triathlon': 51.5,
+  'sprint triathlon': 25.75, 'sprint': 25.75,
+  'olympic triathlon': 51.5, 'olympic': 51.5,
   'half iron': 113, '70.3': 113, 'ironman 70.3': 113,
+  '70.3 / middle distance': 113, 'middle distance': 113,
   'full iron': 226, 'ironman': 226,
+  'ironman / full distance': 226, 'full distance': 226,
+  'ultra': 50, 'ultramarathon': 50,
 }
 
 /** Map a distance label or numeric string to km number. Returns null for non-numeric labels (HYROX categories, etc.). */

@@ -496,6 +496,9 @@ export function personalLeagueTable(races: Race[], athlete: Athlete): LeagueEntr
   const entries: Array<{ race: Race; ageGrade: number }> = []
 
   for (const r of races) {
+    // Age-grade league ranks completed performances only — a DNF/DSQ/DNS can
+    // carry a partial time that would otherwise pollute the ranking.
+    if (r.outcome && r.outcome !== 'Finished') continue
     const timeSecs = parseTimeSecs(r.time)
     const distKm   = parseDistKm(r.distance)
     const label    = distLabel(distKm)
@@ -590,6 +593,9 @@ export interface MilestoneResult {
 
 export function distanceMilestones(races: Race[]): MilestoneResult {
   const totalKm = races.reduce((s, r) => {
+    // Lifetime distance counts completed races only — a DNS never ran, a DNF
+    // didn't cover the full distance. Matches the app's totalKm() elsewhere.
+    if (r.outcome && r.outcome !== 'Finished') return s
     const km = parseDistKm(r.distance)
     return km > 0 ? s + km : s
   }, 0)
@@ -625,6 +631,7 @@ export interface LadderEntry {
 
 export function distanceLadder(races: Race[]): LadderEntry[] {
   const totalKm = races.reduce((s, r) => {
+    if (r.outcome && r.outcome !== 'Finished') return s
     const km = parseDistKm(r.distance)
     return km > 0 ? s + km : s
   }, 0)
