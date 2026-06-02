@@ -3,6 +3,11 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.2.4] - 2026-06-02
+
+### Changed
+- **Final OG share image** — replaced with the designed share card: BREAK/TAPES wordmark, "EVERY FINISH LINE, REMEMBERED." headline (orange emphasis), tagline, and `www.breaktapes.com` pill on solid black.
+
 ## [0.7.2.3] - 2026-06-02
 
 ### Fixed
