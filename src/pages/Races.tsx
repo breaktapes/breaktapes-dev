@@ -17,6 +17,7 @@ import { useAthleteStore } from '@/stores/useAthleteStore'
 import { ViewEditRaceModal } from '@/components/ViewEditRaceModal'
 import { AddRaceModal } from '@/components/AddRaceModal'
 import { RaceImportModal } from '@/components/RaceImportModal'
+import { IronmanRacePicker } from '@/components/IronmanRacePicker'
 import { RaceLogPassport } from '@/components/RaceLogPassport'
 import type { Race } from '@/types'
 import { useUnits, distUnit } from '@/lib/units'
@@ -743,6 +744,7 @@ export function Races() {
   const mapRef = useRef<MapRef>(null)
   const [addRaceOpen, setAddRaceOpen]     = useState(false)
   const [importOpen, setImportOpen]       = useState(false)
+  const [pickerOpen, setPickerOpen]       = useState(false)
   const [passportOpen, setPassportOpen]   = useState(false)
   const [passportYear, setPassportYear]   = useState<string>('all')
 
@@ -844,7 +846,8 @@ export function Races() {
       <RacesSheet races={races} onAddRace={() => setAddRaceOpen(true)} onImportRace={() => setImportOpen(true)} onOpenPassport={(y) => { setPassportYear(y); setPassportOpen(true) }} onDiscover={() => navigate('/discover')} />
 
       {addRaceOpen  && <AddRaceModal     onClose={() => setAddRaceOpen(false)} />}
-      {importOpen   && <RaceImportModal  onClose={() => setImportOpen(false)} />}
+      {importOpen   && <RaceImportModal  onClose={() => setImportOpen(false)} onPickByRace={() => { setImportOpen(false); setPickerOpen(true) }} />}
+      {pickerOpen   && <IronmanRacePicker onClose={() => setPickerOpen(false)} />}
 
       {passportOpen && (
         <RaceLogPassport

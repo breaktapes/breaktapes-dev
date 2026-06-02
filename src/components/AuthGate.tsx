@@ -4,6 +4,7 @@ import { useUser, useAuth, SignIn, SignUp } from '@clerk/clerk-react'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { useRaceStore } from '@/stores/useRaceStore'
+import { useThemeStore } from '@/stores/useThemeStore'
 import { setClerkToken } from '@/lib/supabase'
 import { syncStateToSupabase, resetRemotePullGate } from '@/lib/syncState'
 import { IS_STAGING } from '@/env'
@@ -130,8 +131,16 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   // yank the user back to /you mid-task — trapping anyone who navigated to the
   // dashboard to log a race before completing their profile.
   const didRouteNewUser = useRef(false)
+  const setForceDefault = useThemeStore(s => s.setForceDefault)
 
   useClerkSync()
+
+  // Force the default Carbon+Chrome theme on the logged-out login + loading
+  // screens, ignoring any saved custom theme. The user's theme returns once
+  // they're signed in.
+  useEffect(() => {
+    setForceDefault(!isSignedIn)
+  }, [isSignedIn, setForceDefault])
 
   // Detect brand-new signups (Clerk user created < 2 min ago) and route
   // them to the profile onboarding page once. bt_new_user persists so
@@ -227,7 +236,12 @@ const clerkAppearance = {
 
 
 function LandingScreen() {
-  const [view, setView] = useState<AuthView | null>(null)
+  // Auto-open the auth modal when arriving from the marketing site
+  // (breaktapes.com Get Started / Sign in → app.breaktapes.com/?auth=signup|signin).
+  const [view, setView] = useState<AuthView | null>(() => {
+    const a = new URLSearchParams(window.location.search).get('auth')
+    return a === 'signup' ? 'signup' : a === 'signin' ? 'signin' : null
+  })
 
   // Preserve the current URL so protected routes (e.g. /compare?b=username)
   // redirect back correctly after sign-in / sign-up.
@@ -236,13 +250,15 @@ function LandingScreen() {
 
   return (
     <>
-      <div id="landing-screen">
+      {/* app.breaktapes.com logged-out = simple login screen. The cinematic
+          marketing landing lives on breaktapes.com (see App.tsx MarketingLanding). */}
+      <div id="login-screen">
         <div className="landing-wordmark">BREAK<span className="slash">/</span>TAPES</div>
         <h1 className="landing-headline">
           Your Races.<br /><em>All of Them.</em>
         </h1>
         <p className="landing-sub">Log every finish line. Track PRs, medals, and race history in one place.</p>
-        <div className="landing-actions">
+        <div className="login-actions">
           <button className="btn-main" onClick={() => setView('signup')}>
             Get Started — It's Free
           </button>

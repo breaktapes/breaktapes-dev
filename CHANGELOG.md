@@ -3,6 +3,32 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.1.2] - 2026-06-02
+
+### Fixed
+- **Landing/login grain no longer pixelates on wide screens** — the film-grain texture had no fixed tile size, so it stretched to fill the full (very tall) landing and turned into big blocky noise on large viewports. Now tiled at a fixed 160px repeat so it stays fine.
+
+## [0.7.1.1] - 2026-06-02
+
+### Fixed
+- **Landing + login always use the default Carbon+Chrome theme** — a logged-in user's saved custom/Pro theme no longer tints the marketing landing or the logged-out login screen. The saved theme is untouched and returns once they sign in. Implemented via a transient `forceDefault` flag in the theme store (never persisted), set while not signed in (`AuthGate`) and on the marketing landing (`MarketingLanding`).
+
+## [0.7.1.0] - 2026-06-02
+
+### Changed
+- **Marketing landing moved to breaktapes.com; app.breaktapes.com is login-only again** — the cinematic landing now renders on the apex marketing domain (`breaktapes.com`). `app.breaktapes.com` logged-out shows the simple login screen it had before. The app detects the apex host (`App.tsx` `MarketingLanding`) and renders the marketing page with no Clerk; Get Started / Sign in send visitors to `app.breaktapes.com/?auth=signup|signin`, which auto-opens the matching auth modal.
+- **breaktapes.com worker is now a reverse-proxy** — `landing-worker` proxies the app instead of 301-redirecting, so the apex serves the SPA (which then shows the marketing landing). Requires a one-time `wrangler deploy` of `landing-worker`.
+
+## [0.7.0.0] - 2026-06-02
+
+### Added
+- **New production landing page** — the logged-out screen is now a cinematic, scroll-driven marketing page. Intro "finish-tape" loader (stopwatch counts up, then the tape snaps), animated hero ("Every Finish Line, Remembered."), floating top nav, and a scroll-progress bar. Built with Framer Motion + GSAP; respects `prefers-reduced-motion`.
+- **"I am a…" audience selector** — Marathoner / Triathlete / Everyday. Picking one re-themes the feature showcases and their content (copy, PRs, and the race map's cities) to that athlete type.
+- **Accurate world map** — the Race History showcase renders a real equirectangular world map (Natural Earth land) with race cities projected from actual lat/lng (`src/lib/worldMap.ts`).
+- **Phone-scroll centerpiece** — a pinned device cycles through Dashboard → Medal Wall → Map → Analytics as you scroll.
+- **How it works / Testimonials / FAQ** — 3-step how-it-works with mini-mockups, a rotating testimonial spotlight (placeholder quotes), and an accordion FAQ (free, no AI key, wearables, data privacy).
+- **Live interactive demo** — new public `/demo` route: a self-contained, clickable app shell (persona switcher + Dashboard/Races/Profile tabs) with demo data. No auth, no real stores, no persistence — fully isolated from real user data. Embedded on the landing in a framed window with an "Open full demo" escape.
+
 ## [0.6.14.3] - 2026-06-01
 
 ### Fixed
