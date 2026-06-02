@@ -20,7 +20,7 @@ export interface Race {
   genderPlacing?: string // gender placing — "47/2400"
   agPlacing?: string     // age-group placing value — "3/120"
   agLabel?: string       // age-group label — "M30-34"
-  medal?: string         // "gold" | "silver" | "bronze" | "finisher"
+  medal?: string         // "gold" | "silver" | "bronze" | "finisher" | "custom"
   medalPhoto?: string    // URL
   splits?: Split[]
   elevation?: number
