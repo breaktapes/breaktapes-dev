@@ -162,7 +162,7 @@ const USA_RACES = `
 Canyons Endurance Runs by UTMB 100K | Auburn | United States | 2025-04-26 | 100K | running | 13:48:20 | 320/600 | 60/220 | 14/40 | F35-39 | finisher | trail | mountainous | 4500 | 150 | Speedgoat 6 | 18/clear | 38.90 | -121.08
 Badwater 135 | Death Valley | United States | 2024-07-22 | 100 Mile | running | 39:10:00 | 78/100 | 14/22 | 3/6 | F35-39 | bronze | road | mountainous | 4000 | 142 | Hoka Mafate | 47/extreme | 36.50 | -116.93
 Canyons Endurance Runs by UTMB 50K | Auburn | United States | 2023-04-29 | 50K | running | 5:42:55 | 280/800 | 70/280 | 12/60 | F30-34 | finisher | trail | mountainous | 2100 | 156 | Speedgoat 6 | 16/clear | 38.90 | -121.08
-HOKA UTMB Mont-Blanc | Chamonix | France | 2024-08-30 | 100 Mile | running | 41:30:00 | 1900/2500 | 220/350 | 40/70 | F35-39 | custom | trail | mountainous | 10000 | 148 | Speedgoat 6 | 12/cold | 45.92 | 6.87
+HOKA UTMB Mont-Blanc | Chamonix | France | 2024-08-30 | 100 Mile | running | 41:30:00 | 1900/2500 | 220/350 | 40/70 | F35-39 | finisher | trail | mountainous | 10000 | 148 | Speedgoat 6 | 12/cold | 45.92 | 6.87
 CCC by UTMB | Courmayeur | Italy | 2023-08-31 | 100K | running | 19:05:00 | 1500/2000 | 280/420 | 50/90 | F30-34 | finisher | trail | mountainous | 6100 | 152 | Speedgoat 6 | 14/clear | 45.79 | 6.97
 Mountains 2 Beach Marathon | Ventura | United States | 2022-05-29 | 42.2 | running | 3:34:12 | 142/3500 | 28/1600 | 6/180 | F30-34 | finisher | road | rolling | 480 | 162 | Vaporfly 3 | 17/clear | 34.27834 | -119.29317
 Salt Lake City Half Marathon | Salt Lake City | United States | 2023-04-22 | 21.1 | running | 1:41:58 | 633/4200 | 121/2100 | 24/350 | F30-34 | finisher | road | rolling | 320 | 168 | Vaporfly 3 | 14/clear | 40.7608 | -111.8910
@@ -180,7 +180,7 @@ name: Canyons Endurance Runs by UTMB 100K | date: 2026-06-27 | city: Auburn | co
 const UK_RACES = `
 HYROX London (Pro) | London | United Kingdom | 2025-02-22 | HYROX | hyrox | 1:00:35 | 80/2000 | 75/1700 | 14/350 | M30-34 | finisher | road | flat | 0 | 179 | Nano X3 | 18/indoor | 51.51 | 0.03
 T100 London | London | United Kingdom | 2025-07-26 | 100 | triathlon | 4:21:40 | 310/1100 | 290/900 | 55/180 | M30-34 | finisher | road | flat | 320 | 158 | Cervelo P5 | 21/clear | 51.5074 | -0.1278   (T100 = 2km swim / 80km bike / 18km run)
-London Marathon | London | United Kingdom | 2025-04-27 | 42.2 | running | 2:58:42 | 1840/53000 | 1720/30000 | 240/7000 | M30-34 | custom | road | flat | 60 | 171 | Vaporfly 3 | 12/overcast | 51.5085 | -0.1257
+London Marathon | London | United Kingdom | 2025-04-27 | 42.2 | running | 2:58:42 | 1840/53000 | 1720/30000 | 240/7000 | M30-34 | finisher | road | flat | 60 | 171 | Vaporfly 3 | 12/overcast | 51.5085 | -0.1257
 HYROX Manchester | Manchester | United Kingdom | 2024-11-09 | HYROX | hyrox | 1:02:48 | 47/1500 | 44/1300 | 8/300 | M30-34 | bronze | road | flat | 0 | 181 | Nano X3 | 18/indoor | 53.48 | -2.24
 Hackney Marshes parkrun | London | United Kingdom | 2025-01-04 | 5 | running | 17:42 | 6/420 | 6/280 | 2/55 | M30-34 | silver | road | flat | 5 | 176 | Vaporfly 3 | 7/cold | 51.548 | -0.038
 Great North Run | Newcastle | United Kingdom | 2024-09-08 | 21.1 | running | 1:21:15 | 640/60000 | 600/35000 | 70/6000 | M30-34 | finisher | road | rolling | 120 | 174 | Vaporfly 3 | 16/cloudy | 54.98 | -1.61
@@ -203,7 +203,7 @@ Gran Fondo Pirineus 144K | Camprodon | Spain | 2024-07-06 | 144 | cycling | 5:02
 Granfondo Serra da Estrela 174K | Manteigas | Portugal | 2023-05-28 | 174 | cycling | 5:58:20 | 60/700 | 5/70 | 1/13 | F35-39 | bronze | road | mountainous | 4100 | 148 | Colnago V4Rs | 19/clear | 40.40 | -7.54
 Gran Fondo Les Sybelles La Toussuire 98K | Fontcouverte-la-Toussuire | France | 2024-08-04 | 98 | cycling | 3:28:55 | 40/600 | 2/55 | 1/11 | F40-44 | silver | road | mountainous | 2800 | 156 | Colnago V4Rs | 17/clear | 45.23 | 6.29
 Mercan'Tour Madone Peille 78.5K | Peille | France | 2025-06-08 | 78.5 | cycling | 2:51:40 | 62/1400 | 3/160 | 1/28 | F40-44 | gold | road | mountainous | 2600 | 153 | Colnago V4Rs | 20/clear | 43.80296 | 7.40191
-Grand Raid of Camargue 30K | Salin-de-Giraud | France | 2024-10-20 | 30 | running | 3:08:25 | 88/650 | 14/180 | 4/35 | F40-44 | custom | trail | flat | 120 | 161 | Terrex Speed | 16/clear | 43.41378 | 4.73202
+Grand Raid of Camargue 30K | Salin-de-Giraud | France | 2024-10-20 | 30 | running | 3:08:25 | 88/650 | 14/180 | 4/35 | F40-44 | finisher | trail | flat | 120 | 161 | Terrex Speed | 16/clear | 43.41378 | 4.73202
 La Course entre Mer et Forêt - Semi 21.1K | Le Touquet-Paris-Plage | France | 2023-09-24 | 21.1 | running | 1:52:10 | 240/2100 | 38/780 | 9/120 | F35-39 | finisher | road | flat | 30 | 164 | Pegasus 41 | 14/overcast | 50.5243 | 1.5830
 Lanzarote Marathon 21.1K | Costa Teguise | Spain | 2025-12-06 | 21.1 | running | 1:49:35 | 150/1800 | 22/520 | 5/95 | F40-44 | finisher | road | rolling | 180 | 162 | Pegasus 41 | 22/clear | 28.9981 | -13.4930
 Foulées de Gordes 10K | Gordes | France | 2024-11-10 | 10 | running | 47:30 | 80/900 | 12/350 | 3/70 | F40-44 | bronze | road | rolling | 90 | 162 | Pegasus 41 | 13/clear | 43.9114 | 5.2003
@@ -221,7 +221,7 @@ const DXB_RACES = `
 ADNOC Abu Dhabi Marathon | Abu Dhabi | United Arab Emirates | 2024-12-07 | 10 | running | 52:18 | 600/3000 | 300/1500 | 60/400 | M30-34 | finisher | road | flat | 10 | 172 | Pegasus 41 | 27/clear | 24.45 | 54.38
 Ras Al Khaimah Half Marathon | Ras Al Khaimah | United Arab Emirates | 2025-02-15 | 21.1 | running | 2:05:40 | 1800/5000 | 800/2400 | 120/600 | M30-34 | finisher | road | flat | 15 | 168 | Pegasus 41 | 22/clear | 25.79 | 55.94
 Dubai Marathon | Dubai | United Arab Emirates | 2024-01-19 | 5 | running | 26:30 | 410/2000 | 200/1000 | 30/200 | M30-34 | finisher | road | flat | 12 | 176 | Pegasus 41 | 21/clear | 25.20 | 55.27
-Berlin Marathon | Berlin | Germany | 2025-09-21 | 42.2 | running | 4:22:35 | 28500/47000 | 22000/33000 | 4100/8000 | M30-34 | custom | road | flat | 80 | 169 | Pegasus 41 | 15/overcast | 52.5200 | 13.4050   (bucket-list WMM major)
+Berlin Marathon | Berlin | Germany | 2025-09-21 | 42.2 | running | 4:22:35 | 28500/47000 | 22000/33000 | 4100/8000 | M30-34 | finisher | road | flat | 80 | 169 | Pegasus 41 | 15/overcast | 52.5200 | 13.4050   (bucket-list WMM major)
 IRONMAN 70.3 Dubai | Dubai | United Arab Emirates | 2025-02-07 | 70.3 | triathlon | 6:48:20 | 1850/2400 | 1600/2000 | 280/360 | M30-34 | finisher | road | flat | 60 | 158 | Speed Concept | 24/clear | 25.20 | 55.27   (first local triathlon)
 Abu Dhabi Triathlon (Sprint) | Abu Dhabi | United Arab Emirates | 2025-03-08 | Sprint | triathlon | 1:32:15 | 540/900 | 480/780 | 3/150 | M30-34 | bronze | road | flat | 20 | 165 | Speed Concept | 26/clear | 24.45 | 54.38   (local sprint tri)
 Songkhla Marathon 21.1K | Songkhla | Thailand | 2024-06-16 | 21.1 | running | 2:11:40 | 410/1200 | 320/850 | 55/180 | M30-34 | finisher | road | flat | 12 | 171 | Pegasus 41 | 31/humid | 7.19882 | 100.5951   (Asia)
@@ -236,7 +236,7 @@ name: Standard Chartered Dubai Marathon | date: 2026-06-11 | city: Dubai | count
    =================================================================== */
 const SA_RACES = `
 Two Oceans Marathon | Cape Town | South Africa | 2010-04-03 | 56 (custom km) | running | 6:24:50 | 6800/9000 | 5900/6500 | 800/950 | M20-24 | finisher | road | hilly | 600 | 164 | adizero | 18/clear | -33.9258 | 18.4232
-Comrades Marathon | Durban | South Africa | 2010-05-30 | 89 (custom km) | running | 11:48:30 | 9800/14500 | 8900/11500 | 1400/1700 | M20-24 | finisher | road | hilly | 1800 | 165 | adizero | 14/clear | -29.8587 | 31.0218
+Comrades Marathon | Durban | South Africa | 2010-05-30 | 89 (custom km) | running | 11:48:30 | 9800/14500 | 8900/11500 | 1400/1700 | M20-24 | custom | road | hilly | 1800 | 165 | adizero | 14/clear | -29.8587 | 31.0218
 Two Oceans Marathon | Cape Town | South Africa | 2011-04-23 | 56 (custom km) | running | 5:47:30 | 4900/9500 | 4300/6800 | 560/980 | M20-24 | finisher | road | hilly | 600 | 163 | adizero | 17/clear | -33.9258 | 18.4232
 Comrades Marathon | Durban | South Africa | 2011-05-29 | 89 (custom km) | running | 10:52:20 | 7200/15000 | 6600/12000 | 1050/1750 | M20-24 | bronze | road | hilly | 1800 | 164 | adizero | 13/clear | -29.8587 | 31.0218
 Two Oceans Marathon | Cape Town | South Africa | 2013-03-30 | 56 (custom km) | running | 4:58:20 | 2400/9800 | 2150/7000 | 280/1000 | M20-24 | bronze | road | hilly | 600 | 162 | adizero | 17/clear | -33.9258 | 18.4232
@@ -259,7 +259,7 @@ Knysna Forest Marathon | Knysna | South Africa | 2023-07-08 | 42.2 | running | 2
 Two Oceans Marathon | Cape Town | South Africa | 2024-03-30 | 56 (custom km) | running | 3:42:20 | 70/11200 | 64/7700 | 5/1320 | M30-34 | silver | road | hilly | 600 | 162 | Adios Pro 3 | 17/clear | -33.9258 | 18.4232
 Durban International Marathon | Durban | South Africa | 2024-05-12 | 42.2 | running | 2:44:10 | 60/5000 | 55/4000 | 10/900 | M30-34 | gold | road | flat | 60 | 166 | Adios Pro 3 | 22/humid | -29.86 | 31.02
 Comrades Marathon | Durban | South Africa | 2024-06-09 | 89 (custom km) | running | 6:46:50 | 120/18000 | 112/14200 | 6/1600 | M30-34 | silver | road | hilly | 1800 | 162 | Adios Pro 3 | 13/clear | -29.8587 | 31.0218
-Berlin Marathon | Berlin | Germany | 2024-09-29 | 42.2 | running | 2:39:40 | 1200/45000 | 1100/30000 | 60/3000 | M30-34 | custom | road | flat | 40 | 167 | Vaporfly 3 | 15/clear | 52.52 | 13.40
+Berlin Marathon | Berlin | Germany | 2024-09-29 | 42.2 | running | 2:39:40 | 1200/45000 | 1100/30000 | 60/3000 | M30-34 | finisher | road | flat | 40 | 167 | Vaporfly 3 | 15/clear | 52.52 | 13.40
 Cape Town Marathon | Cape Town | South Africa | 2024-10-20 | 42.2 | running | 2:41:30 | 80/12000 | 70/8000 | 12/2200 | M30-34 | bronze | road | flat | 100 | 165 | Adios Pro 3 | 18/clear | -33.93 | 18.42
 Gun Run Half Marathon | Cape Town | South Africa | 2023-10-15 | 21.1 | running | 1:14:20 | 20/8000 | 18/6000 | 3/900 | M30-34 | bronze | road | flat | 40 | 168 | Vaporfly 3 | 18/clear | -33.93 | 18.42
 `
@@ -271,7 +271,7 @@ name: Cape Town Marathon | date: 2026-10-18 | city: Cape Town | country: South A
    PERSONA 6 — China · Masters 50+ (Wei Zhang)
    =================================================================== */
 const CN_RACES = `
-Boston Marathon | Boston | United States | 2006-04-17 | 42.2 | running | 2:55:20 | 2200/20000 | 2000/12000 | 60/2200 | M35-39 | custom | road | rolling | 280 | 168 | adizero | 8/clear | 42.36 | -71.06
+Boston Marathon | Boston | United States | 2006-04-17 | 42.2 | running | 2:55:20 | 2200/20000 | 2000/12000 | 60/2200 | M35-39 | finisher | road | rolling | 280 | 168 | adizero | 8/clear | 42.36 | -71.06
 Beijing Marathon | Beijing | China | 2010-10-24 | 42.2 | running | 3:02:40 | 800/30000 | 740/24000 | 30/3000 | M40-44 | bronze | road | flat | 40 | 162 | adizero | 12/clear | 39.90 | 116.41
 Berlin Marathon | Berlin | Germany | 2014-09-28 | 42.2 | running | 3:08:15 | 4000/40000 | 3500/28000 | 40/2400 | M45-49 | finisher | road | flat | 40 | 160 | Adios | 15/clear | 52.52 | 13.40
 Shanghai Marathon | Shanghai | China | 2019-11-17 | 42.2 | running | 3:20:50 | 2000/38000 | 1800/26000 | 20/3000 | M50-54 | silver | road | flat | 30 | 158 | Adios Pro 3 | 14/clear | 31.23 | 121.47
@@ -305,7 +305,7 @@ IRONMAN Cairns | Cairns | Australia | 2025-06-15 | IRONMAN | triathlon | 10:42:0
 IRONMAN Western Australia | Busselton | Australia | 2024-12-01 | IRONMAN | triathlon | 10:58:40 | 340/3400 | 30/700 | 5/110 | F35-39 | finisher | road | flat | 200 | 148 | Cervelo P5 | 24/clear | -33.65 | 115.35
 T100 Gold Coast | Gold Coast | Australia | 2025-02-09 | 70.3 | triathlon | 4:58:12 | 6/1900 | 1/400 | 1/70 | F35-39 | gold | road | flat | 300 | 158 | Cervelo P5 | 27/clear | -28.00 | 153.43
 IRONMAN New Zealand | Taupo | New Zealand | 2024-03-02 | IRONMAN | triathlon | 11:05:30 | 280/2500 | 24/550 | 2/100 | F35-39 | silver | road | rolling | 700 | 150 | Cervelo P5 | 19/cloudy | -38.69 | 176.08
-IRONMAN World Championship · Kona | Kailua-Kona | United States | 2024-10-26 | IRONMAN | triathlon | 11:20:15 | 900/2400 | 90/700 | 12/120 | F35-39 | custom | road | rolling | 800 | 148 | Cervelo P5 | 30/hot | 19.64 | -155.99
+IRONMAN World Championship · Kona | Kailua-Kona | United States | 2024-10-26 | IRONMAN | triathlon | 11:20:15 | 900/2400 | 90/700 | 12/120 | F35-39 | finisher | road | rolling | 800 | 148 | Cervelo P5 | 30/hot | 19.64 | -155.99
 Cairns Marathon Festival 10K | Cairns | Australia | 2018-07-15 | 10 | running | 48:20 | 240/1200 | 90/600 | 20/110 | F30-34 | finisher | road | flat | 40 | 162 | Pegasus | 24/humid | -16.9203 | 145.7710   (year 1)
 Gold Coast Marathon 21.1K | Southport | Australia | 2018-07-01 | 21.1 | running | 1:48:10 | 1800/12000 | 700/6000 | 130/1100 | F30-34 | finisher | road | flat | 30 | 160 | Pegasus | 16/clear | -27.9719 | 153.4063
 Noosa Triathlon (Olympic) | Noosa Heads | Australia | 2019-11-03 | Olympic | triathlon | 2:48:30 | 900/8000 | 220/2500 | 40/400 | F30-34 | finisher | road | flat | 120 | 158 | road bike | 25/clear | -26.3983 | 153.0905   (first triathlon)

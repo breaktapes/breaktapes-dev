@@ -240,7 +240,7 @@ function distLabel(d: string): string {
 function t2s(t?: string): number { if (!t) return Infinity; const a = t.split(':').map(Number); if (a.some(Number.isNaN)) return Infinity; return a.length === 3 ? a[0]*3600 + a[1]*60 + a[2] : a.length === 2 ? a[0]*60 + a[1] : Infinity }
 const MEDAL_RGB: Record<string, [string, string, string]> = {
   gold: ['#FFD770', '#B8860B', 'GOLD'], silver: ['#C8D4DC', '#6A7880', 'SILVER'],
-  bronze: ['#CD8C5A', '#7A4420', 'BRONZE'], custom: ['#9B7BE8', '#5A3FA0', 'CUSTOM'],
+  bronze: ['#CD8C5A', '#7A4420', 'BRONZE'], custom: ['#9B7BE8', '#5A3FA0', 'VIC CLAPHAM'],
   finisher: ['#E8895A', '#A8421A', 'FINISHER'],
 }
 const sectionLabel: React.CSSProperties = { fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--white)' }
@@ -362,7 +362,7 @@ function MedalMockup({ persona, framed = false }: { persona: DemoPersonaId; fram
   const races = DEMO_PERSONAS[persona].races
   const counts = { gold: 0, silver: 0, bronze: 0, custom: 0, finisher: 0 } as Record<string, number>
   for (const r of races) { const m = (r.medal || 'finisher'); if (counts[m] != null) counts[m]++ }
-  const order = ['gold', 'silver', 'bronze', 'custom', 'finisher']
+  const order = ['custom', 'gold', 'silver', 'bronze', 'finisher'] // custom (rare, e.g. Vic Clapham) leads
   const cards = [...races].filter(r => r.medal).sort((a, b) => order.indexOf(a.medal!) - order.indexOf(b.medal!)).slice(0, 6)
   return (
     <Shell framed={framed}>
