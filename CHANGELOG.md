@@ -3,6 +3,11 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.2.2] - 2026-06-02
+
+### Changed
+- **OG image cleanup** — removed the decorative slash bars that overlapped the wordmark in link previews. The share card is now the centered BREAK/TAPES wordmark, tagline, and URL pill on a dark background — cleaner and on-brand.
+
 ## [0.7.2.1] - 2026-06-02
 
 ### Changed
