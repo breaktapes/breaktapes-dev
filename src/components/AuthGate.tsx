@@ -4,6 +4,7 @@ import { useUser, useAuth, SignIn, SignUp } from '@clerk/clerk-react'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { useRaceStore } from '@/stores/useRaceStore'
+import { useThemeStore } from '@/stores/useThemeStore'
 import { setClerkToken } from '@/lib/supabase'
 import { syncStateToSupabase, resetRemotePullGate } from '@/lib/syncState'
 import { IS_STAGING } from '@/env'
@@ -130,8 +131,16 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   // yank the user back to /you mid-task — trapping anyone who navigated to the
   // dashboard to log a race before completing their profile.
   const didRouteNewUser = useRef(false)
+  const setForceDefault = useThemeStore(s => s.setForceDefault)
 
   useClerkSync()
+
+  // Force the default Carbon+Chrome theme on the logged-out login + loading
+  // screens, ignoring any saved custom theme. The user's theme returns once
+  // they're signed in.
+  useEffect(() => {
+    setForceDefault(!isSignedIn)
+  }, [isSignedIn, setForceDefault])
 
   // Detect brand-new signups (Clerk user created < 2 min ago) and route
   // them to the profile onboarding page once. bt_new_user persists so

@@ -9,6 +9,7 @@ import { AuthGate } from '@/components/AuthGate'
 import { Layout } from '@/components/Layout'
 import { CLERK_PUBLISHABLE_KEY, POSTHOG_KEY, POSTHOG_HOST } from '@/env'
 import { posthog } from '@/lib/posthog'
+import { useThemeStore } from '@/stores/useThemeStore'
 
 // Lazy-loaded pages — each is a separate JS chunk.
 // Dashboard loads eagerly (it's the default route, always shown first).
@@ -41,6 +42,12 @@ const APP_ORIGIN = 'https://app.breaktapes.com'
 /** Marketing landing for breaktapes.com — no Clerk, no auth. CTAs send the
  *  visitor to app.breaktapes.com where sign-up / sign-in live. */
 function MarketingLanding() {
+  const setForceDefault = useThemeStore(s => s.setForceDefault)
+  // Marketing landing always uses the default Carbon+Chrome look.
+  useEffect(() => {
+    setForceDefault(true)
+    return () => setForceDefault(false)
+  }, [setForceDefault])
   const goApp = (auth: 'signup' | 'signin') => {
     window.location.href = `${APP_ORIGIN}/?auth=${auth}`
   }
