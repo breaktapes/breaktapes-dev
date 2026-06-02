@@ -3,6 +3,12 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.1.0] - 2026-06-02
+
+### Changed
+- **Marketing landing moved to breaktapes.com; app.breaktapes.com is login-only again** — the cinematic landing now renders on the apex marketing domain (`breaktapes.com`). `app.breaktapes.com` logged-out shows the simple login screen it had before. The app detects the apex host (`App.tsx` `MarketingLanding`) and renders the marketing page with no Clerk; Get Started / Sign in send visitors to `app.breaktapes.com/?auth=signup|signin`, which auto-opens the matching auth modal.
+- **breaktapes.com worker is now a reverse-proxy** — `landing-worker` proxies the app instead of 301-redirecting, so the apex serves the SPA (which then shows the marketing landing). Requires a one-time `wrangler deploy` of `landing-worker`.
+
 ## [0.7.0.0] - 2026-06-02
 
 ### Added
