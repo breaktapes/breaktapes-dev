@@ -223,6 +223,75 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 
 ---
 
+## Dashboard Widget Header Spec — CANONICAL
+
+**Every widget on the dashboard (Dashboard.tsx) — visible, off-screen, all size variants (S/M/L), empty states, error states, locked states — MUST use the shared `st.widgetLabel` and `st.widgetTitle` tokens for its header. Do NOT inline-style these or override fontSize.**
+
+**Label** (`st.widgetLabel`, defined at `src/pages/Dashboard.tsx:5954`):
+- `fontSize: var(--text-xs)` → **12px**
+- `fontWeight: 700`
+- `letterSpacing: 0.14em`
+- `lineHeight: 1`
+- `color: var(--orange)`
+- `textTransform: uppercase`
+- `whiteSpace: nowrap` + `overflow: hidden` + `textOverflow: ellipsis`
+- `marginBottom: 4px` ← **canonical gap to title**
+
+**Title** (`st.widgetTitle`, defined at `src/pages/Dashboard.tsx:5971`):
+- `fontSize: var(--text-lg)` → **18px**
+- `fontWeight: 900`
+- `letterSpacing: 0.04em`
+- `lineHeight: 1.1`
+- `color: var(--white)`
+- `textTransform: uppercase`
+- `whiteSpace: nowrap` + `overflow: hidden` + `textOverflow: ellipsis`
+
+**Required JSX wrapper:** label + title MUST be siblings inside a `<div>` parent. Without the wrapper, `glowCard.gap: var(--sp-4)` (16px) applies between them and blows out the spacing.
+
+```jsx
+// ✅ CORRECT
+<WidgetCard id="..." style={st.glowCard}>
+  <div>
+    <div style={st.widgetLabel}>EYEBROW</div>
+    <div role="heading" aria-level={2} style={st.widgetTitle}>TITLE</div>
+  </div>
+  {/* metric block */}
+</WidgetCard>
+
+// ❌ WRONG — glowCard's 16px gap fires between label and title
+<WidgetCard id="..." style={st.glowCard}>
+  <div style={st.widgetLabel}>EYEBROW</div>
+  <div style={st.widgetTitle}>TITLE</div>
+  {/* metric block */}
+</WidgetCard>
+```
+
+**With a top-right badge / pill:**
+
+```jsx
+<WidgetCard id="..." style={st.glowCard}>
+  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
+    <div>
+      <div style={st.widgetLabel}>EYEBROW</div>
+      <div role="heading" aria-level={2} style={st.widgetTitle}>TITLE</div>
+    </div>
+    <span style={{ ...st.badgePill, ... }}>BADGE</span>
+  </div>
+  {/* metric block */}
+</WidgetCard>
+```
+
+**Hard rules when editing or creating a widget:**
+- Never inline-style fontSize on the eyebrow label or main title — pull from the token
+- Never spread-override fontSize/fontWeight/marginBottom on these tokens
+- Never put `marginBottom`, `marginTop`, or any extra spacing on the header row `<div>` — `glowCard.gap` is the only separator between header and metric block
+- The label+title pair MUST share a single parent `<div>` (block or flex with `gap: 0`) — never bare siblings of `WidgetCard`
+- All small-view branches, empty-state branches, locked-state branches MUST follow this same pattern
+
+If a widget needs a different visual treatment, change the token in one place. Never fork inline.
+
+---
+
 ## Key Functions Reference
 
 | Function | Purpose |
