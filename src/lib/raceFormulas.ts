@@ -994,3 +994,178 @@ export function raceDensityWarnings(upcomingRaces: Race[]): DensityWarning[] {
 
   return warnings
 }
+
+// ─── Pacing IQ v2 — 10-class algorithm ────────────────────────────────────────
+// Replaces the legacy 3-class FADER / NEGATIVE SPLITTER / EVEN PACER taxonomy
+// with finer classifications that surface start-side issues, distinguish
+// consistency from average, and map to actionable coaching prescriptions.
+
+export type PacingClass =
+  | 'EVEN STEADY'
+  | 'NEGATIVE SPLITTER'
+  | 'NEGATIVE KICKER'
+  | 'MILD FADER'
+  | 'CLASSIC FADER'
+  | 'CRASH FADER'
+  | 'HOT START'
+  | 'SURGER'
+  | 'SLOW BUILDER'
+  | 'CONSERVATIVE'
+
+export interface PacingClassMeta {
+  label: PacingClass
+  color: string
+  short: string
+  description: string
+  prescription: string
+}
+
+export const PACING_CLASS_META: Record<PacingClass, PacingClassMeta> = {
+  'EVEN STEADY':       { label: 'EVEN STEADY',       color: '#34D399', short: 'EVEN',    description: 'Metronome pacing — most efficient race style.',                  prescription: 'Keep doing what you\'re doing. Train at race pace.' },
+  'NEGATIVE SPLITTER': { label: 'NEGATIVE SPLITTER', color: '#10B981', short: 'NEG SPL', description: 'You close races faster than you open them.',                    prescription: 'Try starting 2–3 sec/km faster — you have more to give.' },
+  'NEGATIVE KICKER':   { label: 'NEGATIVE KICKER',   color: '#22D3EE', short: 'KICKER',  description: 'You hold back deliberately, then kick the last 20%.',           prescription: 'Strong end-game. Push the middle 60% harder.' },
+  'MILD FADER':        { label: 'MILD FADER',        color: '#FBBF24', short: 'M FADE',  description: 'Slight late slowdown — normal endurance drift.',                prescription: 'Add weekly long runs at goal pace + 10 sec/km.' },
+  'CLASSIC FADER':     { label: 'CLASSIC FADER',     color: '#F59E0B', short: 'FADER',   description: 'Real fade. Pacing or fueling problem.',                         prescription: 'Start 5–8 sec/km slower. Practice race-day fueling.' },
+  'CRASH FADER':       { label: 'CRASH FADER',       color: '#EF4444', short: 'CRASH',   description: 'Hit the wall. Major late blow-up.',                             prescription: 'Slow start by 10+ sec/km. Build long-run volume.' },
+  'HOT START':         { label: 'HOT START',         color: '#F87171', short: 'HOT',     description: 'Out too hard, paid for it.',                                    prescription: 'Treat first 5K as warmup. Negative-split the rest.' },
+  'SURGER':            { label: 'SURGER',            color: '#A78BFA', short: 'SURGE',   description: 'Roller-coaster — fast-slow-fast, net even.',                    prescription: 'Practice steady-state runs. Tempo training.' },
+  'SLOW BUILDER':      { label: 'SLOW BUILDER',      color: '#60A5FA', short: 'BUILD',   description: 'Slow start, found rhythm, closed strong.',                      prescription: 'Warm up more pre-race. You\'re leaving time on the road.' },
+  'CONSERVATIVE':      { label: 'CONSERVATIVE',      color: '#94A3B8', short: 'CONSV',   description: 'Sandbagger — never pushed hard.',                               prescription: 'Set a more aggressive goal time and commit to it.' },
+}
+
+// Internal — parses split times into per-segment seconds.
+function pacingSegments(splits: Race['splits']): number[] {
+  if (!splits || !splits.length) return []
+  const hasPer = splits.some(s => s.split)
+  if (hasPer) {
+    return splits
+      .map(s => (s.split ? parseTimeSecs(s.split) : null))
+      .filter((v): v is number => v != null && v > 0)
+  }
+  const cums = splits
+    .map(s => (s.cumulative ? parseTimeSecs(s.cumulative) : null))
+    .filter((v): v is number => v != null)
+  const segs: number[] = []
+  for (let i = 0; i < cums.length; i++) {
+    segs.push(i === 0 ? cums[i] : cums[i] - cums[i - 1])
+  }
+  return segs.filter(v => v > 0)
+}
+
+/**
+ * Classifies a single race's pacing pattern into one of 10 classes.
+ * Returns null when the race lacks enough splits (< 4 segments).
+ * The 4-segment minimum ensures meaningful first-half / second-half stats.
+ */
+export function classifyRacePacing(race: Race): PacingClass | null {
+  const segs = pacingSegments(race.splits)
+  if (segs.length < 4) return null
+
+  const mean = segs.reduce((a, b) => a + b, 0) / segs.length
+  const variance = segs.reduce((a, b) => a + (b - mean) ** 2, 0) / segs.length
+  const stdev = Math.sqrt(variance)
+  const cv = stdev / mean
+
+  const half = Math.floor(segs.length / 2)
+  const firstHalf = segs.slice(0, half)
+  const secondHalf = segs.slice(segs.length - half)
+  const firstHalfAvg = firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length
+  const secondHalfAvg = secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length
+
+  const delta = (secondHalfAvg - firstHalfAvg) / firstHalfAvg
+  const firstSplit = segs[0]
+  const lastSplit = segs[segs.length - 1]
+  const startBurn = firstSplit / firstHalfAvg
+  const kickRatio = lastSplit / firstHalfAvg
+  const crashExists = segs.some(s => s > firstHalfAvg * 1.20)
+
+  // Class detection order matters — most specific patterns first.
+  if (delta >= 0.10 || crashExists) return 'CRASH FADER'
+  if (startBurn < 0.92 && delta > 0.05) return 'HOT START'
+  if (delta < -0.02 && kickRatio < 0.88) return 'NEGATIVE KICKER'
+  if (delta < -0.02) return 'NEGATIVE SPLITTER'
+  if (startBurn > 1.08 && delta < 0) return 'SLOW BUILDER'
+  if (startBurn > 1.05 && kickRatio > 0.98 && Math.abs(delta) < 0.05) return 'CONSERVATIVE'
+  if (cv >= 0.08 && Math.abs(delta) < 0.05) return 'SURGER'
+  if (delta >= 0.05) return 'CLASSIC FADER'
+  if (delta >= 0.02) return 'MILD FADER'
+  if (Math.abs(delta) < 0.02 && cv < 0.04) return 'EVEN STEADY'
+  // Fallback for races that don't fit any above
+  return Math.abs(delta) < 0.02 ? 'EVEN STEADY' : delta > 0 ? 'MILD FADER' : 'NEGATIVE SPLITTER'
+}
+
+export interface PacingAggregate {
+  primary: PacingClass | null
+  primaryCount: number
+  primaryPct: number
+  secondary: PacingClass | null
+  secondaryCount: number
+  secondaryPct: number
+  total: number
+  distribution: Array<{ klass: PacingClass; count: number; pct: number }>
+  coachingNote: string
+}
+
+function coachingFor(primary: PacingClass | null, secondary: PacingClass | null): string {
+  if (!primary) return 'Log races with split times to unlock pacing analysis.'
+  const p = PACING_CLASS_META[primary]
+  if (!secondary || secondary === primary) return p.prescription
+  // Combination notes — only the highest-signal pairings get bespoke copy.
+  if (primary === 'CLASSIC FADER' && secondary === 'HOT START')
+    return 'Pacing problem rooted in start discipline — start 5–10 sec/km slower than goal pace.'
+  if (primary === 'CRASH FADER' && secondary === 'HOT START')
+    return 'Repeated blow-ups from hot starts — race goal pace is too aggressive. Drop it 10–15 sec/km.'
+  if (primary === 'NEGATIVE SPLITTER' && secondary === 'EVEN STEADY')
+    return 'Disciplined, controlled racer. Try a more aggressive opening — you have margin.'
+  if (primary === 'EVEN STEADY' && secondary === 'NEGATIVE SPLITTER')
+    return 'Textbook execution. Train at goal pace + occasional negative-split workouts.'
+  if (primary === 'SLOW BUILDER' && secondary === 'NEGATIVE SPLITTER')
+    return 'You\'re leaving time on the road with cold starts — extend your pre-race warmup.'
+  return `${p.prescription} Secondary tendency: ${PACING_CLASS_META[secondary].short}.`
+}
+
+/**
+ * Aggregates pacing classifications across the user's race history.
+ * Filters: past races only, finished only, has splits.
+ */
+export function pacingAggregate(races: Race[]): PacingAggregate {
+  const today = new Date().toISOString().slice(0, 10)
+  const counts: Partial<Record<PacingClass, number>> = {}
+  let total = 0
+  for (const r of races) {
+    if (r.date > today) continue
+    if (r.outcome && r.outcome !== 'Finished') continue
+    const klass = classifyRacePacing(r)
+    if (!klass) continue
+    counts[klass] = (counts[klass] ?? 0) + 1
+    total++
+  }
+  if (total === 0) {
+    return {
+      primary: null, primaryCount: 0, primaryPct: 0,
+      secondary: null, secondaryCount: 0, secondaryPct: 0,
+      total: 0, distribution: [],
+      coachingNote: coachingFor(null, null),
+    }
+  }
+  const sorted = (Object.entries(counts) as Array<[PacingClass, number]>)
+    .sort((a, b) => b[1] - a[1])
+  const distribution = sorted.map(([klass, count]) => ({
+    klass,
+    count,
+    pct: Math.round((count / total) * 100),
+  }))
+  const primary = sorted[0][0]
+  const primaryCount = sorted[0][1]
+  const primaryPct = Math.round((primaryCount / total) * 100)
+  const sec = sorted[1]
+  const secondaryPct = sec ? Math.round((sec[1] / total) * 100) : 0
+  const secondary = sec && secondaryPct >= 25 ? sec[0] : null
+  const secondaryCount = secondary && sec ? sec[1] : 0
+  return {
+    primary, primaryCount, primaryPct,
+    secondary, secondaryCount, secondaryPct,
+    total, distribution,
+    coachingNote: coachingFor(primary, secondary),
+  }
+}
