@@ -1494,8 +1494,10 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
   if (recent.length === 0) {
     return (
       <WidgetCard id="recent-races" style={st.glowCard}>
-        <div style={st.widgetLabel}>YOUR RECAP</div>
-        <div role="heading" aria-level={2} style={st.widgetTitle}>RECENT RACES</div>
+        <div>
+          <div style={st.widgetLabel}>YOUR RECAP</div>
+          <div role="heading" aria-level={2} style={st.widgetTitle}>RECENT RACES</div>
+        </div>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: '8px' }}>
           No races in the last 3 months.
         </div>
@@ -2649,8 +2651,10 @@ function OnThisDayWidget() {
 
   return (
     <WidgetCard id="on-this-day" style={st.glowCard}>
-      <div style={st.widgetLabel}>ON THIS DAY</div>
-      <div role="heading" aria-level={2} style={st.widgetTitle}>RACE FLASHBACK</div>
+      <div>
+        <div style={st.widgetLabel}>ON THIS DAY</div>
+        <div role="heading" aria-level={2} style={st.widgetTitle}>RACE FLASHBACK</div>
+      </div>
       <div style={{ display: 'flex', gap: 'var(--sp-3)', alignItems: 'flex-start', marginTop: 'var(--sp-2)' }}>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ color: 'var(--orange)', flexShrink: 0, marginTop: '2px' }} aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M3 9h18" stroke="currentColor" strokeWidth="1.5"/><path d="M8 2v4M16 2v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
         <div style={{ minWidth: 0 }}>
@@ -2825,8 +2829,10 @@ function GapToGoalWidget({ race }: { race: Race | null }) {
   if (!nextRace) {
     return (
       <WidgetCard id="gap-to-goal" style={st.glowCard}>
-        <div style={st.widgetLabel}>GAP TO GOAL</div>
-        <div role="heading" aria-level={2} style={st.widgetTitle}>NEXT RACE</div>
+        <div>
+          <div style={st.widgetLabel}>GAP TO GOAL</div>
+          <div role="heading" aria-level={2} style={st.widgetTitle}>NEXT RACE</div>
+        </div>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginTop: '6px' }}>Add an upcoming race to track your gap to goal.</div>
       </WidgetCard>
     )
@@ -2835,8 +2841,10 @@ function GapToGoalWidget({ race }: { race: Race | null }) {
   if (!result?.goal) {
     return (
       <WidgetCard id="gap-to-goal" style={st.glowCard}>
-        <div style={st.widgetLabel}>GAP TO GOAL</div>
-        <div role="heading" aria-level={2} style={st.widgetTitle}>{(nextRace.name ?? '').toUpperCase()}</div>
+        <div>
+          <div style={st.widgetLabel}>GAP TO GOAL</div>
+          <div role="heading" aria-level={2} style={st.widgetTitle}>{(nextRace.name ?? '').toUpperCase()}</div>
+        </div>
         <div style={st.lockedBox}>
           <div style={st.lockedTitle}>NO GOAL SET</div>
           <div style={st.lockedText}>Set a goal time on your next race to track your gap.</div>
@@ -3190,8 +3198,10 @@ function CourseFitWidget({ race }: { race: Race | null }) {
   if (!nextRace) {
     return (
       <WidgetCard id="course-fit" style={st.glowCard}>
-        <div style={st.widgetLabel}>COURSE FIT</div>
-        <div role="heading" aria-level={2} style={st.widgetTitle}>NEXT RACE</div>
+        <div>
+          <div style={st.widgetLabel}>COURSE FIT</div>
+          <div role="heading" aria-level={2} style={st.widgetTitle}>NEXT RACE</div>
+        </div>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginTop: '6px' }}>Add an upcoming race to calculate your course fit score.</div>
       </WidgetCard>
     )
@@ -3329,8 +3339,10 @@ function PBProbabilityWidget({ race }: { race: Race | null }) {
   if (!nextRace) {
     return (
       <WidgetCard id="pb-probability" style={st.glowCard}>
-        <div style={st.widgetLabel}>PB PROBABILITY</div>
-        <div role="heading" aria-level={2} style={st.widgetTitle}>NEXT RACE</div>
+        <div>
+          <div style={st.widgetLabel}>PB PROBABILITY</div>
+          <div role="heading" aria-level={2} style={st.widgetTitle}>NEXT RACE</div>
+        </div>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginTop: '6px' }}>Add an upcoming race to estimate your PB chance.</div>
       </WidgetCard>
     )
@@ -3423,8 +3435,10 @@ function RaceComparerWidget() {
   if (past.length < 2) {
     return (
       <WidgetCard id="race-comparer" style={st.glowCard}>
-        <div style={st.widgetLabel}>RACE COMPARER</div>
-        <div role="heading" aria-level={2} style={st.widgetTitle}>LOG 2+ RACES</div>
+        <div>
+          <div style={st.widgetLabel}>RACE COMPARER</div>
+          <div role="heading" aria-level={2} style={st.widgetTitle}>LOG 2+ RACES</div>
+        </div>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: 'var(--sp-1)' }}>Need at least 2 timed races to compare.</div>
       </WidgetCard>
     )
@@ -3518,8 +3532,10 @@ function WhatToRaceNextWidget() {
   if (!futureUpcoming.length) {
     return (
       <WidgetCard id="what-to-race-next" style={st.glowCard}>
-        <div style={st.widgetLabel}>WHAT TO RACE NEXT</div>
-        <div role="heading" aria-level={2} style={st.widgetTitle}>NO UPCOMING RACES</div>
+        <div>
+          <div style={st.widgetLabel}>WHAT TO RACE NEXT</div>
+          <div role="heading" aria-level={2} style={st.widgetTitle}>NO UPCOMING RACES</div>
+        </div>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: 'var(--sp-1)' }}>Add upcoming races to get recommendations based on your performance trends.</div>
       </WidgetCard>
     )
@@ -3722,8 +3738,10 @@ function PersonalBestsWidget() {
   if (!allDists.length) {
     return (
       <WidgetCard id="personal-bests" style={st.glowCard}>
-        <div style={st.widgetLabel}>ALL TIME</div>
-        <div role="heading" aria-level={2} style={st.widgetTitle}>PERSONAL BESTS</div>
+        <div>
+          <div style={st.widgetLabel}>ALL TIME</div>
+          <div role="heading" aria-level={2} style={st.widgetTitle}>PERSONAL BESTS</div>
+        </div>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: '8px' }}>
           Log timed races to build your PB board.
         </div>
@@ -4272,8 +4290,10 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
 
   if (!result) return (
     <WidgetCard id="riegel-predictor" style={st.glowCard}>
-      <div style={st.widgetLabel}>RACE PREDICTOR</div>
-      <div role="heading" aria-level={2} style={st.widgetTitle}>RIEGEL PREDICTOR</div>
+      <div>
+        <div style={st.widgetLabel}>RACE PREDICTOR</div>
+        <div role="heading" aria-level={2} style={st.widgetTitle}>RIEGEL PREDICTOR</div>
+      </div>
       <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: 0 }}>Log a race with a finish time to see predictions.</p>
     </WidgetCard>
   )
@@ -4480,8 +4500,10 @@ function GoalPaceWidget({ race }: { race: Race | null }) {
 
   if (!result) return (
     <WidgetCard id="goal-pace" style={st.glowCard}>
-      <div style={st.widgetLabel}>GOAL PACE</div>
-      <div role="heading" aria-level={2} style={st.widgetTitle}>{(focusRace.name ?? 'TARGET PACE').toUpperCase()}</div>
+      <div>
+        <div style={st.widgetLabel}>GOAL PACE</div>
+        <div role="heading" aria-level={2} style={st.widgetTitle}>{(focusRace.name ?? 'TARGET PACE').toUpperCase()}</div>
+      </div>
       <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: 0 }}>
         Set a goal time on {focusRace.name} to see your pace breakdown.
       </p>
@@ -4498,8 +4520,10 @@ function GoalPaceWidget({ race }: { race: Race | null }) {
 
   return (
     <WidgetCard id="goal-pace" style={st.glowCard}>
-      <div style={st.widgetLabel}>GOAL PACE</div>
-      <div role="heading" aria-level={2} style={st.widgetTitle}>{(focusRace.name ?? 'TARGET PACE').toUpperCase()}</div>
+      <div>
+        <div style={st.widgetLabel}>GOAL PACE</div>
+        <div role="heading" aria-level={2} style={st.widgetTitle}>{(focusRace.name ?? 'TARGET PACE').toUpperCase()}</div>
+      </div>
 
       {/* Main pace display */}
       <div style={{ display: 'flex', gap: 'var(--sp-3)' }}>
@@ -4776,16 +4800,20 @@ function CourseRepeatsWidget() {
 
   if (!courses.length) return (
     <WidgetCard id="course-repeats" style={st.glowCard}>
-      <div style={st.widgetLabel}>HOME TURF</div>
-      <div role="heading" aria-level={2} style={st.widgetTitle}>COURSE REPEATS</div>
+      <div>
+        <div style={st.widgetLabel}>HOME TURF</div>
+        <div role="heading" aria-level={2} style={st.widgetTitle}>COURSE REPEATS</div>
+      </div>
       <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: 0 }}>Run the same race 3+ times to see your course repeat history.</p>
     </WidgetCard>
   )
 
   return (
     <WidgetCard id="course-repeats" style={st.glowCard}>
-      <div style={st.widgetLabel}>HOME TURF</div>
-      <div role="heading" aria-level={2} style={st.widgetTitle}>COURSE REPEATS</div>
+      <div>
+        <div style={st.widgetLabel}>HOME TURF</div>
+        <div role="heading" aria-level={2} style={st.widgetTitle}>COURSE REPEATS</div>
+      </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
         {courses.slice(0, 4).map(c => (
           <div key={c.key}>
