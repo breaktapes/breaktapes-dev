@@ -2492,7 +2492,7 @@ function PatternScanWidget() {
   return (
     <WidgetCard id="pattern-scan" style={st.glowCard}>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)', marginBottom: '14px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
         <div>
           <div style={st.widgetLabel}>RACE INTEL</div>
           <div role="heading" aria-level={2} style={st.widgetTitle}>PATTERN SCAN</div>
