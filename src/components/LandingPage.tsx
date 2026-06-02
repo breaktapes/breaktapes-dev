@@ -416,44 +416,55 @@ function DashboardMockup() {
 
 
 
-/* Wearables — only WHOOP is production-authorized. Others are "Coming soon". */
+/* Wearables — only WHOOP is production-authorized. Others are "Coming soon".
+   Rendered as a rectangle mockup to match the other showcases. */
 function WearablesMockup() {
-  const live = 'WHOOP'
-  const soon = ['STRAVA', 'GARMIN', 'APPLE HEALTH', 'COROS', 'OURA']
+  const soon = ['STRAVA', 'GARMIN', 'APPLE', 'COROS', 'OURA']
+  const acts: [string, string, string][] = [
+    ['🏃', 'MORNING RUN', '12.4 km · 4:52 /km'],
+    ['🚴', 'LONG RIDE', '64 km · 1,240 kcal'],
+    ['🏊', 'POOL SWIM', '2.0 km · 38:40'],
+  ]
   return (
-    <div style={{ width: '100%', maxWidth: 380, display: 'grid', gap: 'var(--sp-3)' }}>
-      <motion.div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-2)' }}
-        variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}>
-        <motion.span variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }}
-          style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 12, letterSpacing: '0.08em',
-            color: 'var(--white)', padding: '6px 12px', display: 'inline-flex', alignItems: 'center', gap: 6,
-            background: 'var(--green-dim)', border: '1px solid rgba(var(--green-ch),0.4)',
-            borderRadius: 'var(--radius-pill)' }}>
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--green)' }} />{live} · Live
-        </motion.span>
+    <Shell>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 10px', borderRadius: 'var(--radius-pill)', background: 'var(--green-dim)', border: '1px solid rgba(var(--green-ch),0.45)' }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--green)' }} />
+          <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 10, letterSpacing: '0.06em', color: 'var(--white)' }}>WHOOP · LIVE</span>
+        </span>
         {soon.map(b => (
-          <motion.span key={b} variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }}
-            style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 12, letterSpacing: '0.08em',
-              color: 'var(--muted)', padding: '6px 12px', background: 'var(--surface3)',
-              border: '1px solid var(--border)', borderRadius: 'var(--radius-pill)' }}>
-            {b} · Soon
-          </motion.span>
+          <span key={b} style={{ padding: '5px 9px', borderRadius: 'var(--radius-pill)', background: 'var(--surface3)', border: '1px solid var(--border)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 9, letterSpacing: '0.05em', color: 'var(--muted)' }}>{b} · SOON</span>
         ))}
-      </motion.div>
-      {[['🏃', 'Morning Run', '12.4 km · 4:52 /km'], ['😴', 'Recovery', '88% · ready to train'], ['🚴', 'Long Ride', '64 km · 1,240 kcal']].map(([icon, name, meta], i) => (
-        <motion.div key={name} style={{ ...cardSurface, padding: 'var(--sp-3)', display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}
-          initial={{ opacity: 0, x: -24 }} whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.12 }}>
-          <span style={{ width: 38, height: 38, borderRadius: 'var(--radius-sm)', background: 'var(--orange-dim)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>{icon}</span>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 14, textTransform: 'uppercase',
-              color: 'var(--white)' }}>{name}</div>
-            <div style={{ fontFamily: 'var(--body)', fontSize: 11, color: 'var(--muted)' }}>{meta}</div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 12 }}>
+        <div style={{ ...cardSurface, padding: '12px', background: 'linear-gradient(150deg, rgba(var(--green-ch),0.12), var(--surface2))' }}>
+          <div style={{ fontFamily: 'var(--body)', fontSize: 8, letterSpacing: '0.1em', color: 'var(--muted)' }}>RECOVERY</div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 30, color: 'var(--green)', lineHeight: 1 }}>88<span style={{ fontSize: 15 }}>%</span></div>
+          <div style={{ fontFamily: 'var(--body)', fontSize: 9, color: 'var(--muted)', marginTop: 2 }}>Ready to train</div>
+        </div>
+        <div style={{ ...cardSurface, padding: '12px' }}>
+          <div style={{ fontFamily: 'var(--body)', fontSize: 8, letterSpacing: '0.1em', color: 'var(--muted)' }}>TRAINING LOAD</div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 30, color: 'var(--white)', lineHeight: 1 }}>14.2</div>
+          <div style={{ display: 'flex', gap: 3, marginTop: 8, alignItems: 'flex-end', height: 22 }}>
+            {[40, 62, 51, 78, 88, 70, 95].map((h, i) => (
+              <div key={i} style={{ flex: 1, height: `${h}%`, borderRadius: '2px 2px 0 0', background: i === 6 ? 'var(--green)' : 'rgba(var(--orange-ch),0.5)' }} />
+            ))}
           </div>
-        </motion.div>
-      ))}
-    </div>
+        </div>
+      </div>
+      <div style={{ ...sectionLabel, fontSize: 10, marginTop: 14 }}>RECENT ACTIVITY</div>
+      <div style={{ display: 'grid', gap: 7, marginTop: 8 }}>
+        {acts.map(([icon, name, meta]) => (
+          <div key={name} style={{ ...cardSurface, padding: '9px 11px', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ width: 30, height: 30, borderRadius: 'var(--radius-sm)', background: 'var(--orange-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>{icon}</span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 11, color: 'var(--white)' }}>{name}</div>
+              <div style={{ fontFamily: 'var(--body)', fontSize: 9, color: 'var(--muted)' }}>{meta}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </Shell>
   )
 }
 

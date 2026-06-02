@@ -377,34 +377,56 @@ name: 70.3 Geelong | date: 2026-08-09 | city: Geelong | country: Australia | dis
 name: IRONMAN Western Australia | date: 2026-12-06 | city: Busselton | country: Australia | distance: IRONMAN | sport: triathlon | goalTime: 10:40:00
 `
 
+/* ---------- exact-name repeats (Course Repeats widget needs same race 3+ times) ---------- */
+const USA_REPEATS = `
+Canyons Endurance Runs by UTMB 50K | Auburn | United States | 2024-04-27 | 50K | running | 5:36:10 | 260/780 | 64/265 | 11/58 | F35-39 | finisher | trail | mountainous | 2100 | 155 | Speedgoat 6 | 15/clear | 38.90 | -121.08
+Canyons Endurance Runs by UTMB 50K | Auburn | United States | 2022-04-30 | 50K | running | 5:51:20 | 300/760 | 78/270 | 14/56 | F30-34 | finisher | trail | mountainous | 2100 | 158 | Speedgoat 6 | 16/clear | 38.90 | -121.08
+`
+const UK_REPEATS = `
+HYROX London (Pro) | London | United Kingdom | 2024-02-24 | HYROX | hyrox | 1:03:10 | 130/1800 | 120/1550 | 22/320 | M30-34 | finisher | road | flat | 0 | 182 | Nano X3 | 18/indoor | 51.51 | 0.03
+HYROX London (Pro) | London | United Kingdom | 2023-02-18 | HYROX | hyrox | 1:05:45 | 180/1500 | 165/1280 | 28/280 | M25-29 | finisher | road | flat | 0 | 183 | Nano X3 | 18/indoor | 51.51 | 0.03
+`
+const EU_REPEATS = `
+Granfondo Colnago Mont Ventoux 135K | Vaison-la-Romaine | France | 2024-06-22 | 135 | cycling | 4:36:50 | 100/1900 | 5/170 | 1/29 | F40-44 | silver | road | mountainous | 3200 | 152 | Colnago V4Rs | 22/clear | 44.24 | 5.07
+Granfondo Colnago Mont Ventoux 135K | Vaison-la-Romaine | France | 2023-06-18 | 135 | cycling | 4:41:05 | 120/1800 | 7/160 | 2/27 | F35-39 | bronze | road | mountainous | 3200 | 150 | Colnago V4Rs | 24/clear | 44.24 | 5.07
+`
+const DXB_REPEATS = `
+Dubai Marathon | Dubai | United Arab Emirates | 2025-01-17 | 5 | running | 25:55 | 380/2100 | 185/1050 | 28/210 | M30-34 | finisher | road | flat | 12 | 175 | Pegasus 41 | 20/clear | 25.20 | 55.27
+Dubai Marathon | Dubai | United Arab Emirates | 2023-01-20 | 5 | running | 27:40 | 470/1900 | 230/950 | 38/190 | M25-29 | finisher | road | flat | 12 | 178 | Pegasus 41 | 22/clear | 25.20 | 55.27
+`
+const AUS_REPEATS = `
+IRONMAN Cairns | Cairns | Australia | 2023-06-11 | IRONMAN | triathlon | 11:18:40 | 480/2700 | 52/580 | 9/100 | F35-39 | finisher | road | rolling | 600 | 149 | Cervelo P5 | 26/humid | -16.92 | 145.77
+IRONMAN Cairns | Cairns | Australia | 2021-06-13 | IRONMAN | triathlon | 12:02:15 | 640/2500 | 78/540 | 14/95 | F30-34 | finisher | road | rolling | 600 | 147 | Cervelo P5 | 25/humid | -16.92 | 145.77
+`
+
 /* ---------- assembled personas ---------- */
 
 export const DEMO_PERSONAS: Record<DemoPersonaId, DemoPersona> = {
   'usa-trail': {
     id: 'usa-trail', label: 'Trail / Ultra', blurb: 'Mid-pack ultra finisher · Auburn, CA',
     athlete: athlete({ firstName: 'Hannah', lastName: 'Brooks', gender: 'F', dob: '1989-07-09', city: 'Auburn', country: 'United States', mainSport: 'running', units: 'imperial', club: 'Auburn Trail Runners', bio: 'Came to ultras late. In it for the finish line, not the podium.' }),
-    races: buildRaces('usa', USA_RACES + USA_RECENT),
+    races: buildRaces('usa', USA_RACES + USA_RECENT + USA_REPEATS),
     upcoming: buildUpcoming('usa', USA_UP + USA_UPMORE),
     testimonial: { quote: 'The race map turned my training log into something I actually want to show people.', name: 'Hannah Brooks', meta: 'Auburn, CA · Trail & ultra' },
   },
   'uk-hybrid': {
     id: 'uk-hybrid', label: 'Hybrid', blurb: 'HYROX · sub-3 marathon · T100 — London',
     athlete: athlete({ firstName: 'Jack', lastName: 'Reynolds', gender: 'M', dob: '1993-03-14', city: 'London', country: 'United Kingdom', mainSport: 'hyrox', units: 'metric', club: 'F45 Shoreditch', bio: 'Hybrid. Sub-3 marathon, HYROX podiums, T100 finisher — trains everything.' }),
-    races: buildRaces('uk', UK_RACES + UK_RECENT),
+    races: buildRaces('uk', UK_RACES + UK_RECENT + UK_REPEATS),
     upcoming: buildUpcoming('uk', UK_UP + UK_UPMORE),
     testimonial: { quote: 'Logged a parkrun on Saturday and my 5K PR updated before I’d finished my coffee.', name: 'Jack Reynolds', meta: 'London · Hybrid athlete' },
   },
   'eu-cyclist': {
     id: 'eu-cyclist', label: 'Cyclist', blurb: 'Gran fondo age-group hunter · Provence',
     athlete: athlete({ firstName: 'Camille', lastName: 'Dubois', gender: 'F', dob: '1985-10-30', city: 'Vaison-la-Romaine', country: 'France', mainSport: 'cycling', units: 'metric', club: 'Provence Cyclosport', bio: 'Ventoux at dawn. Podiums her age group, hunts the overall.' }),
-    races: buildRaces('eu', EU_RACES + EU_RECENT),
+    races: buildRaces('eu', EU_RACES + EU_RECENT + EU_REPEATS),
     upcoming: buildUpcoming('eu', EU_UP + EU_UPMORE),
     testimonial: { quote: 'Made running feel like a story instead of a spreadsheet.', name: 'Camille Dubois', meta: 'Provence · Gran fondo & road' },
   },
   'dubai-everyday': {
     id: 'dubai-everyday', label: 'Everyday', blurb: 'Weekend racer collecting finish lines · Dubai',
     athlete: athlete({ firstName: 'Marcus', lastName: 'Bennett', gender: 'M', dob: '1995-11-20', city: 'Dubai', country: 'United Arab Emirates', mainSport: 'running', units: 'metric', club: 'Dubai Creek Striders', bio: 'Weekend racer in the desert, collecting finish lines.' }),
-    races: buildRaces('dxb', DXB_RACES + DXB_RECENT),
+    races: buildRaces('dxb', DXB_RACES + DXB_RECENT + DXB_REPEATS),
     upcoming: buildUpcoming('dxb', DXB_UP + DXB_UPMORE),
     testimonial: { quote: 'Stopped keeping the Google Sheet the day I imported everything here. It just pulls it all in.', name: 'Marcus Bennett', meta: 'Dubai · Everyday runner' },
   },
@@ -425,7 +447,7 @@ export const DEMO_PERSONAS: Record<DemoPersonaId, DemoPersona> = {
   'aus-triathlete': {
     id: 'aus-triathlete', label: 'Triathlete', blurb: 'First 10K → Kona, 8-yr progression · Cairns',
     athlete: athlete({ firstName: 'Mia', lastName: 'Thompson', gender: 'F', dob: '1988-09-03', city: 'Cairns', country: 'Australia', mainSport: 'triathlon', units: 'metric', club: 'Cairns Crocs Tri', bio: 'Swim · bike · run. Kona is the dream.' }),
-    races: buildRaces('aus', AUS_RACES + AUS_RECENT),
+    races: buildRaces('aus', AUS_RACES + AUS_RECENT + AUS_REPEATS),
     upcoming: buildUpcoming('aus', AUS_UP + AUS_UPMORE),
     testimonial: { quote: 'The race predictor put my IRONMAN run split closer than my coach did.', name: 'Mia Thompson', meta: 'Cairns · Triathlete' },
   },
