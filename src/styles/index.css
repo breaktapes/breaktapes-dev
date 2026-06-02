@@ -230,10 +230,14 @@ body::after {
   margin: 0 auto; padding: 4rem 1.5rem; text-align: left;
 }
 .pl-hero::before {
-  content: ''; position: absolute; inset: 0; z-index: 0;
+  /* Full-bleed: the hero is a 1120px centered box, but the glow must span the
+     whole viewport — otherwise it stops at the container edge while the plain
+     base shows beyond it, leaving a hard rectangular seam ("the box"). */
+  content: ''; position: absolute; top: 0; bottom: 0; z-index: 0;
+  left: 50%; transform: translateX(-50%); width: 100vw;
   background:
-    radial-gradient(ellipse 70% 50% at 30% 80%, rgba(var(--orange-ch),0.20) 0%, rgba(var(--orange-ch),0.13) 26%, rgba(var(--orange-ch),0.07) 46%, rgba(var(--orange-ch),0.025) 63%, transparent 80%),
-    radial-gradient(ellipse 50% 40% at 90% 10%, rgba(var(--orange-ch),0.10) 0%, rgba(var(--orange-ch),0.035) 34%, transparent 64%);
+    radial-gradient(ellipse 55% 50% at 28% 78%, rgba(var(--orange-ch),0.20) 0%, rgba(var(--orange-ch),0.13) 26%, rgba(var(--orange-ch),0.07) 46%, rgba(var(--orange-ch),0.025) 63%, transparent 80%),
+    radial-gradient(ellipse 45% 40% at 88% 8%, rgba(var(--orange-ch),0.10) 0%, rgba(var(--orange-ch),0.035) 34%, transparent 64%);
   pointer-events: none;
 }
 .pl-hero > * { position: relative; z-index: 2; }
