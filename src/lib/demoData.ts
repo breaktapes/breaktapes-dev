@@ -162,8 +162,8 @@ const USA_RACES = `
 Canyons Endurance Runs by UTMB 100K | Auburn | United States | 2025-04-26 | 100K | running | 13:48:20 | 320/600 | 60/220 | 14/40 | F35-39 | finisher | trail | mountainous | 4500 | 150 | Speedgoat 6 | 18/clear | 38.90 | -121.08
 Badwater 135 | Death Valley | United States | 2024-07-22 | 100 Mile | running | 39:10:00 | 78/100 | 14/22 | 3/6 | F35-39 | bronze | road | mountainous | 4000 | 142 | Hoka Mafate | 47/extreme | 36.50 | -116.93
 Canyons Endurance Runs by UTMB 50K | Auburn | United States | 2023-04-29 | 50K | running | 5:42:55 | 280/800 | 70/280 | 12/60 | F30-34 | finisher | trail | mountainous | 2100 | 156 | Speedgoat 6 | 16/clear | 38.90 | -121.08
-HOKA UTMB Mont-Blanc | Chamonix | France | 2024-08-30 | 100 Mile | running | 41:30:00 | 1900/2500 | 220/350 | 40/70 | F35-39 | finisher | trail | mountainous | 10000 | 148 | Speedgoat 6 | 12/cold | 45.92 | 6.87
-CCC by UTMB | Courmayeur | Italy | 2023-08-31 | 100K | running | 19:05:00 | 1500/2000 | 280/420 | 50/90 | F30-34 | finisher | trail | mountainous | 6100 | 152 | Speedgoat 6 | 14/clear | 45.79 | 6.97
+Hardrock 100 | Silverton | United States | 2024-07-12 | 100 Mile | running | 41:30:00 | 78/150 | 14/45 | 4/12 | F35-39 | finisher | trail | mountainous | 10000 | 148 | Speedgoat 6 | 12/cold | 37.8119 | -107.6645
+Black Canyon Ultras 100K | Mayer | United States | 2023-02-18 | 100K | running | 11:05:00 | 180/600 | 30/160 | 6/35 | F30-34 | finisher | trail | hilly | 1800 | 152 | Speedgoat 6 | 14/clear | 34.2686 | -112.0760
 Mountains 2 Beach Marathon | Ventura | United States | 2022-05-29 | 42.2 | running | 3:34:12 | 142/3500 | 28/1600 | 6/180 | F30-34 | finisher | road | rolling | 480 | 162 | Vaporfly 3 | 17/clear | 34.27834 | -119.29317
 Salt Lake City Half Marathon | Salt Lake City | United States | 2023-04-22 | 21.1 | running | 1:41:58 | 633/4200 | 121/2100 | 24/350 | F30-34 | finisher | road | rolling | 320 | 168 | Vaporfly 3 | 14/clear | 40.7608 | -111.8910
 Mountains 2 Beach 10K | Ventura | United States | 2024-05-25 | 10 | running | 44:07 | 71/1200 | 19/700 | 3/90 | F35-39 | bronze | road | flat | 60 | 174 | Vaporfly 3 | 16/clear | 34.27834 | -119.29317

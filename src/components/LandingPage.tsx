@@ -288,26 +288,28 @@ function MapMockup({ persona, framed = false }: { persona: DemoPersonaId; framed
   if (maxX - minX < 150) { minX = cx0 - 75; maxX = cx0 + 75 }
   if (maxY - minY < 110) { minY = cy0 - 55; maxY = cy0 + 55 }
   const spanX = maxX - minX, spanY = maxY - minY
-  const padX = spanX * 0.5, padY = spanY * 0.5
+  // Generous margin so no pin sits on the card edge (that was the cut-off cities).
+  const padX = spanX * 0.55 + 32, padY = spanY * 0.55 + 26
   minX -= padX; maxX += padX; minY -= padY; maxY += padY
-  // preserveAspectRatio="slice" crops the overflow axis to fill the card. Grow the
-  // shorter axis so the box matches the container AR before slicing (else a wide,
-  // short box gets blown up into a sliver).
+  // Match the container aspect so a clustered map fills the card edge-to-edge.
   const targetAR = framed ? 0.52 : 0.86 // map-area width/height (phone vs rectangle)
   let w = maxX - minX, h = maxY - minY
   if (w / h < targetAR) { const nw = h * targetAR, cx = (minX + maxX) / 2; minX = cx - nw / 2; maxX = cx + nw / 2; w = nw }
   else { const nh = w / targetAR, cy = (minY + maxY) / 2; minY = cy - nh / 2; maxY = cy + nh / 2; h = nh }
-  // Crop the empty Arctic ocean (top) and the distorted Antarctica blob (bottom)
-  // so maps read clean. Usable band is y 30..432 (≈ 70°N..-60°S) — every persona's
-  // races sit inside it, so nothing real is lost.
-  const MY0 = 30, MY1 = 432, MH = MY1 - MY0
-  if (h >= MH) { minY = MY0; h = MH } else { minY = Math.max(MY0, Math.min(minY, MY1 - h)) }
-  const vb = `${minX} ${minY} ${w} ${h}`
+  // Keep the window inside the usable map band (24..440 ≈ poles cropped) by capping
+  // the height and SLIDING it back in-bounds — never resize a single axis (that
+  // breaks the aspect and clips pins). With preserveAspectRatio="meet" below, a
+  // very wide (transatlantic) window simply letterboxes instead of cutting cities.
+  const MY0 = 24, MY1 = 440, MH = MY1 - MY0
+  if (h > MH) { const cy = (minY + maxY) / 2; minY = cy - MH / 2; maxY = cy + MH / 2 }
+  if (minY < MY0) { maxY += MY0 - minY; minY = MY0 }
+  if (maxY > MY1) { minY = Math.max(MY0, minY - (maxY - MY1)); maxY = MY1 }
+  const vb = `${minX} ${minY} ${maxX - minX} ${maxY - minY}`
   const pinR = Math.min(spanX * 0.014 + 3, 9) // cap so global personas don't get huge dots
   return (
     <Shell pad={false} framed={framed}>
       <div style={{ flex: 1, position: 'relative', background: 'radial-gradient(ellipse at 50% 40%, #2a3138, #14181c)', overflow: 'hidden' }}>
-        <svg viewBox={vb} width="100%" height="100%" preserveAspectRatio="xMidYMid slice" style={{ position: 'absolute', inset: 0 }}>
+        <svg viewBox={vb} width="100%" height="100%" preserveAspectRatio="xMidYMid meet" style={{ position: 'absolute', inset: 0 }}>
           {[-1000, 0, 1000, 2000].map(ox => (
             <path key={ox} d={WORLD_MAP_PATH} transform={`translate(${ox} 0)`} fill="rgba(0,0,0,0.55)" stroke="rgba(232,224,213,0.18)" strokeWidth="0.8" />
           ))}
@@ -544,52 +546,52 @@ function WearablesMockup({ persona }: { persona: DemoPersonaId }) {
           <span key={b} style={{ padding: '5px 9px', borderRadius: 'var(--radius-pill)', background: 'var(--surface3)', border: '1px solid var(--border)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 9, letterSpacing: '0.05em', color: 'var(--muted)' }}>{b} · SOON</span>
         ))}
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 12 }}>
-        <div style={{ ...cardSurface, padding: '12px', background: 'linear-gradient(150deg, rgba(var(--green-ch),0.12), var(--surface2))' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 7, marginTop: 8 }}>
+        <div style={{ ...cardSurface, padding: '9px 10px', background: 'linear-gradient(150deg, rgba(var(--green-ch),0.12), var(--surface2))' }}>
           <div style={{ fontFamily: 'var(--body)', fontSize: 8, letterSpacing: '0.1em', color: 'var(--muted)' }}>RECOVERY</div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 30, color: 'var(--green)', lineHeight: 1 }}>88<span style={{ fontSize: 15 }}>%</span></div>
-          <div style={{ fontFamily: 'var(--body)', fontSize: 9, color: 'var(--muted)', marginTop: 2 }}>Ready to train</div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 23, color: 'var(--green)', lineHeight: 1 }}>88<span style={{ fontSize: 12 }}>%</span></div>
+          <div style={{ fontFamily: 'var(--body)', fontSize: 8.5, color: 'var(--muted)', marginTop: 2 }}>Ready to train</div>
         </div>
-        <div style={{ ...cardSurface, padding: '12px' }}>
+        <div style={{ ...cardSurface, padding: '9px 10px' }}>
           <div style={{ fontFamily: 'var(--body)', fontSize: 8, letterSpacing: '0.1em', color: 'var(--muted)' }}>TRAINING LOAD</div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 30, color: 'var(--white)', lineHeight: 1 }}>14.2</div>
-          <div style={{ display: 'flex', gap: 3, marginTop: 8, alignItems: 'flex-end', height: 22 }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 23, color: 'var(--white)', lineHeight: 1 }}>14.2</div>
+          <div style={{ display: 'flex', gap: 3, marginTop: 6, alignItems: 'flex-end', height: 16 }}>
             {[40, 62, 51, 78, 88, 70, 95].map((h, i) => (
               <motion.div key={i} initial={{ height: 0 }} whileInView={{ height: `${h}%` }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.06, ease: 'easeOut' }} style={{ flex: 1, borderRadius: '2px 2px 0 0', background: i === 6 ? 'var(--green)' : 'rgba(var(--orange-ch),0.5)' }} />
             ))}
           </div>
         </div>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginTop: 8 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 7, marginTop: 7 }}>
         {metrics.map(([l, v, c]) => (
-          <div key={l} style={{ ...cardSurface, padding: '9px 8px' }}>
+          <div key={l} style={{ ...cardSurface, padding: '7px 8px' }}>
             <div style={{ fontFamily: 'var(--body)', fontSize: 7.5, letterSpacing: '0.08em', color: 'var(--muted)' }}>{l}</div>
-            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 17, color: c, lineHeight: 1, marginTop: 3 }}>{v}</div>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 15, color: c, lineHeight: 1, marginTop: 2 }}>{v}</div>
           </div>
         ))}
       </div>
-      <div style={{ ...sectionLabel, fontSize: 10, marginTop: 14 }}>RECENT ACTIVITY</div>
-      <div style={{ display: 'grid', gap: 7, marginTop: 8 }}>
+      <div style={{ ...sectionLabel, fontSize: 10, marginTop: 10 }}>RECENT ACTIVITY</div>
+      <div style={{ display: 'grid', gap: 6, marginTop: 7 }}>
         {acts.slice(0, 3).map((a, i) => (
-          <motion.div key={a.name} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.08 }} style={{ ...cardSurface, padding: '10px 11px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-              <span style={{ width: 28, height: 28, borderRadius: 'var(--radius-sm)', background: `color-mix(in srgb, ${a.accent} 16%, transparent)`, color: a.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><ActIcon k={a.k} /></span>
+          <motion.div key={a.name} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.08 }} style={{ ...cardSurface, padding: '8px 10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ width: 25, height: 25, borderRadius: 'var(--radius-sm)', background: `color-mix(in srgb, ${a.accent} 16%, transparent)`, color: a.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><ActIcon k={a.k} /></span>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 11, letterSpacing: '0.02em', color: 'var(--white)' }}>{a.name}</div>
-                <div style={{ fontFamily: 'var(--body)', fontSize: 8.5, color: 'var(--muted)' }}>{a.sub}</div>
+                <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 10.5, letterSpacing: '0.02em', color: 'var(--white)' }}>{a.name}</div>
+                <div style={{ fontFamily: 'var(--body)', fontSize: 8, color: 'var(--muted)' }}>{a.sub}</div>
               </div>
             </div>
-            <div style={{ display: 'flex', gap: 5, marginTop: 8 }}>
+            <div style={{ display: 'flex', gap: 5, marginTop: 6 }}>
               {a.m.map(([l, v]) => (
-                <div key={l} style={{ flex: 1, background: 'var(--surface3)', borderRadius: 'var(--radius-sm)', padding: '5px 4px', textAlign: 'center' }}>
+                <div key={l} style={{ flex: 1, background: 'var(--surface3)', borderRadius: 'var(--radius-sm)', padding: '4px 3px', textAlign: 'center' }}>
                   <div style={{ fontFamily: 'var(--body)', fontSize: 6.5, letterSpacing: '0.04em', color: 'var(--muted)' }}>{l}</div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 10.5, color: 'var(--white)', marginTop: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 10, color: 'var(--white)', marginTop: 1 }}>
                     {l === 'AVG HR' ? <span style={{ color: '#FF5A3C', display: 'inline-flex' }}><MiniHeart /></span> : null}{v}
                   </div>
                 </div>
               ))}
             </div>
-            <div style={{ height: 5, borderRadius: 3, background: 'var(--surface3)', overflow: 'hidden', marginTop: 8 }}>
+            <div style={{ height: 4, borderRadius: 3, background: 'var(--surface3)', overflow: 'hidden', marginTop: 6 }}>
               <motion.div initial={{ width: 0 }} whileInView={{ width: `${a.zone * 100}%` }} viewport={{ once: true }} transition={{ duration: 0.9, delay: 0.1 + i * 0.08, ease: 'easeOut' }} style={{ height: '100%', borderRadius: 3, background: 'linear-gradient(90deg, var(--green), var(--orange))' }} />
             </div>
           </motion.div>
