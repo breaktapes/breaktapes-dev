@@ -780,7 +780,7 @@ If a widget needs a different visual treatment, change the token in one place. N
 - **Join CTA** — fixed bottom bar on all public pages with UTM: `?ref=u-{username}-profile&join_context=compare-with-{encodedName}`.
 - **`initAuth()`** — reads `?join_context` param and updates landing headline for viral pre-fill flow.
 - **`buildRemoteStatePayload()`** — now includes `username` and `is_public` fields synced to Supabase.
-- **Static placeholder** `public/og-placeholder.png` — 1200x630 dark PNG (3151 bytes).
+- **Static placeholder** `public/og-placeholder.png` — 1200x630 branded PNG (72711 bytes). Shows BREAK/TAPES wordmark in Barlow Condensed on dark background with orange slash. Used as OG image fallback when the OG Worker cannot render a dynamic card.
 - **Version bump** — v0.2.0.0 → v0.3.0.0.
 
 #### Key learnings
