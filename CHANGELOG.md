@@ -3,6 +3,11 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.1.2] - 2026-06-02
+
+### Fixed
+- **Landing/login grain no longer pixelates on wide screens** — the film-grain texture had no fixed tile size, so it stretched to fill the full (very tall) landing and turned into big blocky noise on large viewports. Now tiled at a fixed 160px repeat so it stays fine.
+
 ## [0.7.1.1] - 2026-06-02
 
 ### Fixed

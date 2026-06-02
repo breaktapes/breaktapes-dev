@@ -128,12 +128,14 @@ body::after {
   text-align: center;
   transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.4,0,0.2,1);
 }
-/* Grain texture — spans the full scrollable page */
+/* Grain texture — spans the full scrollable page. Tiled at a fixed size so the
+   noise stays fine on wide/tall viewports instead of stretching into blocks. */
 #landing-screen::after {
   content: '';
   position: absolute; inset: 0; z-index: 1;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  opacity: 0.035; mix-blend-mode: overlay; pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat; background-size: 160px 160px;
+  opacity: 0.03; mix-blend-mode: overlay; pointer-events: none;
 }
 #landing-screen > * { position: relative; z-index: 2; }
 /* Fixed chrome must escape the blanket `position: relative` above — its ID
@@ -200,8 +202,9 @@ body::after {
 }
 #login-screen::after {
   content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  opacity: 0.035; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat; background-size: 160px 160px;
+  opacity: 0.03; mix-blend-mode: overlay;
 }
 #login-screen > * { position: relative; z-index: 2; }
 #login-screen .landing-headline { font-size: clamp(3.2rem, 14vw, 6rem); margin-bottom: 1rem; }
