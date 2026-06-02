@@ -288,28 +288,25 @@ function MapMockup({ persona, framed = false }: { persona: DemoPersonaId; framed
   if (maxX - minX < 150) { minX = cx0 - 75; maxX = cx0 + 75 }
   if (maxY - minY < 110) { minY = cy0 - 55; maxY = cy0 + 55 }
   const spanX = maxX - minX, spanY = maxY - minY
-  // Generous margin so no pin sits on the card edge (that was the cut-off cities).
-  const padX = spanX * 0.55 + 32, padY = spanY * 0.55 + 26
+  const padX = spanX * 0.5 + 24, padY = spanY * 0.5 + 20
   minX -= padX; maxX += padX; minY -= padY; maxY += padY
-  // Match the container aspect so a clustered map fills the card edge-to-edge.
+  // Match the card aspect so the map fills edge-to-edge.
   const targetAR = framed ? 0.52 : 0.86 // map-area width/height (phone vs rectangle)
   let w = maxX - minX, h = maxY - minY
   if (w / h < targetAR) { const nw = h * targetAR, cx = (minX + maxX) / 2; minX = cx - nw / 2; maxX = cx + nw / 2; w = nw }
   else { const nh = w / targetAR, cy = (minY + maxY) / 2; minY = cy - nh / 2; maxY = cy + nh / 2; h = nh }
-  // Keep the window inside the usable map band (24..440 ≈ poles cropped) by capping
-  // the height and SLIDING it back in-bounds — never resize a single axis (that
-  // breaks the aspect and clips pins). With preserveAspectRatio="meet" below, a
-  // very wide (transatlantic) window simply letterboxes instead of cutting cities.
-  const MY0 = 24, MY1 = 440, MH = MY1 - MY0
-  if (h > MH) { const cy = (minY + maxY) / 2; minY = cy - MH / 2; maxY = cy + MH / 2 }
-  if (minY < MY0) { maxY += MY0 - minY; minY = MY0 }
-  if (maxY > MY1) { minY = Math.max(MY0, minY - (maxY - MY1)); maxY = MY1 }
+  // Fill the card top-to-bottom with REAL map (no empty bands): keep the window's
+  // height inside the drawn map [0,500] and slide it in-bounds. preserveAspectRatio
+  // is "slice" below, so the viewBox always covers the card — no letterbox gaps.
+  if (h > 500) { h = 500; w = h * targetAR; const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2; minX = cx - w / 2; maxX = cx + w / 2; minY = cy - h / 2; maxY = cy + h / 2 }
+  if (minY < 0) { maxY -= minY; minY = 0 }
+  if (maxY > 500) { minY -= maxY - 500; maxY = 500; if (minY < 0) minY = 0 }
   const vb = `${minX} ${minY} ${maxX - minX} ${maxY - minY}`
   const pinR = Math.min(spanX * 0.014 + 3, 9) // cap so global personas don't get huge dots
   return (
     <Shell pad={false} framed={framed}>
       <div style={{ flex: 1, position: 'relative', background: 'radial-gradient(ellipse at 50% 40%, #2a3138, #14181c)', overflow: 'hidden' }}>
-        <svg viewBox={vb} width="100%" height="100%" preserveAspectRatio="xMidYMid meet" style={{ position: 'absolute', inset: 0 }}>
+        <svg viewBox={vb} width="100%" height="100%" preserveAspectRatio="xMidYMid slice" style={{ position: 'absolute', inset: 0 }}>
           {[-1000, 0, 1000, 2000].map(ox => (
             <path key={ox} d={WORLD_MAP_PATH} transform={`translate(${ox} 0)`} fill="rgba(0,0,0,0.55)" stroke="rgba(232,224,213,0.18)" strokeWidth="0.8" />
           ))}
