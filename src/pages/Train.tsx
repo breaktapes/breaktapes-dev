@@ -13,7 +13,6 @@ import {
   type OWProvider,
 } from '@/lib/openWearables'
 import { useUser } from '@clerk/clerk-react'
-import { IS_STAGING } from '@/env'
 import type { HMS } from '@/components/TimePickerWheel'
 import type { Race } from '@/types'
 
@@ -207,6 +206,15 @@ const OW_PROVIDERS: { id: OWProvider; label: string; icon: string; note?: string
   { id: 'ultrahuman',  label: 'Ultrahuman',  icon: '💍', comingSoon: true },
 ]
 
+// Runtime host check for stagingOnly providers. More reliable than build-time
+// IS_STAGING — the production Cloudflare Pages build can leak VITE_IS_STAGING=true,
+// which wrongly showed Strava on app.breaktapes.com. Hostname is unambiguous.
+function isStagingHost(): boolean {
+  if (typeof window === 'undefined') return false
+  const h = window.location.hostname
+  return h === 'dev.breaktapes.com' || h === 'localhost' || h === '127.0.0.1'
+}
+
 // ─── useOW — shared hook for OW state ────────────────────────────────────────
 
 function useOW() {
@@ -353,7 +361,7 @@ function ActivitiesTab() {
           CONNECTED DEVICES
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
-          {OW_PROVIDERS.filter(p => IS_STAGING || !p.stagingOnly).map(p => {
+          {OW_PROVIDERS.filter(p => !p.stagingOnly || isStagingHost()).map(p => {
             const connected = connectedIds.has(p.id)
             const connInfo = owConnections.find(c => c.provider === p.id)
             return (

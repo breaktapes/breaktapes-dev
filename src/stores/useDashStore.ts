@@ -11,12 +11,12 @@ const DEFAULT_WIDGETS: DashWidget[] = [
   { id: 'gap-to-goal',       label: 'Gap To Goal',              icon: 'GTG', zone: 'now',      enabled: true,  pro: false, size: 'medium' },
   { id: 'course-fit',        label: 'Course Fit Score',         icon: 'FIT', zone: 'now',      enabled: true,  pro: false, size: 'medium' },
   { id: 'pb-probability',    label: 'PB Probability',           icon: 'PBP', zone: 'now',      enabled: true,  pro: false, size: 'medium' },
-  { id: 'on-this-day',       label: 'On This Day',              icon: 'OTD', zone: 'now',      enabled: true,  pro: false, size: 'small'  },
+  { id: 'on-this-day',       label: 'On This Day',              icon: 'OTD', zone: 'now',      enabled: true,  pro: false, size: 'medium' },
   { id: 'goal-pace',         label: 'Goal Pace Breakdown',      icon: 'PCE', zone: 'now',      enabled: true,  pro: false, size: 'medium' },
   // RECENTLY — YOUR RACING
-  { id: 'recent-races',      label: 'Recent Races',             icon: 'RC',  zone: 'recently', enabled: true,  pro: false, size: 'small'  },
-  { id: 'personal-bests',    label: 'Personal Bests',           icon: 'PB',  zone: 'recently', enabled: true,  pro: false, size: 'large'  },
-  { id: 'riegel-predictor',  label: 'Race Predictor',           icon: 'RGL', zone: 'recently', enabled: true,  pro: false, size: 'small'  },
+  { id: 'recent-races',      label: 'Recent Races',             icon: 'RC',  zone: 'recently', enabled: true,  pro: false, size: 'medium' },
+  { id: 'personal-bests',    label: 'Personal Bests',           icon: 'PB',  zone: 'recently', enabled: true,  pro: false, size: 'medium' },
+  { id: 'riegel-predictor',  label: 'Race Predictor',           icon: 'RGL', zone: 'recently', enabled: true,  pro: false, size: 'medium' },
   // CONSISTENCY — BUILD
   { id: 'season-planner',    label: 'Season Planner',           icon: 'SP',  zone: 'trending', enabled: true,  pro: false, size: 'medium' },
   // PATTERNS — ANALYSIS
