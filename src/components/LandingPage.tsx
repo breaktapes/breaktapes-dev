@@ -482,10 +482,10 @@ function WearablesMockup() {
    PHONE-SCROLL STAGE — a pinned device cycles through screens on scroll.
    ===================================================================== */
 const STAGE_SCREENS: { key: string; title: string; line: string; screen: ShotScreen }[] = [
-  { key: 'home', title: 'Your dashboard', line: 'Race-day briefing, next-race countdown, and live form — the moment you open the app.', screen: 'dashboard' },
+  { key: 'home', title: 'Your dashboard', line: 'Race-day briefing, next-race countdown, and live form, the moment you open the app.', screen: 'dashboard' },
   { key: 'medals', title: 'Your medal wall', line: 'Every medal you’ve earned, photo-first and tier by tier. Gold, silver, bronze, finisher.', screen: 'medals' },
   { key: 'map', title: 'Your race map', line: 'Every finish line you’ve crossed, mapped across the world and connected in order.', screen: 'races' },
-  { key: 'analytics', title: 'Your analytics', line: 'Pacing IQ, age-grade and momentum — the numbers behind every result, computed for you.', screen: 'pbs' },
+  { key: 'analytics', title: 'Your analytics', line: 'Pacing IQ, age-grade and momentum, the numbers behind every result, computed for you.', screen: 'pbs' },
 ]
 
 /* ----- Dashboard mockup ----- */
@@ -645,8 +645,8 @@ function StepMiniTrack() {
   )
 }
 const STEPS = [
-  { n: '01', title: 'Sign up', line: 'Create your athlete profile in under a minute. No AI key, no setup — just you.', mock: <StepMiniSignup /> },
-  { n: '02', title: 'Log your races', line: 'Add a finish line in seconds — search the catalog or enter it by hand. Times, splits, medals, photos.', mock: <StepMiniLog /> },
+  { n: '01', title: 'Sign up', line: 'Create your athlete profile in under a minute. No AI key, no setup. Just you.', mock: <StepMiniSignup /> },
+  { n: '02', title: 'Log your races', line: 'Add a finish line in seconds. Search the catalog or enter it by hand. Times, splits, medals, photos.', mock: <StepMiniLog /> },
   { n: '03', title: 'Track everything', line: 'PRs, medals, history, analytics and your race map all build automatically as you log.', mock: <StepMiniTrack /> },
 ]
 function HowItWorks() {
@@ -716,7 +716,7 @@ const FAQS = [
   { q: 'Is BREAKTAPES free?', a: 'Yes, free to start. Core tracking (races, PRs, medals, history, your race map) is free. A Pro tier with advanced analytics and themes is coming later.' },
   { q: 'Do I need an AI or API key?', a: 'No. BREAKTAPES works fully without any AI key or external setup. Just sign up and start logging.' },
   { q: 'Which wearables can I connect?', a: 'WHOOP is live today. Recovery and workouts sync straight in. Strava, Garmin, Apple Health, COROS and Oura are on the way.' },
-  { q: 'Is my data private, and can I export it?', a: 'Your data is yours. Your profile is private by default — you choose what (if anything) to make public — and you can export everything any time.' },
+  { q: 'Is my data private, and can I export it?', a: 'Your data is yours. Your profile is private by default. You choose what (if anything) to make public, and you can export everything any time.' },
 ]
 function FAQItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false)
@@ -761,7 +761,7 @@ function TryItCTA({ onSignUp }: { onSignUp: () => void }) {
         Free to start, no AI key, nothing to install. Create your athlete profile and log your first finish line right now.
       </motion.p>
       <motion.div variants={fadeUp}>
-        <button className="btn-main" onClick={onSignUp} style={{ fontSize: 16, padding: '1rem 2.2rem', letterSpacing: '0.08em' }}>Get Started — It's Free</button>
+        <button className="btn-main" onClick={onSignUp} style={{ fontSize: 16, padding: '1rem 2.2rem', letterSpacing: '0.08em' }}>Get Started, It's Free</button>
       </motion.div>
     </motion.section>
   )
@@ -848,10 +848,10 @@ export default function LandingPage({ onSignUp, onSignIn }: LandingPageProps) {
             Every Finish Line,<br /><em>Remembered.</em>
           </motion.h1>
           <motion.p className="landing-sub" variants={fadeUp} style={{ maxWidth: 440 }}>
-            From start line to medal wall — your whole racing life in one place.
+            From start line to medal wall. Your whole racing life in one place.
           </motion.p>
           <motion.div className="pl-hero-actions" variants={fadeUp}>
-            <button className="btn-main" onClick={handleSignUp}>Get Started — It's Free</button>
+            <button className="btn-main" onClick={handleSignUp}>Get Started, It's Free</button>
             <button className="landing-sign-in-link" onClick={handleSignIn}>Already have an account? Sign in</button>
           </motion.div>
           <motion.div className="landing-proof" variants={fadeUp} style={{ justifyContent: 'flex-start' }}>
@@ -883,7 +883,7 @@ export default function LandingPage({ onSignUp, onSignIn }: LandingPageProps) {
       <FeatureShowcase
         id="race-history"
         eyebrow="Race History" title="Every finish line, mapped"
-        desc={'Your whole racing life on one interactive map. Times, splits, placing, terrain, and the weather you ran through — kept for good.'}
+        desc={'Your whole racing life on one interactive map. Times, splits, placing, terrain, and the weather you ran through, kept for good.'}
         bullets={['Real world map of every race city', 'Splits, placing & conditions per race', 'Year-by-year history and filters']}
         mockup={<MapMockup persona={persona} />}
       />
@@ -897,7 +897,7 @@ export default function LandingPage({ onSignUp, onSignIn }: LandingPageProps) {
       <FeatureShowcase
         id="medal-wall"
         eyebrow="Medal Wall" title="Show off the hardware"
-        desc={"Every medal you've earned in one place — gold, silver, bronze and finisher, tier by tier."}
+        desc={"Every medal you've earned in one place: gold, silver, bronze and finisher, tier by tier."}
         bullets={['Gold, silver, bronze & finisher tiers', 'PB-flagged podium results', 'Every medal, kept for good']}
         mockup={<MedalMockup persona={persona} />}
       />
@@ -905,7 +905,7 @@ export default function LandingPage({ onSignUp, onSignIn }: LandingPageProps) {
         id="wearables" reverse
         eyebrow="Training & Wearables" title="Your training, side by side"
         desc={'Connect WHOOP today and see the training that built every result, right next to the race. More integrations are on the way.'}
-        bullets={['WHOOP live now — recovery & workouts', 'Strava, Garmin, Apple Health coming soon', 'Training load vs race performance']}
+        bullets={['WHOOP live now, recovery & workouts', 'Strava, Garmin, Apple Health coming soon', 'Training load vs race performance']}
         mockup={<WearablesMockup />}
       />
 
@@ -925,7 +925,7 @@ export default function LandingPage({ onSignUp, onSignIn }: LandingPageProps) {
           {[
             { to: 3000, suffix: '+', label: 'Races in the global race catalog' },
             { to: 40, suffix: '+', label: 'Widgets' },
-            { to: 100, suffix: '%', label: 'Yours — export anytime' },
+            { to: 100, suffix: '%', label: 'Yours, export anytime' },
           ].map(s => (
             <motion.div key={s.label} className="pl-stat" variants={fadeUp}>
               <div className="pl-stat-num"><Counter to={s.to} suffix={s.suffix} /></div>
@@ -946,7 +946,7 @@ export default function LandingPage({ onSignUp, onSignIn }: LandingPageProps) {
         <motion.h2 className="pl-cta-title" variants={fadeUp}>Start logging your<br /><em>finish lines.</em></motion.h2>
         <motion.p className="pl-cta-sub" variants={fadeUp}>Free to start. Set up your athlete profile in under a minute.</motion.p>
         <motion.div className="pl-cta-actions" variants={fadeUp}>
-          <button className="btn-main" onClick={handleSignUp}>Get Started — It's Free</button>
+          <button className="btn-main" onClick={handleSignUp}>Get Started, It's Free</button>
           <button className="landing-sign-in-link" onClick={handleSignIn}>Already have an account? Sign in</button>
         </motion.div>
       </motion.section>
