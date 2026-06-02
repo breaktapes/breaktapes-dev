@@ -20,9 +20,13 @@ export interface CatalogRace {
   course_summary?: string
   priority?: string        // 'A' | 'B' | 'C'
   start_time?: string | null  // 'HH:MM:SS' local race-city time; null when source published no time
+  /** competitor.com event id — set only on IRONMAN/70.3/5150 rows. Powers the
+   *  race-picker import: one call to /import/ironman-event returns that event's
+   *  finishers with official splits. */
+  competitor_event_id?: string | null
 }
 
-const COLS = 'id, name, aliases, city, country, year, month, day, dist_km, dist, type, discipline, surface, elevation_profile, course_summary, start_time'
+const COLS = 'id, name, aliases, city, country, year, month, day, dist_km, dist, type, discipline, surface, elevation_profile, course_summary, start_time, competitor_event_id'
 // Supabase PostgREST max-rows is 1,000 per request regardless of range size.
 // Fetch 10 pages of 1,000 in parallel to cover the full ~8,284-row catalog.
 const PAGE = 1000

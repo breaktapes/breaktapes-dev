@@ -56,6 +56,8 @@ interface WearableState {
   owWorkouts: OWWorkout[]
   owRecovery: OWRecovery[]
   owConnections: OWConnection[]
+  // Per-provider hidden sport types (which activity types NOT to show in app)
+  hiddenSports: Record<string, string[]>
 
   // Legacy actions
   setToken: (provider: WearableToken['provider'], token: WearableToken | null) => void
@@ -71,6 +73,7 @@ interface WearableState {
   setOwWorkouts: (workouts: OWWorkout[]) => void
   setOwRecovery: (recovery: OWRecovery[]) => void
   setOwConnections: (connections: OWConnection[]) => void
+  toggleHiddenSport: (provider: string, sport: string) => void
 }
 
 export const useWearableStore = create<WearableState>()(
@@ -89,6 +92,7 @@ export const useWearableStore = create<WearableState>()(
       owWorkouts: [],
       owRecovery: [],
       owConnections: [],
+      hiddenSports: {},
 
       setToken: (provider, token) => {
         if (provider === 'whoop')  set({ whoopToken: token })
@@ -113,6 +117,14 @@ export const useWearableStore = create<WearableState>()(
       setOwWorkouts: (owWorkouts) => set({ owWorkouts }),
       setOwRecovery: (owRecovery) => set({ owRecovery }),
       setOwConnections: (owConnections) => set({ owConnections }),
+
+      toggleHiddenSport: (provider, sport) => set((s) => {
+        const current = s.hiddenSports[provider] ?? []
+        const next = current.includes(sport)
+          ? current.filter(x => x !== sport)
+          : [...current, sport]
+        return { hiddenSports: { ...s.hiddenSports, [provider]: next } }
+      }),
     }),
     {
       name: 'fl2_strava',  // existing localStorage key — stable across versions

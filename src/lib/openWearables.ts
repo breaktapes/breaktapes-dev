@@ -98,12 +98,25 @@ export async function getConnections(owUserId: string): Promise<OWConnection[]> 
   return Array.isArray(list) ? list : []
 }
 
-/** Disconnect a provider — revokes OW's stored tokens. */
+/** Disconnect a provider — revokes OW's stored tokens. Keeps already-synced data. */
 export async function disconnectProvider(owUserId: string, provider: OWProvider): Promise<void> {
   await owFetch(`/disconnect`, {
     method: 'POST',
     body: JSON.stringify({ ow_user_id: owUserId, provider }),
   })
+}
+
+/**
+ * Permanently delete a provider's synced data from OW (workouts + sleep events)
+ * and revoke the connection. The user's source account is never touched.
+ * Returns true on success.
+ */
+export async function deleteProviderData(owUserId: string, provider: OWProvider): Promise<boolean> {
+  const res = await owFetch(`/purge`, {
+    method: 'POST',
+    body: JSON.stringify({ ow_user_id: owUserId, provider }),
+  })
+  return res.ok
 }
 
 // ── Data fetching ─────────────────────────────────────────────────────────────
