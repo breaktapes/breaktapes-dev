@@ -232,6 +232,8 @@ function distLabel(d: string): string {
   if (!Number.isNaN(n) && String(n) === d.trim()) {
     if (Math.abs(n - 42.2) < 0.3) return 'MARATHON'
     if (Math.abs(n - 21.1) < 0.3) return 'HALF MARATHON'
+    if (Math.abs(n - 70.3) < 0.1) return '70.3'
+    if (Math.abs(n - 16.09) < 0.1) return '10 MILE'
     if (n === 10) return '10K'; if (n === 5) return '5K'
     return `${d} KM`
   }
@@ -384,7 +386,11 @@ function MedalMockup({ persona, framed = false }: { persona: DemoPersonaId; fram
   const counts = { gold: 0, silver: 0, bronze: 0, custom: 0, finisher: 0 } as Record<string, number>
   for (const r of races) { const m = (r.medal || 'finisher'); if (counts[m] != null) counts[m]++ }
   const order = ['custom', 'gold', 'silver', 'bronze', 'finisher'] // custom (rare, e.g. Vic Clapham) leads
-  const cards = [...races].filter(r => r.medal).sort((a, b) => order.indexOf(a.medal!) - order.indexOf(b.medal!))
+  const medaled = [...races].filter(r => r.medal).sort((a, b) => (order.indexOf(a.medal!) - order.indexOf(b.medal!)) || (a.date < b.date ? 1 : -1))
+  const cards = medaled.slice(0, 8)
+  const more = medaled.length - cards.length
+  const pbBest = new Map<string, number>()
+  for (const r of races) { if (!r.time) continue; const k = `${r.sport}|${distLabel(r.distance)}`; const s = t2s(r.time); if (pbBest.get(k) == null || s < pbBest.get(k)!) pbBest.set(k, s) }
   return (
     <Shell framed={framed}>
       <div style={sectionLabel as React.CSSProperties}>MEDALS</div>
@@ -399,20 +405,28 @@ function MedalMockup({ persona, framed = false }: { persona: DemoPersonaId; fram
           )
         })}
       </div>
-      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 5, marginTop: 12, alignContent: 'start', overflow: 'hidden' }}>
+      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 7, marginTop: 12, alignContent: 'start', overflow: 'hidden' }}>
         {cards.map(r => {
           const [a, b, label] = MEDAL_RGB[r.medal!]
+          const isPB = r.time != null && pbBest.get(`${r.sport}|${distLabel(r.distance)}`) === t2s(r.time)
+          const dateStr = r.date ? new Date(r.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : ''
           return (
-            <div key={r.id} style={{ padding: '7px 7px', borderRadius: 'var(--radius-sm)', border: `1px solid ${a}30`, background: `linear-gradient(155deg, ${b}22, var(--surface2) 75%)`, minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <span style={{ width: 7, height: 7, borderRadius: '50%', background: `radial-gradient(circle at 35% 30%, ${a}, ${b})`, flexShrink: 0 }} />
-                <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 6.5, letterSpacing: '0.03em', color: a, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
+            <div key={r.id} style={{ padding: '9px 10px', borderRadius: 'var(--radius-md)', border: `1px solid ${isPB ? a + '88' : a + '30'}`, borderLeft: `3px solid ${a}`, background: `linear-gradient(155deg, ${b}26, var(--surface2) 72%)`, boxShadow: isPB ? `0 0 12px ${a}22` : undefined, display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4 }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0 }}>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: `radial-gradient(circle at 35% 30%, ${a}, ${b})`, flexShrink: 0 }} />
+                  <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 7, letterSpacing: '0.04em', color: a, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
+                </span>
+                {isPB ? <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 6.5, color: a, border: `1px solid ${a}66`, borderRadius: 'var(--radius-pill)', padding: '1px 5px', flexShrink: 0 }}>PB</span> : null}
               </div>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 9, color: 'var(--white)', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{distLabel(r.distance)}</div>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 9.5, letterSpacing: '0.02em', textTransform: 'uppercase', color: 'var(--white)', lineHeight: 1.15, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={r.name}>{r.name}</div>
+              <div style={{ fontFamily: 'var(--body)', fontSize: 8, color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{[distLabel(r.distance), r.time].filter(Boolean).join(' · ')}</div>
+              <div style={{ fontFamily: 'var(--body)', fontSize: 7.5, color: 'var(--muted2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{[dateStr, r.city].filter(Boolean).join(' · ')}</div>
             </div>
           )
         })}
       </div>
+      {more > 0 ? <div style={{ fontFamily: 'var(--body)', fontSize: 8, color: 'var(--muted)', textAlign: 'center', marginTop: 8, flexShrink: 0 }}>+ {more} more on your wall</div> : null}
     </Shell>
   )
 }
@@ -556,7 +570,7 @@ function WearablesMockup({ persona }: { persona: DemoPersonaId }) {
       </div>
       <div style={{ ...sectionLabel, fontSize: 10, marginTop: 14 }}>RECENT ACTIVITY</div>
       <div style={{ display: 'grid', gap: 7, marginTop: 8 }}>
-        {acts.map((a, i) => (
+        {acts.slice(0, 3).map((a, i) => (
           <motion.div key={a.name} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.08 }} style={{ ...cardSurface, padding: '10px 11px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
               <span style={{ width: 28, height: 28, borderRadius: 'var(--radius-sm)', background: `color-mix(in srgb, ${a.accent} 16%, transparent)`, color: a.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><ActIcon k={a.k} /></span>
