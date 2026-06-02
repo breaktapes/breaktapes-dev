@@ -448,7 +448,7 @@ body::after {
 }
 .pl-stage-inner {
   position: relative; z-index: 1;
-  display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 4rem;
+  display: grid; grid-template-columns: 1fr minmax(0, 460px); align-items: center; gap: 4rem;
   max-width: 1040px; width: 100%; padding: 0 1.5rem; text-align: left;
 }
 .pl-stage-title {

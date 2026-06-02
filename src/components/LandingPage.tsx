@@ -240,7 +240,8 @@ function distLabel(d: string): string {
 function t2s(t?: string): number { if (!t) return Infinity; const a = t.split(':').map(Number); if (a.some(Number.isNaN)) return Infinity; return a.length === 3 ? a[0]*3600 + a[1]*60 + a[2] : a.length === 2 ? a[0]*60 + a[1] : Infinity }
 const MEDAL_RGB: Record<string, [string, string, string]> = {
   gold: ['#FFD770', '#B8860B', 'GOLD'], silver: ['#C8D4DC', '#6A7880', 'SILVER'],
-  bronze: ['#CD8C5A', '#7A4420', 'BRONZE'], finisher: ['#E8895A', '#A8421A', 'FINISHER'],
+  bronze: ['#CD8C5A', '#7A4420', 'BRONZE'], custom: ['#9B7BE8', '#5A3FA0', 'CUSTOM'],
+  finisher: ['#E8895A', '#A8421A', 'FINISHER'],
 }
 const sectionLabel: React.CSSProperties = { fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--white)' }
 
@@ -335,9 +336,9 @@ function PBMockup({ persona, framed = false }: { persona: DemoPersonaId; framed?
 /* ----- Medal wall mockup ----- */
 function MedalMockup({ persona, framed = false }: { persona: DemoPersonaId; framed?: boolean }) {
   const races = DEMO_PERSONAS[persona].races
-  const counts = { gold: 0, silver: 0, bronze: 0, finisher: 0 } as Record<string, number>
+  const counts = { gold: 0, silver: 0, bronze: 0, custom: 0, finisher: 0 } as Record<string, number>
   for (const r of races) { const m = (r.medal || 'finisher'); if (counts[m] != null) counts[m]++ }
-  const order = ['gold', 'silver', 'bronze', 'finisher']
+  const order = ['gold', 'silver', 'bronze', 'custom', 'finisher']
   const cards = [...races].filter(r => r.medal).sort((a, b) => order.indexOf(a.medal!) - order.indexOf(b.medal!)).slice(0, 6)
   return (
     <Shell framed={framed}>
@@ -433,6 +434,15 @@ function WearablesMockup() {
     ['🏃', 'MORNING RUN', '12.4 km · 4:52 /km'],
     ['🚴', 'LONG RIDE', '64 km · 1,240 kcal'],
     ['🏊', 'POOL SWIM', '2.0 km · 38:40'],
+    ['🏋', 'STRENGTH', '48 min · 312 kcal'],
+    ['⚡', 'HYROX SIM', '58 min · 8 stations'],
+    ['🥾', 'TRAIL HIKE', '9.2 km · 410 m gain'],
+    ['🧘', 'MOBILITY', '22 min · recovery'],
+  ]
+  const metrics: [string, string, string][] = [
+    ['STRAIN', '14.2', 'var(--orange)'],
+    ['SLEEP', '7h 48m', 'var(--white)'],
+    ['RESTING HR', '46', 'var(--green)'],
   ]
   return (
     <Shell>
@@ -461,6 +471,14 @@ function WearablesMockup() {
           </div>
         </div>
       </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginTop: 8 }}>
+        {metrics.map(([l, v, c]) => (
+          <div key={l} style={{ ...cardSurface, padding: '9px 8px' }}>
+            <div style={{ fontFamily: 'var(--body)', fontSize: 7.5, letterSpacing: '0.08em', color: 'var(--muted)' }}>{l}</div>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 17, color: c, lineHeight: 1, marginTop: 3 }}>{v}</div>
+          </div>
+        ))}
+      </div>
       <div style={{ ...sectionLabel, fontSize: 10, marginTop: 14 }}>RECENT ACTIVITY</div>
       <div style={{ display: 'grid', gap: 7, marginTop: 8 }}>
         {acts.map(([icon, name, meta]) => (
@@ -483,7 +501,7 @@ function WearablesMockup() {
    ===================================================================== */
 const STAGE_SCREENS: { key: string; title: string; line: string; screen: ShotScreen }[] = [
   { key: 'home', title: 'Your dashboard', line: 'Race-day briefing, next-race countdown, and live form, the moment you open the app.', screen: 'dashboard' },
-  { key: 'medals', title: 'Your medal wall', line: 'Every medal you’ve earned, photo-first and tier by tier. Gold, silver, bronze, finisher.', screen: 'medals' },
+  { key: 'medals', title: 'Your medal wall', line: 'Every medal you’ve earned, photo-first and tier by tier. Gold, silver, bronze, finisher and custom.', screen: 'medals' },
   { key: 'map', title: 'Your race map', line: 'Every finish line you’ve crossed, mapped across the world and connected in order.', screen: 'races' },
   { key: 'analytics', title: 'Your analytics', line: 'Pacing IQ, age-grade and momentum, the numbers behind every result, computed for you.', screen: 'pbs' },
 ]
@@ -740,8 +758,8 @@ function FAQItem({ q, a }: { q: string; a: string }) {
 function FAQ() {
   return (
     <motion.section className="pl-faq" variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}>
-      <motion.p className="pl-eyebrow" variants={fadeUp} style={{ textAlign: 'left' }}>FAQ</motion.p>
-      <motion.h2 className="pl-faq-title" variants={fadeUp} style={{ textAlign: 'left' }}>Questions, answered</motion.h2>
+      <motion.p className="pl-eyebrow" variants={fadeUp} style={{ textAlign: 'center' }}>FAQ</motion.p>
+      <motion.h2 className="pl-faq-title" variants={fadeUp} style={{ textAlign: 'center' }}>Questions, answered</motion.h2>
       <motion.div className="pl-faq-list" variants={fadeUp}>
         {FAQS.map(f => <FAQItem key={f.q} q={f.q} a={f.a} />)}
       </motion.div>
@@ -897,8 +915,8 @@ export default function LandingPage({ onSignUp, onSignIn }: LandingPageProps) {
       <FeatureShowcase
         id="medal-wall"
         eyebrow="Medal Wall" title="Show off the hardware"
-        desc={"Every medal you've earned in one place: gold, silver, bronze and finisher, tier by tier."}
-        bullets={['Gold, silver, bronze & finisher tiers', 'PB-flagged podium results', 'Every medal, kept for good']}
+        desc={"Every medal you've earned in one place: gold, silver, bronze, finisher and your own custom medals, tier by tier."}
+        bullets={['Gold, silver, bronze, finisher & custom tiers', 'PB-flagged podium results', 'Every medal, kept for good']}
         mockup={<MedalMockup persona={persona} />}
       />
       <FeatureShowcase
