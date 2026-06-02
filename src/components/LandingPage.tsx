@@ -243,6 +243,10 @@ const MEDAL_RGB: Record<string, [string, string, string]> = {
   bronze: ['#CD8C5A', '#7A4420', 'BRONZE'], custom: ['#9B7BE8', '#5A3FA0', 'VIC CLAPHAM'],
   finisher: ['#E8895A', '#A8421A', 'FINISHER'],
 }
+const SPORT_TAG: Record<string, [string, string]> = {
+  running: ['RUN', 'var(--orange)'], cycling: ['RIDE', '#5B8DEF'], triathlon: ['TRI', '#9B7BE8'],
+  swim: ['SWIM', '#2BD4A0'], hyrox: ['HYROX', 'var(--green)'],
+}
 const sectionLabel: React.CSSProperties = { fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--white)' }
 
 /* ----- Race map mockup ----- */
@@ -285,9 +289,11 @@ function MapMockup({ persona, framed = false }: { persona: DemoPersonaId; framed
   let w = maxX - minX, h = maxY - minY
   if (w / h < targetAR) { const nw = h * targetAR, cx = (minX + maxX) / 2; minX = cx - nw / 2; maxX = cx + nw / 2; w = nw }
   else { const nh = w / targetAR, cy = (minY + maxY) / 2; minY = cy - nh / 2; maxY = cy + nh / 2; h = nh }
-  // Keep the viewBox inside the drawn map vertically (0..500) so we never show
-  // dead space past the poles — that void was what made wide maps look "weird".
-  if (h >= 500) { minY = 0; h = 500 } else { minY = Math.max(0, Math.min(minY, 500 - h)) }
+  // Crop the empty Arctic ocean (top) and the distorted Antarctica blob (bottom)
+  // so maps read clean. Usable band is y 30..432 (≈ 70°N..-60°S) — every persona's
+  // races sit inside it, so nothing real is lost.
+  const MY0 = 30, MY1 = 432, MH = MY1 - MY0
+  if (h >= MH) { minY = MY0; h = MH } else { minY = Math.max(MY0, Math.min(minY, MY1 - h)) }
   const vb = `${minX} ${minY} ${w} ${h}`
   const pinR = Math.min(spanX * 0.014 + 3, 9) // cap so global personas don't get huge dots
   return (
@@ -325,26 +331,37 @@ function MapMockup({ persona, framed = false }: { persona: DemoPersonaId; framed
 
 /* ----- Personal bests mockup ----- */
 function PBMockup({ persona, framed = false }: { persona: DemoPersonaId; framed?: boolean }) {
-  const races = DEMO_PERSONAS[persona].races.filter(r => r.time && r.sport === 'running')
+  const ath = DEMO_PERSONAS[persona].athlete
+  const all = DEMO_PERSONAS[persona].races.filter(r => r.time && r.distance)
+  // Best per (sport + distance) → PBs span every discipline the athlete races.
   const best = new Map<string, Race>()
-  for (const r of races) { const k = distLabel(r.distance); const cur = best.get(k); if (!cur || t2s(r.time) < t2s(cur.time)) best.set(k, r) }
-  const top = [...best.values()].sort((a, b) => distKm(b.distance) - distKm(a.distance)).slice(0, 4)
-  const hero = [...best.values()].sort((a, b) => t2s(a.time) - t2s(b.time))[0] ?? top[0]
+  for (const r of all) { const k = `${r.sport}|${distLabel(r.distance)}`; const cur = best.get(k); if (!cur || t2s(r.time) < t2s(cur.time)) best.set(k, r) }
+  const entries = [...best.values()]
+  const mainE = entries.filter(r => r.sport === ath.mainSport)
+  let hero = ath.mainSport === 'running'
+    ? mainE.slice().sort((a, b) => t2s(a.time) / distKm(a.distance) - t2s(b.time) / distKm(b.distance))[0]
+    : mainE.slice().sort((a, b) => distKm(b.distance) - distKm(a.distance))[0]
+  hero = hero ?? entries[0]
+  const rest = entries.filter(r => r !== hero).sort((a, b) => distKm(b.distance) - distKm(a.distance)).slice(0, 5)
+  const tag = (s: string): [string, string] => SPORT_TAG[s] ?? ['', 'var(--muted)']
   return (
     <Shell framed={framed}>
       <div style={sectionLabel as React.CSSProperties}>PERSONAL BESTS</div>
       {hero && (
         <div style={{ marginTop: 10, padding: '12px', borderRadius: 'var(--radius-md)', borderLeft: '3px solid var(--green)', background: 'linear-gradient(120deg, rgba(var(--green-ch),0.1), var(--surface2))' }}>
-          <div style={{ fontFamily: 'var(--body)', fontSize: 8, letterSpacing: '0.12em', color: 'var(--muted)' }}>{distLabel(hero.distance)}</div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 30, color: 'var(--green)', lineHeight: 1 }}>{hero.time}</div>
-          <div style={{ fontFamily: 'var(--body)', fontSize: 9, color: 'var(--muted)', marginTop: 3 }}>{hero.name}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ fontFamily: 'var(--body)', fontSize: 8, letterSpacing: '0.12em', color: 'var(--muted)' }}>{distLabel(hero.distance)}</div>
+            <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 7.5, color: tag(hero.sport)[1], padding: '1px 6px', borderRadius: 'var(--radius-pill)', background: 'var(--surface3)' }}>{tag(hero.sport)[0]}</span>
+          </div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 30, color: 'var(--green)', lineHeight: 1, marginTop: 3 }}>{hero.time}</div>
+          <div style={{ fontFamily: 'var(--body)', fontSize: 9, color: 'var(--muted)', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{hero.name}</div>
         </div>
       )}
-      <div style={{ ...sectionLabel, fontSize: 10, marginTop: 16 }}>SIGNATURE DISTANCES</div>
+      <div style={{ ...sectionLabel, fontSize: 10, marginTop: 16 }}>SIGNATURE EFFORTS</div>
       <div style={{ display: 'grid', gap: 6, marginTop: 8 }}>
-        {top.map((r, i) => (
-          <div key={r.id} style={{ ...cardSurface, padding: '8px 10px', display: 'flex', alignItems: 'center', gap: 9, borderColor: i === 0 ? 'rgba(var(--orange-ch),0.4)' : 'var(--border)' }}>
-            <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 15, color: i === 0 ? 'var(--orange)' : 'var(--muted)' }}>{i + 1}</span>
+        {rest.map(r => (
+          <div key={r.id} style={{ ...cardSurface, padding: '8px 10px', display: 'flex', alignItems: 'center', gap: 9 }}>
+            <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 7.5, color: tag(r.sport)[1], width: 34, flexShrink: 0 }}>{tag(r.sport)[0]}</span>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 11, color: 'var(--white)' }}>{distLabel(r.distance)}</div>
               <div style={{ fontFamily: 'var(--body)', fontSize: 8, color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</div>
@@ -363,7 +380,7 @@ function MedalMockup({ persona, framed = false }: { persona: DemoPersonaId; fram
   const counts = { gold: 0, silver: 0, bronze: 0, custom: 0, finisher: 0 } as Record<string, number>
   for (const r of races) { const m = (r.medal || 'finisher'); if (counts[m] != null) counts[m]++ }
   const order = ['custom', 'gold', 'silver', 'bronze', 'finisher'] // custom (rare, e.g. Vic Clapham) leads
-  const cards = [...races].filter(r => r.medal).sort((a, b) => order.indexOf(a.medal!) - order.indexOf(b.medal!)).slice(0, 6)
+  const cards = [...races].filter(r => r.medal).sort((a, b) => order.indexOf(a.medal!) - order.indexOf(b.medal!))
   return (
     <Shell framed={framed}>
       <div style={sectionLabel as React.CSSProperties}>MEDALS</div>
@@ -378,17 +395,16 @@ function MedalMockup({ persona, framed = false }: { persona: DemoPersonaId; fram
           )
         })}
       </div>
-      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 12, alignContent: 'start' }}>
+      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 5, marginTop: 12, alignContent: 'start', overflow: 'hidden' }}>
         {cards.map(r => {
           const [a, b, label] = MEDAL_RGB[r.medal!]
           return (
-            <div key={r.id} style={{ padding: '11px 12px', borderRadius: 'var(--radius-md)', border: `1px solid ${a}30`, background: `linear-gradient(155deg, ${b}26, var(--surface2) 70%)`, display: 'flex', flexDirection: 'column', gap: 5, minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ width: 9, height: 9, borderRadius: '50%', background: `radial-gradient(circle at 35% 30%, ${a}, ${b})`, flexShrink: 0 }} />
-                <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 10, letterSpacing: '0.06em', color: a }}>{label}</span>
+            <div key={r.id} style={{ padding: '7px 7px', borderRadius: 'var(--radius-sm)', border: `1px solid ${a}30`, background: `linear-gradient(155deg, ${b}22, var(--surface2) 75%)`, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <span style={{ width: 7, height: 7, borderRadius: '50%', background: `radial-gradient(circle at 35% 30%, ${a}, ${b})`, flexShrink: 0 }} />
+                <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 6.5, letterSpacing: '0.03em', color: a, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
               </div>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 11, color: 'var(--white)', lineHeight: 1.15, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</div>
-              <div style={{ fontFamily: 'var(--body)', fontSize: 9, color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{distLabel(r.distance)} · {r.time}</div>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 9, color: 'var(--white)', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{distLabel(r.distance)}</div>
             </div>
           )
         })}
@@ -463,20 +479,42 @@ function MiniHeart() { return (<svg width="9" height="9" viewBox="0 0 24 24" fil
 
 /* Wearables — only WHOOP is production-authorized. Others are "Coming soon".
    Rendered as a rectangle mockup to match the other showcases. */
-function WearablesMockup() {
+type Act = { k: string; name: string; sub: string; m: [string, string][]; zone: number; accent: string }
+const WEARABLE_ACTS: Record<string, Act[]> = {
+  running: [
+    { k: 'run', name: 'TEMPO RUN', sub: '12.4 km · 52:18', m: [['AVG PACE', '4:12/km'], ['AVG HR', '158'], ['CADENCE', '182']], zone: 0.84, accent: 'var(--orange)' },
+    { k: 'run', name: 'LONG RUN', sub: '28.0 km · 2:14:30', m: [['AVG PACE', '4:48/km'], ['AVG HR', '148'], ['CADENCE', '176']], zone: 0.62, accent: 'var(--orange)' },
+    { k: 'run', name: 'TRACK INTERVALS', sub: '10 × 400m', m: [['AVG PACE', '3:18/km'], ['AVG HR', '176'], ['REST', '90s']], zone: 0.95, accent: 'var(--green)' },
+    { k: 'strength', name: 'STRENGTH & CORE', sub: '42:00 · 280 kcal', m: [['AVG HR', '118'], ['PEAK HR', '148'], ['LOAD', '6.2']], zone: 0.5, accent: 'var(--orange)' },
+  ],
+  cycling: [
+    { k: 'bike', name: 'THRESHOLD RIDE', sub: '64.0 km · 2:03:40', m: [['AVG SPEED', '31.2 km/h'], ['AVG HR', '146'], ['AVG POWER', '245 W']], zone: 0.82, accent: 'var(--orange)' },
+    { k: 'bike', name: 'ENDURANCE RIDE', sub: '128 km · 4:18:00', m: [['AVG SPEED', '28.6 km/h'], ['AVG HR', '134'], ['AVG POWER', '198 W']], zone: 0.6, accent: 'var(--orange)' },
+    { k: 'bike', name: 'CLIMBING REPEATS', sub: '1,420 m gain', m: [['AVG SPEED', '14.2 km/h'], ['AVG HR', '162'], ['AVG POWER', '288 W']], zone: 0.92, accent: 'var(--green)' },
+    { k: 'run', name: 'BRICK RUN', sub: '6.0 km · 27:10', m: [['AVG PACE', '4:31/km'], ['AVG HR', '152'], ['CADENCE', '180']], zone: 0.55, accent: 'var(--orange)' },
+  ],
+  triathlon: [
+    { k: 'swim', name: 'OPEN-WATER SWIM', sub: '2.0 km · 32:40', m: [['AVG PACE', '1:38/100m'], ['AVG HR', '138'], ['SWOLF', '36']], zone: 0.62, accent: 'var(--green)' },
+    { k: 'bike', name: 'THRESHOLD RIDE', sub: '90 km · 2:38:00', m: [['AVG SPEED', '34.2 km/h'], ['AVG HR', '148'], ['AVG POWER', '228 W']], zone: 0.84, accent: 'var(--orange)' },
+    { k: 'run', name: 'BRICK RUN', sub: '14 km · 58:20', m: [['AVG PACE', '4:10/km'], ['AVG HR', '156'], ['CADENCE', '184']], zone: 0.78, accent: 'var(--orange)' },
+    { k: 'swim', name: 'POOL INTERVALS', sub: '3.0 km · 50:00', m: [['AVG PACE', '1:40/100m'], ['AVG HR', '142'], ['SWOLF', '35']], zone: 0.7, accent: 'var(--green)' },
+  ],
+  hyrox: [
+    { k: 'hyrox', name: 'HYROX SIM', sub: '58:20 · 8 stations', m: [['AVG SPEED', '11.4 km/h'], ['AVG HR', '164'], ['STRAIN', '12.1']], zone: 0.92, accent: 'var(--green)' },
+    { k: 'run', name: 'TEMPO RUN', sub: '10.0 km · 38:40', m: [['AVG PACE', '3:52/km'], ['AVG HR', '162'], ['CADENCE', '186']], zone: 0.8, accent: 'var(--orange)' },
+    { k: 'strength', name: 'STRENGTH & CORE', sub: '48:00 · 312 kcal', m: [['AVG HR', '128'], ['PEAK HR', '168'], ['LOAD', '8.4']], zone: 0.6, accent: 'var(--orange)' },
+    { k: 'strength', name: 'ERG INTERVALS', sub: '5,000 m row', m: [['SPLIT', '1:52/500m'], ['AVG HR', '170'], ['STRAIN', '11.2']], zone: 0.88, accent: 'var(--green)' },
+  ],
+}
+function WearablesMockup({ persona }: { persona: DemoPersonaId }) {
   const soon = ['STRAVA', 'GARMIN', 'APPLE', 'COROS', 'OURA']
+  const sport = DEMO_PERSONAS[persona].athlete.mainSport || 'running'
   const metrics: [string, string, string][] = [
     ['STRAIN', '14.2', 'var(--orange)'],
     ['SLEEP', '7h 48m', 'var(--white)'],
     ['RESTING HR', '46', 'var(--green)'],
   ]
-  // Each activity carries avg speed/pace, avg HR and a third effort metric.
-  const acts: { k: string; name: string; sub: string; m: [string, string][]; zone: number; accent: string }[] = [
-    { k: 'run', name: 'TEMPO RUN', sub: '12.4 km · 52:18', m: [['AVG PACE', '4:52/km'], ['AVG HR', '158'], ['CADENCE', '182']], zone: 0.84, accent: 'var(--orange)' },
-    { k: 'bike', name: 'THRESHOLD RIDE', sub: '64.0 km · 2:03:40', m: [['AVG SPEED', '31.2 km/h'], ['AVG HR', '146'], ['AVG POWER', '245 W']], zone: 0.70, accent: 'var(--orange)' },
-    { k: 'swim', name: 'OPEN-WATER SWIM', sub: '2.0 km · 38:40', m: [['AVG PACE', '1:55/100m'], ['AVG HR', '132'], ['SWOLF', '38']], zone: 0.52, accent: 'var(--green)' },
-    { k: 'hyrox', name: 'HYROX SIM', sub: '58:20 · 8 stations', m: [['AVG SPEED', '11.4 km/h'], ['AVG HR', '164'], ['STRAIN', '12.1']], zone: 0.92, accent: 'var(--green)' },
-  ]
+  const acts = WEARABLE_ACTS[sport] ?? WEARABLE_ACTS.running
   return (
     <Shell>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
@@ -656,14 +694,14 @@ function PredictorMockup({ persona, framed = false }: { persona: DemoPersonaId; 
         <div style={{ ...sectionLabel, fontSize: 9.5, flexShrink: 0 }}>PREDICTED EQUIVALENTS</div>
         <div style={{ display: 'grid', gap: 5, flexShrink: 0 }}>
           {preds.map(([lbl, d]) => {
-            const conf = Math.max(0.4, 1 - Math.abs(Math.log(d / refKm)) * 0.32)
+            const isPB = Math.abs(d - refKm) / refKm < 0.06
             return (
-              <div key={lbl} style={{ ...cardSurface, padding: '7px 10px', display: 'flex', alignItems: 'center', gap: 9 }}>
-                <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 10, color: 'var(--white)', width: 52 }}>{lbl}</span>
-                <div style={{ flex: 1, height: 5, borderRadius: 3, background: 'var(--surface3)', overflow: 'hidden' }}>
-                  <motion.div initial={{ width: 0 }} whileInView={{ width: `${conf * 100}%` }} viewport={{ once: true }} transition={{ duration: 0.8, ease: 'easeOut' }} style={{ height: '100%', borderRadius: 3, background: 'var(--orange)' }} />
-                </div>
-                <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 11.5, color: 'var(--white)', width: 54, textAlign: 'right' }}>{s2t(refSec * Math.pow(d / refKm, 1.06))}</span>
+              <div key={lbl} style={{ ...cardSurface, padding: '8px 11px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 9, borderColor: isPB ? 'rgba(var(--orange-ch),0.5)' : 'var(--border)', background: isPB ? 'rgba(var(--orange-ch),0.08)' : undefined }}>
+                <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 10.5, color: 'var(--white)', width: 70 }}>{lbl}</span>
+                {isPB
+                  ? <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 7, color: 'var(--orange)', padding: '2px 7px', borderRadius: 'var(--radius-pill)', background: 'var(--surface3)', letterSpacing: '0.04em' }}>YOUR PB</span>
+                  : <span style={{ fontFamily: 'var(--body)', fontSize: 7.5, color: 'var(--muted2)', letterSpacing: '0.04em' }}>predicted</span>}
+                <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 12, color: isPB ? 'var(--orange)' : 'var(--white)', width: 54, textAlign: 'right' }}>{isPB && ref ? ref.time : s2t(refSec * Math.pow(d / refKm, 1.06))}</span>
               </div>
             )
           })}
@@ -1283,7 +1321,7 @@ export default function LandingPage({ onSignUp, onSignIn }: LandingPageProps) {
         eyebrow="Training & Wearables" title="Your training, side by side"
         desc={'Connect WHOOP today and see the training that built every result, right next to the race. More integrations are on the way.'}
         bullets={['WHOOP live now, recovery & workouts', 'Strava, Garmin, Apple Health coming soon', 'Training load vs race performance']}
-        mockup={<WearablesMockup />}
+        mockup={<WearablesMockup persona={persona} />}
       />
 
       {/* ---------------- PHONE-SCROLL CENTERPIECE ---------------- */}
