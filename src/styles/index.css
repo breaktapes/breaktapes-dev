@@ -598,18 +598,21 @@ body::after {
   text-transform: uppercase; color: var(--white); margin: 0.4rem 0 0.75rem;
 }
 .pl-sandbox-sub { font-size: var(--text-base); color: var(--muted); margin: 0 auto 2rem; max-width: 480px; }
-.pl-sandbox-window {
-  position: relative; margin: 0 auto; max-width: 420px;
-  border: 1px solid var(--border2); border-radius: var(--radius-lg); overflow: hidden;
-  background: var(--surface); box-shadow: 0 40px 90px rgba(0,0,0,0.6);
+/* Sandbox styled as a phone device (slightly bigger than a real handset). */
+.pl-sandbox-phone {
+  position: relative; margin: 0 auto; width: 100%; max-width: 400px;
+  aspect-ratio: 400 / 840; background: #0a0a0a;
+  border: 10px solid #16181c; border-radius: 46px; overflow: hidden;
+  box-shadow: 0 50px 110px -30px rgba(0,0,0,0.85), inset 0 0 0 1px rgba(255,255,255,0.05);
 }
-.pl-sandbox-bar {
-  display: flex; align-items: center; gap: 6px; padding: 9px 12px;
-  background: var(--surface2); border-bottom: 1px solid var(--border);
+.pl-sandbox-notch {
+  position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+  width: 120px; height: 22px; background: #000; border-radius: 14px; z-index: 3;
 }
-.pl-sandbox-bar i { width: 10px; height: 10px; border-radius: 50%; background: var(--muted2); }
-.pl-sandbox-bar span { margin-left: 8px; font-family: var(--body); font-size: 11px; color: var(--muted); }
-.pl-sandbox-frame { width: 100%; height: 620px; border: 0; display: block; background: var(--surface); }
+.pl-sandbox-frame {
+  width: 100%; height: 100%; border: 0; display: block;
+  border-radius: 36px; background: var(--surface);
+}
 .pl-sandbox-placeholder {
   width: 100%; height: 620px; display: flex; align-items: center; justify-content: center;
   font-family: var(--headline); font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted2);

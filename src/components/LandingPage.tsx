@@ -194,13 +194,20 @@ const cardSurface: React.CSSProperties = {
 type ShotScreen = 'dashboard' | 'races' | 'pbs' | 'medals'
 const shot = (persona: DemoPersonaId, screen: ShotScreen) => `/landing/${persona}-${screen}.png`
 
-/** A real app screenshot framed as a device-style card (showcase art). */
+/** A real app screenshot dropped into a stylized phone device — looks like the
+ *  actual app running on a phone (whole screen visible, no crop). */
 function ShowcaseShot({ src, title }: { src: string; title: string }) {
   return (
-    <div className="pl-demo-frame"
-      style={{ width: '100%', aspectRatio: '390 / 844', maxHeight: 620, borderRadius: 'var(--radius-lg)', overflow: 'hidden', border: '1px solid var(--border2)', background: '#0a0a0a', boxShadow: '0 30px 80px -40px rgba(0,0,0,0.8)' }}>
+    <div className="pl-mock-phone"
+      style={{ width: '100%', maxWidth: 300, margin: '0 auto', aspectRatio: '390 / 844',
+        background: '#0a0a0a', border: '8px solid #16181c', borderRadius: 38,
+        boxShadow: '0 40px 90px -30px rgba(0,0,0,0.85), inset 0 0 0 1px rgba(255,255,255,0.05)',
+        padding: 0, overflow: 'hidden', position: 'relative' }}>
+      <div style={{ position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)',
+        width: 92, height: 18, background: '#000', borderRadius: 12, zIndex: 2 }} />
       <img key={src} src={src} alt={title} loading="lazy"
-        style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
+        style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center',
+          display: 'block', borderRadius: 30 }} />
     </div>
   )
 }
@@ -545,8 +552,8 @@ function SandboxSection({ persona }: { persona: DemoPersonaId }) {
       <motion.p className="pl-sandbox-sub" variants={fadeUp}>
         Switch between athletes and tap around the dashboard, races, and profile. A real, interactive demo — nothing to install.
       </motion.p>
-      <motion.div className="pl-sandbox-window" variants={fadeUp} ref={ref}>
-        <div className="pl-sandbox-bar"><i /><i /><i /><span>app.breaktapes.com/demo</span></div>
+      <motion.div className="pl-sandbox-phone" variants={fadeUp} ref={ref}>
+        <div className="pl-sandbox-notch" />
         {inView && (
           <iframe key={persona} className="pl-sandbox-frame" src={`/demo?persona=${persona}`} title="BREAKTAPES interactive demo" />
         )}
