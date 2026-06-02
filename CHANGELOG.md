@@ -3,6 +3,12 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.2.1] - 2026-06-02
+
+### Changed
+- **Branded OG image** — link previews (WhatsApp, iMessage, Twitter, Slack) now show the BREAK/TAPES wordmark in Barlow Condensed on a dark background with the orange slash, replacing the plain black placeholder.
+- **Favicon color fix** — browser tab icon is now black background with orange slash (was inverted: orange background with black slash).
+
 ## [0.7.2.0] - 2026-06-02
 
 ### Added
