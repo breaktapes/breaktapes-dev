@@ -43,6 +43,19 @@ export default function Demo() {
   const [tab, setTab] = useState<Tab>(initialTab)
   const persona = DEMO_PERSONAS[pid]
 
+  // Screenshot helper: ?scroll=N scrolls the demo body to a fixed offset on
+  // load (used to capture focused sections like Personal Bests / Medals).
+  useEffect(() => {
+    const n = Number(params.get('scroll'))
+    if (!n) return
+    const id = window.setTimeout(() => {
+      const el = document.querySelector('.demo-real') as HTMLElement | null
+      if (el) el.scrollTop = n
+    }, 600)
+    return () => window.clearTimeout(id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // When embedded in the marketing landing, the parent drives tab/persona via
   // postMessage so the phone-stage can switch screens without reloading the iframe.
   useEffect(() => {

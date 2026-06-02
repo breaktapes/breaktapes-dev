@@ -284,7 +284,8 @@ body::after {
   font-family: var(--headline); font-size: clamp(1.8rem, 5vw, 2.6rem);
   font-weight: 900; text-transform: uppercase; color: var(--white); margin: 0 0 2.5rem;
 }
-.pl-stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--sp-5); }
+.pl-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-5); max-width: 760px; margin: 0 auto; }
+.pl-stat { text-align: center; }
 .pl-stat-num {
   font-family: var(--headline); font-weight: 900;
   font-size: clamp(2.2rem, 6vw, 3.2rem); color: var(--orange); line-height: 1;
