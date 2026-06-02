@@ -562,172 +562,341 @@ function s2t(sec: number): string {
   return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`
 }
 
+/* ---- shared phone-app chrome (header + bottom nav) so widgets read like real
+        app screenshots and fill the full device height ---- */
+const sLabel: React.CSSProperties = { fontFamily: 'var(--body)', fontSize: 8, letterSpacing: '0.1em', color: 'var(--muted)', textTransform: 'uppercase' }
+function NavIcon({ k }: { k: string }) {
+  const c = { width: 15, height: 15, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
+  if (k === 'home') return (<svg {...c}><path d="M3 10.5 12 3l9 7.5" /><path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5" /></svg>)
+  if (k === 'races') return (<svg {...c}><path d="M12 21s7-5.2 7-11a7 7 0 1 0-14 0c0 5.8 7 11 7 11Z" /><circle cx="12" cy="10" r="2.5" /></svg>)
+  if (k === 'train') return (<svg {...c}><path d="M3 12h4l2.5-7 4 14 2.5-7h4" /></svg>)
+  return (<svg {...c}><circle cx="12" cy="8" r="3.5" /><path d="M5 20c0-3.5 3.1-6 7-6s7 2.5 7 6" /></svg>)
+}
+function PhoneNav({ active }: { active: string }) {
+  const tabs: [string, string][] = [['home', 'Home'], ['races', 'Races'], ['train', 'Train'], ['you', 'You']]
+  return (
+    <div style={{ flexShrink: 0, display: 'flex', borderTop: '1px solid var(--border)', background: 'var(--surface)', paddingBottom: 5 }}>
+      {tabs.map(([k, l]) => (
+        <div key={k} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, padding: '7px 0 3px', color: k === active ? 'var(--orange)' : 'var(--muted2)' }}>
+          <NavIcon k={k} /><span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 7.5, letterSpacing: '0.03em' }}>{l}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+function PhoneApp({ title, sub, active, children }: { title: string; sub?: string; active: string; children: React.ReactNode }) {
+  return (
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ padding: '38px 14px 9px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)' }}>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 13, letterSpacing: '0.04em', color: 'var(--white)', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{title}</div>
+          {sub ? <div style={{ fontFamily: 'var(--body)', fontSize: 8, color: 'var(--muted)', marginTop: 1 }}>{sub}</div> : null}
+        </div>
+        <span style={{ width: 23, height: 23, borderRadius: '50%', flexShrink: 0, background: 'linear-gradient(135deg, var(--orange), #B8341A)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 10, color: '#fff' }}>{(sub || title).trim()[0]}</span>
+      </div>
+      <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', padding: '9px 11px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {children}
+      </div>
+      <PhoneNav active={active} />
+    </div>
+  )
+}
+function MiniStat({ label, val, c = 'var(--white)' }: { label: string; val: string; c?: string }) {
+  return (
+    <div style={{ ...cardSurface, padding: '7px 6px', textAlign: 'center' }}>
+      <div style={{ fontFamily: 'var(--body)', fontSize: 6.5, letterSpacing: '0.05em', color: 'var(--muted)' }}>{label}</div>
+      <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 15, color: c, lineHeight: 1, marginTop: 2 }}>{val}</div>
+    </div>
+  )
+}
+function BarRow({ label, val, pct, c }: { label: string; val: string; pct: number; c: string }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 9, color: 'var(--muted)', width: 50, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
+      <div style={{ flex: 1, height: 9, borderRadius: 5, background: 'var(--surface3)', overflow: 'hidden' }}>
+        <motion.div initial={{ width: 0 }} whileInView={{ width: `${Math.max(4, pct * 100)}%` }} viewport={{ once: true }} transition={{ duration: 0.8, ease: 'easeOut' }} style={{ height: '100%', borderRadius: 5, background: c }} />
+      </div>
+      <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 9.5, color: 'var(--white)', width: 40, textAlign: 'right' }}>{val}</span>
+    </div>
+  )
+}
+
 /* ----- Race predictor (Riegel equivalents from best PB) ----- */
 function PredictorMockup({ persona, framed = false }: { persona: DemoPersonaId; framed?: boolean }) {
-  const runs = DEMO_PERSONAS[persona].races.filter(r => r.time && r.sport === 'running' && distKm(r.distance) >= 3)
+  const p = DEMO_PERSONAS[persona]
+  const fn = p.athlete.firstName || ''
+  const runs = p.races.filter(r => r.time && r.sport === 'running' && distKm(r.distance) >= 3)
   let ref = runs[0], bestPace = Infinity
-  for (const r of runs) { const p = t2s(r.time!) / distKm(r.distance); if (p < bestPace) { bestPace = p; ref = r } }
+  for (const r of runs) { const pace = t2s(r.time!) / distKm(r.distance); if (pace < bestPace) { bestPace = pace; ref = r } }
   const refKm = ref ? distKm(ref.distance) : 10, refSec = ref ? t2s(ref.time!) : 2400
-  const rows: [string, number][] = [['5K', 5], ['10K', 10], ['HALF', 21.0975], ['MARATHON', 42.195]]
+  const v = refKm * 1000 / (refSec / 60), tmin = refSec / 60
+  const vo2 = -4.6 + 0.182258 * v + 0.000104 * v * v
+  const pmax = 0.8 + 0.1894393 * Math.exp(-0.012778 * tmin) + 0.2989558 * Math.exp(-0.1932605 * tmin)
+  const vdot = Math.max(35, Math.min(78, Math.round(vo2 / pmax)))
+  const ageGrade = Math.max(48, Math.min(94, Math.round(55 + (vdot - 45) * 1.25)))
+  const weekly = Math.max(35, Math.min(150, Math.round(40 + (vdot - 45) * 3)))
+  const preds: [string, number][] = [['5K', 5], ['10K', 10], ['15K', 15], ['HALF', 21.0975], ['MARATHON', 42.195]]
+  const maraSec = refSec * Math.pow(42.195 / refKm, 1.06), kmPace = maraSec / 42.195
+  const splits: [string, string][] = [['10K', s2t(kmPace * 10)], ['HALF', s2t(kmPace * 21.0975)], ['30K', s2t(kmPace * 30)], ['40K', s2t(kmPace * 40)], ['FINISH', s2t(maraSec)]]
   return (
-    <Shell framed={framed}>
-      <div style={sectionLabel}>RACE PREDICTOR</div>
-      <div style={{ marginTop: 10, padding: '12px', borderRadius: 'var(--radius-md)', borderLeft: '3px solid var(--orange)', background: 'linear-gradient(120deg, rgba(var(--orange-ch),0.12), var(--surface2))' }}>
-        <div style={{ fontFamily: 'var(--body)', fontSize: 8, letterSpacing: '0.12em', color: 'var(--muted)' }}>FROM YOUR {ref ? distLabel(ref.distance) : '10K'} PB</div>
-        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 26, color: 'var(--orange)', lineHeight: 1 }}>{ref?.time ?? '—'}</div>
-        <div style={{ fontFamily: 'var(--body)', fontSize: 9, color: 'var(--muted)', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ref?.name}</div>
-      </div>
-      <div style={{ ...sectionLabel, fontSize: 10, marginTop: 16 }}>PREDICTED EQUIVALENTS</div>
-      <div style={{ display: 'grid', gap: 6, marginTop: 8 }}>
-        {rows.map(([lbl, d]) => (
-          <div key={lbl} style={{ ...cardSurface, padding: '9px 11px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 11, color: 'var(--white)' }}>{lbl}</span>
-            <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 13, color: 'var(--white)' }}>{s2t(refSec * Math.pow(d / refKm, 1.06))}</span>
+    <Shell framed={framed} pad={false}>
+      <PhoneApp title="Race Predictor" sub={`${fn} · Train`} active="train">
+        <div style={{ padding: '11px 12px', borderRadius: 'var(--radius-md)', borderLeft: '3px solid var(--orange)', background: 'linear-gradient(120deg, rgba(var(--orange-ch),0.14), var(--surface2))', flexShrink: 0 }}>
+          <div style={sLabel}>FROM YOUR {ref ? distLabel(ref.distance) : '10K'} PB</div>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 27, color: 'var(--orange)', lineHeight: 1 }}>{ref?.time ?? '—'}</div>
+            <div style={{ fontFamily: 'var(--body)', fontSize: 8, color: 'var(--muted)', textAlign: 'right', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ref?.name}</div>
           </div>
-        ))}
-      </div>
-    </Shell>
-  )
-}
-
-/* ----- Season planner (taper timeline + upcoming calendar) ----- */
-function PlannerMockup({ persona, framed = false }: { persona: DemoPersonaId; framed?: boolean }) {
-  const up = DEMO_PERSONAS[persona].upcoming.slice(0, 3)
-  const next = up[0]
-  return (
-    <Shell framed={framed}>
-      <div style={sectionLabel}>SEASON PLANNER</div>
-      {next && (
-        <div style={{ marginTop: 10, padding: '12px', borderRadius: 'var(--radius-md)', borderLeft: '3px solid var(--green)', background: 'linear-gradient(120deg, rgba(var(--green-ch),0.1), var(--surface2))' }}>
-          <div style={{ fontFamily: 'var(--body)', fontSize: 8, letterSpacing: '0.12em', color: 'var(--muted)' }}>NEXT KEY RACE</div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 18, color: 'var(--white)', lineHeight: 1.05, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{next.name}</div>
-          <div style={{ fontFamily: 'var(--body)', fontSize: 9, color: 'var(--muted)', marginTop: 3 }}>{next.date}{next.goalTime ? ` · goal ${next.goalTime}` : ''}</div>
         </div>
-      )}
-      <div style={{ ...sectionLabel, fontSize: 10, marginTop: 16 }}>TAPER &amp; PEAK</div>
-      <div style={{ display: 'flex', gap: 3, marginTop: 8, height: 30, alignItems: 'flex-end' }}>
-        {[42, 52, 60, 68, 76, 84, 92, 99, 86, 66, 50, 36].map((h, i) => (
-          <div key={i} style={{ flex: 1, height: `${h}%`, borderRadius: '2px 2px 0 0', background: i >= 9 ? 'rgba(var(--green-ch),0.75)' : 'rgba(var(--orange-ch),0.5)' }} />
-        ))}
-      </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
-        <span style={{ fontFamily: 'var(--body)', fontSize: 7.5, color: 'var(--muted)' }}>BUILD</span>
-        <span style={{ fontFamily: 'var(--body)', fontSize: 7.5, color: 'var(--green)' }}>TAPER → RACE</span>
-      </div>
-      <div style={{ ...sectionLabel, fontSize: 10, marginTop: 14 }}>ON THE CALENDAR</div>
-      <div style={{ display: 'grid', gap: 6, marginTop: 8 }}>
-        {up.map(r => (
-          <div key={r.id} style={{ ...cardSurface, padding: '9px 11px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 11, color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</div>
-              <div style={{ fontFamily: 'var(--body)', fontSize: 8, color: 'var(--muted)' }}>{distLabel(r.distance)}</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, flexShrink: 0 }}>
+          <MiniStat label="VDOT" val={String(vdot)} c="var(--orange)" />
+          <MiniStat label="AGE-GRADE" val={`${ageGrade}%`} c="var(--green)" />
+          <MiniStat label="WEEKLY KM" val={String(weekly)} />
+        </div>
+        <div style={{ ...sectionLabel, fontSize: 9.5, flexShrink: 0 }}>PREDICTED EQUIVALENTS</div>
+        <div style={{ display: 'grid', gap: 5, flexShrink: 0 }}>
+          {preds.map(([lbl, d]) => {
+            const conf = Math.max(0.4, 1 - Math.abs(Math.log(d / refKm)) * 0.32)
+            return (
+              <div key={lbl} style={{ ...cardSurface, padding: '7px 10px', display: 'flex', alignItems: 'center', gap: 9 }}>
+                <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 10, color: 'var(--white)', width: 52 }}>{lbl}</span>
+                <div style={{ flex: 1, height: 5, borderRadius: 3, background: 'var(--surface3)', overflow: 'hidden' }}>
+                  <motion.div initial={{ width: 0 }} whileInView={{ width: `${conf * 100}%` }} viewport={{ once: true }} transition={{ duration: 0.8, ease: 'easeOut' }} style={{ height: '100%', borderRadius: 3, background: 'var(--orange)' }} />
+                </div>
+                <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 11.5, color: 'var(--white)', width: 54, textAlign: 'right' }}>{s2t(refSec * Math.pow(d / refKm, 1.06))}</span>
+              </div>
+            )
+          })}
+        </div>
+        <div style={{ ...sectionLabel, fontSize: 9.5, flexShrink: 0 }}>MARATHON GOAL-PACE SPLITS</div>
+        <div style={{ ...cardSurface, padding: '4px 11px', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          {splits.map(([l, t], i) => (
+            <div key={l} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: i < splits.length - 1 ? '1px solid var(--border)' : 'none' }}>
+              <span style={{ fontFamily: 'var(--body)', fontSize: 9.5, color: 'var(--muted)' }}>{l}</span>
+              <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 10.5, color: 'var(--white)' }}>{t}</span>
             </div>
-            <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 11, color: 'var(--orange)', flexShrink: 0 }}>{r.date ? r.date.slice(5) : ''}</span>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      </PhoneApp>
     </Shell>
   )
 }
 
-/* ----- Pacing IQ (split signature) ----- */
+/* ----- Season planner (weekly load + taper + calendar) ----- */
+function PlannerMockup({ persona, framed = false }: { persona: DemoPersonaId; framed?: boolean }) {
+  const p = DEMO_PERSONAS[persona]
+  const fn = p.athlete.firstName || ''
+  const up = p.upcoming.slice(0, 5)
+  const next = up[0]
+  const weeks = [44, 52, 58, 66, 74, 82, 90, 98, 88, 70, 54, 38]
+  return (
+    <Shell framed={framed} pad={false}>
+      <PhoneApp title="Season Plan" sub={`${fn} · Races`} active="races">
+        {next && (
+          <div style={{ padding: '11px 12px', borderRadius: 'var(--radius-md)', borderLeft: '3px solid var(--green)', background: 'linear-gradient(120deg, rgba(var(--green-ch),0.1), var(--surface2))', flexShrink: 0 }}>
+            <div style={sLabel}>NEXT KEY RACE</div>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 17, color: 'var(--white)', lineHeight: 1.05, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{next.name}</div>
+            <div style={{ fontFamily: 'var(--body)', fontSize: 8.5, color: 'var(--muted)', marginTop: 2 }}>{next.date}{next.goalTime ? ` · goal ${next.goalTime}` : ''}</div>
+          </div>
+        )}
+        <div style={{ ...sectionLabel, fontSize: 9.5, flexShrink: 0 }}>WEEKLY LOAD → TAPER</div>
+        <div style={{ ...cardSurface, padding: '10px', flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: 3, height: 46, alignItems: 'flex-end' }}>
+            {weeks.map((h, i) => (
+              <motion.div key={i} initial={{ height: 0 }} whileInView={{ height: `${h}%` }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.04 }} style={{ flex: 1, borderRadius: '2px 2px 0 0', background: i >= 9 ? 'rgba(var(--green-ch),0.8)' : i === 7 ? 'var(--orange)' : 'rgba(var(--orange-ch),0.5)' }} />
+            ))}
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
+            <span style={{ fontFamily: 'var(--body)', fontSize: 7.5, color: 'var(--muted)' }}>BUILD</span>
+            <span style={{ fontFamily: 'var(--body)', fontSize: 7.5, color: 'var(--orange)' }}>PEAK</span>
+            <span style={{ fontFamily: 'var(--body)', fontSize: 7.5, color: 'var(--green)' }}>TAPER → RACE</span>
+          </div>
+        </div>
+        <div style={{ ...sectionLabel, fontSize: 9.5, flexShrink: 0 }}>ON THE CALENDAR · {p.upcoming.length}</div>
+        <div style={{ display: 'grid', gap: 5, flex: 1, minHeight: 0, alignContent: 'start' }}>
+          {up.map(r => (
+            <div key={r.id} style={{ ...cardSurface, padding: '8px 11px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 10.5, color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</div>
+                <div style={{ fontFamily: 'var(--body)', fontSize: 8, color: 'var(--muted)' }}>{distLabel(r.distance)}{r.city ? ` · ${r.city}` : ''}</div>
+              </div>
+              <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 10.5, color: 'var(--orange)', flexShrink: 0 }}>{r.date ? r.date.slice(5) : ''}</span>
+            </div>
+          ))}
+        </div>
+      </PhoneApp>
+    </Shell>
+  )
+}
+
+/* ----- Pacing IQ (split signature + by-race) ----- */
 function PacingMockup({ persona, framed = false }: { persona: DemoPersonaId; framed?: boolean }) {
-  const race = DEMO_PERSONAS[persona].races.find(r => r.splits && r.splits.length >= 4 && r.time)
+  const p = DEMO_PERSONAS[persona]
+  const fn = p.athlete.firstName || ''
+  const withSplits = p.races.filter(r => r.splits && r.splits.length >= 4 && r.time)
+  const race = withSplits[0]
   const segs = race?.splits?.map(s => t2s(s.split)) ?? [60, 60, 60, 60, 60]
   const half = Math.floor(segs.length / 2)
   const first = segs.slice(0, half).reduce((a, b) => a + b, 0) / Math.max(1, half)
   const second = segs.slice(half).reduce((a, b) => a + b, 0) / Math.max(1, segs.length - half)
   const tag = second < first * 0.98 ? 'NEGATIVE SPLITTER' : second > first * 1.03 ? 'FADER' : 'EVEN PACER'
   const desc = tag === 'NEGATIVE SPLITTER' ? 'You finish faster than you start.' : tag === 'FADER' ? 'You go out hot and hold on.' : 'Metronomic, wire to wire.'
-  const max = Math.max(...segs), min = Math.min(...segs)
+  const mx = Math.max(...segs), mn = Math.min(...segs)
+  const mean = segs.reduce((a, b) => a + b, 0) / segs.length
+  const sd = Math.sqrt(segs.reduce((a, b) => a + (b - mean) * (b - mean), 0) / segs.length)
+  const consistency = Math.max(40, Math.min(99, Math.round(100 - (sd / mean) * 180)))
+  const cls = (r: Race): [string, string] => {
+    const s = (r.splits ?? []).map(x => t2s(x.split)); const h = Math.floor(s.length / 2)
+    const f = s.slice(0, h).reduce((a, b) => a + b, 0) / Math.max(1, h)
+    const se = s.slice(h).reduce((a, b) => a + b, 0) / Math.max(1, s.length - h)
+    return se < f * 0.98 ? ['NEG', 'var(--green)'] : se > f * 1.03 ? ['FADE', 'var(--orange)'] : ['EVEN', 'var(--muted)']
+  }
   return (
-    <Shell framed={framed}>
-      <div style={sectionLabel}>PACING IQ</div>
-      <div style={{ marginTop: 10, padding: '12px', borderRadius: 'var(--radius-md)', borderLeft: '3px solid var(--green)', background: 'linear-gradient(120deg, rgba(var(--green-ch),0.1), var(--surface2))' }}>
-        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 19, color: 'var(--green)', lineHeight: 1 }}>{tag}</div>
-        <div style={{ fontFamily: 'var(--body)', fontSize: 9, color: 'var(--muted)', marginTop: 4 }}>{desc}</div>
-      </div>
-      <div style={{ ...sectionLabel, fontSize: 10, marginTop: 16 }}>SPLIT SIGNATURE</div>
-      <div style={{ display: 'flex', gap: 4, marginTop: 8, height: 60, alignItems: 'flex-end' }}>
-        {segs.slice(0, 8).map((s, i) => {
-          const h = max === min ? 60 : 30 + 60 * (s - min) / (max - min)
-          return <div key={i} style={{ flex: 1, height: `${h}%`, borderRadius: '2px 2px 0 0', background: s <= first ? 'var(--green)' : 'rgba(var(--orange-ch),0.6)' }} />
-        })}
-      </div>
-      <div style={{ fontFamily: 'var(--body)', fontSize: 8, color: 'var(--muted)', marginTop: 6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{race?.name ?? 'Logged race splits'}</div>
+    <Shell framed={framed} pad={false}>
+      <PhoneApp title="Pacing IQ" sub={`${fn} · Home`} active="home">
+        <div style={{ padding: '11px 12px', borderRadius: 'var(--radius-md)', borderLeft: '3px solid var(--green)', background: 'linear-gradient(120deg, rgba(var(--green-ch),0.1), var(--surface2))', flexShrink: 0 }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 18, color: 'var(--green)', lineHeight: 1 }}>{tag}</div>
+          <div style={{ fontFamily: 'var(--body)', fontSize: 8.5, color: 'var(--muted)', marginTop: 3 }}>{desc}</div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, flexShrink: 0 }}>
+          <MiniStat label="1ST HALF" val={s2t(first)} />
+          <MiniStat label="2ND HALF" val={s2t(second)} c={second <= first ? 'var(--green)' : 'var(--orange)'} />
+          <MiniStat label="CONSISTENCY" val={`${consistency}%`} c="var(--orange)" />
+        </div>
+        <div style={{ ...sectionLabel, fontSize: 9.5, flexShrink: 0 }}>SPLIT SIGNATURE · {race ? distLabel(race.distance) : ''}</div>
+        <div style={{ ...cardSurface, padding: '10px', flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: 4, height: 56, alignItems: 'flex-end' }}>
+            {segs.slice(0, 10).map((s, i) => {
+              const h = mx === mn ? 60 : 28 + 62 * (s - mn) / (mx - mn)
+              return <motion.div key={i} initial={{ height: 0 }} whileInView={{ height: `${h}%` }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.05 }} style={{ flex: 1, borderRadius: '2px 2px 0 0', background: s <= first ? 'var(--green)' : 'rgba(var(--orange-ch),0.6)' }} />
+            })}
+          </div>
+        </div>
+        <div style={{ ...sectionLabel, fontSize: 9.5, flexShrink: 0 }}>BY RACE</div>
+        <div style={{ display: 'grid', gap: 5, flex: 1, minHeight: 0, alignContent: 'start' }}>
+          {withSplits.slice(0, 4).map(r => { const [lab, col] = cls(r); return (
+            <div key={r.id} style={{ ...cardSurface, padding: '8px 11px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 10, color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</div>
+                <div style={{ fontFamily: 'var(--body)', fontSize: 8, color: 'var(--muted)' }}>{distLabel(r.distance)} · {r.time}</div>
+              </div>
+              <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 8.5, color: col, padding: '3px 7px', borderRadius: 'var(--radius-pill)', background: 'var(--surface3)', flexShrink: 0 }}>{lab}</span>
+            </div>
+          ) })}
+        </div>
+      </PhoneApp>
     </Shell>
   )
 }
 
-/* ----- Career momentum (form trend) ----- */
+/* ----- Career momentum (form trend + recent results + load) ----- */
 function MomentumMockup({ persona, framed = false }: { persona: DemoPersonaId; framed?: boolean }) {
-  const runs = DEMO_PERSONAS[persona].races.filter(r => r.time && r.sport === 'running').slice().sort((a, b) => (a.date < b.date ? -1 : 1))
+  const p = DEMO_PERSONAS[persona]
+  const fn = p.athlete.firstName || ''
+  const runs = p.races.filter(r => r.time && r.sport === 'running').slice().sort((a, b) => (a.date < b.date ? -1 : 1))
   const perf = runs.slice(-8).map(r => distKm(r.distance) / t2s(r.time!) * 1000)
   const pts = perf.length >= 2 ? perf : [1, 1.1]
   const mn = Math.min(...pts), mx = Math.max(...pts)
-  const W = 240, H = 60
+  const W = 240, H = 54
   const path = pts.map((v, i) => `${i === 0 ? 'M' : 'L'} ${(i / (pts.length - 1)) * W} ${H - (mx === mn ? H / 2 : ((v - mn) / (mx - mn)) * (H - 8) + 4)}`).join(' ')
   const rising = pts[pts.length - 1] >= pts[0]
   const score = Math.round(60 + 35 * (mx === mn ? 0.5 : (pts[pts.length - 1] - mn) / (mx - mn)))
   const badge = rising && score >= 85 ? 'HOT' : rising ? 'RISING' : 'STEADY'
+  const bestByDist: Record<string, number> = {}
+  runs.forEach(r => { const k = distLabel(r.distance); const s = t2s(r.time!); if (bestByDist[k] == null || s < bestByDist[k]) bestByDist[k] = s })
+  const recent = runs.slice(-5).reverse()
+  const load = [50, 62, 55, 70, 78, 66, 84, 90, 75, 88]
   return (
-    <Shell framed={framed}>
-      <div style={sectionLabel}>CAREER MOMENTUM</div>
-      <div style={{ marginTop: 10, padding: '12px', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderLeft: '3px solid var(--orange)', background: 'linear-gradient(120deg, rgba(var(--orange-ch),0.12), var(--surface2))' }}>
-        <div>
-          <div style={{ fontFamily: 'var(--body)', fontSize: 8, letterSpacing: '0.12em', color: 'var(--muted)' }}>FORM SCORE</div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 30, color: 'var(--orange)', lineHeight: 1 }}>{score}</div>
+    <Shell framed={framed} pad={false}>
+      <PhoneApp title="Momentum" sub={`${fn} · Home`} active="home">
+        <div style={{ padding: '11px 12px', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderLeft: '3px solid var(--orange)', background: 'linear-gradient(120deg, rgba(var(--orange-ch),0.12), var(--surface2))', flexShrink: 0 }}>
+          <div><div style={sLabel}>FORM SCORE</div><div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 30, color: 'var(--orange)', lineHeight: 1 }}>{score}</div></div>
+          <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 11, color: 'var(--green)', padding: '4px 10px', borderRadius: 'var(--radius-pill)', background: 'var(--green-dim)' }}>▲ {badge}</span>
         </div>
-        <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 11, letterSpacing: '0.06em', color: 'var(--green)', padding: '4px 10px', borderRadius: 'var(--radius-pill)', background: 'var(--green-dim)' }}>▲ {badge}</span>
-      </div>
-      <div style={{ ...sectionLabel, fontSize: 10, marginTop: 16 }}>FORM TREND</div>
-      <div style={{ ...cardSurface, padding: '12px', marginTop: 8 }}>
-        <svg viewBox={`0 0 ${W} ${H}`} width="100%" height="56" preserveAspectRatio="none">
-          <path d={path} fill="none" stroke="var(--green)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </div>
+        <div style={{ ...sectionLabel, fontSize: 9.5, flexShrink: 0 }}>FORM TREND</div>
+        <div style={{ ...cardSurface, padding: '10px', flexShrink: 0 }}>
+          <svg viewBox={`0 0 ${W} ${H}`} width="100%" height="50" preserveAspectRatio="none">
+            <motion.path d={path} fill="none" stroke="var(--green)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} viewport={{ once: true }} transition={{ duration: 1.2 }} />
+          </svg>
+        </div>
+        <div style={{ ...sectionLabel, fontSize: 9.5, flexShrink: 0 }}>RECENT RESULTS</div>
+        <div style={{ display: 'grid', gap: 5, flex: 1, minHeight: 0, alignContent: 'start' }}>
+          {recent.map(r => {
+            const k = distLabel(r.distance), s = t2s(r.time!), isPB = s <= (bestByDist[k] ?? s) + 0.5, diff = s - (bestByDist[k] ?? s)
+            return (
+              <div key={r.id} style={{ ...cardSurface, padding: '8px 11px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 10, color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</div>
+                  <div style={{ fontFamily: 'var(--body)', fontSize: 8, color: 'var(--muted)' }}>{k} · {r.time}</div>
+                </div>
+                <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 8.5, color: isPB ? 'var(--green)' : 'var(--muted)', padding: '3px 7px', borderRadius: 'var(--radius-pill)', background: 'var(--surface3)', flexShrink: 0 }}>{isPB ? 'PB' : `+${s2t(diff)}`}</span>
+              </div>
+            )
+          })}
+        </div>
+        <div style={{ ...sectionLabel, fontSize: 9.5, flexShrink: 0 }}>12-WEEK LOAD</div>
+        <div style={{ display: 'flex', gap: 3, height: 26, alignItems: 'flex-end', flexShrink: 0 }}>
+          {load.map((h, i) => (<motion.div key={i} initial={{ height: 0 }} whileInView={{ height: `${h}%` }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.04 }} style={{ flex: 1, borderRadius: '2px 2px 0 0', background: i >= 8 ? 'var(--green)' : 'rgba(var(--orange-ch),0.5)' }} />))}
+        </div>
+      </PhoneApp>
     </Shell>
   )
 }
 
-/* ----- Race DNA (conditions you thrive in) ----- */
+/* ----- Race DNA (conditions, surface, terrain, elevation) ----- */
 function DNAMockup({ persona, framed = false }: { persona: DemoPersonaId; framed?: boolean }) {
-  const races = DEMO_PERSONAS[persona].races
+  const p = DEMO_PERSONAS[persona]
+  const fn = p.athlete.firstName || ''
+  const races = p.races
   const buckets: [string, number, string][] = [['COLD', 0, '#5B8DEF'], ['COOL', 0, '#2BD4A0'], ['WARM', 0, '#FFB347'], ['HOT', 0, '#FF5A3C']]
   races.forEach(r => { const t = r.weather?.temp; if (t == null) return; const i = t < 10 ? 0 : t < 18 ? 1 : t < 26 ? 2 : 3; buckets[i][1]++ })
   const maxB = Math.max(1, ...buckets.map(b => b[1]))
   const best = buckets.slice().sort((a, b) => b[1] - a[1])[0]
   const surf: Record<string, number> = {}
   races.forEach(r => { const s = r.surface || 'road'; surf[s] = (surf[s] || 0) + 1 })
-  const surfRows = Object.entries(surf).sort((a, b) => b[1] - a[1]).slice(0, 3)
+  const surfRows = Object.entries(surf).sort((a, b) => b[1] - a[1]).slice(0, 4)
   const surfMax = Math.max(1, ...surfRows.map(s => s[1]))
+  const terr: Record<string, number> = {}
+  races.forEach(r => { const s = r.terrain || 'flat'; terr[s] = (terr[s] || 0) + 1 })
+  const terrRows = Object.entries(terr).sort((a, b) => b[1] - a[1]).slice(0, 4)
+  const terrMax = Math.max(1, ...terrRows.map(s => s[1]))
+  const elevs = races.filter(r => r.elevation != null).slice().sort((a, b) => (a.date < b.date ? -1 : 1)).map(r => r.elevation as number).slice(-14)
+  const eMax = Math.max(1, ...elevs)
+  const W = 240, H = 42
+  const ePath = elevs.length >= 2 ? `M 0 ${H} ` + elevs.map((e, i) => `L ${(i / (elevs.length - 1)) * W} ${H - (e / eMax) * (H - 4) - 2}`).join(' ') + ` L ${W} ${H} Z` : ''
+  const totalElev = Math.round(races.reduce((s, r) => s + (r.elevation || 0), 0))
   return (
-    <Shell framed={framed}>
-      <div style={sectionLabel}>RACE DNA</div>
-      <div style={{ ...sectionLabel, fontSize: 10, marginTop: 12, color: 'var(--muted)' }}>TEMPERATURE FIT</div>
-      <div style={{ display: 'grid', gap: 6, marginTop: 8 }}>
-        {buckets.map(([lbl, n, c]) => (
-          <div key={lbl} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 9, color: 'var(--muted)', width: 38 }}>{lbl}{lbl === best[0] && best[1] > 0 ? ' ★' : ''}</span>
-            <div style={{ flex: 1, height: 10, borderRadius: 5, background: 'var(--surface3)', overflow: 'hidden' }}>
-              <div style={{ width: `${(n / maxB) * 100}%`, height: '100%', background: c, borderRadius: 5 }} />
-            </div>
-            <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 9, color: 'var(--white)', width: 14, textAlign: 'right' }}>{n}</span>
+    <Shell framed={framed} pad={false}>
+      <PhoneApp title="Race DNA" sub={`${fn} · Profile`} active="you">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, flexShrink: 0 }}>
+          <div style={{ ...cardSurface, padding: '8px 10px' }}>
+            <div style={sLabel}>THRIVES IN</div>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 16, color: 'var(--green)', lineHeight: 1, marginTop: 2 }}>{best[1] > 0 ? best[0] : '—'}</div>
           </div>
-        ))}
-      </div>
-      <div style={{ ...sectionLabel, fontSize: 10, marginTop: 14, color: 'var(--muted)' }}>SURFACE SPLIT</div>
-      <div style={{ display: 'grid', gap: 6, marginTop: 8 }}>
-        {surfRows.map(([s, n], i) => (
-          <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 9, color: 'var(--muted)', width: 48, textTransform: 'uppercase' }}>{s}</span>
-            <div style={{ flex: 1, height: 10, borderRadius: 5, background: 'var(--surface3)', overflow: 'hidden' }}>
-              <div style={{ width: `${(n / surfMax) * 100}%`, height: '100%', background: i === 0 ? 'var(--orange)' : 'rgba(var(--orange-ch),0.4)', borderRadius: 5 }} />
-            </div>
-            <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 9, color: 'var(--white)', width: 14, textAlign: 'right' }}>{n}</span>
+          <div style={{ ...cardSurface, padding: '8px 10px' }}>
+            <div style={sLabel}>TOTAL CLIMB</div>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 16, color: 'var(--white)', lineHeight: 1, marginTop: 2 }}>{totalElev.toLocaleString()}m</div>
           </div>
-        ))}
-      </div>
+        </div>
+        <div style={{ ...sectionLabel, fontSize: 9.5, flexShrink: 0 }}>TEMPERATURE FIT</div>
+        <div style={{ display: 'grid', gap: 5, flexShrink: 0 }}>
+          {buckets.map(([lbl, n, c]) => (<BarRow key={lbl} label={`${lbl}${lbl === best[0] && best[1] > 0 ? ' ★' : ''}`} val={String(n)} pct={n / maxB} c={c} />))}
+        </div>
+        <div style={{ ...sectionLabel, fontSize: 9.5, flexShrink: 0 }}>SURFACE</div>
+        <div style={{ display: 'grid', gap: 5, flexShrink: 0 }}>
+          {surfRows.map(([s, n], i) => (<BarRow key={s} label={s.toUpperCase()} val={String(n)} pct={n / surfMax} c={i === 0 ? 'var(--orange)' : 'rgba(var(--orange-ch),0.4)'} />))}
+        </div>
+        <div style={{ ...sectionLabel, fontSize: 9.5, flexShrink: 0 }}>TERRAIN</div>
+        <div style={{ display: 'grid', gap: 5, flexShrink: 0 }}>
+          {terrRows.map(([s, n], i) => (<BarRow key={s} label={s.toUpperCase()} val={String(n)} pct={n / terrMax} c={i === 0 ? 'var(--green)' : 'rgba(var(--green-ch),0.4)'} />))}
+        </div>
+        <div style={{ ...sectionLabel, fontSize: 9.5, flexShrink: 0 }}>ELEVATION HISTORY</div>
+        <div style={{ ...cardSurface, padding: '8px 10px', flex: 1, minHeight: 0, display: 'flex', alignItems: 'flex-end' }}>
+          <svg viewBox={`0 0 ${W} ${H}`} width="100%" height="100%" preserveAspectRatio="none">
+            {ePath ? <motion.path d={ePath} fill="rgba(var(--orange-ch),0.2)" stroke="var(--orange)" strokeWidth="1.5" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.8 }} /> : null}
+          </svg>
+        </div>
+      </PhoneApp>
     </Shell>
   )
 }
