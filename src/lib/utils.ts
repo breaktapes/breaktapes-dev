@@ -83,8 +83,8 @@ export function distLabel(d: string | undefined, sport?: string): string {
   const lower = d.toLowerCase().trim()
   if (lower === 'marathon' || lower === 'full marathon') return 'Marathon'
   if (lower === 'half marathon' || lower === 'half') return 'Half Marathon'
-  if (lower === 'ironman' || lower === 'full ironman' || lower === 'full distance') return 'IRONMAN'
-  if (lower === '70.3' || lower === 'half ironman' || lower === 'ironman 70.3' || lower === 'middle distance') return '70.3 / Middle Distance'
+  if (lower === 'ironman' || lower === 'full ironman' || lower === 'full distance' || lower === 'ironman / full distance') return 'IRONMAN'
+  if (lower === '70.3' || lower === 'half ironman' || lower === 'ironman 70.3' || lower === 'middle distance' || lower === '70.3 / middle distance') return '70.3 / Middle Distance'
   if (lower === 'olympic' || lower === 'olympic triathlon') return 'Olympic'
   if (lower === 'sprint' || lower === 'sprint triathlon') return 'Sprint'
   if (lower === '1k' || lower === '1km') return '1K'
