@@ -240,7 +240,7 @@ function distLabel(d: string): string {
   return d.toUpperCase()
 }
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-function fmtDMon(d?: string): string { if (!d) return ''; const p = d.split('-'); if (p.length < 3) return d; return `${p[2]}-${MON[+p[1] - 1] || p[1]}-${p[0]}` }
+function fmtDMon(d?: string): string { if (!d) return ''; const p = d.split('-'); if (p.length < 3) return d; return `${p[2]} ${MON[+p[1] - 1] || p[1]} ${p[0]}` }
 function t2s(t?: string): number { if (!t) return Infinity; const a = t.split(':').map(Number); if (a.some(Number.isNaN)) return Infinity; return a.length === 3 ? a[0]*3600 + a[1]*60 + a[2] : a.length === 2 ? a[0]*60 + a[1] : Infinity }
 const MEDAL_RGB: Record<string, [string, string, string]> = {
   gold: ['#FFD770', '#B8860B', 'GOLD'], silver: ['#C8D4DC', '#6A7880', 'SILVER'],
