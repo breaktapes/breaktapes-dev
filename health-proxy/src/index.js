@@ -636,7 +636,8 @@ export default {
         const url = `https://www.coachcox.co.uk/wp-json/imstats/v1.90/athlete/search/quick/${encodeURIComponent(name)}`;
         const resp = await fetch(url, {
           headers: { 'Accept': 'application/json', 'User-Agent': 'Mozilla/5.0' },
-          signal: AbortSignal.timeout(6000),
+          // 10s: coachcox is ~1.3s warm but can exceed 6s on a cold cache hit.
+          signal: AbortSignal.timeout(10000),
         });
         if (!resp.ok) throw new Error(`CoachCox ${resp.status}`);
         const rows = await resp.json();
