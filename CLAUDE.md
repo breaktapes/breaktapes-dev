@@ -334,6 +334,9 @@ If a widget needs a different visual treatment, change the token in one place. N
 | `computeStreak(activities)` | Calculate current + longest training streak from Strava activities |
 | `classifyPacing(race)` | Classify a race as positive/negative/even split from splits data |
 | `computePacingIQ()` | Aggregate pacing persona across all races with splits |
+| `predictTriathlon(races, targetKey, nowMs?)` | (triFormulas.ts) Predict swim/T1/bike/T2/run splits + finish for a target tri distance; recency-weighted Riegel from own tri legs blended with running-PB engine fallback (`α = nEff/(nEff+2)`) + confidence band |
+| `extractTriLegs(race)` | (triFormulas.ts) Parse a tri race's splits into per-leg seconds (Swim/T1/Bike/T2/Run); per-segment `split` first, cumulative-delta fallback |
+| `detectTriType(distKm)` / `defaultTriTarget(races, upcoming)` | (triFormulas.ts) Bucket a distance to Sprint/Olympic/70.3/IRONMAN; pick default target (next upcoming tri → most-raced → Olympic) |
 | `computeMomentum()` | Weighted career momentum score from recent race times vs PBs |
 | `renderRaceDayForecast()` | Fetch Open-Meteo forecast for next race location + date |
 | `computeAgeGrade(race)` | Calculate WA age-grade percentage for a race result |
@@ -1375,6 +1378,25 @@ Direct DB access (psql/psycopg2) is blocked from localhost — Supabase only exp
 - When the same new fields exist on both HEAD and staging (from two parallel worktrees), `git merge origin/staging` produces duplicate-field conflicts in TypeScript interfaces — always check for duplicate property declarations after merge, they compile but are confusing.
 - `git worktree remove` mid-session kills the shell CWD — the kernel's `getcwd()` fails on every subsequent subprocess. No recovery possible without restarting from a valid directory. Always `cd` to main repo before any worktree cleanup.
 - PostToolUse linter hook can revert file edits made in the same session if the linter reformats aggressively — verify critical new fields persist after every hook run.
+
+---
+
+### Session 38 (2026-06-02) — Triathlon Predictor widget (v0.7.2.0)
+
+**Branch:** `claude/nostalgic-bartik-53be42` → staging (PR #419) → main (PR #420). Both green; merged staging→main with a merge commit (no squash divergence).
+
+#### Shipped
+- **`src/lib/triFormulas.ts`** — pure prediction engine. `TRI_TYPES` (Sprint/Olympic/70.3/IRONMAN with canonical swim/bike/run leg km + default T1/T2). `extractTriLegs()` parses Swim/T1/Bike/T2/Run from `race.splits` (per-segment `split` first, cumulative-delta fallback — matches the `Swim/T1/Bike/T2/Run` labels Coach Cox + IRONMAN imports write). `predictTriathlon()` projects each leg via **recency-weighted Riegel** (per-leg exponents swim 1.02 / bike 1.04 / run 1.06, 1yr half-life decay, cross-distance samples ×0.6) and **blends** with a running-PB engine fallback for the run leg: `α = nEff/(nEff+2)` so cold-start leans engine, seasoned triathletes lean on their own splits. Transitions = weighted avg of actual T1/T2 else type default. Confidence band widens with low α + cross-band. `defaultTriTarget()`, `detectTriType()`, `hasTriSplitData()`.
+- **`TriPredictorWidget`** in Dashboard.tsx — small (finish numeral) / medium (distance selector + finish + range + per-leg bars: swim blue, bike green, run orange, transitions dim) / large (+ per-leg distances). "Set as goal on upcoming race" links a prediction to an upcoming tri's `goalTime` (mirrors RiegelPredictorWidget). Empty state when no tri splits + no running PB.
+- **Registration** — `tri-predictor` in `DEFAULT_WIDGETS` (RECENTLY zone, next to `riegel-predictor`), `WIDGET_SIZES` (`small/medium/large`), render dispatch.
+- **`WIDGET_CONTENT['tri-predictor']`** entry (detail-popup copy).
+- **Tests** — `src/lib/__tests__/triFormulas.test.ts` (20). Full suite 533 green.
+
+#### Key learnings
+- **`widgetContent.ts` guardrail**: `tests/widget-content.test.js` fails if any `enabled: true` widget in `DEFAULT_WIDGETS` lacks a `WIDGET_CONTENT` entry. Always add the content entry in the same change as a new enabled widget, or the suite goes red.
+- Tri split labels in real data are exactly `Swim`/`T1`/`Bike`/`T2`/`Run` stored in `split` (Coach Cox = Swim/Bike/Run only, IRONMAN = full 5). `extractTriLegs` matches on those + cumulative fallback.
+- Empirical-over-engine blend (`α = n/(n+2)`) is the reusable pattern for "use the athlete's own data when they have it, fall back to a model when they don't" — confidence band widens as α→0 and on cross-distance extrapolation.
+- Promote `staging`→`main` with `gh pr merge --merge` (not squash) to keep the branches content-identical and dodge the recurring squash-divergence cleanup.
 
 ---
 
