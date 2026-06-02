@@ -5,6 +5,18 @@
 
 ---
 
+## 2026-06-02 (session 38)
+
+### Triathlon Predictor: empirical-over-engine blend
+**Decision:** Predict tri splits/finish by blending two signals — recency-weighted Riegel projection from the athlete's own recent tri leg splits (empirical) and a running-PB engine fallback for the run leg — weighted by `α = nEff/(nEff+2)`.
+**Rationale:** The athlete's real tri splits already encode race pacing + brick fatigue, so they beat any fresh-TT model when data exists; new users have none, so the model degrades gracefully. `α` grows with same-distance tris logged (cross-distance samples count half) — cold-start leans engine, seasoned triathletes lean on their own history.
+**Mechanics:** Per-leg Riegel exponents swim 1.02 / bike 1.04 / run 1.06; 1yr half-life recency decay; cross-distance samples downweighted ×0.6 and widen the confidence band. Transitions = weighted avg of actual T1/T2 else per-distance default.
+**Reusable pattern:** "use the athlete's own data when they have it, fall back to a model when they don't" with a confidence band that widens as `α→0` and on cross-distance extrapolation.
+**Where:** `src/lib/triFormulas.ts` (`predictTriathlon`), `TriPredictorWidget` in Dashboard.tsx.
+**Version:** v0.7.2.0 (PR #419 → #420)
+
+---
+
 ## 2026-04-26 (session 27)
 
 ### Single `state_json` JSONB blob on `user_state` (not per-slice columns)

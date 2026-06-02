@@ -4,6 +4,16 @@
 
 ---
 
+## 2026-06-02
+
+### New enabled widget without a WIDGET_CONTENT entry fails the guardrail test
+- **Symptom:** After adding `tri-predictor` to `DEFAULT_WIDGETS`, `tests/widget-content.test.js` failed: "enabled widget tri-predictor has an authored WIDGET_CONTENT entry".
+- **Root cause:** `tests/widget-content.test.js` asserts every `enabled: true` widget in `useDashStore.ts` `DEFAULT_WIDGETS` has a matching top-level key in `WIDGET_CONTENT` (`src/lib/widgetContent.ts`) — otherwise users tapping the widget detail get the generic "coming soon" fallback.
+- **Fix:** Add the `WIDGET_CONTENT['<id>']` entry (title/tagline/whatItIs/howToRead/howItImpactsPerformance/relatedActions) in the same change as the new enabled widget.
+- **Watch:** Any new enabled widget needs three touch-points together — `DEFAULT_WIDGETS`, `WIDGET_SIZES`, render dispatch — plus the `WIDGET_CONTENT` entry, or the suite goes red.
+
+---
+
 ## 2026-04-26
 
 ### Cross-device sync silently broken since Clerk migration
