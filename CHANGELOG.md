@@ -3,6 +3,11 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.1.1] - 2026-06-02
+
+### Fixed
+- **Landing + login always use the default Carbon+Chrome theme** — a logged-in user's saved custom/Pro theme no longer tints the marketing landing or the logged-out login screen. The saved theme is untouched and returns once they sign in. Implemented via a transient `forceDefault` flag in the theme store (never persisted), set while not signed in (`AuthGate`) and on the marketing landing (`MarketingLanding`).
+
 ## [0.7.1.0] - 2026-06-02
 
 ### Changed
