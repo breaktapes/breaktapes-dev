@@ -4350,8 +4350,10 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
       <WidgetCard id="riegel-predictor" style={st.glowCard}>
         {/* data-no-widget-detail on the wrapper prevents any click inside from opening the widget detail popup */}
         <div data-no-widget-detail style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
-        <div style={{ ...st.widgetLabel, marginBottom: 0 }}>RACE PREDICTOR</div>
-        <div role="heading" aria-level={2} style={st.widgetTitle}>RIEGEL PREDICTOR</div>
+        <div>
+          <div style={st.widgetLabel}>RACE PREDICTOR</div>
+          <div role="heading" aria-level={2} style={st.widgetTitle}>RIEGEL PREDICTOR</div>
+        </div>
         <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
           Based on {race.name} · {fmtDateDDMM(race.date)}
         </div>
