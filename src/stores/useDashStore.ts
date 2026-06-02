@@ -61,7 +61,7 @@ export const WIDGET_SIZES: Record<string, WidgetSize[]> = {
   // small + medium only
   'pb-probability':      ['small', 'medium'],
   'on-this-day':         ['small', 'medium'],
-  'pacing-iq':           ['small', 'medium'],
+  'pacing-iq':           ['small', 'medium', 'large'],
   'career-momentum':     ['small', 'medium'],
   'pressure-performer':  ['small', 'medium'],
   'travel-load':         ['small', 'medium'],
