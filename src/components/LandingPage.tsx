@@ -194,19 +194,31 @@ const cardSurface: React.CSSProperties = {
    medal wall) computed from each persona's actual race data. Deterministic,
    per-persona, no screenshots — looks like the app, never breaks. */
 type ShotScreen = 'dashboard' | 'races' | 'pbs' | 'medals'
-const shot = (persona: DemoPersonaId, screen: ShotScreen) => `/landing/${persona}-${screen}.png`
 
-/** Stylized phone device shell. Children render inside the screen. */
-function PhoneFrame({ children, pad = true }: { children: React.ReactNode; pad?: boolean }) {
+/** Render shell. `framed` → phone device; otherwise a plain rounded rectangle
+ *  (edge-to-edge). Content is fluid and fills the screen — never cropped. */
+function Shell({ children, pad = true, framed = false }: { children: React.ReactNode; pad?: boolean; framed?: boolean }) {
+  if (framed) {
+    return (
+      <div style={{ width: '100%', maxWidth: 290, margin: '0 auto', aspectRatio: '390 / 844',
+        background: 'var(--surface)', border: '8px solid #16181c', borderRadius: 38,
+        boxShadow: '0 40px 90px -30px rgba(0,0,0,0.85), inset 0 0 0 1px rgba(255,255,255,0.05)',
+        overflow: 'hidden', position: 'relative' }}>
+        <div style={{ position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)',
+          width: 92, height: 18, background: '#000', borderRadius: 12, zIndex: 5 }} />
+        <div style={{ position: 'absolute', inset: 0, borderRadius: 30, overflow: 'hidden',
+          padding: pad ? '40px 16px 16px' : 0, display: 'flex', flexDirection: 'column' }}>
+          {children}
+        </div>
+      </div>
+    )
+  }
   return (
-    <div style={{ width: '100%', maxWidth: 300, margin: '0 auto', aspectRatio: '390 / 844',
-      background: 'var(--surface)', border: '8px solid #16181c', borderRadius: 38,
-      boxShadow: '0 40px 90px -30px rgba(0,0,0,0.85), inset 0 0 0 1px rgba(255,255,255,0.05)',
-      overflow: 'hidden', position: 'relative' }}>
-      <div style={{ position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)',
-        width: 92, height: 18, background: '#000', borderRadius: 12, zIndex: 5 }} />
-      <div style={{ position: 'absolute', inset: 0, borderRadius: 30, overflow: 'hidden',
-        padding: pad ? '40px 16px 16px' : 0, display: 'flex', flexDirection: 'column' }}>
+    <div style={{ width: '100%', maxWidth: 440, margin: '0 auto', aspectRatio: '430 / 560',
+      background: 'var(--surface)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-lg)',
+      boxShadow: '0 30px 80px -40px rgba(0,0,0,0.8)', overflow: 'hidden', position: 'relative' }}>
+      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden',
+        padding: pad ? '18px' : 0, display: 'flex', flexDirection: 'column' }}>
         {children}
       </div>
     </div>
@@ -233,21 +245,28 @@ const MEDAL_RGB: Record<string, [string, string, string]> = {
 const sectionLabel: React.CSSProperties = { fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--white)' }
 
 /* ----- Race map mockup ----- */
-function MapMockup({ persona }: { persona: DemoPersonaId }) {
+function MapMockup({ persona, framed = false }: { persona: DemoPersonaId; framed?: boolean }) {
   const races = DEMO_PERSONAS[persona].races.filter(r => r.lat != null && r.lng != null)
   const cities = new Set(races.map(r => r.city)).size
   const countries = new Set(races.map(r => r.country)).size
   const km = Math.round(races.reduce((s, r) => s + distKm(r.distance), 0))
   const pins = races.map(r => projectLngLat(r.lng!, r.lat!))
+  // Auto-fit the viewBox to the persona's pins so every marker is visible.
+  const xs = pins.map(p => p[0]), ys = pins.map(p => p[1])
+  let minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys)
+  const spanX = Math.max(maxX - minX, 60), spanY = Math.max(maxY - minY, 60)
+  const padX = spanX * 0.55, padY = spanY * 0.55
+  minX -= padX; maxX += padX; minY -= padY; maxY += padY
+  const vb = `${minX} ${minY} ${maxX - minX} ${maxY - minY}`
   return (
-    <PhoneFrame pad={false}>
+    <Shell pad={false} framed={framed}>
       <div style={{ flex: 1, position: 'relative', background: 'radial-gradient(ellipse at 50% 40%, #2a3138, #14181c)', overflow: 'hidden' }}>
-        <svg viewBox="0 30 1000 400" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" style={{ position: 'absolute', inset: 0 }}>
+        <svg viewBox={vb} width="100%" height="100%" preserveAspectRatio="xMidYMid slice" style={{ position: 'absolute', inset: 0 }}>
           <path d={WORLD_MAP_PATH} fill="rgba(0,0,0,0.55)" stroke="rgba(232,224,213,0.18)" strokeWidth="0.8" />
           {pins.map(([x, y], i) => (
             <g key={i}>
-              <circle cx={x} cy={y} r="9" fill="rgba(var(--orange-ch),0.3)" />
-              <circle cx={x} cy={y} r="4" fill="var(--orange)" stroke="#000" strokeWidth="1" />
+              <circle cx={x} cy={y} r={spanX * 0.018 + 3} fill="rgba(var(--orange-ch),0.3)" />
+              <circle cx={x} cy={y} r={spanX * 0.009 + 1.5} fill="var(--orange)" stroke="#000" strokeWidth="0.8" />
             </g>
           ))}
         </svg>
@@ -257,28 +276,28 @@ function MapMockup({ persona }: { persona: DemoPersonaId }) {
         </div>
       </div>
       <div style={{ padding: '12px 12px 14px', background: 'var(--surface)', borderTop: '1px solid var(--border)' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 5 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 6 }}>
           {[[races.length, 'RACES'], [cities, 'CITIES'], [countries, 'COUNTRIES'], [km.toLocaleString(), 'KM']].map(([v, l]) => (
-            <div key={l as string} style={{ ...cardSurface, padding: '7px 4px', textAlign: 'center' }}>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 13, color: 'var(--white)' }}>{v}</div>
-              <div style={{ fontFamily: 'var(--body)', fontSize: 7, letterSpacing: '0.06em', color: 'var(--muted)' }}>{l}</div>
+            <div key={l as string} style={{ ...cardSurface, padding: '8px 4px', textAlign: 'center' }}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 15, color: 'var(--white)' }}>{v}</div>
+              <div style={{ fontFamily: 'var(--body)', fontSize: 8, letterSpacing: '0.06em', color: 'var(--muted)' }}>{l}</div>
             </div>
           ))}
         </div>
       </div>
-    </PhoneFrame>
+    </Shell>
   )
 }
 
 /* ----- Personal bests mockup ----- */
-function PBMockup({ persona }: { persona: DemoPersonaId }) {
+function PBMockup({ persona, framed = false }: { persona: DemoPersonaId; framed?: boolean }) {
   const races = DEMO_PERSONAS[persona].races.filter(r => r.time && r.sport === 'running')
   const best = new Map<string, Race>()
   for (const r of races) { const k = distLabel(r.distance); const cur = best.get(k); if (!cur || t2s(r.time) < t2s(cur.time)) best.set(k, r) }
   const top = [...best.values()].sort((a, b) => distKm(b.distance) - distKm(a.distance)).slice(0, 4)
   const hero = [...best.values()].sort((a, b) => t2s(a.time) - t2s(b.time))[0] ?? top[0]
   return (
-    <PhoneFrame>
+    <Shell framed={framed}>
       <div style={sectionLabel as React.CSSProperties}>PERSONAL BESTS</div>
       {hero && (
         <div style={{ marginTop: 10, padding: '12px', borderRadius: 'var(--radius-md)', borderLeft: '3px solid var(--green)', background: 'linear-gradient(120deg, rgba(var(--green-ch),0.1), var(--surface2))' }}>
@@ -300,45 +319,47 @@ function PBMockup({ persona }: { persona: DemoPersonaId }) {
           </div>
         ))}
       </div>
-    </PhoneFrame>
+    </Shell>
   )
 }
 
 /* ----- Medal wall mockup ----- */
-function MedalMockup({ persona }: { persona: DemoPersonaId }) {
+function MedalMockup({ persona, framed = false }: { persona: DemoPersonaId; framed?: boolean }) {
   const races = DEMO_PERSONAS[persona].races
   const counts = { gold: 0, silver: 0, bronze: 0, finisher: 0 } as Record<string, number>
   for (const r of races) { const m = (r.medal || 'finisher'); if (counts[m] != null) counts[m]++ }
   const order = ['gold', 'silver', 'bronze', 'finisher']
-  const cards = [...races].filter(r => r.medal).sort((a, b) => order.indexOf(a.medal!) - order.indexOf(b.medal!)).slice(0, 4)
+  const cards = [...races].filter(r => r.medal).sort((a, b) => order.indexOf(a.medal!) - order.indexOf(b.medal!)).slice(0, 6)
   return (
-    <PhoneFrame>
+    <Shell framed={framed}>
       <div style={sectionLabel as React.CSSProperties}>MEDALS</div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 9 }}>
-        {order.map(t => {
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
+        {order.filter(t => counts[t] > 0).map(t => {
           const [a, , label] = MEDAL_RGB[t]
           return (
-            <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 9px', borderRadius: 'var(--radius-pill)', border: `1px solid ${a}55`, background: `${a}12` }}>
-              <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 12, color: a }}>{counts[t]}</span>
-              <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 8, letterSpacing: '0.06em', color: 'var(--muted)' }}>{label}</span>
+            <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 10px', borderRadius: 'var(--radius-pill)', border: `1px solid ${a}55`, background: `${a}14` }}>
+              <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 13, color: a }}>{counts[t]}</span>
+              <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 9, letterSpacing: '0.06em', color: 'var(--muted)' }}>{label}</span>
             </span>
           )
         })}
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 7, marginTop: 12 }}>
+      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 12, alignContent: 'start' }}>
         {cards.map(r => {
           const [a, b, label] = MEDAL_RGB[r.medal!]
-          const grad = r.medal === 'gold' || r.medal === 'bronze'
           return (
-            <div key={r.id} style={{ padding: '9px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', background: grad ? `linear-gradient(150deg, ${b}33, var(--surface2))` : 'var(--surface2)' }}>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 9, letterSpacing: '0.06em', color: a }}>{label}</div>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 10, color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: '3px 0' }}>{r.name}</div>
-              <div style={{ fontFamily: 'var(--body)', fontSize: 8, color: 'var(--muted)' }}>{distLabel(r.distance)} · {r.time}</div>
+            <div key={r.id} style={{ padding: '11px 12px', borderRadius: 'var(--radius-md)', border: `1px solid ${a}30`, background: `linear-gradient(155deg, ${b}26, var(--surface2) 70%)`, display: 'flex', flexDirection: 'column', gap: 5, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ width: 9, height: 9, borderRadius: '50%', background: `radial-gradient(circle at 35% 30%, ${a}, ${b})`, flexShrink: 0 }} />
+                <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 10, letterSpacing: '0.06em', color: a }}>{label}</span>
+              </div>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 11, color: 'var(--white)', lineHeight: 1.15, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</div>
+              <div style={{ fontFamily: 'var(--body)', fontSize: 9, color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{distLabel(r.distance)} · {r.time}</div>
             </div>
           )
         })}
       </div>
-    </PhoneFrame>
+    </Shell>
   )
 }
 
@@ -447,16 +468,48 @@ const STAGE_SCREENS: { key: string; title: string; line: string; screen: ShotScr
   { key: 'analytics', title: 'Your analytics', line: 'Pacing IQ, age-grade and momentum — the numbers behind every result, computed for you.', screen: 'pbs' },
 ]
 
-function stageNode(scr: ShotScreen, persona: DemoPersonaId) {
-  if (scr === 'races') return <MapMockup persona={persona} />
-  if (scr === 'pbs') return <PBMockup persona={persona} />
-  if (scr === 'medals') return <MedalMockup persona={persona} />
+/* ----- Dashboard mockup ----- */
+function DashMockup({ persona, framed = false }: { persona: DemoPersonaId; framed?: boolean }) {
+  const p = DEMO_PERSONAS[persona]
+  const first = (p.athlete.firstName || '').toUpperCase()
+  const next = p.upcoming[0]
+  const km = Math.round(p.races.reduce((s, r) => s + distKm(r.distance), 0))
+  const countries = new Set(p.races.map(r => r.country)).size
+  const medals = p.races.filter(r => r.medal).length
+  const stats: [string, string][] = [
+    [String(p.races.length), 'RACES'], [String(countries), 'COUNTRIES'], [km.toLocaleString(), 'KM'],
+    [String(medals), 'MEDALS'], [String(new Set(p.races.map(r => distLabel(r.distance))).size), 'DISTANCES'], [String(p.upcoming.length), 'UPCOMING'],
+  ]
   return (
-    <PhoneFrame pad={false}>
-      <img src={shot(persona, 'dashboard')} alt="Dashboard" loading="lazy"
-        style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center', display: 'block', borderRadius: 30 }} />
-    </PhoneFrame>
+    <Shell framed={framed}>
+      <div style={{ ...cardSurface, padding: '12px 14px', background: 'linear-gradient(135deg, rgba(var(--orange-ch),0.14), var(--surface2))' }}>
+        <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 17, color: 'var(--white)', lineHeight: 1.1 }}>GOOD MORNING, <span style={{ color: 'var(--orange)' }}>{first}</span></div>
+      </div>
+      {next && (
+        <div style={{ ...cardSurface, padding: '13px 14px', marginTop: 10 }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 9, letterSpacing: '0.1em', color: 'var(--orange)' }}>◷ NEXT RACE</div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 18, color: 'var(--white)', lineHeight: 1.05, marginTop: 4 }}>{next.name}</div>
+          <div style={{ fontFamily: 'var(--body)', fontSize: 9, color: 'var(--muted)', marginTop: 4 }}>{next.date} · {distLabel(next.distance)}</div>
+        </div>
+      )}
+      <div style={{ ...sectionLabel, fontSize: 10, marginTop: 16 }}>YOUR RACING</div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 7, marginTop: 8 }}>
+        {stats.map(([v, l]) => (
+          <div key={l} style={{ ...cardSurface, padding: '9px 4px', textAlign: 'center' }}>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 15, color: 'var(--white)' }}>{v}</div>
+            <div style={{ fontFamily: 'var(--body)', fontSize: 7.5, letterSpacing: '0.05em', color: 'var(--muted)' }}>{l}</div>
+          </div>
+        ))}
+      </div>
+    </Shell>
   )
+}
+
+function stageNode(scr: ShotScreen, persona: DemoPersonaId) {
+  if (scr === 'races') return <MapMockup persona={persona} framed />
+  if (scr === 'pbs') return <PBMockup persona={persona} framed />
+  if (scr === 'medals') return <MedalMockup persona={persona} framed />
+  return <DashMockup persona={persona} framed />
 }
 
 function PhoneStage({ screen, stageRef, persona }: { screen: number; stageRef: React.RefObject<HTMLDivElement | null>; persona: DemoPersonaId }) {
@@ -618,7 +671,7 @@ function Testimonials() {
           <motion.blockquote className="pl-quote" key={i}
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }}
             transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}>
-            <span className="pl-quote-mark">“</span>{t.quote}
+            <span className="pl-quote-mark">“</span>{t.quote}<span className="pl-quote-mark pl-quote-mark-close">”</span>
             <footer className="pl-quote-author">
               <span className="pl-quote-avatar">{initials}</span>
               <span><strong>{t.name}</strong><br />{t.role}</span>
@@ -697,8 +750,6 @@ function SandboxSection({ persona }: { persona: DemoPersonaId }) {
           <iframe key={persona} className="pl-sandbox-frame" src={`/demo?persona=${persona}`} title="BREAKTAPES interactive demo" />
         )}
       </motion.div>
-      <motion.a className="pl-sandbox-open" href={`/demo?persona=${persona}`} target="_blank" rel="noopener" variants={fadeUp}
-        onClick={() => track('landing_demo_fullscreen')}>Open full demo ↗</motion.a>
     </motion.section>
   )
 }

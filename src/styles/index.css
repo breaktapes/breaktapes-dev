@@ -250,7 +250,7 @@ body::after {
   text-transform: uppercase; color: var(--muted2);
 }
 .pl-eyebrow {
-  font-family: var(--headline); font-size: var(--text-sm); font-weight: 700;
+  font-family: var(--headline); font-size: calc(var(--text-sm) + 3px); font-weight: 700;
   letter-spacing: 0.16em; text-transform: uppercase; color: var(--orange); margin: 0 0 0.6rem;
 }
 
