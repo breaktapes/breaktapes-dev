@@ -3,6 +3,13 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.1.3] - 2026-06-02
+
+### Fixed
+- **Set Goal Pace sheet** — race name now renders larger and in the heading font, fixing a hierarchy bug where the date/distance line looked bigger than the race name.
+- **Boston Qualifier widget** — qualifying-race finish times bumped 1px for readability.
+- **Gap To Goal widget (small size)** — added a dedicated small-size layout. Previously the small tile reused the medium layout and clipped the Course PB time off the right edge; it now shows the goal time and gap label cleanly.
+
 ## [0.7.1.2] - 2026-06-02
 
 ### Fixed
