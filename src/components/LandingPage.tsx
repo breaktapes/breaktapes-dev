@@ -285,6 +285,9 @@ function MapMockup({ persona, framed = false }: { persona: DemoPersonaId; framed
   let w = maxX - minX, h = maxY - minY
   if (w / h < targetAR) { const nw = h * targetAR, cx = (minX + maxX) / 2; minX = cx - nw / 2; maxX = cx + nw / 2; w = nw }
   else { const nh = w / targetAR, cy = (minY + maxY) / 2; minY = cy - nh / 2; maxY = cy + nh / 2; h = nh }
+  // Keep the viewBox inside the drawn map vertically (0..500) so we never show
+  // dead space past the poles — that void was what made wide maps look "weird".
+  if (h >= 500) { minY = 0; h = 500 } else { minY = Math.max(0, Math.min(minY, 500 - h)) }
   const vb = `${minX} ${minY} ${w} ${h}`
   const pinR = Math.min(spanX * 0.014 + 3, 9) // cap so global personas don't get huge dots
   return (
@@ -447,23 +450,32 @@ function DashboardMockup() {
 
 
 
+/* Clean stroke icons (21st.dev / lucide style) — no emoji anywhere. */
+function ActIcon({ k }: { k: string }) {
+  const c = { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
+  if (k === 'run') return (<svg {...c}><circle cx="17" cy="5" r="2" /><path d="M14.5 8 11 10l2 3-3 5" /><path d="M8 9.5 11.5 8l3 2.5 3 1" /><path d="m6 21 2.5-3.5" /></svg>)
+  if (k === 'bike') return (<svg {...c}><circle cx="6" cy="17" r="3" /><circle cx="18" cy="17" r="3" /><path d="M6 17l4.5-7.5H15l-2-3" /><path d="M12.5 6.5H16" /></svg>)
+  if (k === 'swim') return (<svg {...c}><circle cx="17" cy="6.5" r="1.7" /><path d="M5 12l5-3 3.5 2.5" /><path d="M3 17c1.5 0 1.5-1.2 3-1.2s1.5 1.2 3 1.2 1.5-1.2 3-1.2 1.5 1.2 3 1.2 1.5-1.2 3-1.2" /></svg>)
+  if (k === 'hyrox') return (<svg {...{ ...c, fill: 'currentColor', stroke: 'none' }}><path d="M13 2 5 13h5l-1 9 9-12h-5l3-8z" /></svg>)
+  return (<svg {...c}><path d="M4 8v8M7.5 6v12M16.5 6v12M20 8v8M7.5 12h9" /></svg>)
+}
+function MiniHeart() { return (<svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" style={{ display: 'block' }}><path d="M12 21s-7-4.6-9.3-8.4C.8 9.3 2.3 6 5.6 6c1.9 0 3.2 1.1 4 2.2.8-1.1 2.1-2.2 4-2.2 3.3 0 4.8 3.3 2.9 6.6C19 16.4 12 21 12 21z" /></svg>) }
+
 /* Wearables — only WHOOP is production-authorized. Others are "Coming soon".
    Rendered as a rectangle mockup to match the other showcases. */
 function WearablesMockup() {
   const soon = ['STRAVA', 'GARMIN', 'APPLE', 'COROS', 'OURA']
-  const acts: [string, string, string][] = [
-    ['🏃', 'MORNING RUN', '12.4 km · 4:52 /km'],
-    ['🚴', 'LONG RIDE', '64 km · 1,240 kcal'],
-    ['🏊', 'POOL SWIM', '2.0 km · 38:40'],
-    ['🏋', 'STRENGTH', '48 min · 312 kcal'],
-    ['⚡', 'HYROX SIM', '58 min · 8 stations'],
-    ['🥾', 'TRAIL HIKE', '9.2 km · 410 m gain'],
-    ['🧘', 'MOBILITY', '22 min · recovery'],
-  ]
   const metrics: [string, string, string][] = [
     ['STRAIN', '14.2', 'var(--orange)'],
     ['SLEEP', '7h 48m', 'var(--white)'],
     ['RESTING HR', '46', 'var(--green)'],
+  ]
+  // Each activity carries avg speed/pace, avg HR and a third effort metric.
+  const acts: { k: string; name: string; sub: string; m: [string, string][]; zone: number; accent: string }[] = [
+    { k: 'run', name: 'TEMPO RUN', sub: '12.4 km · 52:18', m: [['AVG PACE', '4:52/km'], ['AVG HR', '158'], ['CADENCE', '182']], zone: 0.84, accent: 'var(--orange)' },
+    { k: 'bike', name: 'THRESHOLD RIDE', sub: '64.0 km · 2:03:40', m: [['AVG SPEED', '31.2 km/h'], ['AVG HR', '146'], ['AVG POWER', '245 W']], zone: 0.70, accent: 'var(--orange)' },
+    { k: 'swim', name: 'OPEN-WATER SWIM', sub: '2.0 km · 38:40', m: [['AVG PACE', '1:55/100m'], ['AVG HR', '132'], ['SWOLF', '38']], zone: 0.52, accent: 'var(--green)' },
+    { k: 'hyrox', name: 'HYROX SIM', sub: '58:20 · 8 stations', m: [['AVG SPEED', '11.4 km/h'], ['AVG HR', '164'], ['STRAIN', '12.1']], zone: 0.92, accent: 'var(--green)' },
   ]
   return (
     <Shell>
@@ -487,7 +499,7 @@ function WearablesMockup() {
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 30, color: 'var(--white)', lineHeight: 1 }}>14.2</div>
           <div style={{ display: 'flex', gap: 3, marginTop: 8, alignItems: 'flex-end', height: 22 }}>
             {[40, 62, 51, 78, 88, 70, 95].map((h, i) => (
-              <div key={i} style={{ flex: 1, height: `${h}%`, borderRadius: '2px 2px 0 0', background: i === 6 ? 'var(--green)' : 'rgba(var(--orange-ch),0.5)' }} />
+              <motion.div key={i} initial={{ height: 0 }} whileInView={{ height: `${h}%` }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.06, ease: 'easeOut' }} style={{ flex: 1, borderRadius: '2px 2px 0 0', background: i === 6 ? 'var(--green)' : 'rgba(var(--orange-ch),0.5)' }} />
             ))}
           </div>
         </div>
@@ -502,14 +514,29 @@ function WearablesMockup() {
       </div>
       <div style={{ ...sectionLabel, fontSize: 10, marginTop: 14 }}>RECENT ACTIVITY</div>
       <div style={{ display: 'grid', gap: 7, marginTop: 8 }}>
-        {acts.map(([icon, name, meta]) => (
-          <div key={name} style={{ ...cardSurface, padding: '9px 11px', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ width: 30, height: 30, borderRadius: 'var(--radius-sm)', background: 'var(--orange-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, flexShrink: 0 }}>{icon}</span>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 11, color: 'var(--white)' }}>{name}</div>
-              <div style={{ fontFamily: 'var(--body)', fontSize: 9, color: 'var(--muted)' }}>{meta}</div>
+        {acts.map((a, i) => (
+          <motion.div key={a.name} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.08 }} style={{ ...cardSurface, padding: '10px 11px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+              <span style={{ width: 28, height: 28, borderRadius: 'var(--radius-sm)', background: `color-mix(in srgb, ${a.accent} 16%, transparent)`, color: a.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><ActIcon k={a.k} /></span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 11, letterSpacing: '0.02em', color: 'var(--white)' }}>{a.name}</div>
+                <div style={{ fontFamily: 'var(--body)', fontSize: 8.5, color: 'var(--muted)' }}>{a.sub}</div>
+              </div>
             </div>
-          </div>
+            <div style={{ display: 'flex', gap: 5, marginTop: 8 }}>
+              {a.m.map(([l, v]) => (
+                <div key={l} style={{ flex: 1, background: 'var(--surface3)', borderRadius: 'var(--radius-sm)', padding: '5px 4px', textAlign: 'center' }}>
+                  <div style={{ fontFamily: 'var(--body)', fontSize: 6.5, letterSpacing: '0.04em', color: 'var(--muted)' }}>{l}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 10.5, color: 'var(--white)', marginTop: 1 }}>
+                    {l === 'AVG HR' ? <span style={{ color: '#FF5A3C', display: 'inline-flex' }}><MiniHeart /></span> : null}{v}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ height: 5, borderRadius: 3, background: 'var(--surface3)', overflow: 'hidden', marginTop: 8 }}>
+              <motion.div initial={{ width: 0 }} whileInView={{ width: `${a.zone * 100}%` }} viewport={{ once: true }} transition={{ duration: 0.9, delay: 0.1 + i * 0.08, ease: 'easeOut' }} style={{ height: '100%', borderRadius: 3, background: 'linear-gradient(90deg, var(--green), var(--orange))' }} />
+            </div>
+          </motion.div>
         ))}
       </div>
     </Shell>
@@ -801,7 +828,7 @@ function StepMiniLog() {
   return (
     <div style={{ ...cardSurface, padding: 'var(--sp-3)', width: '100%', maxWidth: 230, display: 'grid', gap: 8 }}>
       <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 12, letterSpacing: '0.06em',
-        textTransform: 'uppercase', color: 'var(--orange)' }}>🏁 Log a race</div>
+        textTransform: 'uppercase', color: 'var(--orange)' }}>Log a race</div>
       <div style={{ height: 26, borderRadius: 'var(--radius-sm)', background: 'var(--surface3)', border: '1px solid var(--border)',
         display: 'flex', alignItems: 'center', padding: '0 8px', fontFamily: 'var(--body)', fontSize: 10, color: 'var(--white)' }}>Berlin Marathon</div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
