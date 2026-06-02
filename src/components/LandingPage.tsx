@@ -362,13 +362,13 @@ function PBMockup({ persona, framed = false }: { persona: DemoPersonaId; framed?
           const a = PB_ACCENT[sp]
           return (
             <div key={sp}>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: a.color, opacity: 0.75, marginBottom: 7 }}>{sp}</div>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 10.5, letterSpacing: '0.14em', textTransform: 'uppercase', color: a.color, opacity: 0.95, marginBottom: 7 }}>{sp}</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 7 }}>
                 {list.map(r => (
                   <div key={r.id} style={{ background: `linear-gradient(145deg, #141414 0%, ${a.bg} 100%)`, border: '1px solid var(--border2)', borderLeft: `3px solid ${a.color}`, borderRadius: 'var(--radius-md)', padding: '9px 10px', minWidth: 0 }}>
-                    <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 7.5, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)' }}>{distLabel(r.distance)}</div>
+                    <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(245,245,245,0.62)' }}>{distLabel(r.distance)}</div>
                     <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 19, color: a.color, lineHeight: 1, margin: '5px 0 4px' }}>{r.time}</div>
-                    <div style={{ fontFamily: 'var(--body)', fontSize: 8, color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={r.name}>{r.name}</div>
+                    <div style={{ fontFamily: 'var(--body)', fontSize: 9.5, color: 'rgba(245,245,245,0.5)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={r.name}>{r.name}</div>
                   </div>
                 ))}
               </div>
