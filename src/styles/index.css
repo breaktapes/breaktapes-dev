@@ -516,6 +516,73 @@ body::after {
 }
 
 /* =============================================
+   /demo — self-contained interactive demo app
+   ============================================= */
+.demo-root {
+  position: fixed; inset: 0; display: flex; flex-direction: column;
+  background: var(--shell-gradient); color: var(--white); overflow: hidden;
+}
+.demo-top {
+  flex-shrink: 0; display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--border); flex-wrap: wrap;
+}
+.demo-brand { font-family: var(--headline); font-weight: 900; letter-spacing: 0.14em; font-size: 13px; color: var(--white); }
+.demo-badge {
+  font-size: 9px; padding: 2px 6px; background: var(--orange); color: #000;
+  border-radius: var(--radius-xs); letter-spacing: 0.1em; margin-left: 4px; vertical-align: middle;
+}
+.demo-personas { display: flex; gap: 6px; flex-wrap: wrap; }
+.demo-persona {
+  font-family: var(--headline); font-weight: 700; font-size: 11px; text-transform: uppercase;
+  letter-spacing: 0.04em; color: var(--muted); background: var(--surface2);
+  border: 1px solid var(--border2); border-radius: var(--radius-pill); padding: 6px 10px; cursor: pointer;
+}
+.demo-persona.on { color: #000; background: var(--orange); border-color: var(--orange); }
+.demo-body {
+  flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  padding: 14px; max-width: 460px; width: 100%; margin: 0 auto;
+}
+.demo-nav { flex-shrink: 0; display: flex; border-top: 1px solid var(--border); background: var(--surface); }
+.demo-nav-btn {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 8px 0 calc(8px + env(safe-area-inset-bottom, 0px)); background: none; border: none; cursor: pointer;
+  font-family: var(--headline); font-weight: 700; font-size: 10px; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--muted);
+}
+.demo-nav-btn.on { color: var(--orange); }
+.demo-nav-icon { font-size: 16px; }
+
+/* ---- landing sandbox section (embeds /demo in a framed window) ---- */
+.pl-sandbox { max-width: 1000px; margin: 0 auto; padding: 4rem 1.5rem; text-align: center; }
+.pl-sandbox-title {
+  font-family: var(--headline); font-weight: 900; font-size: clamp(1.9rem, 5vw, 2.8rem);
+  text-transform: uppercase; color: var(--white); margin: 0.4rem 0 0.75rem;
+}
+.pl-sandbox-sub { font-size: var(--text-base); color: var(--muted); margin: 0 auto 2rem; max-width: 480px; }
+.pl-sandbox-window {
+  position: relative; margin: 0 auto; max-width: 420px;
+  border: 1px solid var(--border2); border-radius: var(--radius-lg); overflow: hidden;
+  background: var(--surface); box-shadow: 0 40px 90px rgba(0,0,0,0.6);
+}
+.pl-sandbox-bar {
+  display: flex; align-items: center; gap: 6px; padding: 9px 12px;
+  background: var(--surface2); border-bottom: 1px solid var(--border);
+}
+.pl-sandbox-bar i { width: 10px; height: 10px; border-radius: 50%; background: var(--muted2); }
+.pl-sandbox-bar span { margin-left: 8px; font-family: var(--body); font-size: 11px; color: var(--muted); }
+.pl-sandbox-frame { width: 100%; height: 620px; border: 0; display: block; background: var(--surface); }
+.pl-sandbox-placeholder {
+  width: 100%; height: 620px; display: flex; align-items: center; justify-content: center;
+  font-family: var(--headline); font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted2);
+}
+.pl-sandbox-open {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 1.5rem;
+  font-family: var(--headline); font-weight: 700; font-size: var(--text-sm); letter-spacing: 0.04em;
+  text-transform: uppercase; color: var(--orange); text-decoration: none;
+}
+.pl-sandbox-open:hover { filter: brightness(1.15); }
+
+/* =============================================
    LANDING FOOTER
    ============================================= */
 .landing-footer {

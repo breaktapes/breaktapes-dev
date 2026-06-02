@@ -24,6 +24,7 @@ const PrivacyPolicy      = lazy(() => import('@/pages/PrivacyPolicy'))
 const TermsAndConditions = lazy(() => import('@/pages/TermsAndConditions'))
 const Help               = lazy(() => import('@/pages/Help'))
 const Admin              = lazy(() => import('@/pages/Admin').then(m => ({ default: m.Admin })))
+const Demo               = lazy(() => import('@/pages/Demo'))
 
 class RootErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
   state = { error: null }
@@ -152,6 +153,7 @@ export function App() {
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/terms"   element={<TermsAndConditions />} />
               <Route path="/help"    element={<Help />} />
+              <Route path="/demo"    element={<Demo />} />
               {/* All other routes go through Clerk + auth + layout */}
               <Route path="*" element={
                 <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>

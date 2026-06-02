@@ -727,6 +727,28 @@ function FAQ() {
 }
 
 /* =====================================================================
+   LIVE SANDBOX — embeds /demo in a framed window, lazy-mounted on approach.
+   ===================================================================== */
+function SandboxSection() {
+  return (
+    <motion.section className="pl-sandbox" variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}>
+      <motion.p className="pl-eyebrow" variants={fadeUp}>Try it yourself</motion.p>
+      <motion.h2 className="pl-sandbox-title" variants={fadeUp}>The app, live — no signup</motion.h2>
+      <motion.p className="pl-sandbox-sub" variants={fadeUp}>
+        Switch between athletes and tap around the dashboard, races, and profile. A real, interactive demo — nothing to install.
+      </motion.p>
+      <motion.div className="pl-sandbox-window" variants={fadeUp}>
+        <div className="pl-sandbox-bar"><i /><i /><i /><span>app.breaktapes.com/demo</span></div>
+        {/* Native lazy-loading defers the load until the frame nears the viewport. */}
+        <iframe className="pl-sandbox-frame" src="/demo" title="BREAKTAPES interactive demo" loading="lazy" />
+      </motion.div>
+      <motion.a className="pl-sandbox-open" href="/demo" target="_blank" rel="noopener" variants={fadeUp}
+        onClick={() => track('landing_demo_fullscreen')}>Open full demo ↗</motion.a>
+    </motion.section>
+  )
+}
+
+/* =====================================================================
    PAGE
    ===================================================================== */
 export default function LandingPage({ onSignUp, onSignIn }: LandingPageProps) {
@@ -873,6 +895,9 @@ export default function LandingPage({ onSignUp, onSignIn }: LandingPageProps) {
 
       {/* ---------------- HOW IT WORKS ---------------- */}
       <HowItWorks />
+
+      {/* ---------------- LIVE SANDBOX ---------------- */}
+      <SandboxSection />
 
       {/* ---------------- STATS BAND ---------------- */}
       <motion.section className="pl-stats" variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}>
