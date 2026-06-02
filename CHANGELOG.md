@@ -3,6 +3,11 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.2.0] - 2026-06-02
+
+### Added
+- **Triathlon Predictor dashboard widget** — predicts swim / T1 / bike / T2 / run splits and finish time for a target triathlon (Sprint / Olympic / 70.3 / IRONMAN). Blends two signals: recency-weighted Riegel projection from the athlete's own recent tri leg splits (captures real race pacing + brick fatigue) and an engine fallback for the run leg derived from a standalone running PB. Blend weight `α = n / (n + 2)` grows with how much real tri data the athlete has logged, so cold-start leans on the engine model and seasoned triathletes lean on their own data. Cross-distance projections are downweighted and widen the confidence band. New pure library `src/lib/triFormulas.ts` (20 unit tests). Small view shows the finish numeral; medium adds a distance selector, per-leg bars, and confidence range; large adds per-leg distances. Links a prediction to an upcoming triathlon as its goal time (mirrors Race Predictor). Lives in the RECENTLY zone next to Race Predictor; supports small/medium/large sizes.
+
 ## [0.7.1.3] - 2026-06-02
 
 ### Fixed
