@@ -833,15 +833,14 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
                 } else if (s.data) {
                   if (s.data.city)    metaParts.push(s.data.city)
                   if (s.data.country) metaParts.push(s.data.country)
-                  const dl = s.data.dist ? distLabelUtil(s.data.dist) : (s.data.dist_km ? distLabelUtil(String(s.data.dist_km)) : '')
+                  const dl = s.data.dist ? distLabelUtil(s.data.dist, s.data.type) : (s.data.dist_km ? distLabelUtil(String(s.data.dist_km), s.data.type) : '')
                   if (dl) metaParts.push(dl)
                   if (s.allYears && s.allYears.length > 1) {
-                    const _cy = new Date().getFullYear()
+                    // Show the most recent year + "more" (no date repetition across years).
                     const yrs = [...new Set(s.allYears.map(r => r.year).filter(Boolean))]
-                      .sort((a, b) => a! - b!)
-                    const futureYrs = yrs.filter(y => y! >= _cy)
-                    const displayYrs = (futureYrs.length > 0 ? futureYrs : yrs).slice(0, 3)
-                    metaParts.push(displayYrs.join(', ') + (yrs.length > 3 ? '…' : ''))
+                      .sort((a, b) => b! - a!)
+                    const top = yrs[0]
+                    metaParts.push(yrs.length > 1 ? `${top} · +${yrs.length - 1} more` : `${top}`)
                   } else if (s.data.month && s.data.day) {
                     const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
                     // In upcoming mode: advance displayed year past today if needed
