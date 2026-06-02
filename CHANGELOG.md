@@ -3,6 +3,11 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.2.3] - 2026-06-02
+
+### Fixed
+- **OG image now renders in Barlow Condensed** — the share card was rendering the wordmark in a fallback system font instead of the brand typeface. Now uses the correct condensed brand font for the BREAK/TAPES wordmark, tagline, and URL.
+
 ## [0.7.2.2] - 2026-06-02
 
 ### Changed
