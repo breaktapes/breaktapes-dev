@@ -1378,6 +1378,30 @@ Direct DB access (psql/psycopg2) is blocked from localhost — Supabase only exp
 
 ---
 
+### Session 37 (2026-06-02) — IRONMAN/70.3/5150 import + 1,535-event catalog merge
+
+**Branches:** `claude/suspicious-kare-d70eda` → staging → main (PR #397), follow-up fixes PR #406/#407. DB changes applied directly to staging + prod via Supabase MCP.
+
+#### Shipped
+- **Coach Cox name-search import** (`/import/coachcox` in health-proxy) — cross-event IRONMAN/70.3 search with swim/bike/run splits. EXACT first+last token match (coachcox `/quick` is a loose first-name search). `RaceImportModal` carries splits/placings/division/outcome into the saved race.
+- **IRONMAN race-picker** (`IronmanRacePicker.tsx`) — pick race from catalog → `/import/ironman-event` (competitor.com, 1 call = whole event, full swim/T1/bike/T2/run, edge-cached) → filter by name → populate splits.
+- **Catalog** — migration `20260602000000` adds `race_catalog.competitor_event_id` (unique partial index). 1,535 IRONMAN/70.3/5150 event-years crawled (`scripts/scrape-ironman-catalog.mjs`) + merged.
+- **Distance-tag fix** — `distLabel("70.3 / Middle Distance")` was `parseFloat`→70.3→">42.3 = Ultra". Added slash-form exact maps + pass sport. Multi-year autocomplete now shows "most recent · +N more".
+
+#### Catalog merge mechanics (see memory [[project-ironman-import]], [[feedback-catalog-dedup-gotchas]])
+- No service_role key locally (env has only anon). Supabase MCP `execute_sql` HAS write access — bulk-loaded via subagent into a `_im_staging` table, merged in-DB (UPDATE overlaps by lower(name)+year, INSERT new with city inherited from existing same-name tri rows).
+- Name canonicalization: regional championship labels stripped (European Championship → slug → Frankfurt; African/Asia-Pacific → base), preserving "70.3" + "World Championship".
+- Dedup gotchas: multi-distance ≠ dup (key needs `dist`); decimal distances (1.2K vs 12K) must not be punctuation-stripped; **eid-preserving dedup must ORDER BY `(competitor_event_id IS NULL) ASC`** else it deletes the eid row (lost 4 WC event IDs once, re-attached).
+- Merged: 340→291 distinct races. Folded "… Triathlon" suffix, 10 accent/hyphen variants (Jönköping/Poreč/São Paulo…), ~100 short-form "70.3 X" → "IRONMAN 70.3 X" twins, Comrades→Durban, deleted DO-NOT-USE placeholders + Cervia typo. Final: 0 dup groups, 1,535 event IDs, both envs.
+
+#### Key learnings
+- `git cherry-pick` onto main can be corrupted by the PostToolUse linter hook during conflict resolution (reverts the change → empty pick). Use `git diff origin/main origin/staging -- <files> | git apply`; verify with `git cat-file -e origin/main:<file>`.
+- Staging→main was promoted externally mid-session (divergence 4→0) — always re-check `git log origin/main..origin/staging` before promoting.
+- coachcox upstream ~1.3s warm but can exceed 6s cold → Worker timeout bumped to 10s.
+- health-proxy Worker deploys manually (`cd health-proxy && CF_API_TOKEN="" npx wrangler deploy`) — CI does NOT deploy it.
+
+---
+
 ### Session 33 (2026-05-19) — Race DNA/Pattern Scan graphic redesign + weather autofill fixes
 
 **Branch:** `claude/nostalgic-pike-53306c` → direct push to staging + main
