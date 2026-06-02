@@ -10,7 +10,9 @@ import {
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { posthog } from '@/lib/posthog'
-import { DEMO_TESTIMONIALS, DEMO_PERSONA_LIST, type DemoPersonaId } from '@/lib/demoData'
+import { WORLD_MAP_PATH, projectLngLat } from '@/lib/worldMap'
+import { DEMO_TESTIMONIALS, DEMO_PERSONA_LIST, DEMO_PERSONAS, type DemoPersonaId } from '@/lib/demoData'
+import type { Race } from '@/types'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -187,28 +189,156 @@ const cardSurface: React.CSSProperties = {
   borderRadius: 'var(--radius-md)',
 }
 
-/* ---------- REAL app screenshots ----------
-   Static captures of the ACTUAL app, one set per persona (dashboard / races map
-   / personal bests / medal wall), shot at mobile size. The selector swaps the
-   whole set. `contain` so the ENTIRE screen shows in the cutout (no crop). */
+/* ---------- DATA-DRIVEN APP MOCKUPS ----------
+   Stylized recreations of the real app screens (race map / personal bests /
+   medal wall) computed from each persona's actual race data. Deterministic,
+   per-persona, no screenshots — looks like the app, never breaks. */
 type ShotScreen = 'dashboard' | 'races' | 'pbs' | 'medals'
 const shot = (persona: DemoPersonaId, screen: ShotScreen) => `/landing/${persona}-${screen}.png`
 
-/** A real app screenshot dropped into a stylized phone device — looks like the
- *  actual app running on a phone (whole screen visible, no crop). */
-function ShowcaseShot({ src, title }: { src: string; title: string }) {
+/** Stylized phone device shell. Children render inside the screen. */
+function PhoneFrame({ children, pad = true }: { children: React.ReactNode; pad?: boolean }) {
   return (
-    <div className="pl-mock-phone"
-      style={{ width: '100%', maxWidth: 300, margin: '0 auto', aspectRatio: '390 / 844',
-        background: '#0a0a0a', border: '8px solid #16181c', borderRadius: 38,
-        boxShadow: '0 40px 90px -30px rgba(0,0,0,0.85), inset 0 0 0 1px rgba(255,255,255,0.05)',
-        padding: 0, overflow: 'hidden', position: 'relative' }}>
+    <div style={{ width: '100%', maxWidth: 300, margin: '0 auto', aspectRatio: '390 / 844',
+      background: 'var(--surface)', border: '8px solid #16181c', borderRadius: 38,
+      boxShadow: '0 40px 90px -30px rgba(0,0,0,0.85), inset 0 0 0 1px rgba(255,255,255,0.05)',
+      overflow: 'hidden', position: 'relative' }}>
       <div style={{ position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)',
-        width: 92, height: 18, background: '#000', borderRadius: 12, zIndex: 2 }} />
-      <img key={src} src={src} alt={title} loading="lazy"
-        style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center',
-          display: 'block', borderRadius: 30 }} />
+        width: 92, height: 18, background: '#000', borderRadius: 12, zIndex: 5 }} />
+      <div style={{ position: 'absolute', inset: 0, borderRadius: 30, overflow: 'hidden',
+        padding: pad ? '40px 16px 16px' : 0, display: 'flex', flexDirection: 'column' }}>
+        {children}
+      </div>
     </div>
+  )
+}
+
+const DIST_KM: Record<string, number> = { 'IRONMAN': 226, '70.3': 113, 'Olympic': 51.5, 'Sprint': 25.75, 'HYROX': 8, '100 Mile': 160.9, '100K': 100, '50K': 50, 'Ultra': 60, 'Marathon': 42.2, 'Half Marathon': 21.1 }
+function distKm(d: string): number { if (DIST_KM[d] != null) return DIST_KM[d]; const n = parseFloat(d); return Number.isNaN(n) ? 0 : n }
+function distLabel(d: string): string {
+  const n = parseFloat(d)
+  if (!Number.isNaN(n) && String(n) === d.trim()) {
+    if (Math.abs(n - 42.2) < 0.3) return 'MARATHON'
+    if (Math.abs(n - 21.1) < 0.3) return 'HALF MARATHON'
+    if (n === 10) return '10K'; if (n === 5) return '5K'
+    return `${d} KM`
+  }
+  return d.toUpperCase()
+}
+function t2s(t?: string): number { if (!t) return Infinity; const a = t.split(':').map(Number); if (a.some(Number.isNaN)) return Infinity; return a.length === 3 ? a[0]*3600 + a[1]*60 + a[2] : a.length === 2 ? a[0]*60 + a[1] : Infinity }
+const MEDAL_RGB: Record<string, [string, string, string]> = {
+  gold: ['#FFD770', '#B8860B', 'GOLD'], silver: ['#C8D4DC', '#6A7880', 'SILVER'],
+  bronze: ['#CD8C5A', '#7A4420', 'BRONZE'], finisher: ['#E8895A', '#A8421A', 'FINISHER'],
+}
+const sectionLabel: React.CSSProperties = { fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--white)' }
+
+/* ----- Race map mockup ----- */
+function MapMockup({ persona }: { persona: DemoPersonaId }) {
+  const races = DEMO_PERSONAS[persona].races.filter(r => r.lat != null && r.lng != null)
+  const cities = new Set(races.map(r => r.city)).size
+  const countries = new Set(races.map(r => r.country)).size
+  const km = Math.round(races.reduce((s, r) => s + distKm(r.distance), 0))
+  const pins = races.map(r => projectLngLat(r.lng!, r.lat!))
+  return (
+    <PhoneFrame pad={false}>
+      <div style={{ flex: 1, position: 'relative', background: 'radial-gradient(ellipse at 50% 40%, #2a3138, #14181c)', overflow: 'hidden' }}>
+        <svg viewBox="0 30 1000 400" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" style={{ position: 'absolute', inset: 0 }}>
+          <path d={WORLD_MAP_PATH} fill="rgba(0,0,0,0.55)" stroke="rgba(232,224,213,0.18)" strokeWidth="0.8" />
+          {pins.map(([x, y], i) => (
+            <g key={i}>
+              <circle cx={x} cy={y} r="9" fill="rgba(var(--orange-ch),0.3)" />
+              <circle cx={x} cy={y} r="4" fill="var(--orange)" stroke="#000" strokeWidth="1" />
+            </g>
+          ))}
+        </svg>
+        <div style={{ position: 'absolute', top: 12, left: 12, display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(10,10,10,0.85)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-pill)', padding: '5px 11px' }}>
+          <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 14, color: 'var(--orange)' }}>{cities}</span>
+          <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 10, letterSpacing: '0.1em', color: 'var(--white)' }}>CITIES ›</span>
+        </div>
+      </div>
+      <div style={{ padding: '12px 12px 14px', background: 'var(--surface)', borderTop: '1px solid var(--border)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 5 }}>
+          {[[races.length, 'RACES'], [cities, 'CITIES'], [countries, 'COUNTRIES'], [km.toLocaleString(), 'KM']].map(([v, l]) => (
+            <div key={l as string} style={{ ...cardSurface, padding: '7px 4px', textAlign: 'center' }}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 13, color: 'var(--white)' }}>{v}</div>
+              <div style={{ fontFamily: 'var(--body)', fontSize: 7, letterSpacing: '0.06em', color: 'var(--muted)' }}>{l}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </PhoneFrame>
+  )
+}
+
+/* ----- Personal bests mockup ----- */
+function PBMockup({ persona }: { persona: DemoPersonaId }) {
+  const races = DEMO_PERSONAS[persona].races.filter(r => r.time && r.sport === 'running')
+  const best = new Map<string, Race>()
+  for (const r of races) { const k = distLabel(r.distance); const cur = best.get(k); if (!cur || t2s(r.time) < t2s(cur.time)) best.set(k, r) }
+  const top = [...best.values()].sort((a, b) => distKm(b.distance) - distKm(a.distance)).slice(0, 4)
+  const hero = [...best.values()].sort((a, b) => t2s(a.time) - t2s(b.time))[0] ?? top[0]
+  return (
+    <PhoneFrame>
+      <div style={sectionLabel as React.CSSProperties}>PERSONAL BESTS</div>
+      {hero && (
+        <div style={{ marginTop: 10, padding: '12px', borderRadius: 'var(--radius-md)', borderLeft: '3px solid var(--green)', background: 'linear-gradient(120deg, rgba(var(--green-ch),0.1), var(--surface2))' }}>
+          <div style={{ fontFamily: 'var(--body)', fontSize: 8, letterSpacing: '0.12em', color: 'var(--muted)' }}>{distLabel(hero.distance)}</div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 30, color: 'var(--green)', lineHeight: 1 }}>{hero.time}</div>
+          <div style={{ fontFamily: 'var(--body)', fontSize: 9, color: 'var(--muted)', marginTop: 3 }}>{hero.name}</div>
+        </div>
+      )}
+      <div style={{ ...sectionLabel, fontSize: 10, marginTop: 16 }}>SIGNATURE DISTANCES</div>
+      <div style={{ display: 'grid', gap: 6, marginTop: 8 }}>
+        {top.map((r, i) => (
+          <div key={r.id} style={{ ...cardSurface, padding: '8px 10px', display: 'flex', alignItems: 'center', gap: 9, borderColor: i === 0 ? 'rgba(var(--orange-ch),0.4)' : 'var(--border)' }}>
+            <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 15, color: i === 0 ? 'var(--orange)' : 'var(--muted)' }}>{i + 1}</span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 11, color: 'var(--white)' }}>{distLabel(r.distance)}</div>
+              <div style={{ fontFamily: 'var(--body)', fontSize: 8, color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</div>
+            </div>
+            <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 12, color: 'var(--white)' }}>{r.time}</span>
+          </div>
+        ))}
+      </div>
+    </PhoneFrame>
+  )
+}
+
+/* ----- Medal wall mockup ----- */
+function MedalMockup({ persona }: { persona: DemoPersonaId }) {
+  const races = DEMO_PERSONAS[persona].races
+  const counts = { gold: 0, silver: 0, bronze: 0, finisher: 0 } as Record<string, number>
+  for (const r of races) { const m = (r.medal || 'finisher'); if (counts[m] != null) counts[m]++ }
+  const order = ['gold', 'silver', 'bronze', 'finisher']
+  const cards = [...races].filter(r => r.medal).sort((a, b) => order.indexOf(a.medal!) - order.indexOf(b.medal!)).slice(0, 4)
+  return (
+    <PhoneFrame>
+      <div style={sectionLabel as React.CSSProperties}>MEDALS</div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 9 }}>
+        {order.map(t => {
+          const [a, , label] = MEDAL_RGB[t]
+          return (
+            <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '4px 9px', borderRadius: 'var(--radius-pill)', border: `1px solid ${a}55`, background: `${a}12` }}>
+              <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 12, color: a }}>{counts[t]}</span>
+              <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 8, letterSpacing: '0.06em', color: 'var(--muted)' }}>{label}</span>
+            </span>
+          )
+        })}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 7, marginTop: 12 }}>
+        {cards.map(r => {
+          const [a, b, label] = MEDAL_RGB[r.medal!]
+          const grad = r.medal === 'gold' || r.medal === 'bronze'
+          return (
+            <div key={r.id} style={{ padding: '9px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', background: grad ? `linear-gradient(150deg, ${b}33, var(--surface2))` : 'var(--surface2)' }}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 9, letterSpacing: '0.06em', color: a }}>{label}</div>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 10, color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', margin: '3px 0' }}>{r.name}</div>
+              <div style={{ fontFamily: 'var(--body)', fontSize: 8, color: 'var(--muted)' }}>{distLabel(r.distance)} · {r.time}</div>
+            </div>
+          )
+        })}
+      </div>
+    </PhoneFrame>
   )
 }
 
@@ -317,29 +447,38 @@ const STAGE_SCREENS: { key: string; title: string; line: string; screen: ShotScr
   { key: 'analytics', title: 'Your analytics', line: 'Pacing IQ, age-grade and momentum — the numbers behind every result, computed for you.', screen: 'pbs' },
 ]
 
+function stageNode(scr: ShotScreen, persona: DemoPersonaId) {
+  if (scr === 'races') return <MapMockup persona={persona} />
+  if (scr === 'pbs') return <PBMockup persona={persona} />
+  if (scr === 'medals') return <MedalMockup persona={persona} />
+  return (
+    <PhoneFrame pad={false}>
+      <img src={shot(persona, 'dashboard')} alt="Dashboard" loading="lazy"
+        style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center', display: 'block', borderRadius: 30 }} />
+    </PhoneFrame>
+  )
+}
+
 function PhoneStage({ screen, stageRef, persona }: { screen: number; stageRef: React.RefObject<HTMLDivElement | null>; persona: DemoPersonaId }) {
+  const s = STAGE_SCREENS[screen]
   return (
     <section className="pl-stage" ref={stageRef}>
       <div className="pl-stage-pin">
         <div className="pl-stage-inner">
           <div className="pl-stage-copy">
             <p className="pl-eyebrow">The whole app</p>
-            <h2 className="pl-stage-title">{STAGE_SCREENS[screen].title}</h2>
-            <p className="pl-stage-line">{STAGE_SCREENS[screen].line}</p>
+            <h2 className="pl-stage-title">{s.title}</h2>
+            <p className="pl-stage-line">{s.line}</p>
             <div className="pl-stage-dots" aria-hidden="true">
-              {STAGE_SCREENS.map((s, i) => <span key={s.key} className={i === screen ? 'on' : ''} />)}
+              {STAGE_SCREENS.map((st, i) => <span key={st.key} className={i === screen ? 'on' : ''} />)}
             </div>
           </div>
-          <div className="pl-phone">
-            <div className="pl-phone-notch" />
-            <div className="pl-phone-screen">
-              {STAGE_SCREENS.map((s, i) => (
-                <img key={s.key} src={shot(persona, s.screen)} alt={s.title} loading="lazy"
-                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%',
-                    objectFit: 'contain', display: 'block',
-                    opacity: i === screen ? 1 : 0, transition: 'opacity 0.4s ease' }} />
-              ))}
-            </div>
+          <div style={{ width: '100%' }}>
+            <AnimatePresence mode="wait">
+              <motion.div key={s.key} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                {stageNode(s.screen, persona)}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
       </div>
@@ -682,21 +821,21 @@ export default function LandingPage({ onSignUp, onSignIn }: LandingPageProps) {
         eyebrow="Race History" title="Every finish line, mapped"
         desc={'Your whole racing life on one interactive map. Times, splits, placing, terrain, and the weather you ran through — kept for good.'}
         bullets={['Real world map of every race city', 'Splits, placing & conditions per race', 'Year-by-year history and filters']}
-        mockup={<ShowcaseShot src={shot(persona, 'races')} title="Race history — world map" />}
+        mockup={<MapMockup persona={persona} />}
       />
       <FeatureShowcase
         id="auto-prs" reverse
         eyebrow="Auto PRs" title="Personal bests, computed for you"
         desc={'The moment you log a race, BREAKTAPES recomputes your bests across every distance. No spreadsheets, no manual tracking.'}
         bullets={['PRs across 5K → ultra & triathlon', 'Instant recalculation on every log', 'Age-grade & momentum scoring']}
-        mockup={<ShowcaseShot src={shot(persona, 'pbs')} title="Personal bests" />}
+        mockup={<PBMockup persona={persona} />}
       />
       <FeatureShowcase
         id="medal-wall"
         eyebrow="Medal Wall" title="Show off the hardware"
         desc={"Every medal you've earned in one place — gold, silver, bronze and finisher, tier by tier."}
         bullets={['Gold, silver, bronze & finisher tiers', 'PB-flagged podium results', 'Every medal, kept for good']}
-        mockup={<ShowcaseShot src={shot(persona, 'medals')} title="Medal wall" />}
+        mockup={<MedalMockup persona={persona} />}
       />
       <FeatureShowcase
         id="wearables" reverse
