@@ -188,6 +188,11 @@ Victoria Park parkrun | London | United Kingdom | 2024-10-12 | 5 | running | 18:
 London Landmarks Half Marathon | London | United Kingdom | 2025-03-30 | 21.1 | running | 1:23:58 | 410/16000 | 390/9000 | 48/2400 | M30-34 | finisher | road | flat | 50 | 173 | Vaporfly 3 | 11/overcast | 51.5074 | -0.1278
 British 10K London | London | United Kingdom | 2024-07-14 | 10 | running | 33:48 | 40/12000 | 38/8000 | 8/1500 | M30-34 | finisher | road | flat | 20 | 175 | Vaporfly 3 | 19/clear | 51.5074 | -0.1278
 Great South Run | Portsmouth | United Kingdom | 2024-10-20 | 16.09 | running | 54:30 | 55/22000 | 52/14000 | 9/2600 | M30-34 | finisher | road | flat | 15 | 173 | Vaporfly 3 | 14/clear | 50.7989 | -1.0912
+HYROX Berlin | Berlin | Germany | 2024-10-12 | HYROX | hyrox | 1:01:20 | 70/1700 | 65/1450 | 12/300 | M30-34 | bronze | road | flat | 0 | 180 | Nano X3 | 18/indoor | 52.52 | 13.40
+Berlin Marathon | Berlin | Germany | 2024-09-29 | 42.2 | running | 2:56:30 | 1600/45000 | 1480/30000 | 210/6500 | M30-34 | finisher | road | flat | 40 | 170 | Vaporfly 3 | 15/clear | 52.52 | 13.40
+Great Birmingham Run | Birmingham | United Kingdom | 2024-10-13 | 21.1 | running | 1:22:40 | 80/18000 | 75/11000 | 14/2200 | M30-34 | finisher | road | rolling | 80 | 173 | Vaporfly 3 | 13/overcast | 52.4862 | -1.8904
+HYROX Amsterdam | Amsterdam | Netherlands | 2025-01-18 | HYROX | hyrox | 1:00:05 | 55/1600 | 50/1380 | 9/290 | M30-34 | silver | road | flat | 0 | 181 | Nano X3 | 18/indoor | 52.3676 | 4.9041
+HYROX Glasgow | Glasgow | United Kingdom | 2025-03-15 | HYROX | hyrox | 1:01:50 | 60/1500 | 56/1280 | 10/270 | M30-34 | bronze | road | flat | 0 | 181 | Nano X3 | 18/indoor | 55.8642 | -4.2518
 `
 const UK_UP = `
 name: HYROX London | date: 2026-06-13 | city: London | country: United Kingdom | distance: HYROX | sport: hyrox | goalTime: 0:58:00
@@ -292,6 +297,24 @@ Great Wall of China Marathon 10K | Beijing | China | 2024-05-18 | 10 | running |
 Ultra-Trail Mount Yun by UTMB 68K | Linfen | China | 2024-09-21 | 68 (custom km) | running | 10:15:40 | 130/1000 | 120/850 | 9/100 | M55-59 | finisher | trail | mountainous | 3400 | 152 | trail shoes | 15/cold | 36.0889 | 111.5189
 Macao International Marathon 5K | Macao | China | 2025-12-07 | 5 | running | 24:10 | 110/3000 | 100/2000 | 10/240 | M55-59 | bronze | road | flat | 10 | 155 | Adios Pro 3 | 18/clear | 22.1987 | 113.5439
 Shanghai Marathon | Shanghai | China | 2025-11-30 | 42.2 | running | 3:27:50 | 2400/40000 | 2200/27000 | 14/3000 | M55-59 | silver | road | flat | 30 | 156 | Adios Pro 3 | 12/clear | 31.2222 | 121.4581
+Lake Biwa Marathon | Otsu | Japan | 2011-03-06 | 42.2 | running | 3:03:20 | 240/8000 | 220/6000 | 10/600 | M40-44 | silver | road | flat | 30 | 160 | adizero | 9/clear | 35.0045 | 135.8686
+Boston Marathon | Boston | United States | 2012-04-16 | 42.2 | running | 3:01:50 | 1800/24000 | 1650/14000 | 40/2400 | M40-44 | bronze | road | rolling | 280 | 161 | adizero | 12/clear | 42.36 | -71.06
+Tokyo Marathon | Tokyo | Japan | 2013-02-24 | 42.2 | running | 3:05:10 | 900/36000 | 820/26000 | 22/3000 | M45-49 | bronze | road | flat | 30 | 159 | adizero | 8/clear | 35.6762 | 139.6503
+New York City Marathon | New York | United States | 2013-11-03 | 42.2 | running | 3:07:40 | 4200/50000 | 3800/30000 | 60/3200 | M45-49 | finisher | road | rolling | 250 | 160 | adizero | 11/clear | 40.7128 | -74.0060
+Xiamen Marathon | Xiamen | China | 2014-01-02 | 42.2 | running | 3:06:50 | 700/30000 | 640/22000 | 18/2600 | M45-49 | bronze | road | flat | 20 | 158 | Adios | 16/clear | 24.4798 | 118.0894
+Chicago Marathon | Chicago | United States | 2015-10-11 | 42.2 | running | 3:08:30 | 3800/45000 | 3400/28000 | 50/2800 | M45-49 | finisher | road | flat | 30 | 159 | Adios | 13/cloudy | 41.8781 | -87.6298
+Hangzhou Marathon | Hangzhou | China | 2015-11-01 | 42.2 | running | 3:10:20 | 600/28000 | 540/20000 | 12/2400 | M45-49 | silver | road | flat | 40 | 158 | Adios | 14/clear | 30.2741 | 120.1551
+Xiamen Marathon Half | Xiamen | China | 2016-01-02 | 21.1 | running | 1:31:10 | 220/9000 | 200/6500 | 6/700 | M45-49 | silver | road | flat | 20 | 157 | adizero | 17/clear | 24.4798 | 118.0894
+London Marathon | London | United Kingdom | 2016-04-24 | 42.2 | running | 3:09:40 | 5200/39000 | 4700/24000 | 70/2400 | M45-49 | finisher | road | flat | 40 | 159 | Adios | 13/overcast | 51.5074 | -0.1278
+Paris Marathon | Paris | France | 2017-04-09 | 42.2 | running | 3:12:15 | 2400/45000 | 2200/30000 | 30/2600 | M45-49 | silver | road | flat | 40 | 158 | Adios | 14/clear | 48.8566 | 2.3522
+Hangzhou Half Marathon | Hangzhou | China | 2017-11-05 | 21.1 | running | 1:33:50 | 280/9000 | 250/6500 | 8/700 | M45-49 | bronze | road | flat | 40 | 157 | Adios | 15/clear | 30.2741 | 120.1551
+Berlin Marathon | Berlin | Germany | 2018-09-16 | 42.2 | running | 3:13:05 | 6200/44000 | 5500/29000 | 80/2600 | M50-54 | finisher | road | flat | 40 | 157 | Adios Pro 3 | 16/clear | 52.52 | 13.40
+Tokyo Marathon | Tokyo | Japan | 2019-03-03 | 42.2 | running | 3:17:40 | 5800/38000 | 5200/27000 | 60/2400 | M50-54 | bronze | road | flat | 30 | 156 | Adios Pro 3 | 9/clear | 35.6762 | 139.6503
+Course de Paris 10K | Paris | France | 2019-10-13 | 10 | running | 42:30 | 320/9000 | 290/6500 | 9/600 | M50-54 | silver | road | flat | 20 | 158 | Adios Pro 3 | 14/clear | 48.8566 | 2.3522
+Tokyo Legacy Half | Tokyo | Japan | 2021-10-17 | 21.1 | running | 1:35:20 | 600/12000 | 540/8500 | 10/800 | M50-54 | bronze | road | flat | 30 | 155 | Adios Pro 3 | 16/clear | 35.6762 | 139.6503
+The Big Half | London | United Kingdom | 2022-03-06 | 21.1 | running | 1:36:40 | 700/14000 | 640/9500 | 12/900 | M50-54 | bronze | road | flat | 40 | 155 | Adios Pro 3 | 11/overcast | 51.5074 | -0.1278
+Paris Marathon | Paris | France | 2023-04-02 | 42.2 | running | 3:22:30 | 3200/48000 | 2900/31000 | 28/2400 | M55-59 | silver | road | flat | 40 | 156 | Adios Pro 3 | 13/clear | 48.8566 | 2.3522
+Xiamen Marathon | Xiamen | China | 2024-01-07 | 42.2 | running | 3:24:50 | 900/32000 | 820/23000 | 10/2400 | M55-59 | bronze | road | flat | 20 | 155 | Adios Pro 3 | 18/humid | 24.4798 | 118.0894
 `
 const CN_UP = `
 name: Shanghai Marathon | date: 2026-11-29 | city: Shanghai | country: China | distance: 42.2 | sport: running | goalTime: 3:25:00
@@ -317,6 +340,12 @@ Pier to Pub Ocean Swim 1.2K | Lorne | Australia | 2023-01-14 | 1.2 (custom km) |
 HYROX Melbourne | Melbourne | Australia | 2023-09-16 | HYROX | hyrox | 1:18:40 | 220/1400 | 200/1100 | 30/240 | F35-39 | finisher | road | flat | 0 | 172 | Nano X3 | 18/indoor | -37.8136 | 144.9631   (cross-training)
 Gold Coast Marathon 42.2K | Southport | Australia | 2023-07-02 | 42.2 | running | 3:38:20 | 900/9000 | 250/4500 | 45/850 | F35-39 | finisher | road | flat | 30 | 158 | Vaporfly 3 | 15/clear | -27.9719 | 153.4063   (standalone marathon)
 Cairns parkrun | Cairns | Australia | 2024-04-13 | 5 | running | 20:05 | 8/350 | 3/180 | 1/40 | F35-39 | gold | road | flat | 5 | 168 | Vaporfly 3 | 24/humid | -16.9203 | 145.7710
+IRONMAN 70.3 Cebu | Cebu | Philippines | 2019-08-04 | 70.3 | triathlon | 5:25:10 | 90/1800 | 14/420 | 4/70 | F30-34 | silver | road | rolling | 350 | 156 | Cervelo P5 | 30/humid | 10.3157 | 123.8854
+Mooloolaba Triathlon | Mooloolaba | Australia | 2020-03-15 | Olympic | triathlon | 2:31:20 | 280/3000 | 60/900 | 8/150 | F30-34 | silver | road | flat | 60 | 158 | Cervelo P5 | 24/clear | -26.6817 | 153.1186
+Challenge Wanaka | Wanaka | New Zealand | 2021-02-20 | 70.3 | triathlon | 5:14:40 | 120/1400 | 20/360 | 5/60 | F30-34 | bronze | road | rolling | 400 | 154 | Cervelo P5 | 19/clear | -44.7032 | 169.1321
+IRONMAN 70.3 Nice | Nice | France | 2022-09-11 | 70.3 | triathlon | 5:02:30 | 60/2000 | 8/450 | 3/80 | F30-34 | bronze | road | hilly | 600 | 158 | Cervelo P5 | 25/clear | 43.7102 | 7.2620
+IRONMAN Barcelona | Calella | Spain | 2023-10-01 | IRONMAN | triathlon | 10:50:20 | 300/2800 | 26/600 | 5/110 | F35-39 | finisher | road | flat | 200 | 150 | Cervelo P5 | 22/clear | 41.6149 | 2.6556
+IRONMAN 70.3 Sunshine Coast | Maroochydore | Australia | 2024-09-08 | 70.3 | triathlon | 4:55:40 | 40/1900 | 5/420 | 1/75 | F35-39 | gold | road | rolling | 300 | 159 | Cervelo P5 | 23/clear | -26.6500 | 153.0900
 `
 const AUS_UP = `
 name: IRONMAN Cairns | date: 2026-06-14 | city: Cairns | country: Australia | distance: IRONMAN | sport: triathlon | goalTime: 10:30:00
@@ -338,8 +367,16 @@ HYROX London (Pro) | London | United Kingdom | 2026-03-28 | HYROX | hyrox | 0:59
 `
 const UK_UPMORE = `
 name: T100 London | date: 2026-07-25 | city: London | country: United Kingdom | distance: 100 | sport: triathlon | goalTime: 4:15:00
+name: HYROX Berlin | date: 2026-08-15 | city: Berlin | country: Germany | distance: HYROX | sport: hyrox | goalTime: 0:59:00
 name: Great North Run | date: 2026-09-13 | city: Newcastle | country: United Kingdom | distance: 21.1 | sport: running | goalTime: 1:19:00
-name: London Marathon | date: 2026-04-26 | city: London | country: United Kingdom | distance: 42.2 | sport: running | goalTime: 2:55:00
+name: Amsterdam Marathon | date: 2026-10-18 | city: Amsterdam | country: Netherlands | distance: 42.2 | sport: running | goalTime: 2:55:00
+name: HYROX Manchester | date: 2026-11-14 | city: Manchester | country: United Kingdom | distance: HYROX | sport: hyrox | goalTime: 0:59:30
+name: HYROX Amsterdam | date: 2026-12-06 | city: Amsterdam | country: Netherlands | distance: HYROX | sport: hyrox | goalTime: 0:58:30
+name: Berlin Half Marathon | date: 2027-02-07 | city: Berlin | country: Germany | distance: 21.1 | sport: running | goalTime: 1:18:00
+name: HYROX Glasgow | date: 2027-03-14 | city: Glasgow | country: United Kingdom | distance: HYROX | sport: hyrox | goalTime: 0:59:00
+name: London Marathon | date: 2027-04-25 | city: London | country: United Kingdom | distance: 42.2 | sport: running | goalTime: 2:54:00
+name: London Landmarks Half | date: 2027-05-09 | city: London | country: United Kingdom | distance: 21.1 | sport: running | goalTime: 1:20:00
+name: HYROX London (Pro) | date: 2027-06-12 | city: London | country: United Kingdom | distance: HYROX | sport: hyrox | goalTime: 0:57:30
 `
 const EU_RECENT = `
 Granfondo Strade Bianche | Siena | Italy | 2026-03-07 | 130 | cycling | 4:48:20 | 110/2200 | 6/210 | 1/34 | F40-44 | silver | road | hilly | 2900 | 151 | Colnago V4Rs | 14/clear | 43.3188 | 11.3308
@@ -372,6 +409,9 @@ Great Wall of China Marathon 21.1K | Beijing | China | 2026-05-16 | 21.1 | runni
 const CN_UPMORE = `
 name: Beijing Marathon | date: 2026-11-01 | city: Beijing | country: China | distance: 42.2 | sport: running | goalTime: 3:22:00
 name: Ultra-Trail Shudao by UTMB 42K | date: 2026-08-08 | city: Chengdu | country: China | distance: 42 | sport: running | goalTime: 5:50:00
+name: Tokyo Marathon | date: 2027-03-07 | city: Tokyo | country: Japan | distance: 42.2 | sport: running | goalTime: 3:25:00
+name: London Marathon | date: 2027-04-25 | city: London | country: United Kingdom | distance: 42.2 | sport: running | goalTime: 3:28:00
+name: Boston Marathon | date: 2027-04-19 | city: Boston | country: United States | distance: 42.2 | sport: running | goalTime: 3:30:00
 `
 const AUS_RECENT = `
 Noosa Triathlon (Olympic) | Noosa Heads | Australia | 2026-03-22 | Olympic | triathlon | 2:34:10 | 380/8000 | 90/2500 | 12/400 | F35-39 | finisher | road | flat | 120 | 158 | Cervelo P5 | 25/clear | -26.3983 | 153.0905
@@ -380,6 +420,11 @@ Cairns Marathon Festival 10K | Cairns | Australia | 2026-05-10 | 10 | running | 
 const AUS_UPMORE = `
 name: 70.3 Geelong | date: 2026-08-09 | city: Geelong | country: Australia | distance: 70.3 | sport: triathlon | goalTime: 4:52:00
 name: IRONMAN Western Australia | date: 2026-12-06 | city: Busselton | country: Australia | distance: IRONMAN | sport: triathlon | goalTime: 10:40:00
+name: IRONMAN 70.3 Cebu | date: 2026-08-02 | city: Cebu | country: Philippines | distance: 70.3 | sport: triathlon | goalTime: 4:52:00
+name: IRONMAN 70.3 Nice | date: 2026-09-13 | city: Nice | country: France | distance: 70.3 | sport: triathlon | goalTime: 4:58:00
+name: IRONMAN World Championship · Kona | date: 2026-10-10 | city: Kailua-Kona | country: United States | distance: IRONMAN | sport: triathlon | goalTime: 10:20:00
+name: Noosa Triathlon | date: 2026-11-01 | city: Noosa Heads | country: Australia | distance: Olympic | sport: triathlon | goalTime: 2:30:00
+name: IRONMAN New Zealand | date: 2027-03-06 | city: Taupo | country: New Zealand | distance: IRONMAN | sport: triathlon | goalTime: 10:35:00
 `
 
 /* ---------- exact-name repeats (Course Repeats widget needs same race 3+ times) ---------- */
