@@ -182,6 +182,38 @@ body::after {
 .landing-proof-dot { color: var(--muted2); font-size: 12px; user-select: none; }
 
 /* =============================================
+   LOGIN SCREEN — app.breaktapes.com logged-out (simple, centered).
+   The cinematic marketing page (#landing-screen + .pl-*) lives on breaktapes.com.
+   ============================================= */
+#login-screen {
+  position: fixed; inset: 0; z-index: 600;
+  background: linear-gradient(180deg, #050505 0%, #070707 60%, #130905 84%, #1c0b06 100%);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 100vh; min-height: 100dvh;
+  padding: 2rem 1.5rem; text-align: center; overflow: hidden;
+}
+#login-screen::before {
+  content: ''; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 92% 56% at 50% 112%, rgba(var(--orange-ch),0.24) 0%, rgba(var(--orange-ch),0.14) 38%, rgba(var(--orange-ch),0.04) 66%, transparent 82%),
+    radial-gradient(ellipse 46% 30% at 82% 10%, rgba(var(--orange-ch),0.07) 0%, transparent 62%);
+}
+#login-screen::after {
+  content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.035; mix-blend-mode: overlay;
+}
+#login-screen > * { position: relative; z-index: 2; }
+#login-screen .landing-headline { font-size: clamp(3.2rem, 14vw, 6rem); margin-bottom: 1rem; }
+#login-screen .landing-sub { max-width: 300px; margin: 0 auto 2.25rem; text-align: center; }
+.login-actions {
+  display: flex; flex-direction: column; gap: 0.6rem; align-items: center;
+  width: 100%; max-width: 300px; margin-bottom: 2.5rem;
+}
+.login-actions .btn-main { width: 100%; font-size: 15px; padding: 0.85rem 1.5rem; letter-spacing: 0.1em; }
+#login-screen .landing-proof { margin: 0 auto; justify-content: center; }
+
+/* =============================================
    PITCH-DECK LANDING (animated showcase)
    ============================================= */
 .pl-hero {

@@ -8,7 +8,6 @@ import { setClerkToken } from '@/lib/supabase'
 import { syncStateToSupabase, resetRemotePullGate } from '@/lib/syncState'
 import { IS_STAGING } from '@/env'
 import { posthog } from '@/lib/posthog'
-import LandingPage from '@/components/LandingPage'
 
 type AuthView = 'signin' | 'signup'
 
@@ -228,7 +227,12 @@ const clerkAppearance = {
 
 
 function LandingScreen() {
-  const [view, setView] = useState<AuthView | null>(null)
+  // Auto-open the auth modal when arriving from the marketing site
+  // (breaktapes.com Get Started / Sign in → app.breaktapes.com/?auth=signup|signin).
+  const [view, setView] = useState<AuthView | null>(() => {
+    const a = new URLSearchParams(window.location.search).get('auth')
+    return a === 'signup' ? 'signup' : a === 'signin' ? 'signin' : null
+  })
 
   // Preserve the current URL so protected routes (e.g. /compare?b=username)
   // redirect back correctly after sign-in / sign-up.
@@ -237,7 +241,30 @@ function LandingScreen() {
 
   return (
     <>
-      <LandingPage onSignUp={() => setView('signup')} onSignIn={() => setView('signin')} />
+      {/* app.breaktapes.com logged-out = simple login screen. The cinematic
+          marketing landing lives on breaktapes.com (see App.tsx MarketingLanding). */}
+      <div id="login-screen">
+        <div className="landing-wordmark">BREAK<span className="slash">/</span>TAPES</div>
+        <h1 className="landing-headline">
+          Your Races.<br /><em>All of Them.</em>
+        </h1>
+        <p className="landing-sub">Log every finish line. Track PRs, medals, and race history in one place.</p>
+        <div className="login-actions">
+          <button className="btn-main" onClick={() => setView('signup')}>
+            Get Started — It's Free
+          </button>
+          <button className="landing-sign-in-link" onClick={() => setView('signin')}>
+            Already have an account? Sign in
+          </button>
+        </div>
+        <div className="landing-proof">
+          <span className="landing-proof-stat"><strong>Race history</strong> · every finish line</span>
+          <span className="landing-proof-dot" aria-hidden="true">·</span>
+          <span className="landing-proof-stat"><strong>Auto PRs</strong> · all distances</span>
+          <span className="landing-proof-dot" aria-hidden="true">·</span>
+          <span className="landing-proof-stat"><strong>Medal wall</strong> · photo-first</span>
+        </div>
+      </div>
 
       {view && (
         <div

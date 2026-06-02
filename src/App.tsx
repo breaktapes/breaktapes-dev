@@ -25,6 +25,27 @@ const TermsAndConditions = lazy(() => import('@/pages/TermsAndConditions'))
 const Help               = lazy(() => import('@/pages/Help'))
 const Admin              = lazy(() => import('@/pages/Admin').then(m => ({ default: m.Admin })))
 const Demo               = lazy(() => import('@/pages/Demo'))
+const LandingPage        = lazy(() => import('@/components/LandingPage'))
+
+// The cinematic marketing landing lives on the apex marketing domain
+// (breaktapes.com). app.breaktapes.com is the login/app only. `?marketing=1`
+// forces the marketing render locally for testing.
+const MARKETING_HOSTS = new Set(['breaktapes.com', 'www.breaktapes.com'])
+const IS_MARKETING_HOST =
+  typeof window !== 'undefined' &&
+  (MARKETING_HOSTS.has(window.location.hostname) ||
+    new URLSearchParams(window.location.search).has('marketing'))
+
+const APP_ORIGIN = 'https://app.breaktapes.com'
+
+/** Marketing landing for breaktapes.com — no Clerk, no auth. CTAs send the
+ *  visitor to app.breaktapes.com where sign-up / sign-in live. */
+function MarketingLanding() {
+  const goApp = (auth: 'signup' | 'signin') => {
+    window.location.href = `${APP_ORIGIN}/?auth=${auth}`
+  }
+  return <LandingPage onSignUp={() => goApp('signup')} onSignIn={() => goApp('signin')} />
+}
 
 class RootErrorBoundary extends Component<{ children: ReactNode }, { error: Error | null }> {
   state = { error: null }
@@ -154,17 +175,22 @@ export function App() {
               <Route path="/terms"   element={<TermsAndConditions />} />
               <Route path="/help"    element={<Help />} />
               <Route path="/demo"    element={<Demo />} />
-              {/* All other routes go through Clerk + auth + layout */}
+              {/* breaktapes.com (apex) = cinematic marketing landing, no Clerk. */}
+              {/* app.breaktapes.com / dev / localhost = login + app via Clerk.   */}
               <Route path="*" element={
-                <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
-                  <QueryClientProvider client={queryClient}>
-                    <AuthGate>
-                      <Layout>
-                        <AnimatedRoutes />
-                      </Layout>
-                    </AuthGate>
-                  </QueryClientProvider>
-                </ClerkProvider>
+                IS_MARKETING_HOST ? (
+                  <MarketingLanding />
+                ) : (
+                  <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
+                    <QueryClientProvider client={queryClient}>
+                      <AuthGate>
+                        <Layout>
+                          <AnimatedRoutes />
+                        </Layout>
+                      </AuthGate>
+                    </QueryClientProvider>
+                  </ClerkProvider>
+                )
               } />
             </Routes>
           </Suspense>
