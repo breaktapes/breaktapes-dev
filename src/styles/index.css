@@ -132,10 +132,13 @@ body::after {
    noise stays fine on wide/tall viewports instead of stretching into blocks. */
 #landing-screen::after {
   content: '';
-  position: absolute; inset: 0; z-index: 1;
+  position: fixed; inset: 0; z-index: 1;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-repeat: repeat; background-size: 160px 160px;
-  opacity: 0.03; mix-blend-mode: overlay; pointer-events: none;
+  background-repeat: repeat; background-size: 150px 150px;
+  /* Additive (normal-blend) low-opacity noise dithers the radial glow so its
+     8-bit ramp stops banding on near-black. overlay/soft-light preserve black
+     and so can't perturb the dark gradient — that caused the visible rings. */
+  opacity: 0.04; pointer-events: none;
 }
 #landing-screen > * { position: relative; z-index: 2; }
 /* Fixed chrome must escape the blanket `position: relative` above — its ID
@@ -203,8 +206,8 @@ body::after {
 #login-screen::after {
   content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-repeat: repeat; background-size: 160px 160px;
-  opacity: 0.03; mix-blend-mode: overlay;
+  background-repeat: repeat; background-size: 150px 150px;
+  opacity: 0.04;  /* additive dither — see #landing-screen::after note */
 }
 #login-screen > * { position: relative; z-index: 2; }
 #login-screen .landing-headline { font-size: clamp(3.2rem, 14vw, 6rem); margin-bottom: 1rem; }
@@ -229,8 +232,8 @@ body::after {
 .pl-hero::before {
   content: ''; position: absolute; inset: 0; z-index: 0;
   background:
-    radial-gradient(ellipse 70% 50% at 30% 80%, rgba(var(--orange-ch),0.20) 0%, rgba(var(--orange-ch),0.06) 45%, transparent 72%),
-    radial-gradient(ellipse 50% 40% at 90% 10%, rgba(var(--orange-ch),0.10) 0%, transparent 60%);
+    radial-gradient(ellipse 70% 50% at 30% 80%, rgba(var(--orange-ch),0.20) 0%, rgba(var(--orange-ch),0.13) 26%, rgba(var(--orange-ch),0.07) 46%, rgba(var(--orange-ch),0.025) 63%, transparent 80%),
+    radial-gradient(ellipse 50% 40% at 90% 10%, rgba(var(--orange-ch),0.10) 0%, rgba(var(--orange-ch),0.035) 34%, transparent 64%);
   pointer-events: none;
 }
 .pl-hero > * { position: relative; z-index: 2; }
