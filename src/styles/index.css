@@ -437,7 +437,7 @@ body::after {
 .pl-eyebrow-tag { font-weight: 800; }
 
 /* ---- phone-scroll centerpiece ---- */
-.pl-stage { position: relative; height: 360vh; }
+.pl-stage { position: relative; height: 460vh; }
 .pl-stage-pin {
   position: sticky; top: 0; height: 100vh; height: 100dvh;
   display: flex; align-items: center; justify-content: center; overflow: hidden;

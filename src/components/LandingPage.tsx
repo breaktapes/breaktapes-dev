@@ -193,7 +193,7 @@ const cardSurface: React.CSSProperties = {
    Stylized recreations of the real app screens (race map / personal bests /
    medal wall) computed from each persona's actual race data. Deterministic,
    per-persona, no screenshots — looks like the app, never breaks. */
-type ShotScreen = 'dashboard' | 'races' | 'pbs' | 'medals'
+type ShotScreen = 'predictor' | 'planner' | 'pacing' | 'momentum' | 'dna'
 
 /** Render shell. `framed` → phone device; otherwise a plain rounded rectangle
  *  (edge-to-edge). Content is fluid and fills the screen — never cropped. */
@@ -500,42 +500,183 @@ function WearablesMockup() {
    PHONE-SCROLL STAGE — a pinned device cycles through screens on scroll.
    ===================================================================== */
 const STAGE_SCREENS: { key: string; title: string; line: string; screen: ShotScreen }[] = [
-  { key: 'home', title: 'Your dashboard', line: 'Race-day briefing, next-race countdown, and live form, the moment you open the app.', screen: 'dashboard' },
-  { key: 'medals', title: 'Your medal wall', line: 'Every medal you’ve earned, photo-first and tier by tier. Gold, silver, bronze, finisher and custom.', screen: 'medals' },
-  { key: 'map', title: 'Your race map', line: 'Every finish line you’ve crossed, mapped across the world and connected in order.', screen: 'races' },
-  { key: 'analytics', title: 'Your analytics', line: 'Pacing IQ, age-grade and momentum, the numbers behind every result, computed for you.', screen: 'pbs' },
+  { key: 'predictor', title: 'Your race predictor', line: 'Every PB becomes a forecast. Equivalent times from 5K to marathon, recomputed on every log.', screen: 'predictor' },
+  { key: 'planner', title: 'Your season plan', line: 'Your next races on one timeline, with the taper and peak weeks mapped to race day.', screen: 'planner' },
+  { key: 'pacing', title: 'Your pacing IQ', line: 'Negative splitter or fader? Your split signature, read from every race you log.', screen: 'pacing' },
+  { key: 'momentum', title: 'Your momentum', line: 'A single form score from your recent results, trending up or cooling off at a glance.', screen: 'momentum' },
+  { key: 'dna', title: 'Your race DNA', line: 'The conditions you thrive in. Temperature, surface and terrain, distilled from your history.', screen: 'dna' },
 ]
 
-/* ----- Dashboard mockup ----- */
-function DashMockup({ persona, framed = false }: { persona: DemoPersonaId; framed?: boolean }) {
-  const p = DEMO_PERSONAS[persona]
-  const first = (p.athlete.firstName || '').toUpperCase()
-  const next = p.upcoming[0]
-  const km = Math.round(p.races.reduce((s, r) => s + distKm(r.distance), 0))
-  const countries = new Set(p.races.map(r => r.country)).size
-  const medals = p.races.filter(r => r.medal).length
-  const stats: [string, string][] = [
-    [String(p.races.length), 'RACES'], [String(countries), 'COUNTRIES'], [km.toLocaleString(), 'KM'],
-    [String(medals), 'MEDALS'], [String(new Set(p.races.map(r => distLabel(r.distance))).size), 'DISTANCES'], [String(p.upcoming.length), 'UPCOMING'],
-  ]
+function s2t(sec: number): string {
+  sec = Math.round(sec)
+  const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`
+}
+
+/* ----- Race predictor (Riegel equivalents from best PB) ----- */
+function PredictorMockup({ persona, framed = false }: { persona: DemoPersonaId; framed?: boolean }) {
+  const runs = DEMO_PERSONAS[persona].races.filter(r => r.time && r.sport === 'running' && distKm(r.distance) >= 3)
+  let ref = runs[0], bestPace = Infinity
+  for (const r of runs) { const p = t2s(r.time!) / distKm(r.distance); if (p < bestPace) { bestPace = p; ref = r } }
+  const refKm = ref ? distKm(ref.distance) : 10, refSec = ref ? t2s(ref.time!) : 2400
+  const rows: [string, number][] = [['5K', 5], ['10K', 10], ['HALF', 21.0975], ['MARATHON', 42.195]]
   return (
     <Shell framed={framed}>
-      <div style={{ ...cardSurface, padding: '12px 14px', background: 'linear-gradient(135deg, rgba(var(--orange-ch),0.14), var(--surface2))' }}>
-        <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 17, color: 'var(--white)', lineHeight: 1.1 }}>GOOD MORNING, <span style={{ color: 'var(--orange)' }}>{first}</span></div>
+      <div style={sectionLabel}>RACE PREDICTOR</div>
+      <div style={{ marginTop: 10, padding: '12px', borderRadius: 'var(--radius-md)', borderLeft: '3px solid var(--orange)', background: 'linear-gradient(120deg, rgba(var(--orange-ch),0.12), var(--surface2))' }}>
+        <div style={{ fontFamily: 'var(--body)', fontSize: 8, letterSpacing: '0.12em', color: 'var(--muted)' }}>FROM YOUR {ref ? distLabel(ref.distance) : '10K'} PB</div>
+        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 26, color: 'var(--orange)', lineHeight: 1 }}>{ref?.time ?? '—'}</div>
+        <div style={{ fontFamily: 'var(--body)', fontSize: 9, color: 'var(--muted)', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ref?.name}</div>
       </div>
+      <div style={{ ...sectionLabel, fontSize: 10, marginTop: 16 }}>PREDICTED EQUIVALENTS</div>
+      <div style={{ display: 'grid', gap: 6, marginTop: 8 }}>
+        {rows.map(([lbl, d]) => (
+          <div key={lbl} style={{ ...cardSurface, padding: '9px 11px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 11, color: 'var(--white)' }}>{lbl}</span>
+            <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 13, color: 'var(--white)' }}>{s2t(refSec * Math.pow(d / refKm, 1.06))}</span>
+          </div>
+        ))}
+      </div>
+    </Shell>
+  )
+}
+
+/* ----- Season planner (taper timeline + upcoming calendar) ----- */
+function PlannerMockup({ persona, framed = false }: { persona: DemoPersonaId; framed?: boolean }) {
+  const up = DEMO_PERSONAS[persona].upcoming.slice(0, 3)
+  const next = up[0]
+  return (
+    <Shell framed={framed}>
+      <div style={sectionLabel}>SEASON PLANNER</div>
       {next && (
-        <div style={{ ...cardSurface, padding: '13px 14px', marginTop: 10 }}>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 9, letterSpacing: '0.1em', color: 'var(--orange)' }}>◷ NEXT RACE</div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 18, color: 'var(--white)', lineHeight: 1.05, marginTop: 4 }}>{next.name}</div>
-          <div style={{ fontFamily: 'var(--body)', fontSize: 9, color: 'var(--muted)', marginTop: 4 }}>{next.date} · {distLabel(next.distance)}</div>
+        <div style={{ marginTop: 10, padding: '12px', borderRadius: 'var(--radius-md)', borderLeft: '3px solid var(--green)', background: 'linear-gradient(120deg, rgba(var(--green-ch),0.1), var(--surface2))' }}>
+          <div style={{ fontFamily: 'var(--body)', fontSize: 8, letterSpacing: '0.12em', color: 'var(--muted)' }}>NEXT KEY RACE</div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 18, color: 'var(--white)', lineHeight: 1.05, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{next.name}</div>
+          <div style={{ fontFamily: 'var(--body)', fontSize: 9, color: 'var(--muted)', marginTop: 3 }}>{next.date}{next.goalTime ? ` · goal ${next.goalTime}` : ''}</div>
         </div>
       )}
-      <div style={{ ...sectionLabel, fontSize: 10, marginTop: 16 }}>YOUR RACING</div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 7, marginTop: 8 }}>
-        {stats.map(([v, l]) => (
-          <div key={l} style={{ ...cardSurface, padding: '9px 4px', textAlign: 'center' }}>
-            <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 15, color: 'var(--white)' }}>{v}</div>
-            <div style={{ fontFamily: 'var(--body)', fontSize: 7.5, letterSpacing: '0.05em', color: 'var(--muted)' }}>{l}</div>
+      <div style={{ ...sectionLabel, fontSize: 10, marginTop: 16 }}>TAPER &amp; PEAK</div>
+      <div style={{ display: 'flex', gap: 3, marginTop: 8, height: 30, alignItems: 'flex-end' }}>
+        {[42, 52, 60, 68, 76, 84, 92, 99, 86, 66, 50, 36].map((h, i) => (
+          <div key={i} style={{ flex: 1, height: `${h}%`, borderRadius: '2px 2px 0 0', background: i >= 9 ? 'rgba(var(--green-ch),0.75)' : 'rgba(var(--orange-ch),0.5)' }} />
+        ))}
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+        <span style={{ fontFamily: 'var(--body)', fontSize: 7.5, color: 'var(--muted)' }}>BUILD</span>
+        <span style={{ fontFamily: 'var(--body)', fontSize: 7.5, color: 'var(--green)' }}>TAPER → RACE</span>
+      </div>
+      <div style={{ ...sectionLabel, fontSize: 10, marginTop: 14 }}>ON THE CALENDAR</div>
+      <div style={{ display: 'grid', gap: 6, marginTop: 8 }}>
+        {up.map(r => (
+          <div key={r.id} style={{ ...cardSurface, padding: '9px 11px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 11, color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</div>
+              <div style={{ fontFamily: 'var(--body)', fontSize: 8, color: 'var(--muted)' }}>{distLabel(r.distance)}</div>
+            </div>
+            <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 11, color: 'var(--orange)', flexShrink: 0 }}>{r.date ? r.date.slice(5) : ''}</span>
+          </div>
+        ))}
+      </div>
+    </Shell>
+  )
+}
+
+/* ----- Pacing IQ (split signature) ----- */
+function PacingMockup({ persona, framed = false }: { persona: DemoPersonaId; framed?: boolean }) {
+  const race = DEMO_PERSONAS[persona].races.find(r => r.splits && r.splits.length >= 4 && r.time)
+  const segs = race?.splits?.map(s => t2s(s.split)) ?? [60, 60, 60, 60, 60]
+  const half = Math.floor(segs.length / 2)
+  const first = segs.slice(0, half).reduce((a, b) => a + b, 0) / Math.max(1, half)
+  const second = segs.slice(half).reduce((a, b) => a + b, 0) / Math.max(1, segs.length - half)
+  const tag = second < first * 0.98 ? 'NEGATIVE SPLITTER' : second > first * 1.03 ? 'FADER' : 'EVEN PACER'
+  const desc = tag === 'NEGATIVE SPLITTER' ? 'You finish faster than you start.' : tag === 'FADER' ? 'You go out hot and hold on.' : 'Metronomic, wire to wire.'
+  const max = Math.max(...segs), min = Math.min(...segs)
+  return (
+    <Shell framed={framed}>
+      <div style={sectionLabel}>PACING IQ</div>
+      <div style={{ marginTop: 10, padding: '12px', borderRadius: 'var(--radius-md)', borderLeft: '3px solid var(--green)', background: 'linear-gradient(120deg, rgba(var(--green-ch),0.1), var(--surface2))' }}>
+        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 19, color: 'var(--green)', lineHeight: 1 }}>{tag}</div>
+        <div style={{ fontFamily: 'var(--body)', fontSize: 9, color: 'var(--muted)', marginTop: 4 }}>{desc}</div>
+      </div>
+      <div style={{ ...sectionLabel, fontSize: 10, marginTop: 16 }}>SPLIT SIGNATURE</div>
+      <div style={{ display: 'flex', gap: 4, marginTop: 8, height: 60, alignItems: 'flex-end' }}>
+        {segs.slice(0, 8).map((s, i) => {
+          const h = max === min ? 60 : 30 + 60 * (s - min) / (max - min)
+          return <div key={i} style={{ flex: 1, height: `${h}%`, borderRadius: '2px 2px 0 0', background: s <= first ? 'var(--green)' : 'rgba(var(--orange-ch),0.6)' }} />
+        })}
+      </div>
+      <div style={{ fontFamily: 'var(--body)', fontSize: 8, color: 'var(--muted)', marginTop: 6, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{race?.name ?? 'Logged race splits'}</div>
+    </Shell>
+  )
+}
+
+/* ----- Career momentum (form trend) ----- */
+function MomentumMockup({ persona, framed = false }: { persona: DemoPersonaId; framed?: boolean }) {
+  const runs = DEMO_PERSONAS[persona].races.filter(r => r.time && r.sport === 'running').slice().sort((a, b) => (a.date < b.date ? -1 : 1))
+  const perf = runs.slice(-8).map(r => distKm(r.distance) / t2s(r.time!) * 1000)
+  const pts = perf.length >= 2 ? perf : [1, 1.1]
+  const mn = Math.min(...pts), mx = Math.max(...pts)
+  const W = 240, H = 60
+  const path = pts.map((v, i) => `${i === 0 ? 'M' : 'L'} ${(i / (pts.length - 1)) * W} ${H - (mx === mn ? H / 2 : ((v - mn) / (mx - mn)) * (H - 8) + 4)}`).join(' ')
+  const rising = pts[pts.length - 1] >= pts[0]
+  const score = Math.round(60 + 35 * (mx === mn ? 0.5 : (pts[pts.length - 1] - mn) / (mx - mn)))
+  const badge = rising && score >= 85 ? 'HOT' : rising ? 'RISING' : 'STEADY'
+  return (
+    <Shell framed={framed}>
+      <div style={sectionLabel}>CAREER MOMENTUM</div>
+      <div style={{ marginTop: 10, padding: '12px', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderLeft: '3px solid var(--orange)', background: 'linear-gradient(120deg, rgba(var(--orange-ch),0.12), var(--surface2))' }}>
+        <div>
+          <div style={{ fontFamily: 'var(--body)', fontSize: 8, letterSpacing: '0.12em', color: 'var(--muted)' }}>FORM SCORE</div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 30, color: 'var(--orange)', lineHeight: 1 }}>{score}</div>
+        </div>
+        <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 11, letterSpacing: '0.06em', color: 'var(--green)', padding: '4px 10px', borderRadius: 'var(--radius-pill)', background: 'var(--green-dim)' }}>▲ {badge}</span>
+      </div>
+      <div style={{ ...sectionLabel, fontSize: 10, marginTop: 16 }}>FORM TREND</div>
+      <div style={{ ...cardSurface, padding: '12px', marginTop: 8 }}>
+        <svg viewBox={`0 0 ${W} ${H}`} width="100%" height="56" preserveAspectRatio="none">
+          <path d={path} fill="none" stroke="var(--green)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </div>
+    </Shell>
+  )
+}
+
+/* ----- Race DNA (conditions you thrive in) ----- */
+function DNAMockup({ persona, framed = false }: { persona: DemoPersonaId; framed?: boolean }) {
+  const races = DEMO_PERSONAS[persona].races
+  const buckets: [string, number, string][] = [['COLD', 0, '#5B8DEF'], ['COOL', 0, '#2BD4A0'], ['WARM', 0, '#FFB347'], ['HOT', 0, '#FF5A3C']]
+  races.forEach(r => { const t = r.weather?.temp; if (t == null) return; const i = t < 10 ? 0 : t < 18 ? 1 : t < 26 ? 2 : 3; buckets[i][1]++ })
+  const maxB = Math.max(1, ...buckets.map(b => b[1]))
+  const best = buckets.slice().sort((a, b) => b[1] - a[1])[0]
+  const surf: Record<string, number> = {}
+  races.forEach(r => { const s = r.surface || 'road'; surf[s] = (surf[s] || 0) + 1 })
+  const surfRows = Object.entries(surf).sort((a, b) => b[1] - a[1]).slice(0, 3)
+  const surfMax = Math.max(1, ...surfRows.map(s => s[1]))
+  return (
+    <Shell framed={framed}>
+      <div style={sectionLabel}>RACE DNA</div>
+      <div style={{ ...sectionLabel, fontSize: 10, marginTop: 12, color: 'var(--muted)' }}>TEMPERATURE FIT</div>
+      <div style={{ display: 'grid', gap: 6, marginTop: 8 }}>
+        {buckets.map(([lbl, n, c]) => (
+          <div key={lbl} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 9, color: 'var(--muted)', width: 38 }}>{lbl}{lbl === best[0] && best[1] > 0 ? ' ★' : ''}</span>
+            <div style={{ flex: 1, height: 10, borderRadius: 5, background: 'var(--surface3)', overflow: 'hidden' }}>
+              <div style={{ width: `${(n / maxB) * 100}%`, height: '100%', background: c, borderRadius: 5 }} />
+            </div>
+            <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 9, color: 'var(--white)', width: 14, textAlign: 'right' }}>{n}</span>
+          </div>
+        ))}
+      </div>
+      <div style={{ ...sectionLabel, fontSize: 10, marginTop: 14, color: 'var(--muted)' }}>SURFACE SPLIT</div>
+      <div style={{ display: 'grid', gap: 6, marginTop: 8 }}>
+        {surfRows.map(([s, n], i) => (
+          <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 9, color: 'var(--muted)', width: 48, textTransform: 'uppercase' }}>{s}</span>
+            <div style={{ flex: 1, height: 10, borderRadius: 5, background: 'var(--surface3)', overflow: 'hidden' }}>
+              <div style={{ width: `${(n / surfMax) * 100}%`, height: '100%', background: i === 0 ? 'var(--orange)' : 'rgba(var(--orange-ch),0.4)', borderRadius: 5 }} />
+            </div>
+            <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 9, color: 'var(--white)', width: 14, textAlign: 'right' }}>{n}</span>
           </div>
         ))}
       </div>
@@ -544,10 +685,11 @@ function DashMockup({ persona, framed = false }: { persona: DemoPersonaId; frame
 }
 
 function stageNode(scr: ShotScreen, persona: DemoPersonaId) {
-  if (scr === 'races') return <MapMockup persona={persona} framed />
-  if (scr === 'pbs') return <PBMockup persona={persona} framed />
-  if (scr === 'medals') return <MedalMockup persona={persona} framed />
-  return <DashMockup persona={persona} framed />
+  if (scr === 'predictor') return <PredictorMockup persona={persona} framed />
+  if (scr === 'planner') return <PlannerMockup persona={persona} framed />
+  if (scr === 'pacing') return <PacingMockup persona={persona} framed />
+  if (scr === 'momentum') return <MomentumMockup persona={persona} framed />
+  return <DNAMockup persona={persona} framed />
 }
 
 function PhoneStage({ screen, stageRef, persona }: { screen: number; stageRef: React.RefObject<HTMLDivElement | null>; persona: DemoPersonaId }) {
