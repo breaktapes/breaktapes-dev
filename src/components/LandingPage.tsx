@@ -188,24 +188,19 @@ const cardSurface: React.CSSProperties = {
 }
 
 /* ---------- REAL app screenshots ----------
-   Static captures of the ACTUAL app (Dashboard / Races map / Personal Bests /
-   Medal wall), shot at mobile size. Used as fitted screenshots in the feature
-   showcases and the phone-stage — no live iframes (kept only for the sandbox),
-   so the page is light and nothing can fail to load. */
-const SHOTS = {
-  dashboard: '/landing/screen-dashboard.png',
-  races: '/landing/screen-races.png',
-  pbs: '/landing/screen-pbs.png',
-  medals: '/landing/screen-medals.png',
-} as const
+   Static captures of the ACTUAL app, one set per persona (dashboard / races map
+   / personal bests / medal wall), shot at mobile size. The selector swaps the
+   whole set. `contain` so the ENTIRE screen shows in the cutout (no crop). */
+type ShotScreen = 'dashboard' | 'races' | 'pbs' | 'medals'
+const shot = (persona: DemoPersonaId, screen: ShotScreen) => `/landing/${persona}-${screen}.png`
 
 /** A real app screenshot framed as a device-style card (showcase art). */
 function ShowcaseShot({ src, title }: { src: string; title: string }) {
   return (
     <div className="pl-demo-frame"
-      style={{ width: '100%', aspectRatio: '10 / 17', maxHeight: 580, borderRadius: 'var(--radius-lg)', overflow: 'hidden', border: '1px solid var(--border2)', background: 'var(--surface)', boxShadow: '0 30px 80px -40px rgba(0,0,0,0.8)' }}>
-      <img src={src} alt={title} loading="lazy"
-        style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top center', display: 'block' }} />
+      style={{ width: '100%', aspectRatio: '390 / 844', maxHeight: 620, borderRadius: 'var(--radius-lg)', overflow: 'hidden', border: '1px solid var(--border2)', background: '#0a0a0a', boxShadow: '0 30px 80px -40px rgba(0,0,0,0.8)' }}>
+      <img key={src} src={src} alt={title} loading="lazy"
+        style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
     </div>
   )
 }
@@ -308,14 +303,14 @@ function WearablesMockup() {
 /* =====================================================================
    PHONE-SCROLL STAGE — a pinned device cycles through screens on scroll.
    ===================================================================== */
-const STAGE_SCREENS = [
-  { key: 'home', title: 'Your dashboard', line: 'Race-day briefing, next-race countdown, and live form — the moment you open the app.', shot: SHOTS.dashboard },
-  { key: 'medals', title: 'Your medal wall', line: 'Every medal you’ve earned, photo-first and tier by tier. Gold, silver, bronze, finisher.', shot: SHOTS.medals },
-  { key: 'map', title: 'Your race map', line: 'Every finish line you’ve crossed, mapped across the world and connected in order.', shot: SHOTS.races },
-  { key: 'analytics', title: 'Your analytics', line: 'Pacing IQ, age-grade and momentum — the numbers behind every result, computed for you.', shot: SHOTS.pbs },
-] as const
+const STAGE_SCREENS: { key: string; title: string; line: string; screen: ShotScreen }[] = [
+  { key: 'home', title: 'Your dashboard', line: 'Race-day briefing, next-race countdown, and live form — the moment you open the app.', screen: 'dashboard' },
+  { key: 'medals', title: 'Your medal wall', line: 'Every medal you’ve earned, photo-first and tier by tier. Gold, silver, bronze, finisher.', screen: 'medals' },
+  { key: 'map', title: 'Your race map', line: 'Every finish line you’ve crossed, mapped across the world and connected in order.', screen: 'races' },
+  { key: 'analytics', title: 'Your analytics', line: 'Pacing IQ, age-grade and momentum — the numbers behind every result, computed for you.', screen: 'pbs' },
+]
 
-function PhoneStage({ screen, stageRef }: { screen: number; stageRef: React.RefObject<HTMLDivElement | null> }) {
+function PhoneStage({ screen, stageRef, persona }: { screen: number; stageRef: React.RefObject<HTMLDivElement | null>; persona: DemoPersonaId }) {
   return (
     <section className="pl-stage" ref={stageRef}>
       <div className="pl-stage-pin">
@@ -332,9 +327,9 @@ function PhoneStage({ screen, stageRef }: { screen: number; stageRef: React.RefO
             <div className="pl-phone-notch" />
             <div className="pl-phone-screen">
               {STAGE_SCREENS.map((s, i) => (
-                <img key={s.key} src={s.shot} alt={s.title} loading="lazy"
+                <img key={s.key} src={shot(persona, s.screen)} alt={s.title} loading="lazy"
                   style={{ position: 'absolute', inset: 0, width: '100%', height: '100%',
-                    objectFit: 'cover', objectPosition: 'top center', display: 'block',
+                    objectFit: 'contain', display: 'block',
                     opacity: i === screen ? 1 : 0, transition: 'opacity 0.4s ease' }} />
               ))}
             </div>
@@ -680,21 +675,21 @@ export default function LandingPage({ onSignUp, onSignIn }: LandingPageProps) {
         eyebrow="Race History" title="Every finish line, mapped"
         desc={'Your whole racing life on one interactive map. Times, splits, placing, terrain, and the weather you ran through — kept for good.'}
         bullets={['Real world map of every race city', 'Splits, placing & conditions per race', 'Year-by-year history and filters']}
-        mockup={<ShowcaseShot src={SHOTS.races} title="Race history — world map" />}
+        mockup={<ShowcaseShot src={shot(persona, 'races')} title="Race history — world map" />}
       />
       <FeatureShowcase
         id="auto-prs" reverse
         eyebrow="Auto PRs" title="Personal bests, computed for you"
         desc={'The moment you log a race, BREAKTAPES recomputes your bests across every distance. No spreadsheets, no manual tracking.'}
         bullets={['PRs across 5K → ultra & triathlon', 'Instant recalculation on every log', 'Age-grade & momentum scoring']}
-        mockup={<ShowcaseShot src={SHOTS.pbs} title="Personal bests" />}
+        mockup={<ShowcaseShot src={shot(persona, 'pbs')} title="Personal bests" />}
       />
       <FeatureShowcase
         id="medal-wall"
         eyebrow="Medal Wall" title="Show off the hardware"
         desc={"Every medal you've earned in one place — gold, silver, bronze and finisher, tier by tier."}
         bullets={['Gold, silver, bronze & finisher tiers', 'PB-flagged podium results', 'Every medal, kept for good']}
-        mockup={<ShowcaseShot src={SHOTS.medals} title="Medal wall" />}
+        mockup={<ShowcaseShot src={shot(persona, 'medals')} title="Medal wall" />}
       />
       <FeatureShowcase
         id="wearables" reverse
@@ -705,7 +700,7 @@ export default function LandingPage({ onSignUp, onSignIn }: LandingPageProps) {
       />
 
       {/* ---------------- PHONE-SCROLL CENTERPIECE ---------------- */}
-      <PhoneStage screen={screen} stageRef={stageRef} />
+      <PhoneStage screen={screen} stageRef={stageRef} persona={persona} />
 
       {/* ---------------- HOW IT WORKS ---------------- */}
       <HowItWorks />

@@ -43,15 +43,28 @@ export default function Demo() {
   const [tab, setTab] = useState<Tab>(initialTab)
   const persona = DEMO_PERSONAS[pid]
 
-  // Screenshot helper: ?scroll=N scrolls the demo body to a fixed offset on
-  // load (used to capture focused sections like Personal Bests / Medals).
+  // Screenshot helper: ?focus=pbs|medals scrolls a profile section to the top
+  // (works across personas of different heights — used for section captures).
+  // ?scroll=N is a fixed-offset fallback.
   useEffect(() => {
+    const focus = params.get('focus')
     const n = Number(params.get('scroll'))
-    if (!n) return
+    if (!focus && !n) return
     const id = window.setTimeout(() => {
-      const el = document.querySelector('.demo-real') as HTMLElement | null
-      if (el) el.scrollTop = n
-    }, 600)
+      const sc = document.querySelector('.demo-real') as HTMLElement | null
+      if (!sc) return
+      if (focus) {
+        const want = focus === 'pbs' ? 'PERSONAL BESTS' : focus === 'medals' ? 'MEDALS' : ''
+        const head = [...sc.querySelectorAll('h1,h2,h3,div,span')]
+          .find(e => (e.textContent || '').trim().toUpperCase().startsWith(want) && e.children.length < 4) as HTMLElement | undefined
+        if (head) {
+          const top = head.getBoundingClientRect().top - sc.getBoundingClientRect().top + sc.scrollTop
+          sc.scrollTop = Math.max(0, top - 12)
+        }
+      } else if (n) {
+        sc.scrollTop = n
+      }
+    }, 900)
     return () => window.clearTimeout(id)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
