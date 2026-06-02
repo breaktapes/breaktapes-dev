@@ -257,7 +257,16 @@ function MapMockup({ persona, framed = false }: { persona: DemoPersonaId; framed
   const spanX = Math.max(maxX - minX, 60), spanY = Math.max(maxY - minY, 60)
   const padX = spanX * 0.55, padY = spanY * 0.55
   minX -= padX; maxX += padX; minY -= padY; maxY += padY
-  const vb = `${minX} ${minY} ${maxX - minX} ${maxY - minY}`
+  // The map area is rendered with preserveAspectRatio="slice", which fills the
+  // container by cropping the overflow axis. If the fitted box's aspect ratio
+  // doesn't match the container, slice zooms hard into a sliver (cities spread
+  // wide E-W but narrow N-S → a 7:1 box blown up to fill a portrait card).
+  // Grow the shorter axis so the box matches the container AR before slicing.
+  const targetAR = framed ? 0.52 : 0.86 // map-area width/height (phone vs rectangle)
+  let w = maxX - minX, h = maxY - minY
+  if (w / h < targetAR) { const nw = h * targetAR, cx = (minX + maxX) / 2; minX = cx - nw / 2; maxX = cx + nw / 2; w = nw }
+  else { const nh = w / targetAR, cy = (minY + maxY) / 2; minY = cy - nh / 2; maxY = cy + nh / 2; h = nh }
+  const vb = `${minX} ${minY} ${w} ${h}`
   return (
     <Shell pad={false} framed={framed}>
       <div style={{ flex: 1, position: 'relative', background: 'radial-gradient(ellipse at 50% 40%, #2a3138, #14181c)', overflow: 'hidden' }}>
