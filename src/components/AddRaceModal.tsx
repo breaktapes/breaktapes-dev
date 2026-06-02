@@ -1116,7 +1116,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
             <Field label={<>Start Time <span style={{ opacity: 0.5, fontWeight: 400, fontSize: 'var(--text-xs)', textTransform: 'lowercase', letterSpacing: 0 }}>(local, optional)</span></>}>
               <input
                 type="time"
-                style={st.input}
+                style={{ ...st.input, WebkitAppearance: 'none', appearance: 'none', height: '40px', maxWidth: '100%' }}
                 value={startTime}
                 onChange={e => setStartTime(e.target.value)}
               />

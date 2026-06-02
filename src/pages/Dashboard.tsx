@@ -1923,7 +1923,7 @@ function BostonQualWidget() {
                       <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', marginTop: '1px' }}>{fmtDateDDMM(r.date)}</div>
                     </div>
                     <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                      <div style={{ fontSize: 'var(--text-sm)', fontWeight: 800, color: 'var(--white)', fontFamily: 'var(--headline)', lineHeight: 1 }}>{r.time}</div>
+                      <div style={{ fontSize: 'var(--text-compact)', fontWeight: 800, color: 'var(--white)', fontFamily: 'var(--headline)', lineHeight: 1 }}>{r.time}</div>
                       <div style={{ fontSize: 'var(--text-xs)', color: rowColor, fontWeight: 700, marginTop: '2px' }}>
                         {qualified ? `${secsToHMS(Math.abs(gap))} under ✓` : `${secsToHMS(gap)} over`}
                       </div>
@@ -2899,6 +2899,27 @@ function GapToGoalWidget({ race }: { race: Race | null }) {
       : `${secsToHMS(result.gap)} BEHIND GOAL`
 
   const weeksToRace = nextRace.date ? Math.ceil(daysUntil(nextRace.date) / 7) : null
+
+  // Small view: single primary metric only. The medium/large layout puts GOAL
+  // TIME and COURSE PB side-by-side, which overflows and clips the PB time in
+  // the narrow 2-col small grid (see screenshot). Show only the goal time +
+  // gap label here; PB lives in the medium/large views.
+  if (size === 'small') {
+    return (
+      <WidgetCard id="gap-to-goal" style={st.glowCard}>
+        <div style={{ minWidth: 0 }}>
+          <div style={st.widgetLabel}>GAP TO GOAL</div>
+          <div role="heading" aria-level={2} style={st.widgetTitle}>
+            {nextRace.name ? nextRace.name : (distBadge(nextRace.distance) || 'NEXT RACE')}
+          </div>
+        </div>
+        <div style={{ marginTop: 'auto', minWidth: 0 }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: smMetricFont(result.goal), color: 'var(--white)', lineHeight: 1, letterSpacing: '-0.02em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{result.goal}</div>
+          <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.12em', color: gapColor, textTransform: 'uppercase', marginTop: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{gapLabel}</div>
+        </div>
+      </WidgetCard>
+    )
+  }
 
   return (
     <WidgetCard id="gap-to-goal" style={st.glowCard}>
@@ -4481,8 +4502,8 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', overflowY: 'auto' }}>
               {[...upcomingRaces].sort((a, b) => a.date.localeCompare(b.date)).map(r => (
                 <button key={r.id} onClick={() => linkGoalPace(r.id)} style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-3)', textAlign: 'left', cursor: 'pointer', color: 'var(--white)' }}>
-                  <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-sm)' }}>{r.name ?? 'Unnamed Race'}</div>
-                  <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>{fmtDateDDMM(r.date)} · {distLabelUtil(r.distance, r.sport)}</div>
+                  <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name ?? 'Unnamed Race'}</div>
+                  <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '4px' }}>{fmtDateDDMM(r.date)} · {distLabelUtil(r.distance, r.sport)}</div>
                 </button>
               ))}
             </div>

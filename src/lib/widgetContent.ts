@@ -256,6 +256,18 @@ export const WIDGET_CONTENT: Record<string, WidgetContent> = {
     ],
   },
 
+  'tri-predictor': {
+    id: 'tri-predictor',
+    title: 'TRIATHLON PREDICTOR',
+    tagline: 'Swim/bike/run splits + finish for your next tri.',
+    whatItIs: 'Projects swim, T1, bike, T2 and run splits plus total finish time for a Sprint, Olympic, 70.3 or IRONMAN. It Riegel-projects each leg from your own recent triathlon splits (recency-weighted), falling back to your running PB for the run leg when you have no tri history yet.',
+    howToRead: 'Pick a target distance with the selector. The big number is the projected finish, with a confidence range below it. Per-leg bars show how each discipline contributes. The "% from your data" note tells you how much the estimate leans on your real races versus the model — it widens the range when you have little data or are projecting across distances.',
+    howItImpactsPerformance: 'Triathlon pacing is leg-dependent and degrades under brick fatigue. Predicting each split from your own race history (not fresh time trials) bakes in your real race execution, so the targets are grounded. Use it to set a finish goal and pace each leg.',
+    relatedActions: [
+      { label: 'Set a goal race', action: 'openAddUpcomingRace' },
+    ],
+  },
+
   'distance-milestones': {
     id: 'distance-milestones',
     title: 'DISTANCE MILESTONES',
