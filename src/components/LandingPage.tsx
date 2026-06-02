@@ -251,32 +251,53 @@ function MapMockup({ persona, framed = false }: { persona: DemoPersonaId; framed
   const cities = new Set(races.map(r => r.city)).size
   const countries = new Set(races.map(r => r.country)).size
   const km = Math.round(races.reduce((s, r) => s + distKm(r.distance), 0))
-  const pins = races.map(r => projectLngLat(r.lng!, r.lat!))
-  // Auto-fit the viewBox to the persona's pins so every marker is visible.
+  // Equirectangular x = (lng+180)/360*1000, so the antimeridian (±180°) is a hard
+  // seam: a Pacific-spread athlete (Hawaii at x≈69, Australia/NZ at x≈900+) would
+  // span ~92% of the map and zoom out to nothing. Split the pins at their largest
+  // longitude gap and unwrap the smaller group by +1000 so the cluster is
+  // contiguous; the map path is drawn in repeated copies so wrapped pins keep land.
+  const raw = races.map(r => projectLngLat(r.lng!, r.lat!))
+  let pins = raw
+  if (raw.length > 1) {
+    const sx = raw.map(p => p[0]).slice().sort((a, b) => a - b)
+    let gap = -1, thr: number | null = null
+    for (let k = 0; k < sx.length; k++) {
+      const cur = sx[k], nxt = k + 1 < sx.length ? sx[k + 1] : sx[0] + 1000
+      const g = nxt - cur
+      if (g > gap) { gap = g; thr = k + 1 < sx.length ? cur : null }
+    }
+    if (thr != null) { const t = thr; pins = raw.map(([x, y]) => (x <= t ? [x + 1000, y] as [number, number] : [x, y] as [number, number])) }
+  }
   const xs = pins.map(p => p[0]), ys = pins.map(p => p[1])
   let minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys)
-  const spanX = Math.max(maxX - minX, 60), spanY = Math.max(maxY - minY, 60)
-  const padX = spanX * 0.55, padY = spanY * 0.55
+  // Minimum span → consistent zoom across personas: a tight 2-city cluster still
+  // shows regional context instead of extreme zoom-in. (150 x-units ≈ 54° lng.)
+  const cx0 = (minX + maxX) / 2, cy0 = (minY + maxY) / 2
+  if (maxX - minX < 150) { minX = cx0 - 75; maxX = cx0 + 75 }
+  if (maxY - minY < 110) { minY = cy0 - 55; maxY = cy0 + 55 }
+  const spanX = maxX - minX, spanY = maxY - minY
+  const padX = spanX * 0.5, padY = spanY * 0.5
   minX -= padX; maxX += padX; minY -= padY; maxY += padY
-  // The map area is rendered with preserveAspectRatio="slice", which fills the
-  // container by cropping the overflow axis. If the fitted box's aspect ratio
-  // doesn't match the container, slice zooms hard into a sliver (cities spread
-  // wide E-W but narrow N-S → a 7:1 box blown up to fill a portrait card).
-  // Grow the shorter axis so the box matches the container AR before slicing.
+  // preserveAspectRatio="slice" crops the overflow axis to fill the card. Grow the
+  // shorter axis so the box matches the container AR before slicing (else a wide,
+  // short box gets blown up into a sliver).
   const targetAR = framed ? 0.52 : 0.86 // map-area width/height (phone vs rectangle)
   let w = maxX - minX, h = maxY - minY
   if (w / h < targetAR) { const nw = h * targetAR, cx = (minX + maxX) / 2; minX = cx - nw / 2; maxX = cx + nw / 2; w = nw }
   else { const nh = w / targetAR, cy = (minY + maxY) / 2; minY = cy - nh / 2; maxY = cy + nh / 2; h = nh }
   const vb = `${minX} ${minY} ${w} ${h}`
+  const pinR = Math.min(spanX * 0.014 + 3, 9) // cap so global personas don't get huge dots
   return (
     <Shell pad={false} framed={framed}>
       <div style={{ flex: 1, position: 'relative', background: 'radial-gradient(ellipse at 50% 40%, #2a3138, #14181c)', overflow: 'hidden' }}>
         <svg viewBox={vb} width="100%" height="100%" preserveAspectRatio="xMidYMid slice" style={{ position: 'absolute', inset: 0 }}>
-          <path d={WORLD_MAP_PATH} fill="rgba(0,0,0,0.55)" stroke="rgba(232,224,213,0.18)" strokeWidth="0.8" />
+          {[-1000, 0, 1000, 2000].map(ox => (
+            <path key={ox} d={WORLD_MAP_PATH} transform={`translate(${ox} 0)`} fill="rgba(0,0,0,0.55)" stroke="rgba(232,224,213,0.18)" strokeWidth="0.8" />
+          ))}
           {pins.map(([x, y], i) => (
             <g key={i}>
-              <circle cx={x} cy={y} r={spanX * 0.018 + 3} fill="rgba(var(--orange-ch),0.3)" />
-              <circle cx={x} cy={y} r={spanX * 0.009 + 1.5} fill="var(--orange)" stroke="#000" strokeWidth="0.8" />
+              <circle cx={x} cy={y} r={pinR * 1.9} fill="rgba(var(--orange-ch),0.3)" />
+              <circle cx={x} cy={y} r={pinR} fill="var(--orange)" stroke="#000" strokeWidth="0.8" />
             </g>
           ))}
         </svg>
