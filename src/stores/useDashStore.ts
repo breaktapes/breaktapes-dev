@@ -17,6 +17,7 @@ const DEFAULT_WIDGETS: DashWidget[] = [
   { id: 'recent-races',      label: 'Recent Races',             icon: 'RC',  zone: 'recently', enabled: true,  pro: false, size: 'medium' },
   { id: 'personal-bests',    label: 'Personal Bests',           icon: 'PB',  zone: 'recently', enabled: true,  pro: false, size: 'medium' },
   { id: 'riegel-predictor',  label: 'Race Predictor',           icon: 'RGL', zone: 'recently', enabled: true,  pro: false, size: 'medium' },
+  { id: 'tri-predictor',     label: 'Triathlon Predictor',      icon: 'TRI', zone: 'recently', enabled: true,  pro: false, size: 'medium' },
   // CONSISTENCY — BUILD
   { id: 'season-planner',    label: 'Season Planner',           icon: 'SP',  zone: 'trending', enabled: true,  pro: false, size: 'medium' },
   // PATTERNS — ANALYSIS
@@ -49,6 +50,7 @@ export const WIDGET_SIZES: Record<string, WidgetSize[]> = {
   'course-fit':          ['small', 'medium'],
   'personal-bests':      ['small', 'medium', 'large'],
   'riegel-predictor':    ['small', 'medium'],
+  'tri-predictor':       ['small', 'medium', 'large'],
   'boston-qual':         ['small', 'medium', 'large'],
   'age-grade':           ['small', 'medium', 'large'],
   'race-dna':            ['small', 'medium', 'large'],
