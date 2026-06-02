@@ -1,6 +1,6 @@
 {
   "name": "breaktapes",
-  "version": "0.7.2.0",
+  "version": "0.7.2.1",
   "private": true,
   "description": "BREAKTAPES React + Vite migration",
   "scripts": {
