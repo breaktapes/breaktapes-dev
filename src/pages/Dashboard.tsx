@@ -32,6 +32,7 @@ import {
   goalPaceCalc, parseTimeSecs as fParseTimeSecs, parseDistKm as fParseDistKm,
   distanceMilestones, distanceLadder, categoricalBadges, closestUnlocks, secsToHMS as fSecsToHMS,
   findCourseRepeats, personalLeagueTable,
+  pacingAggregate, PACING_CLASS_META,
 } from '@/lib/raceFormulas'
 import { supabase, getClerkToken } from '@/lib/supabase'
 
@@ -1950,34 +1951,15 @@ function PacingIQWidget() {
   const ctx = useWidgetCardContext()
   const size = ctx?.getWidgetSize('pacing-iq') ?? 'medium'
 
-  const analysis = useMemo(() => {
-    const today = todayStr()
-    let faded = 0, negative = 0, even = 0
-    for (const r of races) {
-      // Pacing pattern reflects completed past races — a future race with
-      // manually entered splits, or a DNF blow-up, would skew the persona.
-      if (r.date > today) continue
-      if (r.outcome && r.outcome !== 'Finished') continue
-      const segs = segmentTimes(r.splits)
-      if (segs.length < 2) continue
-      const first = segs[0]
-      const last  = segs[segs.length - 1]
-      if (last > first * 1.02) faded++
-      else if (last < first * 0.98) negative++
-      else even++
-    }
-    const total = faded + negative + even
-    if (total === 0) return null
-    const dominant = faded > negative && faded > even ? 'FADER' :
-      negative > even ? 'NEGATIVE SPLITTER' : 'EVEN PACER'
-    return { faded, negative, even, total, dominant }
-  }, [races])
+  const agg = useMemo(() => pacingAggregate(races), [races])
+  const primaryMeta = agg.primary ? PACING_CLASS_META[agg.primary] : null
+  const secondaryMeta = agg.secondary ? PACING_CLASS_META[agg.secondary] : null
 
   if (size === 'small') {
-    const fullLabel = !analysis ? '—' : analysis.dominant === 'NEGATIVE SPLITTER' ? 'NEG SPLIT' : analysis.dominant === 'EVEN PACER' ? 'EVEN' : 'FADER'
-    const abbrevColor = !analysis ? 'var(--muted)' : analysis.dominant === 'NEGATIVE SPLITTER' ? 'var(--green)' : analysis.dominant === 'EVEN PACER' ? 'var(--white)' : 'var(--orange)'
+    const short = primaryMeta?.short ?? '—'
+    const color = primaryMeta?.color ?? 'var(--muted)'
     // Scale font down for longer labels so they fit in small card
-    const labelFont = fullLabel.length > 7 ? '36px' : fullLabel.length > 5 ? '48px' : '64px'
+    const labelFont = short.length > 7 ? '36px' : short.length > 5 ? '48px' : '64px'
     return (
       <WidgetCard id="pacing-iq" style={st.glowCard}>
         <div>
@@ -1985,11 +1967,11 @@ function PacingIQWidget() {
           <div role="heading" aria-level={2} style={st.widgetTitle}>RACE RHYTHM</div>
         </div>
         <div style={{ marginTop: 'auto' }}>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: labelFont, lineHeight: 1, color: abbrevColor, letterSpacing: '-0.02em' }}>
-            {fullLabel}
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: labelFont, lineHeight: 1, color, letterSpacing: '-0.02em' }}>
+            {short}
           </div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
-            {analysis ? analysis.dominant : 'NO DATA'}
+            {primaryMeta?.label ?? 'NO DATA'}
           </div>
         </div>
       </WidgetCard>
@@ -2003,23 +1985,75 @@ function PacingIQWidget() {
           <div style={st.widgetLabel}>PACING IQ</div>
           <div role="heading" aria-level={2} style={st.widgetTitle}>RACE RHYTHM</div>
         </div>
-        <span style={st.iconBox}>IQ</span>
+        {agg.total > 0 && (
+          <span style={{ ...st.badgePill, background: 'rgba(var(--orange-ch), 0.12)', color: 'var(--orange)', border: '1px solid rgba(var(--orange-ch), 0.3)', flexShrink: 0 }}>
+            {agg.total} RACES
+          </span>
+        )}
       </div>
 
-      {!analysis ? (
+      {!primaryMeta ? (
         <div style={st.lockedBox}>
           <div style={st.lockedTitle}>NO SPLIT DATA</div>
-          <div style={st.lockedText}>Add splits to 2+ races to see your pacing pattern.</div>
+          <div style={st.lockedText}>Add splits to 4+ checkpoint races to see your pacing pattern.</div>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xl)', color: 'var(--green)', letterSpacing: '0.04em' }}>
-            {analysis.dominant}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+          {/* Primary persona */}
+          <div>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xl)', color: primaryMeta.color, letterSpacing: '0.04em' }}>
+              {primaryMeta.label}
+            </div>
+            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginTop: '4px', lineHeight: 1.5 }}>
+              {primaryMeta.description}
+            </div>
+            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--orange)', marginTop: '4px', fontFamily: 'var(--headline)', fontWeight: 700 }}>
+              {agg.primaryPct}% of {agg.total} races
+            </div>
           </div>
-          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5 }}>
-            Based on {analysis.total} races with split data.
-            Fade rate: {Math.round((analysis.faded / analysis.total) * 100)}%.
-            Negative splits: {Math.round((analysis.negative / analysis.total) * 100)}%.
+
+          {/* Secondary tendency — only when ≥25% */}
+          {secondaryMeta && (
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: 'var(--sp-3)' }}>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '6px' }}>
+                SECONDARY · {agg.secondaryPct}%
+              </div>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', color: secondaryMeta.color, letterSpacing: '0.04em' }}>
+                {secondaryMeta.label}
+              </div>
+            </div>
+          )}
+
+          {/* Distribution mini-bars (large only) */}
+          {size === 'large' && agg.distribution.length > 1 && (
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: 'var(--sp-3)' }}>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
+                FULL BREAKDOWN
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+                {agg.distribution.map(({ klass, count, pct }) => {
+                  const meta = PACING_CLASS_META[klass]
+                  return (
+                    <div key={klass} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
+                      <div style={{ width: '90px', fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.04em', flexShrink: 0 }}>
+                        {meta.label}
+                      </div>
+                      <div style={{ flex: 1, height: '4px', background: 'var(--surface3)', borderRadius: 'var(--radius-xs)', overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${pct}%`, background: meta.color, borderRadius: 'var(--radius-xs)', transition: 'width 0.4s ease' }} />
+                      </div>
+                      <div style={{ width: '40px', fontSize: 'var(--text-xs)', color: 'var(--muted)', textAlign: 'right' as const, flexShrink: 0 }}>
+                        {count}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Coaching prescription */}
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontStyle: 'italic', padding: '8px 10px', background: 'var(--surface3)', borderRadius: 'var(--radius-sm)', borderLeft: `2px solid ${primaryMeta.color}` }}>
+            {agg.coachingNote}
           </div>
         </div>
       )}

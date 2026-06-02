@@ -163,10 +163,10 @@ export const WIDGET_CONTENT: Record<string, WidgetContent> = {
   'pacing-iq': {
     id: 'pacing-iq',
     title: 'PACING IQ',
-    tagline: 'Your rhythm across every logged race.',
-    whatItIs: 'Classifies every race with splits into FADER (slowed by more than 2%), EVEN PACER (final split within 2%), or NEGATIVE SPLITTER (closed faster than opening). Your dominant label is the pattern that appears most often.',
-    howToRead: 'The percentages underneath are your fade rate and negative-split rate across all split-equipped races. A 60%+ fade rate is a taper or pacing problem. A 40%+ negative-split rate means you routinely leave time on the table by starting too conservative.',
-    howItImpactsPerformance: 'Even pacing wins. Faders leak 30s–2min on typical marathons; negative-splitters who could have started 5s/km faster leave similar time on the course. Target the next race — if you fade, start slower. If you negative-split, start on pace.',
+    tagline: 'Your rhythm across every logged race — 10-class analysis.',
+    whatItIs: 'Classifies every race with 4+ splits into one of 10 pacing patterns: EVEN STEADY (metronome), NEGATIVE SPLITTER (closed faster), NEGATIVE KICKER (held back then kicked), MILD FADER, CLASSIC FADER, CRASH FADER, HOT START (out too hard), SURGER (roller-coaster), SLOW BUILDER (cold start, strong close), or CONSERVATIVE (sandbagger). Your dominant label is the class that appears most often. A secondary tendency surfaces when another class hits 25%+.',
+    howToRead: 'Primary persona = what you do most. Secondary = your second-most-common pattern (only shown if it covers 25%+ of races). Each class has a tailored coaching prescription based on the start/middle/end pace dynamics. The full breakdown bars in the Large view show every class you have ever exhibited with race counts.',
+    howItImpactsPerformance: 'Even pacing is the most efficient. Faders leak 30s–2min on typical marathons; hot starters guarantee a crash. The 10-class model surfaces start-side problems (HOT START, CONSERVATIVE, SLOW BUILDER) that the old 3-class FADER/EVEN/NEG model missed entirely. Combination patterns like CLASSIC FADER + HOT START point to start-discipline issues; CRASH FADER + HOT START means your goal pace is too aggressive.',
     relatedActions: [
       { label: 'See races with splits', to: '/races' },
     ],
