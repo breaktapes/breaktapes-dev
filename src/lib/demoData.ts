@@ -133,11 +133,13 @@ function genSplits(distKm: number, totalSecs: number, bias: 'neg' | 'even' | 'po
 }
 
 function buildRaces(pid: string, block: string): Race[] {
-  return strip(block).map((l, i) => {
+  let runN = 0 // cycle the split bias across RUNNING races so each persona shows
+  return strip(block).map((l, i) => { // a clean variety of pacing types (neg/even/pos)
     const r = parseRace(l, `${pid}-r${i + 1}`)
     const km = kmOf(r.distance)
     if (r.time && r.sport === 'running' && km >= 5 && km <= 300) {
-      r.splits = genSplits(km, hmsToSec(r.time), (['neg', 'even', 'pos'] as const)[i % 3])
+      r.splits = genSplits(km, hmsToSec(r.time), (['neg', 'even', 'pos'] as const)[runN % 3])
+      runN++
     }
     return r
   })

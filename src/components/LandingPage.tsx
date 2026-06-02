@@ -230,8 +230,8 @@ function distKm(d: string): number { if (DIST_KM[d] != null) return DIST_KM[d]; 
 function distLabel(d: string): string {
   const n = parseFloat(d)
   if (!Number.isNaN(n) && String(n) === d.trim()) {
-    if (Math.abs(n - 42.2) < 0.3) return 'MARATHON'
-    if (Math.abs(n - 21.1) < 0.3) return 'HALF MARATHON'
+    if (Math.abs(n - 42.2) < 0.3) return 'Marathon'
+    if (Math.abs(n - 21.1) < 0.3) return 'Half Marathon'
     if (Math.abs(n - 70.3) < 0.1) return '70.3'
     if (Math.abs(n - 16.09) < 0.1) return '10 MILE'
     if (n === 10) return '10K'; if (n === 5) return '5K'
@@ -239,6 +239,8 @@ function distLabel(d: string): string {
   }
   return d.toUpperCase()
 }
+const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+function fmtDMon(d?: string): string { if (!d) return ''; const p = d.split('-'); if (p.length < 3) return d; return `${p[2]}-${MON[+p[1] - 1] || p[1]}-${p[0]}` }
 function t2s(t?: string): number { if (!t) return Infinity; const a = t.split(':').map(Number); if (a.some(Number.isNaN)) return Infinity; return a.length === 3 ? a[0]*3600 + a[1]*60 + a[2] : a.length === 2 ? a[0]*60 + a[1] : Infinity }
 const MEDAL_RGB: Record<string, [string, string, string]> = {
   gold: ['#FFD770', '#B8860B', 'GOLD'], silver: ['#C8D4DC', '#6A7880', 'SILVER'],
@@ -365,7 +367,7 @@ function PBMockup({ persona, framed = false }: { persona: DemoPersonaId; framed?
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 7 }}>
                 {list.map(r => (
                   <div key={r.id} style={{ background: `linear-gradient(145deg, #141414 0%, ${a.bg} 100%)`, border: '1px solid var(--border2)', borderLeft: `3px solid ${a.color}`, borderRadius: 'var(--radius-md)', padding: '9px 10px', minWidth: 0 }}>
-                    <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(245,245,245,0.62)' }}>{distLabel(r.distance)}</div>
+                    <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 10, letterSpacing: '0.06em', color: 'rgba(245,245,245,0.62)' }}>{distLabel(r.distance)}</div>
                     <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 19, color: a.color, lineHeight: 1, margin: '5px 0 4px' }}>{r.time}</div>
                     <div style={{ fontFamily: 'var(--body)', fontSize: 9.5, color: 'rgba(245,245,245,0.5)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={r.name}>{r.name}</div>
                   </div>
@@ -751,7 +753,7 @@ function PlannerMockup({ persona, framed = false }: { persona: DemoPersonaId; fr
           <div style={{ padding: '11px 12px', borderRadius: 'var(--radius-md)', borderLeft: '3px solid var(--green)', background: 'linear-gradient(120deg, rgba(var(--green-ch),0.1), var(--surface2))', flexShrink: 0 }}>
             <div style={sLabel}>NEXT KEY RACE</div>
             <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 17, color: 'var(--white)', lineHeight: 1.05, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{next.name}</div>
-            <div style={{ fontFamily: 'var(--body)', fontSize: 8.5, color: 'var(--muted)', marginTop: 2 }}>{next.date}{next.goalTime ? ` · goal ${next.goalTime}` : ''}</div>
+            <div style={{ fontFamily: 'var(--body)', fontSize: 8.5, color: 'var(--muted)', marginTop: 2 }}>{fmtDMon(next.date)}{next.goalTime ? ` · goal ${next.goalTime}` : ''}</div>
           </div>
         )}
         <div style={{ ...sectionLabel, fontSize: 9.5, flexShrink: 0 }}>WEEKLY LOAD → TAPER</div>
@@ -773,9 +775,9 @@ function PlannerMockup({ persona, framed = false }: { persona: DemoPersonaId; fr
             <div key={r.id} style={{ ...cardSurface, padding: '8px 11px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 10.5, color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</div>
-                <div style={{ fontFamily: 'var(--body)', fontSize: 8, color: 'var(--muted)' }}>{distLabel(r.distance)}{r.city ? ` · ${r.city}` : ''}</div>
+                <div style={{ fontFamily: 'var(--body)', fontSize: 8, color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{distLabel(r.distance)}{r.city ? ` · ${r.city}` : ''}{r.country ? `, ${r.country}` : ''}</div>
               </div>
-              <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 10.5, color: 'var(--orange)', flexShrink: 0 }}>{r.date ? r.date.slice(5) : ''}</span>
+              <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 9.5, color: 'var(--orange)', flexShrink: 0 }}>{fmtDMon(r.date)}</span>
             </div>
           ))}
         </div>
@@ -804,7 +806,7 @@ function PacingMockup({ persona, framed = false }: { persona: DemoPersonaId; fra
     const s = (r.splits ?? []).map(x => t2s(x.split)); const h = Math.floor(s.length / 2)
     const f = s.slice(0, h).reduce((a, b) => a + b, 0) / Math.max(1, h)
     const se = s.slice(h).reduce((a, b) => a + b, 0) / Math.max(1, s.length - h)
-    return se < f * 0.98 ? ['NEG', 'var(--green)'] : se > f * 1.03 ? ['FADE', 'var(--orange)'] : ['EVEN', 'var(--muted)']
+    return se < f * 0.98 ? ['NEGATIVE SPLIT', 'var(--green)'] : se > f * 1.03 ? ['FADER', 'var(--orange)'] : ['EVEN PACE', 'var(--muted)']
   }
   return (
     <Shell framed={framed} pad={false}>
