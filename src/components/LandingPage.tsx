@@ -11,6 +11,7 @@ import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { posthog } from '@/lib/posthog'
 import { WORLD_MAP_PATH, projectLngLat } from '@/lib/worldMap'
+import { DEMO_TESTIMONIALS } from '@/lib/demoData'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -178,14 +179,6 @@ const HERO_DATA: Record<Audience, HeroData> = {
   everyday:   { tag: 'Next Race · 9 days',  race: 'City Autumn 10K', goal: 'Goal sub-55 · first sub-55 attempt',  races: '12', pr: ['52:18', '10K PR'] },
 }
 
-// PR rows: [label, big, small]
-const PR_DATA: Record<Audience, [string, string, string][]> = {
-  all:        [['5K', '18', ':42'], ['HALF', '1:24', ':10'], ['MARATHON', '3:21', ':05']],
-  marathoner: [['5K', '18', ':42'], ['HALF', '1:24', ':10'], ['MARATHON', '3:21', ':05']],
-  triathlete: [['OLYMPIC', '2:14', ':30'], ['70.3', '4:58', ':12'], ['IRONMAN', '10:42', ':05']],
-  everyday:   [['5K', '26', ':30'], ['10K', '52', ':18'], ['HALF', '2:05', ':40']],
-}
-
 // Real city coordinates (lng, lat) so they project accurately onto the world map.
 interface RaceCity { name: string; lng: number; lat: number }
 const RACE_CITIES: Record<Audience, RaceCity[]> = {
@@ -258,6 +251,32 @@ const cardSurface: React.CSSProperties = {
   background: 'var(--surface2)',
   border: '1px solid var(--border)',
   borderRadius: 'var(--radius-md)',
+}
+
+/* ---------- REAL app embeds ----------
+   Each <DemoEmbed> is an iframe to /demo running the ACTUAL app pages
+   (Dashboard / Races / Profile) seeded with a persona. Each iframe is its
+   own document with its own store, so different personas render side by side
+   with no global-store conflict. Lazy-mounted on approach to keep the landing
+   light. The selected audience maps to the matching demo persona. */
+function audiencePersona(a: Audience): string {
+  return a === 'triathlete' ? 'aus-triathlete'
+    : a === 'everyday' ? 'dubai-everyday'
+    : 'sa-marathoner'
+}
+
+function DemoEmbed({ persona, tab, title }: { persona: string; tab: string; title: string }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const inView = useInView(ref, { once: true, margin: '300px' })
+  return (
+    <div ref={ref} className="pl-demo-frame"
+      style={{ width: '100%', aspectRatio: '10 / 17', maxHeight: 580, borderRadius: 'var(--radius-lg)', overflow: 'hidden', border: '1px solid var(--border2)', background: 'var(--surface)', boxShadow: '0 30px 80px -40px rgba(0,0,0,0.8)' }}>
+      {inView
+        ? <iframe src={`/demo?persona=${persona}&tab=${tab}&chrome=0`} title={title} loading="lazy"
+            style={{ width: '100%', height: '100%', border: 'none', display: 'block' }} />
+        : <div className="pl-demo-skeleton" style={{ width: '100%', height: '100%', background: 'linear-gradient(110deg, var(--surface2) 30%, var(--surface3) 50%, var(--surface2) 70%)' }} />}
+    </div>
+  )
 }
 
 function DashboardMockup({ audience = 'all' }: { audience?: Audience }) {
@@ -360,33 +379,6 @@ function RaceMapMockup({ audience = 'all' }: { audience?: Audience }) {
   )
 }
 
-function PRMockup({ audience = 'all' }: { audience?: Audience }) {
-  const prs = PR_DATA[audience]
-  return (
-    <div style={{ width: '100%', maxWidth: 360, display: 'grid', gap: 'var(--sp-3)' }}>
-      {prs.map(([dist, big, small], i) => (
-        <motion.div key={dist} style={{
-          ...cardSurface, padding: 'var(--sp-4)', display: 'flex', alignItems: 'center',
-          justifyContent: 'space-between', borderLeft: '3px solid var(--orange)',
-          background: 'linear-gradient(90deg, rgba(var(--orange-ch),0.08), var(--surface2))',
-        }}
-          initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.12 }}>
-          <div>
-            <div style={{ fontFamily: 'var(--body)', fontSize: 10, letterSpacing: '0.14em',
-              textTransform: 'uppercase', color: 'var(--muted)' }}>{dist} · Personal Best</div>
-            <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 30, color: 'var(--white)' }}>
-              {big}<span style={{ color: 'var(--muted)', fontSize: 20 }}>{small}</span>
-            </div>
-          </div>
-          <span style={{ fontFamily: 'var(--headline)', fontSize: 11, fontWeight: 800,
-            letterSpacing: '0.1em', color: 'var(--green)', padding: '4px 8px',
-            background: 'var(--green-dim)', borderRadius: 'var(--radius-pill)' }}>PR ▲</span>
-        </motion.div>
-      ))}
-    </div>
-  )
-}
 
 function MedalWallMockup() {
   const tiers = [
@@ -498,7 +490,22 @@ const STAGE_SCREENS = [
   { key: 'analytics', title: 'Your analytics', line: 'Pacing IQ, age-grade and momentum — the numbers behind every result, computed for you.', render: () => <AnalyticsMockup /> },
 ] as const
 
-function PhoneStage({ screen, stageRef }: { screen: number; stageRef: React.RefObject<HTMLDivElement | null> }) {
+// Each phone-stage screen maps to a real demo tab. The phone embeds ONE live
+// /demo iframe; scrolling drives the tab via postMessage (no reload, the app's
+// own page transition plays inside the phone).
+const STAGE_TABS = ['dashboard', 'profile', 'races', 'dashboard'] as const
+
+function PhoneStage({ screen, stageRef, persona }: { screen: number; stageRef: React.RefObject<HTMLDivElement | null>; persona: string }) {
+  const iframeRef = useRef<HTMLIFrameElement>(null)
+  const phoneRef = useRef<HTMLDivElement>(null)
+  const inView = useInView(phoneRef, { once: true, margin: '500px' })
+  const tab = STAGE_TABS[screen] ?? 'dashboard'
+
+  // Drive the embedded app's tab + persona without reloading the iframe.
+  useEffect(() => {
+    iframeRef.current?.contentWindow?.postMessage({ type: 'demo-nav', tab, persona }, '*')
+  }, [tab, persona])
+
   return (
     <section className="pl-stage" ref={stageRef}>
       <div className="pl-stage-pin">
@@ -511,17 +518,14 @@ function PhoneStage({ screen, stageRef }: { screen: number; stageRef: React.RefO
               {STAGE_SCREENS.map((s, i) => <span key={s.key} className={i === screen ? 'on' : ''} />)}
             </div>
           </div>
-          <div className="pl-phone">
+          <div className="pl-phone" ref={phoneRef}>
             <div className="pl-phone-notch" />
             <div className="pl-phone-screen">
-              {STAGE_SCREENS.map((s, i) => (
-                <motion.div key={s.key} className="pl-phone-slide"
-                  animate={{ opacity: i === screen ? 1 : 0, scale: i === screen ? 1 : 0.96 }}
-                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                  style={{ pointerEvents: i === screen ? 'auto' : 'none' }}>
-                  {s.render()}
-                </motion.div>
-              ))}
+              {inView
+                ? <iframe ref={iframeRef} title="BREAKTAPES app — live"
+                    src={`/demo?persona=${persona}&tab=dashboard&chrome=0`}
+                    style={{ width: '100%', height: '100%', border: 'none', display: 'block' }} />
+                : <div className="pl-demo-skeleton" style={{ width: '100%', height: '100%', background: 'var(--surface2)' }} />}
             </div>
           </div>
         </div>
@@ -641,15 +645,10 @@ function HowItWorks() {
 }
 
 /* =====================================================================
-   TESTIMONIALS — rotating spotlight (placeholder quotes, swap later)
+   TESTIMONIALS — rotating spotlight. Real persona quotes, one per athlete
+   type, sourced from the demo data so they stay in sync.
    ===================================================================== */
-const TESTIMONIALS = [
-  { quote: 'Finally everything in one place. I deleted three spreadsheets the day I signed up.', name: 'A. Rivera', role: 'Marathoner · 38 races' },
-  { quote: 'The medal wall alone sold me. Seeing every finish laid out like that hits different.', name: 'J. Kemp', role: 'Everyday runner' },
-  { quote: 'Auto PRs across every distance, no manual tracking. It just knows when I’ve gone faster.', name: 'M. Sato', role: 'Triathlete · 70.3' },
-  { quote: 'The race map turned my training log into something I actually want to show people.', name: 'L. Novak', role: 'Trail & ultra' },
-  { quote: 'WHOOP recovery sitting right next to my race results changed how I taper.', name: 'D. Osei', role: 'Marathoner · BQ chaser' },
-]
+const TESTIMONIALS = DEMO_TESTIMONIALS.map(t => ({ quote: t.quote, name: t.name, role: t.meta }))
 function Testimonials() {
   const [i, setI] = useState(0)
   const reduce = useReducedMotion()
@@ -699,15 +698,15 @@ function FAQItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false)
   return (
     <div className={`pl-faq-item${open ? ' open' : ''}`}>
-      <button className="pl-faq-q" aria-expanded={open}
+      <button className="pl-faq-q" aria-expanded={open} style={{ textAlign: 'left' }}
         onClick={() => { setOpen(o => !o); if (!open) track('landing_faq_open', { q }) }}>
-        <span>{q}</span><span className="pl-faq-icon" aria-hidden="true">{open ? '–' : '+'}</span>
+        <span>{q}</span>
       </button>
       <AnimatePresence initial={false}>
         {open && (
           <motion.div className="pl-faq-a" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}>
-            <p>{a}</p>
+            <p style={{ textAlign: 'left' }}>{a}</p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -717,8 +716,8 @@ function FAQItem({ q, a }: { q: string; a: string }) {
 function FAQ() {
   return (
     <motion.section className="pl-faq" variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}>
-      <motion.p className="pl-eyebrow" variants={fadeUp} style={{ textAlign: 'center' }}>FAQ</motion.p>
-      <motion.h2 className="pl-faq-title" variants={fadeUp}>Questions, answered</motion.h2>
+      <motion.p className="pl-eyebrow" variants={fadeUp} style={{ textAlign: 'left' }}>FAQ</motion.p>
+      <motion.h2 className="pl-faq-title" variants={fadeUp} style={{ textAlign: 'left' }}>Questions, answered</motion.h2>
       <motion.div className="pl-faq-list" variants={fadeUp}>
         {FAQS.map(f => <FAQItem key={f.q} q={f.q} a={f.a} />)}
       </motion.div>
@@ -866,14 +865,14 @@ export default function LandingPage({ onSignUp, onSignIn }: LandingPageProps) {
         eyebrow="Race History" title="Every finish line, mapped"
         desc={descFor('race-history', audience, 'Your whole racing life on one interactive map. Times, splits, placing, terrain, and the weather you ran through — kept for good.')}
         bullets={['Real world map of every race city', 'Splits, placing & conditions per race', 'Year-by-year history and filters']}
-        mockup={<RaceMapMockup audience={audience} />}
+        mockup={<DemoEmbed persona={audiencePersona(audience)} tab="races" title="Race history — live map" />}
       />
       <FeatureShowcase
         id="auto-prs" reverse active={audience} audiences={['marathoner']}
         eyebrow="Auto PRs" title="Personal bests, computed for you"
         desc={descFor('auto-prs', audience, 'The moment you log a race, BREAKTAPES recomputes your bests across every distance. No spreadsheets, no manual tracking.')}
         bullets={['PRs across 5K → ultra & triathlon', 'Instant recalculation on every log', 'Age-grade & momentum scoring']}
-        mockup={<PRMockup audience={audience} />}
+        mockup={<DemoEmbed persona={audiencePersona(audience)} tab="profile" title="Personal bests — live" />}
       />
       <FeatureShowcase
         id="medal-wall" active={audience} audiences={['everyday']}
@@ -891,7 +890,7 @@ export default function LandingPage({ onSignUp, onSignIn }: LandingPageProps) {
       />
 
       {/* ---------------- PHONE-SCROLL CENTERPIECE ---------------- */}
-      <PhoneStage screen={screen} stageRef={stageRef} />
+      <PhoneStage screen={screen} stageRef={stageRef} persona={audiencePersona(audience)} />
 
       {/* ---------------- HOW IT WORKS ---------------- */}
       <HowItWorks />
@@ -904,9 +903,8 @@ export default function LandingPage({ onSignUp, onSignIn }: LandingPageProps) {
         <motion.h2 className="pl-stats-title" variants={fadeUp}>Built for people who actually race</motion.h2>
         <div className="pl-stats-grid">
           {[
-            { to: 1068, suffix: '+', label: 'Races in the catalog' },
-            { to: 9, suffix: '', label: 'Distance PRs tracked' },
-            { to: 24, suffix: '', label: 'Analytics widgets' },
+            { to: 3000, suffix: '+', label: 'Races in the global race catalog' },
+            { to: 40, suffix: '+', label: 'Widgets' },
             { to: 100, suffix: '%', label: 'Yours — export anytime' },
           ].map(s => (
             <motion.div key={s.label} className="pl-stat" variants={fadeUp}>
