@@ -243,10 +243,16 @@ const MEDAL_RGB: Record<string, [string, string, string]> = {
   bronze: ['#CD8C5A', '#7A4420', 'BRONZE'], custom: ['#9B7BE8', '#5A3FA0', 'VIC CLAPHAM'],
   finisher: ['#E8895A', '#A8421A', 'FINISHER'],
 }
-const SPORT_TAG: Record<string, [string, string]> = {
-  running: ['RUN', 'var(--orange)'], cycling: ['RIDE', '#5B8DEF'], triathlon: ['TRI', '#9B7BE8'],
-  swim: ['SWIM', '#2BD4A0'], hyrox: ['HYROX', 'var(--green)'],
+// Discipline colour codes — mirror the app's Profile PersonalBests (SPORT_ACCENT).
+const PB_ACCENT: Record<string, { color: string; bg: string }> = {
+  Running: { color: 'var(--green)', bg: 'rgba(var(--green-ch),0.06)' },
+  Triathlon: { color: 'var(--purple)', bg: 'rgba(var(--purple-ch),0.08)' },
+  Cycling: { color: '#38BDF8', bg: 'rgba(56,189,248,0.07)' },
+  Swimming: { color: '#22D3EE', bg: 'rgba(34,211,238,0.07)' },
+  HYROX: { color: '#FB923C', bg: 'rgba(251,146,60,0.07)' },
 }
+const PB_SPORT_KEY: Record<string, string> = { running: 'Running', triathlon: 'Triathlon', cycling: 'Cycling', swim: 'Swimming', hyrox: 'HYROX' }
+const PB_ORDER = ['Running', 'Triathlon', 'Cycling', 'Swimming', 'HYROX']
 const sectionLabel: React.CSSProperties = { fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--white)' }
 
 /* ----- Race map mockup ----- */
@@ -331,44 +337,42 @@ function MapMockup({ persona, framed = false }: { persona: DemoPersonaId; framed
 
 /* ----- Personal bests mockup ----- */
 function PBMockup({ persona, framed = false }: { persona: DemoPersonaId; framed?: boolean }) {
-  const ath = DEMO_PERSONAS[persona].athlete
   const all = DEMO_PERSONAS[persona].races.filter(r => r.time && r.distance)
-  // Best per (sport + distance) → PBs span every discipline the athlete races.
+  // Best per (sport + distance), then grouped by discipline — exactly like the
+  // app's Profile PersonalBests (sport groups, colour-coded cards).
   const best = new Map<string, Race>()
   for (const r of all) { const k = `${r.sport}|${distLabel(r.distance)}`; const cur = best.get(k); if (!cur || t2s(r.time) < t2s(cur.time)) best.set(k, r) }
-  const entries = [...best.values()]
-  const mainE = entries.filter(r => r.sport === ath.mainSport)
-  let hero = ath.mainSport === 'running'
-    ? mainE.slice().sort((a, b) => t2s(a.time) / distKm(a.distance) - t2s(b.time) / distKm(b.distance))[0]
-    : mainE.slice().sort((a, b) => distKm(b.distance) - distKm(a.distance))[0]
-  hero = hero ?? entries[0]
-  const rest = entries.filter(r => r !== hero).sort((a, b) => distKm(b.distance) - distKm(a.distance)).slice(0, 5)
-  const tag = (s: string): [string, string] => SPORT_TAG[s] ?? ['', 'var(--muted)']
+  const grouped: Record<string, Race[]> = {}
+  for (const r of best.values()) { const k = PB_SPORT_KEY[r.sport] ?? 'Running'; (grouped[k] ||= []).push(r) }
+  Object.keys(grouped).forEach(k => grouped[k].sort((a, b) => distKm(a.distance) - distKm(b.distance)))
+  let budget = 8
+  const groups: [string, Race[]][] = []
+  for (const sp of PB_ORDER) {
+    if (!grouped[sp] || budget <= 0) continue
+    const take = grouped[sp].slice(0, Math.min(6, budget))
+    groups.push([sp, take]); budget -= take.length
+  }
   return (
     <Shell framed={framed}>
       <div style={sectionLabel as React.CSSProperties}>PERSONAL BESTS</div>
-      {hero && (
-        <div style={{ marginTop: 10, padding: '12px', borderRadius: 'var(--radius-md)', borderLeft: '3px solid var(--green)', background: 'linear-gradient(120deg, rgba(var(--green-ch),0.1), var(--surface2))' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <div style={{ fontFamily: 'var(--body)', fontSize: 8, letterSpacing: '0.12em', color: 'var(--muted)' }}>{distLabel(hero.distance)}</div>
-            <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 7.5, color: tag(hero.sport)[1], padding: '1px 6px', borderRadius: 'var(--radius-pill)', background: 'var(--surface3)' }}>{tag(hero.sport)[0]}</span>
-          </div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 30, color: 'var(--green)', lineHeight: 1, marginTop: 3 }}>{hero.time}</div>
-          <div style={{ fontFamily: 'var(--body)', fontSize: 9, color: 'var(--muted)', marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{hero.name}</div>
-        </div>
-      )}
-      <div style={{ ...sectionLabel, fontSize: 10, marginTop: 16 }}>SIGNATURE EFFORTS</div>
-      <div style={{ display: 'grid', gap: 6, marginTop: 8 }}>
-        {rest.map(r => (
-          <div key={r.id} style={{ ...cardSurface, padding: '8px 10px', display: 'flex', alignItems: 'center', gap: 9 }}>
-            <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 7.5, color: tag(r.sport)[1], width: 34, flexShrink: 0 }}>{tag(r.sport)[0]}</span>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 11, color: 'var(--white)' }}>{distLabel(r.distance)}</div>
-              <div style={{ fontFamily: 'var(--body)', fontSize: 8, color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</div>
+      <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 12, overflow: 'hidden' }}>
+        {groups.map(([sp, list]) => {
+          const a = PB_ACCENT[sp]
+          return (
+            <div key={sp}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: a.color, opacity: 0.75, marginBottom: 7 }}>{sp}</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 7 }}>
+                {list.map(r => (
+                  <div key={r.id} style={{ background: `linear-gradient(145deg, #141414 0%, ${a.bg} 100%)`, border: '1px solid var(--border2)', borderLeft: `3px solid ${a.color}`, borderRadius: 'var(--radius-md)', padding: '9px 10px', minWidth: 0 }}>
+                    <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 7.5, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)' }}>{distLabel(r.distance)}</div>
+                    <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 19, color: a.color, lineHeight: 1, margin: '5px 0 4px' }}>{r.time}</div>
+                    <div style={{ fontFamily: 'var(--body)', fontSize: 8, color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={r.name}>{r.name}</div>
+                  </div>
+                ))}
+              </div>
             </div>
-            <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 12, color: 'var(--white)' }}>{r.time}</span>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </Shell>
   )
