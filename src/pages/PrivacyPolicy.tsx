@@ -125,6 +125,25 @@ export default function PrivacyPolicy() {
               Health data is stored per-user with row-level security. It is never sold or shared
               with third parties for advertising.
             </P>
+            <P>
+              <strong>Read-only access.</strong> Our access to your connected wearable accounts is
+              strictly read-only. BREAKTAPES never writes to, edits, or deletes anything on your
+              source account (WHOOP, Strava, Garmin, etc.). We only read your activities to display
+              them in the app.
+            </P>
+            <P>
+              <strong>Deleting wearable data.</strong> You can permanently delete the activities
+              synced from any connected device at any time from <em>Train &rarr; Activities &rarr;
+              device settings &rarr; Delete my data</em>. Disconnecting a device stops new syncing
+              and leaves your existing activities in place until you delete them. Deletion is
+              permanent and cannot be undone. Your source account and its data are never affected.
+            </P>
+            <P>
+              <strong>Account deletion.</strong> If you delete your BREAKTAPES account, all of your
+              data &mdash; including every activity synced from your connected devices &mdash; is
+              permanently deleted with no method of recovery. This does not affect the original data
+              held by WHOOP, Strava, Garmin, or any other source service.
+            </P>
           </SubSection>
           <SubSection title="2.4 Location data">
             <P>

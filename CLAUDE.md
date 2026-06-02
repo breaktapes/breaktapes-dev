@@ -223,6 +223,75 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 
 ---
 
+## Dashboard Widget Header Spec — CANONICAL
+
+**Every widget on the dashboard (Dashboard.tsx) — visible, off-screen, all size variants (S/M/L), empty states, error states, locked states — MUST use the shared `st.widgetLabel` and `st.widgetTitle` tokens for its header. Do NOT inline-style these or override fontSize.**
+
+**Label** (`st.widgetLabel`, defined at `src/pages/Dashboard.tsx:5954`):
+- `fontSize: var(--text-xs)` → **12px**
+- `fontWeight: 700`
+- `letterSpacing: 0.14em`
+- `lineHeight: 1`
+- `color: var(--orange)`
+- `textTransform: uppercase`
+- `whiteSpace: nowrap` + `overflow: hidden` + `textOverflow: ellipsis`
+- `marginBottom: 4px` ← **canonical gap to title**
+
+**Title** (`st.widgetTitle`, defined at `src/pages/Dashboard.tsx:5971`):
+- `fontSize: var(--text-lg)` → **18px**
+- `fontWeight: 900`
+- `letterSpacing: 0.04em`
+- `lineHeight: 1.1`
+- `color: var(--white)`
+- `textTransform: uppercase`
+- `whiteSpace: nowrap` + `overflow: hidden` + `textOverflow: ellipsis`
+
+**Required JSX wrapper:** label + title MUST be siblings inside a `<div>` parent. Without the wrapper, `glowCard.gap: var(--sp-4)` (16px) applies between them and blows out the spacing.
+
+```jsx
+// ✅ CORRECT
+<WidgetCard id="..." style={st.glowCard}>
+  <div>
+    <div style={st.widgetLabel}>EYEBROW</div>
+    <div role="heading" aria-level={2} style={st.widgetTitle}>TITLE</div>
+  </div>
+  {/* metric block */}
+</WidgetCard>
+
+// ❌ WRONG — glowCard's 16px gap fires between label and title
+<WidgetCard id="..." style={st.glowCard}>
+  <div style={st.widgetLabel}>EYEBROW</div>
+  <div style={st.widgetTitle}>TITLE</div>
+  {/* metric block */}
+</WidgetCard>
+```
+
+**With a top-right badge / pill:**
+
+```jsx
+<WidgetCard id="..." style={st.glowCard}>
+  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
+    <div>
+      <div style={st.widgetLabel}>EYEBROW</div>
+      <div role="heading" aria-level={2} style={st.widgetTitle}>TITLE</div>
+    </div>
+    <span style={{ ...st.badgePill, ... }}>BADGE</span>
+  </div>
+  {/* metric block */}
+</WidgetCard>
+```
+
+**Hard rules when editing or creating a widget:**
+- Never inline-style fontSize on the eyebrow label or main title — pull from the token
+- Never spread-override fontSize/fontWeight/marginBottom on these tokens
+- Never put `marginBottom`, `marginTop`, or any extra spacing on the header row `<div>` — `glowCard.gap` is the only separator between header and metric block
+- The label+title pair MUST share a single parent `<div>` (block or flex with `gap: 0`) — never bare siblings of `WidgetCard`
+- All small-view branches, empty-state branches, locked-state branches MUST follow this same pattern
+
+If a widget needs a different visual treatment, change the token in one place. Never fork inline.
+
+---
+
 ## Key Functions Reference
 
 | Function | Purpose |
@@ -265,6 +334,9 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 | `computeStreak(activities)` | Calculate current + longest training streak from Strava activities |
 | `classifyPacing(race)` | Classify a race as positive/negative/even split from splits data |
 | `computePacingIQ()` | Aggregate pacing persona across all races with splits |
+| `predictTriathlon(races, targetKey, nowMs?)` | (triFormulas.ts) Predict swim/T1/bike/T2/run splits + finish for a target tri distance; recency-weighted Riegel from own tri legs blended with running-PB engine fallback (`α = nEff/(nEff+2)`) + confidence band |
+| `extractTriLegs(race)` | (triFormulas.ts) Parse a tri race's splits into per-leg seconds (Swim/T1/Bike/T2/Run); per-segment `split` first, cumulative-delta fallback |
+| `detectTriType(distKm)` / `defaultTriTarget(races, upcoming)` | (triFormulas.ts) Bucket a distance to Sprint/Olympic/70.3/IRONMAN; pick default target (next upcoming tri → most-raced → Olympic) |
 | `computeMomentum()` | Weighted career momentum score from recent race times vs PBs |
 | `renderRaceDayForecast()` | Fetch Open-Meteo forecast for next race location + date |
 | `computeAgeGrade(race)` | Calculate WA age-grade percentage for a race result |
@@ -708,7 +780,7 @@ All frontend work MUST conform to `DESIGN.md` in the repo root.
 - **Join CTA** — fixed bottom bar on all public pages with UTM: `?ref=u-{username}-profile&join_context=compare-with-{encodedName}`.
 - **`initAuth()`** — reads `?join_context` param and updates landing headline for viral pre-fill flow.
 - **`buildRemoteStatePayload()`** — now includes `username` and `is_public` fields synced to Supabase.
-- **Static placeholder** `public/og-placeholder.png` — 1200x630 dark PNG (3151 bytes).
+- **Static placeholder** `public/og-placeholder.png` — 1200x630 branded PNG (72711 bytes). Shows BREAK/TAPES wordmark in Barlow Condensed on dark background with orange slash. Used as OG image fallback when the OG Worker cannot render a dynamic card.
 - **Version bump** — v0.2.0.0 → v0.3.0.0.
 
 #### Key learnings
@@ -1306,6 +1378,49 @@ Direct DB access (psql/psycopg2) is blocked from localhost — Supabase only exp
 - When the same new fields exist on both HEAD and staging (from two parallel worktrees), `git merge origin/staging` produces duplicate-field conflicts in TypeScript interfaces — always check for duplicate property declarations after merge, they compile but are confusing.
 - `git worktree remove` mid-session kills the shell CWD — the kernel's `getcwd()` fails on every subsequent subprocess. No recovery possible without restarting from a valid directory. Always `cd` to main repo before any worktree cleanup.
 - PostToolUse linter hook can revert file edits made in the same session if the linter reformats aggressively — verify critical new fields persist after every hook run.
+
+---
+
+### Session 38 (2026-06-02) — Triathlon Predictor widget (v0.7.2.0)
+
+**Branch:** `claude/nostalgic-bartik-53be42` → staging (PR #419) → main (PR #420). Both green; merged staging→main with a merge commit (no squash divergence).
+
+#### Shipped
+- **`src/lib/triFormulas.ts`** — pure prediction engine. `TRI_TYPES` (Sprint/Olympic/70.3/IRONMAN with canonical swim/bike/run leg km + default T1/T2). `extractTriLegs()` parses Swim/T1/Bike/T2/Run from `race.splits` (per-segment `split` first, cumulative-delta fallback — matches the `Swim/T1/Bike/T2/Run` labels Coach Cox + IRONMAN imports write). `predictTriathlon()` projects each leg via **recency-weighted Riegel** (per-leg exponents swim 1.02 / bike 1.04 / run 1.06, 1yr half-life decay, cross-distance samples ×0.6) and **blends** with a running-PB engine fallback for the run leg: `α = nEff/(nEff+2)` so cold-start leans engine, seasoned triathletes lean on their own splits. Transitions = weighted avg of actual T1/T2 else type default. Confidence band widens with low α + cross-band. `defaultTriTarget()`, `detectTriType()`, `hasTriSplitData()`.
+- **`TriPredictorWidget`** in Dashboard.tsx — small (finish numeral) / medium (distance selector + finish + range + per-leg bars: swim blue, bike green, run orange, transitions dim) / large (+ per-leg distances). "Set as goal on upcoming race" links a prediction to an upcoming tri's `goalTime` (mirrors RiegelPredictorWidget). Empty state when no tri splits + no running PB.
+- **Registration** — `tri-predictor` in `DEFAULT_WIDGETS` (RECENTLY zone, next to `riegel-predictor`), `WIDGET_SIZES` (`small/medium/large`), render dispatch.
+- **`WIDGET_CONTENT['tri-predictor']`** entry (detail-popup copy).
+- **Tests** — `src/lib/__tests__/triFormulas.test.ts` (20). Full suite 533 green.
+
+#### Key learnings
+- **`widgetContent.ts` guardrail**: `tests/widget-content.test.js` fails if any `enabled: true` widget in `DEFAULT_WIDGETS` lacks a `WIDGET_CONTENT` entry. Always add the content entry in the same change as a new enabled widget, or the suite goes red.
+- Tri split labels in real data are exactly `Swim`/`T1`/`Bike`/`T2`/`Run` stored in `split` (Coach Cox = Swim/Bike/Run only, IRONMAN = full 5). `extractTriLegs` matches on those + cumulative fallback.
+- Empirical-over-engine blend (`α = n/(n+2)`) is the reusable pattern for "use the athlete's own data when they have it, fall back to a model when they don't" — confidence band widens as α→0 and on cross-distance extrapolation.
+- Promote `staging`→`main` with `gh pr merge --merge` (not squash) to keep the branches content-identical and dodge the recurring squash-divergence cleanup.
+
+---
+
+### Session 37 (2026-06-02) — IRONMAN/70.3/5150 import + 1,535-event catalog merge
+
+**Branches:** `claude/suspicious-kare-d70eda` → staging → main (PR #397), follow-up fixes PR #406/#407. DB changes applied directly to staging + prod via Supabase MCP.
+
+#### Shipped
+- **Coach Cox name-search import** (`/import/coachcox` in health-proxy) — cross-event IRONMAN/70.3 search with swim/bike/run splits. EXACT first+last token match (coachcox `/quick` is a loose first-name search). `RaceImportModal` carries splits/placings/division/outcome into the saved race.
+- **IRONMAN race-picker** (`IronmanRacePicker.tsx`) — pick race from catalog → `/import/ironman-event` (competitor.com, 1 call = whole event, full swim/T1/bike/T2/run, edge-cached) → filter by name → populate splits.
+- **Catalog** — migration `20260602000000` adds `race_catalog.competitor_event_id` (unique partial index). 1,535 IRONMAN/70.3/5150 event-years crawled (`scripts/scrape-ironman-catalog.mjs`) + merged.
+- **Distance-tag fix** — `distLabel("70.3 / Middle Distance")` was `parseFloat`→70.3→">42.3 = Ultra". Added slash-form exact maps + pass sport. Multi-year autocomplete now shows "most recent · +N more".
+
+#### Catalog merge mechanics (see memory [[project-ironman-import]], [[feedback-catalog-dedup-gotchas]])
+- No service_role key locally (env has only anon). Supabase MCP `execute_sql` HAS write access — bulk-loaded via subagent into a `_im_staging` table, merged in-DB (UPDATE overlaps by lower(name)+year, INSERT new with city inherited from existing same-name tri rows).
+- Name canonicalization: regional championship labels stripped (European Championship → slug → Frankfurt; African/Asia-Pacific → base), preserving "70.3" + "World Championship".
+- Dedup gotchas: multi-distance ≠ dup (key needs `dist`); decimal distances (1.2K vs 12K) must not be punctuation-stripped; **eid-preserving dedup must ORDER BY `(competitor_event_id IS NULL) ASC`** else it deletes the eid row (lost 4 WC event IDs once, re-attached).
+- Merged: 340→291 distinct races. Folded "… Triathlon" suffix, 10 accent/hyphen variants (Jönköping/Poreč/São Paulo…), ~100 short-form "70.3 X" → "IRONMAN 70.3 X" twins, Comrades→Durban, deleted DO-NOT-USE placeholders + Cervia typo. Final: 0 dup groups, 1,535 event IDs, both envs.
+
+#### Key learnings
+- `git cherry-pick` onto main can be corrupted by the PostToolUse linter hook during conflict resolution (reverts the change → empty pick). Use `git diff origin/main origin/staging -- <files> | git apply`; verify with `git cat-file -e origin/main:<file>`.
+- Staging→main was promoted externally mid-session (divergence 4→0) — always re-check `git log origin/main..origin/staging` before promoting.
+- coachcox upstream ~1.3s warm but can exceed 6s cold → Worker timeout bumped to 10s.
+- health-proxy Worker deploys manually (`cd health-proxy && CF_API_TOKEN="" npx wrangler deploy`) — CI does NOT deploy it.
 
 ---
 

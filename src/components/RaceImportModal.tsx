@@ -10,17 +10,27 @@ const HEALTH_PROXY = 'https://health.breaktapes.com'
 
 type Step = 'search' | 'results'
 
+interface ImportSplit { label: string; split?: string }
+
 interface ImportResult {
   raceName: string
   date: string
   time?: string
-  source: 'ultrasignup' | 'marathonview' | 'athlinks' | 'runsignup'
+  source: 'ultrasignup' | 'marathonview' | 'athlinks' | 'runsignup' | 'coachcox'
   distance_m?: number
   city?: string
   /** UltraSignup region: a US 2-letter state OR a 3-letter country code. */
   state?: string
   country?: string
   raw?: string[]
+  // Rich fields from tri sources (Coach Cox / IRONMAN). Optional everywhere.
+  sport?: string
+  splits?: ImportSplit[]
+  agLabel?: string
+  placing?: string
+  genderPlacing?: string
+  agPlacing?: string
+  outcome?: string
 }
 
 // Resolve a display country from what the scrapers actually return: MarathonView
@@ -88,7 +98,7 @@ function normalizeDateStr(d: string): string {
   return d
 }
 
-export function RaceImportModal({ onClose }: { onClose: () => void }) {
+export function RaceImportModal({ onClose, onPickByRace }: { onClose: () => void; onPickByRace?: () => void }) {
   const addRace    = useRaceStore(s => s.addRace)
   const existingRaces = useRaceStore(s => s.races)
   const upcomingRaces = useRaceStore(s => s.upcomingRaces)
@@ -103,7 +113,7 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
   const [importing, setImporting]     = useState(false)
   const [error, setError]             = useState('')
   const [skippedCount, setSkippedCount] = useState(0)
-  const [sourceErrors, setSourceErrors] = useState<{ ultrasignup?: boolean; marathonview?: boolean; athlinks?: boolean; runsignup?: boolean }>({})
+  const [sourceErrors, setSourceErrors] = useState<{ ultrasignup?: boolean; marathonview?: boolean; athlinks?: boolean; runsignup?: boolean; coachcox?: boolean }>({})
 
 
   useEffect(() => {
@@ -118,7 +128,7 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
     const settle = <T,>(p: Promise<T>): Promise<PromiseSettledResult<T>> =>
       Promise.allSettled([p]).then(([r]) => r)
 
-    const [us, mv, al, rs] = await Promise.all([
+    const [us, mv, al, rs, cc] = await Promise.all([
       settle(fetch(`${HEALTH_PROXY}/import/ultrasignup`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ firstName: firstName.trim(), lastName: lastName.trim() }),
@@ -137,10 +147,14 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ firstName: firstName.trim(), lastName: lastName.trim() }),
       }).then(r => r.json())),
+      settle(fetch(`${HEALTH_PROXY}/import/coachcox`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ firstName: firstName.trim(), lastName: lastName.trim() }),
+      }).then(r => r.json())),
     ])
 
     const all: ImportResult[] = []
-    const errs: { ultrasignup?: boolean; marathonview?: boolean; athlinks?: boolean; runsignup?: boolean } = {}
+    const errs: { ultrasignup?: boolean; marathonview?: boolean; athlinks?: boolean; runsignup?: boolean; coachcox?: boolean } = {}
 
     if (us.status === 'fulfilled' && us.value.status === 'ok') {
       for (const r of (us.value.results ?? [])) {
@@ -176,6 +190,15 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
       }
     } else if (rs.status === 'rejected' || (rs.status === 'fulfilled' && rs.value?.status === 'error')) {
       errs.runsignup = true
+    }
+
+    if (cc.status === 'fulfilled' && cc.value.status === 'ok') {
+      for (const r of (cc.value.results ?? [])) {
+        if (!r.raceName || r.raceName.length < 3) continue
+        all.push({ ...r, date: normalizeDateStr(r.date ?? ''), source: 'coachcox' })
+      }
+    } else if (cc.status === 'rejected' || (cc.status === 'fulfilled' && cc.value?.status === 'error')) {
+      errs.coachcox = true
     }
 
     setSourceErrors(errs)
@@ -223,9 +246,16 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
         date,
         time:     normalizeImportTime(r.time),
         distance,
-        sport:    'Running',
+        sport:    r.sport ?? 'Running',
         city:     r.city ?? '',
         country:  deriveImportCountry(r.country, r.state),
+        // Rich fields from tri sources (Coach Cox / IRONMAN) — only set when present
+        ...(r.splits && r.splits.length ? { splits: r.splits.filter(s => s.split).map(s => ({ label: s.label, split: s.split })) } : {}),
+        ...(r.agLabel       ? { agLabel: r.agLabel }             : {}),
+        ...(r.placing       ? { placing: r.placing }             : {}),
+        ...(r.genderPlacing ? { genderPlacing: r.genderPlacing } : {}),
+        ...(r.agPlacing     ? { agPlacing: r.agPlacing }         : {}),
+        ...(r.outcome       ? { outcome: r.outcome }             : {}),
       }
       addRace(race)
     }
@@ -256,7 +286,7 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
         <div style={st.body}>
           {step === 'search' && (
             <>
-              <p style={st.hint}>Search UltraSignup, MarathonView, and RunSignup for races you've run.</p>
+              <p style={st.hint}>Search UltraSignup, MarathonView, RunSignup, and Coach Cox (IRONMAN / 70.3) for races you've run.</p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-2)' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <label style={st.fieldLabel}>First Name</label>
@@ -300,8 +330,18 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
                 <span style={st.sourcePill}>✓ UltraSignup</span>
                 <span style={st.sourcePill}>✓ MarathonView</span>
                 <span style={st.sourcePill}>✓ RunSignup</span>
+                <span style={st.sourcePill}>✓ Coach Cox</span>
                 <span style={{ ...st.sourcePill, opacity: athlinksUrl.trim() ? 1 : 0.45 }}>✓ Athlinks</span>
               </div>
+              {onPickByRace && (
+                <button
+                  type="button"
+                  onClick={onPickByRace}
+                  style={{ background: 'transparent', border: '1px dashed var(--border2)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-3)', color: 'var(--muted)', fontSize: 'var(--text-sm)', fontFamily: 'var(--body)', cursor: 'pointer', textAlign: 'left' }}
+                >
+                  🏊 Racing IRONMAN or 70.3? <span style={{ color: 'var(--orange)', fontWeight: 600 }}>Pick a specific race →</span> for official splits.
+                </button>
+              )}
               {error && <p style={st.errorText}>{error}</p>}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '0.75rem' }}>
                 <button style={st.cancelBtn} onClick={onClose} type="button">CANCEL</button>
@@ -323,7 +363,7 @@ export function RaceImportModal({ onClose }: { onClose: () => void }) {
               {(sourceErrors.ultrasignup || sourceErrors.marathonview || sourceErrors.athlinks || sourceErrors.runsignup) && (
                 <div style={{ padding: '8px 12px', background: 'rgba(var(--error-ch),0.08)', border: '1px solid rgba(var(--error-ch),0.25)', borderRadius: 'var(--radius-md)', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--sp-2)' }}>
                   <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: 'var(--error)' }}>
-                    {[sourceErrors.ultrasignup && 'UltraSignup', sourceErrors.marathonview && 'MarathonView', sourceErrors.runsignup && 'RunSignup', sourceErrors.athlinks && 'Athlinks'].filter(Boolean).join(' & ')} failed to respond.
+                    {[sourceErrors.ultrasignup && 'UltraSignup', sourceErrors.marathonview && 'MarathonView', sourceErrors.runsignup && 'RunSignup', sourceErrors.coachcox && 'Coach Cox', sourceErrors.athlinks && 'Athlinks'].filter(Boolean).join(' & ')} failed to respond.
                   </p>
                   <button
                     style={{ background: 'none', border: '1px solid rgba(var(--error-ch),0.4)', color: 'var(--error)', fontSize: 'var(--text-xs)', padding: '3px 8px', borderRadius: 'var(--radius-xs)', cursor: 'pointer', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', flexShrink: 0 }}

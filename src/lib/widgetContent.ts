@@ -163,10 +163,10 @@ export const WIDGET_CONTENT: Record<string, WidgetContent> = {
   'pacing-iq': {
     id: 'pacing-iq',
     title: 'PACING IQ',
-    tagline: 'Your rhythm across every logged race.',
-    whatItIs: 'Classifies every race with splits into FADER (slowed by more than 2%), EVEN PACER (final split within 2%), or NEGATIVE SPLITTER (closed faster than opening). Your dominant label is the pattern that appears most often.',
-    howToRead: 'The percentages underneath are your fade rate and negative-split rate across all split-equipped races. A 60%+ fade rate is a taper or pacing problem. A 40%+ negative-split rate means you routinely leave time on the table by starting too conservative.',
-    howItImpactsPerformance: 'Even pacing wins. Faders leak 30s–2min on typical marathons; negative-splitters who could have started 5s/km faster leave similar time on the course. Target the next race — if you fade, start slower. If you negative-split, start on pace.',
+    tagline: 'Your rhythm across every logged race — 10-class analysis.',
+    whatItIs: 'Classifies every race with 4+ splits into one of 10 pacing patterns: EVEN STEADY (metronome), NEGATIVE SPLITTER (closed faster), NEGATIVE KICKER (held back then kicked), MILD FADER, CLASSIC FADER, CRASH FADER, HOT START (out too hard), SURGER (roller-coaster), SLOW BUILDER (cold start, strong close), or CONSERVATIVE (sandbagger). Your dominant label is the class that appears most often. A secondary tendency surfaces when another class hits 25%+.',
+    howToRead: 'Primary persona = what you do most. Secondary = your second-most-common pattern (only shown if it covers 25%+ of races). Each class has a tailored coaching prescription based on the start/middle/end pace dynamics. The full breakdown bars in the Large view show every class you have ever exhibited with race counts.',
+    howItImpactsPerformance: 'Even pacing is the most efficient. Faders leak 30s–2min on typical marathons; hot starters guarantee a crash. The 10-class model surfaces start-side problems (HOT START, CONSERVATIVE, SLOW BUILDER) that the old 3-class FADER/EVEN/NEG model missed entirely. Combination patterns like CLASSIC FADER + HOT START point to start-discipline issues; CRASH FADER + HOT START means your goal pace is too aggressive.',
     relatedActions: [
       { label: 'See races with splits', to: '/races' },
     ],
@@ -251,6 +251,18 @@ export const WIDGET_CONTENT: Record<string, WidgetContent> = {
     whatItIs: 'Uses the Riegel formula (T2 = T1 × (D2/D1)^1.06) against your current best performance to project finish times at other distances. One of the most-validated endurance prediction methods.',
     howToRead: 'The source race sets the anchor. Predicted times at other distances assume you apply similar training specificity — a 5K PB does not predict a marathon without marathon-specific training.',
     howItImpactsPerformance: 'Great for goal-setting. If your current 10K predicts a 3:05 marathon but you are training for 2:55, the gap tells you the marathon is aspirational unless form improves.',
+    relatedActions: [
+      { label: 'Set a goal race', action: 'openAddUpcomingRace' },
+    ],
+  },
+
+  'tri-predictor': {
+    id: 'tri-predictor',
+    title: 'TRIATHLON PREDICTOR',
+    tagline: 'Swim/bike/run splits + finish for your next tri.',
+    whatItIs: 'Projects swim, T1, bike, T2 and run splits plus total finish time for a Sprint, Olympic, 70.3 or IRONMAN. It Riegel-projects each leg from your own recent triathlon splits (recency-weighted), falling back to your running PB for the run leg when you have no tri history yet.',
+    howToRead: 'Pick a target distance with the selector. The big number is the projected finish, with a confidence range below it. Per-leg bars show how each discipline contributes. The "% from your data" note tells you how much the estimate leans on your real races versus the model — it widens the range when you have little data or are projecting across distances.',
+    howItImpactsPerformance: 'Triathlon pacing is leg-dependent and degrades under brick fatigue. Predicting each split from your own race history (not fresh time trials) bakes in your real race execution, so the targets are grounded. Use it to set a finish goal and pace each leg.',
     relatedActions: [
       { label: 'Set a goal race', action: 'openAddUpcomingRace' },
     ],

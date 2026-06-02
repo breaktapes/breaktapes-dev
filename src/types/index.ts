@@ -43,6 +43,7 @@ export interface Race {
   avgHeartRate?: number  // average HR in bpm
   terrain?: string       // "flat" | "rolling" | "hilly" | "mountainous"
   shoe?: string          // shoe / kit worn
+  hyroxPartner?: string  // username of doubles partner (HYROX only)
 }
 
 export interface Split {

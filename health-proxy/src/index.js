@@ -623,6 +623,185 @@ export default {
       }
     }
 
+    // ── Race Import: Coach Cox (IRONMAN / 70.3 cross-event name search) ───
+    // coachcox.co.uk aggregates 14+ years of IRONMAN + 70.3 results with full
+    // swim/bike/run splits. Public JSON API, one call returns every result for
+    // a name across all events/years. This is the name-search source for tri.
+    if (path === '/import/coachcox' && request.method === 'POST') {
+      try {
+        const { firstName, lastName } = await request.json().catch(() => ({}));
+        const name = `${(firstName || '').trim()} ${(lastName || '').trim()}`.trim();
+        if (!name) return json({ results: [], status: 'ok' }, 200, origin);
+
+        const url = `https://www.coachcox.co.uk/wp-json/imstats/v1.90/athlete/search/quick/${encodeURIComponent(name)}`;
+        const resp = await fetch(url, {
+          headers: { 'Accept': 'application/json', 'User-Agent': 'Mozilla/5.0' },
+          // 10s: coachcox is ~1.3s warm but can exceed 6s on a cold cache hit.
+          signal: AbortSignal.timeout(10000),
+        });
+        if (!resp.ok) throw new Error(`CoachCox ${resp.status}`);
+        const rows = await resp.json();
+
+        // seconds (string|number) → "H:MM:SS" / "M:SS"; empty/0 → '' (no split)
+        const hms = (v) => {
+          const secs = Number(v);
+          if (!Number.isFinite(secs) || secs <= 0) return '';
+          const h = Math.floor(secs / 3600);
+          const m = Math.floor((secs % 3600) / 60);
+          const s = Math.floor(secs % 60);
+          return h > 0
+            ? `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+            : `${m}:${String(s).padStart(2, '0')}`;
+        };
+        // Unix-seconds → YYYY-MM-DD (rd.s); fall back to parsing rd.d "1 Jun 2025"
+        const toDate = (rd) => {
+          if (rd && rd.s) {
+            const d = new Date(Number(rd.s) * 1000);
+            if (!isNaN(d.getTime())) return d.toISOString().slice(0, 10);
+          }
+          return '';
+        };
+        const statusMap = { FIN: 'Finished', DNF: 'DNF', DNS: 'DNS', DQ: 'DSQ' };
+
+        // Coach Cox /quick is a loose first-name search: "Pratik Desai" returns
+        // every "Pratik *" (Kamat, Maniyar, ...). Require EXACT first AND last
+        // token match against what the user typed so only their own results show.
+        const norm = (s) => (s || '').toLowerCase().trim().replace(/\s+/g, ' ');
+        const fn = norm(firstName);
+        const ln = norm(lastName);
+        const nameMatches = (athleteName) => {
+          const toks = norm(athleteName).split(' ').filter(Boolean);
+          if (!toks.length) return false;
+          const first = toks[0];
+          const last  = toks[toks.length - 1];
+          if (fn && first !== fn) return false;   // first name must match exactly
+          if (ln && last  !== ln) return false;   // last name must match exactly
+          return true;
+        };
+
+        const results = [];
+        for (const r of (Array.isArray(rows) ? rows : [])) {
+          const raceName = r.rn || '';
+          if (!raceName) continue;
+          if (!nameMatches(r.n)) continue;   // drop loose first-name-only matches
+          const isFull = r.rty === 'im';     // 'im' = full IRONMAN, 'him' = 70.3
+          results.push({
+            raceName,
+            date:         toDate(r.rd),
+            time:         hms(r.ot),
+            distance_m:   isFull ? 226000 : 113000,
+            sport:        'Triathlon',
+            agLabel:      r.di || '',
+            placing:      r.or  ? String(r.or)  : '',
+            agPlacing:    r.odr ? String(r.odr) : '',
+            outcome:      statusMap[r.fs] || '',
+            // splits: swim (st) / bike (bt) / run (rt) — seconds
+            splits: [
+              { label: 'Swim', split: hms(r.st) },
+              { label: 'Bike', split: hms(r.bt) },
+              { label: 'Run',  split: hms(r.rt) },
+            ].filter(s => s.split),
+            source: 'coachcox',
+          });
+        }
+
+        if (posthog) {
+          posthog.capture({
+            distinctId,
+            event: 'race import searched',
+            properties: { provider: 'coachcox', result_count: results.length, ...(sessionId && { $session_id: sessionId }) },
+          });
+          await posthog.shutdown();
+        }
+        return json({ results, status: 'ok' }, 200, origin);
+      } catch (e) {
+        if (posthog) { posthog.captureException(e, distinctId); await posthog.shutdown(); }
+        return json({ results: [], status: 'error', message: e.message }, 502, origin);
+      }
+    }
+
+    // ── Race Import: IRONMAN per-event (official competitor.com data) ──────
+    // Given a competitor.com event id (stored in race_catalog as
+    // competitor_event_id), returns ALL finishers for that one event in a
+    // single upstream call, with full swim/T1/bike/T2/run splits. Powers the
+    // race-picker flow: user picks a race → fetch event → filter by name.
+    // Demand-driven cache: response cached at the edge (caches.default) keyed
+    // by event id, so repeat imports of the same race hit zero upstream calls.
+    if (path === '/import/ironman-event' && request.method === 'POST') {
+      try {
+        const { eventId } = await request.json().catch(() => ({}));
+        if (!eventId || !/^[a-z0-9-]{36}$/i.test(eventId)) {
+          return json({ results: [], status: 'error', message: 'valid eventId required' }, 400, origin);
+        }
+
+        const cache = caches.default;
+        const cacheKey = new Request(`https://cache.breaktapes.com/ironman-event/${eventId}`);
+        let upstream = await cache.match(cacheKey);
+
+        if (!upstream) {
+          const resp = await fetch(
+            `https://labs-v2.competitor.com/api/results?wtc_eventid=${eventId}`,
+            { headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36' }, signal: AbortSignal.timeout(12000) },
+          );
+          if (!resp.ok) throw new Error(`competitor ${resp.status}`);
+          const body = await resp.text();
+          upstream = new Response(body, {
+            headers: { 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=86400' },
+          });
+          // Store a clone; cache TTL via Cache-Control (24h)
+          await cache.put(cacheKey, upstream.clone());
+        }
+
+        const data = JSON.parse(await upstream.text());
+        const rowsRaw = data?.resultsJson?.value ?? [];
+
+        // "H:MM:SS"/"M:SS" passthrough; "0:00:00"/empty → '' (no split)
+        const clean = (t) => {
+          const s = (t || '').trim();
+          return (!s || /^0(:00)*$/.test(s)) ? '' : s;
+        };
+        const statusOf = (r) => r.wtc_dnf ? 'DNF' : r.wtc_dns ? 'DNS' : r.wtc_dq ? 'DSQ' : 'Finished';
+
+        const results = rowsRaw.map(r => {
+          const c = r.wtc_ContactId || {};
+          return {
+            athlete:    c.fullname || `${c.firstname || ''} ${c.lastname || ''}`.trim(),
+            firstName:  c.firstname || '',
+            lastName:   c.lastname || '',
+            city:       c.address1_city || '',
+            country:    (r.wtc_CountryRepresentingId || {}).wtc_name || '',
+            agLabel:    (r.wtc_AgeGroupId || {}).wtc_agegroupname || '',
+            time:       clean(r.wtc_finishtimeformatted),
+            placing:    r.wtc_finishrankoverall != null ? String(r.wtc_finishrankoverall) : '',
+            genderPlacing: r.wtc_finishrankgender != null ? String(r.wtc_finishrankgender) : '',
+            agPlacing:  r.wtc_finishrankgroup != null ? String(r.wtc_finishrankgroup) : '',
+            outcome:    statusOf(r),
+            bibNumber:  r.wtc_bibnumber != null ? String(r.wtc_bibnumber) : '',
+            splits: [
+              { label: 'Swim', split: clean(r.wtc_swimtimeformatted) },
+              { label: 'T1',   split: clean(r.wtc_transition1timeformatted) },
+              { label: 'Bike', split: clean(r.wtc_biketimeformatted) },
+              { label: 'T2',   split: clean(r.wtc_transitiontime2formatted) },
+              { label: 'Run',  split: clean(r.wtc_runtimeformatted) },
+            ].filter(s => s.split),
+          };
+        }).filter(r => r.athlete);
+
+        if (posthog) {
+          posthog.capture({
+            distinctId,
+            event: 'race import event fetched',
+            properties: { provider: 'ironman', event_id: eventId, result_count: results.length, ...(sessionId && { $session_id: sessionId }) },
+          });
+          await posthog.shutdown();
+        }
+        return json({ results, status: 'ok', count: results.length }, 200, origin);
+      } catch (e) {
+        if (posthog) { posthog.captureException(e, distinctId); await posthog.shutdown(); }
+        return json({ results: [], status: 'error', message: e.message }, 502, origin);
+      }
+    }
+
     // ══════════════════════════════════════════════════════════════════════
     // ── Open Wearables unified API routes ─────────────────────────────────
     // All /ow/* routes proxy to the self-hosted OW instance on Railway.
@@ -687,6 +866,65 @@ export default {
           );
           const authData = await authRes.json().catch(() => ({}));
           return json(authData, authRes.status, origin);
+        } catch (e) {
+          return json({ error: e.message }, 502, origin);
+        }
+      }
+
+      // ── POST /ow/purge — delete a provider's synced data + disconnect ────
+      // Body: { ow_user_id, provider }
+      // OW has no bulk per-provider purge, so we list the provider's events
+      // (workouts + sleep) and delete each, then revoke the connection. The
+      // user's source account is never touched (read-only). Timeseries samples
+      // are not individually deletable via OW's API — full purge happens on
+      // account deletion (DELETE user).
+      if (path === '/ow/purge' && request.method === 'POST') {
+        try {
+          const { ow_user_id, provider } = await request.json().catch(() => ({}));
+          if (!ow_user_id || !provider) {
+            return json({ error: 'ow_user_id and provider required' }, 400, origin);
+          }
+          const start = new Date(Date.now() - 5 * 365 * 86400000).toISOString();
+          const end   = new Date().toISOString();
+          const hdr   = { 'X-Open-Wearables-API-Key': owKey };
+          let deleted = 0;
+
+          // Delete workouts for this provider
+          try {
+            const wRes = await fetch(
+              `${ow}/api/v1/users/${ow_user_id}/events/workouts?start_date=${encodeURIComponent(start)}&end_date=${encodeURIComponent(end)}&limit=1000`,
+              { headers: hdr },
+            );
+            const wBody = await wRes.json().catch(() => ({ data: [] }));
+            const workouts = (wBody.data ?? wBody.workouts ?? []).filter(w => (w.provider ?? w.data_source) === provider);
+            for (const w of workouts) {
+              const id = w.id ?? w.external_id;
+              if (!id) continue;
+              const dr = await fetch(`${ow}/api/v1/users/${ow_user_id}/events/workouts/${id}`, { method: 'DELETE', headers: hdr });
+              if (dr.ok) deleted++;
+            }
+          } catch { /* best-effort */ }
+
+          // Delete sleep sessions for this provider
+          try {
+            const sRes = await fetch(
+              `${ow}/api/v1/users/${ow_user_id}/events/sleep?start_date=${encodeURIComponent(start)}&end_date=${encodeURIComponent(end)}&limit=1000`,
+              { headers: hdr },
+            );
+            const sBody = await sRes.json().catch(() => ({ data: [] }));
+            const sleeps = (sBody.data ?? sBody.sleep ?? []).filter(x => (x.provider ?? x.data_source) === provider);
+            for (const s of sleeps) {
+              const id = s.id ?? s.external_id;
+              if (!id) continue;
+              const dr = await fetch(`${ow}/api/v1/users/${ow_user_id}/events/sleep/${id}`, { method: 'DELETE', headers: hdr });
+              if (dr.ok) deleted++;
+            }
+          } catch { /* best-effort */ }
+
+          // Revoke the connection
+          await fetch(`${ow}/api/v1/users/${ow_user_id}/connections/${provider}`, { method: 'DELETE', headers: hdr }).catch(() => {});
+
+          return json({ ok: true, deleted }, 200, origin);
         } catch (e) {
           return json({ error: e.message }, 502, origin);
         }

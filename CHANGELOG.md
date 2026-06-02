@@ -3,6 +3,39 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.2.4] - 2026-06-02
+
+### Changed
+- **Final OG share image** — replaced with the designed share card: BREAK/TAPES wordmark, "EVERY FINISH LINE, REMEMBERED." headline (orange emphasis), tagline, and `www.breaktapes.com` pill on solid black.
+
+## [0.7.2.3] - 2026-06-02
+
+### Fixed
+- **OG image now renders in Barlow Condensed** — the share card was rendering the wordmark in a fallback system font instead of the brand typeface. Now uses the correct condensed brand font for the BREAK/TAPES wordmark, tagline, and URL.
+
+## [0.7.2.2] - 2026-06-02
+
+### Changed
+- **OG image cleanup** — removed the decorative slash bars that overlapped the wordmark in link previews. The share card is now the centered BREAK/TAPES wordmark, tagline, and URL pill on a dark background — cleaner and on-brand.
+
+## [0.7.2.1] - 2026-06-02
+
+### Changed
+- **Branded OG image** — link previews (WhatsApp, iMessage, Twitter, Slack) now show the BREAK/TAPES wordmark in Barlow Condensed on a dark background with the orange slash, replacing the plain black placeholder.
+- **Favicon color fix** — browser tab icon is now black background with orange slash (was inverted: orange background with black slash).
+
+## [0.7.2.0] - 2026-06-02
+
+### Added
+- **Triathlon Predictor dashboard widget** — predicts swim / T1 / bike / T2 / run splits and finish time for a target triathlon (Sprint / Olympic / 70.3 / IRONMAN). Blends two signals: recency-weighted Riegel projection from the athlete's own recent tri leg splits (captures real race pacing + brick fatigue) and an engine fallback for the run leg derived from a standalone running PB. Blend weight `α = n / (n + 2)` grows with how much real tri data the athlete has logged, so cold-start leans on the engine model and seasoned triathletes lean on their own data. Cross-distance projections are downweighted and widen the confidence band. New pure library `src/lib/triFormulas.ts` (20 unit tests). Small view shows the finish numeral; medium adds a distance selector, per-leg bars, and confidence range; large adds per-leg distances. Links a prediction to an upcoming triathlon as its goal time (mirrors Race Predictor). Lives in the RECENTLY zone next to Race Predictor; supports small/medium/large sizes.
+
+## [0.7.1.3] - 2026-06-02
+
+### Fixed
+- **Set Goal Pace sheet** — race name now renders larger and in the heading font, fixing a hierarchy bug where the date/distance line looked bigger than the race name.
+- **Boston Qualifier widget** — qualifying-race finish times bumped 1px for readability.
+- **Gap To Goal widget (small size)** — added a dedicated small-size layout. Previously the small tile reused the medium layout and clipped the Course PB time off the right edge; it now shows the goal time and gap label cleanly.
+
 ## [0.7.1.2] - 2026-06-02
 
 ### Fixed

@@ -23,7 +23,7 @@ import { WidgetCard, WidgetCardContext, DragListenersContext, useWidgetCardConte
 import { WidgetDetailModal } from '@/components/WidgetDetailModal'
 import type { WidgetDynamicContext } from '@/lib/widgetContent'
 import type { Race, DashWidget, WidgetSize, Split } from '@/types'
-import { useUnits, distUnit, computePaceSecPerKm as computePaceSecPerKmFn } from '@/lib/units'
+import { useUnits, distUnit, fmtDistWithUnit, computePaceSecPerKm as computePaceSecPerKmFn } from '@/lib/units'
 import { fmtDateDDMM, fmtDateOrdinal, distLabel as distLabelUtil, normalizeName, racePriorityLabel } from '@/lib/utils'
 import { useRaceCatalog, type CatalogRace } from '@/hooks/useRaceCatalog'
 import {
@@ -32,7 +32,12 @@ import {
   goalPaceCalc, parseTimeSecs as fParseTimeSecs, parseDistKm as fParseDistKm,
   distanceMilestones, distanceLadder, categoricalBadges, closestUnlocks, secsToHMS as fSecsToHMS,
   findCourseRepeats, personalLeagueTable,
+  pacingAggregate, PACING_CLASS_META,
 } from '@/lib/raceFormulas'
+import {
+  predictTriathlon, defaultTriTarget, hasTriSplitData, TRI_TYPES,
+  type TriTypeKey,
+} from '@/lib/triFormulas'
 import { supabase, getClerkToken } from '@/lib/supabase'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -1494,8 +1499,10 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
   if (recent.length === 0) {
     return (
       <WidgetCard id="recent-races" style={st.glowCard}>
-        <div style={st.widgetLabel}>YOUR RECAP</div>
-        <div role="heading" aria-level={2} style={st.widgetTitle}>RECENT RACES</div>
+        <div>
+          <div style={st.widgetLabel}>YOUR RECAP</div>
+          <div role="heading" aria-level={2} style={st.widgetTitle}>RECENT RACES</div>
+        </div>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: '8px' }}>
           No races in the last 3 months.
         </div>
@@ -1916,7 +1923,7 @@ function BostonQualWidget() {
                       <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', marginTop: '1px' }}>{fmtDateDDMM(r.date)}</div>
                     </div>
                     <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                      <div style={{ fontSize: 'var(--text-sm)', fontWeight: 800, color: 'var(--white)', fontFamily: 'var(--headline)', lineHeight: 1 }}>{r.time}</div>
+                      <div style={{ fontSize: 'var(--text-compact)', fontWeight: 800, color: 'var(--white)', fontFamily: 'var(--headline)', lineHeight: 1 }}>{r.time}</div>
                       <div style={{ fontSize: 'var(--text-xs)', color: rowColor, fontWeight: 700, marginTop: '2px' }}>
                         {qualified ? `${secsToHMS(Math.abs(gap))} under ✓` : `${secsToHMS(gap)} over`}
                       </div>
@@ -1948,34 +1955,15 @@ function PacingIQWidget() {
   const ctx = useWidgetCardContext()
   const size = ctx?.getWidgetSize('pacing-iq') ?? 'medium'
 
-  const analysis = useMemo(() => {
-    const today = todayStr()
-    let faded = 0, negative = 0, even = 0
-    for (const r of races) {
-      // Pacing pattern reflects completed past races — a future race with
-      // manually entered splits, or a DNF blow-up, would skew the persona.
-      if (r.date > today) continue
-      if (r.outcome && r.outcome !== 'Finished') continue
-      const segs = segmentTimes(r.splits)
-      if (segs.length < 2) continue
-      const first = segs[0]
-      const last  = segs[segs.length - 1]
-      if (last > first * 1.02) faded++
-      else if (last < first * 0.98) negative++
-      else even++
-    }
-    const total = faded + negative + even
-    if (total === 0) return null
-    const dominant = faded > negative && faded > even ? 'FADER' :
-      negative > even ? 'NEGATIVE SPLITTER' : 'EVEN PACER'
-    return { faded, negative, even, total, dominant }
-  }, [races])
+  const agg = useMemo(() => pacingAggregate(races), [races])
+  const primaryMeta = agg.primary ? PACING_CLASS_META[agg.primary] : null
+  const secondaryMeta = agg.secondary ? PACING_CLASS_META[agg.secondary] : null
 
   if (size === 'small') {
-    const fullLabel = !analysis ? '—' : analysis.dominant === 'NEGATIVE SPLITTER' ? 'NEG SPLIT' : analysis.dominant === 'EVEN PACER' ? 'EVEN' : 'FADER'
-    const abbrevColor = !analysis ? 'var(--muted)' : analysis.dominant === 'NEGATIVE SPLITTER' ? 'var(--green)' : analysis.dominant === 'EVEN PACER' ? 'var(--white)' : 'var(--orange)'
+    const short = primaryMeta?.short ?? '—'
+    const color = primaryMeta?.color ?? 'var(--muted)'
     // Scale font down for longer labels so they fit in small card
-    const labelFont = fullLabel.length > 7 ? '36px' : fullLabel.length > 5 ? '48px' : '64px'
+    const labelFont = short.length > 7 ? '36px' : short.length > 5 ? '48px' : '64px'
     return (
       <WidgetCard id="pacing-iq" style={st.glowCard}>
         <div>
@@ -1983,11 +1971,11 @@ function PacingIQWidget() {
           <div role="heading" aria-level={2} style={st.widgetTitle}>RACE RHYTHM</div>
         </div>
         <div style={{ marginTop: 'auto' }}>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: labelFont, lineHeight: 1, color: abbrevColor, letterSpacing: '-0.02em' }}>
-            {fullLabel}
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: labelFont, lineHeight: 1, color, letterSpacing: '-0.02em' }}>
+            {short}
           </div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
-            {analysis ? analysis.dominant : 'NO DATA'}
+            {primaryMeta?.label ?? 'NO DATA'}
           </div>
         </div>
       </WidgetCard>
@@ -2001,23 +1989,75 @@ function PacingIQWidget() {
           <div style={st.widgetLabel}>PACING IQ</div>
           <div role="heading" aria-level={2} style={st.widgetTitle}>RACE RHYTHM</div>
         </div>
-        <span style={st.iconBox}>IQ</span>
+        {agg.total > 0 && (
+          <span style={{ ...st.badgePill, background: 'rgba(var(--orange-ch), 0.12)', color: 'var(--orange)', border: '1px solid rgba(var(--orange-ch), 0.3)', flexShrink: 0 }}>
+            {agg.total} RACES
+          </span>
+        )}
       </div>
 
-      {!analysis ? (
+      {!primaryMeta ? (
         <div style={st.lockedBox}>
           <div style={st.lockedTitle}>NO SPLIT DATA</div>
-          <div style={st.lockedText}>Add splits to 2+ races to see your pacing pattern.</div>
+          <div style={st.lockedText}>Add splits to 4+ checkpoint races to see your pacing pattern.</div>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xl)', color: 'var(--green)', letterSpacing: '0.04em' }}>
-            {analysis.dominant}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+          {/* Primary persona */}
+          <div>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xl)', color: primaryMeta.color, letterSpacing: '0.04em' }}>
+              {primaryMeta.label}
+            </div>
+            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginTop: '4px', lineHeight: 1.5 }}>
+              {primaryMeta.description}
+            </div>
+            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--orange)', marginTop: '4px', fontFamily: 'var(--headline)', fontWeight: 700 }}>
+              {agg.primaryPct}% of {agg.total} races
+            </div>
           </div>
-          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5 }}>
-            Based on {analysis.total} races with split data.
-            Fade rate: {Math.round((analysis.faded / analysis.total) * 100)}%.
-            Negative splits: {Math.round((analysis.negative / analysis.total) * 100)}%.
+
+          {/* Secondary tendency — only when ≥25% */}
+          {secondaryMeta && (
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: 'var(--sp-3)' }}>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '6px' }}>
+                SECONDARY · {agg.secondaryPct}%
+              </div>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', color: secondaryMeta.color, letterSpacing: '0.04em' }}>
+                {secondaryMeta.label}
+              </div>
+            </div>
+          )}
+
+          {/* Distribution mini-bars (large only) */}
+          {size === 'large' && agg.distribution.length > 1 && (
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: 'var(--sp-3)' }}>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
+                FULL BREAKDOWN
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+                {agg.distribution.map(({ klass, count, pct }) => {
+                  const meta = PACING_CLASS_META[klass]
+                  return (
+                    <div key={klass} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
+                      <div style={{ width: '90px', fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.04em', flexShrink: 0 }}>
+                        {meta.label}
+                      </div>
+                      <div style={{ flex: 1, height: '4px', background: 'var(--surface3)', borderRadius: 'var(--radius-xs)', overflow: 'hidden' }}>
+                        <div style={{ height: '100%', width: `${pct}%`, background: meta.color, borderRadius: 'var(--radius-xs)', transition: 'width 0.4s ease' }} />
+                      </div>
+                      <div style={{ width: '40px', fontSize: 'var(--text-xs)', color: 'var(--muted)', textAlign: 'right' as const, flexShrink: 0 }}>
+                        {count}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Coaching prescription */}
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontStyle: 'italic', padding: '8px 10px', background: 'var(--surface3)', borderRadius: 'var(--radius-sm)', borderLeft: `2px solid ${primaryMeta.color}` }}>
+            {agg.coachingNote}
           </div>
         </div>
       )}
@@ -2492,7 +2532,7 @@ function PatternScanWidget() {
   return (
     <WidgetCard id="pattern-scan" style={st.glowCard}>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)', marginBottom: '14px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
         <div>
           <div style={st.widgetLabel}>RACE INTEL</div>
           <div role="heading" aria-level={2} style={st.widgetTitle}>PATTERN SCAN</div>
@@ -2649,8 +2689,10 @@ function OnThisDayWidget() {
 
   return (
     <WidgetCard id="on-this-day" style={st.glowCard}>
-      <div style={st.widgetLabel}>ON THIS DAY</div>
-      <div role="heading" aria-level={2} style={st.widgetTitle}>RACE FLASHBACK</div>
+      <div>
+        <div style={st.widgetLabel}>ON THIS DAY</div>
+        <div role="heading" aria-level={2} style={st.widgetTitle}>RACE FLASHBACK</div>
+      </div>
       <div style={{ display: 'flex', gap: 'var(--sp-3)', alignItems: 'flex-start', marginTop: 'var(--sp-2)' }}>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ color: 'var(--orange)', flexShrink: 0, marginTop: '2px' }} aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="1.5"/><path d="M3 9h18" stroke="currentColor" strokeWidth="1.5"/><path d="M8 2v4M16 2v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
         <div style={{ minWidth: 0 }}>
@@ -2825,8 +2867,10 @@ function GapToGoalWidget({ race }: { race: Race | null }) {
   if (!nextRace) {
     return (
       <WidgetCard id="gap-to-goal" style={st.glowCard}>
-        <div style={st.widgetLabel}>GAP TO GOAL</div>
-        <div role="heading" aria-level={2} style={st.widgetTitle}>NEXT RACE</div>
+        <div>
+          <div style={st.widgetLabel}>GAP TO GOAL</div>
+          <div role="heading" aria-level={2} style={st.widgetTitle}>NEXT RACE</div>
+        </div>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginTop: '6px' }}>Add an upcoming race to track your gap to goal.</div>
       </WidgetCard>
     )
@@ -2835,8 +2879,10 @@ function GapToGoalWidget({ race }: { race: Race | null }) {
   if (!result?.goal) {
     return (
       <WidgetCard id="gap-to-goal" style={st.glowCard}>
-        <div style={st.widgetLabel}>GAP TO GOAL</div>
-        <div role="heading" aria-level={2} style={st.widgetTitle}>{(nextRace.name ?? '').toUpperCase()}</div>
+        <div>
+          <div style={st.widgetLabel}>GAP TO GOAL</div>
+          <div role="heading" aria-level={2} style={st.widgetTitle}>{(nextRace.name ?? '').toUpperCase()}</div>
+        </div>
         <div style={st.lockedBox}>
           <div style={st.lockedTitle}>NO GOAL SET</div>
           <div style={st.lockedText}>Set a goal time on your next race to track your gap.</div>
@@ -2853,6 +2899,27 @@ function GapToGoalWidget({ race }: { race: Race | null }) {
       : `${secsToHMS(result.gap)} BEHIND GOAL`
 
   const weeksToRace = nextRace.date ? Math.ceil(daysUntil(nextRace.date) / 7) : null
+
+  // Small view: single primary metric only. The medium/large layout puts GOAL
+  // TIME and COURSE PB side-by-side, which overflows and clips the PB time in
+  // the narrow 2-col small grid (see screenshot). Show only the goal time +
+  // gap label here; PB lives in the medium/large views.
+  if (size === 'small') {
+    return (
+      <WidgetCard id="gap-to-goal" style={st.glowCard}>
+        <div style={{ minWidth: 0 }}>
+          <div style={st.widgetLabel}>GAP TO GOAL</div>
+          <div role="heading" aria-level={2} style={st.widgetTitle}>
+            {nextRace.name ? nextRace.name : (distBadge(nextRace.distance) || 'NEXT RACE')}
+          </div>
+        </div>
+        <div style={{ marginTop: 'auto', minWidth: 0 }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: smMetricFont(result.goal), color: 'var(--white)', lineHeight: 1, letterSpacing: '-0.02em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{result.goal}</div>
+          <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.12em', color: gapColor, textTransform: 'uppercase', marginTop: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{gapLabel}</div>
+        </div>
+      </WidgetCard>
+    )
+  }
 
   return (
     <WidgetCard id="gap-to-goal" style={st.glowCard}>
@@ -3190,8 +3257,10 @@ function CourseFitWidget({ race }: { race: Race | null }) {
   if (!nextRace) {
     return (
       <WidgetCard id="course-fit" style={st.glowCard}>
-        <div style={st.widgetLabel}>COURSE FIT</div>
-        <div role="heading" aria-level={2} style={st.widgetTitle}>NEXT RACE</div>
+        <div>
+          <div style={st.widgetLabel}>COURSE FIT</div>
+          <div role="heading" aria-level={2} style={st.widgetTitle}>NEXT RACE</div>
+        </div>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginTop: '6px' }}>Add an upcoming race to calculate your course fit score.</div>
       </WidgetCard>
     )
@@ -3329,8 +3398,10 @@ function PBProbabilityWidget({ race }: { race: Race | null }) {
   if (!nextRace) {
     return (
       <WidgetCard id="pb-probability" style={st.glowCard}>
-        <div style={st.widgetLabel}>PB PROBABILITY</div>
-        <div role="heading" aria-level={2} style={st.widgetTitle}>NEXT RACE</div>
+        <div>
+          <div style={st.widgetLabel}>PB PROBABILITY</div>
+          <div role="heading" aria-level={2} style={st.widgetTitle}>NEXT RACE</div>
+        </div>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginTop: '6px' }}>Add an upcoming race to estimate your PB chance.</div>
       </WidgetCard>
     )
@@ -3423,8 +3494,10 @@ function RaceComparerWidget() {
   if (past.length < 2) {
     return (
       <WidgetCard id="race-comparer" style={st.glowCard}>
-        <div style={st.widgetLabel}>RACE COMPARER</div>
-        <div role="heading" aria-level={2} style={st.widgetTitle}>LOG 2+ RACES</div>
+        <div>
+          <div style={st.widgetLabel}>RACE COMPARER</div>
+          <div role="heading" aria-level={2} style={st.widgetTitle}>LOG 2+ RACES</div>
+        </div>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: 'var(--sp-1)' }}>Need at least 2 timed races to compare.</div>
       </WidgetCard>
     )
@@ -3518,8 +3591,10 @@ function WhatToRaceNextWidget() {
   if (!futureUpcoming.length) {
     return (
       <WidgetCard id="what-to-race-next" style={st.glowCard}>
-        <div style={st.widgetLabel}>WHAT TO RACE NEXT</div>
-        <div role="heading" aria-level={2} style={st.widgetTitle}>NO UPCOMING RACES</div>
+        <div>
+          <div style={st.widgetLabel}>WHAT TO RACE NEXT</div>
+          <div role="heading" aria-level={2} style={st.widgetTitle}>NO UPCOMING RACES</div>
+        </div>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: 'var(--sp-1)' }}>Add upcoming races to get recommendations based on your performance trends.</div>
       </WidgetCard>
     )
@@ -3722,8 +3797,10 @@ function PersonalBestsWidget() {
   if (!allDists.length) {
     return (
       <WidgetCard id="personal-bests" style={st.glowCard}>
-        <div style={st.widgetLabel}>ALL TIME</div>
-        <div role="heading" aria-level={2} style={st.widgetTitle}>PERSONAL BESTS</div>
+        <div>
+          <div style={st.widgetLabel}>ALL TIME</div>
+          <div role="heading" aria-level={2} style={st.widgetTitle}>PERSONAL BESTS</div>
+        </div>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: '8px' }}>
           Log timed races to build your PB board.
         </div>
@@ -4272,8 +4349,10 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
 
   if (!result) return (
     <WidgetCard id="riegel-predictor" style={st.glowCard}>
-      <div style={st.widgetLabel}>RACE PREDICTOR</div>
-      <div role="heading" aria-level={2} style={st.widgetTitle}>RIEGEL PREDICTOR</div>
+      <div>
+        <div style={st.widgetLabel}>RACE PREDICTOR</div>
+        <div role="heading" aria-level={2} style={st.widgetTitle}>RIEGEL PREDICTOR</div>
+      </div>
       <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: 0 }}>Log a race with a finish time to see predictions.</p>
     </WidgetCard>
   )
@@ -4330,8 +4409,10 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
       <WidgetCard id="riegel-predictor" style={st.glowCard}>
         {/* data-no-widget-detail on the wrapper prevents any click inside from opening the widget detail popup */}
         <div data-no-widget-detail style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
-        <div style={{ ...st.widgetLabel, marginBottom: 0 }}>RACE PREDICTOR</div>
-        <div role="heading" aria-level={2} style={st.widgetTitle}>RIEGEL PREDICTOR</div>
+        <div>
+          <div style={st.widgetLabel}>RACE PREDICTOR</div>
+          <div role="heading" aria-level={2} style={st.widgetTitle}>RIEGEL PREDICTOR</div>
+        </div>
         <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
           Based on {race.name} · {fmtDateDDMM(race.date)}
         </div>
@@ -4421,6 +4502,193 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', overflowY: 'auto' }}>
               {[...upcomingRaces].sort((a, b) => a.date.localeCompare(b.date)).map(r => (
                 <button key={r.id} onClick={() => linkGoalPace(r.id)} style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-3)', textAlign: 'left', cursor: 'pointer', color: 'var(--white)' }}>
+                  <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name ?? 'Unnamed Race'}</div>
+                  <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '4px' }}>{fmtDateDDMM(r.date)} · {distLabelUtil(r.distance, r.sport)}</div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+    </>
+  )
+}
+
+const TRI_LEG_COLOR: Record<string, string> = {
+  swim: '#60A5FA', bike: 'var(--green)', run: 'var(--orange)', t1: 'var(--muted)', t2: 'var(--muted)',
+}
+
+function TriPredictorWidget() {
+  const races         = useRaceStore(selectRaces)
+  const upcomingRaces = useRaceStore(selectUpcomingRaces)
+  const updateRace    = useRaceStore(s => s.updateRace)
+  const units = useUnits()
+  const ctx = useWidgetCardContext()
+  const size = ctx?.getWidgetSize('tri-predictor') ?? 'medium'
+
+  const defaultTarget = useMemo(() => defaultTriTarget(races, upcomingRaces), [races, upcomingRaces])
+  const [target, setTarget] = useState<TriTypeKey | null>(null)
+  const activeTarget = target ?? defaultTarget
+  const pred = useMemo(() => predictTriathlon(races, activeTarget), [races, activeTarget])
+  const hasSplits = useMemo(() => hasTriSplitData(races), [races])
+  const [showLinkSheet, setShowLinkSheet] = useState(false)
+
+  const Header = (
+    <div>
+      <div style={st.widgetLabel}>RACE PREDICTOR</div>
+      <div role="heading" aria-level={2} style={st.widgetTitle}>TRIATHLON PREDICTOR</div>
+    </div>
+  )
+
+  if (!pred) return (
+    <WidgetCard id="tri-predictor" style={st.glowCard}>
+      {Header}
+      <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: 0 }}>
+        Log a triathlon with swim / bike / run splits to predict your next race.
+      </p>
+    </WidgetCard>
+  )
+
+  if (size === 'small') {
+    return (
+      <WidgetCard id="tri-predictor" style={st.glowCard}>
+        {Header}
+        <div style={{ marginTop: 'auto' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: smMetricFont(pred.totalTime), lineHeight: 1, color: 'var(--orange)', letterSpacing: '-0.02em' }}>
+            {pred.totalTime}
+          </div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
+            {pred.type.label} FINISH
+          </div>
+        </div>
+      </WidgetCard>
+    )
+  }
+
+  const upcomingTris = [...upcomingRaces]
+    .filter(r => { const s = (r.sport ?? '').toLowerCase(); return s.includes('tri') || s.includes('iron') })
+    .sort((a, b) => (a.date || '').localeCompare(b.date || ''))
+
+  function setGoalOnTri(raceId: string) {
+    if (!pred) return
+    updateRace(raceId, { goalTime: pred.totalTime })
+    setShowLinkSheet(false)
+  }
+
+  return (
+    <>
+      <WidgetCard id="tri-predictor" style={st.glowCard}>
+        <div data-no-widget-detail style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+          {Header}
+
+          {/* Distance selector */}
+          <div style={{ display: 'flex', gap: '4px' }}>
+            {TRI_TYPES.map(t => {
+              const on = t.key === activeTarget
+              return (
+                <button
+                  key={t.key}
+                  data-no-widget-detail
+                  onClick={() => setTarget(t.key)}
+                  style={{
+                    flex: 1, padding: '6px 2px', borderRadius: 'var(--radius-sm)', cursor: 'pointer',
+                    fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)',
+                    letterSpacing: '0.04em', textTransform: 'uppercase',
+                    background: on ? 'rgba(var(--orange-ch),0.15)' : 'var(--surface3)',
+                    border: `1px solid ${on ? 'rgba(var(--orange-ch),0.4)' : 'var(--border)'}`,
+                    color: on ? 'var(--orange)' : 'var(--muted)',
+                  }}
+                >
+                  {t.label}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Finish total + confidence band */}
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 'var(--sp-2)', marginTop: '2px' }}>
+            <div>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', lineHeight: 1, color: 'var(--orange)', letterSpacing: '-0.02em' }}>
+                {pred.totalTime}
+              </div>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '3px' }}>
+                Range {pred.band.lowTime}–{pred.band.highTime}
+              </div>
+            </div>
+            <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)', textAlign: 'right' }}>
+              {pred.type.label}<br />FINISH
+            </span>
+          </div>
+
+          {/* Per-leg breakdown */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+            {pred.legs.map(leg => {
+              const pct = pred.totalSecs > 0 ? (leg.secs / pred.totalSecs) * 100 : 0
+              const color = TRI_LEG_COLOR[leg.key] ?? 'var(--white)'
+              const isTransition = leg.key === 't1' || leg.key === 't2'
+              return (
+                <div key={leg.key} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
+                  <span style={{ width: '38px', flexShrink: 0, fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.06em', textTransform: 'uppercase', color }}>
+                    {leg.label}
+                  </span>
+                  <div style={{ flex: 1, height: '6px', background: 'var(--surface3)', borderRadius: '3px', overflow: 'hidden', minWidth: 0 }}>
+                    <div style={{ width: `${pct}%`, height: '100%', background: color, opacity: isTransition ? 0.4 : 0.85 }} />
+                  </div>
+                  <span style={{ width: '64px', flexShrink: 0, textAlign: 'right', fontFamily: 'var(--mono)', fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--white)' }}>
+                    {leg.time}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Per-leg distances + basis (large only) */}
+          {size === 'large' && (
+            <>
+              <div style={st.widgetDivider} />
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
+                <span>Swim {fmtDistWithUnit(pred.type.swimKm, units)}</span>
+                <span>Bike {fmtDistWithUnit(pred.type.bikeKm, units)}</span>
+                <span>Run {fmtDistWithUnit(pred.type.runKm, units)}</span>
+              </div>
+            </>
+          )}
+
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>
+            {hasSplits ? `Based on ${pred.basis}` : 'Estimate from running PB — add a triathlon for full splits'}
+            {pred.alpha > 0 && pred.alpha < 1 ? ` · ${Math.round(pred.alpha * 100)}% from your data` : ''}
+          </div>
+
+          {upcomingTris.length > 0 && (
+            <button
+              data-no-widget-detail
+              onClick={() => { if (upcomingTris.length === 1) setGoalOnTri(upcomingTris[0].id); else setShowLinkSheet(true) }}
+              style={{
+                marginTop: '2px', padding: '8px', borderRadius: 'var(--radius-sm)', cursor: 'pointer',
+                fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.08em', textTransform: 'uppercase',
+                background: 'rgba(var(--green-ch),0.12)', border: '1px solid rgba(var(--green-ch),0.3)', color: 'var(--green)',
+              }}
+            >
+              Set as goal on upcoming race
+            </button>
+          )}
+        </div>
+      </WidgetCard>
+
+      {showLinkSheet && createPortal(
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 1500, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={() => setShowLinkSheet(false)}>
+          <div style={{ ...st.customizeSheet, maxHeight: '60vh' }} onClick={e => e.stopPropagation()}>
+            <div style={{ width: '40px', height: '4px', background: 'var(--border2)', borderRadius: 'var(--radius-xs)', margin: '0 auto 16px' }} />
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)', marginBottom: '4px' }}>
+              Set Goal Time On Race
+            </div>
+            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginBottom: '14px' }}>
+              Sets {pred.type.label} finish ({pred.totalTime}) as the goal time.
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', overflowY: 'auto' }}>
+              {upcomingTris.map(r => (
+                <button key={r.id} onClick={() => setGoalOnTri(r.id)} style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-3)', textAlign: 'left', cursor: 'pointer', color: 'var(--white)' }}>
                   <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-sm)' }}>{r.name ?? 'Unnamed Race'}</div>
                   <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>{fmtDateDDMM(r.date)} · {distLabelUtil(r.distance, r.sport)}</div>
                 </button>
@@ -4480,8 +4748,10 @@ function GoalPaceWidget({ race }: { race: Race | null }) {
 
   if (!result) return (
     <WidgetCard id="goal-pace" style={st.glowCard}>
-      <div style={st.widgetLabel}>GOAL PACE</div>
-      <div role="heading" aria-level={2} style={st.widgetTitle}>{(focusRace.name ?? 'TARGET PACE').toUpperCase()}</div>
+      <div>
+        <div style={st.widgetLabel}>GOAL PACE</div>
+        <div role="heading" aria-level={2} style={st.widgetTitle}>{(focusRace.name ?? 'TARGET PACE').toUpperCase()}</div>
+      </div>
       <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: 0 }}>
         Set a goal time on {focusRace.name} to see your pace breakdown.
       </p>
@@ -4498,8 +4768,10 @@ function GoalPaceWidget({ race }: { race: Race | null }) {
 
   return (
     <WidgetCard id="goal-pace" style={st.glowCard}>
-      <div style={st.widgetLabel}>GOAL PACE</div>
-      <div role="heading" aria-level={2} style={st.widgetTitle}>{(focusRace.name ?? 'TARGET PACE').toUpperCase()}</div>
+      <div>
+        <div style={st.widgetLabel}>GOAL PACE</div>
+        <div role="heading" aria-level={2} style={st.widgetTitle}>{(focusRace.name ?? 'TARGET PACE').toUpperCase()}</div>
+      </div>
 
       {/* Main pace display */}
       <div style={{ display: 'flex', gap: 'var(--sp-3)' }}>
@@ -4776,16 +5048,20 @@ function CourseRepeatsWidget() {
 
   if (!courses.length) return (
     <WidgetCard id="course-repeats" style={st.glowCard}>
-      <div style={st.widgetLabel}>HOME TURF</div>
-      <div role="heading" aria-level={2} style={st.widgetTitle}>COURSE REPEATS</div>
+      <div>
+        <div style={st.widgetLabel}>HOME TURF</div>
+        <div role="heading" aria-level={2} style={st.widgetTitle}>COURSE REPEATS</div>
+      </div>
       <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: 0 }}>Run the same race 3+ times to see your course repeat history.</p>
     </WidgetCard>
   )
 
   return (
     <WidgetCard id="course-repeats" style={st.glowCard}>
-      <div style={st.widgetLabel}>HOME TURF</div>
-      <div role="heading" aria-level={2} style={st.widgetTitle}>COURSE REPEATS</div>
+      <div>
+        <div style={st.widgetLabel}>HOME TURF</div>
+        <div role="heading" aria-level={2} style={st.widgetTitle}>COURSE REPEATS</div>
+      </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
         {courses.slice(0, 4).map(c => (
           <div key={c.key}>
@@ -5333,6 +5609,7 @@ export function Dashboard() {
       case 'recent-races':      return <RecentRaces onAddRace={openAddRace} />
       case 'personal-bests':    return <PersonalBestsWidget />
       case 'riegel-predictor':  return <RiegelPredictorWidget onAddGoal={openRiegelGoal} />
+      case 'tri-predictor':     return <TriPredictorWidget />
       case 'season-planner':    return <SeasonPlannerWidget onAddRace={openAddUpcomingRace} onOpenPlanner={() => setShowAllUpcoming(true)} />
       case 'boston-qual':       return <BostonQualWidget />
       case 'pacing-iq':         return <PacingIQWidget />
@@ -5930,7 +6207,8 @@ const st = {
     letterSpacing: '0.14em',
     textTransform: 'uppercase' as const,
     color: 'var(--orange)',
-    marginBottom: '2px',
+    lineHeight: 1,
+    marginBottom: '4px',
     whiteSpace: 'nowrap' as const,
     overflow: 'hidden',
     textOverflow: 'ellipsis',
