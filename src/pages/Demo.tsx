@@ -22,10 +22,15 @@ import { Profile } from '@/pages/Profile'
 
 type Tab = 'dashboard' | 'races' | 'profile'
 
-const TABS: { id: Tab; label: string; icon: string }[] = [
-  { id: 'dashboard', label: 'Home', icon: '◇' },
-  { id: 'races', label: 'Races', icon: '◎' },
-  { id: 'profile', label: 'You', icon: '◉' },
+const ICON = {
+  home: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 10.5 12 3l9 7.5" /><path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5" /></svg>,
+  races: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 21s7-5.2 7-11a7 7 0 1 0-14 0c0 5.8 7 11 7 11Z" /><circle cx="12" cy="10" r="2.5" /></svg>,
+  you: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="3.5" /><path d="M5 20c0-3.5 3.1-6 7-6s7 2.5 7 6" /></svg>,
+}
+const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
+  { id: 'dashboard', label: 'Home', icon: ICON.home },
+  { id: 'races', label: 'Races', icon: ICON.races },
+  { id: 'profile', label: 'You', icon: ICON.you },
 ]
 
 const isPersona = (v: string | null): v is DemoPersonaId =>

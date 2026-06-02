@@ -563,7 +563,7 @@ body::after {
 }
 .demo-top {
   flex-shrink: 0; display: flex; align-items: center; justify-content: space-between;
-  gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--border); flex-wrap: wrap;
+  gap: 8px; padding: 22px 14px 10px; border-bottom: 1px solid var(--border); flex-wrap: wrap;
 }
 .demo-brand { font-family: var(--headline); font-weight: 900; letter-spacing: 0.14em; font-size: 13px; color: var(--white); }
 .demo-badge {
@@ -578,18 +578,22 @@ body::after {
 }
 .demo-persona.on { color: #000; background: var(--orange); border-color: var(--orange); }
 .demo-body {
-  flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch;
   padding: 14px; max-width: 460px; width: 100%; margin: 0 auto;
 }
-.demo-nav { flex-shrink: 0; display: flex; border-top: 1px solid var(--border); background: var(--surface); }
+.demo-nav {
+  flex-shrink: 0; display: flex; border-top: 1px solid var(--border); background: var(--surface);
+  padding-bottom: 6px;
+}
 .demo-nav-btn {
-  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
-  padding: 8px 0 calc(8px + env(safe-area-inset-bottom, 0px)); background: none; border: none; cursor: pointer;
-  font-family: var(--headline); font-weight: 700; font-size: 10px; text-transform: uppercase;
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 9px 0; background: none; border: none; cursor: pointer;
+  font-family: var(--headline); font-weight: 700; font-size: 9px; text-transform: uppercase;
   letter-spacing: 0.06em; color: var(--muted);
 }
 .demo-nav-btn.on { color: var(--orange); }
-.demo-nav-icon { font-size: 16px; }
+.demo-nav-icon { display: inline-flex; width: 20px; height: 20px; }
+.demo-nav-icon svg { width: 100%; height: 100%; }
 
 /* ---- landing sandbox section (embeds /demo in a framed window) ---- */
 .pl-sandbox { max-width: 1000px; margin: 0 auto; padding: 4rem 1.5rem; text-align: center; }

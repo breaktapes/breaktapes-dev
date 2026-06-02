@@ -7,7 +7,7 @@
 // and for logged-out visitors — see useDemoSeed(). It can never overwrite a
 // signed-in user's real race data.
 
-import type { Race, Athlete } from '@/types'
+import type { Race, Athlete, Split } from '@/types'
 
 export type DemoPersonaId =
   | 'usa-trail'
@@ -117,8 +117,30 @@ function strip(block: string): string[] {
     .filter(Boolean)
 }
 
+/* ---------- synthetic splits (so Pacing IQ / Race DNA / split tables work) ---------- */
+const KM_OF: Record<string, number> = { IRONMAN: 226, '70.3': 113, Olympic: 51.5, Sprint: 25.75, HYROX: 8, '100 Mile': 160.9, '100K': 100, '50K': 50, Ultra: 60, Marathon: 42.2, 'Half Marathon': 21.1 }
+function kmOf(d: string): number { if (KM_OF[d] != null) return KM_OF[d]; const n = parseFloat(d); return Number.isNaN(n) ? 0 : n }
+function hmsToSec(t: string): number { const a = t.split(':').map(Number); if (a.some(Number.isNaN)) return 0; return a.length === 3 ? a[0]*3600 + a[1]*60 + a[2] : a.length === 2 ? a[0]*60 + a[1] : 0 }
+function fmtSecs(s: number): string { s = Math.round(s); const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60; return h ? `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}` : `${m}:${String(sec).padStart(2,'0')}` }
+function genSplits(distKm: number, totalSecs: number, bias: 'neg' | 'even' | 'pos'): Split[] {
+  const N = Math.max(3, distKm <= 12 ? 4 : distKm <= 45 ? Math.min(9, Math.round(distKm/5)) : Math.min(10, Math.round(distKm/10)))
+  const raw: number[] = []
+  for (let i = 0; i < N; i++) { const t = N > 1 ? i/(N-1) : 0; const drift = bias === 'neg' ? 0.05 - 0.10*t : bias === 'pos' ? -0.05 + 0.10*t : (i%2 ? 0.015 : -0.015); raw.push(1 + drift) }
+  const sum = raw.reduce((a, b) => a + b, 0), segKm = distKm/N
+  let cum = 0; const out: Split[] = []
+  for (let i = 0; i < N; i++) { const segS = totalSecs*raw[i]/sum; cum += segS; out.push({ label: `${Math.round(segKm*(i+1))}K`, split: fmtSecs(segS), cumulative: fmtSecs(cum) }) }
+  return out
+}
+
 function buildRaces(pid: string, block: string): Race[] {
-  return strip(block).map((l, i) => parseRace(l, `${pid}-r${i + 1}`))
+  return strip(block).map((l, i) => {
+    const r = parseRace(l, `${pid}-r${i + 1}`)
+    const km = kmOf(r.distance)
+    if (r.time && r.sport === 'running' && km >= 5 && km <= 300) {
+      r.splits = genSplits(km, hmsToSec(r.time), (['neg', 'even', 'pos'] as const)[i % 3])
+    }
+    return r
+  })
 }
 function buildUpcoming(pid: string, block: string): Race[] {
   return strip(block).map((l, i) => parseUpcoming(l, `${pid}-u${i + 1}`))
@@ -295,56 +317,116 @@ const AUS_UP = `
 name: IRONMAN Cairns | date: 2026-06-14 | city: Cairns | country: Australia | distance: IRONMAN | sport: triathlon | goalTime: 10:30:00
 `
 
+/* ---------- recent 2026 results (Recent Races widget) + extra upcoming (Season Planner) ---------- */
+const USA_RECENT = `
+Way Too Cool 50K | Cool | United States | 2026-03-14 | 50K | running | 5:38:40 | 230/720 | 58/250 | 9/52 | F35-39 | finisher | trail | hilly | 1150 | 156 | Speedgoat 6 | 13/clear | 38.8901 | -121.0124
+Lake Sonoma 50 | Healdsburg | United States | 2026-05-02 | Ultra | running | 9:42:15 | 180/420 | 40/120 | 7/26 | F35-39 | finisher | trail | mountainous | 3050 | 152 | Speedgoat 6 | 16/clear | 38.7110 | -123.0010
+`
+const USA_UPMORE = `
+name: Western States 100 | date: 2026-06-27 | city: Olympic Valley | country: United States | distance: 100 Mile | sport: running | goalTime: 26:00:00
+name: Broken Arrow Skyrace 46K | date: 2026-08-21 | city: Olympic Valley | country: United States | distance: 46 | sport: running | goalTime: 7:30:00
+name: Javelina Jundred | date: 2026-10-24 | city: Fountain Hills | country: United States | distance: 100 Mile | sport: running | goalTime: 24:30:00
+`
+const UK_RECENT = `
+Victoria Park parkrun | London | United Kingdom | 2026-05-09 | 5 | running | 17:35 | 5/410 | 5/270 | 1/52 | M30-34 | finisher | road | flat | 4 | 177 | Vaporfly 3 | 11/clear | 51.5363 | -0.0395
+HYROX London (Pro) | London | United Kingdom | 2026-03-28 | HYROX | hyrox | 0:59:10 | 60/2100 | 56/1800 | 10/360 | M30-34 | bronze | road | flat | 0 | 180 | Nano X3 | 18/indoor | 51.51 | -0.13
+`
+const UK_UPMORE = `
+name: T100 London | date: 2026-07-25 | city: London | country: United Kingdom | distance: 100 | sport: triathlon | goalTime: 4:15:00
+name: Great North Run | date: 2026-09-13 | city: Newcastle | country: United Kingdom | distance: 21.1 | sport: running | goalTime: 1:19:00
+name: London Marathon | date: 2026-04-26 | city: London | country: United Kingdom | distance: 42.2 | sport: running | goalTime: 2:55:00
+`
+const EU_RECENT = `
+Granfondo Strade Bianche | Siena | Italy | 2026-03-07 | 130 | cycling | 4:48:20 | 110/2200 | 6/210 | 1/34 | F40-44 | silver | road | hilly | 2900 | 151 | Colnago V4Rs | 14/clear | 43.3188 | 11.3308
+La Marseillaise Half Marathon | Marseille | France | 2026-05-17 | 21.1 | running | 1:47:50 | 210/1900 | 30/620 | 7/110 | F40-44 | finisher | road | rolling | 160 | 163 | Pegasus 41 | 19/clear | 43.2965 | 5.3698
+`
+const EU_UPMORE = `
+name: Étape du Tour | date: 2026-07-12 | city: Albertville | country: France | distance: 135 | sport: cycling | goalTime: 5:10:00
+name: Granfondo Stelvio Santini | date: 2026-08-30 | city: Bormio | country: Italy | distance: 151 | sport: cycling | goalTime: 5:40:00
+`
+const DXB_RECENT = `
+Dubai Creek Striders Half Marathon | Dubai | United Arab Emirates | 2026-04-03 | 21.1 | running | 2:03:10 | 850/2400 | 400/1150 | 65/290 | M30-34 | finisher | road | flat | 14 | 167 | Pegasus 41 | 24/clear | 25.20 | 55.27
+Dubai Spring 10K | Dubai | United Arab Emirates | 2026-05-15 | 10 | running | 51:05 | 560/2800 | 290/1450 | 55/380 | M30-34 | finisher | road | flat | 10 | 170 | Pegasus 41 | 28/clear | 25.20 | 55.27
+`
+const DXB_UPMORE = `
+name: ADNOC Abu Dhabi Marathon | date: 2026-12-06 | city: Abu Dhabi | country: United Arab Emirates | distance: 42.2 | sport: running | goalTime: 4:05:00
+name: RAK Half Marathon | date: 2026-08-22 | city: Ras Al Khaimah | country: United Arab Emirates | distance: 21.1 | sport: running | goalTime: 1:58:00
+`
+const SA_RECENT = `
+Two Oceans Marathon | Cape Town | South Africa | 2026-04-04 | 56 (custom km) | running | 3:40:50 | 90/11000 | 82/7600 | 7/1300 | M30-34 | silver | road | hilly | 600 | 162 | Adios Pro 3 | 17/clear | -33.9258 | 18.4232
+Cape Town 10K | Cape Town | South Africa | 2026-05-23 | 10 | running | 33:40 | 18/4000 | 17/3100 | 4/700 | M30-34 | bronze | road | flat | 40 | 168 | Vaporfly 3 | 16/clear | -33.93 | 18.42
+`
+const SA_UPMORE = `
+name: Comrades Marathon | date: 2026-06-14 | city: Durban | country: South Africa | distance: 89 | sport: running | goalTime: 6:40:00
+name: Berlin Marathon | date: 2026-09-27 | city: Berlin | country: Germany | distance: 42.2 | sport: running | goalTime: 2:37:00
+`
+const CN_RECENT = `
+Wuxi Marathon | Wuxi | China | 2026-03-22 | 42.2 | running | 3:25:40 | 2100/35000 | 1950/24000 | 12/2800 | M55-59 | silver | road | flat | 30 | 156 | Adios Pro 3 | 13/clear | 31.4912 | 120.3119
+Great Wall of China Marathon 21.1K | Beijing | China | 2026-05-16 | 21.1 | running | 1:37:20 | 130/1700 | 120/1400 | 7/200 | M55-59 | bronze | trail | hilly | 400 | 157 | Adios Pro 3 | 22/humid | 39.9042 | 116.4074
+`
+const CN_UPMORE = `
+name: Beijing Marathon | date: 2026-11-01 | city: Beijing | country: China | distance: 42.2 | sport: running | goalTime: 3:22:00
+name: Ultra-Trail Shudao by UTMB 42K | date: 2026-08-08 | city: Chengdu | country: China | distance: 42 | sport: running | goalTime: 5:50:00
+`
+const AUS_RECENT = `
+Noosa Triathlon (Olympic) | Noosa Heads | Australia | 2026-03-22 | Olympic | triathlon | 2:34:10 | 380/8000 | 90/2500 | 12/400 | F35-39 | finisher | road | flat | 120 | 158 | Cervelo P5 | 25/clear | -26.3983 | 153.0905
+Cairns Marathon Festival 10K | Cairns | Australia | 2026-05-10 | 10 | running | 45:50 | 120/1200 | 45/600 | 9/110 | F35-39 | finisher | road | flat | 40 | 161 | Vaporfly 3 | 24/humid | -16.9203 | 145.7710
+`
+const AUS_UPMORE = `
+name: 70.3 Geelong | date: 2026-08-09 | city: Geelong | country: Australia | distance: 70.3 | sport: triathlon | goalTime: 4:52:00
+name: IRONMAN Western Australia | date: 2026-12-06 | city: Busselton | country: Australia | distance: IRONMAN | sport: triathlon | goalTime: 10:40:00
+`
+
 /* ---------- assembled personas ---------- */
 
 export const DEMO_PERSONAS: Record<DemoPersonaId, DemoPersona> = {
   'usa-trail': {
     id: 'usa-trail', label: 'Trail / Ultra', blurb: 'Mid-pack ultra finisher · Auburn, CA',
     athlete: athlete({ firstName: 'Hannah', lastName: 'Brooks', gender: 'F', dob: '1989-07-09', city: 'Auburn', country: 'United States', mainSport: 'running', units: 'imperial', club: 'Auburn Trail Runners', bio: 'Came to ultras late. In it for the finish line, not the podium.' }),
-    races: buildRaces('usa', USA_RACES),
-    upcoming: buildUpcoming('usa', USA_UP),
+    races: buildRaces('usa', USA_RACES + USA_RECENT),
+    upcoming: buildUpcoming('usa', USA_UP + USA_UPMORE),
     testimonial: { quote: 'The race map turned my training log into something I actually want to show people.', name: 'Hannah Brooks', meta: 'Auburn, CA · Trail & ultra' },
   },
   'uk-hybrid': {
     id: 'uk-hybrid', label: 'Hybrid', blurb: 'HYROX · sub-3 marathon · T100 — London',
     athlete: athlete({ firstName: 'Jack', lastName: 'Reynolds', gender: 'M', dob: '1993-03-14', city: 'London', country: 'United Kingdom', mainSport: 'hyrox', units: 'metric', club: 'F45 Shoreditch', bio: 'Hybrid. Sub-3 marathon, HYROX podiums, T100 finisher — trains everything.' }),
-    races: buildRaces('uk', UK_RACES),
-    upcoming: buildUpcoming('uk', UK_UP),
+    races: buildRaces('uk', UK_RACES + UK_RECENT),
+    upcoming: buildUpcoming('uk', UK_UP + UK_UPMORE),
     testimonial: { quote: 'Logged a parkrun on Saturday and my 5K PR updated before I’d finished my coffee.', name: 'Jack Reynolds', meta: 'London · Hybrid athlete' },
   },
   'eu-cyclist': {
     id: 'eu-cyclist', label: 'Cyclist', blurb: 'Gran fondo age-group hunter · Provence',
     athlete: athlete({ firstName: 'Camille', lastName: 'Dubois', gender: 'F', dob: '1985-10-30', city: 'Vaison-la-Romaine', country: 'France', mainSport: 'cycling', units: 'metric', club: 'Provence Cyclosport', bio: 'Ventoux at dawn. Podiums her age group, hunts the overall.' }),
-    races: buildRaces('eu', EU_RACES),
-    upcoming: buildUpcoming('eu', EU_UP),
+    races: buildRaces('eu', EU_RACES + EU_RECENT),
+    upcoming: buildUpcoming('eu', EU_UP + EU_UPMORE),
     testimonial: { quote: 'Made running feel like a story instead of a spreadsheet.', name: 'Camille Dubois', meta: 'Provence · Gran fondo & road' },
   },
   'dubai-everyday': {
     id: 'dubai-everyday', label: 'Everyday', blurb: 'Weekend racer collecting finish lines · Dubai',
     athlete: athlete({ firstName: 'Marcus', lastName: 'Bennett', gender: 'M', dob: '1995-11-20', city: 'Dubai', country: 'United Arab Emirates', mainSport: 'running', units: 'metric', club: 'Dubai Creek Striders', bio: 'Weekend racer in the desert, collecting finish lines.' }),
-    races: buildRaces('dxb', DXB_RACES),
-    upcoming: buildUpcoming('dxb', DXB_UP),
+    races: buildRaces('dxb', DXB_RACES + DXB_RECENT),
+    upcoming: buildUpcoming('dxb', DXB_UP + DXB_UPMORE),
     testimonial: { quote: 'Stopped keeping the Google Sheet the day I imported everything here. It just pulls it all in.', name: 'Marcus Bennett', meta: 'Dubai · Everyday runner' },
   },
   'sa-marathoner': {
     id: 'sa-marathoner', label: 'Marathoner', blurb: 'Sub-2:40 + Comrades Silver · Cape Town',
     athlete: athlete({ firstName: 'Thabo', lastName: 'Nkosi', gender: 'M', dob: '1990-02-11', city: 'Cape Town', country: 'South Africa', mainSport: 'running', units: 'metric', club: 'Cape Town Marathon Club', bio: 'From an 11-hour first Comrades to Silver. 14 years on the road, now chasing sub-2:40.' }),
-    races: buildRaces('sa', SA_RACES),
-    upcoming: buildUpcoming('sa', SA_UP),
+    races: buildRaces('sa', SA_RACES + SA_RECENT),
+    upcoming: buildUpcoming('sa', SA_UP + SA_UPMORE),
     testimonial: { quote: 'I’ve got medals in a shoebox going back nine years. First time I’ve actually seen them all in one place.', name: 'Thabo Nkosi', meta: 'Cape Town · Comrades & Two Oceans' },
   },
   'china-masters': {
     id: 'china-masters', label: 'Masters 50+', blurb: '25-year veteran, masters podiums · Shanghai',
     athlete: athlete({ firstName: 'Wei', lastName: 'Zhang', gender: 'M', dob: '1968-07-14', city: 'Shanghai', country: 'China', mainSport: 'running', units: 'metric', club: 'Shanghai Marathon Club', bio: '25 years of racing and still chasing PBs. Age-grade obsessive.' }),
-    races: buildRaces('cn', CN_RACES),
-    upcoming: buildUpcoming('cn', CN_UP),
+    races: buildRaces('cn', CN_RACES + CN_RECENT),
+    upcoming: buildUpcoming('cn', CN_UP + CN_UPMORE),
     testimonial: { quote: 'I stopped guessing whether I was ready. The data’s all in the same screen now.', name: 'Wei Zhang', meta: 'Shanghai · Masters' },
   },
   'aus-triathlete': {
     id: 'aus-triathlete', label: 'Triathlete', blurb: 'First 10K → Kona, 8-yr progression · Cairns',
     athlete: athlete({ firstName: 'Mia', lastName: 'Thompson', gender: 'F', dob: '1988-09-03', city: 'Cairns', country: 'Australia', mainSport: 'triathlon', units: 'metric', club: 'Cairns Crocs Tri', bio: 'Swim · bike · run. Kona is the dream.' }),
-    races: buildRaces('aus', AUS_RACES),
-    upcoming: buildUpcoming('aus', AUS_UP),
+    races: buildRaces('aus', AUS_RACES + AUS_RECENT),
+    upcoming: buildUpcoming('aus', AUS_UP + AUS_UPMORE),
     testimonial: { quote: 'The race predictor put my IRONMAN run split closer than my coach did.', name: 'Mia Thompson', meta: 'Cairns · Triathlete' },
   },
 }
