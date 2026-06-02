@@ -4,6 +4,7 @@ import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@/env'
+import { supabaseAnon } from '@/lib/supabase'
 import { RaceShareCard } from '@/components/RaceShareCard'
 import { DateInput } from '@/components/DateInput'
 import { CustomDistInput } from '@/components/CustomDistInput'
@@ -98,6 +99,40 @@ const MEDAL_COLORS: Record<string, string> = {
   silver:   '#C8D4DC',
   bronze:   '#CD8C5A',
   finisher: 'var(--orange)',
+}
+
+// ─── Split templates ─────────────────────────────────────────────────────────
+
+const SPLIT_TEMPLATES: Record<string, { name: string; labels: string[] }[]> = {
+  Running: [
+    { name: '5K',       labels: ['2.5K', '5K'] },
+    { name: '10K',      labels: ['5K', '10K'] },
+    { name: 'Half',     labels: ['5K', '10K', '15K', '21.1K'] },
+    { name: 'Marathon', labels: ['5K', '10K', '15K', '20K', 'Half', '25K', '30K', '35K', '40K', 'Finish'] },
+    { name: '50K',      labels: ['10K', '20K', '30K', '40K', '50K'] },
+    { name: '100K',     labels: ['10K', '20K', '30K', '40K', '50K', '60K', '70K', '80K', '90K', '100K'] },
+    { name: '100mi',    labels: ['10mi', '20mi', '30mi', '40mi', '50mi', '60mi', '70mi', '80mi', '90mi', '100mi'] },
+  ],
+  Triathlon: [
+    { name: 'Standard',      labels: ['Swim', 'T1', 'Bike', 'T2', 'Run'] },
+    { name: '+ Checkpoints', labels: ['Swim', 'T1', 'Bike 45K', 'Bike Finish', 'T2', 'Run 10K', 'Run Finish'] },
+  ],
+  Cycling: [
+    { name: '100K',       labels: ['25K', '50K', '75K', '100K'] },
+    { name: 'Century',    labels: ['25mi', '50mi', '75mi', '100mi'] },
+    { name: '200K',       labels: ['50K', '100K', '150K', '200K'] },
+  ],
+  Swimming: [
+    { name: '1K',   labels: ['250m', '500m', '750m', '1000m'] },
+    { name: '5K',   labels: ['1K', '2K', '3K', '4K', '5K'] },
+    { name: '10K',  labels: ['1K', '2K', '3K', '4K', '5K', '6K', '7K', '8K', '9K', '10K'] },
+  ],
+  HYROX: [
+    { name: 'Solo Open',    labels: ['Run 1', 'SkiErg', 'Run 2', 'Sled Push', 'Run 3', 'Sled Pull', 'Run 4', 'Burpee Broad Jump', 'Run 5', 'Row', 'Run 6', 'Farmers Carry', 'Run 7', 'Sandbag Lunges', 'Run 8', 'Wall Balls'] },
+    { name: 'Solo Pro',     labels: ['Run 1', 'SkiErg', 'Run 2', 'Sled Push', 'Run 3', 'Sled Pull', 'Run 4', 'Burpee Broad Jump', 'Run 5', 'Row', 'Run 6', 'Farmers Carry', 'Run 7', 'Sandbag Lunges', 'Run 8', 'Wall Balls'] },
+    { name: 'Doubles Open', labels: ['Run 1', 'SkiErg', 'Run 2', 'Sled Push', 'Run 3', 'Sled Pull', 'Run 4', 'Burpee Broad Jump', 'Run 5', 'Row', 'Run 6', 'Farmers Carry', 'Run 7', 'Sandbag Lunges', 'Run 8', 'Wall Balls'] },
+    { name: 'Doubles Pro',  labels: ['Run 1', 'SkiErg', 'Run 2', 'Sled Push', 'Run 3', 'Sled Pull', 'Run 4', 'Burpee Broad Jump', 'Run 5', 'Row', 'Run 6', 'Farmers Carry', 'Run 7', 'Sandbag Lunges', 'Run 8', 'Wall Balls'] },
+  ],
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -394,19 +429,38 @@ function ViewPanel({ race, isPB, onEdit, onDelete, onShare }: { race: Race; isPB
         {race.goalTime && <InfoRow label="Goal Time" value={race.goalTime} />}
         {race.elevation != null && <InfoRow label="Elevation" value={`${race.elevation}m`} />}
         {race.surface && <InfoRow label="Surface" value={race.surface} />}
+        {race.hyroxPartner && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
+            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--headline)', fontWeight: 700 }}>
+              Doubles Partner
+            </span>
+            <a
+              href={`/u/${race.hyroxPartner}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ fontSize: 'var(--text-sm)', color: 'var(--orange)', fontWeight: 600, textDecoration: 'none' }}
+            >
+              @{race.hyroxPartner}
+            </a>
+          </div>
+        )}
       </div>
 
       {/* Splits */}
       {race.splits && race.splits.length > 0 && (
         <div>
           <p style={st.sectionLabel}>SPLITS</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px 74px', gap: '4px 8px', marginBottom: '4px', paddingBottom: '4px', borderBottom: '1px solid var(--border)' }}>
+            <span style={{ fontSize: '9px', color: 'var(--muted2)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>CHECKPOINT</span>
+            <span style={{ fontSize: '9px', color: 'var(--muted2)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>SPLIT</span>
+            <span style={{ fontSize: '9px', color: 'var(--muted2)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>ELAPSED</span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
             {race.splits.map((s, i) => (
-              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
+              <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 74px', gap: '4px 8px', padding: '5px 0', borderBottom: '1px solid var(--border)' }}>
                 <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{s.label}</span>
-                <span style={{ fontSize: 'var(--text-sm)', fontFamily: 'var(--headline)', fontWeight: 700, color: 'var(--white)' }}>
-                  {s.cumulative || s.split || '—'}
-                </span>
+                <span style={{ fontSize: 'var(--text-xs)', fontFamily: 'monospace', color: 'var(--white)' }}>{s.split || '—'}</span>
+                <span style={{ fontSize: 'var(--text-xs)', fontFamily: 'monospace', color: 'var(--muted)' }}>{s.cumulative || '—'}</span>
               </div>
             ))}
           </div>
@@ -505,6 +559,226 @@ function InfoChip({ label, value }: { label: string; value: string }) {
   )
 }
 
+// ─── HYROX partner search ─────────────────────────────────────────────────────
+
+function PartnerSearch({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [query, setQuery] = useState(value)
+  const [results, setResults] = useState<string[]>([])
+  const [searching, setSearching] = useState(false)
+  const [open, setOpen] = useState(false)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  function handleInput(v: string) {
+    setQuery(v)
+    onChange(v)
+    setOpen(true)
+    if (timerRef.current) clearTimeout(timerRef.current)
+    if (v.trim().length < 2) { setResults([]); return }
+    timerRef.current = setTimeout(async () => {
+      setSearching(true)
+      try {
+        const { data } = await supabaseAnon
+          .from('user_state')
+          .select('username')
+          .eq('is_public', true)
+          .ilike('username', `%${v.trim()}%`)
+          .limit(6)
+        setResults((data ?? []).map((r: { username: string }) => r.username).filter(Boolean))
+      } finally {
+        setSearching(false)
+      }
+    }, 300)
+  }
+
+  function pick(username: string) {
+    setQuery(username)
+    onChange(username)
+    setResults([])
+    setOpen(false)
+  }
+
+  function clear() {
+    setQuery('')
+    onChange('')
+    setResults([])
+  }
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <div style={{ position: 'relative' }}>
+        <input
+          style={st.input}
+          value={query}
+          onChange={e => handleInput(e.target.value)}
+          onFocus={() => query.length >= 2 && setOpen(true)}
+          onBlur={() => setTimeout(() => setOpen(false), 150)}
+          placeholder="Search by username…"
+          autoComplete="off"
+        />
+        {query && (
+          <button type="button" onClick={clear} style={{
+            position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)',
+            background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: 'var(--text-base)', lineHeight: 1, padding: 0,
+          }}>×</button>
+        )}
+      </div>
+      {open && (results.length > 0 || searching) && (
+        <div style={{
+          position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 50,
+          background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-sm)',
+          overflow: 'hidden',
+        }}>
+          {searching && <div style={{ padding: '8px 12px', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Searching…</div>}
+          {results.map(u => (
+            <button key={u} type="button" onMouseDown={() => pick(u)} style={{
+              display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '8px 12px',
+              background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left',
+              borderBottom: '1px solid var(--border)',
+            }}>
+              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>@</span>
+              <span style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', fontWeight: 500 }}>{u}</span>
+            </button>
+          ))}
+          {!searching && results.length === 0 && query.length >= 2 && (
+            <div style={{ padding: '8px 12px', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>No public profiles found for "{query}"</div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Splits editor ────────────────────────────────────────────────────────────
+
+function splitToSecs(t: string): number {
+  if (!t) return 0
+  const parts = t.split(':').map(Number)
+  if (parts.length === 3) return (parts[0] || 0) * 3600 + (parts[1] || 0) * 60 + (parts[2] || 0)
+  if (parts.length === 2) return (parts[0] || 0) * 60 + (parts[1] || 0)
+  return 0
+}
+
+function secsToHMS(s: number): string {
+  const h = Math.floor(s / 3600)
+  const m = Math.floor((s % 3600) / 60)
+  const sec = s % 60
+  return `${h}:${String(m).padStart(2, '0')}:${String(sec).padStart(2, '0')}`
+}
+
+function SplitsEditor({ splits, onChange, sport }: {
+  splits: Split[]
+  onChange: (s: Split[]) => void
+  sport: string
+}) {
+  const templates = SPLIT_TEMPLATES[sport] ?? []
+
+  const cumulative = useMemo(() => {
+    let total = 0
+    return splits.map(sp => {
+      const secs = splitToSecs(sp.split ?? '')
+      total += secs
+      return secs > 0 ? secsToHMS(total) : ''
+    })
+  }, [splits])
+
+  function applyTemplate(labels: string[]) {
+    onChange(labels.map(l => ({ label: l, split: '' })))
+  }
+
+  function addRow() {
+    onChange([...splits, { label: '', split: '' }])
+  }
+
+  function removeRow(i: number) {
+    onChange(splits.filter((_, idx) => idx !== i))
+  }
+
+  function updateRow(i: number, field: 'label' | 'split', val: string) {
+    onChange(splits.map((s, idx) => idx === i ? { ...s, [field]: val } : s))
+  }
+
+  const inputBase: React.CSSProperties = {
+    background: 'var(--surface3)',
+    border: '1px solid var(--border2)',
+    borderRadius: 'var(--radius-sm)',
+    color: 'var(--white)',
+    fontSize: 'var(--text-xs)',
+    padding: '5px 8px',
+    height: '32px',
+    width: '100%',
+    boxSizing: 'border-box',
+    fontFamily: 'var(--body)',
+    minWidth: 0,
+  }
+
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', gap: 'var(--sp-3)', flexWrap: 'wrap' }}>
+        <div style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-xs)', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', flexShrink: 0 }}>SPLITS</div>
+        {templates.length > 0 && (
+          <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+            {templates.map(t => (
+              <button key={t.name} type="button" onClick={() => applyTemplate(t.labels)} style={{
+                background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-sm)',
+                color: 'var(--muted)', fontSize: '9px', fontFamily: 'var(--headline)', fontWeight: 700,
+                letterSpacing: '0.08em', textTransform: 'uppercase', padding: '3px 7px', cursor: 'pointer',
+              }}>
+                {t.name}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {splits.length > 0 && (
+        <div style={{ marginBottom: '6px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 90px 74px 24px', gap: '5px', marginBottom: '4px', paddingBottom: '4px', borderBottom: '1px solid var(--border)' }}>
+            {(['CHECKPOINT', 'SPLIT', 'ELAPSED', '']).map(h => (
+              <div key={h} style={{ fontSize: '9px', color: 'var(--muted2)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' }}>{h}</div>
+            ))}
+          </div>
+          {splits.map((sp, i) => (
+            <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 90px 74px 24px', gap: '5px', marginBottom: '4px', alignItems: 'center' }}>
+              <input
+                style={inputBase}
+                value={sp.label}
+                onChange={e => updateRow(i, 'label', e.target.value)}
+                placeholder="e.g. 15mi, Aid 1..."
+              />
+              <input
+                style={{ ...inputBase, fontFamily: 'monospace' }}
+                value={sp.split ?? ''}
+                onChange={e => updateRow(i, 'split', e.target.value)}
+                placeholder="0:00:00"
+                inputMode="numeric"
+              />
+              <div style={{ fontSize: 'var(--text-xs)', color: cumulative[i] ? 'var(--muted)' : 'var(--muted2)', fontFamily: 'monospace', paddingLeft: '4px' }}>
+                {cumulative[i] || '—'}
+              </div>
+              <button type="button" onClick={() => removeRow(i)} style={{
+                background: 'transparent', border: 'none', color: 'var(--muted)', cursor: 'pointer',
+                fontSize: 'var(--text-base)', padding: '0', lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>×</button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <button type="button" onClick={addRow} style={{
+        background: 'transparent', border: '1px dashed var(--border2)', borderRadius: 'var(--radius-sm)',
+        color: 'var(--muted)', fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700,
+        letterSpacing: '0.08em', textTransform: 'uppercase', padding: '6px 12px', cursor: 'pointer', width: '100%',
+      }}>
+        + Add Split
+      </button>
+
+      {splits.some(s => s.split?.trim()) && (
+        <div style={{ fontSize: '9px', color: 'var(--muted2)', marginTop: '5px' }}>ELAPSED auto-computed · Format: H:MM:SS or MM:SS</div>
+      )}
+    </div>
+  )
+}
+
 // ─── Edit panel ───────────────────────────────────────────────────────────────
 
 function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race; onSave: (patch: Partial<Race>) => void; onCancel: () => void; isUpcoming?: boolean }) {
@@ -554,14 +828,9 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
   const [elevation, setElevation] = useState(race.elevation != null ? String(race.elevation) : '')
   const [surface, setSurface]   = useState(race.surface ?? '')
   const [roleAtRace, setRoleAtRace] = useState<'' | 'runner' | 'pacer' | 'guide'>(race.roleAtRace ?? '')
-  const [splits]                = useState<Split[]>(race.splits ?? [])
-  // Triathlon discipline splits (Swim · T1 · Bike · T2 · Run)
-  const findTriSplit = (label: string) => (race.splits ?? []).find(s => s.label.toLowerCase() === label.toLowerCase())?.split ?? ''
-  const [triSwim, setTriSwim] = useState(() => findTriSplit('Swim'))
-  const [triT1,   setTriT1]   = useState(() => findTriSplit('T1'))
-  const [triBike, setTriBike] = useState(() => findTriSplit('Bike'))
-  const [triT2,   setTriT2]   = useState(() => findTriSplit('T2'))
-  const [triRun,  setTriRun]  = useState(() => findTriSplit('Run'))
+  const [splits, setSplits]    = useState<Split[]>(race.splits ?? [])
+  const [hyroxPartner, setHyroxPartner] = useState(race.hyroxPartner ?? '')
+  const isDoubles = sport === 'HYROX' && (distance.toLowerCase().includes('doubles') || customDist.toLowerCase().includes('doubles'))
   // More Stats
   const [moreOpen, setMoreOpen]           = useState(false)
   const [startTime, setStartTime]         = useState(race.startTime ?? '')
@@ -770,18 +1039,8 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
       surface: isUpcoming ? undefined : surface || undefined,
       roleAtRace: isUpcoming ? undefined : (roleAtRace || undefined) as 'runner' | 'pacer' | 'guide' | undefined,
       splits: isUpcoming ? undefined : (() => {
-        // Triathlon: structured discipline splits take precedence over generic split table
-        if (sport === 'Triathlon') {
-          const triSplits: Split[] = [
-            { label: 'Swim', split: triSwim.trim() || undefined },
-            { label: 'T1',   split: triT1.trim()   || undefined },
-            { label: 'Bike', split: triBike.trim()  || undefined },
-            { label: 'T2',   split: triT2.trim()   || undefined },
-            { label: 'Run',  split: triRun.trim()   || undefined },
-          ].filter(s => !!s.split) as Split[]
-          return triSplits.length > 0 ? triSplits : (splits.length > 0 ? splits : undefined)
-        }
-        return splits.length > 0 ? splits : undefined
+        const cleaned = splits.filter(s => s.label.trim() || s.split?.trim())
+        return cleaned.length > 0 ? cleaned : undefined
       })(),
       medalPhoto: isUpcoming ? undefined : medalPhoto ?? undefined,
       photos: isUpcoming ? undefined : photos.length > 0 ? photos : undefined,
@@ -789,6 +1048,7 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
       avgHeartRate: isUpcoming ? undefined : avgHeartRate ? Number(avgHeartRate) : undefined,
       terrain: isUpcoming ? undefined : terrain || undefined,
       shoe: isUpcoming ? undefined : shoe.trim() || undefined,
+      hyroxPartner: (!isUpcoming && isDoubles && hyroxPartner.trim()) ? hyroxPartner.trim() : undefined,
       weather: isUpcoming ? undefined : (weatherTemp || weatherCond || weatherWind || weatherHum) ? {
         temp: weatherTemp ? Number(weatherTemp) : undefined,
         condition: weatherCond || undefined,
@@ -826,6 +1086,15 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
       </div>
       {isCustomDist && (
         <CustomDistInput value={customDist} onChange={setCustomDist} />
+      )}
+
+      {isDoubles && !isUpcoming && (
+        <Field label="Doubles Partner">
+          <PartnerSearch value={hyroxPartner} onChange={setHyroxPartner} />
+          <div style={{ fontSize: '9px', color: 'var(--muted2)', marginTop: '5px' }}>
+            Search by username · partner must have a public BREAKTAPES profile
+          </div>
+        </Field>
       )}
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
@@ -982,33 +1251,8 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
         </Field>
       ) : null}
 
-      {/* Triathlon discipline splits */}
-      {sport === 'Triathlon' && !isUpcoming && (
-        <div>
-          <div style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-xs)', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '10px' }}>SPLITS</div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-2)' }}>
-            {([
-              { label: 'Swim',      val: triSwim,  set: setTriSwim,  ph: '0:28:00' },
-              { label: 'T1',        val: triT1,    set: setTriT1,    ph: '0:03:30' },
-              { label: 'Bike',      val: triBike,  set: setTriBike,  ph: '2:35:00' },
-              { label: 'T2',        val: triT2,    set: setTriT2,    ph: '0:02:15' },
-              { label: 'Run',       val: triRun,   set: setTriRun,   ph: '1:55:00' },
-            ] as { label: string; val: string; set: (v: string) => void; ph: string }[]).map(seg => (
-              <div key={seg.label} style={seg.label === 'Run' ? { gridColumn: '1 / -1' } : undefined}>
-                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '4px' }}>{seg.label}</div>
-                <input
-                  style={st.input}
-                  type="text"
-                  inputMode="numeric"
-                  placeholder={seg.ph}
-                  value={seg.val}
-                  onChange={e => seg.set(e.target.value)}
-                />
-              </div>
-            ))}
-          </div>
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', marginTop: '8px' }}>Format: H:MM:SS or MM:SS</div>
-        </div>
+      {!isUpcoming && (
+        <SplitsEditor sport={sport} splits={splits} onChange={setSplits} />
       )}
 
       <Field label="Notes">
