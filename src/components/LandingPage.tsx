@@ -730,25 +730,18 @@ function FAQ() {
 }
 
 /* =====================================================================
-   LIVE SANDBOX — embeds /demo in a framed window, lazy-mounted on approach.
+   TRY-IT CTA — sends visitors straight into the real app to start logging.
    ===================================================================== */
-function SandboxSection({ persona }: { persona: DemoPersonaId }) {
-  const ref = useRef<HTMLDivElement>(null)
-  const inView = useInView(ref, { once: true, margin: '300px' })
-  // The ONLY live app iframe on the page (everything else is a screenshot), so
-  // it always loads reliably. Seeded with the persona chosen in the selector.
+function TryItCTA({ onSignUp }: { onSignUp: () => void }) {
   return (
     <motion.section className="pl-sandbox" variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}>
       <motion.p className="pl-eyebrow" variants={fadeUp}>Try it yourself</motion.p>
-      <motion.h2 className="pl-sandbox-title" variants={fadeUp}>The app, live — no signup</motion.h2>
+      <motion.h2 className="pl-sandbox-title" variants={fadeUp}>Start logging in under a minute</motion.h2>
       <motion.p className="pl-sandbox-sub" variants={fadeUp}>
-        Switch between athletes and tap around the dashboard, races, and profile. A real, interactive demo — nothing to install.
+        Free to start, no AI key, nothing to install. Create your athlete profile and log your first finish line right now.
       </motion.p>
-      <motion.div className="pl-sandbox-phone" variants={fadeUp} ref={ref}>
-        <div className="pl-sandbox-notch" />
-        {inView && (
-          <iframe key={persona} className="pl-sandbox-frame" src={`/demo?persona=${persona}`} title="BREAKTAPES interactive demo" />
-        )}
+      <motion.div variants={fadeUp}>
+        <button className="btn-main" onClick={onSignUp} style={{ fontSize: 16, padding: '1rem 2.2rem', letterSpacing: '0.08em' }}>Get Started — It's Free</button>
       </motion.div>
     </motion.section>
   )
@@ -903,7 +896,7 @@ export default function LandingPage({ onSignUp, onSignIn }: LandingPageProps) {
       <HowItWorks />
 
       {/* ---------------- LIVE SANDBOX ---------------- */}
-      <SandboxSection persona={persona} />
+      <TryItCTA onSignUp={handleSignUp} />
 
       {/* ---------------- STATS BAND ---------------- */}
       <motion.section className="pl-stats" variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}>
