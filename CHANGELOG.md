@@ -3,6 +3,16 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.0.0] - 2026-06-02
+
+### Added
+- **New production landing page** — the logged-out screen is now a cinematic, scroll-driven marketing page. Intro "finish-tape" loader (stopwatch counts up, then the tape snaps), animated hero ("Every Finish Line, Remembered."), floating top nav, and a scroll-progress bar. Built with Framer Motion + GSAP; respects `prefers-reduced-motion`.
+- **"I am a…" audience selector** — Marathoner / Triathlete / Everyday. Picking one re-themes the feature showcases and their content (copy, PRs, and the race map's cities) to that athlete type.
+- **Accurate world map** — the Race History showcase renders a real equirectangular world map (Natural Earth land) with race cities projected from actual lat/lng (`src/lib/worldMap.ts`).
+- **Phone-scroll centerpiece** — a pinned device cycles through Dashboard → Medal Wall → Map → Analytics as you scroll.
+- **How it works / Testimonials / FAQ** — 3-step how-it-works with mini-mockups, a rotating testimonial spotlight (placeholder quotes), and an accordion FAQ (free, no AI key, wearables, data privacy).
+- **Live interactive demo** — new public `/demo` route: a self-contained, clickable app shell (persona switcher + Dashboard/Races/Profile tabs) with demo data. No auth, no real stores, no persistence — fully isolated from real user data. Embedded on the landing in a framed window with an "Open full demo" escape.
+
 ## [0.6.14.3] - 2026-06-01
 
 ### Fixed
