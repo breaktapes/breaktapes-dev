@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { useWearableStore } from '@/stores/useWearableStore'
+import { posthog } from '@/lib/posthog'
 import { handleGarminCallback } from '@/lib/garmin'
 import { computeVDOT, paceZones, parseDistKm, parseTimeSecs, secsToHMS } from '@/lib/raceFormulas'
 import { useUnits } from '@/lib/units'
@@ -752,6 +753,9 @@ export function Train() {
 
   const races = useRaceStore(s => s.races)
 
+  // Track page view on mount
+  useEffect(() => { posthog.capture('page_viewed', { page: 'train' }) }, [])
+
   // Handle Garmin OAuth callback
   useEffect(() => {
     const state    = searchParams.get('state')
@@ -943,7 +947,7 @@ export function Train() {
       {/* Tab bar */}
       <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', marginBottom: '0.25rem', gap: '0.25rem' }}>
         {TAB_LABELS.map(t => (
-          <button key={t.id} style={tabStyle(t.id)} onClick={() => setActiveTab(t.id)}>
+          <button key={t.id} style={tabStyle(t.id)} onClick={() => { setActiveTab(t.id); posthog.capture('train_tab_changed', { tab: t.id }) }}>
             {t.label}
           </button>
         ))}

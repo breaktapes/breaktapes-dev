@@ -8,6 +8,7 @@ import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { selectRaces, selectNextRace, selectAthlete, selectAuthUser } from '@/stores/selectors'
+import { posthog } from '@/lib/posthog'
 import { EditProfileModal } from '@/components/EditProfileModal'
 import type { Race } from '@/types'
 import { useUnits, distUnit } from '@/lib/units'
@@ -2921,6 +2922,9 @@ function OnboardingBanner({ onEdit }: { onEdit: () => void }) {
 export function Profile() {
   const authUser = useAuthStore(selectAuthUser)
   const [showEdit, setShowEdit] = useState(false)
+
+  // Track page view on mount
+  useEffect(() => { posthog.capture('page_viewed', { page: 'profile' }) }, [])
 
   // Auto-open edit modal 300ms after mount for new users (once per device)
   useEffect(() => {

@@ -3,6 +3,14 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.3.0] - 2026-06-03
+
+### Added
+- **Admin dashboard** — `/admin` now has 5 tabs: Analytics (DAU/WAU/MAU, race stats, top sports/distances), Users (list with last-seen + race count + public status), Feedback (all beta feedback with star ratings), Errors (client crash log from `beta_errors`), Catalog (existing submissions queue).
+- **Worker admin routes** — `GET /api/admin/users`, `/api/admin/feedback`, `/api/admin/errors`, `/api/admin/analytics` — all require admin JWT, served via service role key.
+- **PostHog event tracking** — `page_viewed` on Dashboard/Races/Train/Profile mount; `modal_opened` for add-race and import-race modals; `widget_detail_opened` and `dashboard_customize_opened` on Dashboard; `train_tab_changed` in Train page; `admin_page_viewed` and `admin_tab_viewed` in Admin.
+- **Global error capture** — `window.onerror` and `window.onunhandledrejection` in `main.tsx` → `sendBeacon('/api/error-report')` → `beta_errors` table (existing table, existing Worker route, now wired up).
+
 ## [0.7.2.4] - 2026-06-02
 
 ### Changed

@@ -1326,6 +1326,123 @@ async function handleCatalogSubmit(request, env) {
   return new Response(JSON.stringify({ ok: true }), { headers: ADMIN_CORS });
 }
 
+async function handleAdminUsers(request, env) {
+  if (request.method === 'OPTIONS') return adminCors();
+  const userId = await resolveAdminUserId(request, env);
+  if (!userId) return new Response('Forbidden', { status: 403, headers: ADMIN_CORS });
+  const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceKey) return new Response('Service unavailable', { status: 503, headers: ADMIN_CORS });
+  const supabaseUrl = env.SUPABASE_URL || 'https://kmdpufauamadwavqsinj.supabase.co';
+  const res = await fetch(
+    `${supabaseUrl}/rest/v1/user_state?select=user_id,username,is_public,updated_at,state_json&order=updated_at.desc&limit=200`,
+    { headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` } }
+  );
+  if (!res.ok) return new Response(await res.text(), { status: 502, headers: ADMIN_CORS });
+  const rows = await res.json();
+  const users = rows.map(r => {
+    let raceCount = 0, upcomingCount = 0, sport = null;
+    try {
+      const s = r.state_json;
+      if (s) {
+        raceCount = Array.isArray(s.races) ? s.races.length : 0;
+        upcomingCount = Array.isArray(s.upcoming_races) ? s.upcoming_races.length : 0;
+        sport = s.athlete?.sport ?? null;
+      }
+    } catch {}
+    return { user_id: r.user_id, username: r.username, is_public: r.is_public, updated_at: r.updated_at, race_count: raceCount, upcoming_count: upcomingCount, sport };
+  });
+  return new Response(JSON.stringify(users), { headers: ADMIN_CORS });
+}
+
+async function handleAdminFeedback(request, env) {
+  if (request.method === 'OPTIONS') return adminCors();
+  const userId = await resolveAdminUserId(request, env);
+  if (!userId) return new Response('Forbidden', { status: 403, headers: ADMIN_CORS });
+  const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceKey) return new Response('Service unavailable', { status: 503, headers: ADMIN_CORS });
+  const supabaseUrl = env.SUPABASE_URL || 'https://kmdpufauamadwavqsinj.supabase.co';
+  const res = await fetch(
+    `${supabaseUrl}/rest/v1/beta_feedback?select=id,user_id,rating,message,page,created_at&order=created_at.desc&limit=300`,
+    { headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` } }
+  );
+  if (!res.ok) return new Response(await res.text(), { status: 502, headers: ADMIN_CORS });
+  return new Response(await res.text(), { headers: ADMIN_CORS });
+}
+
+async function handleAdminErrors(request, env) {
+  if (request.method === 'OPTIONS') return adminCors();
+  const userId = await resolveAdminUserId(request, env);
+  if (!userId) return new Response('Forbidden', { status: 403, headers: ADMIN_CORS });
+  const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceKey) return new Response('Service unavailable', { status: 503, headers: ADMIN_CORS });
+  const supabaseUrl = env.SUPABASE_URL || 'https://kmdpufauamadwavqsinj.supabase.co';
+  const res = await fetch(
+    `${supabaseUrl}/rest/v1/beta_errors?select=id,message,stack,url,env,ts,created_at&order=created_at.desc&limit=200`,
+    { headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` } }
+  );
+  if (!res.ok) return new Response(await res.text(), { status: 502, headers: ADMIN_CORS });
+  return new Response(await res.text(), { headers: ADMIN_CORS });
+}
+
+async function handleAdminAnalytics(request, env) {
+  if (request.method === 'OPTIONS') return adminCors();
+  const userId = await resolveAdminUserId(request, env);
+  if (!userId) return new Response('Forbidden', { status: 403, headers: ADMIN_CORS });
+  const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceKey) return new Response('Service unavailable', { status: 503, headers: ADMIN_CORS });
+  const supabaseUrl = env.SUPABASE_URL || 'https://kmdpufauamadwavqsinj.supabase.co';
+  const svcH = { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` };
+
+  const now = new Date();
+  const d24h = new Date(now - 24*60*60*1000).toISOString();
+  const d7d  = new Date(now - 7*24*60*60*1000).toISOString();
+  const d30d = new Date(now - 30*24*60*60*1000).toISOString();
+
+  const [dauRes, wauRes, mauRes, fbRes, usersRes, totalRes] = await Promise.all([
+    fetch(`${supabaseUrl}/rest/v1/user_state?select=user_id&updated_at=gte.${d24h}`, { headers: svcH }),
+    fetch(`${supabaseUrl}/rest/v1/user_state?select=user_id&updated_at=gte.${d7d}`,  { headers: svcH }),
+    fetch(`${supabaseUrl}/rest/v1/user_state?select=user_id&updated_at=gte.${d30d}`, { headers: svcH }),
+    fetch(`${supabaseUrl}/rest/v1/beta_feedback?select=id,rating&limit=1000`, { headers: svcH }),
+    fetch(`${supabaseUrl}/rest/v1/user_state?select=state_json&limit=500&order=updated_at.desc`, { headers: svcH }),
+    fetch(`${supabaseUrl}/rest/v1/user_state?select=user_id`, { headers: { ...svcH, Prefer: 'count=exact', Range: '0-0' } }),
+  ]);
+
+  const totalCount = parseInt(totalRes.headers.get('Content-Range')?.split('/')[1] ?? '0') || 0;
+  const dau = dauRes.ok ? (await dauRes.json()).length : 0;
+  const wau = wauRes.ok ? (await wauRes.json()).length : 0;
+  const mau = mauRes.ok ? (await mauRes.json()).length : 0;
+
+  let fbCount = 0, avgRating = 0;
+  if (fbRes.ok) {
+    const fbs = await fbRes.json();
+    fbCount = fbs.length;
+    const rated = fbs.filter(f => f.rating);
+    if (rated.length) avgRating = Math.round(rated.reduce((s, f) => s + f.rating, 0) / rated.length * 10) / 10;
+  }
+
+  const sportCounts = {}, distCounts = {};
+  let totalRaces = 0, usersWithRaces = 0;
+  if (usersRes.ok) {
+    const rows = await usersRes.json();
+    for (const r of rows) {
+      const races = r.state_json?.races ?? [];
+      if (races.length) { usersWithRaces++; totalRaces += races.length; }
+      for (const rc of races) {
+        if (rc.sport)     sportCounts[rc.sport]     = (sportCounts[rc.sport]     || 0) + 1;
+        if (rc.distance)  distCounts[rc.distance]   = (distCounts[rc.distance]   || 0) + 1;
+      }
+    }
+  }
+
+  return new Response(JSON.stringify({
+    users:      { total: totalCount, dau, wau, mau },
+    feedback:   { count: fbCount, avg_rating: avgRating },
+    races:      { total: totalRaces, users_with_races: usersWithRaces, avg_per_user: usersWithRaces ? Math.round(totalRaces / usersWithRaces * 10) / 10 : 0 },
+    top_sports: Object.entries(sportCounts).sort((a, b) => b[1] - a[1]).slice(0, 8),
+    top_distances: Object.entries(distCounts).sort((a, b) => b[1] - a[1]).slice(0, 10),
+  }), { headers: ADMIN_CORS });
+}
+
 async function handleAdminListContributions(request, env) {
   if (request.method === 'OPTIONS') return adminCors();
 
@@ -1605,6 +1722,26 @@ async function handleRequest(request, env) {
     const adminActionMatch = path.match(/^\/api\/admin\/contributions\/(\d+)\/(approve|reject)$/);
     if (request.method === 'POST' && adminActionMatch) {
       return handleAdminAction(request, env, Number(adminActionMatch[1]), adminActionMatch[2]);
+    }
+
+    // Admin: GET /api/admin/users
+    if ((request.method === 'GET' || request.method === 'OPTIONS') && path === '/api/admin/users') {
+      return handleAdminUsers(request, env);
+    }
+
+    // Admin: GET /api/admin/feedback
+    if ((request.method === 'GET' || request.method === 'OPTIONS') && path === '/api/admin/feedback') {
+      return handleAdminFeedback(request, env);
+    }
+
+    // Admin: GET /api/admin/errors
+    if ((request.method === 'GET' || request.method === 'OPTIONS') && path === '/api/admin/errors') {
+      return handleAdminErrors(request, env);
+    }
+
+    // Admin: GET /api/admin/analytics
+    if ((request.method === 'GET' || request.method === 'OPTIONS') && path === '/api/admin/analytics') {
+      return handleAdminAnalytics(request, env);
     }
 
     // POST /api/catalog/submit — user submits upcoming race to catalog
