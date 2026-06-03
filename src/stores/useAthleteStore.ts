@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { Athlete, SeasonPlan } from '@/types'
+import type { Athlete, Injury, SeasonPlan } from '@/types'
 import { syncStateToSupabase } from '@/lib/syncState'
 
 export interface DistGoal {
@@ -24,6 +24,7 @@ export interface AthleteState {
   athlete: Athlete | null
   seasonPlans: SeasonPlan[]
   goals: GoalsState
+  injuries: Injury[]
   setAthlete: (athlete: Athlete | null) => void
   updateAthlete: (partial: Partial<Athlete>) => void
   /** Patch only Clerk-derived identity fields (username, imageUrl) without
@@ -39,6 +40,11 @@ export interface AthleteState {
   setAnnualGoal: (year: number, partial: Partial<AnnualGoals>) => void
   addDistGoal: (goal: Omit<DistGoal, 'id'>) => void
   deleteDistGoal: (id: string) => void
+  setInjuries: (injuries: Injury[]) => void
+  addInjury: (patch: Omit<Injury, 'id' | 'createdAt'>) => void
+  updateInjury: (id: string, patch: Partial<Injury>) => void
+  resolveInjury: (id: string) => void
+  deleteInjury: (id: string) => void
 }
 
 export const useAthleteStore = create<AthleteState>()(
@@ -47,6 +53,7 @@ export const useAthleteStore = create<AthleteState>()(
       athlete: null,
       seasonPlans: [],
       goals: { annual: {}, distGoals: [] },
+      injuries: [],
 
       setAthlete: (athlete) => set({ athlete }),
 
@@ -139,6 +146,45 @@ export const useAthleteStore = create<AthleteState>()(
         set(s => ({
           goals: { ...s.goals, distGoals: s.goals.distGoals.filter(g => g.id !== id) },
         }))
+        void syncStateToSupabase()
+      },
+
+      setInjuries: (injuries) => set({ injuries }),
+
+      addInjury: (patch) => {
+        const today = new Date().toISOString().split('T')[0]
+        const injury: Injury = { ...patch, id: crypto.randomUUID(), createdAt: today }
+        set(s => ({ injuries: [...s.injuries, injury] }))
+        // Backward compat: seed athlete.injuryBreakStart for comeback_run achievement
+        const { athlete } = get()
+        if (athlete && !athlete.injuryBreakStart) {
+          get().updateAthlete({ injuryBreakStart: injury.startDate })
+        }
+        void syncStateToSupabase()
+      },
+
+      updateInjury: (id, patch) => {
+        set(s => ({ injuries: s.injuries.map(i => i.id === id ? { ...i, ...patch } : i) }))
+        void syncStateToSupabase()
+      },
+
+      resolveInjury: (id) => {
+        const today = new Date().toISOString().split('T')[0]
+        set(s => ({
+          injuries: s.injuries.map(i =>
+            i.id === id ? { ...i, resolved: true, phase: 'resolved', returnDate: i.returnDate ?? today } : i
+          ),
+        }))
+        // Backward compat: seed athlete.injuryBreakEnd for comeback_run achievement
+        const { athlete } = get()
+        if (athlete && !athlete.injuryBreakEnd) {
+          get().updateAthlete({ injuryBreakEnd: today })
+        }
+        void syncStateToSupabase()
+      },
+
+      deleteInjury: (id) => {
+        set(s => ({ injuries: s.injuries.filter(i => i.id !== id) }))
         void syncStateToSupabase()
       },
     }),

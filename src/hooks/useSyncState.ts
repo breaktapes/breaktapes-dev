@@ -7,7 +7,7 @@ import { useAthleteStore } from '@/stores/useAthleteStore'
 import { APP_URL, IS_STAGING } from '@/env'
 import { markRemotePullComplete } from '@/lib/syncState'
 import { mergeRaceLists, mergeTombstones, type Tomb } from '@/lib/mergeRaces'
-import type { Race, Athlete, SeasonPlan } from '@/types'
+import type { Race, Athlete, SeasonPlan, Injury } from '@/types'
 import type { GoalsState } from '@/stores/useAthleteStore'
 
 const PROD_URL = 'https://app.breaktapes.com'
@@ -19,6 +19,7 @@ interface RemoteState {
   athlete?: Athlete
   season_plans?: SeasonPlan[]
   goals?: GoalsState
+  injuries?: Injury[]
   next_race?: Race | null
   focus_race_id?: string | null
   deleted_race_ids?: Tomb[]
@@ -44,6 +45,7 @@ export function useSyncState() {
   const setAthlete = useAthleteStore(s => s.setAthlete)
   const setSeasonPlans = useAthleteStore(s => s.setSeasonPlans)
   const setGoals = useAthleteStore(s => s.setGoals)
+  const setInjuries = useAthleteStore(s => s.setInjuries)
 
   // Cross-device merge (see src/lib/mergeRaces.ts, unit-tested):
   //  - last-write-wins by updatedAt → EDITS propagate, ties prefer local
@@ -100,6 +102,8 @@ export function useSyncState() {
       }
     }
     if (Array.isArray(remote.season_plans)) setSeasonPlans(remote.season_plans)
+    // Injuries: remote replaces local when present; empty remote never wipes local.
+    if (Array.isArray(remote.injuries) && remote.injuries.length > 0) setInjuries(remote.injuries)
     // Goals: prefer remote when local is empty; never overwrite local goals with
     // an empty remote (fresh device must not wipe goals that were set on another).
     if (remote.goals) {
