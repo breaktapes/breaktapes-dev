@@ -9,6 +9,7 @@ import { useRef, useState, useMemo, useEffect, Component } from 'react'
 import type { ReactNode, ErrorInfo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useUser } from '@clerk/clerk-react'
+import { posthog } from '@/lib/posthog'
 import Map, { Marker } from 'react-map-gl/maplibre'
 import type { MapRef } from 'react-map-gl/maplibre'
 import 'maplibre-gl/dist/maplibre-gl.css'
@@ -748,6 +749,9 @@ export function Races() {
   const [passportOpen, setPassportOpen]   = useState(false)
   const [passportYear, setPassportYear]   = useState<string>('all')
 
+  // Track page view on mount
+  useEffect(() => { posthog.capture('page_viewed', { page: 'races' }) }, [])
+
   // One-time normalization pass — collapse admin labels into canonical
   // city names ("Dubai Emirate" → "Dubai", "Mumbai Suburban" → "Mumbai").
   // Clearing lat/lng forces the geocode backfill to re-resolve under the
@@ -843,7 +847,7 @@ export function Races() {
       />
 
       {/* Bottom sheet */}
-      <RacesSheet races={races} onAddRace={() => setAddRaceOpen(true)} onImportRace={() => setImportOpen(true)} onOpenPassport={(y) => { setPassportYear(y); setPassportOpen(true) }} onDiscover={() => navigate('/discover')} />
+      <RacesSheet races={races} onAddRace={() => { setAddRaceOpen(true); posthog.capture('modal_opened', { modal: 'add_race', source: 'races' }) }} onImportRace={() => { setImportOpen(true); posthog.capture('modal_opened', { modal: 'import_race' }) }} onOpenPassport={(y) => { setPassportYear(y); setPassportOpen(true) }} onDiscover={() => navigate('/discover')} />
 
       {addRaceOpen  && <AddRaceModal     onClose={() => setAddRaceOpen(false)} />}
       {importOpen   && <RaceImportModal  onClose={() => setImportOpen(false)} onPickByRace={() => { setImportOpen(false); setPickerOpen(true) }} />}

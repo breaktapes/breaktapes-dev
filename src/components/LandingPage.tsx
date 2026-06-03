@@ -11,6 +11,8 @@ import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { posthog } from '@/lib/posthog'
 import { WORLD_MAP_PATH, projectLngLat } from '@/lib/worldMap'
+import { DEMO_TESTIMONIALS, DEMO_PERSONA_LIST, DEMO_PERSONAS, type DemoPersonaId } from '@/lib/demoData'
+import type { Race } from '@/types'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -25,8 +27,6 @@ interface LandingPageProps {
   onSignUp: () => void
   onSignIn: () => void
 }
-
-type Audience = 'all' | 'marathoner' | 'triathlete' | 'everyday'
 
 /* ---------- shared motion presets ---------- */
 const fadeUp: Variants = {
@@ -159,91 +159,20 @@ function TopChrome({ progress, onSignUp, onSignIn, visible }:
 }
 
 /* =====================================================================
-   AUDIENCE SELECTOR — "I am a…" (re-themes the page; deep per-audience
-   content swap lands in Phase B).
+   PERSONA SELECTOR — "I am a…" — lists the seven demo athletes. The
+   selection drives the live interactive sandbox lower down the page.
    ===================================================================== */
-const AUDIENCES: { id: Audience; label: string }[] = [
-  { id: 'all', label: 'Show me everything' },
-  { id: 'marathoner', label: 'Marathoner' },
-  { id: 'triathlete', label: 'Triathlete' },
-  { id: 'everyday', label: 'Everyday runner' },
-]
-
-/* ---------- per-audience content (mockups + copy react to the selector) ---------- */
-interface HeroData { tag: string; race: string; goal: string; races: string; pr: [string, string] }
-const HERO_DATA: Record<Audience, HeroData> = {
-  all:        { tag: 'Next Race · 12 days', race: 'Berlin Marathon', goal: 'Goal 3:15 · 12-week taper on track', races: '42', pr: ['3:21', 'MARATHON PR'] },
-  marathoner: { tag: 'Next Race · 12 days', race: 'Berlin Marathon', goal: 'Goal 3:15 · 12-week taper on track', races: '42', pr: ['3:21', 'MARATHON PR'] },
-  triathlete: { tag: 'Next Race · 26 days', race: 'IRONMAN Nice',    goal: 'Goal 10:30 · bike block peaking',     races: '38', pr: ['10:42', 'IRONMAN PR'] },
-  everyday:   { tag: 'Next Race · 9 days',  race: 'City Autumn 10K', goal: 'Goal sub-55 · first sub-55 attempt',  races: '12', pr: ['52:18', '10K PR'] },
-}
-
-// PR rows: [label, big, small]
-const PR_DATA: Record<Audience, [string, string, string][]> = {
-  all:        [['5K', '18', ':42'], ['HALF', '1:24', ':10'], ['MARATHON', '3:21', ':05']],
-  marathoner: [['5K', '18', ':42'], ['HALF', '1:24', ':10'], ['MARATHON', '3:21', ':05']],
-  triathlete: [['OLYMPIC', '2:14', ':30'], ['70.3', '4:58', ':12'], ['IRONMAN', '10:42', ':05']],
-  everyday:   [['5K', '26', ':30'], ['10K', '52', ':18'], ['HALF', '2:05', ':40']],
-}
-
-// Real city coordinates (lng, lat) so they project accurately onto the world map.
-interface RaceCity { name: string; lng: number; lat: number }
-const RACE_CITIES: Record<Audience, RaceCity[]> = {
-  all: [
-    { name: 'London', lng: -0.13, lat: 51.51 }, { name: 'Berlin', lng: 13.40, lat: 52.52 },
-    { name: 'Boston', lng: -71.06, lat: 42.36 }, { name: 'Tokyo', lng: 139.65, lat: 35.68 },
-    { name: 'Sydney', lng: 151.21, lat: -33.87 },
-  ],
-  marathoner: [ // World Marathon Majors
-    { name: 'Boston', lng: -71.06, lat: 42.36 }, { name: 'Chicago', lng: -87.63, lat: 41.88 },
-    { name: 'London', lng: -0.13, lat: 51.51 }, { name: 'Berlin', lng: 13.40, lat: 52.52 },
-    { name: 'Tokyo', lng: 139.65, lat: 35.68 },
-  ],
-  triathlete: [ // iconic triathlon venues
-    { name: 'Kona', lng: -155.99, lat: 19.64 }, { name: 'Nice', lng: 7.27, lat: 43.70 },
-    { name: 'Roth', lng: 11.09, lat: 49.14 }, { name: 'Cairns', lng: 145.77, lat: -16.92 },
-    { name: 'Taupō', lng: 176.07, lat: -38.69 },
-  ],
-  everyday: [
-    { name: 'London', lng: -0.13, lat: 51.51 }, { name: 'Paris', lng: 2.35, lat: 48.86 },
-    { name: 'Amsterdam', lng: 4.90, lat: 52.37 }, { name: 'Berlin', lng: 13.40, lat: 52.52 },
-    { name: 'New York', lng: -74.01, lat: 40.71 },
-  ],
-}
-
-// Per-showcase description override by audience (falls back to the base desc).
-const SHOWCASE_DESC: Record<string, Partial<Record<Audience, string>>> = {
-  'race-history': {
-    marathoner: 'Every marathon and major on one map — splits, placing, and the weather you ran through, kept for good.',
-    triathlete: 'Every swim-bike-run venue you’ve raced, mapped and timed — from local olympics to the iconic courses.',
-    everyday: 'Every finish line you’ve crossed on one map — from your first 5K to your latest weekend race.',
-  },
-  'auto-prs': {
-    marathoner: 'Log a marathon and your bests recompute across 5K, 10K, half and the full — instantly, no spreadsheet.',
-    triathlete: 'Bests across olympic, 70.3 and full — overall and by leg, recalculated the moment you log a race.',
-    everyday: 'Every distance counts. Log a parkrun or a 10K and your personal bests update on the spot.',
-  },
-  'medal-wall': {
-    triathlete: 'Every finisher medal and podium from sprint to IRONMAN — laid out the way they deserve.',
-    everyday: 'Every medal you’ve earned, photo-first. Your first finisher medal belongs on the wall too.',
-  },
-  'wearables': {
-    triathlete: 'Connect WHOOP today and see swim-bike-run load next to every race result. More integrations on the way.',
-    everyday: 'Connect WHOOP and see the training behind every finish. Strava, Garmin & Apple Health are coming.',
-  },
-}
-const descFor = (id: string, a: Audience, base: string) => SHOWCASE_DESC[id]?.[a] ?? base
-function AudienceSelector({ value, onChange }: { value: Audience; onChange: (a: Audience) => void }) {
+function PersonaSelector({ value, onChange }: { value: DemoPersonaId; onChange: (p: DemoPersonaId) => void }) {
   return (
     <motion.section className="pl-audience" variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}>
       <motion.p className="pl-eyebrow" variants={fadeUp}>Make it yours</motion.p>
       <motion.h2 className="pl-audience-title" variants={fadeUp}>I am a…</motion.h2>
       <motion.div className="pl-audience-pills" variants={fadeUp} role="tablist" aria-label="Athlete type">
-        {AUDIENCES.map(a => (
-          <button key={a.id} role="tab" aria-selected={value === a.id}
-            className={`pl-audience-pill${value === a.id ? ' active' : ''}`}
-            onClick={() => { onChange(a.id); track('landing_audience_switch', { audience: a.id }) }}>
-            {a.label}
+        {DEMO_PERSONA_LIST.map(p => (
+          <button key={p.id} role="tab" aria-selected={value === p.id}
+            className={`pl-audience-pill${value === p.id ? ' active' : ''}`}
+            onClick={() => { onChange(p.id); track('landing_audience_switch', { audience: p.id }) }}>
+            {p.label}
           </button>
         ))}
       </motion.div>
@@ -260,8 +189,251 @@ const cardSurface: React.CSSProperties = {
   borderRadius: 'var(--radius-md)',
 }
 
-function DashboardMockup({ audience = 'all' }: { audience?: Audience }) {
-  const d = HERO_DATA[audience]
+/* ---------- DATA-DRIVEN APP MOCKUPS ----------
+   Stylized recreations of the real app screens (race map / personal bests /
+   medal wall) computed from each persona's actual race data. Deterministic,
+   per-persona, no screenshots — looks like the app, never breaks. */
+type ShotScreen = 'predictor' | 'planner' | 'pacing' | 'momentum' | 'dna'
+
+/** Render shell. `framed` → phone device; otherwise a plain rounded rectangle
+ *  (edge-to-edge). Content is fluid and fills the screen — never cropped. */
+function Shell({ children, pad = true, framed = false }: { children: React.ReactNode; pad?: boolean; framed?: boolean }) {
+  if (framed) {
+    return (
+      <div style={{ width: '100%', maxWidth: 290, margin: '0 auto', aspectRatio: '390 / 844',
+        background: 'var(--surface)', border: '8px solid #16181c', borderRadius: 38,
+        boxShadow: '0 40px 90px -30px rgba(0,0,0,0.85), inset 0 0 0 1px rgba(255,255,255,0.05)',
+        overflow: 'hidden', position: 'relative' }}>
+        <div style={{ position: 'absolute', top: 8, left: '50%', transform: 'translateX(-50%)',
+          width: 92, height: 18, background: '#000', borderRadius: 12, zIndex: 5 }} />
+        <div style={{ position: 'absolute', inset: 0, borderRadius: 30, overflow: 'hidden',
+          padding: pad ? '40px 16px 16px' : 0, display: 'flex', flexDirection: 'column' }}>
+          {children}
+        </div>
+      </div>
+    )
+  }
+  return (
+    <div style={{ width: '100%', maxWidth: 440, margin: '0 auto', aspectRatio: '430 / 560',
+      background: 'var(--surface)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-lg)',
+      boxShadow: '0 30px 80px -40px rgba(0,0,0,0.8)', overflow: 'hidden', position: 'relative' }}>
+      <div style={{ position: 'absolute', inset: 0, overflow: 'hidden',
+        padding: pad ? '18px' : 0, display: 'flex', flexDirection: 'column' }}>
+        {children}
+      </div>
+    </div>
+  )
+}
+
+const DIST_KM: Record<string, number> = { 'IRONMAN': 226, '70.3': 113, 'Olympic': 51.5, 'Sprint': 25.75, 'HYROX': 8, '100 Mile': 160.9, '100K': 100, '50K': 50, 'Ultra': 60, 'Marathon': 42.2, 'Half Marathon': 21.1 }
+function distKm(d: string): number { if (DIST_KM[d] != null) return DIST_KM[d]; const n = parseFloat(d); return Number.isNaN(n) ? 0 : n }
+function distLabel(d: string): string {
+  const n = parseFloat(d)
+  if (!Number.isNaN(n) && String(n) === d.trim()) {
+    if (Math.abs(n - 42.2) < 0.3) return 'Marathon'
+    if (Math.abs(n - 21.1) < 0.3) return 'Half Marathon'
+    if (Math.abs(n - 70.3) < 0.1) return '70.3'
+    if (Math.abs(n - 16.09) < 0.1) return '10 MILE'
+    if (n === 10) return '10K'; if (n === 5) return '5K'
+    return `${d} KM`
+  }
+  return d.toUpperCase()
+}
+const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+function fmtDMon(d?: string): string { if (!d) return ''; const p = d.split('-'); if (p.length < 3) return d; return `${p[2]} ${MON[+p[1] - 1] || p[1]} ${p[0]}` }
+function t2s(t?: string): number { if (!t) return Infinity; const a = t.split(':').map(Number); if (a.some(Number.isNaN)) return Infinity; return a.length === 3 ? a[0]*3600 + a[1]*60 + a[2] : a.length === 2 ? a[0]*60 + a[1] : Infinity }
+const MEDAL_RGB: Record<string, [string, string, string]> = {
+  gold: ['#FFD770', '#B8860B', 'GOLD'], silver: ['#C8D4DC', '#6A7880', 'SILVER'],
+  bronze: ['#CD8C5A', '#7A4420', 'BRONZE'], custom: ['#9B7BE8', '#5A3FA0', 'VIC CLAPHAM'],
+  finisher: ['#E8895A', '#A8421A', 'FINISHER'],
+}
+// Discipline colour codes — mirror the app's Profile PersonalBests (SPORT_ACCENT).
+const PB_ACCENT: Record<string, { color: string; bg: string }> = {
+  Running: { color: 'var(--green)', bg: 'rgba(var(--green-ch),0.06)' },
+  Triathlon: { color: 'var(--purple)', bg: 'rgba(var(--purple-ch),0.08)' },
+  Cycling: { color: '#38BDF8', bg: 'rgba(56,189,248,0.07)' },
+  Swimming: { color: '#22D3EE', bg: 'rgba(34,211,238,0.07)' },
+  HYROX: { color: '#FB923C', bg: 'rgba(251,146,60,0.07)' },
+}
+const PB_SPORT_KEY: Record<string, string> = { running: 'Running', triathlon: 'Triathlon', cycling: 'Cycling', swim: 'Swimming', hyrox: 'HYROX' }
+const PB_ORDER = ['Running', 'Triathlon', 'Cycling', 'Swimming', 'HYROX']
+const sectionLabel: React.CSSProperties = { fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--white)' }
+
+/* ----- Race map mockup ----- */
+function MapMockup({ persona, framed = false }: { persona: DemoPersonaId; framed?: boolean }) {
+  const races = DEMO_PERSONAS[persona].races.filter(r => r.lat != null && r.lng != null)
+  const cities = new Set(races.map(r => r.city)).size
+  const countries = new Set(races.map(r => r.country)).size
+  const km = Math.round(races.reduce((s, r) => s + distKm(r.distance), 0))
+  // Equirectangular x = (lng+180)/360*1000, so the antimeridian (±180°) is a hard
+  // seam: a Pacific-spread athlete (Hawaii at x≈69, Australia/NZ at x≈900+) would
+  // span ~92% of the map and zoom out to nothing. Split the pins at their largest
+  // longitude gap and unwrap the smaller group by +1000 so the cluster is
+  // contiguous; the map path is drawn in repeated copies so wrapped pins keep land.
+  const raw = races.map(r => projectLngLat(r.lng!, r.lat!))
+  let pins = raw
+  if (raw.length > 1) {
+    const sx = raw.map(p => p[0]).slice().sort((a, b) => a - b)
+    let gap = -1, thr: number | null = null
+    for (let k = 0; k < sx.length; k++) {
+      const cur = sx[k], nxt = k + 1 < sx.length ? sx[k + 1] : sx[0] + 1000
+      const g = nxt - cur
+      if (g > gap) { gap = g; thr = k + 1 < sx.length ? cur : null }
+    }
+    if (thr != null) { const t = thr; pins = raw.map(([x, y]) => (x <= t ? [x + 1000, y] as [number, number] : [x, y] as [number, number])) }
+  }
+  const xs = pins.map(p => p[0]), ys = pins.map(p => p[1])
+  let minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys)
+  // Minimum span → consistent zoom across personas: a tight 2-city cluster still
+  // shows regional context instead of extreme zoom-in. (150 x-units ≈ 54° lng.)
+  const cx0 = (minX + maxX) / 2, cy0 = (minY + maxY) / 2
+  if (maxX - minX < 150) { minX = cx0 - 75; maxX = cx0 + 75 }
+  if (maxY - minY < 110) { minY = cy0 - 55; maxY = cy0 + 55 }
+  const spanX = maxX - minX, spanY = maxY - minY
+  const padX = spanX * 0.5 + 24, padY = spanY * 0.5 + 20
+  minX -= padX; maxX += padX; minY -= padY; maxY += padY
+  // Match the card aspect so the map fills edge-to-edge.
+  const targetAR = framed ? 0.52 : 0.86 // map-area width/height (phone vs rectangle)
+  let w = maxX - minX, h = maxY - minY
+  if (w / h < targetAR) { const nw = h * targetAR, cx = (minX + maxX) / 2; minX = cx - nw / 2; maxX = cx + nw / 2; w = nw }
+  else { const nh = w / targetAR, cy = (minY + maxY) / 2; minY = cy - nh / 2; maxY = cy + nh / 2; h = nh }
+  // Fill the card top-to-bottom with REAL map (no empty bands): keep the window's
+  // height inside the drawn map [0,500] and slide it in-bounds. preserveAspectRatio
+  // is "slice" below, so the viewBox always covers the card — no letterbox gaps.
+  if (h > 500) { h = 500; w = h * targetAR; const cx = (minX + maxX) / 2, cy = (minY + maxY) / 2; minX = cx - w / 2; maxX = cx + w / 2; minY = cy - h / 2; maxY = cy + h / 2 }
+  if (minY < 0) { maxY -= minY; minY = 0 }
+  if (maxY > 500) { minY -= maxY - 500; maxY = 500; if (minY < 0) minY = 0 }
+  const vb = `${minX} ${minY} ${maxX - minX} ${maxY - minY}`
+  const pinR = Math.min(spanX * 0.014 + 3, 9) // cap so global personas don't get huge dots
+  return (
+    <Shell pad={false} framed={framed}>
+      <div style={{ flex: 1, position: 'relative', background: 'radial-gradient(ellipse at 50% 40%, #2a3138, #14181c)', overflow: 'hidden' }}>
+        <svg viewBox={vb} width="100%" height="100%" preserveAspectRatio="xMidYMid slice" style={{ position: 'absolute', inset: 0 }}>
+          {[-1000, 0, 1000, 2000].map(ox => (
+            <path key={ox} d={WORLD_MAP_PATH} transform={`translate(${ox} 0)`} fill="rgba(0,0,0,0.55)" stroke="rgba(232,224,213,0.18)" strokeWidth="0.8" />
+          ))}
+          {pins.map(([x, y], i) => (
+            <g key={i}>
+              <circle cx={x} cy={y} r={pinR * 1.9} fill="rgba(var(--orange-ch),0.3)" />
+              <circle cx={x} cy={y} r={pinR} fill="var(--orange)" stroke="#000" strokeWidth="0.8" />
+            </g>
+          ))}
+        </svg>
+        <div style={{ position: 'absolute', top: 12, left: 12, display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(10,10,10,0.85)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-pill)', padding: '5px 11px' }}>
+          <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 14, color: 'var(--orange)' }}>{cities}</span>
+          <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 10, letterSpacing: '0.1em', color: 'var(--white)' }}>CITIES ›</span>
+        </div>
+      </div>
+      <div style={{ padding: '12px 12px 14px', background: 'var(--surface)', borderTop: '1px solid var(--border)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 6 }}>
+          {[[races.length, 'RACES'], [cities, 'CITIES'], [countries, 'COUNTRIES'], [km.toLocaleString(), 'KM']].map(([v, l]) => (
+            <div key={l as string} style={{ ...cardSurface, padding: '8px 4px', textAlign: 'center' }}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 15, color: 'var(--white)' }}>{v}</div>
+              <div style={{ fontFamily: 'var(--body)', fontSize: 8, letterSpacing: '0.06em', color: 'var(--muted)' }}>{l}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </Shell>
+  )
+}
+
+/* ----- Personal bests mockup ----- */
+function PBMockup({ persona, framed = false }: { persona: DemoPersonaId; framed?: boolean }) {
+  const all = DEMO_PERSONAS[persona].races.filter(r => r.time && r.distance)
+  // Best per (sport + distance), then grouped by discipline — exactly like the
+  // app's Profile PersonalBests (sport groups, colour-coded cards).
+  const best = new Map<string, Race>()
+  for (const r of all) { const k = `${r.sport}|${distLabel(r.distance)}`; const cur = best.get(k); if (!cur || t2s(r.time) < t2s(cur.time)) best.set(k, r) }
+  const grouped: Record<string, Race[]> = {}
+  for (const r of best.values()) { const k = PB_SPORT_KEY[r.sport] ?? 'Running'; (grouped[k] ||= []).push(r) }
+  Object.keys(grouped).forEach(k => grouped[k].sort((a, b) => distKm(a.distance) - distKm(b.distance)))
+  let budget = 8
+  const groups: [string, Race[]][] = []
+  for (const sp of PB_ORDER) {
+    if (!grouped[sp] || budget <= 0) continue
+    const take = grouped[sp].slice(0, Math.min(6, budget))
+    groups.push([sp, take]); budget -= take.length
+  }
+  return (
+    <Shell framed={framed}>
+      <div style={sectionLabel as React.CSSProperties}>PERSONAL BESTS</div>
+      <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 12, overflow: 'hidden' }}>
+        {groups.map(([sp, list]) => {
+          const a = PB_ACCENT[sp]
+          return (
+            <div key={sp}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 10.5, letterSpacing: '0.14em', textTransform: 'uppercase', color: a.color, opacity: 0.95, marginBottom: 7 }}>{sp}</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 7 }}>
+                {list.map(r => (
+                  <div key={r.id} style={{ background: `linear-gradient(145deg, #141414 0%, ${a.bg} 100%)`, border: '1px solid var(--border2)', borderLeft: `3px solid ${a.color}`, borderRadius: 'var(--radius-md)', padding: '9px 10px', minWidth: 0 }}>
+                    <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 10, letterSpacing: '0.06em', color: 'rgba(245,245,245,0.62)' }}>{distLabel(r.distance)}</div>
+                    <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 19, color: a.color, lineHeight: 1, margin: '5px 0 4px' }}>{r.time}</div>
+                    <div style={{ fontFamily: 'var(--body)', fontSize: 9.5, color: 'rgba(245,245,245,0.5)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={r.name}>{r.name}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </Shell>
+  )
+}
+
+/* ----- Medal wall mockup ----- */
+function MedalMockup({ persona, framed = false }: { persona: DemoPersonaId; framed?: boolean }) {
+  const races = DEMO_PERSONAS[persona].races
+  const counts = { gold: 0, silver: 0, bronze: 0, custom: 0, finisher: 0 } as Record<string, number>
+  for (const r of races) { const m = (r.medal || 'finisher'); if (counts[m] != null) counts[m]++ }
+  const order = ['custom', 'gold', 'silver', 'bronze', 'finisher'] // custom (rare, e.g. Vic Clapham) leads
+  const medaled = [...races].filter(r => r.medal).sort((a, b) => (order.indexOf(a.medal!) - order.indexOf(b.medal!)) || (a.date < b.date ? 1 : -1))
+  const cards = medaled.slice(0, 8)
+  const more = medaled.length - cards.length
+  const pbBest = new Map<string, number>()
+  for (const r of races) { if (!r.time) continue; const k = `${r.sport}|${distLabel(r.distance)}`; const s = t2s(r.time); if (pbBest.get(k) == null || s < pbBest.get(k)!) pbBest.set(k, s) }
+  return (
+    <Shell framed={framed}>
+      <div style={sectionLabel as React.CSSProperties}>MEDALS</div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
+        {order.filter(t => counts[t] > 0).map(t => {
+          const [a, , label] = MEDAL_RGB[t]
+          return (
+            <span key={t} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 10px', borderRadius: 'var(--radius-pill)', border: `1px solid ${a}55`, background: `${a}14` }}>
+              <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 13, color: a }}>{counts[t]}</span>
+              <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 9, letterSpacing: '0.06em', color: 'var(--muted)' }}>{label}</span>
+            </span>
+          )
+        })}
+      </div>
+      <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 7, marginTop: 12, alignContent: 'start', overflow: 'hidden' }}>
+        {cards.map(r => {
+          const [a, b, label] = MEDAL_RGB[r.medal!]
+          const isPB = r.time != null && pbBest.get(`${r.sport}|${distLabel(r.distance)}`) === t2s(r.time)
+          const dateStr = r.date ? new Date(r.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : ''
+          return (
+            <div key={r.id} style={{ padding: '9px 10px', borderRadius: 'var(--radius-md)', border: `1px solid ${isPB ? a + '88' : a + '30'}`, borderLeft: `3px solid ${a}`, background: `linear-gradient(155deg, ${b}26, var(--surface2) 72%)`, boxShadow: isPB ? `0 0 12px ${a}22` : undefined, display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4 }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0 }}>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: `radial-gradient(circle at 35% 30%, ${a}, ${b})`, flexShrink: 0 }} />
+                  <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 7, letterSpacing: '0.04em', color: a, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
+                </span>
+                {isPB ? <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 6.5, color: a, border: `1px solid ${a}66`, borderRadius: 'var(--radius-pill)', padding: '1px 5px', flexShrink: 0 }}>PB</span> : null}
+              </div>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 9.5, letterSpacing: '0.02em', textTransform: 'uppercase', color: 'var(--white)', lineHeight: 1.15, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={r.name}>{r.name}</div>
+              <div style={{ fontFamily: 'var(--body)', fontSize: 8, color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{[distLabel(r.distance), r.time].filter(Boolean).join(' · ')}</div>
+              <div style={{ fontFamily: 'var(--body)', fontSize: 7.5, color: 'var(--muted2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{[dateStr, r.city].filter(Boolean).join(' · ')}</div>
+            </div>
+          )
+        })}
+      </div>
+      {more > 0 ? <div style={{ fontFamily: 'var(--body)', fontSize: 8, color: 'var(--muted)', textAlign: 'center', marginTop: 8, flexShrink: 0 }}>+ {more} more on your wall</div> : null}
+    </Shell>
+  )
+}
+
+function DashboardMockup() {
+  const d = { tag: 'Next Race · 12 days', race: 'Berlin Marathon', goal: 'Goal 3:15 · 12-week taper on track', races: '42', pr: ['3:21', 'MARATHON PR'] as [string, string] }
   return (
     <div style={{
       width: '100%', maxWidth: 320, padding: 'var(--sp-4)',
@@ -310,219 +482,510 @@ function DashboardMockup({ audience = 'all' }: { audience?: Audience }) {
   )
 }
 
-function RaceMapMockup({ audience = 'all' }: { audience?: Audience }) {
-  // Sort west→east so the connecting arcs hop between neighbours, not across the map.
-  const cities = [...RACE_CITIES[audience]].sort((a, b) => a.lng - b.lng)
-  const pts = cities.map(c => ({ name: c.name, p: projectLngLat(c.lng, c.lat) }))
-  const arcs: string[] = []
-  for (let i = 0; i < pts.length - 1; i++) {
-    const [x1, y1] = pts[i].p
-    const [x2, y2] = pts[i + 1].p
-    const dist = Math.hypot(x2 - x1, y2 - y1)
-    const cx = (x1 + x2) / 2
-    const cy = (y1 + y2) / 2 - dist * 0.22 // lift the control point for a great-circle feel
-    arcs.push(`M${x1} ${y1} Q${cx} ${cy} ${x2} ${y2}`)
-  }
-  return (
-    <div style={{
-      width: '100%', maxWidth: 460, aspectRatio: '1000 / 360', padding: 'var(--sp-3)',
-      background: 'radial-gradient(ellipse at 50% 45%, var(--surface3), var(--surface))',
-      border: '1px solid var(--border2)', borderRadius: 'var(--radius-lg)',
-      boxShadow: '0 24px 60px rgba(0,0,0,0.5)', overflow: 'hidden',
-    }}>
-      {/* viewBox windows the equirectangular 1000×500 space to the inhabited band. */}
-      <svg viewBox="0 40 1000 380" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
-        <path d={WORLD_MAP_PATH} fill="rgba(232,224,213,0.10)"
-          stroke="rgba(232,224,213,0.28)" strokeWidth="0.9" strokeLinejoin="round" />
-        {arcs.map((d, i) => (
-          <motion.path key={i} d={d} fill="none" stroke="var(--orange)" strokeWidth="3" strokeLinecap="round"
-            initial={{ pathLength: 0, opacity: 0 }} whileInView={{ pathLength: 1, opacity: 1 }}
-            viewport={{ once: true }} transition={{ duration: 1, delay: 0.3 + i * 0.22, ease: 'easeInOut' }} />
-        ))}
-        {pts.map((c, i) => {
-          const [x, y] = c.p
-          return (
-            <motion.g key={c.name} initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
-              viewport={{ once: true }} transition={{ duration: 0.4, delay: 0.15 + i * 0.16 }}>
-              <circle cx={x} cy={y} r="16" fill="none" stroke="rgba(var(--orange-ch),0.4)" strokeWidth="2">
-                <animate attributeName="r" values="9;18;9" dur="2.4s" repeatCount="indefinite" />
-                <animate attributeName="opacity" values="0.7;0;0.7" dur="2.4s" repeatCount="indefinite" />
-              </circle>
-              <circle cx={x} cy={y} r="8" fill="var(--orange)" stroke="#000" strokeWidth="1.5" />
-              <text x={x + 20} y={y + 6} fill="var(--white)" fontSize="20"
-                fontFamily="var(--headline)" fontWeight="800" stroke="#000" strokeWidth="0.5"
-                paintOrder="stroke">{c.name}</text>
-            </motion.g>
-          )
-        })}
-      </svg>
-    </div>
-  )
-}
 
-function PRMockup({ audience = 'all' }: { audience?: Audience }) {
-  const prs = PR_DATA[audience]
-  return (
-    <div style={{ width: '100%', maxWidth: 360, display: 'grid', gap: 'var(--sp-3)' }}>
-      {prs.map(([dist, big, small], i) => (
-        <motion.div key={dist} style={{
-          ...cardSurface, padding: 'var(--sp-4)', display: 'flex', alignItems: 'center',
-          justifyContent: 'space-between', borderLeft: '3px solid var(--orange)',
-          background: 'linear-gradient(90deg, rgba(var(--orange-ch),0.08), var(--surface2))',
-        }}
-          initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.12 }}>
-          <div>
-            <div style={{ fontFamily: 'var(--body)', fontSize: 10, letterSpacing: '0.14em',
-              textTransform: 'uppercase', color: 'var(--muted)' }}>{dist} · Personal Best</div>
-            <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 30, color: 'var(--white)' }}>
-              {big}<span style={{ color: 'var(--muted)', fontSize: 20 }}>{small}</span>
-            </div>
-          </div>
-          <span style={{ fontFamily: 'var(--headline)', fontSize: 11, fontWeight: 800,
-            letterSpacing: '0.1em', color: 'var(--green)', padding: '4px 8px',
-            background: 'var(--green-dim)', borderRadius: 'var(--radius-pill)' }}>PR ▲</span>
-        </motion.div>
-      ))}
-    </div>
-  )
-}
 
-function MedalWallMockup() {
-  const tiers = [
-    ['#FFD770', '#B8860B'], ['#C8D4DC', '#6A7880'], ['#CD8C5A', '#7A4420'],
-    ['#FFD770', '#B8860B'], ['#CD8C5A', '#7A4420'], ['#C8D4DC', '#6A7880'],
-    ['#CD8C5A', '#7A4420'], ['#FFD770', '#B8860B'],
+
+/* Clean stroke icons (21st.dev / lucide style) — no emoji anywhere. */
+function ActIcon({ k }: { k: string }) {
+  const c = { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
+  if (k === 'run') return (<svg {...c}><circle cx="17" cy="5" r="2" /><path d="M14.5 8 11 10l2 3-3 5" /><path d="M8 9.5 11.5 8l3 2.5 3 1" /><path d="m6 21 2.5-3.5" /></svg>)
+  if (k === 'bike') return (<svg {...c}><circle cx="6" cy="17" r="3" /><circle cx="18" cy="17" r="3" /><path d="M6 17l4.5-7.5H15l-2-3" /><path d="M12.5 6.5H16" /></svg>)
+  if (k === 'swim') return (<svg {...c}><circle cx="17" cy="6.5" r="1.7" /><path d="M5 12l5-3 3.5 2.5" /><path d="M3 17c1.5 0 1.5-1.2 3-1.2s1.5 1.2 3 1.2 1.5-1.2 3-1.2 1.5 1.2 3 1.2 1.5-1.2 3-1.2" /></svg>)
+  if (k === 'hyrox') return (<svg {...{ ...c, fill: 'currentColor', stroke: 'none' }}><path d="M13 2 5 13h5l-1 9 9-12h-5l3-8z" /></svg>)
+  return (<svg {...c}><path d="M4 8v8M7.5 6v12M16.5 6v12M20 8v8M7.5 12h9" /></svg>)
+}
+function MiniHeart() { return (<svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" style={{ display: 'block' }}><path d="M12 21s-7-4.6-9.3-8.4C.8 9.3 2.3 6 5.6 6c1.9 0 3.2 1.1 4 2.2.8-1.1 2.1-2.2 4-2.2 3.3 0 4.8 3.3 2.9 6.6C19 16.4 12 21 12 21z" /></svg>) }
+
+/* Wearables — only WHOOP is production-authorized. Others are "Coming soon".
+   Rendered as a rectangle mockup to match the other showcases. */
+type Act = { k: string; name: string; sub: string; m: [string, string][]; zone: number; accent: string }
+const WEARABLE_ACTS: Record<string, Act[]> = {
+  running: [
+    { k: 'run', name: 'TEMPO RUN', sub: '12.4 km · 52:18', m: [['AVG PACE', '4:12/km'], ['AVG HR', '158'], ['CADENCE', '182']], zone: 0.84, accent: 'var(--orange)' },
+    { k: 'run', name: 'LONG RUN', sub: '28.0 km · 2:14:30', m: [['AVG PACE', '4:48/km'], ['AVG HR', '148'], ['CADENCE', '176']], zone: 0.62, accent: 'var(--orange)' },
+    { k: 'run', name: 'TRACK INTERVALS', sub: '10 × 400m', m: [['AVG PACE', '3:18/km'], ['AVG HR', '176'], ['REST', '90s']], zone: 0.95, accent: 'var(--green)' },
+    { k: 'strength', name: 'STRENGTH & CORE', sub: '42:00 · 280 kcal', m: [['AVG HR', '118'], ['PEAK HR', '148'], ['LOAD', '6.2']], zone: 0.5, accent: 'var(--orange)' },
+  ],
+  cycling: [
+    { k: 'bike', name: 'THRESHOLD RIDE', sub: '64.0 km · 2:03:40', m: [['AVG SPEED', '31.2 km/h'], ['AVG HR', '146'], ['AVG POWER', '245 W']], zone: 0.82, accent: 'var(--orange)' },
+    { k: 'bike', name: 'ENDURANCE RIDE', sub: '128 km · 4:18:00', m: [['AVG SPEED', '28.6 km/h'], ['AVG HR', '134'], ['AVG POWER', '198 W']], zone: 0.6, accent: 'var(--orange)' },
+    { k: 'bike', name: 'CLIMBING REPEATS', sub: '1,420 m gain', m: [['AVG SPEED', '14.2 km/h'], ['AVG HR', '162'], ['AVG POWER', '288 W']], zone: 0.92, accent: 'var(--green)' },
+    { k: 'run', name: 'BRICK RUN', sub: '6.0 km · 27:10', m: [['AVG PACE', '4:31/km'], ['AVG HR', '152'], ['CADENCE', '180']], zone: 0.55, accent: 'var(--orange)' },
+  ],
+  triathlon: [
+    { k: 'swim', name: 'OPEN-WATER SWIM', sub: '2.0 km · 32:40', m: [['AVG PACE', '1:38/100m'], ['AVG HR', '138'], ['SWOLF', '36']], zone: 0.62, accent: 'var(--green)' },
+    { k: 'bike', name: 'THRESHOLD RIDE', sub: '90 km · 2:38:00', m: [['AVG SPEED', '34.2 km/h'], ['AVG HR', '148'], ['AVG POWER', '228 W']], zone: 0.84, accent: 'var(--orange)' },
+    { k: 'run', name: 'BRICK RUN', sub: '14 km · 58:20', m: [['AVG PACE', '4:10/km'], ['AVG HR', '156'], ['CADENCE', '184']], zone: 0.78, accent: 'var(--orange)' },
+    { k: 'swim', name: 'POOL INTERVALS', sub: '3.0 km · 50:00', m: [['AVG PACE', '1:40/100m'], ['AVG HR', '142'], ['SWOLF', '35']], zone: 0.7, accent: 'var(--green)' },
+  ],
+  hyrox: [
+    { k: 'hyrox', name: 'HYROX SIM', sub: '58:20 · 8 stations', m: [['AVG SPEED', '11.4 km/h'], ['AVG HR', '164'], ['STRAIN', '12.1']], zone: 0.92, accent: 'var(--green)' },
+    { k: 'run', name: 'TEMPO RUN', sub: '10.0 km · 38:40', m: [['AVG PACE', '3:52/km'], ['AVG HR', '162'], ['CADENCE', '186']], zone: 0.8, accent: 'var(--orange)' },
+    { k: 'strength', name: 'STRENGTH & CORE', sub: '48:00 · 312 kcal', m: [['AVG HR', '128'], ['PEAK HR', '168'], ['LOAD', '8.4']], zone: 0.6, accent: 'var(--orange)' },
+    { k: 'strength', name: 'ERG INTERVALS', sub: '5,000 m row', m: [['SPLIT', '1:52/500m'], ['AVG HR', '170'], ['STRAIN', '11.2']], zone: 0.88, accent: 'var(--green)' },
+  ],
+}
+function WearablesMockup({ persona }: { persona: DemoPersonaId }) {
+  const soon = ['STRAVA', 'GARMIN', 'APPLE', 'COROS', 'OURA']
+  const sport = DEMO_PERSONAS[persona].athlete.mainSport || 'running'
+  const metrics: [string, string, string][] = [
+    ['STRAIN', '14.2', 'var(--orange)'],
+    ['SLEEP', '7h 48m', 'var(--white)'],
+    ['RESTING HR', '46', 'var(--green)'],
   ]
+  const acts = WEARABLE_ACTS[sport] ?? WEARABLE_ACTS.running
   return (
-    <motion.div style={{
-      width: '100%', maxWidth: 360, padding: 'var(--sp-4)', ...cardSurface,
-      display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'var(--sp-3)',
-      boxShadow: '0 24px 60px rgba(0,0,0,0.5)',
-    }} variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}>
-      {tiers.map(([a, b], i) => (
-        <motion.div key={i} variants={{ hidden: { opacity: 0, scale: 0.4 }, show: { opacity: 1, scale: 1 } }}
-          whileHover={{ scale: 1.12, rotate: -4 }}
-          style={{ aspectRatio: '1', borderRadius: '50%',
-            background: `radial-gradient(circle at 35% 30%, ${a}, ${b})`,
-            boxShadow: `0 0 14px ${a}55, inset 0 -3px 6px rgba(0,0,0,0.35)`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 13, color: 'rgba(0,0,0,0.45)' }}>
-          ★
-        </motion.div>
-      ))}
-    </motion.div>
-  )
-}
-
-/* Wearables — only WHOOP is production-authorized. Others are "Coming soon". */
-function WearablesMockup() {
-  const live = 'WHOOP'
-  const soon = ['STRAVA', 'GARMIN', 'APPLE HEALTH', 'COROS', 'OURA']
-  return (
-    <div style={{ width: '100%', maxWidth: 380, display: 'grid', gap: 'var(--sp-3)' }}>
-      <motion.div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-2)' }}
-        variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}>
-        <motion.span variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }}
-          style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 12, letterSpacing: '0.08em',
-            color: 'var(--white)', padding: '6px 12px', display: 'inline-flex', alignItems: 'center', gap: 6,
-            background: 'var(--green-dim)', border: '1px solid rgba(var(--green-ch),0.4)',
-            borderRadius: 'var(--radius-pill)' }}>
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--green)' }} />{live} · Live
-        </motion.span>
+    <Shell>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 10px', borderRadius: 'var(--radius-pill)', background: 'var(--green-dim)', border: '1px solid rgba(var(--green-ch),0.45)' }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--green)' }} />
+          <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 10, letterSpacing: '0.06em', color: 'var(--white)' }}>WHOOP · LIVE</span>
+        </span>
         {soon.map(b => (
-          <motion.span key={b} variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }}
-            style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 12, letterSpacing: '0.08em',
-              color: 'var(--muted)', padding: '6px 12px', background: 'var(--surface3)',
-              border: '1px solid var(--border)', borderRadius: 'var(--radius-pill)' }}>
-            {b} · Soon
-          </motion.span>
+          <span key={b} style={{ padding: '5px 9px', borderRadius: 'var(--radius-pill)', background: 'var(--surface3)', border: '1px solid var(--border)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 9, letterSpacing: '0.05em', color: 'var(--muted)' }}>{b} · SOON</span>
         ))}
-      </motion.div>
-      {[['🏃', 'Morning Run', '12.4 km · 4:52 /km'], ['😴', 'Recovery', '88% · ready to train'], ['🚴', 'Long Ride', '64 km · 1,240 kcal']].map(([icon, name, meta], i) => (
-        <motion.div key={name} style={{ ...cardSurface, padding: 'var(--sp-3)', display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}
-          initial={{ opacity: 0, x: -24 }} whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.12 }}>
-          <span style={{ width: 38, height: 38, borderRadius: 'var(--radius-sm)', background: 'var(--orange-dim)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18 }}>{icon}</span>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 14, textTransform: 'uppercase',
-              color: 'var(--white)' }}>{name}</div>
-            <div style={{ fontFamily: 'var(--body)', fontSize: 11, color: 'var(--muted)' }}>{meta}</div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 7, marginTop: 8 }}>
+        <div style={{ ...cardSurface, padding: '9px 10px', background: 'linear-gradient(150deg, rgba(var(--green-ch),0.12), var(--surface2))' }}>
+          <div style={{ fontFamily: 'var(--body)', fontSize: 8, letterSpacing: '0.1em', color: 'var(--muted)' }}>RECOVERY</div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 23, color: 'var(--green)', lineHeight: 1 }}>88<span style={{ fontSize: 12 }}>%</span></div>
+          <div style={{ fontFamily: 'var(--body)', fontSize: 8.5, color: 'var(--muted)', marginTop: 2 }}>Ready to train</div>
+        </div>
+        <div style={{ ...cardSurface, padding: '9px 10px' }}>
+          <div style={{ fontFamily: 'var(--body)', fontSize: 8, letterSpacing: '0.1em', color: 'var(--muted)' }}>TRAINING LOAD</div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 23, color: 'var(--white)', lineHeight: 1 }}>14.2</div>
+          <div style={{ display: 'flex', gap: 3, marginTop: 6, alignItems: 'flex-end', height: 16 }}>
+            {[40, 62, 51, 78, 88, 70, 95].map((h, i) => (
+              <motion.div key={i} initial={{ height: 0 }} whileInView={{ height: `${h}%` }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.06, ease: 'easeOut' }} style={{ flex: 1, borderRadius: '2px 2px 0 0', background: i === 6 ? 'var(--green)' : 'rgba(var(--orange-ch),0.5)' }} />
+            ))}
           </div>
-        </motion.div>
-      ))}
-    </div>
-  )
-}
-
-/* Analytics screen for the phone-scroll stage — compact bars + sparkline. */
-function AnalyticsMockup() {
-  const bars = [42, 64, 51, 78, 88, 70, 95]
-  return (
-    <div style={{ width: '100%', maxWidth: 300, padding: 'var(--sp-4)', ...cardSurface, display: 'grid', gap: 'var(--sp-3)' }}>
-      <div>
-        <div style={{ fontFamily: 'var(--body)', fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 8 }}>Form trend</div>
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 5, height: 70 }}>
-          {bars.map((b, i) => (
-            <div key={i} style={{ flex: 1, height: `${b}%`, borderRadius: '3px 3px 0 0',
-              background: i === bars.length - 1 ? 'var(--green)' : 'rgba(var(--orange-ch),0.55)' }} />
-          ))}
         </div>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-2)' }}>
-        {[['72.4', 'AGE GRADE %'], ['HOT', 'MOMENTUM']].map(([v, l]) => (
-          <div key={l} style={{ ...cardSurface, padding: 'var(--sp-3)', background: 'var(--surface3)' }}>
-            <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 22, color: l === 'MOMENTUM' ? 'var(--green)' : 'var(--white)' }}>{v}</div>
-            <div style={{ fontFamily: 'var(--body)', fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)' }}>{l}</div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 7, marginTop: 7 }}>
+        {metrics.map(([l, v, c]) => (
+          <div key={l} style={{ ...cardSurface, padding: '7px 8px' }}>
+            <div style={{ fontFamily: 'var(--body)', fontSize: 7.5, letterSpacing: '0.08em', color: 'var(--muted)' }}>{l}</div>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 15, color: c, lineHeight: 1, marginTop: 2 }}>{v}</div>
           </div>
         ))}
       </div>
-      <div style={{ ...cardSurface, padding: 'var(--sp-3)', background: 'var(--surface3)' }}>
-        <div style={{ fontFamily: 'var(--body)', fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 6 }}>Pacing IQ · Negative splitter</div>
-        <svg viewBox="0 0 240 32" width="100%" height="26" preserveAspectRatio="none">
-          <path d="M0 24 L48 22 L96 18 L144 14 L192 10 L240 6" fill="none" stroke="var(--green)" strokeWidth="2.5" strokeLinecap="round" />
-        </svg>
+      <div style={{ ...sectionLabel, fontSize: 10, marginTop: 10 }}>RECENT ACTIVITY</div>
+      <div style={{ display: 'grid', gap: 6, marginTop: 7 }}>
+        {acts.slice(0, 3).map((a, i) => (
+          <motion.div key={a.name} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.08 }} style={{ ...cardSurface, padding: '8px 10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ width: 25, height: 25, borderRadius: 'var(--radius-sm)', background: `color-mix(in srgb, ${a.accent} 16%, transparent)`, color: a.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><ActIcon k={a.k} /></span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 10.5, letterSpacing: '0.02em', color: 'var(--white)' }}>{a.name}</div>
+                <div style={{ fontFamily: 'var(--body)', fontSize: 8, color: 'var(--muted)' }}>{a.sub}</div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 5, marginTop: 6 }}>
+              {a.m.map(([l, v]) => (
+                <div key={l} style={{ flex: 1, background: 'var(--surface3)', borderRadius: 'var(--radius-sm)', padding: '4px 3px', textAlign: 'center' }}>
+                  <div style={{ fontFamily: 'var(--body)', fontSize: 6.5, letterSpacing: '0.04em', color: 'var(--muted)' }}>{l}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 10, color: 'var(--white)', marginTop: 1 }}>
+                    {l === 'AVG HR' ? <span style={{ color: '#FF5A3C', display: 'inline-flex' }}><MiniHeart /></span> : null}{v}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ height: 4, borderRadius: 3, background: 'var(--surface3)', overflow: 'hidden', marginTop: 6 }}>
+              <motion.div initial={{ width: 0 }} whileInView={{ width: `${a.zone * 100}%` }} viewport={{ once: true }} transition={{ duration: 0.9, delay: 0.1 + i * 0.08, ease: 'easeOut' }} style={{ height: '100%', borderRadius: 3, background: 'linear-gradient(90deg, var(--green), var(--orange))' }} />
+            </div>
+          </motion.div>
+        ))}
       </div>
-    </div>
+    </Shell>
   )
 }
+
 
 /* =====================================================================
    PHONE-SCROLL STAGE — a pinned device cycles through screens on scroll.
    ===================================================================== */
-const STAGE_SCREENS = [
-  { key: 'home', title: 'Your dashboard', line: 'Race-day briefing, next-race countdown, and live form — the moment you open the app.', render: () => <DashboardMockup /> },
-  { key: 'medals', title: 'Your medal wall', line: 'Every medal you’ve earned, photo-first and tier by tier. Tap any one for the story.', render: () => <MedalWallMockup /> },
-  { key: 'map', title: 'Your race map', line: 'Every finish line you’ve crossed, mapped across the world and connected in order.', render: () => <RaceMapMockup /> },
-  { key: 'analytics', title: 'Your analytics', line: 'Pacing IQ, age-grade and momentum — the numbers behind every result, computed for you.', render: () => <AnalyticsMockup /> },
-] as const
+const STAGE_SCREENS: { key: string; title: string; line: string; screen: ShotScreen }[] = [
+  { key: 'predictor', title: 'Your race predictor', line: 'Every PB becomes a forecast. Equivalent times from 5K to marathon, recomputed on every log.', screen: 'predictor' },
+  { key: 'planner', title: 'Your season plan', line: 'Your next races on one timeline, with the taper and peak weeks mapped to race day.', screen: 'planner' },
+  { key: 'pacing', title: 'Your pacing IQ', line: 'Negative splitter or fader? Your split signature, read from every race you log.', screen: 'pacing' },
+  { key: 'momentum', title: 'Your momentum', line: 'A single form score from your recent results, trending up or cooling off at a glance.', screen: 'momentum' },
+  { key: 'dna', title: 'Your race DNA', line: 'The conditions you thrive in. Temperature, surface and terrain, distilled from your history.', screen: 'dna' },
+]
 
-function PhoneStage({ screen, stageRef }: { screen: number; stageRef: React.RefObject<HTMLDivElement | null> }) {
+function s2t(sec: number): string {
+  sec = Math.round(sec)
+  const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`
+}
+
+/* ---- shared phone-app chrome (header + bottom nav) so widgets read like real
+        app screenshots and fill the full device height ---- */
+const sLabel: React.CSSProperties = { fontFamily: 'var(--body)', fontSize: 8, letterSpacing: '0.1em', color: 'var(--muted)', textTransform: 'uppercase' }
+function NavIcon({ k }: { k: string }) {
+  const c = { width: 15, height: 15, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
+  if (k === 'home') return (<svg {...c}><path d="M3 10.5 12 3l9 7.5" /><path d="M5 9.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9.5" /></svg>)
+  if (k === 'races') return (<svg {...c}><path d="M12 21s7-5.2 7-11a7 7 0 1 0-14 0c0 5.8 7 11 7 11Z" /><circle cx="12" cy="10" r="2.5" /></svg>)
+  if (k === 'train') return (<svg {...c}><path d="M3 12h4l2.5-7 4 14 2.5-7h4" /></svg>)
+  return (<svg {...c}><circle cx="12" cy="8" r="3.5" /><path d="M5 20c0-3.5 3.1-6 7-6s7 2.5 7 6" /></svg>)
+}
+function PhoneNav({ active }: { active: string }) {
+  const tabs: [string, string][] = [['home', 'Home'], ['races', 'Races'], ['train', 'Train'], ['you', 'You']]
+  return (
+    <div style={{ flexShrink: 0, display: 'flex', borderTop: '1px solid var(--border)', background: 'var(--surface)', paddingBottom: 5 }}>
+      {tabs.map(([k, l]) => (
+        <div key={k} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, padding: '7px 0 3px', color: k === active ? 'var(--orange)' : 'var(--muted2)' }}>
+          <NavIcon k={k} /><span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 7.5, letterSpacing: '0.03em' }}>{l}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+function PhoneApp({ title, sub, active, children }: { title: string; sub?: string; active: string; children: React.ReactNode }) {
+  return (
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ padding: '38px 14px 9px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)' }}>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 13, letterSpacing: '0.04em', color: 'var(--white)', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{title}</div>
+          {sub ? <div style={{ fontFamily: 'var(--body)', fontSize: 8, color: 'var(--muted)', marginTop: 1 }}>{sub}</div> : null}
+        </div>
+        <span style={{ width: 23, height: 23, borderRadius: '50%', flexShrink: 0, background: 'linear-gradient(135deg, var(--orange), #B8341A)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 10, color: '#fff' }}>{(sub || title).trim()[0]}</span>
+      </div>
+      <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', padding: '9px 11px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {children}
+      </div>
+      <PhoneNav active={active} />
+    </div>
+  )
+}
+function MiniStat({ label, val, c = 'var(--white)' }: { label: string; val: string; c?: string }) {
+  return (
+    <div style={{ ...cardSurface, padding: '7px 6px', textAlign: 'center' }}>
+      <div style={{ fontFamily: 'var(--body)', fontSize: 6.5, letterSpacing: '0.05em', color: 'var(--muted)' }}>{label}</div>
+      <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 15, color: c, lineHeight: 1, marginTop: 2 }}>{val}</div>
+    </div>
+  )
+}
+function BarRow({ label, val, pct, c }: { label: string; val: string; pct: number; c: string }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 9, color: 'var(--muted)', width: 50, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{label}</span>
+      <div style={{ flex: 1, height: 9, borderRadius: 5, background: 'var(--surface3)', overflow: 'hidden' }}>
+        <motion.div initial={{ width: 0 }} whileInView={{ width: `${Math.max(4, pct * 100)}%` }} viewport={{ once: true }} transition={{ duration: 0.8, ease: 'easeOut' }} style={{ height: '100%', borderRadius: 5, background: c }} />
+      </div>
+      <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 9.5, color: 'var(--white)', width: 40, textAlign: 'right' }}>{val}</span>
+    </div>
+  )
+}
+
+/* ----- Race predictor (Riegel equivalents from best PB) ----- */
+function PredictorMockup({ persona, framed = false }: { persona: DemoPersonaId; framed?: boolean }) {
+  const p = DEMO_PERSONAS[persona]
+  const fn = p.athlete.firstName || ''
+  const runs = p.races.filter(r => r.time && r.sport === 'running' && distKm(r.distance) >= 3)
+  let ref = runs[0], bestPace = Infinity
+  for (const r of runs) { const pace = t2s(r.time!) / distKm(r.distance); if (pace < bestPace) { bestPace = pace; ref = r } }
+  const refKm = ref ? distKm(ref.distance) : 10, refSec = ref ? t2s(ref.time!) : 2400
+  const v = refKm * 1000 / (refSec / 60), tmin = refSec / 60
+  const vo2 = -4.6 + 0.182258 * v + 0.000104 * v * v
+  const pmax = 0.8 + 0.1894393 * Math.exp(-0.012778 * tmin) + 0.2989558 * Math.exp(-0.1932605 * tmin)
+  const vdot = Math.max(35, Math.min(78, Math.round(vo2 / pmax)))
+  const ageGrade = Math.max(48, Math.min(94, Math.round(55 + (vdot - 45) * 1.25)))
+  const weekly = Math.max(35, Math.min(150, Math.round(40 + (vdot - 45) * 3)))
+  const preds: [string, number][] = [['5K', 5], ['10K', 10], ['15K', 15], ['HALF', 21.0975], ['MARATHON', 42.195]]
+  const maraSec = refSec * Math.pow(42.195 / refKm, 1.06), kmPace = maraSec / 42.195
+  const splits: [string, string][] = [['10K', s2t(kmPace * 10)], ['HALF', s2t(kmPace * 21.0975)], ['30K', s2t(kmPace * 30)], ['40K', s2t(kmPace * 40)], ['FINISH', s2t(maraSec)]]
+  return (
+    <Shell framed={framed} pad={false}>
+      <PhoneApp title="Race Predictor" sub={`${fn} · Train`} active="train">
+        <div style={{ padding: '11px 12px', borderRadius: 'var(--radius-md)', borderLeft: '3px solid var(--orange)', background: 'linear-gradient(120deg, rgba(var(--orange-ch),0.14), var(--surface2))', flexShrink: 0 }}>
+          <div style={sLabel}>FROM YOUR {ref ? distLabel(ref.distance) : '10K'} PB</div>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 27, color: 'var(--orange)', lineHeight: 1 }}>{ref?.time ?? '—'}</div>
+            <div style={{ fontFamily: 'var(--body)', fontSize: 8, color: 'var(--muted)', textAlign: 'right', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ref?.name}</div>
+          </div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, flexShrink: 0 }}>
+          <MiniStat label="VDOT" val={String(vdot)} c="var(--orange)" />
+          <MiniStat label="AGE-GRADE" val={`${ageGrade}%`} c="var(--green)" />
+          <MiniStat label="WEEKLY KM" val={String(weekly)} />
+        </div>
+        <div style={{ ...sectionLabel, fontSize: 9.5, flexShrink: 0 }}>PREDICTED EQUIVALENTS</div>
+        <div style={{ display: 'grid', gap: 5, flexShrink: 0 }}>
+          {preds.map(([lbl, d]) => {
+            const isPB = Math.abs(d - refKm) / refKm < 0.06
+            return (
+              <div key={lbl} style={{ ...cardSurface, padding: '8px 11px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 9, borderColor: isPB ? 'rgba(var(--orange-ch),0.5)' : 'var(--border)', background: isPB ? 'rgba(var(--orange-ch),0.08)' : undefined }}>
+                <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 10.5, color: 'var(--white)', width: 70 }}>{lbl}</span>
+                {isPB
+                  ? <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 7, color: 'var(--orange)', padding: '2px 7px', borderRadius: 'var(--radius-pill)', background: 'var(--surface3)', letterSpacing: '0.04em' }}>YOUR PB</span>
+                  : <span style={{ fontFamily: 'var(--body)', fontSize: 7.5, color: 'var(--muted2)', letterSpacing: '0.04em' }}>predicted</span>}
+                <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 12, color: isPB ? 'var(--orange)' : 'var(--white)', width: 54, textAlign: 'right' }}>{isPB && ref ? ref.time : s2t(refSec * Math.pow(d / refKm, 1.06))}</span>
+              </div>
+            )
+          })}
+        </div>
+        <div style={{ ...sectionLabel, fontSize: 9.5, flexShrink: 0 }}>MARATHON GOAL-PACE SPLITS</div>
+        <div style={{ ...cardSurface, padding: '4px 11px', flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          {splits.map(([l, t], i) => (
+            <div key={l} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', borderBottom: i < splits.length - 1 ? '1px solid var(--border)' : 'none' }}>
+              <span style={{ fontFamily: 'var(--body)', fontSize: 9.5, color: 'var(--muted)' }}>{l}</span>
+              <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 10.5, color: 'var(--white)' }}>{t}</span>
+            </div>
+          ))}
+        </div>
+      </PhoneApp>
+    </Shell>
+  )
+}
+
+/* ----- Season planner (weekly load + taper + calendar) ----- */
+function PlannerMockup({ persona, framed = false }: { persona: DemoPersonaId; framed?: boolean }) {
+  const p = DEMO_PERSONAS[persona]
+  const fn = p.athlete.firstName || ''
+  const up = p.upcoming.slice(0, 5)
+  const next = up[0]
+  const weeks = [44, 52, 58, 66, 74, 82, 90, 98, 88, 70, 54, 38]
+  return (
+    <Shell framed={framed} pad={false}>
+      <PhoneApp title="Season Plan" sub={`${fn} · Races`} active="races">
+        {next && (
+          <div style={{ padding: '11px 12px', borderRadius: 'var(--radius-md)', borderLeft: '3px solid var(--green)', background: 'linear-gradient(120deg, rgba(var(--green-ch),0.1), var(--surface2))', flexShrink: 0 }}>
+            <div style={sLabel}>NEXT KEY RACE</div>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 17, color: 'var(--white)', lineHeight: 1.05, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{next.name}</div>
+            <div style={{ fontFamily: 'var(--body)', fontSize: 8.5, color: 'var(--muted)', marginTop: 2 }}>{fmtDMon(next.date)}{next.goalTime ? ` · goal ${next.goalTime}` : ''}</div>
+          </div>
+        )}
+        <div style={{ ...sectionLabel, fontSize: 9.5, flexShrink: 0 }}>WEEKLY LOAD → TAPER</div>
+        <div style={{ ...cardSurface, padding: '10px', flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: 3, height: 46, alignItems: 'flex-end' }}>
+            {weeks.map((h, i) => (
+              <motion.div key={i} initial={{ height: 0 }} whileInView={{ height: `${h}%` }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.04 }} style={{ flex: 1, borderRadius: '2px 2px 0 0', background: i >= 9 ? 'rgba(var(--green-ch),0.8)' : i === 7 ? 'var(--orange)' : 'rgba(var(--orange-ch),0.5)' }} />
+            ))}
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6 }}>
+            <span style={{ fontFamily: 'var(--body)', fontSize: 7.5, color: 'var(--muted)' }}>BUILD</span>
+            <span style={{ fontFamily: 'var(--body)', fontSize: 7.5, color: 'var(--orange)' }}>PEAK</span>
+            <span style={{ fontFamily: 'var(--body)', fontSize: 7.5, color: 'var(--green)' }}>TAPER → RACE</span>
+          </div>
+        </div>
+        <div style={{ ...sectionLabel, fontSize: 9.5, flexShrink: 0 }}>ON THE CALENDAR · {p.upcoming.length}</div>
+        <div style={{ display: 'grid', gap: 5, flex: 1, minHeight: 0, alignContent: 'start' }}>
+          {up.map(r => (
+            <div key={r.id} style={{ ...cardSurface, padding: '8px 11px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 10.5, color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</div>
+                <div style={{ fontFamily: 'var(--body)', fontSize: 8, color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{distLabel(r.distance)}{r.city ? ` · ${r.city}` : ''}{r.country ? `, ${r.country}` : ''}</div>
+              </div>
+              <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 9.5, color: 'var(--orange)', flexShrink: 0 }}>{fmtDMon(r.date)}</span>
+            </div>
+          ))}
+        </div>
+      </PhoneApp>
+    </Shell>
+  )
+}
+
+/* ----- Pacing IQ (split signature + by-race) ----- */
+function PacingMockup({ persona, framed = false }: { persona: DemoPersonaId; framed?: boolean }) {
+  const p = DEMO_PERSONAS[persona]
+  const fn = p.athlete.firstName || ''
+  const withSplits = p.races.filter(r => r.splits && r.splits.length >= 4 && r.time)
+  const race = withSplits[0]
+  const segs = race?.splits?.map(s => t2s(s.split)) ?? [60, 60, 60, 60, 60]
+  const half = Math.floor(segs.length / 2)
+  const first = segs.slice(0, half).reduce((a, b) => a + b, 0) / Math.max(1, half)
+  const second = segs.slice(half).reduce((a, b) => a + b, 0) / Math.max(1, segs.length - half)
+  const tag = second < first * 0.98 ? 'NEGATIVE SPLITTER' : second > first * 1.03 ? 'FADER' : 'EVEN PACER'
+  const desc = tag === 'NEGATIVE SPLITTER' ? 'You finish faster than you start.' : tag === 'FADER' ? 'You go out hot and hold on.' : 'Metronomic, wire to wire.'
+  const mx = Math.max(...segs), mn = Math.min(...segs)
+  const mean = segs.reduce((a, b) => a + b, 0) / segs.length
+  const sd = Math.sqrt(segs.reduce((a, b) => a + (b - mean) * (b - mean), 0) / segs.length)
+  const consistency = Math.max(40, Math.min(99, Math.round(100 - (sd / mean) * 180)))
+  const cls = (r: Race): [string, string] => {
+    const s = (r.splits ?? []).map(x => t2s(x.split)); const h = Math.floor(s.length / 2)
+    const f = s.slice(0, h).reduce((a, b) => a + b, 0) / Math.max(1, h)
+    const se = s.slice(h).reduce((a, b) => a + b, 0) / Math.max(1, s.length - h)
+    return se < f * 0.98 ? ['NEGATIVE SPLIT', 'var(--green)'] : se > f * 1.03 ? ['FADER', 'var(--orange)'] : ['EVEN PACE', 'var(--muted)']
+  }
+  return (
+    <Shell framed={framed} pad={false}>
+      <PhoneApp title="Pacing IQ" sub={`${fn} · Home`} active="home">
+        <div style={{ padding: '11px 12px', borderRadius: 'var(--radius-md)', borderLeft: '3px solid var(--green)', background: 'linear-gradient(120deg, rgba(var(--green-ch),0.1), var(--surface2))', flexShrink: 0 }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 18, color: 'var(--green)', lineHeight: 1 }}>{tag}</div>
+          <div style={{ fontFamily: 'var(--body)', fontSize: 8.5, color: 'var(--muted)', marginTop: 3 }}>{desc}</div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, flexShrink: 0 }}>
+          <MiniStat label="1ST HALF" val={s2t(first)} />
+          <MiniStat label="2ND HALF" val={s2t(second)} c={second <= first ? 'var(--green)' : 'var(--orange)'} />
+          <MiniStat label="CONSISTENCY" val={`${consistency}%`} c="var(--orange)" />
+        </div>
+        <div style={{ ...sectionLabel, fontSize: 9.5, flexShrink: 0 }}>SPLIT SIGNATURE · {race ? distLabel(race.distance) : ''}</div>
+        <div style={{ ...cardSurface, padding: '10px', flexShrink: 0 }}>
+          <div style={{ display: 'flex', gap: 4, height: 56, alignItems: 'flex-end' }}>
+            {segs.slice(0, 10).map((s, i) => {
+              const h = mx === mn ? 60 : 28 + 62 * (s - mn) / (mx - mn)
+              return <motion.div key={i} initial={{ height: 0 }} whileInView={{ height: `${h}%` }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.05 }} style={{ flex: 1, borderRadius: '2px 2px 0 0', background: s <= first ? 'var(--green)' : 'rgba(var(--orange-ch),0.6)' }} />
+            })}
+          </div>
+        </div>
+        <div style={{ ...sectionLabel, fontSize: 9.5, flexShrink: 0 }}>BY RACE</div>
+        <div style={{ display: 'grid', gap: 5, flex: 1, minHeight: 0, alignContent: 'start' }}>
+          {withSplits.slice(0, 4).map(r => { const [lab, col] = cls(r); return (
+            <div key={r.id} style={{ ...cardSurface, padding: '8px 11px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 10, color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</div>
+                <div style={{ fontFamily: 'var(--body)', fontSize: 8, color: 'var(--muted)' }}>{distLabel(r.distance)} · {r.time}</div>
+              </div>
+              <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 8.5, color: col, padding: '3px 7px', borderRadius: 'var(--radius-pill)', background: 'var(--surface3)', flexShrink: 0 }}>{lab}</span>
+            </div>
+          ) })}
+        </div>
+      </PhoneApp>
+    </Shell>
+  )
+}
+
+/* ----- Career momentum (form trend + recent results + load) ----- */
+function MomentumMockup({ persona, framed = false }: { persona: DemoPersonaId; framed?: boolean }) {
+  const p = DEMO_PERSONAS[persona]
+  const fn = p.athlete.firstName || ''
+  const runs = p.races.filter(r => r.time && r.sport === 'running').slice().sort((a, b) => (a.date < b.date ? -1 : 1))
+  const perf = runs.slice(-8).map(r => distKm(r.distance) / t2s(r.time!) * 1000)
+  const pts = perf.length >= 2 ? perf : [1, 1.1]
+  const mn = Math.min(...pts), mx = Math.max(...pts)
+  const W = 240, H = 54
+  const path = pts.map((v, i) => `${i === 0 ? 'M' : 'L'} ${(i / (pts.length - 1)) * W} ${H - (mx === mn ? H / 2 : ((v - mn) / (mx - mn)) * (H - 8) + 4)}`).join(' ')
+  const rising = pts[pts.length - 1] >= pts[0]
+  const score = Math.round(60 + 35 * (mx === mn ? 0.5 : (pts[pts.length - 1] - mn) / (mx - mn)))
+  const badge = rising && score >= 85 ? 'HOT' : rising ? 'RISING' : 'STEADY'
+  const bestByDist: Record<string, number> = {}
+  runs.forEach(r => { const k = distLabel(r.distance); const s = t2s(r.time!); if (bestByDist[k] == null || s < bestByDist[k]) bestByDist[k] = s })
+  const recent = runs.slice(-5).reverse()
+  const load = [50, 62, 55, 70, 78, 66, 84, 90, 75, 88]
+  return (
+    <Shell framed={framed} pad={false}>
+      <PhoneApp title="Momentum" sub={`${fn} · Home`} active="home">
+        <div style={{ padding: '11px 12px', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderLeft: '3px solid var(--orange)', background: 'linear-gradient(120deg, rgba(var(--orange-ch),0.12), var(--surface2))', flexShrink: 0 }}>
+          <div><div style={sLabel}>FORM SCORE</div><div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 30, color: 'var(--orange)', lineHeight: 1 }}>{score}</div></div>
+          <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 11, color: 'var(--green)', padding: '4px 10px', borderRadius: 'var(--radius-pill)', background: 'var(--green-dim)' }}>▲ {badge}</span>
+        </div>
+        <div style={{ ...sectionLabel, fontSize: 9.5, flexShrink: 0 }}>FORM TREND</div>
+        <div style={{ ...cardSurface, padding: '10px', flexShrink: 0 }}>
+          <svg viewBox={`0 0 ${W} ${H}`} width="100%" height="50" preserveAspectRatio="none">
+            <motion.path d={path} fill="none" stroke="var(--green)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" initial={{ pathLength: 0 }} whileInView={{ pathLength: 1 }} viewport={{ once: true }} transition={{ duration: 1.2 }} />
+          </svg>
+        </div>
+        <div style={{ ...sectionLabel, fontSize: 9.5, flexShrink: 0 }}>RECENT RESULTS</div>
+        <div style={{ display: 'grid', gap: 5, flex: 1, minHeight: 0, alignContent: 'start' }}>
+          {recent.map(r => {
+            const k = distLabel(r.distance), s = t2s(r.time!), isPB = s <= (bestByDist[k] ?? s) + 0.5, diff = s - (bestByDist[k] ?? s)
+            return (
+              <div key={r.id} style={{ ...cardSurface, padding: '8px 11px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 10, color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</div>
+                  <div style={{ fontFamily: 'var(--body)', fontSize: 8, color: 'var(--muted)' }}>{k} · {r.time}</div>
+                </div>
+                <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 8.5, color: isPB ? 'var(--green)' : 'var(--muted)', padding: '3px 7px', borderRadius: 'var(--radius-pill)', background: 'var(--surface3)', flexShrink: 0 }}>{isPB ? 'PB' : `+${s2t(diff)}`}</span>
+              </div>
+            )
+          })}
+        </div>
+        <div style={{ ...sectionLabel, fontSize: 9.5, flexShrink: 0 }}>12-WEEK LOAD</div>
+        <div style={{ display: 'flex', gap: 3, height: 26, alignItems: 'flex-end', flexShrink: 0 }}>
+          {load.map((h, i) => (<motion.div key={i} initial={{ height: 0 }} whileInView={{ height: `${h}%` }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.04 }} style={{ flex: 1, borderRadius: '2px 2px 0 0', background: i >= 8 ? 'var(--green)' : 'rgba(var(--orange-ch),0.5)' }} />))}
+        </div>
+      </PhoneApp>
+    </Shell>
+  )
+}
+
+/* ----- Race DNA (conditions, surface, terrain, elevation) ----- */
+function DNAMockup({ persona, framed = false }: { persona: DemoPersonaId; framed?: boolean }) {
+  const p = DEMO_PERSONAS[persona]
+  const fn = p.athlete.firstName || ''
+  const races = p.races
+  const buckets: [string, number, string][] = [['COLD', 0, '#5B8DEF'], ['COOL', 0, '#2BD4A0'], ['WARM', 0, '#FFB347'], ['HOT', 0, '#FF5A3C']]
+  races.forEach(r => { const t = r.weather?.temp; if (t == null) return; const i = t < 10 ? 0 : t < 18 ? 1 : t < 26 ? 2 : 3; buckets[i][1]++ })
+  const maxB = Math.max(1, ...buckets.map(b => b[1]))
+  const best = buckets.slice().sort((a, b) => b[1] - a[1])[0]
+  const surf: Record<string, number> = {}
+  races.forEach(r => { const s = r.surface || 'road'; surf[s] = (surf[s] || 0) + 1 })
+  const surfRows = Object.entries(surf).sort((a, b) => b[1] - a[1]).slice(0, 4)
+  const surfMax = Math.max(1, ...surfRows.map(s => s[1]))
+  const terr: Record<string, number> = {}
+  races.forEach(r => { const s = r.terrain || 'flat'; terr[s] = (terr[s] || 0) + 1 })
+  const terrRows = Object.entries(terr).sort((a, b) => b[1] - a[1]).slice(0, 4)
+  const terrMax = Math.max(1, ...terrRows.map(s => s[1]))
+  const elevs = races.filter(r => r.elevation != null).slice().sort((a, b) => (a.date < b.date ? -1 : 1)).map(r => r.elevation as number).slice(-14)
+  const eMax = Math.max(1, ...elevs)
+  const W = 240, H = 42
+  const ePath = elevs.length >= 2 ? `M 0 ${H} ` + elevs.map((e, i) => `L ${(i / (elevs.length - 1)) * W} ${H - (e / eMax) * (H - 4) - 2}`).join(' ') + ` L ${W} ${H} Z` : ''
+  const totalElev = Math.round(races.reduce((s, r) => s + (r.elevation || 0), 0))
+  return (
+    <Shell framed={framed} pad={false}>
+      <PhoneApp title="Race DNA" sub={`${fn} · Profile`} active="you">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, flexShrink: 0 }}>
+          <div style={{ ...cardSurface, padding: '8px 10px' }}>
+            <div style={sLabel}>THRIVES IN</div>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 16, color: 'var(--green)', lineHeight: 1, marginTop: 2 }}>{best[1] > 0 ? best[0] : '—'}</div>
+          </div>
+          <div style={{ ...cardSurface, padding: '8px 10px' }}>
+            <div style={sLabel}>TOTAL CLIMB</div>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 16, color: 'var(--white)', lineHeight: 1, marginTop: 2 }}>{totalElev.toLocaleString()}m</div>
+          </div>
+        </div>
+        <div style={{ ...sectionLabel, fontSize: 9.5, flexShrink: 0 }}>TEMPERATURE FIT</div>
+        <div style={{ display: 'grid', gap: 5, flexShrink: 0 }}>
+          {buckets.map(([lbl, n, c]) => (<BarRow key={lbl} label={`${lbl}${lbl === best[0] && best[1] > 0 ? ' ★' : ''}`} val={String(n)} pct={n / maxB} c={c} />))}
+        </div>
+        <div style={{ ...sectionLabel, fontSize: 9.5, flexShrink: 0 }}>SURFACE</div>
+        <div style={{ display: 'grid', gap: 5, flexShrink: 0 }}>
+          {surfRows.map(([s, n], i) => (<BarRow key={s} label={s.toUpperCase()} val={String(n)} pct={n / surfMax} c={i === 0 ? 'var(--orange)' : 'rgba(var(--orange-ch),0.4)'} />))}
+        </div>
+        <div style={{ ...sectionLabel, fontSize: 9.5, flexShrink: 0 }}>TERRAIN</div>
+        <div style={{ display: 'grid', gap: 5, flexShrink: 0 }}>
+          {terrRows.map(([s, n], i) => (<BarRow key={s} label={s.toUpperCase()} val={String(n)} pct={n / terrMax} c={i === 0 ? 'var(--green)' : 'rgba(var(--green-ch),0.4)'} />))}
+        </div>
+        <div style={{ ...sectionLabel, fontSize: 9.5, flexShrink: 0 }}>ELEVATION HISTORY</div>
+        <div style={{ ...cardSurface, padding: '8px 10px', flex: 1, minHeight: 0, display: 'flex', alignItems: 'flex-end' }}>
+          <svg viewBox={`0 0 ${W} ${H}`} width="100%" height="100%" preserveAspectRatio="none">
+            {ePath ? <motion.path d={ePath} fill="rgba(var(--orange-ch),0.2)" stroke="var(--orange)" strokeWidth="1.5" initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ duration: 0.8 }} /> : null}
+          </svg>
+        </div>
+      </PhoneApp>
+    </Shell>
+  )
+}
+
+function stageNode(scr: ShotScreen, persona: DemoPersonaId) {
+  if (scr === 'predictor') return <PredictorMockup persona={persona} framed />
+  if (scr === 'planner') return <PlannerMockup persona={persona} framed />
+  if (scr === 'pacing') return <PacingMockup persona={persona} framed />
+  if (scr === 'momentum') return <MomentumMockup persona={persona} framed />
+  return <DNAMockup persona={persona} framed />
+}
+
+function PhoneStage({ screen, stageRef, persona }: { screen: number; stageRef: React.RefObject<HTMLDivElement | null>; persona: DemoPersonaId }) {
+  const s = STAGE_SCREENS[screen]
   return (
     <section className="pl-stage" ref={stageRef}>
       <div className="pl-stage-pin">
         <div className="pl-stage-inner">
           <div className="pl-stage-copy">
             <p className="pl-eyebrow">The whole app</p>
-            <h2 className="pl-stage-title">{STAGE_SCREENS[screen].title}</h2>
-            <p className="pl-stage-line">{STAGE_SCREENS[screen].line}</p>
+            <h2 className="pl-stage-title">{s.title}</h2>
+            <p className="pl-stage-line">{s.line}</p>
             <div className="pl-stage-dots" aria-hidden="true">
-              {STAGE_SCREENS.map((s, i) => <span key={s.key} className={i === screen ? 'on' : ''} />)}
+              {STAGE_SCREENS.map((st, i) => <span key={st.key} className={i === screen ? 'on' : ''} />)}
             </div>
           </div>
-          <div className="pl-phone">
-            <div className="pl-phone-notch" />
-            <div className="pl-phone-screen">
-              {STAGE_SCREENS.map((s, i) => (
-                <motion.div key={s.key} className="pl-phone-slide"
-                  animate={{ opacity: i === screen ? 1 : 0, scale: i === screen ? 1 : 0.96 }}
-                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                  style={{ pointerEvents: i === screen ? 'auto' : 'none' }}>
-                  {s.render()}
-                </motion.div>
-              ))}
-            </div>
+          <div style={{ width: '100%' }}>
+            <AnimatePresence mode="wait">
+              <motion.div key={s.key} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+                {stageNode(s.screen, persona)}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
       </div>
@@ -535,16 +998,15 @@ function PhoneStage({ screen, stageRef }: { screen: number; stageRef: React.RefO
    ===================================================================== */
 interface ShowcaseProps {
   id: string; eyebrow: string; title: string; desc: string; bullets: string[]
-  mockup: React.ReactNode; reverse?: boolean; audiences: Audience[]; active: Audience
+  mockup: React.ReactNode; reverse?: boolean
   depth?: number
 }
-function FeatureShowcase({ eyebrow, title, desc, bullets, mockup, reverse, audiences, active, depth = 40 }: ShowcaseProps) {
-  const highlighted = active !== 'all' && audiences.includes(active)
+function FeatureShowcase({ eyebrow, title, desc, bullets, mockup, reverse, depth = 40 }: ShowcaseProps) {
   return (
-    <motion.section className={`pl-showcase${reverse ? ' pl-reverse' : ''}${highlighted ? ' pl-highlight' : ''}`}
+    <motion.section className={`pl-showcase${reverse ? ' pl-reverse' : ''}`}
       variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-12% 0px' }}>
       <motion.div className="pl-showcase-copy" variants={fadeUp}>
-        <p className="pl-eyebrow">{eyebrow}{highlighted && <span className="pl-eyebrow-tag"> · for you</span>}</p>
+        <p className="pl-eyebrow">{eyebrow}</p>
         <h2 className="pl-showcase-title">{title}</h2>
         <p className="pl-showcase-desc">{desc}</p>
         <ul className="pl-bullets">
@@ -592,7 +1054,7 @@ function StepMiniLog() {
   return (
     <div style={{ ...cardSurface, padding: 'var(--sp-3)', width: '100%', maxWidth: 230, display: 'grid', gap: 8 }}>
       <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 12, letterSpacing: '0.06em',
-        textTransform: 'uppercase', color: 'var(--orange)' }}>🏁 Log a race</div>
+        textTransform: 'uppercase', color: 'var(--orange)' }}>Log a race</div>
       <div style={{ height: 26, borderRadius: 'var(--radius-sm)', background: 'var(--surface3)', border: '1px solid var(--border)',
         display: 'flex', alignItems: 'center', padding: '0 8px', fontFamily: 'var(--body)', fontSize: 10, color: 'var(--white)' }}>Berlin Marathon</div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
@@ -617,8 +1079,8 @@ function StepMiniTrack() {
   )
 }
 const STEPS = [
-  { n: '01', title: 'Sign up', line: 'Create your athlete profile in under a minute. No AI key, no setup — just you.', mock: <StepMiniSignup /> },
-  { n: '02', title: 'Log your races', line: 'Add a finish line in seconds — search the catalog or enter it by hand. Times, splits, medals, photos.', mock: <StepMiniLog /> },
+  { n: '01', title: 'Sign up', line: 'Create your athlete profile in under a minute. No AI key, no setup. Just you.', mock: <StepMiniSignup /> },
+  { n: '02', title: 'Log your races', line: 'Add a finish line in seconds. Search the catalog or enter it by hand. Times, splits, medals, photos.', mock: <StepMiniLog /> },
   { n: '03', title: 'Track everything', line: 'PRs, medals, history, analytics and your race map all build automatically as you log.', mock: <StepMiniTrack /> },
 ]
 function HowItWorks() {
@@ -641,15 +1103,10 @@ function HowItWorks() {
 }
 
 /* =====================================================================
-   TESTIMONIALS — rotating spotlight (placeholder quotes, swap later)
+   TESTIMONIALS — rotating spotlight. Real persona quotes, one per athlete
+   type, sourced from the demo data so they stay in sync.
    ===================================================================== */
-const TESTIMONIALS = [
-  { quote: 'Finally everything in one place. I deleted three spreadsheets the day I signed up.', name: 'A. Rivera', role: 'Marathoner · 38 races' },
-  { quote: 'The medal wall alone sold me. Seeing every finish laid out like that hits different.', name: 'J. Kemp', role: 'Everyday runner' },
-  { quote: 'Auto PRs across every distance, no manual tracking. It just knows when I’ve gone faster.', name: 'M. Sato', role: 'Triathlete · 70.3' },
-  { quote: 'The race map turned my training log into something I actually want to show people.', name: 'L. Novak', role: 'Trail & ultra' },
-  { quote: 'WHOOP recovery sitting right next to my race results changed how I taper.', name: 'D. Osei', role: 'Marathoner · BQ chaser' },
-]
+const TESTIMONIALS = DEMO_TESTIMONIALS.map(t => ({ quote: t.quote, name: t.name, role: t.meta }))
 function Testimonials() {
   const [i, setI] = useState(0)
   const reduce = useReducedMotion()
@@ -668,7 +1125,7 @@ function Testimonials() {
           <motion.blockquote className="pl-quote" key={i}
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }}
             transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}>
-            <span className="pl-quote-mark">“</span>{t.quote}
+            <span className="pl-quote-mark">“</span>{t.quote}<span className="pl-quote-mark pl-quote-mark-close">”</span>
             <footer className="pl-quote-author">
               <span className="pl-quote-avatar">{initials}</span>
               <span><strong>{t.name}</strong><br />{t.role}</span>
@@ -690,24 +1147,24 @@ function Testimonials() {
    FAQ — accordion
    ===================================================================== */
 const FAQS = [
-  { q: 'Is BREAKTAPES free?', a: 'Yes — free to start. Core tracking (races, PRs, medals, history, your race map) is free. A Pro tier with advanced analytics and themes is coming later.' },
+  { q: 'Is BREAKTAPES free?', a: 'Yes, free to start. Core tracking (races, PRs, medals, history, your race map) is free. A Pro tier with advanced analytics and themes is coming later.' },
   { q: 'Do I need an AI or API key?', a: 'No. BREAKTAPES works fully without any AI key or external setup. Just sign up and start logging.' },
-  { q: 'Which wearables can I connect?', a: 'WHOOP is live today — recovery and workouts sync straight in. Strava, Garmin, Apple Health, COROS and Oura are on the way.' },
-  { q: 'Is my data private, and can I export it?', a: 'Your data is yours. Your profile is private by default — you choose what (if anything) to make public — and you can export everything any time.' },
+  { q: 'Which wearables can I connect?', a: 'WHOOP is live today. Recovery and workouts sync straight in. Strava, Garmin, Apple Health, COROS and Oura are on the way.' },
+  { q: 'Is my data private, and can I export it?', a: 'Your data is yours. Your profile is private by default. You choose what (if anything) to make public, and you can export everything any time.' },
 ]
 function FAQItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false)
   return (
     <div className={`pl-faq-item${open ? ' open' : ''}`}>
-      <button className="pl-faq-q" aria-expanded={open}
+      <button className="pl-faq-q" aria-expanded={open} style={{ textAlign: 'left' }}
         onClick={() => { setOpen(o => !o); if (!open) track('landing_faq_open', { q }) }}>
-        <span>{q}</span><span className="pl-faq-icon" aria-hidden="true">{open ? '–' : '+'}</span>
+        <span>{q}</span>
       </button>
       <AnimatePresence initial={false}>
         {open && (
           <motion.div className="pl-faq-a" initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}>
-            <p>{a}</p>
+            <p style={{ textAlign: 'left' }}>{a}</p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -718,7 +1175,7 @@ function FAQ() {
   return (
     <motion.section className="pl-faq" variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}>
       <motion.p className="pl-eyebrow" variants={fadeUp} style={{ textAlign: 'center' }}>FAQ</motion.p>
-      <motion.h2 className="pl-faq-title" variants={fadeUp}>Questions, answered</motion.h2>
+      <motion.h2 className="pl-faq-title" variants={fadeUp} style={{ textAlign: 'center' }}>Questions, answered</motion.h2>
       <motion.div className="pl-faq-list" variants={fadeUp}>
         {FAQS.map(f => <FAQItem key={f.q} q={f.q} a={f.a} />)}
       </motion.div>
@@ -727,23 +1184,19 @@ function FAQ() {
 }
 
 /* =====================================================================
-   LIVE SANDBOX — embeds /demo in a framed window, lazy-mounted on approach.
+   TRY-IT CTA — sends visitors straight into the real app to start logging.
    ===================================================================== */
-function SandboxSection() {
+function TryItCTA({ onSignUp }: { onSignUp: () => void }) {
   return (
     <motion.section className="pl-sandbox" variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}>
       <motion.p className="pl-eyebrow" variants={fadeUp}>Try it yourself</motion.p>
-      <motion.h2 className="pl-sandbox-title" variants={fadeUp}>The app, live — no signup</motion.h2>
+      <motion.h2 className="pl-sandbox-title" variants={fadeUp}>Start logging in under a minute</motion.h2>
       <motion.p className="pl-sandbox-sub" variants={fadeUp}>
-        Switch between athletes and tap around the dashboard, races, and profile. A real, interactive demo — nothing to install.
+        Free to start, no AI key, nothing to install. Create your athlete profile and log your first finish line right now.
       </motion.p>
-      <motion.div className="pl-sandbox-window" variants={fadeUp}>
-        <div className="pl-sandbox-bar"><i /><i /><i /><span>app.breaktapes.com/demo</span></div>
-        {/* Native lazy-loading defers the load until the frame nears the viewport. */}
-        <iframe className="pl-sandbox-frame" src="/demo" title="BREAKTAPES interactive demo" loading="lazy" />
+      <motion.div variants={fadeUp}>
+        <button className="btn-main" onClick={onSignUp} style={{ fontSize: 16, padding: '1rem 2.2rem', letterSpacing: '0.08em' }}>Get Started, It's Free</button>
       </motion.div>
-      <motion.a className="pl-sandbox-open" href="/demo" target="_blank" rel="noopener" variants={fadeUp}
-        onClick={() => track('landing_demo_fullscreen')}>Open full demo ↗</motion.a>
     </motion.section>
   )
 }
@@ -757,7 +1210,7 @@ export default function LandingPage({ onSignUp, onSignIn }: LandingPageProps) {
   const [loaded, setLoaded] = useState(false)
   const [navVisible, setNavVisible] = useState(false)
   const [progress, setProgress] = useState(0)
-  const [audience, setAudience] = useState<Audience>('all')
+  const [persona, setPersona] = useState<DemoPersonaId>('sa-marathoner')
   const [screen, setScreen] = useState(0)
   const stageRef = useRef<HTMLDivElement>(null)
 
@@ -829,10 +1282,10 @@ export default function LandingPage({ onSignUp, onSignIn }: LandingPageProps) {
             Every Finish Line,<br /><em>Remembered.</em>
           </motion.h1>
           <motion.p className="landing-sub" variants={fadeUp} style={{ maxWidth: 440 }}>
-            From start line to medal wall — your whole racing life in one place.
+            From start line to medal wall. Your whole racing life in one place.
           </motion.p>
           <motion.div className="pl-hero-actions" variants={fadeUp}>
-            <button className="btn-main" onClick={handleSignUp}>Get Started — It's Free</button>
+            <button className="btn-main" onClick={handleSignUp}>Get Started, It's Free</button>
             <button className="landing-sign-in-link" onClick={handleSignIn}>Already have an account? Sign in</button>
           </motion.div>
           <motion.div className="landing-proof" variants={fadeUp} style={{ justifyContent: 'flex-start' }}>
@@ -847,7 +1300,7 @@ export default function LandingPage({ onSignUp, onSignIn }: LandingPageProps) {
           <motion.div
             initial={{ opacity: 0, y: 40, rotate: -2 }} animate={loaded ? { opacity: 1, y: 0, rotate: -2 } : {}}
             transition={{ duration: 0.9, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}>
-            <DashboardMockup audience={audience} />
+            <DashboardMockup />
           </motion.div>
         </div>
         <motion.div className="pl-scroll-hint" initial={{ opacity: 0 }} animate={loaded ? { opacity: 1 } : {}}
@@ -857,57 +1310,56 @@ export default function LandingPage({ onSignUp, onSignIn }: LandingPageProps) {
         </motion.div>
       </section>
 
-      {/* ---------------- AUDIENCE SELECTOR ---------------- */}
-      <AudienceSelector value={audience} onChange={setAudience} />
+      {/* ---------------- PERSONA SELECTOR ---------------- */}
+      <PersonaSelector value={persona} onChange={setPersona} />
 
-      {/* ---------------- FEATURE SHOWCASES ---------------- */}
+      {/* ---------------- FEATURE SHOWCASES (real app screenshots) ---------------- */}
       <FeatureShowcase
-        id="race-history" active={audience} audiences={['marathoner', 'everyday']}
+        id="race-history"
         eyebrow="Race History" title="Every finish line, mapped"
-        desc={descFor('race-history', audience, 'Your whole racing life on one interactive map. Times, splits, placing, terrain, and the weather you ran through — kept for good.')}
+        desc={'Your whole racing life on one interactive map. Times, splits, placing, terrain, and the weather you ran through, kept for good.'}
         bullets={['Real world map of every race city', 'Splits, placing & conditions per race', 'Year-by-year history and filters']}
-        mockup={<RaceMapMockup audience={audience} />}
+        mockup={<MapMockup persona={persona} />}
       />
       <FeatureShowcase
-        id="auto-prs" reverse active={audience} audiences={['marathoner']}
+        id="auto-prs" reverse
         eyebrow="Auto PRs" title="Personal bests, computed for you"
-        desc={descFor('auto-prs', audience, 'The moment you log a race, BREAKTAPES recomputes your bests across every distance. No spreadsheets, no manual tracking.')}
+        desc={'The moment you log a race, BREAKTAPES recomputes your bests across every distance. No spreadsheets, no manual tracking.'}
         bullets={['PRs across 5K → ultra & triathlon', 'Instant recalculation on every log', 'Age-grade & momentum scoring']}
-        mockup={<PRMockup audience={audience} />}
+        mockup={<PBMockup persona={persona} />}
       />
       <FeatureShowcase
-        id="medal-wall" active={audience} audiences={['everyday']}
+        id="medal-wall"
         eyebrow="Medal Wall" title="Show off the hardware"
-        desc={descFor('medal-wall', audience, "A photo-first wall of every medal you've earned. Gold, silver, bronze, finisher — laid out the way they deserve.")}
-        bullets={['Photo-first medal display', 'Tier badges & PR shimmer', 'Community medal photo library']}
-        mockup={<MedalWallMockup />}
+        desc={"Every medal you've earned in one place: gold, silver, bronze, finisher and your own custom medals, tier by tier."}
+        bullets={['Gold, silver, bronze, finisher & custom tiers', 'PB-flagged podium results', 'Every medal, kept for good']}
+        mockup={<MedalMockup persona={persona} />}
       />
       <FeatureShowcase
-        id="wearables" reverse active={audience} audiences={['triathlete']}
+        id="wearables" reverse
         eyebrow="Training & Wearables" title="Your training, side by side"
-        desc={descFor('wearables', audience, 'Connect WHOOP today and see the training that built every result, right next to the race. More integrations are on the way.')}
-        bullets={['WHOOP live now — recovery & workouts', 'Strava, Garmin, Apple Health coming soon', 'Training load vs race performance']}
-        mockup={<WearablesMockup />}
+        desc={'Connect WHOOP today and see the training that built every result, right next to the race. More integrations are on the way.'}
+        bullets={['WHOOP live now, recovery & workouts', 'Strava, Garmin, Apple Health coming soon', 'Training load vs race performance']}
+        mockup={<WearablesMockup persona={persona} />}
       />
 
       {/* ---------------- PHONE-SCROLL CENTERPIECE ---------------- */}
-      <PhoneStage screen={screen} stageRef={stageRef} />
+      <PhoneStage screen={screen} stageRef={stageRef} persona={persona} />
 
       {/* ---------------- HOW IT WORKS ---------------- */}
       <HowItWorks />
 
       {/* ---------------- LIVE SANDBOX ---------------- */}
-      <SandboxSection />
+      <TryItCTA onSignUp={handleSignUp} />
 
       {/* ---------------- STATS BAND ---------------- */}
       <motion.section className="pl-stats" variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true }}>
         <motion.h2 className="pl-stats-title" variants={fadeUp}>Built for people who actually race</motion.h2>
         <div className="pl-stats-grid">
           {[
-            { to: 1068, suffix: '+', label: 'Races in the catalog' },
-            { to: 9, suffix: '', label: 'Distance PRs tracked' },
-            { to: 24, suffix: '', label: 'Analytics widgets' },
-            { to: 100, suffix: '%', label: 'Yours — export anytime' },
+            { to: 3000, suffix: '+', label: 'Races in the global race catalog' },
+            { to: 40, suffix: '+', label: 'Widgets' },
+            { to: 100, suffix: '%', label: 'Yours, export anytime' },
           ].map(s => (
             <motion.div key={s.label} className="pl-stat" variants={fadeUp}>
               <div className="pl-stat-num"><Counter to={s.to} suffix={s.suffix} /></div>
@@ -928,7 +1380,7 @@ export default function LandingPage({ onSignUp, onSignIn }: LandingPageProps) {
         <motion.h2 className="pl-cta-title" variants={fadeUp}>Start logging your<br /><em>finish lines.</em></motion.h2>
         <motion.p className="pl-cta-sub" variants={fadeUp}>Free to start. Set up your athlete profile in under a minute.</motion.p>
         <motion.div className="pl-cta-actions" variants={fadeUp}>
-          <button className="btn-main" onClick={handleSignUp}>Get Started — It's Free</button>
+          <button className="btn-main" onClick={handleSignUp}>Get Started, It's Free</button>
           <button className="landing-sign-in-link" onClick={handleSignIn}>Already have an account? Sign in</button>
         </motion.div>
       </motion.section>

@@ -3,6 +3,37 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.5.0] - 2026-06-03
+
+### Added
+- **admin.breaktapes.com — dedicated admin subdomain** — the full admin dashboard now lives on its own locked subdomain, off the production athlete app. Same Worker + bundle; the app detects the host at runtime (`IS_ADMIN_HOST`) and renders an admin-only shell: Clerk sign-in → admin allowlist check (`VITE_ADMIN_USER_IDS`) → dashboard. Non-allowlisted accounts get a 403 with sign-out. No athlete chrome, no athlete data sync (signing in here never touches the user's race/profile row). `?admin=1` forces the admin render locally.
+- **`src/components/AdminApp.tsx`** — self-contained admin gate with its own lightweight Clerk auth (installs JWT + sets authUser only) and standalone Admin render.
+- **wrangler.toml** — `admin.breaktapes.com` added to the production Worker as a `custom_domain` route, which auto-provisions the Cloudflare DNS record + TLS cert on deploy (no manual DNS step).
+
+### Changed
+- **`/admin` removed from the athlete app** — no longer a route on `app.breaktapes.com`; the Settings "Admin Panel" link is gone. Admin is reachable only at `admin.breaktapes.com`.
+- **Admin page** — accepts `standalone` + `onSignOut` props; standalone mode swaps the back button for a sign-out button.
+
+## [0.7.4.0] - 2026-06-03
+
+### Added
+- **Admin Analytics deep-dive** — Analytics tab now shows: 30-day signup growth bar chart, engagement segments (power 10+ / active 1–9 / dormant 0 races), feature adoption % (public profiles, upcoming races, goals set, wearable linked), activity recency buckets (today/week/month/dormant), wearable connection breakdown (WHOOP/Garmin/Strava), top race countries, top sports, top distances.
+- **CSV export** — Users, Feedback, and Errors tabs each get a one-click CSV download of the loaded rows.
+- **Per-tab refresh** — every admin tab has a ↻ Refresh button to re-pull without a full page reload.
+- **`created_at` on user_state** — migration `20260603000000` adds the column (defaults to now()) so signup-growth tracking is accurate from deploy onward; pre-deploy rows are backfilled to `updated_at` as an approximate floor.
+
+### Changed
+- **Worker `/api/admin/analytics`** — now aggregates engagement segments, feature adoption, activity recency, wearable adoption (joins `wearable_tokens`), top countries, and a 30-day daily signup series.
+- **Worker `/api/admin/users`** — returns `created_at`, `goal_count`, and `country` per user; CSV export includes all fields.
+
+## [0.7.3.0] - 2026-06-03
+
+### Added
+- **Admin dashboard** — `/admin` now has 5 tabs: Analytics (DAU/WAU/MAU, race stats, top sports/distances), Users (list with last-seen + race count + public status), Feedback (all beta feedback with star ratings), Errors (client crash log from `beta_errors`), Catalog (existing submissions queue).
+- **Worker admin routes** — `GET /api/admin/users`, `/api/admin/feedback`, `/api/admin/errors`, `/api/admin/analytics` — all require admin JWT, served via service role key.
+- **PostHog event tracking** — `page_viewed` on Dashboard/Races/Train/Profile mount; `modal_opened` for add-race and import-race modals; `widget_detail_opened` and `dashboard_customize_opened` on Dashboard; `train_tab_changed` in Train page; `admin_page_viewed` and `admin_tab_viewed` in Admin.
+- **Global error capture** — `window.onerror` and `window.onunhandledrejection` in `main.tsx` → `sendBeacon('/api/error-report')` → `beta_errors` table (existing table, existing Worker route, now wired up).
+
 ## [0.7.2.4] - 2026-06-02
 
 ### Changed

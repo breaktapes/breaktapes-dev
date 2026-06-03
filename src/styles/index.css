@@ -132,10 +132,13 @@ body::after {
    noise stays fine on wide/tall viewports instead of stretching into blocks. */
 #landing-screen::after {
   content: '';
-  position: absolute; inset: 0; z-index: 1;
+  position: fixed; inset: 0; z-index: 1;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-repeat: repeat; background-size: 160px 160px;
-  opacity: 0.03; mix-blend-mode: overlay; pointer-events: none;
+  background-repeat: repeat; background-size: 150px 150px;
+  /* Additive (normal-blend) low-opacity noise dithers the radial glow so its
+     8-bit ramp stops banding on near-black. overlay/soft-light preserve black
+     and so can't perturb the dark gradient — that caused the visible rings. */
+  opacity: 0.04; pointer-events: none;
 }
 #landing-screen > * { position: relative; z-index: 2; }
 /* Fixed chrome must escape the blanket `position: relative` above — its ID
@@ -203,8 +206,8 @@ body::after {
 #login-screen::after {
   content: ''; position: absolute; inset: 0; z-index: 1; pointer-events: none;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-repeat: repeat; background-size: 160px 160px;
-  opacity: 0.03; mix-blend-mode: overlay;
+  background-repeat: repeat; background-size: 150px 150px;
+  opacity: 0.04;  /* additive dither — see #landing-screen::after note */
 }
 #login-screen > * { position: relative; z-index: 2; }
 #login-screen .landing-headline { font-size: clamp(3.2rem, 14vw, 6rem); margin-bottom: 1rem; }
@@ -227,10 +230,14 @@ body::after {
   margin: 0 auto; padding: 4rem 1.5rem; text-align: left;
 }
 .pl-hero::before {
-  content: ''; position: absolute; inset: 0; z-index: 0;
+  /* Full-bleed: the hero is a 1120px centered box, but the glow must span the
+     whole viewport — otherwise it stops at the container edge while the plain
+     base shows beyond it, leaving a hard rectangular seam ("the box"). */
+  content: ''; position: absolute; top: 0; bottom: 0; z-index: 0;
+  left: 50%; transform: translateX(-50%); width: 100vw;
   background:
-    radial-gradient(ellipse 70% 50% at 30% 80%, rgba(var(--orange-ch),0.20) 0%, rgba(var(--orange-ch),0.06) 45%, transparent 72%),
-    radial-gradient(ellipse 50% 40% at 90% 10%, rgba(var(--orange-ch),0.10) 0%, transparent 60%);
+    radial-gradient(ellipse 55% 50% at 28% 78%, rgba(var(--orange-ch),0.20) 0%, rgba(var(--orange-ch),0.13) 26%, rgba(var(--orange-ch),0.07) 46%, rgba(var(--orange-ch),0.025) 63%, transparent 80%),
+    radial-gradient(ellipse 45% 40% at 88% 8%, rgba(var(--orange-ch),0.10) 0%, rgba(var(--orange-ch),0.035) 34%, transparent 64%);
   pointer-events: none;
 }
 .pl-hero > * { position: relative; z-index: 2; }
@@ -247,7 +254,7 @@ body::after {
   text-transform: uppercase; color: var(--muted2);
 }
 .pl-eyebrow {
-  font-family: var(--headline); font-size: var(--text-sm); font-weight: 700;
+  font-family: var(--headline); font-size: calc(var(--text-sm) + 3px); font-weight: 700;
   letter-spacing: 0.16em; text-transform: uppercase; color: var(--orange); margin: 0 0 0.6rem;
 }
 
@@ -281,7 +288,8 @@ body::after {
   font-family: var(--headline); font-size: clamp(1.8rem, 5vw, 2.6rem);
   font-weight: 900; text-transform: uppercase; color: var(--white); margin: 0 0 2.5rem;
 }
-.pl-stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--sp-5); }
+.pl-stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--sp-5); max-width: 760px; margin: 0 auto; }
+.pl-stat { text-align: center; }
 .pl-stat-num {
   font-family: var(--headline); font-weight: 900;
   font-size: clamp(2.2rem, 6vw, 3.2rem); color: var(--orange); line-height: 1;
@@ -429,7 +437,7 @@ body::after {
 .pl-eyebrow-tag { font-weight: 800; }
 
 /* ---- phone-scroll centerpiece ---- */
-.pl-stage { position: relative; height: 360vh; }
+.pl-stage { position: relative; height: 460vh; }
 .pl-stage-pin {
   position: sticky; top: 0; height: 100vh; height: 100dvh;
   display: flex; align-items: center; justify-content: center; overflow: hidden;
@@ -440,7 +448,7 @@ body::after {
 }
 .pl-stage-inner {
   position: relative; z-index: 1;
-  display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 4rem;
+  display: grid; grid-template-columns: 1fr minmax(0, 460px); align-items: center; gap: 4rem;
   max-width: 1040px; width: 100%; padding: 0 1.5rem; text-align: left;
 }
 .pl-stage-title {
@@ -559,7 +567,7 @@ body::after {
 }
 .demo-top {
   flex-shrink: 0; display: flex; align-items: center; justify-content: space-between;
-  gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--border); flex-wrap: wrap;
+  gap: 8px; padding: 22px 14px 10px; border-bottom: 1px solid var(--border); flex-wrap: wrap;
 }
 .demo-brand { font-family: var(--headline); font-weight: 900; letter-spacing: 0.14em; font-size: 13px; color: var(--white); }
 .demo-badge {
@@ -574,18 +582,22 @@ body::after {
 }
 .demo-persona.on { color: #000; background: var(--orange); border-color: var(--orange); }
 .demo-body {
-  flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+  flex: 1; overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch;
   padding: 14px; max-width: 460px; width: 100%; margin: 0 auto;
 }
-.demo-nav { flex-shrink: 0; display: flex; border-top: 1px solid var(--border); background: var(--surface); }
+.demo-nav {
+  flex-shrink: 0; display: flex; border-top: 1px solid var(--border); background: var(--surface);
+  padding-bottom: 6px;
+}
 .demo-nav-btn {
-  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
-  padding: 8px 0 calc(8px + env(safe-area-inset-bottom, 0px)); background: none; border: none; cursor: pointer;
-  font-family: var(--headline); font-weight: 700; font-size: 10px; text-transform: uppercase;
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 9px 0; background: none; border: none; cursor: pointer;
+  font-family: var(--headline); font-weight: 700; font-size: 9px; text-transform: uppercase;
   letter-spacing: 0.06em; color: var(--muted);
 }
 .demo-nav-btn.on { color: var(--orange); }
-.demo-nav-icon { font-size: 16px; }
+.demo-nav-icon { display: inline-flex; width: 20px; height: 20px; }
+.demo-nav-icon svg { width: 100%; height: 100%; }
 
 /* ---- landing sandbox section (embeds /demo in a framed window) ---- */
 .pl-sandbox { max-width: 1000px; margin: 0 auto; padding: 4rem 1.5rem; text-align: center; }
@@ -594,18 +606,21 @@ body::after {
   text-transform: uppercase; color: var(--white); margin: 0.4rem 0 0.75rem;
 }
 .pl-sandbox-sub { font-size: var(--text-base); color: var(--muted); margin: 0 auto 2rem; max-width: 480px; }
-.pl-sandbox-window {
-  position: relative; margin: 0 auto; max-width: 420px;
-  border: 1px solid var(--border2); border-radius: var(--radius-lg); overflow: hidden;
-  background: var(--surface); box-shadow: 0 40px 90px rgba(0,0,0,0.6);
+/* Sandbox styled as a phone device (slightly bigger than a real handset). */
+.pl-sandbox-phone {
+  position: relative; margin: 0 auto; width: 100%; max-width: 400px;
+  aspect-ratio: 400 / 840; background: #0a0a0a;
+  border: 10px solid #16181c; border-radius: 46px; overflow: hidden;
+  box-shadow: 0 50px 110px -30px rgba(0,0,0,0.85), inset 0 0 0 1px rgba(255,255,255,0.05);
 }
-.pl-sandbox-bar {
-  display: flex; align-items: center; gap: 6px; padding: 9px 12px;
-  background: var(--surface2); border-bottom: 1px solid var(--border);
+.pl-sandbox-notch {
+  position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+  width: 120px; height: 22px; background: #000; border-radius: 14px; z-index: 3;
 }
-.pl-sandbox-bar i { width: 10px; height: 10px; border-radius: 50%; background: var(--muted2); }
-.pl-sandbox-bar span { margin-left: 8px; font-family: var(--body); font-size: 11px; color: var(--muted); }
-.pl-sandbox-frame { width: 100%; height: 620px; border: 0; display: block; background: var(--surface); }
+.pl-sandbox-frame {
+  width: 100%; height: 100%; border: 0; display: block;
+  border-radius: 36px; background: var(--surface);
+}
 .pl-sandbox-placeholder {
   width: 100%; height: 620px; display: flex; align-items: center; justify-content: center;
   font-family: var(--headline); font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted2);

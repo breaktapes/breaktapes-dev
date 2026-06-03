@@ -39,6 +39,7 @@ import {
   type TriTypeKey,
 } from '@/lib/triFormulas'
 import { supabase, getClerkToken } from '@/lib/supabase'
+import { posthog } from '@/lib/posthog'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -5493,6 +5494,7 @@ export function Dashboard() {
       (patch) => useDashStore.setState(patch),
     )
     initDashLayout()
+    posthog.capture('page_viewed', { page: 'dashboard' })
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // widgetOrder from store (may be updated by migration)
@@ -5538,6 +5540,7 @@ export function Dashboard() {
     setDetailPreview(preview ?? null)
     setDetailCtx(ctx)
     setDetailWidget(w)
+    posthog.capture('widget_detail_opened', { widget_id: id })
   }, [widgets])
 
   const closeDetail = useCallback(() => {
@@ -5721,7 +5724,7 @@ export function Dashboard() {
       {/* + Add Widgets button at bottom of flat list in edit mode */}
       {editMode && (
         <button
-          onClick={() => setShowAddWidgets(true)}
+          onClick={() => { setShowAddWidgets(true); posthog.capture('dashboard_customize_opened') }}
           style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-sm)', fontWeight: 700, textTransform: 'uppercase', width: '100%', height: 40, borderRadius: 'var(--radius-md)', border: '1px dashed var(--border2)', background: 'transparent', color: 'var(--muted)', cursor: 'pointer', letterSpacing: '0.06em' }}
         >
           + ADD WIDGETS
