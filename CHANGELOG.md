@@ -3,6 +3,11 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.5.4] - 2026-06-03
+
+### Fixed
+- **Admin dashboard scroll on mobile** — `admin.breaktapes.com` runs without the athlete Layout, so the global `#root { overflow: hidden }` left the dashboard clipped and unscrollable on phones. Wrapped the standalone Admin in its own fixed scroll container (matches Layout's inner `<main>`). The 5-tab bar is now horizontally scrollable on narrow screens too.
+
 ## [0.7.5.3] - 2026-06-03
 
 ### Changed

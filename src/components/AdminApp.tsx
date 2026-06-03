@@ -132,7 +132,14 @@ function AdminGate() {
     )
   }
 
-  return <Admin standalone onSignOut={() => signOut()} />
+  // #root is `overflow:hidden` globally (the athlete app scrolls inside
+  // Layout's inner <main>). AdminApp has no Layout, so wrap the dashboard in
+  // its own fixed scroll container or the page clips with no scroll on mobile.
+  return (
+    <div style={{ position: 'fixed', inset: 0, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', background: 'var(--black)' }}>
+      <Admin standalone onSignOut={() => signOut()} />
+    </div>
+  )
 }
 
 export function AdminApp() {
