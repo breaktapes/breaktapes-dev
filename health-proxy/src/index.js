@@ -40,7 +40,7 @@ function corsHeaders(origin) {
   return {
     'Access-Control-Allow-Origin': origin,
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, X-OW-User-ID, X-POSTHOG-DISTINCT-ID, X-POSTHOG-SESSION-ID',
+    'Access-Control-Allow-Headers': 'Authorization, Content-Type, X-OW-User-ID, X-POSTHOG-DISTINCT-ID, X-POSTHOG-SESSION-ID',
     'Access-Control-Max-Age': '86400',
   };
 }
@@ -60,6 +60,90 @@ function json(data, status = 200, origin = '') {
     status,
     headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
   });
+}
+
+// ── Cryptographic Clerk JWT verification (RS256 via JWKS) ────────────────────
+// Mirrors worker/index.js. Issuer is PINNED so an attacker can't point us at
+// their own JWKS. Fails CLOSED on any error.
+const ALLOWED_ISS = new Set([
+  'https://clerk.breaktapes.com',
+  'https://accounts.breaktapes.com',
+  'https://elegant-snipe-62.clerk.accounts.dev', // dev/local instance
+]);
+const _jwksCache = new Map(); // iss -> { keys, fetchedAt }
+
+function _b64urlToBytes(b64url) {
+  const b64 = b64url.replace(/-/g, '+').replace(/_/g, '/');
+  const pad = b64.length % 4 ? '='.repeat(4 - (b64.length % 4)) : '';
+  const bin = atob(b64 + pad);
+  const arr = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+  return arr;
+}
+
+async function _getJwks(iss, force) {
+  const cached = _jwksCache.get(iss);
+  if (!force && cached && Date.now() - cached.fetchedAt < 3600_000) return cached.keys;
+  const res = await fetch(`${iss}/.well-known/jwks.json`);
+  if (!res.ok) throw new Error(`jwks ${res.status}`);
+  const { keys } = await res.json();
+  _jwksCache.set(iss, { keys, fetchedAt: Date.now() });
+  return keys;
+}
+
+// Returns the verified Clerk `sub` (user_xxx), or null. Fails CLOSED.
+async function verifyClerkSub(request) {
+  try {
+    const authHeader = request.headers.get('Authorization') ?? '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    if (!token) return null;
+    const parts = String(token).split('.');
+    if (parts.length !== 3) return null;
+    const [h, p, s] = parts;
+    const header = JSON.parse(atob(h.replace(/-/g, '+').replace(/_/g, '/')));
+    if (header.alg !== 'RS256' || !header.kid) return null;
+    const payload = JSON.parse(atob(p.replace(/-/g, '+').replace(/_/g, '/')));
+    if (!ALLOWED_ISS.has(String(payload.iss ?? ''))) return null;
+    if (!payload.sub || !String(payload.sub).startsWith('user_')) return null;
+    const nowS = Math.floor(Date.now() / 1000);
+    if (!payload.exp || nowS > payload.exp) return null;
+    if (payload.nbf && nowS + 5 < payload.nbf) return null;
+
+    let keys = await _getJwks(payload.iss, false);
+    let jwk = keys.find(k => k.kid === header.kid);
+    if (!jwk) { keys = await _getJwks(payload.iss, true); jwk = keys.find(k => k.kid === header.kid); }
+    if (!jwk) return null;
+
+    const key = await crypto.subtle.importKey(
+      'jwk', jwk, { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' }, false, ['verify'],
+    );
+    const ok = await crypto.subtle.verify(
+      'RSASSA-PKCS1-v1_5', key, _b64urlToBytes(s), new TextEncoder().encode(`${h}.${p}`),
+    );
+    return ok ? String(payload.sub) : null;
+  } catch {
+    return null;
+  }
+}
+
+// Verify the caller (by verified Clerk sub) owns the given OW user id.
+// OW user objects carry external_user_id = the Clerk sub set at /ow/user creation.
+// Prevents IDOR: a user cannot read/mutate another user's wearable data by
+// passing a different ow_user_id. Fails CLOSED.
+async function verifyOwOwner(request, env, owUserId) {
+  const sub = await verifyClerkSub(request);
+  if (!sub || !owUserId) return false;
+  try {
+    const ow = env.OW_BASE_URL.replace(/\/$/, '');
+    const res = await fetch(`${ow}/api/v1/users/${encodeURIComponent(owUserId)}`, {
+      headers: { 'X-Open-Wearables-API-Key': env.OW_API_KEY },
+    });
+    if (!res.ok) return false;
+    const u = await res.json().catch(() => ({}));
+    return u && u.external_user_id === sub;
+  } catch {
+    return false;
+  }
 }
 
 export default {
@@ -825,6 +909,9 @@ export default {
           if (!clerk_user_id || !email) {
             return json({ error: 'clerk_user_id and email required' }, 400, origin);
           }
+          // A user may only create/retrieve their OWN OW user — verified sub must match.
+          const sub = await verifyClerkSub(request);
+          if (!sub || sub !== clerk_user_id) return json({ error: 'Forbidden' }, 403, origin);
           // Try to find existing user first (OW does not deduplicate on external_user_id automatically)
           const listRes = await fetch(`${ow}/api/v1/users?search=${encodeURIComponent(email)}`, {
             headers: { 'X-Open-Wearables-API-Key': owKey },
@@ -859,6 +946,7 @@ export default {
         if (!owUserId || !provider || !redirectUri) {
           return json({ error: 'ow_user_id, provider, redirect_uri required' }, 400, origin);
         }
+        if (!await verifyOwOwner(request, env, owUserId)) return json({ error: 'Forbidden' }, 403, origin);
         try {
           const authRes = await fetch(
             `${ow}/api/v1/oauth/${provider}/authorize?user_id=${owUserId}&redirect_uri=${encodeURIComponent(redirectUri)}`,
@@ -884,6 +972,7 @@ export default {
           if (!ow_user_id || !provider) {
             return json({ error: 'ow_user_id and provider required' }, 400, origin);
           }
+          if (!await verifyOwOwner(request, env, ow_user_id)) return json({ error: 'Forbidden' }, 403, origin);
           const start = new Date(Date.now() - 5 * 365 * 86400000).toISOString();
           const end   = new Date().toISOString();
           const hdr   = { 'X-Open-Wearables-API-Key': owKey };
@@ -938,6 +1027,7 @@ export default {
           if (!ow_user_id || !provider) {
             return json({ error: 'ow_user_id and provider required' }, 400, origin);
           }
+          if (!await verifyOwOwner(request, env, ow_user_id)) return json({ error: 'Forbidden' }, 403, origin);
           // OW path: DELETE /api/v1/users/{user_id}/connections/{provider}
           const res = await fetch(`${ow}/api/v1/users/${ow_user_id}/connections/${provider}`, {
             method: 'DELETE',
@@ -955,6 +1045,7 @@ export default {
       if (path === '/ow/connections' && request.method === 'GET') {
         const owUserId = url.searchParams.get('ow_user_id');
         if (!owUserId) return json({ error: 'ow_user_id required' }, 400, origin);
+        if (!await verifyOwOwner(request, env, owUserId)) return json({ error: 'Forbidden' }, 403, origin);
         try {
           const res = await fetch(`${ow}/api/v1/users/${owUserId}/connections`, {
             headers: { 'X-Open-Wearables-API-Key': owKey },
@@ -982,6 +1073,7 @@ export default {
       if (path === '/ow/workouts' && request.method === 'GET') {
         const owUserId = url.searchParams.get('ow_user_id');
         if (!owUserId) return json({ error: 'ow_user_id required' }, 400, origin);
+        if (!await verifyOwOwner(request, env, owUserId)) return json({ error: 'Forbidden' }, 403, origin);
         const since = url.searchParams.get('since') ?? new Date(Date.now() - 60 * 86400000).toISOString();
         const end   = new Date().toISOString();
         const limit = url.searchParams.get('limit') ?? '200';
@@ -1020,6 +1112,7 @@ export default {
       if (path === '/ow/recovery' && request.method === 'GET') {
         const owUserId = url.searchParams.get('ow_user_id');
         if (!owUserId) return json({ error: 'ow_user_id required' }, 400, origin);
+        if (!await verifyOwOwner(request, env, owUserId)) return json({ error: 'Forbidden' }, 403, origin);
         const days = parseInt(url.searchParams.get('days') ?? '14', 10);
         const since = new Date(Date.now() - days * 86400000).toISOString();
         const end   = new Date().toISOString();
@@ -1063,6 +1156,7 @@ export default {
       if (path === '/ow/activity' && request.method === 'GET') {
         const owUserId = url.searchParams.get('ow_user_id');
         if (!owUserId) return json({ error: 'ow_user_id required' }, 400, origin);
+        if (!await verifyOwOwner(request, env, owUserId)) return json({ error: 'Forbidden' }, 403, origin);
         const days = parseInt(url.searchParams.get('days') ?? '14', 10);
         const since = new Date(Date.now() - days * 86400000).toISOString();
         const end   = new Date().toISOString();
@@ -1092,6 +1186,7 @@ export default {
         try {
           const { ow_user_id, provider } = await request.json().catch(() => ({}));
           if (!ow_user_id) return json({ error: 'ow_user_id required' }, 400, origin);
+          if (!await verifyOwOwner(request, env, ow_user_id)) return json({ error: 'Forbidden' }, 403, origin);
           const syncPath = provider
             ? `${ow}/api/v1/providers/${provider}/users/${ow_user_id}/sync`
             : `${ow}/api/v1/users/${ow_user_id}/sync`;
@@ -1122,6 +1217,11 @@ export default {
     const owUserId = request.headers.get('X-OW-User-ID');
     if (!owUserId) {
       return json({ error: 'Missing X-OW-User-ID header' }, 400, origin);
+    }
+    // Ownership gate: the caller's verified Clerk sub must own this OW user.
+    // Without this, any path proxies to OW with the admin key for any user id.
+    if (!await verifyOwOwner(request, env, owUserId)) {
+      return json({ error: 'Forbidden' }, 403, origin);
     }
 
     const owUrl = env.OW_BASE_URL.replace(/\/$/, '') + path + url.search;
