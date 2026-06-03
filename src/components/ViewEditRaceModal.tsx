@@ -13,6 +13,7 @@ import { TimePickerWheel, type HMS } from '@/components/TimePickerWheel'
 import type { Race, Split } from '@/types'
 import { useUnits, fmtDistKm, distUnit, fmtPaceSecPerKm, computePaceSecPerKm, fmtSpeedKmh } from '@/lib/units'
 import { removeMedalBackground } from '@/lib/removeBg'
+import { uploadPhotoIfNeeded, uploadPhotosIfNeeded } from '@/lib/uploadPhoto'
 import { findSportDistMatch, distLabel as distLabelUtil, fmtDateDDMM, RACE_PRIORITY_OPTIONS, racePriorityLabel } from '@/lib/utils'
 import { geocodeCity } from '@/lib/geocode'
 
@@ -849,6 +850,7 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
   const [photos, setPhotos]           = useState<string[]>(race.photos ?? [])
   const [photosUploading, setPhotosUploading] = useState(false)
   const photosInputRef = useRef<HTMLInputElement>(null)
+  const [saving, setSaving]           = useState(false)
 
 
   const sportDists = DISTANCES_BY_SPORT[sport] ?? []
@@ -992,7 +994,8 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
     }
   }
 
-  function handleSave() {
+  async function handleSave() {
+    if (saving) return
     const effectiveDist = isCustomDist ? customDist : distance
     const effectiveMedal = medal === '__custom__' ? customMedal : medal
     const hasGoalHMS = goalHMS.h > 0 || goalHMS.m > 0 || goalHMS.s > 0
@@ -1011,6 +1014,15 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
       alert('Sport is required for ultra distances (>42km). Please select a sport.')
       return
     }
+
+    // Upload any base64 photos to Storage and keep only the URL in state. This
+    // is what keeps the synced state_json / localStorage small (the cause of the
+    // slow-save + crash). Also lazy-migrates existing embedded base64 on save.
+    // Non-fatal: uploadPhoto* return the original data URL if the upload fails.
+    setSaving(true)
+    const uploadedMedal = isUpcoming ? undefined : await uploadPhotoIfNeeded(medalPhoto)
+    const uploadedPhotos = isUpcoming ? undefined : await uploadPhotosIfNeeded(photos.length > 0 ? photos : undefined)
+
     const patch: Partial<Race> = {
       name: name.trim() || undefined,
       sport,
@@ -1042,8 +1054,8 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
         const cleaned = splits.filter(s => s.label.trim() || s.split?.trim())
         return cleaned.length > 0 ? cleaned : undefined
       })(),
-      medalPhoto: isUpcoming ? undefined : medalPhoto ?? undefined,
-      photos: isUpcoming ? undefined : photos.length > 0 ? photos : undefined,
+      medalPhoto: isUpcoming ? undefined : uploadedMedal ?? undefined,
+      photos: isUpcoming ? undefined : uploadedPhotos && uploadedPhotos.length > 0 ? uploadedPhotos : undefined,
       startTime: isUpcoming ? undefined : startTime.trim() || undefined,
       avgHeartRate: isUpcoming ? undefined : avgHeartRate ? Number(avgHeartRate) : undefined,
       terrain: isUpcoming ? undefined : terrain || undefined,
@@ -1055,11 +1067,6 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
         wind: weatherWind ? Number(weatherWind) : undefined,
         humidity: weatherHum ? Number(weatherHum) : undefined,
       } : race.weather,
-    }
-    // Require sport for ultra distances
-    if (!isUpcoming && effectiveDist && parseFloat(effectiveDist) > 42.3 && !sport) {
-      alert('Sport is required for ultra distances (>42km). Please select a sport.')
-      return
     }
     onSave(patch)
   }
@@ -1384,8 +1391,8 @@ function EditPanel({ race, onSave, onCancel, isUpcoming = false }: { race: Race;
       )}
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '0.75rem' }}>
-        <button style={st.cancelBtn} onClick={onCancel}>Cancel</button>
-        <button className="btn-v3 btn-primary-v3" style={st.saveBtn} onClick={handleSave}>Save Changes</button>
+        <button style={st.cancelBtn} onClick={onCancel} disabled={saving}>Cancel</button>
+        <button className="btn-v3 btn-primary-v3" style={st.saveBtn} onClick={handleSave} disabled={saving}>{saving ? 'Saving…' : 'Save Changes'}</button>
       </div>
     </div>
   )
