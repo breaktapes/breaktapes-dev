@@ -1326,6 +1326,13 @@ async function handleCatalogSubmit(request, env) {
   return new Response(JSON.stringify({ ok: true }), { headers: ADMIN_CORS });
 }
 
+async function handleAdminCheck(request, env) {
+  if (request.method === 'OPTIONS') return adminCors();
+  const userId = await resolveAdminUserId(request, env);
+  if (!userId) return new Response(JSON.stringify({ ok: false }), { status: 403, headers: ADMIN_CORS });
+  return new Response(JSON.stringify({ ok: true }), { headers: ADMIN_CORS });
+}
+
 async function handleAdminUsers(request, env) {
   if (request.method === 'OPTIONS') return adminCors();
   const userId = await resolveAdminUserId(request, env);
@@ -1788,6 +1795,12 @@ async function handleRequest(request, env) {
     const adminActionMatch = path.match(/^\/api\/admin\/contributions\/(\d+)\/(approve|reject)$/);
     if (request.method === 'POST' && adminActionMatch) {
       return handleAdminAction(request, env, Number(adminActionMatch[1]), adminActionMatch[2]);
+    }
+
+    // Admin: GET /api/admin/check — authz probe (drives the client gate; no
+    // admin IDs are shipped in the bundle, so this 403 is the source of truth)
+    if ((request.method === 'GET' || request.method === 'OPTIONS') && path === '/api/admin/check') {
+      return handleAdminCheck(request, env);
     }
 
     // Admin: GET /api/admin/users
