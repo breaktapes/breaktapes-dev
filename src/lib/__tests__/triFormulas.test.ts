@@ -5,6 +5,14 @@ import {
   defaultTriTarget, hasTriSplitData, TRI_TYPES, triTypeByKey,
 } from '../triFormulas'
 
+function mkRace(over: Partial<Race>): Race {
+  return {
+    id: over.id ?? 'rx', name: over.name ?? 'Race', date: over.date ?? '2026-04-01',
+    city: '', country: '', distance: over.distance ?? '10', sport: over.sport ?? '',
+    outcome: over.outcome ?? 'Finished', ...over,
+  }
+}
+
 const NOW = new Date('2026-06-02T00:00:00').getTime()
 
 function tri(over: Partial<Race> = {}): Race {
@@ -135,6 +143,77 @@ describe('predictTriathlon', () => {
 
   it('ignores DNF tris', () => {
     expect(predictTriathlon([tri({ outcome: 'DNF', splits: OLY_SPLITS })], 'olympic', NOW)).toBeNull()
+  })
+
+  it('uses standalone swim race as engine fallback for swim leg', () => {
+    const swimRace = mkRace({ id: 'sw1', sport: 'Swimming', distance: '1.5', time: '0:25:00' })
+    const pred = predictTriathlon([swimRace], 'olympic', NOW)!
+    expect(pred).not.toBeNull()
+    const swimLeg = pred.legs.find(l => l.key === 'swim')!
+    expect(swimLeg.source).toBe('engine')
+    expect(swimLeg.secs).toBeGreaterThan(0)
+    expect(swimLeg.time).not.toBe('—')
+  })
+
+  it('uses standalone bike race as engine fallback for bike leg', () => {
+    const bikeRace = mkRace({ id: 'bk1', sport: 'Cycling', distance: '40', time: '1:10:00' })
+    const pred = predictTriathlon([bikeRace], 'olympic', NOW)!
+    expect(pred).not.toBeNull()
+    const bikeLeg = pred.legs.find(l => l.key === 'bike')!
+    expect(bikeLeg.source).toBe('engine')
+    expect(bikeLeg.secs).toBeGreaterThan(0)
+    expect(bikeLeg.time).not.toBe('—')
+  })
+
+  it('uses swim split from a tri race as engine fallback', () => {
+    // Tri race with only swim split — no standalone sport=swim race needed
+    const triWithSwim = tri({ id: 't2', splits: [{ label: 'Swim', split: '0:25:00' }] })
+    const pred = predictTriathlon([triWithSwim], 'olympic', NOW)!
+    const swimLeg = pred.legs.find(l => l.key === 'swim')!
+    // empirical picks it up first via samples['swim'] — source is empirical
+    expect(swimLeg.secs).toBeGreaterThan(0)
+    expect(swimLeg.time).not.toBe('—')
+  })
+
+  it('uses bike split from a tri race as engine fallback', () => {
+    const triWithBike = tri({ id: 't3', splits: [{ label: 'Bike', split: '1:10:00' }] })
+    const pred = predictTriathlon([triWithBike], 'olympic', NOW)!
+    const bikeLeg = pred.legs.find(l => l.key === 'bike')!
+    expect(bikeLeg.secs).toBeGreaterThan(0)
+    expect(bikeLeg.time).not.toBe('—')
+  })
+
+  it('blends empirical + swim engine when both exist', () => {
+    const swimRace = mkRace({ id: 'sw2', sport: 'open water swim', distance: '1.5', time: '0:22:00' })
+    const pred = predictTriathlon([tri({ splits: OLY_SPLITS }), swimRace], 'olympic', NOW)!
+    const swimLeg = pred.legs.find(l => l.key === 'swim')!
+    // alpha > 0 (has a tri with splits), engine also exists → blend
+    expect(swimLeg.source).toBe('blend')
+  })
+
+  it('blends empirical + bike engine when both exist', () => {
+    const bikeRace = mkRace({ id: 'bk3', sport: 'Cycling', distance: '40', time: '1:05:00' })
+    const pred = predictTriathlon([tri({ splits: OLY_SPLITS }), bikeRace], 'olympic', NOW)!
+    const bikeLeg = pred.legs.find(l => l.key === 'bike')!
+    // alpha > 0 (has tri with splits), standalone bike engine exists → blend
+    expect(bikeLeg.source).toBe('blend')
+  })
+
+  it('basis text lists engine disciplines when no tri splits', () => {
+    const swimRace = mkRace({ id: 'sw3', sport: 'Swimming', distance: '1.5', time: '0:25:00' })
+    const bikeRace = mkRace({ id: 'bk2', sport: 'Cycling', distance: '40', time: '1:10:00' })
+    const runRace  = mkRace({ id: 'rn1', sport: 'Running', distance: '10', time: '0:40:00' })
+    const pred = predictTriathlon([swimRace, bikeRace, runRace], 'olympic', NOW)!
+    expect(pred.basis).toContain('swim')
+    expect(pred.basis).toContain('bike')
+    expect(pred.basis).toContain('run')
+    expect(pred.basis).toContain('engine estimate')
+  })
+
+  it('basis text names tri splits when empirical data exists', () => {
+    const pred = predictTriathlon([tri({ splits: OLY_SPLITS })], 'olympic', NOW)!
+    expect(pred.basis).toContain('tri')
+    expect(pred.basis).toContain('splits')
   })
 })
 
