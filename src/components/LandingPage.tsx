@@ -651,7 +651,7 @@ function PhoneApp({ title, sub, active, children }: { title: string; sub?: strin
         </div>
         <span style={{ width: 23, height: 23, borderRadius: '50%', flexShrink: 0, background: 'linear-gradient(135deg, var(--orange), #B8341A)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 10, color: '#fff' }}>{(sub || title).trim()[0]}</span>
       </div>
-      <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', padding: '9px 11px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', padding: '9px 11px', display: 'flex', flexDirection: 'column', gap: 8, textAlign: 'left' }}>
         {children}
       </div>
       <PhoneNav active={active} />
@@ -716,11 +716,11 @@ function PredictorMockup({ persona, framed = false }: { persona: DemoPersonaId; 
             const isPB = Math.abs(d - refKm) / refKm < 0.06
             return (
               <div key={lbl} style={{ ...cardSurface, padding: '8px 11px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 9, borderColor: isPB ? 'rgba(var(--orange-ch),0.5)' : 'var(--border)', background: isPB ? 'rgba(var(--orange-ch),0.08)' : undefined }}>
-                <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 10.5, color: 'var(--white)', width: 70 }}>{lbl}</span>
-                {isPB
-                  ? <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 7, color: 'var(--orange)', padding: '2px 7px', borderRadius: 'var(--radius-pill)', background: 'var(--surface3)', letterSpacing: '0.04em' }}>YOUR PB</span>
-                  : <span style={{ fontFamily: 'var(--body)', fontSize: 7.5, color: 'var(--muted2)', letterSpacing: '0.04em' }}>predicted</span>}
-                <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 12, color: isPB ? 'var(--orange)' : 'var(--white)', width: 54, textAlign: 'right' }}>{isPB && ref ? ref.time : s2t(refSec * Math.pow(d / refKm, 1.06))}</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                  <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 10.5, color: 'var(--white)' }}>{lbl}</span>
+                  {isPB && <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 7, color: 'var(--orange)', padding: '2px 7px', borderRadius: 'var(--radius-pill)', background: 'var(--surface3)', letterSpacing: '0.04em' }}>YOUR PB</span>}
+                </span>
+                <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 12, color: isPB ? 'var(--orange)' : 'var(--white)', textAlign: 'right' }}>{isPB && ref ? ref.time : s2t(refSec * Math.pow(d / refKm, 1.06))}</span>
               </div>
             )
           })}
@@ -837,7 +837,7 @@ function PacingMockup({ persona, framed = false }: { persona: DemoPersonaId; fra
                 <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 10, color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</div>
                 <div style={{ fontFamily: 'var(--body)', fontSize: 8, color: 'var(--muted)' }}>{distLabel(r.distance)} · {r.time}</div>
               </div>
-              <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 8.5, color: col, padding: '3px 7px', borderRadius: 'var(--radius-pill)', background: 'var(--surface3)', flexShrink: 0 }}>{lab}</span>
+              <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 8.5, color: col, padding: '3px 7px', borderRadius: 'var(--radius-pill)', background: 'var(--surface3)', flexShrink: 0, minWidth: 86, textAlign: 'center' }}>{lab}</span>
             </div>
           ) })}
         </div>
