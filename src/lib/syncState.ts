@@ -33,6 +33,8 @@ import { APP_URL } from '@/env'
 // — so the flushed write carries the real (merged) data, not empty state.
 let _pullComplete = false
 let _pendingSync = false
+let _debounceTimer: ReturnType<typeof setTimeout> | null = null
+const SYNC_DEBOUNCE_MS = 600
 
 /** Called by useSyncState once the initial remote pull has been applied. */
 export function markRemotePullComplete() {
@@ -48,10 +50,11 @@ export function markRemotePullComplete() {
 export function resetRemotePullGate() {
   _pullComplete = false
   _pendingSync = false
+  if (_debounceTimer) { clearTimeout(_debounceTimer); _debounceTimer = null }
 }
 
-export async function syncStateToSupabase() {
-  const { authUser, setSyncStatus } = useAuthStore.getState()
+export function syncStateToSupabase(): void {
+  const { authUser } = useAuthStore.getState()
   if (!authUser) return
 
   // Block writes until the first remote pull has hydrated local state.
@@ -60,6 +63,20 @@ export async function syncStateToSupabase() {
     _pendingSync = true
     return
   }
+
+  // Debounce: coalesce rapid successive mutations into a single write.
+  // Prevents concurrent server writes from multiple fast user actions (e.g.
+  // editing priority, then goal time, then notes in quick succession).
+  if (_debounceTimer) clearTimeout(_debounceTimer)
+  _debounceTimer = setTimeout(() => {
+    _debounceTimer = null
+    void _doSync()
+  }, SYNC_DEBOUNCE_MS)
+}
+
+async function _doSync() {
+  const { authUser, setSyncStatus } = useAuthStore.getState()
+  if (!authUser) return
 
   setSyncStatus('syncing')
   const token = getClerkToken()

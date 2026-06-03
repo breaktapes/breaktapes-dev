@@ -1785,6 +1785,87 @@ async function handleApiState(request, env) {
   });
 }
 
+// POST /api/upload-photo — upload a race/medal photo to Supabase Storage via the
+// service role and return its public URL. Keeps base64 blobs OUT of the synced
+// state_json (the cause of the slow-save / quota-crash bug). Body: { data_url }.
+// CORS uses apiCorsHeaders (known-origins allowlist) to match /api/sync + /api/state.
+const PHOTO_BUCKET = 'race-photos';
+// Hard cap on a single decoded image (8 MB). Compressed client-side to ~<1 MB,
+// so this only rejects pathological inputs — never a normal photo. This route
+// intentionally allows a larger body than /api/sync's 512 KB cap — moving large
+// images here is exactly what keeps the sync payload under that cap.
+const MAX_PHOTO_BYTES = 8 * 1024 * 1024;
+
+async function handleApiUploadPhoto(request, env) {
+  if (request.method === 'OPTIONS') {
+    return new Response(null, { headers: { ...apiCorsHeaders(request), 'Access-Control-Allow-Methods': 'POST, OPTIONS' } });
+  }
+  if (request.method !== 'POST') {
+    return new Response('Method not allowed', { status: 405, headers: apiCorsHeaders(request) });
+  }
+
+  const authHeader = request.headers.get('Authorization') ?? '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  if (!token) return new Response('Unauthorized', { status: 401, headers: apiCorsHeaders(request) });
+
+  const payload = await verifyClerkJwt(token);
+  if (!payload || !payload.sub) return new Response('Invalid token', { status: 401, headers: apiCorsHeaders(request) });
+  const userId = payload.sub;
+
+  let body;
+  try { body = await request.json(); }
+  catch { return new Response('Invalid JSON', { status: 400, headers: apiCorsHeaders(request) }); }
+
+  const dataUrl = typeof body.data_url === 'string' ? body.data_url : '';
+  const m = dataUrl.match(/^data:(image\/(png|jpeg|jpg|webp));base64,(.+)$/);
+  if (!m) return new Response('Bad image data', { status: 400, headers: apiCorsHeaders(request) });
+  const mime = m[1];
+  const ext = mime === 'image/png' ? 'png' : mime === 'image/webp' ? 'webp' : 'jpg';
+
+  // Decode base64 → bytes
+  let bytes;
+  try {
+    const bin = atob(m[3]);
+    bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  } catch {
+    return new Response('Bad image data', { status: 400, headers: apiCorsHeaders(request) });
+  }
+  if (bytes.length === 0 || bytes.length > MAX_PHOTO_BYTES) {
+    return new Response('Image too large', { status: 413, headers: apiCorsHeaders(request) });
+  }
+
+  const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceKey) {
+    return new Response('Service unavailable — SUPABASE_SERVICE_ROLE_KEY not set', { status: 503, headers: apiCorsHeaders(request) });
+  }
+  const supabaseUrl = env.SUPABASE_URL || 'https://kmdpufauamadwavqsinj.supabase.co';
+
+  // Path is namespaced by the Clerk user id so one user can't overwrite another's.
+  const objectPath = `${userId}/${crypto.randomUUID()}.${ext}`;
+  const res = await fetch(`${supabaseUrl}/storage/v1/object/${PHOTO_BUCKET}/${objectPath}`, {
+    method: 'POST',
+    headers: {
+      apikey: serviceKey,
+      Authorization: `Bearer ${serviceKey}`,
+      'Content-Type': mime,
+      'Cache-Control': 'public, max-age=31536000, immutable',
+      'x-upsert': 'true',
+    },
+    body: bytes,
+  });
+
+  if (!res.ok) {
+    const err = await res.text().catch(() => res.status.toString());
+    return new Response(`Storage error: ${err}`, { status: 502, headers: apiCorsHeaders(request) });
+  }
+
+  const publicUrl = `${supabaseUrl}/storage/v1/object/public/${PHOTO_BUCKET}/${objectPath}`;
+  return new Response(JSON.stringify({ url: publicUrl }), {
+    headers: { 'Content-Type': 'application/json', ...apiCorsHeaders(request) },
+  });
+}
+
 // ── Main handler ──────────────────────────────────────────────────────────────
 
 export default {
@@ -1814,6 +1895,12 @@ async function handleRequest(request, env) {
     // POST /api/sync — profile state sync via service role (no Clerk-Supabase JWT needed)
     if ((request.method === 'POST' || request.method === 'OPTIONS') && path === '/api/sync') {
       return handleApiSync(request, env);
+    }
+
+    // POST /api/upload-photo — store a race/medal photo in Supabase Storage,
+    // return its public URL (keeps base64 out of the synced state_json)
+    if ((request.method === 'POST' || request.method === 'OPTIONS') && path === '/api/upload-photo') {
+      return handleApiUploadPhoto(request, env);
     }
 
     // Admin: GET /api/admin/contributions — list pending
