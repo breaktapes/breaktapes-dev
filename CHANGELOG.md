@@ -3,6 +3,12 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.5.5] - 2026-06-03
+
+### Changed
+- **Import more prominent in onboarding** — new users now see a "↓ Import" button alongside "Log a Race" as co-equal primary CTAs in the onboarding card on the dashboard. The Races page empty state (zero races logged) now shows an "↓ Import your results" button instead of plain muted text, reducing friction for athletes with existing race history.
+- **IronmanRacePicker wired to dashboard import** — the IRONMAN/70.3 race-picker flow is now accessible when opening the import modal from the onboarding card, matching the entry point in the Races page.
+
 ## [0.7.5.4] - 2026-06-03
 
 ### Fixed
