@@ -342,8 +342,8 @@ export default {
               time:     r.formattime || r.time || '',
               city:     r.city || '',
               state:    r.state || '',
-              place:    r.place || null,
-              gender_place: r.gender_place || null,
+              placing:       r.place        ? String(r.place)        : '',
+              genderPlacing: r.gender_place ? String(r.gender_place) : '',
             });
           }
         }

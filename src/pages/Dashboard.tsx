@@ -35,7 +35,7 @@ import {
   pacingAggregate, PACING_CLASS_META,
 } from '@/lib/raceFormulas'
 import {
-  predictTriathlon, defaultTriTarget, hasTriSplitData, TRI_TYPES,
+  predictTriathlon, defaultTriTarget, hasTriSplitData, TRI_TYPES, isTriRace,
   type TriTypeKey,
 } from '@/lib/triFormulas'
 import { supabase, getClerkToken } from '@/lib/supabase'
@@ -4560,12 +4560,19 @@ function TriPredictorWidget() {
   const ctx = useWidgetCardContext()
   const size = ctx?.getWidgetSize('tri-predictor') ?? 'medium'
 
+  const hasAnyTri = useMemo(
+    () => races.some(isTriRace) || upcomingRaces.some(isTriRace),
+    [races, upcomingRaces],
+  )
+
   const defaultTarget = useMemo(() => defaultTriTarget(races, upcomingRaces), [races, upcomingRaces])
   const [target, setTarget] = useState<TriTypeKey | null>(null)
   const activeTarget = target ?? defaultTarget
   const pred = useMemo(() => predictTriathlon(races, activeTarget), [races, activeTarget])
   const hasSplits = useMemo(() => hasTriSplitData(races), [races])
   const [showLinkSheet, setShowLinkSheet] = useState(false)
+
+  if (!hasAnyTri) return null
 
   const Header = (
     <div>
@@ -4689,7 +4696,7 @@ function TriPredictorWidget() {
           )}
 
           <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>
-            {hasSplits ? `Based on ${pred.basis}` : 'Estimate from running PB — add a triathlon for full splits'}
+            {hasSplits ? `Based on ${pred.basis}` : `Estimate from ${pred.basis}`}
             {pred.alpha > 0 && pred.alpha < 1 ? ` · ${Math.round(pred.alpha * 100)}% from your data` : ''}
           </div>
 
