@@ -65,7 +65,7 @@ export async function syncStateToSupabase() {
   const token = getClerkToken()
 
   const { races, upcomingRaces, wishlistRaces, nextRace, focusRaceId, deletedRaceIds } = useRaceStore.getState()
-  const { athlete, seasonPlans, goals } = useAthleteStore.getState()
+  const { athlete, seasonPlans, goals, injuries } = useAthleteStore.getState()
 
   const stateJson = {
     races,
@@ -77,6 +77,7 @@ export async function syncStateToSupabase() {
     season_plans: seasonPlans,
     goals,
     athlete,
+    injuries,
   }
 
   // Primary path: POST to /api/sync on the Cloudflare Worker.

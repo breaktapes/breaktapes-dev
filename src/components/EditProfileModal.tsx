@@ -42,8 +42,8 @@ export function EditProfileModal({ onClose }: Props) {
   const [clubJoinDates, setClubJoinDates] = useState<Record<string, string>>(athlete?.clubJoinDates ?? {})
 
   // Injury break dates (for comeback_run achievement)
-  const [injuryBreakStart, setInjuryBreakStart] = useState(athlete?.injuryBreakStart ?? '')
-  const [injuryBreakEnd,   setInjuryBreakEnd]   = useState(athlete?.injuryBreakEnd ?? '')
+  const [injuryBreakStart] = useState(athlete?.injuryBreakStart ?? '')
+  const [injuryBreakEnd]   = useState(athlete?.injuryBreakEnd ?? '')
 
   function addClub() {
     const trimmed = clubInput.trim()
@@ -233,18 +233,18 @@ export function EditProfileModal({ onClose }: Props) {
             />
           </Field>
 
-          {/* Injury Break — for comeback_run achievement */}
-          <Field label="Injury / Break Period">
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-              <div>
-                <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>From</span>
-                <DateInput value={injuryBreakStart} onChange={setInjuryBreakStart} max={new Date().toISOString().split('T')[0]} />
-              </div>
-              <div>
-                <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>To</span>
-                <DateInput value={injuryBreakEnd} onChange={setInjuryBreakEnd} max={new Date().toISOString().split('T')[0]} />
-              </div>
+          {/* Injury Log — managed on You page */}
+          <Field label="Injury Log">
+            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', lineHeight: 1.5, marginBottom: 8 }}>
+              Track injuries, rehab phases, and estimated return dates from the You page.
             </div>
+            <button
+              type="button"
+              style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '8px 16px', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer' }}
+              onClick={onClose}
+            >
+              Manage injuries →
+            </button>
           </Field>
 
           {error && (

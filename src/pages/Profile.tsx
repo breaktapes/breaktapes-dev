@@ -10,7 +10,9 @@ import { useAuthStore } from '@/stores/useAuthStore'
 import { selectRaces, selectNextRace, selectAthlete, selectAuthUser } from '@/stores/selectors'
 import { posthog } from '@/lib/posthog'
 import { EditProfileModal } from '@/components/EditProfileModal'
-import type { Race } from '@/types'
+import { InjuryLogModal } from '@/components/InjuryLogModal'
+import type { Injury, Race } from '@/types'
+import { INJURY_BODY_PARTS, INJURY_PHASES } from '@/types'
 import { useUnits, distUnit } from '@/lib/units'
 import { distLabel } from '@/lib/utils'
 import { APP_URL } from '@/env'
@@ -2566,6 +2568,150 @@ function RacePersonality() {
 
 // ─── Bio / Details Section ────────────────────────────────────────────────────
 
+// ─── Injury Tracker Section ───────────────────────────────────────────────────
+
+function InjuryTrackerSection() {
+  const injuries   = useAthleteStore(s => s.injuries)
+  const [modal, setModal] = useState<{ open: boolean; injury?: Injury | null }>({ open: false })
+
+  const active   = injuries.filter(i => !i.resolved)
+  const resolved = injuries.filter(i => i.resolved)
+  const [showResolved, setShowResolved] = useState(false)
+
+  const bodyPartLabel = (key: string) => INJURY_BODY_PARTS.find(p => p.key === key)?.label ?? key
+  const bodyPartEmoji = (key: string) => INJURY_BODY_PARTS.find(p => p.key === key)?.emoji ?? '⚕️'
+  const phaseLabel    = (key: string) => INJURY_PHASES.find(p => p.key === key)?.label ?? key
+  const phaseIndex    = (key: string) => INJURY_PHASES.findIndex(p => p.key === key && p.key !== 'resolved')
+
+  const severityColor = (s: string) =>
+    s === 'severe' ? 'var(--orange)' : s === 'moderate' ? '#FFB347' : 'var(--green)'
+
+  return (
+    <section aria-label="Injury log" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '1rem' }}>
+      {/* Header row */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--orange)', marginBottom: 4 }}>
+            RECOVERY
+          </div>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-lg)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)' }}>
+            INJURY LOG
+          </div>
+        </div>
+        <button
+          style={{ background: 'none', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: 'var(--sp-1) var(--sp-3)', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer' }}
+          onClick={() => setModal({ open: true, injury: null })}
+        >
+          + Log
+        </button>
+      </div>
+
+      {/* Empty state */}
+      {active.length === 0 && (
+        <div style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-4)', textAlign: 'center' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', color: 'var(--white)', marginBottom: 4 }}>No active injuries</div>
+          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>Keep it that way! 🏃</div>
+        </div>
+      )}
+
+      {/* Active injury cards */}
+      {active.map(inj => {
+        const phases = INJURY_PHASES.filter(p => p.key !== 'resolved')
+        const curIdx = phaseIndex(inj.phase)
+        return (
+          <div
+            key={inj.id}
+            style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-4)', cursor: 'pointer' }}
+            onClick={() => setModal({ open: true, injury: inj })}
+            role="button"
+            tabIndex={0}
+            onKeyDown={e => e.key === 'Enter' && setModal({ open: true, injury: inj })}
+            aria-label={`Edit ${bodyPartLabel(inj.bodyPart)} injury`}
+          >
+            {/* Card header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 'var(--sp-3)' }}>
+              <div>
+                <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', color: 'var(--white)', textTransform: 'uppercase' }}>
+                  {bodyPartEmoji(inj.bodyPart)} {bodyPartLabel(inj.bodyPart)}
+                </div>
+                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>
+                  {inj.injuryType.replace(/_/g, ' ')} · Since {inj.startDate}
+                </div>
+              </div>
+              <span style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: severityColor(inj.severity), background: `${severityColor(inj.severity)}22`, border: `1px solid ${severityColor(inj.severity)}55`, borderRadius: 'var(--radius-xs)', padding: '2px 8px' }}>
+                {inj.severity}
+              </span>
+            </div>
+
+            {/* Phase bar */}
+            <div style={{ marginBottom: 'var(--sp-2)' }}>
+              <div style={{ display: 'flex', gap: 2, marginBottom: 'var(--sp-1)' }}>
+                {phases.map((p, i) => (
+                  <div
+                    key={p.key}
+                    style={{ flex: 1, height: 4, borderRadius: 2, background: i <= curIdx ? 'var(--orange)' : 'var(--surface3)' }}
+                    aria-label={p.label}
+                  />
+                ))}
+              </div>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                {phaseLabel(inj.phase)}
+              </div>
+            </div>
+
+            {/* Return date */}
+            {inj.returnDate && (
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--green)' }}>
+                Est. return: {inj.returnDate}
+              </div>
+            )}
+          </div>
+        )
+      })}
+
+      {/* Resolved toggle */}
+      {resolved.length > 0 && (
+        <button
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase', textAlign: 'left', padding: 0 }}
+          onClick={() => setShowResolved(r => !r)}
+        >
+          {showResolved ? '▼' : '▶'} RECOVERED · {resolved.length}
+        </button>
+      )}
+      {showResolved && resolved.map(inj => (
+        <div
+          key={inj.id}
+          style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-3)', opacity: 0.55, cursor: 'pointer' }}
+          onClick={() => setModal({ open: true, injury: inj })}
+          role="button"
+          tabIndex={0}
+          onKeyDown={e => e.key === 'Enter' && setModal({ open: true, injury: inj })}
+        >
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--white)', textTransform: 'uppercase' }}>
+            {bodyPartEmoji(inj.bodyPart)} {bodyPartLabel(inj.bodyPart)} · {inj.injuryType.replace(/_/g, ' ')}
+          </div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>
+            {inj.startDate}{inj.returnDate ? ` → ${inj.returnDate}` : ''} · Resolved
+          </div>
+        </div>
+      ))}
+
+      {/* Disclaimer */}
+      <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', margin: 0, lineHeight: 1.5 }}>
+        Injury information is for personal tracking only and is not medical advice.
+        Consult a physiotherapist or sports doctor for diagnosis and treatment.
+      </p>
+
+      {modal.open && (
+        <InjuryLogModal
+          injury={modal.injury}
+          onClose={() => setModal({ open: false })}
+        />
+      )}
+    </section>
+  )
+}
+
 // ─── Goals Section ────────────────────────────────────────────────────────────
 
 function secsToHMS(secs: number): string {
@@ -2959,6 +3105,7 @@ export function Profile() {
       <RaceActivityHeatmap />
       <MajorsQualifiers />
       <RacePersonality />
+      <InjuryTrackerSection />
       <GoalsSection />
     </main>
   )
