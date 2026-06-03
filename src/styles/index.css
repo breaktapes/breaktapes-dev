@@ -682,8 +682,10 @@ body::after {
   .pl-reverse .pl-showcase-copy, .pl-reverse .pl-showcase-art { order: initial; }
   .pl-showcase-copy { display: flex; flex-direction: column; align-items: center; }
   .pl-showcase-desc { max-width: 520px; }
-  .pl-bullets li { justify-content: center; text-align: left; }
-  .pl-stats-grid { grid-template-columns: repeat(2, 1fr); gap: var(--sp-6) var(--sp-4); }
+  /* Bullets: keep items left-aligned but center the BLOCK within the centered showcase. */
+  .pl-bullets { display: inline-grid; margin: 0 auto; text-align: left; }
+  .pl-bullets li { justify-content: flex-start; text-align: left; }
+  .pl-stats-grid { grid-template-columns: repeat(2, 1fr); gap: var(--sp-6) var(--sp-4); justify-items: center; }
   .pl-scroll-hint { display: none; }
   /* phone stage: phone on top, copy below, centered */
   .pl-stage-inner { grid-template-columns: 1fr; justify-items: center; gap: 1.75rem; text-align: center; }
@@ -694,6 +696,43 @@ body::after {
   .pl-stage-line { max-width: 440px; }
   .pl-stage-title { min-height: auto; }
   .pl-how-grid { grid-template-columns: 1fr; gap: 1.25rem; }
+}
+
+/* Tighter mobile tuning for narrow phones (iPhone SE 375, iPhone 14 390). */
+@media (max-width: 480px) {
+  /* Headline: drop min so the wordmark fits on two lines (no orphan "LINE,"). */
+  .landing-headline { font-size: clamp(2.4rem, 11vw, 3.5rem); line-height: 0.95; letter-spacing: 0.005em; }
+  /* Sub-tagline + proof tighter so CTA sits closer. */
+  .landing-sub { font-size: 14px; margin-bottom: 1.25rem; }
+  .landing-proof { gap: 0.3rem 0.5rem; }
+  /* Hero: pull CTA up — kill the big gap below proof line. */
+  .pl-hero { gap: 1.5rem; padding: 4rem 1.25rem 2.5rem; }
+  .pl-hero-actions { margin: 0.25rem 0 1rem; gap: 0.5rem; }
+  .btn-main { padding: 0.95rem 1.4rem; font-size: 14px; }
+  /* Stats grid: one column on phones — kills the lonely "100%" orphan. */
+  .pl-stats { padding: 3rem 1.25rem; }
+  .pl-stats-grid { grid-template-columns: 1fr; gap: var(--sp-5); max-width: 280px; }
+  /* Section paddings down on narrow phones. */
+  .pl-audience { padding: 3rem 1.25rem 1.5rem; }
+  .pl-showcase { padding: 2.5rem 1.25rem; }
+  .pl-how { padding: 3.5rem 1.25rem; }
+  .pl-faq { padding: 3rem 1.25rem 3.5rem; }
+  /* Section titles a touch smaller. */
+  .pl-eyebrow { font-size: 11px; letter-spacing: 0.18em; }
+  .pl-audience-title, .pl-showcase-title, .pl-stats-title, .pl-how-title, .pl-faq-title {
+    font-size: clamp(1.7rem, 7.5vw, 2.4rem); line-height: 1.05;
+  }
+  /* Persona pills: tighter padding to fit more per row. */
+  .pl-audience-pill { padding: 0.55rem 0.95rem; font-size: 12px; }
+  /* Phone-stage: shrink frame slightly so it doesn't dominate. */
+  .pl-phone { width: 200px; height: 400px; }
+  .pl-stage-line { font-size: 14px; max-width: 320px; }
+  /* CTA pill at bottom of page tighter. */
+  .pl-footer { padding: 2rem 1.25rem; }
+  /* Sticky nav: tighter height so more content shows above the fold. */
+  .pl-nav { padding: 0.6rem 1rem; }
+  .pl-nav-cta { padding: 0.55rem 1rem; font-size: 13px; }
+  .pl-nav-ghost { font-size: 13px; padding: 0.5rem 0.6rem; }
 }
 
 /* Respect reduced-motion: framer-motion honours this via useReducedMotion(),
