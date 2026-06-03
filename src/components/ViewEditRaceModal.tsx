@@ -805,6 +805,16 @@ function SplitsEditor({ splits, onChange, sport }: {
     fontFamily: 'var(--body)',
     minWidth: 0,
   }
+  // Tighter padding + monospace so a full H:MM:SS fits the narrow time cells
+  // on a 390px viewport without clipping.
+  const timeInput: React.CSSProperties = {
+    ...inputBase,
+    fontFamily: 'monospace',
+    fontSize: 'var(--text-compact)',
+    padding: '5px 3px',
+    textAlign: 'center',
+  }
+  const cols = '1fr 66px 78px 56px 18px'
 
   return (
     <div>
@@ -827,9 +837,9 @@ function SplitsEditor({ splits, onChange, sport }: {
 
       {splits.length > 0 && (
         <div style={{ marginBottom: '6px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 72px 76px 64px 20px', gap: '4px', marginBottom: '4px', paddingBottom: '4px', borderBottom: '1px solid var(--border)' }}>
-            {(['CHECKPOINT', 'SPLIT', 'ELAPSED', units === 'imperial' ? 'PACE /MI' : 'PACE /KM', '']).map((h, hi) => (
-              <div key={hi} style={{ fontSize: '9px', color: 'var(--muted2)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{h}</div>
+          <div style={{ display: 'grid', gridTemplateColumns: cols, gap: '4px', marginBottom: '4px', paddingBottom: '4px', borderBottom: '1px solid var(--border)' }}>
+            {(['CHECKPOINT', 'SPLIT', 'ELAPSED', units === 'imperial' ? 'PACE/MI' : 'PACE/KM', '']).map((h, hi) => (
+              <div key={hi} style={{ fontSize: '9px', color: 'var(--muted2)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', textAlign: hi === 0 ? 'left' : 'center', whiteSpace: 'nowrap', overflow: 'hidden' }}>{h}</div>
             ))}
           </div>
           {splits.map((sp, i) => {
@@ -838,15 +848,15 @@ function SplitsEditor({ splits, onChange, sport }: {
             const elapsedStr = cumSecs[i] > 0 ? secsToHMS(cumSecs[i]) : ''
             const paceStr = seg != null && splitSecs > 0 ? fmtPaceBare(splitSecs / seg, units) : ''
             return (
-              <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 72px 76px 64px 20px', gap: '4px', marginBottom: '4px', alignItems: 'center' }}>
+              <div key={i} style={{ display: 'grid', gridTemplateColumns: cols, gap: '4px', marginBottom: '4px', alignItems: 'center' }}>
                 <input
                   style={inputBase}
                   value={sp.label}
                   onChange={e => updateLabel(i, e.target.value)}
-                  placeholder="e.g. 15mi, Aid 1..."
+                  placeholder="15mi, Aid 1..."
                 />
                 <input
-                  style={{ ...inputBase, fontFamily: 'monospace' }}
+                  style={timeInput}
                   value={cellVal(i, 'split', sp.split ?? '')}
                   onChange={e => onSplitInput(i, e.target.value)}
                   onBlur={() => setEdit(null)}
@@ -854,7 +864,7 @@ function SplitsEditor({ splits, onChange, sport }: {
                   inputMode="numeric"
                 />
                 <input
-                  style={{ ...inputBase, fontFamily: 'monospace' }}
+                  style={timeInput}
                   value={cellVal(i, 'elapsed', elapsedStr)}
                   onChange={e => onElapsedInput(i, e.target.value)}
                   onBlur={() => setEdit(null)}
@@ -862,7 +872,7 @@ function SplitsEditor({ splits, onChange, sport }: {
                   inputMode="numeric"
                 />
                 <input
-                  style={{ ...inputBase, fontFamily: 'monospace', opacity: seg == null ? 0.4 : 1 }}
+                  style={{ ...timeInput, opacity: seg == null ? 0.4 : 1 }}
                   value={cellVal(i, 'pace', paceStr)}
                   onChange={e => onPaceInput(i, e.target.value)}
                   onBlur={() => setEdit(null)}
