@@ -45,6 +45,7 @@ export interface AthleteState {
   updateInjury: (id: string, patch: Partial<Injury>) => void
   resolveInjury: (id: string) => void
   deleteInjury: (id: string) => void
+  clearAll: () => void
 }
 
 export const useAthleteStore = create<AthleteState>()(
@@ -187,6 +188,13 @@ export const useAthleteStore = create<AthleteState>()(
         set(s => ({ injuries: s.injuries.filter(i => i.id !== id) }))
         void syncStateToSupabase()
       },
+
+      clearAll: () => set({
+        athlete: null,
+        seasonPlans: [],
+        goals: { annual: {}, distGoals: [] },
+        injuries: [],
+      }),
     }),
     {
       name: 'fl2_ath',  // must match existing localStorage key

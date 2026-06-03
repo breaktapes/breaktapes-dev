@@ -37,6 +37,7 @@ export interface RaceState {
   addToWishlist: (race: Race) => void
   removeFromWishlist: (id: string) => void
   moveToUpcoming: (id: string) => void
+  clearAll: () => void
 }
 
 // All mutation actions push the FULL state via syncStateToSupabase.
@@ -232,6 +233,18 @@ export const useRaceStore = create<RaceState>()(
         // addUpcomingRace already triggers sync — covers both slices in one upsert.
         get().addUpcomingRace(race)
       },
+
+      // Reset all race data on sign-out so a subsequent sign-in by a different
+      // user doesn't merge the previous user's races into the new account.
+      clearAll: () => set({
+        races: [],
+        upcomingRaces: [],
+        wishlistRaces: [],
+        nextRace: null,
+        focusRaceId: null,
+        _pendingDeleteIds: [],
+        deletedRaceIds: [],
+      }),
     }),
     {
       name: 'fl2_races',  // must match existing localStorage key
