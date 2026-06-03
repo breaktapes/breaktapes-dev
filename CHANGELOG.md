@@ -3,6 +3,13 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.6.4] - 2026-06-03
+
+### Fixed
+- **`QuotaExceededError` tab crash — root cause closed.** Production logged 48 `QuotaExceededError: The quota has been exceeded.` reports in two hours. Cause: legacy races still carry base64 photo data URLs embedded in the persisted `fl2_races` localStorage blob, pushing it past the ~5 MB quota. Once over quota, *every* Zustand persist write threw straight out of the React event handler (`pinFocusRace`, `addUpcomingRace` via `ViewEditRaceModal`, etc.) — the function that wrote was incidental; localStorage was simply full. The v0.7.6.3 lazy-on-save migration could not rescue these users: saving one race rewrites the whole still-over-quota blob, so the write threw before the strip landed. Two-part fix:
+  - **Quota-safe persist storage** (`src/lib/safeStorage.ts`) — wraps `localStorage` for both the race and athlete stores; `setItem` now swallows `QuotaExceededError` instead of throwing. A rejected cache write no longer crashes the tab (the canonical copy is the synced Supabase row, not localStorage).
+  - **Boot-time bulk photo migration** (`src/lib/migratePhotos.ts`) — runs once per session after the Clerk token is installed: uploads *every* embedded base64 photo to the `race-photos` Storage bucket, replaces each with its URL in memory, then writes back a single tiny blob. Stripping all photos before one write is what actually frees the quota. Idempotent and retry-safe — re-runs next boot if uploads failed (Worker down / offline), and never loses a photo.
+
 ## [0.7.6.3] - 2026-06-03
 
 ### Fixed
