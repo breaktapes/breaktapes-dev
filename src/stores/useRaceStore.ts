@@ -4,6 +4,7 @@ import type { Race } from '@/types'
 import { syncStateToSupabase } from '@/lib/syncState'
 import type { Tomb } from '@/lib/mergeRaces'
 import { posthog } from '@/lib/posthog'
+import { safeStorage } from '@/lib/safeStorage'
 
 /** Mark a race as locally edited now — drives cross-device last-write-wins. */
 function stamp(r: Race): Race {
@@ -248,6 +249,7 @@ export const useRaceStore = create<RaceState>()(
     }),
     {
       name: 'fl2_races',  // must match existing localStorage key
+      storage: safeStorage,  // swallows QuotaExceededError instead of crashing the tab
       partialize: (s) => ({
         races: s.races,
         upcomingRaces: s.upcomingRaces,
