@@ -3,6 +3,28 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.6.0] - 2026-06-03
+
+### Security
+- **XSS fix** — `r.city` in public profile race rows was interpolated into HTML without escaping. Fixed with `escapeHtml()`.
+- **CSP + X-Frame-Options** — all public profile SSR responses now include `Content-Security-Policy: script-src 'none'; frame-ancestors 'none'`, `X-Frame-Options: DENY`, and `Referrer-Policy: strict-origin-when-cross-origin`.
+- **Admin CORS** — admin endpoints (`/api/admin/*`) restricted from `Access-Control-Allow-Origin: *` to known app origins only.
+- **API sync + state CORS** — `/api/sync` and `/api/state` restricted from wildcard ACAO to known origins.
+- **JWT expiry** — `verifyClerkJwt` now rejects tokens with no `exp` claim (previously optional field allowed non-expiring tokens through).
+- **Payload size cap** — `/api/sync` enforces 512 KB body limit using post-parse text length (Content-Length header is unreliable on chunked transfers).
+- **Error report auth** — `/api/error-report` now requires a valid Clerk JWT; unauthenticated requests are silently dropped.
+- **`get_public_card` RPC** — replaced raw `athlete` JSONB passthrough with an explicit field allowlist; DOB, injury dates, OW user ID, club join dates no longer exposed to anon callers.
+- **Bio visibility** — bio and clubs on public profiles now require `profileVisibility.bio === true` (was default ON).
+- **Admin OPTIONS preflight** — `adminCors()` was refactored to accept a `request` arg but call sites were left without arguments, causing TypeError → 500 on every OPTIONS preflight, breaking the admin UI. Fixed.
+
+### Fixed
+- **Sign-out data leak** — sign-out now clears persisted Zustand stores (`fl2_races`, `fl2_ath`, `fl2_strava`) and resets in-memory state including injuries and wearable tokens. Without this, user B on the same device inherited user A's full race history.
+- **`autoMoveExpiredUpcoming` never ran** — the function existed but was never called. Now invoked from `onRehydrateStorage` so expired upcoming races are promoted to past race history on every app load.
+- **`hasLocalData` guard** — extended to include `seasonPlans` and `goals` so users whose only data is season plans or annual goals get their state backed up to Supabase without needing to log a race first.
+- **`resetRemotePullGate` on sign-out** — the write gate is now re-armed on sign-out so the next user's bootstrap sync defers until their remote pull completes.
+- **Admin analytics `goalCount`** — was always 0 because goals is a `{annual, distGoals}` object, not an array. Fixed to count entries correctly.
+- **`showBio` default** — bio visibility now defaults to OFF (matching all other profile visibility flags), with `=== true` opt-in.
+
 ## [0.7.5.3] - 2026-06-03
 
 ### Changed
