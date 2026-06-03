@@ -677,13 +677,14 @@ body::after {
   .pl-hero-actions { align-items: center; }
   .pl-hero .landing-proof { justify-content: center !important; }
   .pl-showcase {
-    grid-template-columns: 1fr; gap: 2rem; padding: 3.5rem 1.5rem; text-align: center;
+    grid-template-columns: 1fr; gap: 2rem; padding: 3.5rem 1.5rem; text-align: left;
   }
   .pl-reverse .pl-showcase-copy, .pl-reverse .pl-showcase-art { order: initial; }
-  .pl-showcase-copy { display: flex; flex-direction: column; align-items: center; }
-  .pl-showcase-desc { max-width: 520px; }
-  /* Bullets: keep items left-aligned but center the BLOCK within the centered showcase. */
-  .pl-bullets { display: inline-grid; margin: 0 auto; text-align: left; }
+  .pl-showcase-copy { display: flex; flex-direction: column; align-items: flex-start; text-align: left; }
+  .pl-showcase-desc { max-width: 100%; text-align: left; }
+  .pl-showcase-art { justify-content: flex-start; }
+  /* Bullets: left-aligned and flush-left, matching desktop. */
+  .pl-bullets { display: grid; margin: 0; text-align: left; }
   .pl-bullets li { justify-content: flex-start; text-align: left; }
   .pl-stats-grid { grid-template-columns: repeat(2, 1fr); gap: var(--sp-6) var(--sp-4); justify-items: center; }
   .pl-scroll-hint { display: none; }
