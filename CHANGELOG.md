@@ -3,6 +3,18 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.5.2] - 2026-06-03
+
+### Added
+- **Injury Tracker** — athletes can now log injuries by body part, type, and severity directly from the You page. A 3-step modal (body part → type/severity → dates/phase/notes) captures the injury with a manual rehab phase picker (Rest → Cross-training → Building → Training → Racing) and an optional physio-provided return date. No auto-advance from time; all phase transitions are user-driven.
+- **Phase progress bar** on each active injury card — 5-segment bar shows current rehab phase at a glance.
+- **Recovery Mode on Race Readiness widget** — when an active injury is logged, the readiness score is hidden entirely and replaced with a Recovery Mode state showing the injured body part, current phase, and estimated return date. The score returns (with easing) after the injury is resolved.
+- **Resolved injury archive** — resolved injuries collapse into a "RECOVERED · N" section, preserving history without cluttering the active view.
+- **Cross-device sync** — injuries stored in the existing `state_json` JSONB column; no new Supabase migration required. Sync follows the same last-write-wins pattern as season plans.
+
+### Changed
+- **Edit Profile modal** — injury break date fields replaced with a "Manage injuries →" link to the You page injury tracker. Legacy `injuryBreakStart`/`injuryBreakEnd` fields preserved in the save payload for the `comeback_run` achievement.
+
 ## [0.7.5.1] - 2026-06-03
 
 ### Changed
