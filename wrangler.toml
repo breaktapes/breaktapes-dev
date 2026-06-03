@@ -6,10 +6,18 @@ account_id = "b09f233e618dc7f23bcb247c947eb303"
 
 assets = { directory = "dist", html_handling = "auto-trailing-slash", binding = "ASSETS" }
 
-# Production: app.breaktapes.com
+# Production: app.breaktapes.com (athlete app) + admin.breaktapes.com (admin dashboard)
+# Both served by the same Worker + bundle; the app detects the host at runtime
+# (IS_ADMIN_HOST in src/App.tsx) and renders the locked admin shell on the
+# admin subdomain.
+#
+# admin.breaktapes.com uses `custom_domain = true`, which auto-provisions the
+# Cloudflare DNS record + TLS cert on `wrangler deploy` — no manual DNS step.
+# (app.breaktapes.com stays a zone route because its DNS record already exists.)
 # Deploy: wrangler deploy
 routes = [
-  { pattern = "app.breaktapes.com/*", zone_id = "7d1d8be858893e977e57b0455ed2388f" }
+  { pattern = "app.breaktapes.com/*",   zone_id = "7d1d8be858893e977e57b0455ed2388f" },
+  { pattern = "admin.breaktapes.com",   custom_domain = true }
 ]
 
 [vars]

@@ -1326,6 +1326,189 @@ async function handleCatalogSubmit(request, env) {
   return new Response(JSON.stringify({ ok: true }), { headers: ADMIN_CORS });
 }
 
+async function handleAdminUsers(request, env) {
+  if (request.method === 'OPTIONS') return adminCors();
+  const userId = await resolveAdminUserId(request, env);
+  if (!userId) return new Response('Forbidden', { status: 403, headers: ADMIN_CORS });
+  const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceKey) return new Response('Service unavailable', { status: 503, headers: ADMIN_CORS });
+  const supabaseUrl = env.SUPABASE_URL || 'https://kmdpufauamadwavqsinj.supabase.co';
+  const res = await fetch(
+    `${supabaseUrl}/rest/v1/user_state?select=user_id,username,is_public,updated_at,created_at,state_json&order=updated_at.desc&limit=500`,
+    { headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` } }
+  );
+  if (!res.ok) return new Response(await res.text(), { status: 502, headers: ADMIN_CORS });
+  const rows = await res.json();
+  const users = rows.map(r => {
+    let raceCount = 0, upcomingCount = 0, sport = null, country = null, goalCount = 0;
+    try {
+      const s = r.state_json;
+      if (s) {
+        raceCount = Array.isArray(s.races) ? s.races.length : 0;
+        upcomingCount = Array.isArray(s.upcoming_races) ? s.upcoming_races.length : 0;
+        goalCount = Array.isArray(s.goals) ? s.goals.length : 0;
+        sport = s.athlete?.sport ?? null;
+        country = s.athlete?.country ?? null;
+      }
+    } catch {}
+    return { user_id: r.user_id, username: r.username, is_public: r.is_public, updated_at: r.updated_at, created_at: r.created_at, race_count: raceCount, upcoming_count: upcomingCount, goal_count: goalCount, sport, country };
+  });
+  return new Response(JSON.stringify(users), { headers: ADMIN_CORS });
+}
+
+async function handleAdminFeedback(request, env) {
+  if (request.method === 'OPTIONS') return adminCors();
+  const userId = await resolveAdminUserId(request, env);
+  if (!userId) return new Response('Forbidden', { status: 403, headers: ADMIN_CORS });
+  const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceKey) return new Response('Service unavailable', { status: 503, headers: ADMIN_CORS });
+  const supabaseUrl = env.SUPABASE_URL || 'https://kmdpufauamadwavqsinj.supabase.co';
+  const res = await fetch(
+    `${supabaseUrl}/rest/v1/beta_feedback?select=id,user_id,rating,message,page,created_at&order=created_at.desc&limit=300`,
+    { headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` } }
+  );
+  if (!res.ok) return new Response(await res.text(), { status: 502, headers: ADMIN_CORS });
+  return new Response(await res.text(), { headers: ADMIN_CORS });
+}
+
+async function handleAdminErrors(request, env) {
+  if (request.method === 'OPTIONS') return adminCors();
+  const userId = await resolveAdminUserId(request, env);
+  if (!userId) return new Response('Forbidden', { status: 403, headers: ADMIN_CORS });
+  const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceKey) return new Response('Service unavailable', { status: 503, headers: ADMIN_CORS });
+  const supabaseUrl = env.SUPABASE_URL || 'https://kmdpufauamadwavqsinj.supabase.co';
+  const res = await fetch(
+    `${supabaseUrl}/rest/v1/beta_errors?select=id,message,stack,url,env,ts,created_at&order=created_at.desc&limit=200`,
+    { headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` } }
+  );
+  if (!res.ok) return new Response(await res.text(), { status: 502, headers: ADMIN_CORS });
+  return new Response(await res.text(), { headers: ADMIN_CORS });
+}
+
+async function handleAdminAnalytics(request, env) {
+  if (request.method === 'OPTIONS') return adminCors();
+  const userId = await resolveAdminUserId(request, env);
+  if (!userId) return new Response('Forbidden', { status: 403, headers: ADMIN_CORS });
+  const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceKey) return new Response('Service unavailable', { status: 503, headers: ADMIN_CORS });
+  const supabaseUrl = env.SUPABASE_URL || 'https://kmdpufauamadwavqsinj.supabase.co';
+  const svcH = { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` };
+
+  const now = new Date();
+  const d24h = new Date(now - 24*60*60*1000).toISOString();
+  const d7d  = new Date(now - 7*24*60*60*1000).toISOString();
+  const d30d = new Date(now - 30*24*60*60*1000).toISOString();
+
+  const [dauRes, wauRes, mauRes, fbRes, usersRes, totalRes, wearRes, signupRes] = await Promise.all([
+    fetch(`${supabaseUrl}/rest/v1/user_state?select=user_id&updated_at=gte.${d24h}`, { headers: svcH }),
+    fetch(`${supabaseUrl}/rest/v1/user_state?select=user_id&updated_at=gte.${d7d}`,  { headers: svcH }),
+    fetch(`${supabaseUrl}/rest/v1/user_state?select=user_id&updated_at=gte.${d30d}`, { headers: svcH }),
+    fetch(`${supabaseUrl}/rest/v1/beta_feedback?select=id,rating&limit=1000`, { headers: svcH }),
+    fetch(`${supabaseUrl}/rest/v1/user_state?select=user_id,is_public,updated_at,state_json&limit=1000&order=updated_at.desc`, { headers: svcH }),
+    fetch(`${supabaseUrl}/rest/v1/user_state?select=user_id`, { headers: { ...svcH, Prefer: 'count=exact', Range: '0-0' } }),
+    fetch(`${supabaseUrl}/rest/v1/wearable_tokens?select=user_id,provider`, { headers: svcH }),
+    fetch(`${supabaseUrl}/rest/v1/user_state?select=created_at&created_at=gte.${d30d}&order=created_at.asc`, { headers: svcH }),
+  ]);
+
+  const totalCount = parseInt(totalRes.headers.get('Content-Range')?.split('/')[1] ?? '0') || 0;
+  const dau = dauRes.ok ? (await dauRes.json()).length : 0;
+  const wau = wauRes.ok ? (await wauRes.json()).length : 0;
+  const mau = mauRes.ok ? (await mauRes.json()).length : 0;
+
+  let fbCount = 0, avgRating = 0;
+  if (fbRes.ok) {
+    const fbs = await fbRes.json();
+    fbCount = fbs.length;
+    const rated = fbs.filter(f => f.rating);
+    if (rated.length) avgRating = Math.round(rated.reduce((s, f) => s + f.rating, 0) / rated.length * 10) / 10;
+  }
+
+  // Wearable adoption: distinct users per provider + any-provider count.
+  const wearByProvider = {};
+  const wearUserSet = new Set();
+  if (wearRes.ok) {
+    for (const w of await wearRes.json()) {
+      if (!w.provider) continue;
+      wearByProvider[w.provider] = (wearByProvider[w.provider] || 0) + 1;
+      wearUserSet.add(w.user_id);
+    }
+  }
+
+  const sportCounts = {}, distCounts = {}, countryCounts = {};
+  let totalRaces = 0, usersWithRaces = 0;
+  let publicCount = 0, withUpcoming = 0, withGoals = 0;
+  let segPower = 0, segActive = 0, segDormant = 0;          // 10+ / 1-9 / 0 races
+  let recToday = 0, recWeek = 0, recMonth = 0, recDormant = 0;
+  const nowMs = now.getTime();
+  if (usersRes.ok) {
+    const rows = await usersRes.json();
+    for (const r of rows) {
+      const s = r.state_json ?? {};
+      const races = Array.isArray(s.races) ? s.races : [];
+      const upcoming = Array.isArray(s.upcoming_races) ? s.upcoming_races : [];
+      const goals = Array.isArray(s.goals) ? s.goals : [];
+
+      if (r.is_public) publicCount++;
+      if (upcoming.length) withUpcoming++;
+      if (goals.length) withGoals++;
+
+      if (races.length >= 10) segPower++;
+      else if (races.length >= 1) segActive++;
+      else segDormant++;
+
+      if (races.length) { usersWithRaces++; totalRaces += races.length; }
+      for (const rc of races) {
+        if (rc.sport)     sportCounts[rc.sport]       = (sportCounts[rc.sport]       || 0) + 1;
+        if (rc.distance)  distCounts[rc.distance]     = (distCounts[rc.distance]     || 0) + 1;
+        if (rc.country)   countryCounts[rc.country]   = (countryCounts[rc.country]   || 0) + 1;
+      }
+
+      const age = nowMs - new Date(r.updated_at).getTime();
+      if (age < 24*60*60*1000)       recToday++;
+      else if (age < 7*24*60*60*1000)  recWeek++;
+      else if (age < 30*24*60*60*1000) recMonth++;
+      else recDormant++;
+    }
+  }
+
+  // Signup growth: daily new-user counts over the last 30 days (created_at).
+  const signupsByDay = {};
+  if (signupRes.ok) {
+    for (const r of await signupRes.json()) {
+      if (!r.created_at) continue;
+      const day = r.created_at.slice(0, 10); // YYYY-MM-DD
+      signupsByDay[day] = (signupsByDay[day] || 0) + 1;
+    }
+  }
+  const growth = [];
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(nowMs - i*24*60*60*1000).toISOString().slice(0, 10);
+    growth.push([d, signupsByDay[d] || 0]);
+  }
+
+  const pct = (n) => totalCount ? Math.round(n / totalCount * 100) : 0;
+
+  return new Response(JSON.stringify({
+    users:      { total: totalCount, dau, wau, mau },
+    feedback:   { count: fbCount, avg_rating: avgRating },
+    races:      { total: totalRaces, users_with_races: usersWithRaces, avg_per_user: usersWithRaces ? Math.round(totalRaces / usersWithRaces * 10) / 10 : 0 },
+    segments:   { power: segPower, active: segActive, dormant: segDormant },
+    adoption:   {
+      public:   { count: publicCount,        pct: pct(publicCount) },
+      upcoming: { count: withUpcoming,        pct: pct(withUpcoming) },
+      goals:    { count: withGoals,           pct: pct(withGoals) },
+      wearables:{ count: wearUserSet.size,    pct: pct(wearUserSet.size) },
+    },
+    recency:    { today: recToday, week: recWeek, month: recMonth, dormant: recDormant },
+    wearables:  Object.entries(wearByProvider).sort((a, b) => b[1] - a[1]),
+    growth,
+    top_sports: Object.entries(sportCounts).sort((a, b) => b[1] - a[1]).slice(0, 8),
+    top_distances: Object.entries(distCounts).sort((a, b) => b[1] - a[1]).slice(0, 10),
+    top_countries: Object.entries(countryCounts).sort((a, b) => b[1] - a[1]).slice(0, 10),
+  }), { headers: ADMIN_CORS });
+}
+
 async function handleAdminListContributions(request, env) {
   if (request.method === 'OPTIONS') return adminCors();
 
@@ -1605,6 +1788,26 @@ async function handleRequest(request, env) {
     const adminActionMatch = path.match(/^\/api\/admin\/contributions\/(\d+)\/(approve|reject)$/);
     if (request.method === 'POST' && adminActionMatch) {
       return handleAdminAction(request, env, Number(adminActionMatch[1]), adminActionMatch[2]);
+    }
+
+    // Admin: GET /api/admin/users
+    if ((request.method === 'GET' || request.method === 'OPTIONS') && path === '/api/admin/users') {
+      return handleAdminUsers(request, env);
+    }
+
+    // Admin: GET /api/admin/feedback
+    if ((request.method === 'GET' || request.method === 'OPTIONS') && path === '/api/admin/feedback') {
+      return handleAdminFeedback(request, env);
+    }
+
+    // Admin: GET /api/admin/errors
+    if ((request.method === 'GET' || request.method === 'OPTIONS') && path === '/api/admin/errors') {
+      return handleAdminErrors(request, env);
+    }
+
+    // Admin: GET /api/admin/analytics
+    if ((request.method === 'GET' || request.method === 'OPTIONS') && path === '/api/admin/analytics') {
+      return handleAdminAnalytics(request, env);
     }
 
     // POST /api/catalog/submit — user submits upcoming race to catalog
