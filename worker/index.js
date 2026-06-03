@@ -336,7 +336,7 @@ function renderProfile(row, username) {
 
   // Profile visibility gates — all default OFF (must be explicitly enabled)
   const pv = athlete.profileVisibility || {};
-  const showBio      = pv.bio       !== false; // default ON — bio/clubs shown unless explicitly hidden
+  const showBio      = pv.bio       === true; // explicit opt-in, matching all other visibility flags
   const showStats    = pv.stats     === true;
   const showRaces    = pv.races     === true;
   const showPBs      = pv.pbs       === true;
@@ -1231,7 +1231,7 @@ async function verifyClerkJwt(token) {
     if (!ALLOWED_ISS.has(iss)) return null;
     if (!payload.sub || !String(payload.sub).startsWith('user_')) return null;
     const nowS = Math.floor(Date.now() / 1000);
-    if (payload.exp && nowS > payload.exp) return null;
+    if (!payload.exp || nowS > payload.exp) return null;
     if (payload.nbf && nowS + 5 < payload.nbf) return null;
 
     let keys = await _getJwks(iss, false);
@@ -1279,8 +1279,8 @@ const ADMIN_CORS = {
   'Content-Type': 'application/json',
 };
 
-function adminCors() {
-  return new Response(null, { headers: ADMIN_CORS });
+function adminCors(request) {
+  return new Response(null, { headers: adminCorsHeaders(request) });
 }
 
 /** Verify Clerk token (signature) and return userId if valid admin, else null. */
@@ -1299,24 +1299,24 @@ async function resolveAdminUserId(request, env) {
 
 async function handleCatalogSubmit(request, env) {
   if (request.method === 'OPTIONS') return adminCors();
-  if (request.method !== 'POST') return new Response('Method not allowed', { status: 405, headers: ADMIN_CORS });
+  if (request.method !== 'POST') return new Response('Method not allowed', { status: 405, headers: adminCorsHeaders(request) });
 
   // Auth: decode Clerk JWT
   const authHeader = request.headers.get('Authorization') ?? '';
   const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
-  if (!token) return new Response('Unauthorized', { status: 401, headers: ADMIN_CORS });
+  if (!token) return new Response('Unauthorized', { status: 401, headers: adminCorsHeaders(request) });
   const payload = await verifyClerkJwt(token);
-  if (!payload || !payload.sub) return new Response('Invalid token', { status: 401, headers: ADMIN_CORS });
+  if (!payload || !payload.sub) return new Response('Invalid token', { status: 401, headers: adminCorsHeaders(request) });
   const userId = payload.sub;
 
   let body;
-  try { body = await request.json(); } catch { return new Response('Invalid JSON', { status: 400, headers: ADMIN_CORS }); }
+  try { body = await request.json(); } catch { return new Response('Invalid JSON', { status: 400, headers: adminCorsHeaders(request) }); }
 
   const { name, city, country, sport, dist_label, dist_km, year, event_date, month, day } = body;
-  if (!name || !city) return new Response('name and city required', { status: 400, headers: ADMIN_CORS });
+  if (!name || !city) return new Response('name and city required', { status: 400, headers: adminCorsHeaders(request) });
 
   const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!serviceKey) return new Response('Service unavailable', { status: 503, headers: ADMIN_CORS });
+  if (!serviceKey) return new Response('Service unavailable', { status: 503, headers: adminCorsHeaders(request) });
 
   const supabaseUrl = env.SUPABASE_URL || 'https://kmdpufauamadwavqsinj.supabase.co';
   const res = await fetch(`${supabaseUrl}/rest/v1/rpc/upsert_catalog_contribution`, {
@@ -1344,30 +1344,30 @@ async function handleCatalogSubmit(request, env) {
 
   if (!res.ok) {
     const err = await res.text().catch(() => '');
-    return new Response(`RPC error: ${err}`, { status: 502, headers: ADMIN_CORS });
+    return new Response(`RPC error: ${err}`, { status: 502, headers: adminCorsHeaders(request) });
   }
-  return new Response(JSON.stringify({ ok: true }), { headers: ADMIN_CORS });
+  return new Response(JSON.stringify({ ok: true }), { headers: adminCorsHeaders(request) });
 }
 
 async function handleAdminCheck(request, env) {
   if (request.method === 'OPTIONS') return adminCors();
   const userId = await resolveAdminUserId(request, env);
-  if (!userId) return new Response(JSON.stringify({ ok: false }), { status: 403, headers: ADMIN_CORS });
-  return new Response(JSON.stringify({ ok: true }), { headers: ADMIN_CORS });
+  if (!userId) return new Response(JSON.stringify({ ok: false }), { status: 403, headers: adminCorsHeaders(request) });
+  return new Response(JSON.stringify({ ok: true }), { headers: adminCorsHeaders(request) });
 }
 
 async function handleAdminUsers(request, env) {
   if (request.method === 'OPTIONS') return adminCors();
   const userId = await resolveAdminUserId(request, env);
-  if (!userId) return new Response('Forbidden', { status: 403, headers: ADMIN_CORS });
+  if (!userId) return new Response('Forbidden', { status: 403, headers: adminCorsHeaders(request) });
   const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!serviceKey) return new Response('Service unavailable', { status: 503, headers: ADMIN_CORS });
+  if (!serviceKey) return new Response('Service unavailable', { status: 503, headers: adminCorsHeaders(request) });
   const supabaseUrl = env.SUPABASE_URL || 'https://kmdpufauamadwavqsinj.supabase.co';
   const res = await fetch(
     `${supabaseUrl}/rest/v1/user_state?select=user_id,username,is_public,updated_at,created_at,state_json&order=updated_at.desc&limit=500`,
     { headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` } }
   );
-  if (!res.ok) return new Response(await res.text(), { status: 502, headers: ADMIN_CORS });
+  if (!res.ok) return new Response('Database error', { status: 502, headers: adminCorsHeaders(request) });
   const rows = await res.json();
   const users = rows.map(r => {
     let raceCount = 0, upcomingCount = 0, sport = null, country = null, goalCount = 0;
@@ -1384,45 +1384,45 @@ async function handleAdminUsers(request, env) {
     } catch {}
     return { user_id: r.user_id, username: r.username, is_public: r.is_public, updated_at: r.updated_at, created_at: r.created_at, race_count: raceCount, upcoming_count: upcomingCount, goal_count: goalCount, sport, country };
   });
-  return new Response(JSON.stringify(users), { headers: ADMIN_CORS });
+  return new Response(JSON.stringify(users), { headers: adminCorsHeaders(request) });
 }
 
 async function handleAdminFeedback(request, env) {
   if (request.method === 'OPTIONS') return adminCors();
   const userId = await resolveAdminUserId(request, env);
-  if (!userId) return new Response('Forbidden', { status: 403, headers: ADMIN_CORS });
+  if (!userId) return new Response('Forbidden', { status: 403, headers: adminCorsHeaders(request) });
   const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!serviceKey) return new Response('Service unavailable', { status: 503, headers: ADMIN_CORS });
+  if (!serviceKey) return new Response('Service unavailable', { status: 503, headers: adminCorsHeaders(request) });
   const supabaseUrl = env.SUPABASE_URL || 'https://kmdpufauamadwavqsinj.supabase.co';
   const res = await fetch(
     `${supabaseUrl}/rest/v1/beta_feedback?select=id,user_id,rating,message,page,created_at&order=created_at.desc&limit=300`,
     { headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` } }
   );
-  if (!res.ok) return new Response(await res.text(), { status: 502, headers: ADMIN_CORS });
-  return new Response(await res.text(), { headers: ADMIN_CORS });
+  if (!res.ok) return new Response('Database error', { status: 502, headers: adminCorsHeaders(request) });
+  return new Response(await res.text(), { headers: adminCorsHeaders(request) });
 }
 
 async function handleAdminErrors(request, env) {
   if (request.method === 'OPTIONS') return adminCors();
   const userId = await resolveAdminUserId(request, env);
-  if (!userId) return new Response('Forbidden', { status: 403, headers: ADMIN_CORS });
+  if (!userId) return new Response('Forbidden', { status: 403, headers: adminCorsHeaders(request) });
   const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!serviceKey) return new Response('Service unavailable', { status: 503, headers: ADMIN_CORS });
+  if (!serviceKey) return new Response('Service unavailable', { status: 503, headers: adminCorsHeaders(request) });
   const supabaseUrl = env.SUPABASE_URL || 'https://kmdpufauamadwavqsinj.supabase.co';
   const res = await fetch(
     `${supabaseUrl}/rest/v1/beta_errors?select=id,message,stack,url,env,ts,created_at&order=created_at.desc&limit=200`,
     { headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` } }
   );
-  if (!res.ok) return new Response(await res.text(), { status: 502, headers: ADMIN_CORS });
-  return new Response(await res.text(), { headers: ADMIN_CORS });
+  if (!res.ok) return new Response('Database error', { status: 502, headers: adminCorsHeaders(request) });
+  return new Response(await res.text(), { headers: adminCorsHeaders(request) });
 }
 
 async function handleAdminAnalytics(request, env) {
   if (request.method === 'OPTIONS') return adminCors();
   const userId = await resolveAdminUserId(request, env);
-  if (!userId) return new Response('Forbidden', { status: 403, headers: ADMIN_CORS });
+  if (!userId) return new Response('Forbidden', { status: 403, headers: adminCorsHeaders(request) });
   const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!serviceKey) return new Response('Service unavailable', { status: 503, headers: ADMIN_CORS });
+  if (!serviceKey) return new Response('Service unavailable', { status: 503, headers: adminCorsHeaders(request) });
   const supabaseUrl = env.SUPABASE_URL || 'https://kmdpufauamadwavqsinj.supabase.co';
   const svcH = { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` };
 
@@ -1538,17 +1538,17 @@ async function handleAdminAnalytics(request, env) {
     top_sports: Object.entries(sportCounts).sort((a, b) => b[1] - a[1]).slice(0, 8),
     top_distances: Object.entries(distCounts).sort((a, b) => b[1] - a[1]).slice(0, 10),
     top_countries: Object.entries(countryCounts).sort((a, b) => b[1] - a[1]).slice(0, 10),
-  }), { headers: ADMIN_CORS });
+  }), { headers: adminCorsHeaders(request) });
 }
 
 async function handleAdminListContributions(request, env) {
   if (request.method === 'OPTIONS') return adminCors();
 
   const userId = await resolveAdminUserId(request, env);
-  if (!userId) return new Response('Forbidden', { status: 403, headers: ADMIN_CORS });
+  if (!userId) return new Response('Forbidden', { status: 403, headers: adminCorsHeaders(request) });
 
   const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!serviceKey) return new Response('Service unavailable', { status: 503, headers: ADMIN_CORS });
+  if (!serviceKey) return new Response('Service unavailable', { status: 503, headers: adminCorsHeaders(request) });
 
   const supabaseUrl = env.SUPABASE_URL || 'https://kmdpufauamadwavqsinj.supabase.co';
   const res = await fetch(
@@ -1557,20 +1557,20 @@ async function handleAdminListContributions(request, env) {
   );
 
   if (!res.ok) {
-    return new Response(await res.text(), { status: 502, headers: ADMIN_CORS });
+    return new Response('Database error', { status: 502, headers: adminCorsHeaders(request) });
   }
   const data = await res.json();
-  return new Response(JSON.stringify(data), { headers: ADMIN_CORS });
+  return new Response(JSON.stringify(data), { headers: adminCorsHeaders(request) });
 }
 
 async function handleAdminAction(request, env, id, action) {
   if (request.method === 'OPTIONS') return adminCors();
 
   const userId = await resolveAdminUserId(request, env);
-  if (!userId) return new Response('Forbidden', { status: 403, headers: ADMIN_CORS });
+  if (!userId) return new Response('Forbidden', { status: 403, headers: adminCorsHeaders(request) });
 
   const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!serviceKey) return new Response('Service unavailable', { status: 503, headers: ADMIN_CORS });
+  if (!serviceKey) return new Response('Service unavailable', { status: 503, headers: adminCorsHeaders(request) });
 
   const supabaseUrl = env.SUPABASE_URL || 'https://kmdpufauamadwavqsinj.supabase.co';
   const svcHeaders = { apikey: serviceKey, Authorization: `Bearer ${serviceKey}`, 'Content-Type': 'application/json' };
@@ -1581,9 +1581,9 @@ async function handleAdminAction(request, env, id, action) {
       `${supabaseUrl}/rest/v1/pending_catalog_contributions?id=eq.${id}&limit=1`,
       { headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` } }
     );
-    if (!fetchRes.ok) return new Response('Fetch failed', { status: 502, headers: ADMIN_CORS });
+    if (!fetchRes.ok) return new Response('Fetch failed', { status: 502, headers: adminCorsHeaders(request) });
     const rows = await fetchRes.json();
-    if (!rows || rows.length === 0) return new Response('Not found', { status: 404, headers: ADMIN_CORS });
+    if (!rows || rows.length === 0) return new Response('Not found', { status: 404, headers: adminCorsHeaders(request) });
     const c = rows[0];
 
     // Map sport to catalog type code
@@ -1609,7 +1609,7 @@ async function handleAdminAction(request, env, id, action) {
     });
     if (!insertRes.ok) {
       const err = await insertRes.text();
-      return new Response(`Insert failed: ${err}`, { status: 502, headers: ADMIN_CORS });
+      return new Response(`Insert failed: ${err}`, { status: 502, headers: adminCorsHeaders(request) });
     }
   }
 
@@ -1624,21 +1624,23 @@ async function handleAdminAction(request, env, id, action) {
   );
 
   if (!updateRes.ok) {
-    return new Response('Update failed', { status: 502, headers: ADMIN_CORS });
+    return new Response('Update failed', { status: 502, headers: adminCorsHeaders(request) });
   }
-  return new Response(null, { status: 204, headers: ADMIN_CORS });
+  return new Response(null, { status: 204, headers: adminCorsHeaders(request) });
 }
 
+
+function apiCorsHeaders(request) {
+  const origin = request.headers.get('Origin') || '';
+  const allowed = ADMIN_ALLOWED_ORIGINS.has(origin) ? origin : 'https://app.breaktapes.com';
+  return { 'Access-Control-Allow-Origin': allowed, 'Access-Control-Allow-Headers': 'Authorization, Content-Type' };
+}
 
 async function handleApiSync(request, env) {
   // CORS preflight
   if (request.method === 'OPTIONS') {
     return new Response(null, {
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Authorization, Content-Type',
-      },
+      headers: { ...apiCorsHeaders(request), 'Access-Control-Allow-Methods': 'POST, OPTIONS' },
     });
   }
 
@@ -1656,21 +1658,23 @@ async function handleApiSync(request, env) {
   if (!payload || !payload.sub) return new Response('Invalid token', { status: 401 });
   const userId = payload.sub;
 
-  // Enforce payload size cap before reading body (512 KB is ample for any real state_json)
-  const contentLength = parseInt(request.headers.get('content-length') || '0', 10);
-  if (contentLength > 512_000) return new Response('Payload too large', { status: 413 });
+  // Read body as text first so we can enforce size cap reliably.
+  // Content-Length is client-controlled and absent on chunked transfers — post-parse check is the only reliable gate.
+  let bodyText;
+  try { bodyText = await request.text(); } catch { return new Response('Invalid body', { status: 400 }); }
+  if (bodyText.length > 512_000) return new Response('Payload too large', { status: 413 });
 
-  // Parse body
   let body;
-  try { body = await request.json(); }
+  try { body = JSON.parse(bodyText); }
   catch { return new Response('Invalid JSON', { status: 400 }); }
 
-  // Validate username format if provided
-  const rawUsername = body.username ?? null;
+  // Validate username — normalize to lowercase first (Clerk may provide mixed-case)
+  const rawUsername = body.username != null ? String(body.username).toLowerCase().trim() : null;
   if (rawUsername !== null && rawUsername !== '') {
-    if (typeof rawUsername !== 'string' || !/^[a-z0-9][a-z0-9-]{1,18}[a-z0-9]$/.test(rawUsername)) {
+    if (!/^[a-z0-9][a-z0-9-]{1,18}[a-z0-9]$/.test(rawUsername)) {
       return new Response('Invalid username format', { status: 400 });
     }
+    body = { ...body, username: rawUsername };
   }
 
   const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
@@ -1725,29 +1729,21 @@ async function handleApiSync(request, env) {
   });
 
   if (!res.ok) {
-    const err = await res.text().catch(() => res.status.toString());
-    return new Response(`Supabase error: ${err}`, {
+    return new Response('Sync error', {
       status: 502,
-      headers: { 'Access-Control-Allow-Origin': '*' },
+      headers: apiCorsHeaders(request),
     });
   }
 
   return new Response(JSON.stringify({ ok: true }), {
-    headers: {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
-    },
+    headers: { 'Content-Type': 'application/json', ...apiCorsHeaders(request) },
   });
 }
 
 async function handleApiState(request, env) {
   if (request.method === 'OPTIONS') {
     return new Response(null, {
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, OPTIONS',
-        'Access-Control-Allow-Headers': 'Authorization, Content-Type',
-      },
+      headers: { ...apiCorsHeaders(request), 'Access-Control-Allow-Methods': 'GET, OPTIONS' },
     });
   }
 
@@ -1775,9 +1771,9 @@ async function handleApiState(request, env) {
   );
 
   if (!res.ok) {
-    return new Response(`Supabase error: ${res.status}`, {
+    return new Response('State fetch error', {
       status: 502,
-      headers: { 'Access-Control-Allow-Origin': '*' },
+      headers: apiCorsHeaders(request),
     });
   }
 
@@ -1785,10 +1781,7 @@ async function handleApiState(request, env) {
   const stateJson = (rows && rows[0]?.state_json) ?? null;
 
   return new Response(JSON.stringify({ state_json: stateJson }), {
-    headers: {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
-    },
+    headers: { 'Content-Type': 'application/json', ...apiCorsHeaders(request) },
   });
 }
 
@@ -1804,7 +1797,7 @@ export default {
       // For profile/race SSR routes, degrade to a clean 404; otherwise 500.
       const p = new URL(request.url).pathname;
       if (p.startsWith('/u/')) return notFoundPage(p.split('/')[2] || '');
-      return new Response('Internal error', { status: 500, headers: { 'Access-Control-Allow-Origin': '*' } });
+      return new Response('Internal error', { status: 500, headers: { 'X-Content-Type-Options': 'nosniff' } });
     }
   },
 };
@@ -1875,7 +1868,9 @@ async function handleRequest(request, env) {
       const errPayload = await verifyClerkJwt(errToken);
       if (!errPayload) return new Response(null, { status: 204 });
       try {
-        const body = await request.json();
+        const errText = await request.text().catch(() => '');
+        if (errText.length > 32_000) return new Response(null, { status: 204 }); // silently drop oversized reports
+        const body = JSON.parse(errText);
         // Store in Supabase beta_errors if table exists; otherwise silently drop
         if (env.SUPABASE_URL && env.SUPABASE_ANON_KEY) {
           await fetch(`${env.SUPABASE_URL}/rest/v1/beta_errors`, {

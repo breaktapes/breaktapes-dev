@@ -12,7 +12,8 @@ returns jsonb language sql security definer set search_path = public stable as $
         'lastName',          us.state_json->'athlete'->'lastName',
         'city',              us.state_json->'athlete'->'city',
         'country',           us.state_json->'athlete'->'country',
-        'bio',               us.state_json->'athlete'->'bio',
+        'bio',               case when coalesce((us.state_json->'athlete'->'profileVisibility'->>'bio')::boolean, false)
+                           then us.state_json->'athlete'->'bio' else null end,
         'mainSport',         us.state_json->'athlete'->'mainSport',
         'clubs',             us.state_json->'athlete'->'clubs',
         'imageUrl',          us.state_json->'athlete'->'imageUrl',
@@ -27,3 +28,6 @@ returns jsonb language sql security definer set search_path = public stable as $
   from user_state us
   where lower(us.username) = lower(p_username) and us.is_public = true limit 1;
 $$;
+
+-- Re-state the grant for resilience — idempotent if prior migration already applied it.
+grant execute on function public.get_public_card(text) to anon;

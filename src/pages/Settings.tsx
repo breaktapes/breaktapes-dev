@@ -4,7 +4,7 @@ import { useClerk, useUser } from '@clerk/clerk-react'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { useRaceStore } from '@/stores/useRaceStore'
-import { syncStateToSupabase } from '@/lib/syncState'
+import { syncStateToSupabase, resetRemotePullGate } from '@/lib/syncState'
 import { THEMES } from '@/types'
 import type { ThemeId } from '@/types'
 import { useThemeStore } from '@/stores/useThemeStore'
@@ -91,6 +91,8 @@ export function Settings() {
     useAthleteStore.persist.clearStorage()
     useRaceStore.setState({ races: [], upcomingRaces: [], wishlistRaces: [], nextRace: null, focusRaceId: null, deletedRaceIds: [], _pendingDeleteIds: [] })
     useAthleteStore.setState({ athlete: null, seasonPlans: [], goals: { annual: {}, distGoals: [] } })
+    // Re-arm the write gate so the next user's bootstrap sync defers until their remote pull lands.
+    resetRemotePullGate()
     await signOut()
   }
 
