@@ -643,11 +643,11 @@ function PhoneNav({ active }: { active: string }) {
 }
 function PhoneApp({ title, sub, active, children }: { title: string; sub?: string; active: string; children: React.ReactNode }) {
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ padding: '38px 14px 9px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)' }}>
-        <div style={{ minWidth: 0 }}>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 13, letterSpacing: '0.04em', color: 'var(--white)', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{title}</div>
-          {sub ? <div style={{ fontFamily: 'var(--body)', fontSize: 8, color: 'var(--muted)', marginTop: 1 }}>{sub}</div> : null}
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', textAlign: 'left' }}>
+      <div style={{ padding: '38px 14px 9px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid var(--border)', textAlign: 'left' }}>
+        <div style={{ minWidth: 0, textAlign: 'left' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 13, letterSpacing: '0.04em', color: 'var(--white)', textTransform: 'uppercase', whiteSpace: 'nowrap', textAlign: 'left' }}>{title}</div>
+          {sub ? <div style={{ fontFamily: 'var(--body)', fontSize: 8, color: 'var(--muted)', marginTop: 1, textAlign: 'left' }}>{sub}</div> : null}
         </div>
         <span style={{ width: 23, height: 23, borderRadius: '50%', flexShrink: 0, background: 'linear-gradient(135deg, var(--orange), #B8341A)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 10, color: '#fff' }}>{(sub || title).trim()[0]}</span>
       </div>
