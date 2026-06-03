@@ -64,9 +64,9 @@ const st = {
   backBtn: { background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: 'var(--text-lg)', padding: '4px 8px', lineHeight: 1 } as React.CSSProperties,
   title: { fontFamily: 'var(--headline)', fontSize: 'var(--text-xl)', fontWeight: 900, letterSpacing: '0.06em', textTransform: 'uppercase' as const, color: 'var(--white)', margin: 0 } as React.CSSProperties,
   badge: { fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', background: 'rgba(var(--orange-ch),0.15)', color: 'var(--orange)', border: '1px solid rgba(var(--orange-ch),0.35)', borderRadius: 'var(--radius-xs)', padding: '2px 8px', textTransform: 'uppercase' as const } as React.CSSProperties,
-  tabBar: { display: 'flex', gap: '4px', marginBottom: '20px', borderBottom: '1px solid var(--border)', paddingBottom: '0' } as React.CSSProperties,
+  tabBar: { display: 'flex', gap: '4px', marginBottom: '20px', borderBottom: '1px solid var(--border)', paddingBottom: '0', overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' } as React.CSSProperties,
   tab: (active: boolean): React.CSSProperties => ({
-    background: 'none', border: 'none', cursor: 'pointer',
+    background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0, whiteSpace: 'nowrap',
     fontFamily: 'var(--headline)', fontSize: 'var(--text-xs)', fontWeight: 700, letterSpacing: '0.1em',
     textTransform: 'uppercase', padding: '8px 14px',
     color: active ? 'var(--orange)' : 'var(--muted)',
