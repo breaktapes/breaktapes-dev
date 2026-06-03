@@ -145,6 +145,24 @@ describe('Dashboard — RecentRaces', () => {
   })
 })
 
+// ─── NewUserOnboarding ───────────────────────────────────────────────────────
+
+describe('Dashboard — NewUserOnboarding', () => {
+  it('shows Import button when no races', () => {
+    renderDashboard()
+    const importBtn = screen.getByRole('button', { name: /↓ Import/i })
+    expect(importBtn).toBeInTheDocument()
+  })
+
+  it('does not show NewUserOnboarding when races exist', () => {
+    useRaceStore.setState({ races: [RACE], nextRace: null, upcomingRaces: [] })
+    renderDashboard()
+    // "Log a Race" button in NewUserOnboarding should not be present
+    const logBtns = screen.queryAllByText(/^Log a Race$/i)
+    expect(logBtns.length).toBe(0)
+  })
+})
+
 // ─── Zone structure ───────────────────────────────────────────────────────────
 
 describe('Dashboard — zone labels', () => {

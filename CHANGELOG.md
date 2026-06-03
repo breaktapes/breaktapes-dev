@@ -16,6 +16,7 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`get_public_card` RPC** — replaced raw `athlete` JSONB passthrough with an explicit field allowlist; DOB, injury dates, OW user ID, club join dates no longer exposed to anon callers.
 - **Bio visibility** — bio and clubs on public profiles now require `profileVisibility.bio === true` (was default ON).
 - **Admin OPTIONS preflight** — `adminCors()` was refactored to accept a `request` arg but call sites were left without arguments, causing TypeError → 500 on every OPTIONS preflight, breaking the admin UI. Fixed.
+- **OW proxy IDOR** — `/ow/*` routes trusted client-supplied `ow_user_id` with no ownership check, letting any user read another's wearable data. Added Clerk JWT verification + `verifyOwOwner()` (sub == OW external_user_id) to every OW route; frontend `owFetch` attaches the Clerk JWT.
 
 ### Fixed
 - **Sign-out data leak** — sign-out now clears persisted Zustand stores (`fl2_races`, `fl2_ath`, `fl2_strava`) and resets in-memory state including injuries and wearable tokens. Without this, user B on the same device inherited user A's full race history.
@@ -24,6 +25,13 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **`resetRemotePullGate` on sign-out** — the write gate is now re-armed on sign-out so the next user's bootstrap sync defers until their remote pull completes.
 - **Admin analytics `goalCount`** — was always 0 because goals is a `{annual, distGoals}` object, not an array. Fixed to count entries correctly.
 - **`showBio` default** — bio visibility now defaults to OFF (matching all other profile visibility flags), with `=== true` opt-in.
+- **Wearable + Apple Health token persistence** — `saveWearableToken`/`removeWearableToken`/Apple Health imports used `supabase.auth.getUser()` (always null under Clerk), making every write a silent no-op. Switched to the Clerk user id from the auth store.
+
+## [0.7.5.5] - 2026-06-03
+
+### Changed
+- **Import more prominent in onboarding** — new users now see a "↓ Import" button alongside "Log a Race" as co-equal primary CTAs in the onboarding card on the dashboard. The Races page empty state (zero races logged) now shows an "↓ Import your results" button instead of plain muted text, reducing friction for athletes with existing race history.
+- **IronmanRacePicker wired to dashboard import** — the IRONMAN/70.3 race-picker flow is now accessible when opening the import modal from the onboarding card, matching the entry point in the Races page.
 
 ## [0.7.5.4] - 2026-06-03
 

@@ -580,13 +580,27 @@ function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport, onDiscover
             ))
           )
         ) : sorted.length === 0 ? (
-          <div style={{
-            textAlign: 'center', padding: '2rem 1rem',
-            color: 'var(--muted)', fontSize: 'var(--text-sm)',
-            fontFamily: 'var(--headline)', letterSpacing: '0.08em', textTransform: 'uppercase',
-          }}>
-            {races.length === 0 ? 'No races yet — log your first one' : 'No races in this year'}
-          </div>
+          races.length === 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--sp-3)', padding: '2rem 1rem' }}>
+              <div style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)', fontFamily: 'var(--headline)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                No races yet
+              </div>
+              <button
+                onClick={onImportRace}
+                style={{ background: 'var(--surface3)', color: 'var(--white)', border: '1px solid rgba(var(--orange-ch),0.35)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-3) var(--sp-4)', fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-xs)', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer' }}
+              >
+                ↓ Import your results
+              </button>
+            </div>
+          ) : (
+            <div style={{
+              textAlign: 'center', padding: '2rem 1rem',
+              color: 'var(--muted)', fontSize: 'var(--text-sm)',
+              fontFamily: 'var(--headline)', letterSpacing: '0.08em', textTransform: 'uppercase',
+            }}>
+              No races in this year
+            </div>
+          )
         ) : viewMode === 'compact' ? (
           <>
             {(() => {
