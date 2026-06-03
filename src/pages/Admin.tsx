@@ -536,7 +536,7 @@ function ErrorsTab() {
 }
 
 // ─── Root ─────────────────────────────────────────────────────────────────────
-export function Admin() {
+export function Admin({ standalone, onSignOut }: { standalone?: boolean; onSignOut?: () => void } = {}) {
   const navigate  = useNavigate()
   const authUser  = useAuthStore(s => s.authUser)
   const [tab, setTab] = useState<AdminTab>('analytics')
@@ -561,9 +561,12 @@ export function Admin() {
   return (
     <div style={st.page}>
       <div style={st.header}>
-        <button style={st.backBtn} onClick={() => navigate(-1)}>←</button>
+        {!standalone && <button style={st.backBtn} onClick={() => navigate(-1)}>←</button>}
         <h1 style={st.title}>Admin</h1>
         <span style={st.badge}>Internal</span>
+        {standalone && onSignOut && (
+          <button style={{ ...st.backBtn, marginLeft: 'auto', fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase' }} onClick={onSignOut}>Sign out</button>
+        )}
       </div>
 
       <div style={st.tabBar}>

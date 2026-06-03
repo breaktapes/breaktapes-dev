@@ -3,6 +3,17 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.5.0] - 2026-06-03
+
+### Added
+- **admin.breaktapes.com — dedicated admin subdomain** — the full admin dashboard now lives on its own locked subdomain, off the production athlete app. Same Worker + bundle; the app detects the host at runtime (`IS_ADMIN_HOST`) and renders an admin-only shell: Clerk sign-in → admin allowlist check (`VITE_ADMIN_USER_IDS`) → dashboard. Non-allowlisted accounts get a 403 with sign-out. No athlete chrome, no athlete data sync (signing in here never touches the user's race/profile row). `?admin=1` forces the admin render locally.
+- **`src/components/AdminApp.tsx`** — self-contained admin gate with its own lightweight Clerk auth (installs JWT + sets authUser only) and standalone Admin render.
+- **wrangler.toml** — `admin.breaktapes.com/*` route added to the production Worker.
+
+### Changed
+- **`/admin` removed from the athlete app** — no longer a route on `app.breaktapes.com`; the Settings "Admin Panel" link is gone. Admin is reachable only at `admin.breaktapes.com`.
+- **Admin page** — accepts `standalone` + `onSignOut` props; standalone mode swaps the back button for a sign-out button.
+
 ## [0.7.4.0] - 2026-06-03
 
 ### Added

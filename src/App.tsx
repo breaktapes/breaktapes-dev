@@ -24,9 +24,9 @@ const Compare  = lazy(() => import('@/pages/Compare').then(m => ({ default: m.Co
 const PrivacyPolicy      = lazy(() => import('@/pages/PrivacyPolicy'))
 const TermsAndConditions = lazy(() => import('@/pages/TermsAndConditions'))
 const Help               = lazy(() => import('@/pages/Help'))
-const Admin              = lazy(() => import('@/pages/Admin').then(m => ({ default: m.Admin })))
 const Demo               = lazy(() => import('@/pages/Demo'))
 const LandingPage        = lazy(() => import('@/components/LandingPage'))
+const AdminApp           = lazy(() => import('@/components/AdminApp').then(m => ({ default: m.AdminApp })))
 
 // The cinematic marketing landing lives on the apex marketing domain
 // (breaktapes.com). app.breaktapes.com is the login/app only. `?marketing=1`
@@ -36,6 +36,14 @@ const IS_MARKETING_HOST =
   typeof window !== 'undefined' &&
   (MARKETING_HOSTS.has(window.location.hostname) ||
     new URLSearchParams(window.location.search).has('marketing'))
+
+// admin.breaktapes.com = locked admin dashboard, no athlete app. `?admin=1`
+// forces the admin render locally for testing.
+const ADMIN_HOSTS = new Set(['admin.breaktapes.com'])
+const IS_ADMIN_HOST =
+  typeof window !== 'undefined' &&
+  (ADMIN_HOSTS.has(window.location.hostname) ||
+    new URLSearchParams(window.location.search).has('admin'))
 
 const APP_ORIGIN = 'https://app.breaktapes.com'
 
@@ -156,7 +164,7 @@ function AnimatedRoutes() {
           <Route path="/settings" element={<Settings />} />
           <Route path="/discover" element={<Discover />} />
           <Route path="/compare"  element={<Compare />} />
-          <Route path="/admin"    element={<Admin />} />
+          {/* /admin lives on admin.breaktapes.com only — not on the athlete app */}
           {/* Backwards compat aliases */}
           <Route path="/pace"    element={<Navigate to="/train" replace />} />
           <Route path="/history" element={<Navigate to="/races" replace />} />
@@ -182,11 +190,18 @@ export function App() {
               <Route path="/terms"   element={<TermsAndConditions />} />
               <Route path="/help"    element={<Help />} />
               <Route path="/demo"    element={<Demo />} />
-              {/* breaktapes.com (apex) = cinematic marketing landing, no Clerk. */}
-              {/* app.breaktapes.com / dev / localhost = login + app via Clerk.   */}
+              {/* breaktapes.com (apex)   = cinematic marketing landing, no Clerk. */}
+              {/* admin.breaktapes.com     = locked admin dashboard, no athlete app. */}
+              {/* app.breaktapes.com / dev = login + athlete app via Clerk.          */}
               <Route path="*" element={
                 IS_MARKETING_HOST ? (
                   <MarketingLanding />
+                ) : IS_ADMIN_HOST ? (
+                  <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
+                    <QueryClientProvider client={queryClient}>
+                      <AdminApp />
+                    </QueryClientProvider>
+                  </ClerkProvider>
                 ) : (
                   <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
                     <QueryClientProvider client={queryClient}>
