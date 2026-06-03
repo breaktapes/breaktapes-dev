@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { useClerk, useUser } from '@clerk/clerk-react'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
+import { useRaceStore } from '@/stores/useRaceStore'
 import { syncStateToSupabase } from '@/lib/syncState'
 import { THEMES } from '@/types'
 import type { ThemeId } from '@/types'
@@ -84,6 +85,12 @@ export function Settings() {
   async function handleSignOut() {
     localStorage.removeItem('bt_new_user')
     localStorage.removeItem('bt_modal_shown')
+    // Clear persisted Zustand stores so the next user on this device starts clean.
+    // Without this, user B rehydrates user A's full race history from localStorage.
+    useRaceStore.persist.clearStorage()
+    useAthleteStore.persist.clearStorage()
+    useRaceStore.setState({ races: [], upcomingRaces: [], wishlistRaces: [], nextRace: null, focusRaceId: null, deletedRaceIds: [], _pendingDeleteIds: [] })
+    useAthleteStore.setState({ athlete: null, seasonPlans: [], goals: { annual: {}, distGoals: [] } })
     await signOut()
   }
 

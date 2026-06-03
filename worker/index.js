@@ -44,6 +44,9 @@ function html(status, body, extraHeaders = {}) {
     headers: {
       'Content-Type': 'text/html; charset=utf-8',
       'X-Content-Type-Options': 'nosniff',
+      'X-Frame-Options': 'DENY',
+      'Referrer-Policy': 'strict-origin-when-cross-origin',
+      'Content-Security-Policy': "default-src 'self'; font-src fonts.gstatic.com; style-src 'self' fonts.googleapis.com 'unsafe-inline'; img-src 'self' https: data:; script-src 'none'; frame-ancestors 'none';",
       ...extraHeaders,
     },
   });
@@ -333,6 +336,7 @@ function renderProfile(row, username) {
 
   // Profile visibility gates — all default OFF (must be explicitly enabled)
   const pv = athlete.profileVisibility || {};
+  const showBio      = pv.bio       !== false; // default ON — bio/clubs shown unless explicitly hidden
   const showStats    = pv.stats     === true;
   const showRaces    = pv.races     === true;
   const showPBs      = pv.pbs       === true;
@@ -421,7 +425,7 @@ function renderProfile(row, username) {
     const flag = r.country ? countryFlagEmoji(r.country) : '';
     const label = distLabel(r.distance);
     const time = r.time ? escapeHtml(fmtTime(r.time)) : 'DNF';
-    const loc = [r.city, r.country ? escapeHtml(shortCountryName(r.country)) : ''].filter(Boolean).join(', ');
+    const loc = [r.city ? escapeHtml(r.city) : '', r.country ? escapeHtml(shortCountryName(r.country)) : ''].filter(Boolean).join(', ');
 
     const pbStyle = pb
       ? 'border-color:rgba(200,160,40,0.45);background:rgba(200,150,40,0.04);box-shadow:inset 0 0 0 1px rgba(200,150,40,0.2);'
@@ -487,8 +491,8 @@ function renderProfile(row, username) {
       </div>
     </div>
 
-    ${bioHtml}
-    ${clubPills ? `<div class="clubs-row">${clubPills}</div>` : ''}
+    ${showBio ? bioHtml : ''}
+    ${showBio && clubPills ? `<div class="clubs-row">${clubPills}</div>` : ''}
 
     ${showStats ? `
     <section class="profile-section" style="margin-top:20px;">
@@ -1249,8 +1253,27 @@ async function verifyClerkJwt(token) {
 
 // ── Admin helpers ────────────────────────────────────────────────────────────
 
+const ADMIN_ALLOWED_ORIGINS = new Set([
+  'https://app.breaktapes.com',
+  'https://dev.breaktapes.com',
+  'http://localhost:3000',
+]);
+
+function adminCorsHeaders(request) {
+  const origin = request.headers.get('Origin') || '';
+  const allowedOrigin = ADMIN_ALLOWED_ORIGINS.has(origin) ? origin : 'https://app.breaktapes.com';
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+    'Content-Type': 'application/json',
+  };
+}
+
+// Legacy constant kept for the few spots that don't have a request reference.
+// Prefer adminCorsHeaders(request) where possible.
 const ADMIN_CORS = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': 'https://app.breaktapes.com',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Authorization, Content-Type',
   'Content-Type': 'application/json',
@@ -1346,7 +1369,8 @@ async function handleAdminUsers(request, env) {
       if (s) {
         raceCount = Array.isArray(s.races) ? s.races.length : 0;
         upcomingCount = Array.isArray(s.upcoming_races) ? s.upcoming_races.length : 0;
-        goalCount = Array.isArray(s.goals) ? s.goals.length : 0;
+        const g = s.goals ?? {};
+        goalCount = Object.keys(g.annual ?? {}).length + (Array.isArray(g.distGoals) ? g.distGoals.length : 0);
         sport = s.athlete?.sport ?? null;
         country = s.athlete?.country ?? null;
       }
@@ -1447,11 +1471,12 @@ async function handleAdminAnalytics(request, env) {
       const s = r.state_json ?? {};
       const races = Array.isArray(s.races) ? s.races : [];
       const upcoming = Array.isArray(s.upcoming_races) ? s.upcoming_races : [];
-      const goals = Array.isArray(s.goals) ? s.goals : [];
+      const goalsObj = s.goals ?? {};
+      const hasGoals = Object.keys(goalsObj.annual ?? {}).length > 0 || (Array.isArray(goalsObj.distGoals) && goalsObj.distGoals.length > 0);
 
       if (r.is_public) publicCount++;
       if (upcoming.length) withUpcoming++;
-      if (goals.length) withGoals++;
+      if (hasGoals) withGoals++;
 
       if (races.length >= 10) segPower++;
       else if (races.length >= 1) segActive++;
@@ -1624,10 +1649,22 @@ async function handleApiSync(request, env) {
   if (!payload || !payload.sub) return new Response('Invalid token', { status: 401 });
   const userId = payload.sub;
 
+  // Enforce payload size cap before reading body (512 KB is ample for any real state_json)
+  const contentLength = parseInt(request.headers.get('content-length') || '0', 10);
+  if (contentLength > 512_000) return new Response('Payload too large', { status: 413 });
+
   // Parse body
   let body;
   try { body = await request.json(); }
   catch { return new Response('Invalid JSON', { status: 400 }); }
+
+  // Validate username format if provided
+  const rawUsername = body.username ?? null;
+  if (rawUsername !== null && rawUsername !== '') {
+    if (typeof rawUsername !== 'string' || !/^[a-z0-9][a-z0-9-]{1,18}[a-z0-9]$/.test(rawUsername)) {
+      return new Response('Invalid username format', { status: 400 });
+    }
+  }
 
   const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
   if (!serviceKey) {
@@ -1817,6 +1854,13 @@ async function handleRequest(request, env) {
 
     // POST /api/error-report — client-side crash reporting (sendBeacon)
     if (request.method === 'POST' && path === '/api/error-report') {
+      // Require a valid Clerk JWT — error reports are authenticated-only.
+      // Prevents unauthenticated DB flooding. Falls through to 401 if no token.
+      const errAuthHeader = request.headers.get('Authorization') ?? '';
+      const errToken = errAuthHeader.startsWith('Bearer ') ? errAuthHeader.slice(7) : null;
+      if (!errToken) return new Response(null, { status: 204 }); // silently drop unauthenticated reports
+      const errPayload = await verifyClerkJwt(errToken);
+      if (!errPayload) return new Response(null, { status: 204 });
       try {
         const body = await request.json();
         // Store in Supabase beta_errors if table exists; otherwise silently drop
