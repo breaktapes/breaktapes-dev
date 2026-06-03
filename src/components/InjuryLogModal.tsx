@@ -207,7 +207,7 @@ export function InjuryLogModal({ injury, onClose }: Props) {
               <div style={s.grid2}>
                 {INJURY_BODY_PARTS.map(p => (
                   <button key={p.key} style={s.partBtn(bodyPart === p.key)} onClick={() => setBodyPart(p.key)}>
-                    <span>{p.emoji}</span> {p.label}
+                    {p.label}
                   </button>
                 ))}
               </div>

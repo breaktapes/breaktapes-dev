@@ -2578,8 +2578,8 @@ function InjuryTrackerSection() {
   const resolved = injuries.filter(i => i.resolved)
   const [showResolved, setShowResolved] = useState(false)
 
-  const bodyPartLabel = (key: string) => INJURY_BODY_PARTS.find(p => p.key === key)?.label ?? key
-  const bodyPartEmoji = (key: string) => INJURY_BODY_PARTS.find(p => p.key === key)?.emoji ?? '⚕️'
+  // Strip the parenthetical anatomical name for compact card display
+  const bodyPartLabel = (key: string) => (INJURY_BODY_PARTS.find(p => p.key === key)?.label ?? key).replace(/\s*\(.*\)$/, '')
   const phaseLabel    = (key: string) => INJURY_PHASES.find(p => p.key === key)?.label ?? key
   const phaseIndex    = (key: string) => INJURY_PHASES.findIndex(p => p.key === key && p.key !== 'resolved')
 
@@ -2632,7 +2632,7 @@ function InjuryTrackerSection() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 'var(--sp-3)' }}>
               <div>
                 <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', color: 'var(--white)', textTransform: 'uppercase' }}>
-                  {bodyPartEmoji(inj.bodyPart)} {bodyPartLabel(inj.bodyPart)}
+                  {bodyPartLabel(inj.bodyPart)}
                 </div>
                 <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>
                   {inj.injuryType.replace(/_/g, ' ')} · Since {inj.startDate}
@@ -2688,7 +2688,7 @@ function InjuryTrackerSection() {
           onKeyDown={e => e.key === 'Enter' && setModal({ open: true, injury: inj })}
         >
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--white)', textTransform: 'uppercase' }}>
-            {bodyPartEmoji(inj.bodyPart)} {bodyPartLabel(inj.bodyPart)} · {inj.injuryType.replace(/_/g, ' ')}
+            {bodyPartLabel(inj.bodyPart)} · {inj.injuryType.replace(/_/g, ' ')}
           </div>
           <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 2 }}>
             {inj.startDate}{inj.returnDate ? ` → ${inj.returnDate}` : ''} · Resolved

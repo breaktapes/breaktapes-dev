@@ -121,22 +121,22 @@ export const INJURY_PHASES: { key: InjuryPhase; label: string }[] = [
   { key: 'resolved',       label: 'Resolved' },
 ]
 
-export const INJURY_BODY_PARTS: { key: InjuryBodyPart; label: string; emoji: string }[] = [
-  { key: 'achilles',   label: 'Achilles',    emoji: '🦶' },
-  { key: 'ankle',      label: 'Ankle',       emoji: '🦶' },
-  { key: 'knee',       label: 'Knee',        emoji: '🦵' },
-  { key: 'it_band',    label: 'IT Band',     emoji: '🦵' },
-  { key: 'hip',        label: 'Hip',         emoji: '🏃' },
-  { key: 'hamstring',  label: 'Hamstring',   emoji: '🦵' },
-  { key: 'calf',       label: 'Calf',        emoji: '🦵' },
-  { key: 'shin',       label: 'Shin',        emoji: '🦵' },
-  { key: 'foot',       label: 'Foot',        emoji: '🦶' },
-  { key: 'plantar',    label: 'Plantar',     emoji: '🦶' },
-  { key: 'lower_back', label: 'Lower Back',  emoji: '🔙' },
-  { key: 'shoulder',   label: 'Shoulder',    emoji: '💪' },
-  { key: 'quad',       label: 'Quad',        emoji: '🦵' },
-  { key: 'groin',      label: 'Groin',       emoji: '🏃' },
-  { key: 'other',      label: 'Other',       emoji: '⚕️' },
+export const INJURY_BODY_PARTS: { key: InjuryBodyPart; label: string }[] = [
+  { key: 'achilles',   label: 'Achilles (Achilles tendon)' },
+  { key: 'ankle',      label: 'Ankle' },
+  { key: 'knee',       label: 'Knee (patella)' },
+  { key: 'it_band',    label: 'IT Band (iliotibial band)' },
+  { key: 'hip',        label: 'Hip' },
+  { key: 'hamstring',  label: 'Hamstring (biceps femoris)' },
+  { key: 'calf',       label: 'Calf (gastrocnemius)' },
+  { key: 'shin',       label: 'Shin (tibia)' },
+  { key: 'foot',       label: 'Foot' },
+  { key: 'plantar',    label: 'Plantar (plantar fascia)' },
+  { key: 'lower_back', label: 'Lower Back (lumbar spine)' },
+  { key: 'shoulder',   label: 'Shoulder (rotator cuff)' },
+  { key: 'quad',       label: 'Quad (quadriceps)' },
+  { key: 'groin',      label: 'Groin (adductor)' },
+  { key: 'other',      label: 'Other' },
 ]
 
 export const INJURY_TYPES: { key: InjuryType; label: string }[] = [
