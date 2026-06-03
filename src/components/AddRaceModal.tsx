@@ -675,6 +675,7 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
   }
 
   async function handleSave() {
+    if (saving) return
     if (!validate()) return
     setSaving(true)
 

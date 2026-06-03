@@ -36,6 +36,10 @@ function useClerkSync() {
       // their own remote pull lands (prevents the previous session's empty
       // state, or a fresh-device empty state, from overwriting their row).
       resetRemotePullGate()
+      // Clear all race + athlete data so a subsequent sign-in by a different
+      // user doesn't merge the previous user's local races into the new account.
+      useRaceStore.getState().clearAll()
+      useAthleteStore.getState().clearAll()
       posthog.reset()
       return
     }

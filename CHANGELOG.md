@@ -3,6 +3,17 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.6.3] - 2026-06-03
+
+### Fixed
+- **Race data duplication & deletion — root causes closed.** Three independent bugs that corrupted upcoming/past race lists:
+  - **Double-save duplication** — `AddRaceModal` had no re-entry guard, so a fast double-tap created two races with different UUIDs before `saving` re-rendered. Added `if (saving) return`.
+  - **Concurrent write race** — every mutation fired `syncStateToSupabase()` immediately; rapid edits produced overlapping full-state writes where the last to land discarded the others. Added a 600 ms debounce so successive mutations coalesce into one write.
+  - **Cross-user data bleed** — Zustand stores were never cleared on sign-out, so a different user signing in on the same device had the previous user's races merged into their account by the pull-merge. Added `clearAll()` to the race + athlete stores, called on sign-out.
+
+### Changed
+- **Race & medal photos moved to object storage.** Photos were stored as base64 data URLs *inside* each race object, which lives in the synced `state_json` blob and in localStorage. Every save re-serialized the entire photo-laden state synchronously (main-thread freeze) and re-uploaded it, and could blow the ~5 MB localStorage quota → tab crash. Photos now upload to a public Supabase Storage bucket (`race-photos`) via a new Worker route `POST /api/upload-photo` (service role), and only the URL is stored. Existing embedded base64 photos lazy-migrate on the next save. This is what makes saves fast again and stops the crash for photo-heavy histories.
+
 ## [0.7.6.2] - 2026-06-03
 
 ### Fixed
@@ -41,7 +52,6 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 - **Import more prominent in onboarding** — new users now see a "↓ Import" button alongside "Log a Race" as co-equal primary CTAs in the onboarding card on the dashboard. The Races page empty state (zero races logged) now shows an "↓ Import your results" button instead of plain muted text, reducing friction for athletes with existing race history.
 - **IronmanRacePicker wired to dashboard import** — the IRONMAN/70.3 race-picker flow is now accessible when opening the import modal from the onboarding card, matching the entry point in the Races page.
-
 ## [0.7.5.4] - 2026-06-03
 
 ### Fixed
