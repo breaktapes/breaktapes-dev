@@ -3,6 +3,18 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.4.0] - 2026-06-03
+
+### Added
+- **Admin Analytics deep-dive** — Analytics tab now shows: 30-day signup growth bar chart, engagement segments (power 10+ / active 1–9 / dormant 0 races), feature adoption % (public profiles, upcoming races, goals set, wearable linked), activity recency buckets (today/week/month/dormant), wearable connection breakdown (WHOOP/Garmin/Strava), top race countries, top sports, top distances.
+- **CSV export** — Users, Feedback, and Errors tabs each get a one-click CSV download of the loaded rows.
+- **Per-tab refresh** — every admin tab has a ↻ Refresh button to re-pull without a full page reload.
+- **`created_at` on user_state** — migration `20260603000000` adds the column (defaults to now()) so signup-growth tracking is accurate from deploy onward; pre-deploy rows are backfilled to `updated_at` as an approximate floor.
+
+### Changed
+- **Worker `/api/admin/analytics`** — now aggregates engagement segments, feature adoption, activity recency, wearable adoption (joins `wearable_tokens`), top countries, and a 30-day daily signup series.
+- **Worker `/api/admin/users`** — returns `created_at`, `goal_count`, and `country` per user; CSV export includes all fields.
+
 ## [0.7.3.0] - 2026-06-03
 
 ### Added

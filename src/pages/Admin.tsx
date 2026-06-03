@@ -23,7 +23,8 @@ interface Contribution {
 }
 interface AdminUser {
   user_id: string; username: string | null; is_public: boolean
-  updated_at: string; race_count: number; upcoming_count: number; sport: string | null
+  updated_at: string; created_at: string | null; race_count: number
+  upcoming_count: number; goal_count: number; sport: string | null; country: string | null
 }
 interface Feedback {
   id: number; user_id: string; rating: number | null; message: string | null
@@ -37,8 +38,19 @@ interface Analytics {
   users:      { total: number; dau: number; wau: number; mau: number }
   feedback:   { count: number; avg_rating: number }
   races:      { total: number; users_with_races: number; avg_per_user: number }
+  segments:   { power: number; active: number; dormant: number }
+  adoption:   {
+    public:    { count: number; pct: number }
+    upcoming:  { count: number; pct: number }
+    goals:     { count: number; pct: number }
+    wearables: { count: number; pct: number }
+  }
+  recency:    { today: number; week: number; month: number; dormant: number }
+  wearables:  [string, number][]
+  growth:     [string, number][]
   top_sports: [string, number][]
   top_distances: [string, number][]
+  top_countries: [string, number][]
 }
 
 const ADMIN_CORS_HEADERS = { 'Content-Type': 'application/json' }
@@ -115,6 +127,38 @@ function fmtTimeAgo(iso: string): string {
   return new Date(iso).toLocaleDateString()
 }
 
+function downloadCSV(filename: string, rows: Record<string, unknown>[]) {
+  if (!rows.length) return
+  const cols = Object.keys(rows[0])
+  const esc = (v: unknown) => {
+    const s = v == null ? '' : String(v)
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+  }
+  const csv = [cols.join(','), ...rows.map(r => cols.map(c => esc(r[c])).join(','))].join('\n')
+  const blob = new Blob([csv], { type: 'text/csv' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url; a.download = filename; a.click()
+  URL.revokeObjectURL(url)
+  posthog.capture('admin_csv_exported', { file: filename, rows: rows.length })
+}
+
+const refreshBtnStyle: React.CSSProperties = {
+  background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-sm)',
+  color: 'var(--muted)', cursor: 'pointer', padding: '6px 12px', fontSize: 'var(--text-xs)',
+  fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase',
+}
+const exportBtnStyle: React.CSSProperties = { ...refreshBtnStyle, color: 'var(--orange)', borderColor: 'rgba(var(--orange-ch),0.4)' }
+
+function TabActions({ onRefresh, onExport, loading }: { onRefresh: () => void; onExport?: () => void; loading: boolean }) {
+  return (
+    <div style={{ display: 'flex', gap: 'var(--sp-2)', justifyContent: 'flex-end', marginBottom: '12px' }}>
+      {onExport && <button style={exportBtnStyle} onClick={onExport}>↓ Export CSV</button>}
+      <button style={refreshBtnStyle} onClick={onRefresh} disabled={loading}>{loading ? '…' : '↻ Refresh'}</button>
+    </div>
+  )
+}
+
 function Stars({ rating }: { rating: number | null }) {
   if (!rating) return <span style={{ color: 'var(--muted)', fontSize: 'var(--text-xs)' }}>No rating</span>
   return (
@@ -158,6 +202,7 @@ function CatalogTab() {
   return (
     <>
       {toast && <div style={st.toast}>{toast}</div>}
+      <TabActions onRefresh={load} loading={loading} />
       {error && <div style={st.error}>{error}</div>}
       <p style={st.sectionLabel}>Pending race catalog submissions — {loading ? '…' : `${contributions.length} pending`}</p>
       {loading ? (
@@ -194,10 +239,19 @@ function UsersTab() {
   const [error, setError]   = useState('')
   const [search, setSearch] = useState('')
 
-  useEffect(() => {
-    setLoading(true)
+  const load = useCallback(() => {
+    setLoading(true); setError('')
     apiReq('/api/admin/users').then(d => setUsers(d ?? [])).catch(e => setError(String(e))).finally(() => setLoading(false))
   }, [])
+  useEffect(() => { load() }, [load])
+
+  function exportCSV() {
+    downloadCSV(`breaktapes-users-${new Date().toISOString().slice(0, 10)}.csv`, users.map(u => ({
+      user_id: u.user_id, username: u.username ?? '', country: u.country ?? '', sport: u.sport ?? '',
+      races: u.race_count, upcoming: u.upcoming_count, goals: u.goal_count,
+      is_public: u.is_public, created_at: u.created_at ?? '', last_seen: u.updated_at,
+    })))
+  }
 
   const now = Date.now()
   const dau = users.filter(u => now - new Date(u.updated_at).getTime() < 24*60*60*1000).length
@@ -209,6 +263,7 @@ function UsersTab() {
 
   return (
     <>
+      <TabActions onRefresh={load} onExport={exportCSV} loading={loading} />
       {error && <div style={st.error}>{error}</div>}
       <div style={st.statGrid}>
         <div style={st.statCard}><div style={st.statLabel}>Total Users</div><div style={st.statValue}>{users.length}</div></div>
@@ -257,10 +312,18 @@ function FeedbackTab() {
   const [error, setError]   = useState('')
   const [expanded, setExpanded] = useState<number | null>(null)
 
-  useEffect(() => {
-    setLoading(true)
+  const load = useCallback(() => {
+    setLoading(true); setError('')
     apiReq('/api/admin/feedback').then(d => setItems(d ?? [])).catch(e => setError(String(e))).finally(() => setLoading(false))
   }, [])
+  useEffect(() => { load() }, [load])
+
+  function exportCSV() {
+    downloadCSV(`breaktapes-feedback-${new Date().toISOString().slice(0, 10)}.csv`, items.map(i => ({
+      id: i.id, user_id: i.user_id, rating: i.rating ?? '', page: i.page ?? '',
+      message: i.message ?? '', created_at: i.created_at,
+    })))
+  }
 
   const withRating = items.filter(i => i.rating)
   const avgRating  = withRating.length ? (withRating.reduce((s, i) => s + (i.rating ?? 0), 0) / withRating.length).toFixed(1) : '—'
@@ -268,6 +331,7 @@ function FeedbackTab() {
 
   return (
     <>
+      <TabActions onRefresh={load} onExport={exportCSV} loading={loading} />
       {error && <div style={st.error}>{error}</div>}
       <div style={st.statGrid}>
         <div style={st.statCard}><div style={st.statLabel}>Total Feedback</div><div style={st.statValue}>{items.length}</div></div>
@@ -316,26 +380,67 @@ function FeedbackTab() {
   )
 }
 
+function BarList({ label, rows, capitalize }: { label: string; rows: [string, number][]; capitalize?: boolean }) {
+  if (!rows.length) return null
+  const max = rows[0]?.[1] ?? 1
+  return (
+    <div style={{ marginBottom: '24px' }}>
+      <p style={st.sectionLabel}>{label}</p>
+      {rows.map(([name, count]) => (
+        <div key={name} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', marginBottom: '8px' }}>
+          <div style={{ ...st.barLabel, textTransform: capitalize ? 'capitalize' : 'none' }}>{name || 'Unset'}</div>
+          <div style={st.bar(Math.round(count / max * 100))} />
+          <div style={st.barCount}>{count}</div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function GrowthChart({ data }: { data: [string, number][] }) {
+  const max = Math.max(1, ...data.map(d => d[1]))
+  const total = data.reduce((s, d) => s + d[1], 0)
+  return (
+    <div style={{ marginBottom: '24px' }}>
+      <p style={st.sectionLabel}>New Signups — Last 30 Days ({total} total)</p>
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: '2px', height: '80px', padding: '0 2px' }}>
+        {data.map(([day, count]) => (
+          <div key={day} title={`${day}: ${count}`} style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', height: '100%' }}>
+            <div style={{ height: `${Math.round(count / max * 100)}%`, minHeight: count > 0 ? '3px' : '0', background: count > 0 ? 'var(--orange)' : 'var(--surface3)', borderRadius: '2px 2px 0 0' }} />
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '4px' }}>
+        <span>{data[0]?.[0].slice(5)}</span><span>{data[data.length - 1]?.[0].slice(5)}</span>
+      </div>
+    </div>
+  )
+}
+
 // ─── Analytics Tab ────────────────────────────────────────────────────────────
 function AnalyticsTab() {
   const [data, setData]     = useState<Analytics | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError]   = useState('')
 
-  useEffect(() => {
-    setLoading(true)
+  const load = useCallback(() => {
+    setLoading(true); setError('')
     apiReq('/api/admin/analytics').then(setData).catch(e => setError(String(e))).finally(() => setLoading(false))
   }, [])
+  useEffect(() => { load() }, [load])
 
-  if (loading) return <p style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)' }}>Loading analytics…</p>
-  if (error)   return <div style={st.error}>{error}</div>
+  if (loading && !data) return <p style={{ color: 'var(--muted)', fontSize: 'var(--text-sm)' }}>Loading analytics…</p>
+  if (error)   return <><TabActions onRefresh={load} loading={loading} /><div style={st.error}>{error}</div></>
   if (!data)   return null
 
-  const maxSport = data.top_sports[0]?.[1] ?? 1
-  const maxDist  = data.top_distances[0]?.[1] ?? 1
+  const seg = data.segments
+  const segTotal = Math.max(1, seg.power + seg.active + seg.dormant)
+  const rec = data.recency
 
   return (
     <>
+      <TabActions onRefresh={load} loading={loading} />
+
       <p style={st.sectionLabel}>User Activity</p>
       <div style={st.statGrid}>
         <div style={st.statCard}><div style={st.statLabel}>Total Users</div><div style={st.statValue}>{data.users.total}</div></div>
@@ -344,39 +449,36 @@ function AnalyticsTab() {
         <div style={st.statCard}><div style={st.statLabel}>MAU (30d)</div><div style={st.statValue}>{data.users.mau}</div></div>
       </div>
 
-      <p style={{ ...st.sectionLabel, marginTop: '8px' }}>Race Data</p>
+      <GrowthChart data={data.growth} />
+
+      <p style={st.sectionLabel}>Engagement Segments</p>
       <div style={st.statGrid}>
-        <div style={st.statCard}><div style={st.statLabel}>Total Races Logged</div><div style={st.statValue}>{data.races.total.toLocaleString()}</div></div>
-        <div style={st.statCard}><div style={st.statLabel}>Users With Races</div><div style={st.statValue}>{data.races.users_with_races}</div></div>
-        <div style={st.statCard}><div style={st.statLabel}>Avg Races / User</div><div style={st.statValue}>{data.races.avg_per_user}</div></div>
-        <div style={st.statCard}><div style={st.statLabel}>Feedback Count</div><div style={st.statValue}>{data.feedback.count}</div><div style={st.statSub}>avg {data.feedback.avg_rating} ★</div></div>
+        <div style={st.statCard}><div style={st.statLabel}>Power (10+ races)</div><div style={{ ...st.statValue, color: '#00FF88' }}>{seg.power}</div><div style={st.statSub}>{Math.round(seg.power / segTotal * 100)}%</div></div>
+        <div style={st.statCard}><div style={st.statLabel}>Active (1–9)</div><div style={st.statValue}>{seg.active}</div><div style={st.statSub}>{Math.round(seg.active / segTotal * 100)}%</div></div>
+        <div style={st.statCard}><div style={st.statLabel}>Dormant (0 races)</div><div style={{ ...st.statValue, color: 'var(--muted)' }}>{seg.dormant}</div><div style={st.statSub}>{Math.round(seg.dormant / segTotal * 100)}%</div></div>
+        <div style={st.statCard}><div style={st.statLabel}>Avg Races / User</div><div style={st.statValue}>{data.races.avg_per_user}</div><div style={st.statSub}>{data.races.total.toLocaleString()} total</div></div>
       </div>
 
-      {data.top_sports.length > 0 && (
-        <div style={{ marginBottom: '24px' }}>
-          <p style={{ ...st.sectionLabel, marginTop: '8px' }}>Top Sports</p>
-          {data.top_sports.map(([sport, count]) => (
-            <div key={sport} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', marginBottom: '8px' }}>
-              <div style={{ ...st.barLabel, textTransform: 'capitalize' }}>{sport || 'Unset'}</div>
-              <div style={st.bar(Math.round(count / maxSport * 100))} />
-              <div style={st.barCount}>{count}</div>
-            </div>
-          ))}
-        </div>
-      )}
+      <p style={st.sectionLabel}>Feature Adoption</p>
+      <div style={st.statGrid}>
+        <div style={st.statCard}><div style={st.statLabel}>Public Profiles</div><div style={st.statValue}>{data.adoption.public.pct}%</div><div style={st.statSub}>{data.adoption.public.count} users</div></div>
+        <div style={st.statCard}><div style={st.statLabel}>Has Upcoming</div><div style={st.statValue}>{data.adoption.upcoming.pct}%</div><div style={st.statSub}>{data.adoption.upcoming.count} users</div></div>
+        <div style={st.statCard}><div style={st.statLabel}>Set Goals</div><div style={st.statValue}>{data.adoption.goals.pct}%</div><div style={st.statSub}>{data.adoption.goals.count} users</div></div>
+        <div style={st.statCard}><div style={st.statLabel}>Wearable Linked</div><div style={st.statValue}>{data.adoption.wearables.pct}%</div><div style={st.statSub}>{data.adoption.wearables.count} users</div></div>
+      </div>
 
-      {data.top_distances.length > 0 && (
-        <div>
-          <p style={{ ...st.sectionLabel }}>Top Distances</p>
-          {data.top_distances.map(([dist, count]) => (
-            <div key={dist} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', marginBottom: '8px' }}>
-              <div style={st.barLabel}>{dist || 'Unset'}</div>
-              <div style={st.bar(Math.round(count / maxDist * 100))} />
-              <div style={st.barCount}>{count}</div>
-            </div>
-          ))}
-        </div>
-      )}
+      <p style={st.sectionLabel}>Activity Recency</p>
+      <div style={st.statGrid}>
+        <div style={st.statCard}><div style={st.statLabel}>Today</div><div style={{ ...st.statValue, color: '#00FF88' }}>{rec.today}</div></div>
+        <div style={st.statCard}><div style={st.statLabel}>This Week</div><div style={st.statValue}>{rec.week}</div></div>
+        <div style={st.statCard}><div style={st.statLabel}>This Month</div><div style={st.statValue}>{rec.month}</div></div>
+        <div style={st.statCard}><div style={st.statLabel}>Dormant (30d+)</div><div style={{ ...st.statValue, color: 'var(--muted)' }}>{rec.dormant}</div></div>
+      </div>
+
+      <BarList label="Wearable Connections" rows={data.wearables} capitalize />
+      <BarList label="Top Race Countries" rows={data.top_countries} />
+      <BarList label="Top Sports" rows={data.top_sports} capitalize />
+      <BarList label="Top Distances" rows={data.top_distances} />
     </>
   )
 }
@@ -388,13 +490,22 @@ function ErrorsTab() {
   const [error, setError]   = useState('')
   const [expanded, setExpanded] = useState<string | null>(null)
 
-  useEffect(() => {
-    setLoading(true)
+  const load = useCallback(() => {
+    setLoading(true); setError('')
     apiReq('/api/admin/errors').then(d => setErrors(d ?? [])).catch(e => setError(String(e))).finally(() => setLoading(false))
   }, [])
+  useEffect(() => { load() }, [load])
+
+  function exportCSV() {
+    downloadCSV(`breaktapes-errors-${new Date().toISOString().slice(0, 10)}.csv`, errors.map(e => ({
+      id: e.id, message: e.message ?? '', url: e.url ?? '', env: e.env ?? '',
+      created_at: e.created_at, stack: e.stack ?? '',
+    })))
+  }
 
   return (
     <>
+      <TabActions onRefresh={load} onExport={exportCSV} loading={loading} />
       {error && <div style={st.error}>{error}</div>}
       <p style={st.sectionLabel}>{loading ? '…' : `${errors.length} client errors logged`}</p>
       {loading ? (
