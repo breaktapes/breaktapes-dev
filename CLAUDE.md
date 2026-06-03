@@ -956,6 +956,7 @@ PR #164 was squash-merged to main; subsequent fixes commit `6b8debd` from worktr
 - Weather forecast uses `forecast_days=2` so the 5-hour strip always spans midnight. Do not revert to `forecast_days=1` — it leaves only 1 slot after ~9PM.
 - `IS_STAGING` from `src/env.ts` drives `proAccessGranted` in `useAuthStore` — all Pro features are unlocked on `dev.breaktapes.com`. Production (`app.breaktapes.com`) keeps `proAccessGranted: false`.
 - Dashboard test `YESTERDAY`/`FUTURE` constants use local-time date arithmetic (`localDateStr(n)` helper) — not `.toISOString()` which is UTC and drifts ±1 day in non-UTC timezones after midnight.
+- Race splits (`ViewEditRaceModal.tsx`): `split` is the ONLY canonical stored field; ELAPSED and PACE are derived for both display and write-back. Editing a derived column converts to `split` via `withCumulative()` / `labelToKm()`. The Race Detail view panel computes ELAPSED live with `withCumulative(race.splits)` — do NOT revert it to reading stored `s.cumulative`, which is "—" for any race saved before Session 39. PACE needs a distance in the checkpoint label (`labelToKm`); use it, not `resolveDistKm()` (which mis-parses "10mi"→10km, "250m"→250km).
 
 ---
 
@@ -1378,6 +1379,31 @@ Direct DB access (psql/psycopg2) is blocked from localhost — Supabase only exp
 - When the same new fields exist on both HEAD and staging (from two parallel worktrees), `git merge origin/staging` produces duplicate-field conflicts in TypeScript interfaces — always check for duplicate property declarations after merge, they compile but are confusing.
 - `git worktree remove` mid-session kills the shell CWD — the kernel's `getcwd()` fails on every subsequent subprocess. No recovery possible without restarting from a valid directory. Always `cd` to main repo before any worktree cleanup.
 - PostToolUse linter hook can revert file edits made in the same session if the linter reformats aggressively — verify critical new fields persist after every hook run.
+
+---
+
+### Session 39 (2026-06-03) — Race splits interlink (split/elapsed/pace) (v0.7.6.1)
+
+**Branch:** `claude/brave-lichterman-92fbf9` → staging (PR #446) → main (PR #449). Both green.
+
+#### Shipped — all in `src/components/ViewEditRaceModal.tsx`
+- **Edit Race modal — 3 interlinked editable split columns.** Was CHECKPOINT | SPLIT | read-only ELAPSED. Now CHECKPOINT | SPLIT | ELAPSED | PACE, all editable; `split` stays the canonical stored field. Enter any one of the three time columns, the other two auto-fill:
+  - **ELAPSED** (total elapsed) → `split[i] = elapsedSecs − cumSecs[i−1]` (prior elapsed from existing splits).
+  - **PACE** → `split = secPerKm × segmentKm`. Segment km parsed from cumulative checkpoint labels via new `labelToKm()` ("5K"/"21.1K"/"10mi"/"250m"/"1000m"/"Half"/"Marathon"/bare→km; null for "T1"/"Aid 1"/"Finish"). Units-aware via `useUnits()` — header shows `PACE /KM` or `/MI`, input parsed in that unit. Disabled + dimmed when the label carries no distance.
+  - **SPLIT** → stored verbatim, drives the other two.
+- **Per-cell raw text buffer** (`edit` state `{i, field, val}`) so a derived column can be typed freely while focused without the live recompute fighting keystrokes; `cellVal()` returns the buffer for the focused cell, computed value for the rest; `onBlur` clears the buffer → snaps to canonical.
+- **`withCumulative(splits)`** helper fills each split's `cumulative` from the running sum of `split` times (blank-split rows get no elapsed). All `onChange` paths route through it → `cumulative` now persists on save.
+- **Race Detail view panel** — ELAPSED column was reading stored `s.cumulative`, which races saved before this change never had → always showed "—". Now renders `withCumulative(race.splits)` so ELAPSED is computed live for **all** races (old + new). Pure render math, no migration.
+- **`fmtPaceBare(secPerKm, units)`** — formats a sec/km pace to bare `M:SS` in the user's pace unit (no "/km" suffix, for the compact input).
+- **VERSION** 0.7.5.4 → 0.7.6.1.
+
+#### Key learnings
+- The split/elapsed/pace trio: keep ONE canonical field (`split`) and derive the other two for both display and write-back. Editing a derived column converts to canonical on the fly — no schema change, no migration. The only state needed is a per-cell raw buffer so the focused input isn't overwritten by its own recompute.
+- A read-only column that displays a **stored** derived field (`s.cumulative`) silently shows "—" for every record written before the field was populated. Prefer computing derived display values live at render (`withCumulative()`), and persist them too for downstream consumers (SSR worker, share card) — belt and suspenders.
+- `labelToKm` must special-case unit suffixes: `mi`→×1.60934, bare `m`→÷1000 (250m/1000m), `k`/`km`→as-is, "Half"→21.0975, "Marathon"→42.195. `resolveDistKm()` from utils is wrong here — it `parseFloat`s "10mi" to 10 km and "250m" to 250 km.
+- **Squash divergence churn during a single ship:** staging advanced twice mid-PR (#444 then #443 v0.7.6.0). Each advance forced a rebase + VERSION re-bump (0.7.5.5→0.7.5.6→0.7.6.1) to avoid version collision/regression. Always re-`git fetch` and re-check `origin/staging` right before every force-push; the tip moves under you.
+- Promote staging→main when main already holds the *content* of a staging commit under a different SHA (#444 vs its #445 squash): `git checkout -B promote origin/main && git merge origin/staging` → only metadata files (VERSION/package.json/CHANGELOG) conflict; `git checkout --theirs` them, source 3-way-merges clean because the dup change is identical on both sides. Merge to main with `--merge`, then fast-forward `origin/main:staging` to zero out divergence.
+- `gh pr merge --merge` prints `fatal: 'main' is already used by worktree` when main is checked out in another worktree — this is gh trying a local checkout AFTER the remote merge already succeeded. Harmless; verify with `git fetch` + `git log origin/main`.
 
 ---
 
