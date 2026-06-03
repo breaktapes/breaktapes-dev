@@ -1,10 +1,10 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useUser, useAuth, useClerk, SignIn } from '@clerk/clerk-react'
 import { useAuthStore } from '@/stores/useAuthStore'
-import { setClerkToken } from '@/lib/supabase'
+import { setClerkToken, getClerkToken } from '@/lib/supabase'
 import { IS_STAGING } from '@/env'
 import { posthog } from '@/lib/posthog'
-import { Admin, isAdminUser } from '@/pages/Admin'
+import { Admin } from '@/pages/Admin'
 
 // admin.breaktapes.com runs a self-contained shell: Clerk sign-in → admin
 // allowlist check → the dashboard. Deliberately does NOT mount the athlete
@@ -14,7 +14,7 @@ import { Admin, isAdminUser } from '@/pages/Admin'
 const JWT_TEMPLATE = IS_STAGING ? 'supabase-staging' : 'supabase'
 
 // Lighter than AuthGate's useClerkSync: installs the Clerk JWT + sets authUser
-// so isAdminUser() and the /api/admin/* Authorization header work. Skips the
+// so the /api/admin/* Authorization header + check probe work. Skips the
 // athlete identity sync + bootstrap backfill entirely — admin host must never
 // touch the user's race/profile row.
 function useAdminAuth() {
@@ -90,17 +90,38 @@ function AdminGate() {
   const { signOut } = useClerk()
   const authUser = useAuthStore(s => s.authUser)
   const didView = useRef(false)
+  // Authorization is decided by the Worker, not a client-side list. We probe
+  // /api/admin/check once the Clerk JWT is installed; 200 = allowed, 403 =
+  // denied. No admin user IDs are shipped in the bundle.
+  const [authz, setAuthz] = useState<'checking' | 'allowed' | 'denied'>('checking')
   useAdminAuth()
 
   useEffect(() => {
     if (isSignedIn && !didView.current) { didView.current = true; posthog.capture('admin_host_opened') }
   }, [isSignedIn])
 
+  // Probe once the token is installed (authUser flips non-null right after
+  // setClerkToken in useAdminAuth, so getClerkToken() is ready by then).
+  useEffect(() => {
+    if (!isSignedIn || !authUser) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const token = getClerkToken()
+        const res = await fetch('/api/admin/check', { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+        if (!cancelled) setAuthz(res.ok ? 'allowed' : 'denied')
+      } catch {
+        if (!cancelled) setAuthz('denied')
+      }
+    })()
+    return () => { cancelled = true }
+  }, [isSignedIn, authUser])
+
   if (!isLoaded) return <Loading />
   if (!isSignedIn) return <CenteredSignIn />
+  if (authz === 'checking') return <Loading />
 
-  // Signed in but not on the allowlist → hard stop, offer sign-out.
-  if (!isAdminUser(authUser?.id)) {
+  if (authz === 'denied') {
     return (
       <div style={{ position: 'fixed', inset: 0, background: 'var(--black)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'var(--sp-4)', padding: '24px', textAlign: 'center' }}>
         <div style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-2xl)', fontWeight: 900, color: 'var(--orange)' }}>403</div>

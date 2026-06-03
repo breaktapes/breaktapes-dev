@@ -4,14 +4,9 @@ import { useAuthStore } from '@/stores/useAuthStore'
 import { getClerkToken } from '@/lib/supabase'
 import { posthog } from '@/lib/posthog'
 
-const ADMIN_IDS = new Set(
-  (import.meta.env.VITE_ADMIN_USER_IDS as string ?? '')
-    .split(',').map((s: string) => s.trim()).filter(Boolean)
-)
-
-export function isAdminUser(userId: string | undefined): boolean {
-  return !!userId && ADMIN_IDS.has(userId)
-}
+// Authorization lives entirely in the Worker (ADMIN_USER_IDS secret), probed
+// via /api/admin/check by AdminApp. No admin user IDs are shipped in the
+// client bundle. This page is only rendered after that probe returns 200.
 
 type AdminTab = 'catalog' | 'users' | 'feedback' | 'analytics' | 'errors'
 
@@ -540,15 +535,16 @@ export function Admin({ standalone, onSignOut }: { standalone?: boolean; onSignO
   const navigate  = useNavigate()
   const authUser  = useAuthStore(s => s.authUser)
   const [tab, setTab] = useState<AdminTab>('analytics')
-  const isAdmin   = isAdminUser(authUser?.id)
 
+  // Gating is handled upstream by AdminApp's /api/admin/check probe — this
+  // page only mounts for an authorized admin. Each tab's data call is also
+  // independently authorized server-side.
   useEffect(() => {
-    if (isAdmin) posthog.capture('admin_page_viewed', { tab })
+    posthog.capture('admin_page_viewed', { tab })
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAdmin])
+  }, [])
 
   if (!authUser) return <div style={st.page}><p style={{ color: 'var(--muted)', fontSize: 'var(--text-compact)' }}>Sign in required.</p></div>
-  if (!isAdmin)  return <div style={st.page}><p style={{ color: 'var(--muted)', fontSize: 'var(--text-compact)' }}>Not authorised.</p></div>
 
   const TABS: { id: AdminTab; label: string }[] = [
     { id: 'analytics', label: 'Analytics' },

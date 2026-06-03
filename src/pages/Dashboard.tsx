@@ -2719,9 +2719,41 @@ function OnThisDayWidget() {
 function RaceReadinessWidget() {
   const races      = useRaceStore(selectRaces)
   const owRecovery = useWearableStore(s => s.owRecovery)
+  const injuries   = useAthleteStore(s => s.injuries)
   const today      = todayStr()
   const ctx        = useWidgetCardContext()
   const size       = ctx?.getWidgetSize('race-readiness') ?? 'medium'
+
+  // Recovery Mode: show if any unresolved injury exists
+  const activeInjury = (injuries ?? []).find(i => !i.resolved)
+  if (activeInjury) {
+    const bodyPartLabel = activeInjury.bodyPart.replace(/_/g, ' ').toUpperCase()
+    const phaseLabel = activeInjury.phase.replace(/_/g, ' ')
+    return (
+      <WidgetCard id="race-readiness" style={st.glowCard}>
+        <div>
+          <div style={st.widgetLabel}>FORM CHECK</div>
+          <div role="heading" aria-level={2} style={st.widgetTitle}>RECOVERY MODE</div>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', marginTop: 'auto' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', color: 'var(--orange)', textTransform: 'uppercase', letterSpacing: '0.02em' }}>
+            {bodyPartLabel}
+          </div>
+          <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)' }}>
+            {phaseLabel}
+          </div>
+          {activeInjury.returnDate && (
+            <div style={{ fontSize: 'var(--text-sm)', color: 'var(--green)', fontFamily: 'var(--headline)', fontWeight: 700 }}>
+              Est. return: {activeInjury.returnDate}
+            </div>
+          )}
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', lineHeight: 1.4 }}>
+            Log your recovery on the You page
+          </div>
+        </div>
+      </WidgetCard>
+    )
+  }
 
   const { signal, score, daysSince, recoveryDays, lastDist, hrvAvg, recoveryScore, hasWearable } = useMemo(() => {
     const past = races.filter(r => r.date <= today).sort((a, b) => b.date.localeCompare(a.date))

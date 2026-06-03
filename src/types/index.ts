@@ -94,6 +94,78 @@ export interface Athlete {
   }
 }
 
+export type InjuryBodyPart =
+  | 'achilles' | 'ankle' | 'knee' | 'it_band' | 'hip' | 'hamstring'
+  | 'calf' | 'shin' | 'foot' | 'plantar' | 'lower_back' | 'shoulder'
+  | 'quad' | 'groin' | 'other'
+
+export type InjuryType =
+  | 'tendinopathy' | 'stress_fracture' | 'muscle_strain' | 'ligament_sprain'
+  | 'bursitis' | 'it_band_syndrome' | 'plantar_fasciitis' | 'shin_splints'
+  | 'stress_reaction' | 'overuse' | 'other'
+
+export type InjuryPhase =
+  | 'rest'           // Not training — rest only
+  | 'cross_training' // Pool, bike, elliptical — no impact
+  | 'building'       // Walk-jog, gradual load
+  | 'training'       // Structured runs, no race goals
+  | 'racing'         // Cleared for race starts
+  | 'resolved'       // Back to normal
+
+export const INJURY_PHASES: { key: InjuryPhase; label: string }[] = [
+  { key: 'rest',           label: 'Rest' },
+  { key: 'cross_training', label: 'Cross-training' },
+  { key: 'building',       label: 'Building' },
+  { key: 'training',       label: 'Training' },
+  { key: 'racing',         label: 'Racing' },
+  { key: 'resolved',       label: 'Resolved' },
+]
+
+export const INJURY_BODY_PARTS: { key: InjuryBodyPart; label: string }[] = [
+  { key: 'achilles',   label: 'Achilles (Achilles tendon)' },
+  { key: 'ankle',      label: 'Ankle' },
+  { key: 'knee',       label: 'Knee (patella)' },
+  { key: 'it_band',    label: 'IT Band (iliotibial band)' },
+  { key: 'hip',        label: 'Hip' },
+  { key: 'hamstring',  label: 'Hamstring (biceps femoris)' },
+  { key: 'calf',       label: 'Calf (gastrocnemius)' },
+  { key: 'shin',       label: 'Shin (tibia)' },
+  { key: 'foot',       label: 'Foot' },
+  { key: 'plantar',    label: 'Plantar (plantar fascia)' },
+  { key: 'lower_back', label: 'Lower Back (lumbar spine)' },
+  { key: 'shoulder',   label: 'Shoulder (rotator cuff)' },
+  { key: 'quad',       label: 'Quad (quadriceps)' },
+  { key: 'groin',      label: 'Groin (adductor)' },
+  { key: 'other',      label: 'Other' },
+]
+
+export const INJURY_TYPES: { key: InjuryType; label: string }[] = [
+  { key: 'tendinopathy',      label: 'Tendinopathy' },
+  { key: 'stress_fracture',   label: 'Stress fracture' },
+  { key: 'muscle_strain',     label: 'Muscle strain' },
+  { key: 'ligament_sprain',   label: 'Ligament sprain' },
+  { key: 'bursitis',          label: 'Bursitis' },
+  { key: 'it_band_syndrome',  label: 'IT band syndrome' },
+  { key: 'plantar_fasciitis', label: 'Plantar fasciitis' },
+  { key: 'shin_splints',      label: 'Shin splints' },
+  { key: 'stress_reaction',   label: 'Stress reaction' },
+  { key: 'overuse',           label: 'Overuse' },
+  { key: 'other',             label: 'Other' },
+]
+
+export interface Injury {
+  id: string
+  createdAt: string                  // YYYY-MM-DD
+  bodyPart: InjuryBodyPart
+  injuryType: InjuryType
+  severity: 'mild' | 'moderate' | 'severe'
+  phase: InjuryPhase
+  startDate: string                  // YYYY-MM-DD
+  returnDate?: string                // YYYY-MM-DD — physio's target (user-entered)
+  notes?: string
+  resolved: boolean
+}
+
 export interface WearableToken {
   provider: 'whoop' | 'garmin' | 'strava' | 'coros' | 'oura'
   access_token: string
