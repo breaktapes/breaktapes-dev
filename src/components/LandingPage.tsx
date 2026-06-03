@@ -1210,7 +1210,7 @@ export default function LandingPage({ onSignUp, onSignIn }: LandingPageProps) {
   const [loaded, setLoaded] = useState(false)
   const [navVisible, setNavVisible] = useState(false)
   const [progress, setProgress] = useState(0)
-  const [persona, setPersona] = useState<DemoPersonaId>('sa-marathoner')
+  const [persona, setPersona] = useState<DemoPersonaId>('dubai-everyday')
   const [screen, setScreen] = useState(0)
   const stageRef = useRef<HTMLDivElement>(null)
 

@@ -40,7 +40,7 @@ const isTab = (v: string | null): v is Tab =>
 
 export default function Demo() {
   const [params] = useSearchParams()
-  const initialPersona: DemoPersonaId = isPersona(params.get('persona')) ? (params.get('persona') as DemoPersonaId) : 'sa-marathoner'
+  const initialPersona: DemoPersonaId = isPersona(params.get('persona')) ? (params.get('persona') as DemoPersonaId) : 'dubai-everyday'
   const initialTab: Tab = isTab(params.get('tab')) ? (params.get('tab') as Tab) : 'dashboard'
   const chrome = params.get('chrome') !== '0'
 
