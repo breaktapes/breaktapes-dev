@@ -1,5 +1,12 @@
 import { supabase } from '@/lib/supabase'
+import { useAuthStore } from '@/stores/useAuthStore'
 import { useWearableStore } from '@/stores/useWearableStore'
+
+// App uses Clerk, not Supabase Auth — supabase.auth.getUser() returns null.
+// The Clerk user id lives in the auth store.
+function clerkUserId(): string | null {
+  return useAuthStore.getState().authUser?.id ?? null
+}
 
 const CHUNK_SIZE = 8 * 1024 * 1024 // 8 MB
 const FLUSH_THRESHOLD = 5000        // flush a date early if it hits this many records
@@ -77,8 +84,8 @@ export async function importAppleHealthXMLStreaming(
   file: File,
   onProgress?: (pct: number) => void,
 ): Promise<void> {
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Not authenticated')
+  const userId = clerkUserId()
+  if (!userId) throw new Error('Not authenticated')
 
   let offset = 0
   const total = file.size
@@ -111,7 +118,7 @@ export async function importAppleHealthXMLStreaming(
     // Early-flush dates that hit the threshold (handles single-date bulk exports)
     for (const [date, recs] of Object.entries(pending)) {
       if (recs.length >= FLUSH_THRESHOLD && !batchDates.has(date)) {
-        await flushDate(user.id, date, recs)
+        await flushDate(userId, date, recs)
         batchDates.add(date)
         delete pending[date]
       }
@@ -123,7 +130,7 @@ export async function importAppleHealthXMLStreaming(
   // Flush remaining dates
   for (const [date, recs] of Object.entries(pending)) {
     if (!batchDates.has(date)) {
-      await flushDate(user.id, date, recs)
+      await flushDate(userId, date, recs)
       batchDates.add(date)
     }
   }
@@ -139,8 +146,8 @@ export async function importAppleHealthXMLStreaming(
  * Small-file path (< 500 MB): load entire file text, parse all records at once.
  */
 export async function importAppleHealthXML(file: File): Promise<void> {
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Not authenticated')
+  const userId = clerkUserId()
+  if (!userId) throw new Error('Not authenticated')
 
   const text = await file.text()
   const byDate: Record<string, HealthRecord[]> = {}
@@ -152,7 +159,7 @@ export async function importAppleHealthXML(file: File): Promise<void> {
   }
 
   for (const [date, recs] of Object.entries(byDate)) {
-    await flushDate(user.id, date, recs)
+    await flushDate(userId, date, recs)
   }
 
   useWearableStore.getState().setAppleHealthSummary({
