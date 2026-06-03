@@ -1382,6 +1382,35 @@ Direct DB access (psql/psycopg2) is blocked from localhost — Supabase only exp
 
 ---
 
+### Session 40 (2026-06-03) — Injury Tracker (v0.7.5.2 / v0.7.5.3)
+
+**Branch:** `claude/bold-agnesi-175d99` → staging (PR #436) → main (PR #437); label follow-up `promote-injury-labels` → staging (PR #439) → main (PR #440). Planned via `/autoplan` (CEO subagent only — codex binary broken, ENOENT). Two USER CHALLENGES surfaced + resolved by user at the gate.
+
+#### Shipped
+- **`Injury` type** (`src/types/index.ts`) — `bodyPart` (15 `InjuryBodyPart` keys), `injuryType` (11 `InjuryType` keys), `severity` (mild/moderate/severe), `phase` (`InjuryPhase`: rest → cross_training → building → training → racing → resolved), `startDate`, `returnDate?`, `notes?`, `resolved`. Plus display arrays `INJURY_BODY_PARTS`, `INJURY_TYPES`, `INJURY_PHASES`.
+- **`useAthleteStore` injuries[]** — `addInjury` / `updateInjury` / `resolveInjury` / `deleteInjury` / `setInjuries`. Synced via existing `state_json` JSONB (no migration). `addInjury` seeds `athlete.injuryBreakStart`, `resolveInjury` seeds `athlete.injuryBreakEnd` — keeps `comeback_run` achievement working (backward compat).
+- **Sync wiring** — `injuries` added to `syncStateToSupabase` payload + `RemoteState` interface + `applyRemoteSafe` in `useSyncState.ts`. Remote replaces local only when non-empty (empty remote never wipes local — same guard as season_plans).
+- **`InjuryLogModal.tsx`** (new) — 3-step wizard (body part → type+severity → dates+phase+notes), `createPortal`, body-scroll lock. Manual phase picker only (no auto-advance). Disclaimer on step 3.
+- **InjuryTracker section** in Profile/You page — active injury cards with 5-segment phase bars, resolved collapsible ("RECOVERED · N"), empty state ("No active injuries — keep it that way! 🏃"), "+ Log" CTA, disclaimer footer.
+- **RaceReadinessWidget Recovery Mode** (`Dashboard.tsx`) — when `injuries.some(i => !i.resolved)`, the widget hides the readiness score entirely and shows body part + phase + est. return date. Early-return before the existing score logic. NOT a 40% cap.
+- **EditProfileModal** — injury break date fields replaced with "Manage injuries →" CTA (closes modal → You page). Legacy `injuryBreakStart/End` kept in save payload (state vars now read-only — dropped the setters).
+- **Anatomical labels (v0.7.5.3)** — removed emoji from body part picker; labels now `Calf (gastrocnemius)`, `IT Band (iliotibial band)`, `Shin (tibia)`, `Knee (patella)`, `Hamstring (biceps femoris)`, `Plantar (plantar fascia)`, `Lower Back (lumbar spine)`, `Shoulder (rotator cuff)`, `Quad (quadriceps)`, `Groin (adductor)`, `Achilles (Achilles tendon)`. Profile cards strip the parenthetical via `.replace(/\s*\(.*\)$/, '')` for compact display.
+
+#### Key decisions (autoplan USER CHALLENGES)
+- **No medical lookup table** — CEO review flagged hardcoded rehab-week estimates as legal/safety risk. User chose: user enters their physio's return date instead. App is a logger, not a predictor.
+- **Full tracker kept** (not simpler Downtime Log) — user explicitly kept the rich body-part/type/phase spec.
+- **Readiness hidden, not capped** — achievement app shouldn't punish injury with a low score; Recovery Mode replaces the score.
+- **Manual phases only** — no time-based `derivePhase()` auto-advance (clinically inaccurate per CEO review).
+
+#### Key learnings
+- `/autoplan` runs CEO subagent even when codex binary is broken (`ENOENT` on `@openai/codex-darwin-arm64` vendor path) — degrades to `[codex-unavailable]`, subagent-only review still surfaces USER CHALLENGES.
+- `InjuryLogModal` style object uses function-valued keys (`partBtn(active)`, `sevBtn(active, color)`) — type the `s` map as `Record<string, any>`, NOT `Record<string, React.CSSProperties>`, or tsc errors "no call signatures" / "not callable".
+- `handleSave` in an edit-capable modal must preserve `resolved` (`isEdit ? injury?.resolved : false`) — a hardcoded `resolved: false` un-resolves an injury when the user edits a recovered one. Caught in /ship pre-landing review.
+- Post-squash divergence (again): PR #436 squash-merged to staging but the feature branch wasn't reset, so PR #438 (label change) was "not mergeable: merge commit cannot be cleanly created". Fix: force-sync staging to main (`git push origin origin/main:staging --force`), branch fresh from `origin/main`, cherry-pick the single delta commit, new PR.
+- Parallel ship superseded the version number: main jumped to 0.7.6.x while this branch was at 0.7.5.3. The merge kept this session's content (verified all 4 injury surfaces present in `origin/main`); only the VERSION integer was leapfrogged. Always verify CONTENT in main, not the version string.
+
+---
+
 ### Session 39 (2026-06-03) — Race splits interlink (split/elapsed/pace) (v0.7.6.1)
 
 **Branch:** `claude/brave-lichterman-92fbf9` → staging (PR #446) → main (PR #449). Both green.
