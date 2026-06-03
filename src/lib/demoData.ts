@@ -390,7 +390,7 @@ name: Granfondo Stelvio Santini | date: 2026-08-30 | city: Bormio | country: Ita
 `
 const DXB_RECENT = `
 Dubai Creek Striders Half Marathon | Dubai | United Arab Emirates | 2026-01-10 | 21.1 | running | 2:03:10 | 850/2400 | 400/1150 | 65/290 | M30-34 | finisher | road | flat | 14 | 167 | Pegasus 41 | 24/clear | 25.20 | 55.27
-Dubai Spring 10K | Dubai | United Arab Emirates | 2026-05-15 | 10 | running | 51:05 | 560/2800 | 290/1450 | 55/380 | M30-34 | finisher | road | flat | 10 | 170 | Pegasus 41 | 28/clear | 25.20 | 55.27
+Dubai Marathon 10K | Dubai | United Arab Emirates | 2026-02-01 | 10 | running | 51:05 | 560/2800 | 290/1450 | 55/380 | M30-34 | finisher | road | flat | 10 | 170 | Pegasus 41 | 28/clear | 25.20 | 55.27
 `
 const DXB_UPMORE = `
 name: ADNOC Abu Dhabi Marathon | date: 2026-12-06 | city: Abu Dhabi | country: United Arab Emirates | distance: 42.2 | sport: running | goalTime: 4:05:00
