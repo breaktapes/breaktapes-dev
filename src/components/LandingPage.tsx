@@ -886,7 +886,7 @@ function MomentumMockup({ persona, framed = false }: { persona: DemoPersonaId; f
                   <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 10, color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name}</div>
                   <div style={{ fontFamily: 'var(--body)', fontSize: 8, color: 'var(--muted)' }}>{k} · {r.time}</div>
                 </div>
-                <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 8.5, color: isPB ? 'var(--green)' : 'var(--muted)', padding: '3px 7px', borderRadius: 'var(--radius-pill)', background: 'var(--surface3)', flexShrink: 0 }}>{isPB ? 'PB' : `+${s2t(diff)}`}</span>
+                <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 8.5, color: isPB ? 'var(--green)' : 'var(--muted)', padding: '3px 7px', borderRadius: 'var(--radius-pill)', background: 'var(--surface3)', flexShrink: 0, minWidth: 48, textAlign: 'center' }}>{isPB ? 'PB' : `+${s2t(diff)}`}</span>
               </div>
             )
           })}

@@ -725,9 +725,16 @@ body::after {
   }
   /* Persona pills: tighter padding to fit more per row. */
   .pl-audience-pill { padding: 0.55rem 0.95rem; font-size: 12px; }
-  /* Phone-stage: shrink frame slightly so it doesn't dominate. */
-  .pl-phone { width: 200px; height: 400px; }
-  .pl-stage-line { font-size: 14px; max-width: 320px; }
+  /* Phone-stage: shrink frame more so the top isn't clipped by sticky nav,
+     and reduce the bottom title/desc sizes so the whole pinned stage fits
+     a phone viewport without squeeze. */
+  .pl-stage { height: 380vh; }
+  .pl-stage-inner { gap: 1.25rem; }
+  .pl-phone { width: 178px; height: 356px; }
+  .pl-stage-title { font-size: clamp(1.4rem, 6.5vw, 2rem); line-height: 1.05; margin: 0 0 0.5rem; }
+  .pl-stage-line { font-size: 13px; max-width: 280px; line-height: 1.5; margin: 0 0 1rem; }
+  .pl-stage-dots span { width: 7px; height: 7px; }
+  .pl-stage-dots span.on { width: 22px; }
   /* CTA pill at bottom of page tighter. */
   .pl-footer { padding: 2rem 1.25rem; }
   /* Sticky nav: tighter height so more content shows above the fold. */
