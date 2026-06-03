@@ -389,7 +389,7 @@ name: Étape du Tour | date: 2026-07-12 | city: Albertville | country: France | 
 name: Granfondo Stelvio Santini | date: 2026-08-30 | city: Bormio | country: Italy | distance: 151 | sport: cycling | goalTime: 5:40:00
 `
 const DXB_RECENT = `
-Dubai Creek Striders Half Marathon | Dubai | United Arab Emirates | 2026-04-03 | 21.1 | running | 2:03:10 | 850/2400 | 400/1150 | 65/290 | M30-34 | finisher | road | flat | 14 | 167 | Pegasus 41 | 24/clear | 25.20 | 55.27
+Dubai Creek Striders Half Marathon | Dubai | United Arab Emirates | 2026-01-10 | 21.1 | running | 2:03:10 | 850/2400 | 400/1150 | 65/290 | M30-34 | finisher | road | flat | 14 | 167 | Pegasus 41 | 24/clear | 25.20 | 55.27
 Dubai Spring 10K | Dubai | United Arab Emirates | 2026-05-15 | 10 | running | 51:05 | 560/2800 | 290/1450 | 55/380 | M30-34 | finisher | road | flat | 10 | 170 | Pegasus 41 | 28/clear | 25.20 | 55.27
 `
 const DXB_UPMORE = `
