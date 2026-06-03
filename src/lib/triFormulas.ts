@@ -159,6 +159,62 @@ function bestRunningEffort(races: Race[]): { secs: number; km: number } | null {
   return best ? { secs: best.secs, km: best.km } : null
 }
 
+const SWIM_SPORTS = /swim/i
+/**
+ * Best swim effort for the engine fallback — considers both standalone swim
+ * races and swim splits extracted from past triathlon races.
+ */
+function bestSwimEffort(races: Race[]): { secs: number; km: number } | null {
+  type Candidate = { secs: number; km: number; pace: number }
+  let best: Candidate | null = null
+  const consider = (s: number, k: number) => {
+    if (s <= 0 || k <= 0) return
+    const pace = s / k
+    if (!best || pace < best.pace) best = { secs: s, km: k, pace }
+  }
+  for (const r of races) {
+    if (r.outcome === 'DNF' || r.outcome === 'DNS' || r.outcome === 'DSQ') continue
+    if (SWIM_SPORTS.test(r.sport ?? '')) {
+      const secs = parseTimeSecs(r.time); const km = parseDistKm(r.distance)
+      if (secs) consider(secs, km)
+    } else if (isTriRace(r)) {
+      const srcType = detectTriType(parseDistKm(r.distance))
+      if (!srcType) continue
+      const swimSecs = extractTriLegs(r).swim
+      if (swimSecs) consider(swimSecs, srcType.swimKm)
+    }
+  }
+  return best ? { secs: (best as Candidate).secs, km: (best as Candidate).km } : null
+}
+
+const BIKE_SPORTS = /cycl|bik|ride|mtb|velothon/i
+/**
+ * Best bike effort for the engine fallback — considers both standalone cycling
+ * races and bike splits extracted from past triathlon races.
+ */
+function bestBikeEffort(races: Race[]): { secs: number; km: number } | null {
+  type Candidate = { secs: number; km: number; pace: number }
+  let best: Candidate | null = null
+  const consider = (s: number, k: number) => {
+    if (s <= 0 || k <= 0) return
+    const pace = s / k
+    if (!best || pace < best.pace) best = { secs: s, km: k, pace }
+  }
+  for (const r of races) {
+    if (r.outcome === 'DNF' || r.outcome === 'DNS' || r.outcome === 'DSQ') continue
+    if (BIKE_SPORTS.test(r.sport ?? '')) {
+      const secs = parseTimeSecs(r.time); const km = parseDistKm(r.distance)
+      if (secs) consider(secs, km)
+    } else if (isTriRace(r)) {
+      const srcType = detectTriType(parseDistKm(r.distance))
+      if (!srcType) continue
+      const bikeSecs = extractTriLegs(r).bike
+      if (bikeSecs) consider(bikeSecs, srcType.bikeKm)
+    }
+  }
+  return best ? { secs: (best as Candidate).secs, km: (best as Candidate).km } : null
+}
+
 function riegel(knownSecs: number, knownKm: number, targetKm: number, exp: number): number {
   return knownSecs * Math.pow(targetKm / knownKm, exp)
 }
@@ -220,7 +276,9 @@ export function predictTriathlon(
     if (contributed) usedRaces.add(race.id)
   }
 
-  const engineRun = bestRunningEffort(races)
+  const engineSwim = bestSwimEffort(races)
+  const engineBike = bestBikeEffort(races)
+  const engineRun  = bestRunningEffort(races)
 
   function weightedMean(arr: Array<{ projected?: number; secs?: number; weight: number }>): number | null {
     let sw = 0, swx = 0
@@ -245,14 +303,21 @@ export function predictTriathlon(
     let secs: number | null = null
     let source: TriLegPrediction['source'] = 'empirical'
 
-    if (disc === 'run') {
-      const engine = engineRun ? riegel(engineRun.secs, engineRun.km, legKm.run, LEG_EXP.run) : null
+    if (disc === 'swim') {
+      const engine = engineSwim ? riegel(engineSwim.secs, engineSwim.km, legKm.swim, LEG_EXP.swim) : null
+      if (emp != null && engine != null) { secs = alpha * emp + (1 - alpha) * engine; source = 'blend' }
+      else if (emp != null) { secs = emp; source = 'empirical' }
+      else if (engine != null) { secs = engine; source = 'engine' }
+    } else if (disc === 'bike') {
+      const engine = engineBike ? riegel(engineBike.secs, engineBike.km, legKm.bike, LEG_EXP.bike) : null
       if (emp != null && engine != null) { secs = alpha * emp + (1 - alpha) * engine; source = 'blend' }
       else if (emp != null) { secs = emp; source = 'empirical' }
       else if (engine != null) { secs = engine; source = 'engine' }
     } else {
-      // No reliable engine model for swim/bike yet — empirical only.
-      if (emp != null) { secs = emp; source = 'empirical' }
+      const engine = engineRun ? riegel(engineRun.secs, engineRun.km, legKm.run, LEG_EXP.run) : null
+      if (emp != null && engine != null) { secs = alpha * emp + (1 - alpha) * engine; source = 'blend' }
+      else if (emp != null) { secs = emp; source = 'empirical' }
+      else if (engine != null) { secs = engine; source = 'engine' }
     }
 
     if (secs != null) anyLeg = true
@@ -286,9 +351,15 @@ export function predictTriathlon(
   const lowSecs = totalSecs * (1 - u)
   const highSecs = totalSecs * (1 + u)
 
+  const engineParts: string[] = []
+  if (engineSwim) engineParts.push('swim')
+  if (engineBike) engineParts.push('bike')
+  if (engineRun)  engineParts.push('run')
   const basis = usedRaces.size > 0
     ? `${usedRaces.size} tri${usedRaces.size === 1 ? '' : 's'} with splits${hasCrossBand ? ' (some other distances)' : ''}`
-    : 'standalone running PB (engine estimate)'
+    : engineParts.length > 0
+      ? `${engineParts.join(' + ')} PB${engineParts.length > 1 ? 's' : ''} (engine estimate)`
+      : 'engine estimate'
 
   return {
     type,

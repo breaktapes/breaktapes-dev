@@ -3,6 +3,15 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.6.2] - 2026-06-03
+
+### Fixed
+- **Course Fit widget no longer stuck on "Log 3+ races"** — race results imported from UltraSignup (Comrades, Western States, ultras) now carry placing data correctly. A field-name mismatch was silently dropping finish position on every UltraSignup import, preventing the Course Fit widget from ever meeting its 3-race threshold.
+- **Triathlon Predictor hidden for non-triathletes** — the widget now returns nothing when the athlete has no past or upcoming triathlon logged, so it no longer appears as an empty card on pure-running dashboards.
+
+### Changed
+- **Triathlon Predictor uses all discipline data** — swim and bike predictions now draw from standalone swim and cycling races in addition to triathlon splits, using the same recency-weighted Riegel + blend model as the run leg (α = empirical / (empirical + 2)). Athletes with pool swim results or sportive ride history get meaningful swim and bike estimates even before their first tri.
+
 ## [0.7.6.0] - 2026-06-03
 
 ### Security
