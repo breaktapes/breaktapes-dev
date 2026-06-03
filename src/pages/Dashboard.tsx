@@ -16,6 +16,8 @@ import { useDashStore, initDashV3Migration } from '@/stores/useDashStore'
 import { selectRaces, selectNextRace, selectAthlete, selectUpcomingRaces, selectFocusRaceId } from '@/stores/selectors'
 import { AddRaceModal } from '@/components/AddRaceModal'
 import { ViewEditRaceModal } from '@/components/ViewEditRaceModal'
+import { RaceImportModal } from '@/components/RaceImportModal'
+import { IronmanRacePicker } from '@/components/IronmanRacePicker'
 import { TimePickerWheel } from '@/components/TimePickerWheel'
 import type { HMS } from '@/components/TimePickerWheel'
 import { CustomDistInput } from '@/components/CustomDistInput'
@@ -5417,7 +5419,7 @@ function AddWidgetsSheet({ onClose }: { onClose: () => void }) {
 
 // ─── New-user onboarding ──────────────────────────────────────────────────────
 
-function NewUserOnboarding({ onLogRace, onAddUpcoming, onDiscover }: { onLogRace: () => void; onAddUpcoming: () => void; onDiscover: () => void }) {
+function NewUserOnboarding({ onLogRace, onImport, onAddUpcoming, onDiscover }: { onLogRace: () => void; onImport: () => void; onAddUpcoming: () => void; onDiscover: () => void }) {
   const races          = useRaceStore(selectRaces)
   const upcomingRaces  = useRaceStore(selectUpcomingRaces)
   if (races.length > 0 || upcomingRaces.length > 0) return null
@@ -5445,12 +5447,20 @@ function NewUserOnboarding({ onLogRace, onAddUpcoming, onDiscover }: { onLogRace
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
-        <button
-          onClick={onLogRace}
-          style={{ width: '100%', background: 'var(--orange)', color: '#000', border: 'none', borderRadius: 'var(--radius-lg)', padding: 'var(--sp-4)', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer' }}
-        >
-          Log a Past Race
-        </button>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-2)' }}>
+          <button
+            onClick={onLogRace}
+            style={{ background: 'var(--orange)', color: '#000', border: 'none', borderRadius: 'var(--radius-lg)', padding: 'var(--sp-4)', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer' }}
+          >
+            Log a Race
+          </button>
+          <button
+            onClick={onImport}
+            style={{ background: 'var(--surface3)', color: 'var(--white)', border: '1px solid rgba(var(--orange-ch),0.35)', borderRadius: 'var(--radius-lg)', padding: 'var(--sp-4)', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer' }}
+          >
+            ↓ Import
+          </button>
+        </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-2)' }}>
           <button
             onClick={onAddUpcoming}
@@ -5462,7 +5472,7 @@ function NewUserOnboarding({ onLogRace, onAddUpcoming, onDiscover }: { onLogRace
             onClick={onDiscover}
             style={{ background: 'var(--surface3)', color: 'var(--white)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-lg)', padding: 'var(--sp-3)', fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-xs)', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer' }}
           >
-            Discover Races
+            Discover
           </button>
         </div>
       </div>
@@ -5478,6 +5488,8 @@ export function Dashboard() {
   // modals
   const [showAddRace,     setShowAddRace]     = useState(false)
   const [addRaceMode,     setAddRaceMode]     = useState<'past' | 'upcoming'>('past')
+  const [showImport,      setShowImport]      = useState(false)
+  const [showPicker,      setShowPicker]      = useState(false)
   const [showAllUpcoming, setShowAllUpcoming] = useState(false)
   const [editRace,        setEditRace]        = useState<Race | null>(null)
   const [editRaceMode,    setEditRaceMode]    = useState<'view' | 'edit'>('view')
@@ -5666,6 +5678,8 @@ export function Dashboard() {
     <WidgetCardContext.Provider value={widgetCtxValue}>
     <div style={st.page}>
       {showAddRace      && <AddRaceModal defaultMode={addRaceMode} prefillDistance={riegelPrefillDist} prefill={catalogPrefill} onClose={() => { setShowAddRace(false); setRiegelPrefillDist(undefined); setCatalogPrefill(undefined) }} />}
+      {showImport       && <RaceImportModal onClose={() => setShowImport(false)} onPickByRace={() => { setShowImport(false); setShowPicker(true) }} />}
+      {showPicker       && <IronmanRacePicker onClose={() => setShowPicker(false)} />}
       {showAllUpcoming  && <AllUpcomingModal onClose={() => setShowAllUpcoming(false)} onAddRace={openAddUpcomingRace} />}
       {editRace         && <ViewEditRaceModal race={editRace} initialMode={editRaceMode} onClose={() => { setEditRace(null); setEditRaceMode('view') }} />}
       {detailWidget     && <WidgetDetailModal widget={detailWidget} preview={detailPreview} dynamicContext={detailCtx} actions={widgetActions} onClose={closeDetail} />}
@@ -5713,6 +5727,7 @@ export function Dashboard() {
         <>
           <NewUserOnboarding
             onLogRace={openAddRace}
+            onImport={() => setShowImport(true)}
             onAddUpcoming={openAddUpcomingRace}
             onDiscover={() => navigate('/discover')}
           />

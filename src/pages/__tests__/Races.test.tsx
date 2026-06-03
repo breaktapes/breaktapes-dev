@@ -83,6 +83,18 @@ describe('Races — race list', () => {
     // Suppress unused variable warning
     void emptyEls
   })
+
+  it('shows import CTA in empty state when no races logged', () => {
+    renderRaces()
+    const importBtns = screen.queryAllByText(/import your results/i)
+    expect(importBtns.length).toBeGreaterThanOrEqual(1)
+  })
+
+  it('does not show import CTA when races exist', () => {
+    useRaceStore.setState({ races: [RACE], nextRace: null, upcomingRaces: [] })
+    renderRaces()
+    expect(screen.queryByText(/import your results/i)).toBeNull()
+  })
 })
 
 describe('Races — log race button', () => {
