@@ -3,6 +3,11 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.5.3] - 2026-06-03
+
+### Changed
+- **Injury body part picker** — removed emoji icons; each option now shows the common name with its anatomical name in brackets (e.g. "Calf (gastrocnemius)", "IT Band (iliotibial band)", "Shin (tibia)"). Injury cards on the You page show the short common name.
+
 ## [0.7.5.2] - 2026-06-03
 
 ### Added
