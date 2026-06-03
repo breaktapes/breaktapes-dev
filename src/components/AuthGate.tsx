@@ -106,11 +106,14 @@ function useClerkSync() {
         if (!didBootstrapSync.current) {
           didBootstrapSync.current = true
           const { races, upcomingRaces, wishlistRaces } = useRaceStore.getState()
-          const { athlete } = useAthleteStore.getState()
+          const { athlete, seasonPlans, goals } = useAthleteStore.getState()
           const hasLocalData =
             races.length > 0 ||
             upcomingRaces.length > 0 ||
             wishlistRaces.length > 0 ||
+            seasonPlans.length > 0 ||
+            Object.keys(goals?.annual ?? {}).length > 0 ||
+            (goals?.distGoals?.length ?? 0) > 0 ||
             !!(athlete && (athlete.firstName || athlete.lastName || athlete.username || athlete.city || athlete.bio))
           if (hasLocalData) void syncStateToSupabase()
         }

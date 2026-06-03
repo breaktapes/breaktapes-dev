@@ -145,6 +145,54 @@ describe('Dashboard — RecentRaces', () => {
   })
 })
 
+// ─── NewUserOnboarding ───────────────────────────────────────────────────────
+
+describe('Dashboard — NewUserOnboarding', () => {
+  it('shows Import button when no races', () => {
+    renderDashboard()
+    const importBtn = screen.getByRole('button', { name: /↓ Import/i })
+    expect(importBtn).toBeInTheDocument()
+  })
+
+  it('does not show NewUserOnboarding when races exist', () => {
+    useRaceStore.setState({ races: [RACE], nextRace: null, upcomingRaces: [] })
+    renderDashboard()
+    // "Log a Race" button in NewUserOnboarding should not be present
+    const logBtns = screen.queryAllByText(/^Log a Race$/i)
+    expect(logBtns.length).toBe(0)
+  })
+})
+
+// ─── TriPredictorWidget visibility ───────────────────────────────────────────
+
+describe('Dashboard — TriPredictorWidget visibility', () => {
+  it('hides TRIATHLON PREDICTOR widget when user has only running races', () => {
+    useRaceStore.setState({ races: [RACE], nextRace: null, upcomingRaces: [] })
+    renderDashboard()
+    expect(screen.queryByText('TRIATHLON PREDICTOR')).not.toBeInTheDocument()
+  })
+
+  it('shows TRIATHLON PREDICTOR widget when user has a past triathlon', () => {
+    const triRace: Race = {
+      id: 't1', name: 'Olympic Tri', date: '2025-06-01',
+      city: '', country: '', distance: '51.5', sport: 'triathlon', outcome: 'Finished',
+    }
+    useRaceStore.setState({ races: [triRace], nextRace: null, upcomingRaces: [] })
+    renderDashboard()
+    expect(screen.getByText('TRIATHLON PREDICTOR')).toBeInTheDocument()
+  })
+
+  it('shows TRIATHLON PREDICTOR widget when user has an upcoming triathlon', () => {
+    const upcomingTri: Race = {
+      id: 'u1', name: 'IRONMAN 70.3', date: FUTURE,
+      city: '', country: '', distance: '113', sport: 'triathlon', outcome: undefined,
+    }
+    useRaceStore.setState({ races: [], nextRace: null, upcomingRaces: [upcomingTri] })
+    renderDashboard()
+    expect(screen.getByText('TRIATHLON PREDICTOR')).toBeInTheDocument()
+  })
+})
+
 // ─── Zone structure ───────────────────────────────────────────────────────────
 
 describe('Dashboard — zone labels', () => {

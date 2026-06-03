@@ -457,7 +457,7 @@ function ViewPanel({ race, isPB, onEdit, onDelete, onShare }: { race: Race; isPB
             <span style={{ fontSize: '9px', color: 'var(--muted2)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>ELAPSED</span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            {race.splits.map((s, i) => (
+            {withCumulative(race.splits).map((s, i) => (
               <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 74px', gap: '4px 8px', padding: '5px 0', borderBottom: '1px solid var(--border)' }}>
                 <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{s.label}</span>
                 <span style={{ fontSize: 'var(--text-xs)', fontFamily: 'monospace', color: 'var(--white)' }}>{s.split || '—'}</span>
@@ -659,6 +659,47 @@ function splitToSecs(t: string): number {
   return 0
 }
 
+// Parse a cumulative distance (km) out of a checkpoint label so pace can
+// interlink with split/elapsed. Handles "5K", "21.1K", "10mi", "250m",
+// "1000m", "Half", "Marathon", and bare numbers (assumed km). Returns null
+// when the label carries no distance ("T1", "Aid 1", "Finish") — pace stays
+// uncomputable for that row.
+function labelToKm(label: string): number | null {
+  if (!label) return null
+  const l = label.trim().toLowerCase()
+  if (l === 'half' || l === 'half marathon') return 21.0975
+  if (l === 'marathon' || l === 'full' || l === 'full marathon') return 42.195
+  let m = l.match(/^([\d.]+)\s*mi\b/)
+  if (m) return parseFloat(m[1]) * 1.60934
+  m = l.match(/^([\d.]+)\s*m$/)            // metres: 250m, 1000m
+  if (m) return parseFloat(m[1]) / 1000
+  m = l.match(/^([\d.]+)\s*k/)             // 5k, 21.1km
+  if (m) return parseFloat(m[1])
+  m = l.match(/^([\d.]+)$/)                // bare number → km
+  if (m) return parseFloat(m[1])
+  return null
+}
+
+// Format a sec/km pace into a bare "M:SS" string in the user's pace unit.
+function fmtPaceBare(secPerKm: number, units: 'metric' | 'imperial'): string {
+  if (!isFinite(secPerKm) || secPerKm <= 0) return ''
+  const per = units === 'imperial' ? secPerKm * 1.60934 : secPerKm
+  const m = Math.floor(per / 60)
+  const s = Math.round(per % 60)
+  return `${m}:${String(s).padStart(2, '0')}`
+}
+
+// Fill each split's `cumulative` (elapsed) from the running sum of `split`
+// times so it persists for the view panel. Blank-split rows get no elapsed.
+function withCumulative(arr: Split[]): Split[] {
+  let total = 0
+  return arr.map(s => {
+    const sec = splitToSecs(s.split ?? '')
+    if (sec > 0) total += sec
+    return { ...s, cumulative: sec > 0 ? secsToHMS(total) : undefined }
+  })
+}
+
 function secsToHMS(s: number): string {
   const h = Math.floor(s / 3600)
   const m = Math.floor((s % 3600) / 60)
@@ -672,30 +713,83 @@ function SplitsEditor({ splits, onChange, sport }: {
   sport: string
 }) {
   const templates = SPLIT_TEMPLATES[sport] ?? []
+  const units = useUnits()
 
-  const cumulative = useMemo(() => {
+  // Per-cell raw text buffer so a derived column (elapsed/pace) can be typed
+  // freely while focused without the live recompute fighting the keystrokes.
+  const [edit, setEdit] = useState<{ i: number; field: 'split' | 'elapsed' | 'pace'; val: string } | null>(null)
+
+  // Cumulative elapsed seconds at each row (running sum of split times).
+  const cumSecs = useMemo(() => {
     let total = 0
     return splits.map(sp => {
       const secs = splitToSecs(sp.split ?? '')
-      total += secs
-      return secs > 0 ? secsToHMS(total) : ''
+      if (secs > 0) total += secs
+      return secs > 0 ? total : 0
+    })
+  }, [splits])
+
+  // Segment distance (km) per row, parsed from cumulative checkpoint labels.
+  const segKm = useMemo(() => {
+    return splits.map((sp, i) => {
+      const cum = labelToKm(sp.label)
+      if (cum == null) return null
+      let prev = 0
+      for (let j = i - 1; j >= 0; j--) { const p = labelToKm(splits[j].label); if (p != null) { prev = p; break } }
+      const seg = cum - prev
+      return seg > 0 ? seg : null
     })
   }, [splits])
 
   function applyTemplate(labels: string[]) {
-    onChange(labels.map(l => ({ label: l, split: '' })))
+    onChange(withCumulative(labels.map(l => ({ label: l, split: '' }))))
   }
 
   function addRow() {
-    onChange([...splits, { label: '', split: '' }])
+    onChange(withCumulative([...splits, { label: '', split: '' }]))
   }
 
   function removeRow(i: number) {
-    onChange(splits.filter((_, idx) => idx !== i))
+    onChange(withCumulative(splits.filter((_, idx) => idx !== i)))
   }
 
-  function updateRow(i: number, field: 'label' | 'split', val: string) {
-    onChange(splits.map((s, idx) => idx === i ? { ...s, [field]: val } : s))
+  function setSplitAt(i: number, splitStr: string) {
+    onChange(withCumulative(splits.map((s, idx) => idx === i ? { ...s, split: splitStr } : s)))
+  }
+
+  function updateLabel(i: number, val: string) {
+    onChange(withCumulative(splits.map((s, idx) => idx === i ? { ...s, label: val } : s)))
+  }
+
+  // SPLIT: source of truth — stored verbatim.
+  function onSplitInput(i: number, val: string) {
+    setEdit({ i, field: 'split', val })
+    setSplitAt(i, val)
+  }
+
+  // ELAPSED: derive this row's split from total elapsed minus prior elapsed.
+  function onElapsedInput(i: number, val: string) {
+    setEdit({ i, field: 'elapsed', val })
+    const elapsed = splitToSecs(val)
+    const prev = i > 0 ? cumSecs[i - 1] : 0
+    const seg = elapsed - prev
+    setSplitAt(i, seg > 0 ? secsToHMS(seg) : '')
+  }
+
+  // PACE: derive this row's split from pace × segment distance.
+  function onPaceInput(i: number, val: string) {
+    setEdit({ i, field: 'pace', val })
+    const seg = segKm[i]
+    if (seg == null) return
+    const perEntered = splitToSecs(val)
+    if (perEntered <= 0) { setSplitAt(i, ''); return }
+    const secPerKm = units === 'imperial' ? perEntered / 1.60934 : perEntered
+    setSplitAt(i, secsToHMS(Math.round(secPerKm * seg)))
+  }
+
+  // Value for a derived cell: raw buffer while editing, else live-computed.
+  function cellVal(i: number, field: 'split' | 'elapsed' | 'pace', computed: string): string {
+    return edit && edit.i === i && edit.field === field ? edit.val : computed
   }
 
   const inputBase: React.CSSProperties = {
@@ -733,35 +827,57 @@ function SplitsEditor({ splits, onChange, sport }: {
 
       {splits.length > 0 && (
         <div style={{ marginBottom: '6px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 90px 74px 24px', gap: '5px', marginBottom: '4px', paddingBottom: '4px', borderBottom: '1px solid var(--border)' }}>
-            {(['CHECKPOINT', 'SPLIT', 'ELAPSED', '']).map(h => (
-              <div key={h} style={{ fontSize: '9px', color: 'var(--muted2)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase' }}>{h}</div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 72px 76px 64px 20px', gap: '4px', marginBottom: '4px', paddingBottom: '4px', borderBottom: '1px solid var(--border)' }}>
+            {(['CHECKPOINT', 'SPLIT', 'ELAPSED', units === 'imperial' ? 'PACE /MI' : 'PACE /KM', '']).map((h, hi) => (
+              <div key={hi} style={{ fontSize: '9px', color: 'var(--muted2)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>{h}</div>
             ))}
           </div>
-          {splits.map((sp, i) => (
-            <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 90px 74px 24px', gap: '5px', marginBottom: '4px', alignItems: 'center' }}>
-              <input
-                style={inputBase}
-                value={sp.label}
-                onChange={e => updateRow(i, 'label', e.target.value)}
-                placeholder="e.g. 15mi, Aid 1..."
-              />
-              <input
-                style={{ ...inputBase, fontFamily: 'monospace' }}
-                value={sp.split ?? ''}
-                onChange={e => updateRow(i, 'split', e.target.value)}
-                placeholder="0:00:00"
-                inputMode="numeric"
-              />
-              <div style={{ fontSize: 'var(--text-xs)', color: cumulative[i] ? 'var(--muted)' : 'var(--muted2)', fontFamily: 'monospace', paddingLeft: '4px' }}>
-                {cumulative[i] || '—'}
+          {splits.map((sp, i) => {
+            const seg = segKm[i]
+            const splitSecs = splitToSecs(sp.split ?? '')
+            const elapsedStr = cumSecs[i] > 0 ? secsToHMS(cumSecs[i]) : ''
+            const paceStr = seg != null && splitSecs > 0 ? fmtPaceBare(splitSecs / seg, units) : ''
+            return (
+              <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 72px 76px 64px 20px', gap: '4px', marginBottom: '4px', alignItems: 'center' }}>
+                <input
+                  style={inputBase}
+                  value={sp.label}
+                  onChange={e => updateLabel(i, e.target.value)}
+                  placeholder="e.g. 15mi, Aid 1..."
+                />
+                <input
+                  style={{ ...inputBase, fontFamily: 'monospace' }}
+                  value={cellVal(i, 'split', sp.split ?? '')}
+                  onChange={e => onSplitInput(i, e.target.value)}
+                  onBlur={() => setEdit(null)}
+                  placeholder="0:00"
+                  inputMode="numeric"
+                />
+                <input
+                  style={{ ...inputBase, fontFamily: 'monospace' }}
+                  value={cellVal(i, 'elapsed', elapsedStr)}
+                  onChange={e => onElapsedInput(i, e.target.value)}
+                  onBlur={() => setEdit(null)}
+                  placeholder="0:00:00"
+                  inputMode="numeric"
+                />
+                <input
+                  style={{ ...inputBase, fontFamily: 'monospace', opacity: seg == null ? 0.4 : 1 }}
+                  value={cellVal(i, 'pace', paceStr)}
+                  onChange={e => onPaceInput(i, e.target.value)}
+                  onBlur={() => setEdit(null)}
+                  placeholder={seg == null ? '—' : '0:00'}
+                  inputMode="numeric"
+                  disabled={seg == null}
+                  title={seg == null ? 'Add a distance to the checkpoint label (e.g. 5K, 10mi) to enter pace' : undefined}
+                />
+                <button type="button" onClick={() => removeRow(i)} style={{
+                  background: 'transparent', border: 'none', color: 'var(--muted)', cursor: 'pointer',
+                  fontSize: 'var(--text-base)', padding: '0', lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>×</button>
               </div>
-              <button type="button" onClick={() => removeRow(i)} style={{
-                background: 'transparent', border: 'none', color: 'var(--muted)', cursor: 'pointer',
-                fontSize: 'var(--text-base)', padding: '0', lineHeight: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>×</button>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
 
@@ -773,9 +889,9 @@ function SplitsEditor({ splits, onChange, sport }: {
         + Add Split
       </button>
 
-      {splits.some(s => s.split?.trim()) && (
-        <div style={{ fontSize: '9px', color: 'var(--muted2)', marginTop: '5px' }}>ELAPSED auto-computed · Format: H:MM:SS or MM:SS</div>
-      )}
+      <div style={{ fontSize: '9px', color: 'var(--muted2)', marginTop: '5px', lineHeight: 1.5 }}>
+        Enter any one of SPLIT, ELAPSED or PACE — the other two fill in. Pace needs a distance in the checkpoint label (e.g. 5K, 10mi). Format: H:MM:SS or MM:SS.
+      </div>
     </div>
   )
 }

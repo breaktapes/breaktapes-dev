@@ -3,7 +3,7 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
-## [0.7.5.5] - 2026-06-03
+## [0.7.6.3] - 2026-06-03
 
 ### Fixed
 - **Race data duplication & deletion — root causes closed.** Three independent bugs that corrupted upcoming/past race lists:
@@ -14,6 +14,44 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Changed
 - **Race & medal photos moved to object storage.** Photos were stored as base64 data URLs *inside* each race object, which lives in the synced `state_json` blob and in localStorage. Every save re-serialized the entire photo-laden state synchronously (main-thread freeze) and re-uploaded it, and could blow the ~5 MB localStorage quota → tab crash. Photos now upload to a public Supabase Storage bucket (`race-photos`) via a new Worker route `POST /api/upload-photo` (service role), and only the URL is stored. Existing embedded base64 photos lazy-migrate on the next save. This is what makes saves fast again and stops the crash for photo-heavy histories.
 
+## [0.7.6.2] - 2026-06-03
+
+### Fixed
+- **Course Fit widget no longer stuck on "Log 3+ races"** — race results imported from UltraSignup (Comrades, Western States, ultras) now carry placing data correctly. A field-name mismatch was silently dropping finish position on every UltraSignup import, preventing the Course Fit widget from ever meeting its 3-race threshold.
+- **Triathlon Predictor hidden for non-triathletes** — the widget now returns nothing when the athlete has no past or upcoming triathlon logged, so it no longer appears as an empty card on pure-running dashboards.
+
+### Changed
+- **Triathlon Predictor uses all discipline data** — swim and bike predictions now draw from standalone swim and cycling races in addition to triathlon splits, using the same recency-weighted Riegel + blend model as the run leg (α = empirical / (empirical + 2)). Athletes with pool swim results or sportive ride history get meaningful swim and bike estimates even before their first tri.
+
+## [0.7.6.0] - 2026-06-03
+
+### Security
+- **XSS fix** — `r.city` in public profile race rows was interpolated into HTML without escaping. Fixed with `escapeHtml()`.
+- **CSP + X-Frame-Options** — all public profile SSR responses now include `Content-Security-Policy: script-src 'none'; frame-ancestors 'none'`, `X-Frame-Options: DENY`, and `Referrer-Policy: strict-origin-when-cross-origin`.
+- **Admin CORS** — admin endpoints (`/api/admin/*`) restricted from `Access-Control-Allow-Origin: *` to known app origins only.
+- **API sync + state CORS** — `/api/sync` and `/api/state` restricted from wildcard ACAO to known origins.
+- **JWT expiry** — `verifyClerkJwt` now rejects tokens with no `exp` claim (previously optional field allowed non-expiring tokens through).
+- **Payload size cap** — `/api/sync` enforces 512 KB body limit using post-parse text length (Content-Length header is unreliable on chunked transfers).
+- **Error report auth** — `/api/error-report` now requires a valid Clerk JWT; unauthenticated requests are silently dropped.
+- **`get_public_card` RPC** — replaced raw `athlete` JSONB passthrough with an explicit field allowlist; DOB, injury dates, OW user ID, club join dates no longer exposed to anon callers.
+- **Bio visibility** — bio and clubs on public profiles now require `profileVisibility.bio === true` (was default ON).
+- **Admin OPTIONS preflight** — `adminCors()` was refactored to accept a `request` arg but call sites were left without arguments, causing TypeError → 500 on every OPTIONS preflight, breaking the admin UI. Fixed.
+- **OW proxy IDOR** — `/ow/*` routes trusted client-supplied `ow_user_id` with no ownership check, letting any user read another's wearable data. Added Clerk JWT verification + `verifyOwOwner()` (sub == OW external_user_id) to every OW route; frontend `owFetch` attaches the Clerk JWT.
+
+### Fixed
+- **Sign-out data leak** — sign-out now clears persisted Zustand stores (`fl2_races`, `fl2_ath`, `fl2_strava`) and resets in-memory state including injuries and wearable tokens. Without this, user B on the same device inherited user A's full race history.
+- **`autoMoveExpiredUpcoming` never ran** — the function existed but was never called. Now invoked from `onRehydrateStorage` so expired upcoming races are promoted to past race history on every app load.
+- **`hasLocalData` guard** — extended to include `seasonPlans` and `goals` so users whose only data is season plans or annual goals get their state backed up to Supabase without needing to log a race first.
+- **`resetRemotePullGate` on sign-out** — the write gate is now re-armed on sign-out so the next user's bootstrap sync defers until their remote pull completes.
+- **Admin analytics `goalCount`** — was always 0 because goals is a `{annual, distGoals}` object, not an array. Fixed to count entries correctly.
+- **`showBio` default** — bio visibility now defaults to OFF (matching all other profile visibility flags), with `=== true` opt-in.
+- **Wearable + Apple Health token persistence** — `saveWearableToken`/`removeWearableToken`/Apple Health imports used `supabase.auth.getUser()` (always null under Clerk), making every write a silent no-op. Switched to the Clerk user id from the auth store.
+
+## [0.7.5.5] - 2026-06-03
+
+### Changed
+- **Import more prominent in onboarding** — new users now see a "↓ Import" button alongside "Log a Race" as co-equal primary CTAs in the onboarding card on the dashboard. The Races page empty state (zero races logged) now shows an "↓ Import your results" button instead of plain muted text, reducing friction for athletes with existing race history.
+- **IronmanRacePicker wired to dashboard import** — the IRONMAN/70.3 race-picker flow is now accessible when opening the import modal from the onboarding card, matching the entry point in the Races page.
 ## [0.7.5.4] - 2026-06-03
 
 ### Fixed

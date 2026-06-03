@@ -308,7 +308,9 @@ export const useRaceStore = create<RaceState>()(
           } catch {}
         }
 
-        // Promote nextRace on load (expired races stay in upcoming until user logs result)
+        // Move any upcoming races whose date has passed into the past races list.
+        state.autoMoveExpiredUpcoming()
+        // Promote nextRace on load (finds the nearest future upcoming race)
         state.promoteNextRace()
       },
     }

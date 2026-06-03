@@ -3,6 +3,8 @@
  * The proxy injects the key and the OW_BASE_URL; the frontend only sees health.breaktapes.com.
  */
 
+import { getClerkToken } from '@/lib/supabase'
+
 const HEALTH_PROXY = 'https://health.breaktapes.com'
 
 export type OWProvider =
@@ -43,10 +45,14 @@ export interface OWActivitySummary {
 // ── Internal fetch helper ─────────────────────────────────────────────────────
 
 async function owFetch(path: string, options: RequestInit = {}): Promise<Response> {
+  // Attach the Clerk JWT so the proxy can verify the caller owns the ow_user_id
+  // (prevents IDOR: reading another user's wearable data by guessing their id).
+  const token = getClerkToken()
   return fetch(`${HEALTH_PROXY}/ow${path}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...(options.headers as Record<string, string> ?? {}),
     },
   })
