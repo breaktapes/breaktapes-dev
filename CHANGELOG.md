@@ -3,6 +3,11 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.5.1] - 2026-06-03
+
+### Changed
+- **Admin authorization is now server-only** — removed the client-side `VITE_ADMIN_USER_IDS` allowlist (it shipped admin Clerk IDs in the public JS bundle). The admin gate now probes a new `GET /api/admin/check` endpoint; the Worker's signature-verified Clerk JWT check against the `ADMIN_USER_IDS` secret is the single source of truth. No admin identities are exposed in the bundle. `isAdminUser()` and its baked-in list are deleted.
+
 ## [0.7.5.0] - 2026-06-03
 
 ### Added
