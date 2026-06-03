@@ -1298,7 +1298,7 @@ async function resolveAdminUserId(request, env) {
 }
 
 async function handleCatalogSubmit(request, env) {
-  if (request.method === 'OPTIONS') return adminCors();
+  if (request.method === 'OPTIONS') return adminCors(request);
   if (request.method !== 'POST') return new Response('Method not allowed', { status: 405, headers: adminCorsHeaders(request) });
 
   // Auth: decode Clerk JWT
@@ -1350,14 +1350,14 @@ async function handleCatalogSubmit(request, env) {
 }
 
 async function handleAdminCheck(request, env) {
-  if (request.method === 'OPTIONS') return adminCors();
+  if (request.method === 'OPTIONS') return adminCors(request);
   const userId = await resolveAdminUserId(request, env);
   if (!userId) return new Response(JSON.stringify({ ok: false }), { status: 403, headers: adminCorsHeaders(request) });
   return new Response(JSON.stringify({ ok: true }), { headers: adminCorsHeaders(request) });
 }
 
 async function handleAdminUsers(request, env) {
-  if (request.method === 'OPTIONS') return adminCors();
+  if (request.method === 'OPTIONS') return adminCors(request);
   const userId = await resolveAdminUserId(request, env);
   if (!userId) return new Response('Forbidden', { status: 403, headers: adminCorsHeaders(request) });
   const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
@@ -1388,7 +1388,7 @@ async function handleAdminUsers(request, env) {
 }
 
 async function handleAdminFeedback(request, env) {
-  if (request.method === 'OPTIONS') return adminCors();
+  if (request.method === 'OPTIONS') return adminCors(request);
   const userId = await resolveAdminUserId(request, env);
   if (!userId) return new Response('Forbidden', { status: 403, headers: adminCorsHeaders(request) });
   const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
@@ -1403,7 +1403,7 @@ async function handleAdminFeedback(request, env) {
 }
 
 async function handleAdminErrors(request, env) {
-  if (request.method === 'OPTIONS') return adminCors();
+  if (request.method === 'OPTIONS') return adminCors(request);
   const userId = await resolveAdminUserId(request, env);
   if (!userId) return new Response('Forbidden', { status: 403, headers: adminCorsHeaders(request) });
   const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
@@ -1418,7 +1418,7 @@ async function handleAdminErrors(request, env) {
 }
 
 async function handleAdminAnalytics(request, env) {
-  if (request.method === 'OPTIONS') return adminCors();
+  if (request.method === 'OPTIONS') return adminCors(request);
   const userId = await resolveAdminUserId(request, env);
   if (!userId) return new Response('Forbidden', { status: 403, headers: adminCorsHeaders(request) });
   const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
@@ -1542,7 +1542,7 @@ async function handleAdminAnalytics(request, env) {
 }
 
 async function handleAdminListContributions(request, env) {
-  if (request.method === 'OPTIONS') return adminCors();
+  if (request.method === 'OPTIONS') return adminCors(request);
 
   const userId = await resolveAdminUserId(request, env);
   if (!userId) return new Response('Forbidden', { status: 403, headers: adminCorsHeaders(request) });
@@ -1564,7 +1564,7 @@ async function handleAdminListContributions(request, env) {
 }
 
 async function handleAdminAction(request, env, id, action) {
-  if (request.method === 'OPTIONS') return adminCors();
+  if (request.method === 'OPTIONS') return adminCors(request);
 
   const userId = await resolveAdminUserId(request, env);
   if (!userId) return new Response('Forbidden', { status: 403, headers: adminCorsHeaders(request) });

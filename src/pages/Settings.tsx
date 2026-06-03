@@ -4,6 +4,7 @@ import { useClerk, useUser } from '@clerk/clerk-react'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { useRaceStore } from '@/stores/useRaceStore'
+import { useWearableStore } from '@/stores/useWearableStore'
 import { syncStateToSupabase, resetRemotePullGate } from '@/lib/syncState'
 import { THEMES } from '@/types'
 import type { ThemeId } from '@/types'
@@ -89,8 +90,10 @@ export function Settings() {
     // Without this, user B rehydrates user A's full race history from localStorage.
     useRaceStore.persist.clearStorage()
     useAthleteStore.persist.clearStorage()
+    useWearableStore.persist.clearStorage()
     useRaceStore.setState({ races: [], upcomingRaces: [], wishlistRaces: [], nextRace: null, focusRaceId: null, deletedRaceIds: [], _pendingDeleteIds: [] })
-    useAthleteStore.setState({ athlete: null, seasonPlans: [], goals: { annual: {}, distGoals: [] } })
+    useAthleteStore.setState({ athlete: null, seasonPlans: [], goals: { annual: {}, distGoals: [] }, injuries: [] })
+    useWearableStore.setState({ stravaToken: null, whoopToken: null, garminToken: null })
     // Re-arm the write gate so the next user's bootstrap sync defers until their remote pull lands.
     resetRemotePullGate()
     await signOut()
