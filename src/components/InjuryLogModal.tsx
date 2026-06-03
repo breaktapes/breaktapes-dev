@@ -41,7 +41,7 @@ export function InjuryLogModal({ injury, onClose }: Props) {
   }, [])
 
   function handleSave() {
-    const patch = { bodyPart, injuryType, severity, phase, startDate, returnDate: returnDate || undefined, notes: notes || undefined, resolved: false }
+    const patch = { bodyPart, injuryType, severity, phase, startDate, returnDate: returnDate || undefined, notes: notes || undefined, resolved: isEdit ? (injury?.resolved ?? false) : false }
     if (isEdit && injury) {
       updateInjury(injury.id, patch)
     } else {
