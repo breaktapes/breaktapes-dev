@@ -729,12 +729,18 @@ body::after {
      and reduce the bottom title/desc sizes so the whole pinned stage fits
      a phone viewport without squeeze. */
   .pl-stage { height: 380vh; }
-  .pl-stage-inner { gap: 1.25rem; }
-  .pl-phone { width: 178px; height: 356px; }
-  .pl-stage-title { font-size: clamp(1.4rem, 6.5vw, 2rem); line-height: 1.05; margin: 0 0 0.5rem; }
-  .pl-stage-line { font-size: 13px; max-width: 280px; line-height: 1.5; margin: 0 0 1rem; }
-  .pl-stage-dots span { width: 7px; height: 7px; }
-  .pl-stage-dots span.on { width: 22px; }
+  /* Push the pinned phone content DOWN below the sticky nav header so the
+     phone-frame top edge isn't visually covered by it. align-items: center
+     in the parent .pl-stage-pin would otherwise sit the phone at viewport
+     vertical-center, which on iOS Safari with the nav + URL bar visible puts
+     the phone top behind the nav. */
+  .pl-stage-pin { align-items: flex-start; padding-top: 4.5rem; padding-bottom: 1rem; }
+  .pl-stage-inner { gap: 1rem; }
+  .pl-phone { width: 168px; height: 336px; }
+  .pl-stage-title { font-size: clamp(1.3rem, 6vw, 1.8rem); line-height: 1.05; margin: 0 0 0.4rem; min-height: auto; }
+  .pl-stage-line { font-size: 12.5px; max-width: 280px; line-height: 1.45; margin: 0 0 0.8rem; }
+  .pl-stage-dots span { width: 6px; height: 6px; }
+  .pl-stage-dots span.on { width: 20px; }
   /* CTA pill at bottom of page tighter. */
   .pl-footer { padding: 2rem 1.25rem; }
   /* Sticky nav: tighter height so more content shows above the fold. */
