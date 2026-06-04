@@ -915,6 +915,8 @@ PR #164 was squash-merged to main; subsequent fixes commit `6b8debd` from worktr
 
 ## Known Issues / Watch Points
 
+- **Core Web Vitals (Session 41):** `index.html` carries the only render hints — `preconnect`/`dns-prefetch` to `clerk.breaktapes.com` + Google Fonts `<link>`. Do NOT move fonts back to a CSS `@import` (chains behind the CSS bundle → text-LCP regression). `AuthGate` renders `<LandingScreen>` during `!isLoaded` for logged-out visitors (cookie-gated on `__client_uat`) — do not revert to the always-`AuthLoadingScreen` gate or text-LCP regresses. The auth modal overlay must stay top-anchored (`alignItems: flex-start` + `overflowY: auto`) and Clerk's card must keep its reserved `minHeight` (`clerkAppearance.elements.rootBox`/`card`) or the 0.251 CLS returns. Do not re-add `backdrop-filter: blur()` to the overlay (per-keystroke GPU recomposite → INP). `.pl-progress` is driven by the `--pl-progress` CSS var set on `#landing-screen` each scroll frame — keep `.pl-progress` a descendant of `#landing-screen` or the var stops inheriting.
+- `admin.breaktapes.com` shares the **production Worker** with `app.breaktapes.com/*` (both routes in `wrangler.toml`; `IS_ADMIN_HOST` switches the shell). There is no admin-only deploy — deploying prod updates both hosts. Auth-gating the admin dashboard view is runtime access control, NOT deploy isolation.
 - `getDashLayout()` is a **pure read** — must never call `set()`. If you add any write logic, it creates an infinite render loop (render → useMemo → getDashLayout → set → re-render). Any state mutation belongs in `initDashLayout()`, called from `useEffect` on mount only. This bug caused the Safari "page not responding" crash and was fixed in Session 36.
 - Every widget that supports `size: 'small'` must have a `if (size === 'small') return (...)` early-return branch with metric at `var(--text-2xl)`. Without it the widget renders at whatever its medium view uses, causing visual inconsistency in the 2-col small grid.
 - `REMOVED_WIDGET_IDS` in `useDashStore.ts` must be kept up to date whenever a widget is removed. Entries here purge stale IDs from persisted `fl2_dash_layout` localStorage on upgrade. Removing an ID from this set while deleting the widget causes the widget to persist in users' layouts invisibly.
@@ -1379,6 +1381,37 @@ Direct DB access (psql/psycopg2) is blocked from localhost — Supabase only exp
 - When the same new fields exist on both HEAD and staging (from two parallel worktrees), `git merge origin/staging` produces duplicate-field conflicts in TypeScript interfaces — always check for duplicate property declarations after merge, they compile but are confusing.
 - `git worktree remove` mid-session kills the shell CWD — the kernel's `getcwd()` fails on every subsequent subprocess. No recovery possible without restarting from a valid directory. Always `cd` to main repo before any worktree cleanup.
 - PostToolUse linter hook can revert file edits made in the same session if the linter reformats aggressively — verify critical new fields persist after every hook run.
+
+---
+
+### Session 41 (2026-06-04) — Core Web Vitals pass: auth + landing (v0.7.6.6)
+
+**Branch:** `claude/unruffled-proskuriakova-a40451` → staging (PR #464) → main (PR #465). Both green; promoted via `--merge` (zero divergence). Prod + admin verified live (HTTP 200, new build markers).
+
+#### Why
+Cloudflare Web Analytics RUM (bots excluded) flagged four bad metrics, all on the auth/landing surface:
+- **INP** `#password-field` (Clerk's native input id) worst **5,816 ms**; `#login-screen>p.landing-sub` 3,240 ms
+- **CLS** Clerk sign-up box (`.cl-internal-*`) **0.251** (Poor); hero parallax `.pl-parallax` 0.107
+- **LCP** P50 **3,280 ms** (36% Poor), P99 **11,164 ms** (32 s spike @13:00 GST)
+
+Single root chain: app gated ALL paint on Clerk `isLoaded` (LCP element was the `AuthLoadingScreen` pulsing dot), and the root `index.html` shipped zero render hints, so first paint + first auth tap both waited on cold Clerk init + a render-blocking CSS-`@import` font fetch.
+
+#### Shipped (8 fixes)
+- **`index.html`** — `preconnect` + `dns-prefetch` `clerk.breaktapes.com`; `preconnect` Google Fonts + load families via `<link>` (removed the CSS `@import`, which chained behind the CSS bundle download).
+- **`AuthGate.tsx`** — render real `<LandingScreen>` during `!isLoaded` for logged-out visitors (gated on `hasClerkSessionHint()` reading the `__client_uat` cookie) so headline text is the LCP element, not the dot. Reserve Clerk card footprint via `clerkAppearance.elements.rootBox`/`card` `minHeight` (560/520) + top-anchor the modal overlay (`alignItems: flex-start`, `overflowY: auto`, `padding: clamp(1rem,8vh,5rem)…`) so the empty→filled form grows DOWNWARD instead of recentering (kills 0.251 CLS). Dropped `backdrop-filter: blur(8px)` → solid `rgba(0,0,0,0.88)` (blur forced a GPU recomposite per keystroke behind the password field).
+- **`posthog.ts`** — `disable_session_recording: true` (rrweb instrumentation was competing for the main thread during the login cold-start window; autocapture kept).
+- **`LandingPage.tsx` / `index.css`** — scroll-progress bar driven by a `--pl-progress` CSS var written directly on `#landing-screen` each frame (no per-frame React re-render of the 1,400-line landing tree); `navVisible`/`screen` commit only on change via `lastNav`/`lastScreen` refs; `.pl-parallax { will-change: transform }` (GPU-composited → not counted as CLS); `.pl-progress` reads `transform: scaleX(var(--pl-progress,0))`. `TopChrome` lost its `progress` prop.
+- **VERSION** 0.7.6.5 → 0.7.6.6.
+
+#### Key learnings
+- `#password-field` is **Clerk's native password input id** — not custom app code. INP on the auth widget = Clerk cold-load + main-thread contention, not a handler bug.
+- Diagnosed via 3 parallel investigation subagents (one per metric cluster: LCP, CLS, INP). All four metrics traced to the same `index.html` + Clerk-gate root chain. Fan-out paid off — coupled cause wasn't obvious per-metric.
+- `__client_uat` is a first-party JS-readable Clerk cookie on the app eTLD+1 (`.breaktapes.com`), value `0` (signed out) or unix ts. Safe synchronous "is there a session?" hint to avoid a login flash while `isLoaded` is false. (`__session`/`__client` carry base64 — don't regex those.)
+- Worst-case of the cookie gate is a brief flash, never a broken state: once `isLoaded` resolves, `isSignedIn` decides the real screen.
+- CSS-var-driven progress bar: `.pl-progress` must be a DOM descendant of the element the var is set on (`#landing-screen > .pl-progress`) so the var inherits. Confirmed before relying on it.
+- `backdrop-filter: blur()` over the full viewport is on the INP critical path — each interaction's "next paint" re-samples the blur. Cheap solid overlay removes it with near-identical visuals.
+- Reserve Clerk widget size via `clerkAppearance.elements` (`rootBox`/`card` `minHeight`) — there are zero `.cl-*` rules in app CSS, so the widget is otherwise unconstrained and pops 0→full height → CLS.
+- `admin.breaktapes.com` is NOT a separate deploy — it shares the production Worker with `app.breaktapes.com/*` (both routes in `wrangler.toml`, `IS_ADMIN_HOST` switch). Auth-gating the admin view ≠ deploy isolation. "Ship to admin" = full production deploy for all users.
 
 ---
 
