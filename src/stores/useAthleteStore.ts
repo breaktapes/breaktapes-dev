@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { Athlete, Injury, SeasonPlan } from '@/types'
 import { syncStateToSupabase } from '@/lib/syncState'
+import { safeStorage } from '@/lib/safeStorage'
 
 export interface DistGoal {
   id: string
@@ -198,6 +199,7 @@ export const useAthleteStore = create<AthleteState>()(
     }),
     {
       name: 'fl2_ath',  // must match existing localStorage key
+      storage: safeStorage,  // swallows QuotaExceededError instead of crashing the tab
       // Migrate old SPA format: raw athlete object stored at root, not wrapped in {state:{...}}
       onRehydrateStorage: () => (state) => {
         if (!state) return

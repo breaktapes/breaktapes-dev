@@ -7,6 +7,7 @@ import { useRaceStore } from '@/stores/useRaceStore'
 import { useThemeStore } from '@/stores/useThemeStore'
 import { setClerkToken } from '@/lib/supabase'
 import { syncStateToSupabase, resetRemotePullGate } from '@/lib/syncState'
+import { migrateEmbeddedPhotos } from '@/lib/migratePhotos'
 import { IS_STAGING } from '@/env'
 import { posthog } from '@/lib/posthog'
 
@@ -24,6 +25,7 @@ function useClerkSync() {
   const setProAccess = useAuthStore(s => s.setProAccess)
   const applyClerkIdentity = useAthleteStore(s => s.applyClerkIdentity)
   const didBootstrapSync = useRef(false)
+  const didMigratePhotos = useRef(false)
 
   useEffect(() => {
     if (!isLoaded) return
@@ -32,6 +34,7 @@ function useClerkSync() {
       setAuthUser(null)
       setClerkToken(null)
       didBootstrapSync.current = false
+      didMigratePhotos.current = false
       // Re-arm the write gate so the next signed-in user defers writes until
       // their own remote pull lands (prevents the previous session's empty
       // state, or a fresh-device empty state, from overwriting their row).
@@ -116,6 +119,17 @@ function useClerkSync() {
             (goals?.distGoals?.length ?? 0) > 0 ||
             !!(athlete && (athlete.firstName || athlete.lastName || athlete.username || athlete.city || athlete.bio))
           if (hasLocalData) void syncStateToSupabase()
+        }
+
+        // One-time bulk migration of embedded base64 race/medal photos →
+        // Supabase Storage URLs. Fires once per session AFTER the Clerk token is
+        // installed (the upload route needs it). This is what frees the bloated
+        // ~5 MB `fl2_races` localStorage blob for users who hit QuotaExceededError:
+        // it strips every base64 photo in one pass, then writes back a tiny blob.
+        // Retry-safe — re-runs next boot if uploads failed (Worker down/offline).
+        if (!didMigratePhotos.current) {
+          didMigratePhotos.current = true
+          void migrateEmbeddedPhotos()
         }
       } catch {
         // Leave authUser null on token failure — better to show landing
