@@ -3,6 +3,14 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.6.7] - 2026-06-04
+
+### Fixed
+- **MarathonView import used gun time instead of net (chip) time.** The scraper read `result` (official gun time) and ignored `personal_time` (the runner's chip time). For big-corral majors like Berlin and Tokyo, a back-of-pack runner's gun→net gap reaches 15+ min, so imported finish times came in inflated (e.g. Berlin 2018 imported as 5:02:57 when the net time was 4:32:15). Now prefers `personal_time`, falls back to `result` only when net is absent, and rounds the fractional seconds MarathonView sometimes returns. Existing saved races keep their old values — re-import to pick up net times.
+
+### Added
+- **Age/gender namesake filter on name-based import.** MarathonView name search returns every namesake; results are now soft-filtered against the signed-in athlete's DOB-derived birth year and gender (`RaceImportModal` passes `birthYear` + `gender`; the worker filters). Conservative by design — a row is dropped only on a real conflict, never when the source leaves the field blank, so the user's own races (which MarathonView often leaves age/gender-null) are never discarded. Wired for MarathonView; other sources unchanged.
+
 ## [0.7.6.6] - 2026-06-04
 
 ### Performance

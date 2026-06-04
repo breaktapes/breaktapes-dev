@@ -545,7 +545,7 @@ export default {
     // ── Race Import: MarathonView ─────────────────────────────────────────
     if (path === '/import/marathonview' && request.method === 'POST') {
       try {
-        const { name } = await request.json();
+        const { name, birthYear, gender } = await request.json();
         const trimmed = (name || '').trim();
         if (!trimmed) return json({ results: [], status: 'ok' }, 200, origin);
         const url = `https://marathonview.net/query/${encodeURIComponent(trimmed)}`;
@@ -587,8 +587,31 @@ export default {
           ? payload.data.results
           : [];
 
+        // Soft age/gender filter using the caller's DOB-derived birthYear + gender.
+        // MarathonView name search returns ALL namesakes; this removes wrong-person
+        // rows. CONSERVATIVE: only drop on an actual CONFLICT — keep any row whose
+        // field is null, because MarathonView leaves age/gender blank on many of the
+        // user's OWN races and a hard match would discard valid results.
+        let wantGender = String(gender || '').trim().toUpperCase().slice(0, 1);
+        if (wantGender !== 'M' && wantGender !== 'F') wantGender = '';
+        const wantBirthYear = Number(birthYear) || 0;
+        const matchesUser = (r) => {
+          if (wantGender && r.gender != null) {
+            const g = String(r.gender).trim().toUpperCase().slice(0, 1);
+            if ((g === 'M' || g === 'F') && g !== wantGender) return false;
+          }
+          if (wantBirthYear && r.birth_year != null) {
+            if (Number(r.birth_year) !== wantBirthYear) return false;
+          }
+          return true;
+        };
+        const filteredList = (wantGender || wantBirthYear)
+          ? raceList.filter(matchesUser)
+          : raceList;
+
         const fmtTime = (secs) => {
           if (!secs || !Number.isFinite(secs)) return '';
+          secs = Math.round(secs); // personal_time can be a float (e.g. 12431.299…)
           const h = Math.floor(secs / 3600);
           const m = Math.floor((secs % 3600) / 60);
           const s = Math.floor(secs % 60);
@@ -597,13 +620,23 @@ export default {
             : `${m}:${String(s).padStart(2, '0')}`;
         };
 
-        const results = raceList.map(r => ({
+        // Prefer NET/chip time (`personal_time`) over GUN/clock time (`result`).
+        // MarathonView's `result` is the official gun time; for big-corral races
+        // (Berlin, Tokyo) the gun→net gap reaches 15+ min for back-of-pack runners,
+        // which surfaced as inflated import times. Fall back to `result` when net absent.
+        const pickTime = (r) => {
+          const net = Number(r.personal_time);
+          const gun = Number(r.result);
+          return fmtTime(Number.isFinite(net) && net > 0 ? net : gun);
+        };
+
+        const results = filteredList.map(r => ({
           raceName:   r.event_name || r.race_name || 'Unknown Race',
           date:       r.date || '',
-          time:       fmtTime(Number(r.result)),
+          time:       pickTime(r),
           distance_m: r.distance,
           country:    r.event_country || '',
-          raw:        [r.event_name, r.date, fmtTime(Number(r.result))],
+          raw:        [r.event_name, r.date, pickTime(r)],
         }));
 
         if (posthog) {

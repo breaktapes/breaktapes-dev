@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useRaceStore } from '@/stores/useRaceStore'
+import { useAthleteStore } from '@/stores/useAthleteStore'
 import { parseDistKm } from '@/lib/raceFormulas'
 import { fmtDateDDMM } from '@/lib/utils'
 import { posthog } from '@/lib/posthog'
@@ -102,6 +103,12 @@ export function RaceImportModal({ onClose, onPickByRace }: { onClose: () => void
   const addRace    = useRaceStore(s => s.addRace)
   const existingRaces = useRaceStore(s => s.races)
   const upcomingRaces = useRaceStore(s => s.upcomingRaces)
+  const athlete       = useAthleteStore(s => s.athlete)
+
+  // Derive a birth year + gender from the signed-in athlete's DOB to soft-filter
+  // namesake rows out of name-based import results (drop on conflict, keep on null).
+  const birthYear = athlete?.dob ? Number(String(athlete.dob).slice(0, 4)) || undefined : undefined
+  const gender    = athlete?.gender || undefined
 
   const [step, setStep]               = useState<Step>('search')
   const [firstName, setFirstName]     = useState('')
@@ -135,7 +142,7 @@ export function RaceImportModal({ onClose, onPickByRace }: { onClose: () => void
       }).then(r => r.json())),
       settle(fetch(`${HEALTH_PROXY}/import/marathonview`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: `${firstName.trim()} ${lastName.trim()}`.trim() }),
+        body: JSON.stringify({ name: `${firstName.trim()} ${lastName.trim()}`.trim(), birthYear, gender }),
       }).then(r => r.json())),
       athlinksUrl.trim()
         ? settle(fetch(`${HEALTH_PROXY}/import/athlinks`, {
