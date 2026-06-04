@@ -184,9 +184,29 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
     }
   }, [isSignedIn, user, navigate])
 
-  if (!isLoaded) return <AuthLoadingScreen />
+  if (!isLoaded) {
+    // While Clerk boots we don't yet know auth state. Clerk's __client_uat cookie
+    // is a synchronous hint: present & non-zero ⇒ a session exists ⇒ show the
+    // loader (avoids a login-screen flash before the dashboard). Otherwise the
+    // visitor is almost certainly logged out — render the real login screen NOW
+    // so its headline text is the LCP element instead of a pulsing dot, and the
+    // ?auth modal can warm Clerk in parallel.
+    return hasClerkSessionHint() ? <AuthLoadingScreen /> : <LandingScreen />
+  }
   if (!isSignedIn) return <LandingScreen />
   return <>{children}</>
+}
+
+/** Synchronous best-effort "is there a Clerk session?" check via the
+ *  __client_uat cookie (Clerk sets it to a unix ts when signed in, 0 when not).
+ *  Used only to decide loader-vs-login-screen during the !isLoaded window. */
+function hasClerkSessionHint(): boolean {
+  try {
+    const m = document.cookie.match(/(?:^|;\s*)__client_uat=(\d+)/)
+    return !!m && m[1] !== '0'
+  } catch {
+    return false
+  }
 }
 
 
@@ -232,10 +252,21 @@ const clerkAppearance = {
     fontFamily: 'Barlow, sans-serif',
   },
   elements: {
+    // Reserve the widget footprint BEFORE Clerk async-injects the form, so the
+    // empty→filled transition can't recenter the box and push painted content
+    // (was a 0.251 CLS). min-height sized to the taller sign-up form; min-height
+    // (not fixed height) still lets OTP / reset steps grow.
+    rootBox: {
+      width: '100%',
+      maxWidth: 400,
+      minHeight: 560,
+    },
     card: {
       background: '#141414',
       border: '1px solid rgba(245,245,245,0.08)',
       boxShadow: '0 24px 48px rgba(0,0,0,0.6)',
+      minHeight: 520,
+      width: '100%',
     },
     headerTitle: {
       fontFamily: 'Barlow Condensed, sans-serif',
@@ -300,11 +331,17 @@ function LandingScreen() {
         <div
           style={{
             position: 'fixed', inset: 0,
-            background: 'rgba(0,0,0,0.75)',
-            backdropFilter: 'blur(8px)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            // Solid overlay (was backdrop-filter: blur(8px)) — full-viewport blur
+            // forced a GPU recomposite on every keystroke in the password field,
+            // inflating auth INP. Solid dark reads near-identical.
+            background: 'rgba(0,0,0,0.88)',
+            // Top-anchor + overflow scroll: when Clerk's form grows from empty to
+            // full it expands DOWNWARD instead of recentering, so it can't push
+            // already-painted content (the 0.251 CLS source).
+            display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
+            overflowY: 'auto',
             zIndex: 1000,
-            padding: '1rem',
+            padding: 'clamp(1rem, 8vh, 5rem) 1rem 2rem',
           }}
           onClick={e => { if (e.target === e.currentTarget) setView(null) }}
         >

@@ -1,5 +1,6 @@
 @import './tokens.css';
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Barlow:wght@400;500;600&family=Geist+Mono:wght@300;400;500;600&display=swap');
+/* Google Fonts loaded via <link> in index.html (preconnected) — not a CSS @import,
+   which would chain behind the CSS bundle download and delay text LCP. */
 
 *, *::before, *::after {
   box-sizing: border-box;
@@ -247,6 +248,9 @@ body::after {
 }
 .pl-hero-actions .btn-main { width: 100%; font-size: 15px; padding: 0.9rem 1.5rem; letter-spacing: 0.1em; }
 .pl-hero-art { display: flex; justify-content: center; }
+/* GPU-composite the GSAP parallax transform so its late y-shift doesn't trigger
+   layout and isn't counted as CLS. */
+.pl-parallax { will-change: transform; }
 .pl-scroll-hint {
   position: absolute; bottom: 1.25rem; left: 50%; transform: translateX(-50%);
   display: flex; flex-direction: column; align-items: center; gap: 2px; z-index: 3;
@@ -364,7 +368,7 @@ body::after {
 /* ---- scroll progress bar ---- */
 .pl-progress {
   position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 760;
-  background: var(--orange); transform-origin: 0 50%; transform: scaleX(0);
+  background: var(--orange); transform-origin: 0 50%; transform: scaleX(var(--pl-progress, 0));
   box-shadow: 0 0 12px rgba(var(--orange-ch),0.6);
 }
 
