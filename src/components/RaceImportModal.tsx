@@ -17,7 +17,7 @@ interface ImportResult {
   raceName: string
   date: string
   time?: string
-  source: 'ultrasignup' | 'marathonview' | 'athlinks' | 'runsignup' | 'coachcox'
+  source: 'ultrasignup' | 'marathonview' | 'athlinks' | 'runsignup' | 'coachcox' | 'hopasports'
   distance_m?: number
   city?: string
   /** UltraSignup region: a US 2-letter state OR a 3-letter country code. */
@@ -122,6 +122,13 @@ export function RaceImportModal({ onClose, onPickByRace }: { onClose: () => void
   const [skippedCount, setSkippedCount] = useState(0)
   const [sourceErrors, setSourceErrors] = useState<{ ultrasignup?: boolean; marathonview?: boolean; athlinks?: boolean; runsignup?: boolean; coachcox?: boolean }>({})
 
+  // Hopasports (UAE/MENA) is event-scoped, so it gets its own search: find the
+  // event, then we scan it for the name already entered above.
+  const [hopaQuery, setHopaQuery]       = useState('')
+  const [hopaEvents, setHopaEvents]     = useState<{ slug: string; name: string }[]>([])
+  const [hopaSearching, setHopaSearching] = useState(false)
+  const [hopaFetching, setHopaFetching] = useState('')   // slug currently being imported
+
 
   useEffect(() => {
     document.body.style.overflow = 'hidden'
@@ -212,6 +219,48 @@ export function RaceImportModal({ onClose, onPickByRace }: { onClose: () => void
     setResults(all)
     setSearching(false)
     setStep('results')
+  }
+
+  async function searchHopaEvents() {
+    if (!hopaQuery.trim()) { setHopaEvents([]); return }
+    setHopaSearching(true)
+    try {
+      const res = await fetch(`${HEALTH_PROXY}/import/hopasports-events`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ q: hopaQuery.trim() }),
+      }).then(r => r.json())
+      setHopaEvents(res?.status === 'ok' ? (res.events ?? []).slice(0, 12) : [])
+    } catch { setHopaEvents([]) }
+    setHopaSearching(false)
+  }
+
+  async function pickHopaEvent(slug: string) {
+    if (!firstName.trim() && !lastName.trim()) { setError('Enter your first or last name above first'); return }
+    setHopaFetching(slug); setError('')
+    try {
+      const res = await fetch(`${HEALTH_PROXY}/import/hopasports`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug, firstName: firstName.trim(), lastName: lastName.trim() }),
+      }).then(r => r.json())
+      const rows: ImportResult[] = res?.status === 'ok'
+        ? (res.results ?? [])
+            .filter((r: { athleteName?: string }) => r.athleteName && r.athleteName.length >= 2)
+            .map((r: { raceName?: string; date?: string; time?: string; distance_m?: number; placing?: string }) => ({
+              raceName: r.raceName ?? 'Hopasports Event',
+              date: r.date ?? '',
+              time: r.time,
+              distance_m: r.distance_m,
+              placing: r.placing,
+              source: 'hopasports' as const,
+            }))
+        : []
+      const who = `${firstName} ${lastName}`.trim()
+      if (!rows.length) { setError(`No results for "${who}" in that event — check the spelling on your bib name.`); setHopaFetching(''); return }
+      setResults(rows)
+      setSelected(new Set())
+      setStep('results')
+    } catch { setError('Hopasports lookup failed — try again.') }
+    setHopaFetching('')
   }
 
   function isDuplicate(r: ImportResult): boolean {
@@ -333,12 +382,51 @@ export function RaceImportModal({ onClose, onPickByRace }: { onClose: () => void
                   Find your ID: athlinks.com → My Profile → copy the URL
                 </p>
               </div>
+
+              {/* Hopasports — UAE / MENA events (RAK, Dubai Creek, Expo City Half…) */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', padding: 'var(--sp-3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-md)', background: 'var(--surface3)' }}>
+                <label style={st.fieldLabel}>
+                  UAE race? <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: 'var(--muted)' }}>(Hopasports — RAK, Dubai, etc.)</span>
+                </label>
+                <div style={{ display: 'flex', gap: 'var(--sp-2)' }}>
+                  <input
+                    style={{ ...st.input, flex: 1 }}
+                    placeholder="Search the event name…"
+                    value={hopaQuery}
+                    onChange={e => setHopaQuery(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), searchHopaEvents())}
+                    autoComplete="off"
+                  />
+                  <button type="button" style={st.cancelBtn} onClick={searchHopaEvents} disabled={hopaSearching}>
+                    {hopaSearching ? '…' : 'FIND'}
+                  </button>
+                </div>
+                {hopaEvents.length > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px', maxHeight: '180px', overflowY: 'auto' }}>
+                    {hopaEvents.map(ev => (
+                      <button
+                        key={ev.slug}
+                        type="button"
+                        onClick={() => pickHopaEvent(ev.slug)}
+                        disabled={!!hopaFetching}
+                        style={{ textAlign: 'left', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: 'var(--sp-2) var(--sp-3)', color: 'var(--white)', fontSize: 'var(--text-sm)', fontFamily: 'var(--body)', cursor: hopaFetching ? 'wait' : 'pointer', opacity: hopaFetching && hopaFetching !== ev.slug ? 0.5 : 1 }}
+                      >
+                        {hopaFetching === ev.slug ? 'Looking up your result…' : ev.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: 'var(--muted)', lineHeight: 1.4 }}>
+                  Enter your name above, then pick your event — we'll pull your finish time, placing and distance.
+                </p>
+              </div>
               <div style={{ display: 'flex', gap: 'var(--sp-2)', flexWrap: 'wrap' }}>
                 <span style={st.sourcePill}>✓ UltraSignup</span>
                 <span style={st.sourcePill}>✓ MarathonView</span>
                 <span style={st.sourcePill}>✓ RunSignup</span>
                 <span style={st.sourcePill}>✓ Coach Cox</span>
                 <span style={{ ...st.sourcePill, opacity: athlinksUrl.trim() ? 1 : 0.45 }}>✓ Athlinks</span>
+                <span style={st.sourcePill}>✓ Hopasports (UAE)</span>
               </div>
               {onPickByRace && (
                 <button
