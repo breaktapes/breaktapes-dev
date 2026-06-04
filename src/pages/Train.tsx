@@ -1332,17 +1332,33 @@ export function Train() {
                   { label: 'Half Marathon',km: 21.0975 },
                   { label: 'Marathon',     km: 42.195 },
                 ]
+                // Age the athlete was on a given race date (for age-at-PB grading).
+                const dobDate = athlete?.dob ? new Date(athlete.dob) : null
+                const ageOnDate = (raceDate?: string): number | null => {
+                  if (!dobDate || isNaN(dobDate.getTime()) || !raceDate) return null
+                  const d = new Date(raceDate)
+                  if (isNaN(d.getTime())) return null
+                  let a = d.getFullYear() - dobDate.getFullYear()
+                  if (d.getMonth() < dobDate.getMonth() || (d.getMonth() === dobDate.getMonth() && d.getDate() < dobDate.getDate())) a--
+                  return a >= 5 && a <= 100 ? a : null
+                }
+
                 const pbRows = PB_DISTS.map(d => {
                   const pb = findRunPB(races, d.km)
                   if (!pb?.time) return null
                   const timeSecs = parseTimeSecs(pb.time)
                   if (!timeSecs) return null
-                  return { label: d.label, km: d.km, timeSecs, timeStr: pb.time }
-                }).filter(Boolean) as { label: string; km: number; timeSecs: number; timeStr: string }[]
+                  // Grade each PB from the age it was actually SET at (race date − DOB),
+                  // not the athlete's current age — a PB run at 47 must not be projected
+                  // as if it were run at 54. Fall back to the manual/profile age only when
+                  // the race has no date or DOB is unknown.
+                  const ageAtPB = ageOnDate(pb.date) ?? (resolvedCurrentAge || null)
+                  return { label: d.label, km: d.km, timeSecs, timeStr: pb.time, ageAtPB }
+                }).filter(Boolean) as { label: string; km: number; timeSecs: number; timeStr: string; ageAtPB: number | null }[]
 
                 if (!pbRows.length && !resolvedCurrentAge) return null
 
-                const canProject = resolvedCurrentAge && !isNaN(targetAge) && targetAge >= 15 && targetAge <= 90
+                const canProject = !isNaN(targetAge) && targetAge >= 15 && targetAge <= 90 && pbRows.some(r => r.ageAtPB)
 
                 return (
                   <div style={card}>
@@ -1377,39 +1393,35 @@ export function Train() {
                     </div>
 
                     {canProject && pbRows.length > 0 && (() => {
-                      const fromFactor = waAgeFactor(resolvedCurrentAge!, gender)
-                      const toFactor   = waAgeFactor(targetAge, gender)
-                      const ratio = toFactor / fromFactor
-                      const direction = targetAge < resolvedCurrentAge! ? '↑ faster' : targetAge > resolvedCurrentAge! ? '↓ slower' : '= same'
-                      const pctChange = Math.abs((ratio - 1) * 100)
+                      const toFactor = waAgeFactor(targetAge, gender)
 
                       return (
                         <>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', marginBottom: '10px', padding: '7px 10px', borderRadius: 'var(--radius-sm)', background: ratio < 1 ? 'rgba(0,255,136,0.06)' : ratio > 1 ? 'rgba(249,115,22,0.06)' : 'var(--surface3)', border: `1px solid ${ratio < 1 ? 'rgba(0,255,136,0.2)' : ratio > 1 ? 'rgba(249,115,22,0.2)' : 'var(--border)'}` }}>
-                            <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color: ratio < 1 ? 'var(--green)' : ratio > 1 ? '#f97316' : 'var(--muted)' }}>
-                              {direction}
+                          <div style={{ marginBottom: '10px', padding: '7px 10px', borderRadius: 'var(--radius-sm)', background: 'var(--surface3)', border: '1px solid var(--border)' }}>
+                            <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', lineHeight: 1.4 }}>
+                              Each PB is projected from the age you set it at to age {targetAge}.
                             </span>
-                            {pctChange > 0.1 && (
-                              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
-                                ~{pctChange.toFixed(1)}% {targetAge < resolvedCurrentAge! ? 'improvement' : 'slower'} at age {targetAge}
-                              </span>
-                            )}
                           </div>
 
                           {/* PB projection table */}
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--sp-2)', padding: '4px 0 8px', borderBottom: '1px solid var(--border2)' }}>
-                            {['Distance', `Age ${resolvedCurrentAge}`, `Age ${targetAge}`].map(h => (
+                            {['Distance', 'Your PB', `Age ${targetAge}`].map(h => (
                               <span key={h} style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)' }}>{h}</span>
                             ))}
                           </div>
                           {pbRows.map(row => {
+                            if (!row.ageAtPB) return null
+                            const ratio = toFactor / waAgeFactor(row.ageAtPB, gender)
                             const projSecs = row.timeSecs * ratio
                             const projStr  = secsToHMS(Math.round(projSecs))
                             const projPaceKm = secsToMMSS(projSecs / row.km)
                             return (
                               <div key={row.label} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 'var(--sp-2)', padding: '10px 0', borderBottom: '1px solid var(--border)', alignItems: 'center' }}>
                                 <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', fontFamily: 'var(--headline)', fontWeight: 700 }}>{row.label}</span>
-                                <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', color: 'var(--white)' }}>{row.timeStr}</span>
+                                <div>
+                                  <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', color: 'var(--white)' }}>{row.timeStr}</div>
+                                  <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>at age {row.ageAtPB}</div>
+                                </div>
                                 <div>
                                   <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', color: ratio < 1 ? 'var(--green)' : ratio > 1 ? '#f97316' : 'var(--white)' }}>{projStr}</div>
                                   <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>{projPaceKm}/km</div>
@@ -1450,7 +1462,7 @@ export function Train() {
                       <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Log timed races at 5K–Marathon distances to see pace projections.</p>
                     )}
                     {!canProject && (
-                      <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Enter your current and target age above.</p>
+                      <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Enter a target age above. PBs are graded from the age you set them at (needs your date of birth in your profile, or a fallback current age).</p>
                     )}
                   </div>
                 )

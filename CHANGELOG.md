@@ -3,6 +3,11 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.6.8] - 2026-06-04
+
+### Fixed
+- **Age-Grade Pace Projection used current age instead of age-at-PB.** The Train → Pace projection graded every PB against the athlete's *current* profile age, so an old PB set at 47 was projected as if it had been run at 54 — overstating how much faster the athlete would be at a younger target age. For a 4:18:16 marathon PB set at 47, projecting to age 30 showed `3:27:51` (19.5% faster) when the correct value is `3:47:04` (12.1% faster). Each PB is now graded from the age it was actually set at (race date − DOB), per-row, with the achievement age shown under each PB time. Falls back to the manual/profile age only when a PB has no race date or DOB is unknown.
+
 ## [0.7.6.7] - 2026-06-04
 
 ### Fixed
