@@ -3,6 +3,15 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.6.6] - 2026-06-04
+
+### Performance
+- **Core Web Vitals pass on the auth + landing surfaces.** Real-user monitoring (Cloudflare Web Analytics, bots excluded) flagged poor INP on the Clerk password field (P-worst 5,816 ms), a 0.251 CLS on the Clerk sign-up box, LCP P50 of 3,280 ms (36% Poor), and an LCP P99 of 11 s. Root cause was a single chain: the app gated all paint on Clerk `isLoaded`, and the root `index.html` shipped zero render hints, so first paint and first auth interaction both waited on a cold Clerk init plus a render-blocking, CSS-`@import`'d font fetch. Fixes:
+  - **`index.html`** — `preconnect` + `dns-prefetch` to `clerk.breaktapes.com`; `preconnect` to Google Fonts and load the two families via `<link>` instead of a CSS `@import` (which chained behind the CSS bundle download). Warms Clerk and fonts before first paint/tap.
+  - **`AuthGate.tsx`** — render the real login screen during `!isLoaded` for logged-out visitors (gated on the `__client_uat` Clerk cookie hint), so the headline text is the LCP element instead of a pulsing dot. Reserve the Clerk card footprint (`rootBox`/`card` `minHeight`) and top-anchor the modal overlay so the empty→filled form can't recenter and push painted content (closes the 0.251 CLS). Replace the full-viewport `backdrop-filter: blur(8px)` with a solid overlay — the blur forced a GPU recomposite on every keystroke behind the password field.
+  - **`posthog.ts`** — `disable_session_recording` so rrweb instrumentation doesn't compete for the main thread during the login cold-start window (autocapture kept).
+  - **`LandingPage.tsx` / `index.css`** — drive the scroll-progress bar from a `--pl-progress` CSS variable instead of per-frame React state (no full-tree re-render of the 1,400-line landing on every scroll frame); commit `navVisible`/`screen` only on change; `will-change: transform` on `.pl-parallax` so its GSAP transform is GPU-composited and not counted as CLS.
+
 ## [0.7.6.4] - 2026-06-03
 
 ### Fixed
