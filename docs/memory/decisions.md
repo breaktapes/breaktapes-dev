@@ -5,6 +5,21 @@
 
 ---
 
+## 2026-06-04 (session 41)
+
+### Render the login screen during Clerk `!isLoaded` instead of a blocking loader
+**Decision:** While Clerk boots (`!isLoaded`), `AuthGate` renders the real `<LandingScreen>` for likely-logged-out visitors (gated on the `__client_uat` cookie hint) rather than the `AuthLoadingScreen` pulsing dot. Signed-in users (cookie present, non-zero) still get the loader to avoid a login flash.
+**Rationale:** The old hard gate made the LCP element a pulsing dot — real content (headline text) couldn't paint until Clerk's network round-trip resolved (P50 3.3s, P99 11s). Most first-time visitors are logged out, so painting the login screen immediately gives instant text LCP. The cookie is a synchronous, first-party JS-readable hint; worst case is a brief flash, never a broken state (once `isLoaded` resolves, `isSignedIn` decides the real screen).
+**Tradeoff:** Signed-in users with no `__client_uat` (cleared cookies, fresh device) see a brief login-screen flash before the dashboard. Accepted — rare, and cheaper than the universal LCP penalty.
+
+### `index.html` owns all render hints; fonts via `<link>`, never CSS `@import`
+**Decision:** Preconnect/dns-prefetch `clerk.breaktapes.com` and load Google Fonts via `<link>` in the root `index.html`. Fonts are NOT a CSS `@import`.
+**Rationale:** A CSS `@import` chains behind the CSS-bundle download before the font request even starts → late text LCP. `<link>` in the head + preconnect lets the browser warm the font origin and Clerk's FAPI domain before the JS bundle requests them. (`public/index.html` is a stale legacy vanilla-app artifact and is NOT the React template — don't be misled by its preconnects.)
+
+### Drive landing scroll-progress from a CSS var, not React state
+**Decision:** The scroll-progress bar reads a `--pl-progress` CSS var written on `#landing-screen` each scroll frame; `navVisible`/`screen` commit React state only on change. `.pl-parallax` gets `will-change: transform`.
+**Rationale:** Per-frame `setProgress` re-rendered the entire 1,400-line `LandingPage` tree on every scroll frame (scroll jank, inflated INP). A CSS var write touches no React. `will-change` GPU-composites the GSAP parallax transform so its late y-shift isn't counted as CLS.
+
 ## 2026-06-02 (session 38)
 
 ### Triathlon Predictor: empirical-over-engine blend

@@ -4,6 +4,14 @@
 
 ---
 
+## 2026-06-04
+
+### Poor Core Web Vitals on auth + landing (INP 5.8s, CLS 0.251, LCP P50 3.3s/P99 11s)
+- **Symptom:** Cloudflare Web Analytics RUM (bots excluded): `#password-field` INP 5,816 ms, Clerk sign-up box CLS 0.251, LCP P50 3,280 ms (36% Poor), P99 11,164 ms (32s spike @13:00 GST).
+- **Root cause (single chain):** App gated all paint on Clerk `isLoaded` (LCP = the `AuthLoadingScreen` pulsing dot), and root `index.html` shipped zero render hints — so first paint + first auth interaction both waited on a cold Clerk init plus a render-blocking, CSS-`@import`'d font fetch. `#password-field` is Clerk's native input id (no custom field); INP = Clerk cold-load + main-thread contention. CLS = the Clerk widget mounting empty (~0 height) then injecting the form and recentering in the flex overlay. PostHog session recording (rrweb) added main-thread weight during the login cold-start window.
+- **Fix (v0.7.6.6):** (1) `index.html` preconnect/dns-prefetch `clerk.breaktapes.com` + fonts via `<link>` (dropped CSS `@import`). (2) `AuthGate` renders `<LandingScreen>` during `!isLoaded` for logged-out visitors (gated on `__client_uat` cookie) → text LCP, not dot. (3) Reserve Clerk card `minHeight` via `clerkAppearance.elements` + top-anchor overlay → no recenter (CLS). (4) Drop `backdrop-filter: blur(8px)` → solid overlay (INP). (5) PostHog `disable_session_recording`. (6) Landing scroll progress → `--pl-progress` CSS var (no per-frame React re-render); `.pl-parallax { will-change: transform }`.
+- **Diagnosis method:** 3 parallel investigation subagents (LCP / CLS / INP), then 1 adversarial review subagent on the diff. All four metrics traced to the same root chain.
+
 ## 2026-06-02
 
 ### New enabled widget without a WIDGET_CONTENT entry fails the guardrail test
