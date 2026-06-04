@@ -8,6 +8,11 @@ export function initPostHog() {
     person_profiles: 'identified_only',
     capture_pageview: false, // manual via usePostHogPageView
     capture_pageleave: true,
+    // rrweb session recording loads + instruments the DOM during the exact
+    // cold-start window the user first interacts with the login screen —
+    // inflates INP on the auth inputs. Keep autocapture (product analytics),
+    // drop the heavy recorder.
+    disable_session_recording: true,
     enable_recording_console_log: false,
     loaded(ph) {
       if (import.meta.env.DEV) ph.debug()

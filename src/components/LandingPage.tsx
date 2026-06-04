@@ -136,11 +136,13 @@ function LoaderOverlay({ onDone }: { onDone: () => void }) {
 /* =====================================================================
    FLOATING TOP NAV + SCROLL PROGRESS BAR
    ===================================================================== */
-function TopChrome({ progress, onSignUp, onSignIn, visible }:
-  { progress: number; onSignUp: () => void; onSignIn: () => void; visible: boolean }) {
+function TopChrome({ onSignUp, onSignIn, visible }:
+  { onSignUp: () => void; onSignIn: () => void; visible: boolean }) {
   return (
     <>
-      <div className="pl-progress" style={{ transform: `scaleX(${progress})` }} aria-hidden="true" />
+      {/* Width driven by the --pl-progress CSS var written directly on
+          #landing-screen each scroll frame — no per-frame React re-render. */}
+      <div className="pl-progress" aria-hidden="true" />
       <AnimatePresence>
         {visible && (
           <motion.header className="pl-nav"
@@ -1209,10 +1211,13 @@ export default function LandingPage({ onSignUp, onSignIn }: LandingPageProps) {
   const reduce = useReducedMotion()
   const [loaded, setLoaded] = useState(false)
   const [navVisible, setNavVisible] = useState(false)
-  const [progress, setProgress] = useState(0)
   const [persona, setPersona] = useState<DemoPersonaId>('sa-marathoner')
   const [screen, setScreen] = useState(0)
   const stageRef = useRef<HTMLDivElement>(null)
+  // Last-committed values so the per-frame scroll handler only calls setState
+  // when navVisible / screen actually change (not every frame).
+  const lastNav = useRef(false)
+  const lastScreen = useRef(0)
 
   const handleSignUp = useCallback(() => { track('landing_cta_click', { cta: 'get_started' }); onSignUp() }, [onSignUp])
   const handleSignIn = useCallback(() => { track('landing_cta_click', { cta: 'sign_in' }); onSignIn() }, [onSignIn])
@@ -1249,15 +1254,18 @@ export default function LandingPage({ onSignUp, onSignIn }: LandingPageProps) {
         raf = 0
         const max = el.scrollHeight - el.clientHeight
         const p = max > 0 ? el.scrollTop / max : 0
-        setProgress(p)
-        setNavVisible(p > 0.06)
-        // Drive the pinned phone-stage screen index from scroll within its section.
+        // Progress bar: write a CSS var directly — no React re-render per frame.
+        el.style.setProperty('--pl-progress', String(p))
+        // Nav reveal: boolean, only commit on change.
+        const nv = p > 0.06
+        if (nv !== lastNav.current) { lastNav.current = nv; setNavVisible(nv) }
+        // Phone-stage screen index: int, only commit on change.
         const stage = stageRef.current
         if (stage) {
           const dur = stage.offsetHeight - el.clientHeight
           const sp = dur > 0 ? (el.scrollTop - stage.offsetTop) / dur : 0
           const idx = Math.max(0, Math.min(STAGE_SCREENS.length - 1, Math.floor(sp * STAGE_SCREENS.length)))
-          setScreen(idx)
+          if (idx !== lastScreen.current) { lastScreen.current = idx; setScreen(idx) }
         }
       })
     }
@@ -1272,7 +1280,7 @@ export default function LandingPage({ onSignUp, onSignIn }: LandingPageProps) {
         {!loaded && <LoaderOverlay key="loader" onDone={() => setLoaded(true)} />}
       </AnimatePresence>
 
-      <TopChrome progress={progress} onSignUp={handleSignUp} onSignIn={handleSignIn} visible={navVisible} />
+      <TopChrome onSignUp={handleSignUp} onSignIn={handleSignIn} visible={navVisible} />
 
       {/* ---------------- HERO ---------------- */}
       <section className="pl-hero">
