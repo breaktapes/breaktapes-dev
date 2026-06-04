@@ -3,6 +3,14 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.6.9] - 2026-06-04
+
+### Added
+- **Hopasports race import (UAE / MENA).** New import source covering the regional timer behind RAK, Dubai, Khorfakkan and other UAE events — races MarathonView (marathon-only) never carried. In the Import dialog, enter your name, then search and pick your Hopasports event; the worker parses the event's race list, scans every race (21km/10km/5km…) in parallel for your name, and pulls finish time, placing and distance. Finish times are chip/net (no gun-time inflation). Worker routes: `POST /import/hopasports-events` (event search via the public listing) and `POST /import/hopasports` (results by event + name).
+  - Event-scoped by necessity: Hopasports has no public global athlete search (its site search is Livewire, not callable from a Worker), so import is event-first rather than pure name fan-out.
+  - Hopasports exposes no machine-readable event date; the imported race is stamped with the year from the event (e.g. `2026-01-01`) for you to adjust the exact day in race detail.
+- **Speedhive/Sporthive investigated, deferred.** Its search + events APIs are open, but finisher-row (classification) results are gated behind a non-public SPA route and per-athlete aggregation needs a claimed MYLAPS profile — not reliably importable from a Worker. Documented for a future pass.
+
 ## [0.7.6.8] - 2026-06-04
 
 ### Fixed
