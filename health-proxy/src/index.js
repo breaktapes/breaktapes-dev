@@ -661,6 +661,154 @@ export default {
       }
     }
 
+    // ── Race Import: Hopasports (UAE / MENA timer — RAK, Dubai Creek, etc.) ──
+    // The caller supplies a hopa event `slug` (from /import/hopasports-events)
+    // plus a name. We parse the event's race list off the event page, then scan
+    // every race (21km / 10km / 5km …) for that athlete in parallel and return
+    // matches tagged with distance. finishtime is chip/net (ms) — no gun/net issue.
+    if (path === '/import/hopasports' && request.method === 'POST') {
+      const distinctId = request.headers.get('X-POSTHOG-DISTINCT-ID') || 'anon';
+      const posthog = makePostHog(env);
+      try {
+        const body = await request.json().catch(() => ({}));
+        const slug = String(body.slug || '').trim();
+        const q = String(body.name || `${body.firstName || ''} ${body.lastName || ''}`).trim();
+        if (!slug || !q) return json({ results: [], status: 'ok' }, 200, origin);
+
+        // finishtime is milliseconds (e.g. 2367000 → 39:27, fractional → rounded).
+        const fmt = (ms) => {
+          if (!ms || !Number.isFinite(ms)) return '';
+          const s = Math.round(ms / 1000);
+          const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60;
+          return h > 0
+            ? `${h}:${String(m).padStart(2, '0')}:${String(x).padStart(2, '0')}`
+            : `${m}:${String(x).padStart(2, '0')}`;
+        };
+        // "21km" → 21000, "10Miler (16KM)" → 16000, "5km" → 5000.
+        const parseDistM = (title) => {
+          if (!title) return 0;
+          const paren = title.match(/\((\d+(?:\.\d+)?)\s*km\)/i);
+          if (paren) return Math.round(parseFloat(paren[1]) * 1000);
+          const km = title.match(/(\d+(?:\.\d+)?)\s*km/i);
+          if (km) return Math.round(parseFloat(km[1]) * 1000);
+          const mi = title.match(/(\d+(?:\.\d+)?)\s*mile/i);
+          if (mi) return Math.round(parseFloat(mi[1]) * 1609.34);
+          return 0;
+        };
+
+        // 1. Pull the event page and parse its race list (Vue prop
+        //    `:races_with_pt="JSON.parse('[…]')"`, "-escaped).
+        const pageHtml = await fetch(`https://results.hopasports.com/event/${encodeURIComponent(slug)}`, {
+          headers: { 'Accept': 'text/html', 'User-Agent': 'Mozilla/5.0' },
+          signal: AbortSignal.timeout(10000),
+        }).then(r => r.ok ? r.text() : '');
+        let races = [];
+        const m = pageHtml.match(/:races_with_pt="JSON\.parse\(.(.*?).\)"/s);
+        if (m) {
+          try {
+            races = JSON.parse(m[1].replace(/\\u0022/g, '"').replace(/\\\//g, '/')).map(r => ({
+              race_id: r.race_id, pt: r.pt || 'i', title: r.title || '',
+            }));
+          } catch (_) { /* fall through */ }
+        }
+        if (!races.length) races = [{ race_id: 1, pt: 'i', title: '' }];
+        const eventTitle = ((pageHtml.match(/<title>([^<|]+)/) || [])[1] || 'Hopasports Event').trim();
+        // hopa exposes no machine-readable event date on these surfaces; fall back
+        // to the year in the slug/title so the import isn't stamped "today". The
+        // user fixes the exact day in race detail. Empty when no year is present.
+        const yr = (slug.match(/20\d\d/) || eventTitle.match(/20\d\d/) || [])[0];
+        const dateGuess = yr ? `${yr}-01-01` : '';
+
+        // 2. Scan every race for the athlete in parallel.
+        const perRace = await Promise.all(races.map(async (rc) => {
+          try {
+            const url = `https://results.hopasports.com/static_forward/en/event/${encodeURIComponent(slug)}/results/list`
+              + `?nopag=1&race=${rc.race_id}&pt=${encodeURIComponent(rc.pt)}&q=${encodeURIComponent(q)}&raw=1`;
+            const data = await fetch(url, {
+              headers: { 'Accept': 'application/json', 'User-Agent': 'Mozilla/5.0', 'X-Requested-With': 'XMLHttpRequest' },
+              signal: AbortSignal.timeout(10000),
+            }).then(r => r.ok ? r.json() : null);
+            // ranktable is an array for the full list, an object keyed by rank for
+            // some filtered queries — normalize both.
+            const rtt = data && data.ranktable;
+            const rank = Array.isArray(rtt) ? rtt : (rtt && typeof rtt === 'object' ? Object.values(rtt) : []);
+            // Drop DNS/DNF/registered-but-no-time rows — nothing to import.
+            return rank.filter(r => r && Number(r.finishtime) > 0).map(r => {
+              const p = (r && r.target && r.target.participants && r.target.participants[0]) || {};
+              return {
+                raceName:    eventTitle,
+                date:        dateGuess,
+                distance:    rc.title,
+                distance_m:  parseDistM(rc.title),
+                athleteName: p.name || '',
+                time:        fmt(r.finishtime) || (r.finishtimeTxt || ''),
+                placing:     r.overallrankTxt != null ? String(r.overallrankTxt) : '',
+                category:    r.category || p.category || '',
+                club:        p.represents || '',
+                nationality: p.nationality || '',
+                bib:         r.bib || p.bib || '',
+                source:      'hopasports',
+              };
+            });
+          } catch (_) { return []; }
+        }));
+        const results = perRace.flat();
+
+        if (posthog) {
+          posthog.capture({
+            distinctId,
+            event: 'race import searched',
+            properties: { provider: 'hopasports', result_count: results.length, ...(sessionId && { $session_id: sessionId }) },
+          });
+          await posthog.shutdown();
+        }
+        return json({ results, status: 'ok' }, 200, origin);
+      } catch (e) {
+        if (posthog) { posthog.captureException(e, distinctId); await posthog.shutdown(); }
+        return json({ results: [], status: 'error', message: e.message }, 502, origin);
+      }
+    }
+
+    // ── Hopasports event search (for the event-first import picker) ──────────
+    // hopa has no public events API (its global search is Livewire). The
+    // past/on-tour listing pages ARE plain server HTML, so we scrape the event
+    // links + names and filter client-side. Covers the recent UAE/MENA events.
+    if (path === '/import/hopasports-events' && request.method === 'POST') {
+      try {
+        const body = await request.json().catch(() => ({}));
+        const query = String(body.q || '').trim().toLowerCase();
+        const pages = [
+          'https://www.hopasports.com/en/events/past',
+          'https://www.hopasports.com/en/events/ontour',
+        ];
+        const htmls = await Promise.all(pages.map(u =>
+          fetch(u, { headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'text/html' }, signal: AbortSignal.timeout(10000) })
+            .then(r => r.ok ? r.text() : '').catch(() => '')
+        ));
+        const decode = (s) => s
+          .replace(/&#0?39;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, '&')
+          .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/\s+/g, ' ').trim();
+        const seen = new Set();
+        const events = [];
+        const re = /<a[^>]*href="[^"]*\/event\/([a-z0-9-]+)"[^>]*class="[^"]*hover:underline[^"]*"[^>]*>([^<]{2,140})</g;
+        for (const html of htmls) {
+          let m;
+          while ((m = re.exec(html))) {
+            const slug = m[1];
+            if (seen.has(slug)) continue;
+            seen.add(slug);
+            const name = decode(m[2]);
+            if (query && !(`${name} ${slug}`.toLowerCase().includes(query))) continue;
+            events.push({ slug, name, source: 'hopasports' });
+          }
+          re.lastIndex = 0;
+        }
+        return json({ events, status: 'ok' }, 200, origin);
+      } catch (e) {
+        return json({ events: [], status: 'error', message: e.message }, 502, origin);
+      }
+    }
+
     // ── RunSignup race results search ─────────────────────────────────────
     if (path === '/import/runsignup' && request.method === 'POST') {
       const distinctId = request.headers.get('X-POSTHOG-DISTINCT-ID') || 'anon';
