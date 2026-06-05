@@ -1544,6 +1544,129 @@ async function handleAdminAnalytics(request, env) {
   }), { headers: adminCorsHeaders(request) });
 }
 
+// Run a HogQL query against the PostHog query API. Requires a PostHog PERSONAL
+// API key (POSTHOG_PERSONAL_API_KEY) — the ingest key in POSTHOG_API_KEY is
+// write-only and cannot read events. Returns the rows array, or null on any
+// failure / missing config (caller degrades gracefully).
+async function posthogHogQL(env, query) {
+  const personalKey = env.POSTHOG_PERSONAL_API_KEY;
+  const projectId = env.POSTHOG_PROJECT_ID;
+  if (!personalKey || !projectId) return null;
+  // Query API lives on the APP host (us.posthog.com), not the ingest host
+  // (us.i.posthog.com). Override via POSTHOG_QUERY_HOST for EU / self-host.
+  const host = env.POSTHOG_QUERY_HOST || 'https://us.posthog.com';
+  try {
+    const res = await fetch(`${host}/api/projects/${projectId}/query/`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${personalKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ query: { kind: 'HogQLQuery', query } }),
+    });
+    if (!res.ok) return null;
+    const json = await res.json().catch(() => null);
+    return Array.isArray(json?.results) ? json.results : null;
+  } catch {
+    return null;
+  }
+}
+
+// GET /api/admin/data-integrity — cross-references PostHog `race_logged` /
+// `race_planned` events (which carry the Clerk user_id as distinct_id via
+// posthog.identify) against the live user_state rows to find accounts that
+// logged races but now have none — the fingerprint of the historical
+// full-replace data-loss bug (fixed v0.7.6.12). A full-replace wipe overwrites
+// updated_at too, so the DB alone can't tell a wiped account from a never-active
+// one; PostHog is the only surviving record of "this user HAD races".
+async function handleAdminDataIntegrity(request, env) {
+  if (request.method === 'OPTIONS') return adminCors(request);
+  const userId = await resolveAdminUserId(request, env);
+  if (!userId) return new Response('Forbidden', { status: 403, headers: adminCorsHeaders(request) });
+
+  const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceKey) return new Response('Service unavailable', { status: 503, headers: adminCorsHeaders(request) });
+  const supabaseUrl = env.SUPABASE_URL || 'https://kmdpufauamadwavqsinj.supabase.co';
+  const svcH = { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` };
+
+  // PostHog: count race_logged + race_planned events per identified user.
+  // distinct_id LIKE 'user_%' keeps only Clerk-identified users (drops anon).
+  const [loggedRows, plannedRows] = await Promise.all([
+    posthogHogQL(env, "SELECT distinct_id, count() AS c FROM events WHERE event = 'race_logged' AND distinct_id LIKE 'user_%' GROUP BY distinct_id"),
+    posthogHogQL(env, "SELECT distinct_id, count() AS c FROM events WHERE event = 'race_planned' AND distinct_id LIKE 'user_%' GROUP BY distinct_id"),
+  ]);
+
+  if (loggedRows === null) {
+    return new Response(JSON.stringify({
+      enabled: false,
+      reason: 'POSTHOG_PERSONAL_API_KEY and POSTHOG_PROJECT_ID Worker secrets are required to query PostHog. Set them on the production Worker, then reload.',
+    }), { headers: adminCorsHeaders(request) });
+  }
+
+  const loggedByUser = new Map();
+  for (const [did, c] of loggedRows) loggedByUser.set(did, Number(c) || 0);
+  const plannedByUser = new Map();
+  for (const [did, c] of (plannedRows ?? [])) plannedByUser.set(did, Number(c) || 0);
+
+  // Current live state per user.
+  const usersRes = await fetch(
+    `${supabaseUrl}/rest/v1/user_state?select=user_id,username,updated_at,created_at,state_json&limit=5000`,
+    { headers: svcH },
+  );
+  const liveByUser = new Map();
+  if (usersRes.ok) {
+    for (const r of await usersRes.json()) {
+      const s = r.state_json ?? {};
+      liveByUser.set(r.user_id, {
+        username: r.username ?? null,
+        races: Array.isArray(s.races) ? s.races.length : 0,
+        upcoming: Array.isArray(s.upcoming_races) ? s.upcoming_races.length : 0,
+        updated_at: r.updated_at,
+        created_at: r.created_at,
+      });
+    }
+  }
+
+  // An event fires per logged race; deletes/re-logs inflate the count, so we use
+  // it as a lower-bound signal of "had data", not an exact race count.
+  const wiped = [];   // logged races, now have ZERO past races
+  const partial = []; // logged notably more than they currently have
+  for (const [uid, loggedCount] of loggedByUser) {
+    const live = liveByUser.get(uid);
+    const currentRaces = live?.races ?? 0;
+    const currentUpcoming = live?.upcoming ?? 0;
+    const plannedCount = plannedByUser.get(uid) ?? 0;
+    const row = {
+      user_id: uid,
+      username: live?.username ?? null,
+      logged_events: loggedCount,
+      planned_events: plannedCount,
+      current_races: currentRaces,
+      current_upcoming: currentUpcoming,
+      has_row: !!live,
+      updated_at: live?.updated_at ?? null,
+      created_at: live?.created_at ?? null,
+    };
+    if (currentRaces === 0 && currentUpcoming === 0) wiped.push(row);
+    else if (loggedCount >= currentRaces + 3) partial.push(row);
+  }
+  wiped.sort((a, b) => b.logged_events - a.logged_events);
+  partial.sort((a, b) => (b.logged_events - b.current_races) - (a.logged_events - a.current_races));
+
+  return new Response(JSON.stringify({
+    enabled: true,
+    generated_at: new Date().toISOString(),
+    summary: {
+      identified_loggers: loggedByUser.size,
+      wiped_count: wiped.length,
+      partial_count: partial.length,
+      live_rows: liveByUser.size,
+    },
+    wiped,
+    partial,
+  }), { headers: adminCorsHeaders(request) });
+}
+
 async function handleAdminListContributions(request, env) {
   if (request.method === 'OPTIONS') return adminCors(request);
 
@@ -1932,6 +2055,11 @@ async function handleRequest(request, env) {
     // Admin: GET /api/admin/analytics
     if ((request.method === 'GET' || request.method === 'OPTIONS') && path === '/api/admin/analytics') {
       return handleAdminAnalytics(request, env);
+    }
+
+    // Admin: GET /api/admin/data-integrity — find wiped/partial-loss accounts
+    if ((request.method === 'GET' || request.method === 'OPTIONS') && path === '/api/admin/data-integrity') {
+      return handleAdminDataIntegrity(request, env);
     }
 
     // POST /api/catalog/submit — user submits upcoming race to catalog
