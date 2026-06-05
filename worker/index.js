@@ -1589,6 +1589,16 @@ async function handleAdminDataIntegrity(request, env) {
   const supabaseUrl = env.SUPABASE_URL || 'https://kmdpufauamadwavqsinj.supabase.co';
   const svcH = { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` };
 
+  // Daily-snapshot drop detector (race_count_audit / race_count_drops view) —
+  // self-contained Supabase signal, no PostHog needed. Flags any account whose
+  // race count fell vs its previous daily snapshot. Best-effort: missing table
+  // (migration not yet applied) → empty list.
+  let drops = [];
+  try {
+    const dr = await fetch(`${supabaseUrl}/rest/v1/race_count_drops?select=*&order=lost.desc&limit=100`, { headers: svcH });
+    if (dr.ok) drops = await dr.json().catch(() => []);
+  } catch { /* view absent — leave drops empty */ }
+
   // PostHog: count race_logged + race_planned events per identified user.
   // distinct_id LIKE 'user_%' keeps only Clerk-identified users (drops anon).
   const [loggedRows, plannedRows] = await Promise.all([
@@ -1596,10 +1606,12 @@ async function handleAdminDataIntegrity(request, env) {
     posthogHogQL(env, "SELECT distinct_id, count() AS c FROM events WHERE event = 'race_planned' AND distinct_id LIKE 'user_%' GROUP BY distinct_id"),
   ]);
 
+  // PostHog cross-ref is optional; the daily-drop signal works without it.
   if (loggedRows === null) {
     return new Response(JSON.stringify({
       enabled: false,
-      reason: 'POSTHOG_PERSONAL_API_KEY and POSTHOG_PROJECT_ID Worker secrets are required to query PostHog. Set them on the production Worker, then reload.',
+      reason: 'PostHog cross-ref needs POSTHOG_PERSONAL_API_KEY + POSTHOG_PROJECT_ID Worker secrets. The daily-drop detector below works without them.',
+      drops,
     }), { headers: adminCorsHeaders(request) });
   }
 
@@ -1661,7 +1673,9 @@ async function handleAdminDataIntegrity(request, env) {
       wiped_count: wiped.length,
       partial_count: partial.length,
       live_rows: liveByUser.size,
+      drops_count: drops.length,
     },
+    drops,
     wiped,
     partial,
   }), { headers: adminCorsHeaders(request) });
