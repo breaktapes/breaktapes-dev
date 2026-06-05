@@ -54,13 +54,17 @@ interface IntegrityRow {
   current_races: number; current_upcoming: number
   has_row: boolean; updated_at: string | null; created_at: string | null
 }
+interface DropRow {
+  user_id: string; prev_races: number; current_races: number; lost: number; captured_at: string
+}
 interface DataIntegrity {
   enabled: boolean
   reason?: string
   generated_at?: string
-  summary?: { identified_loggers: number; wiped_count: number; partial_count: number; live_rows: number }
+  summary?: { identified_loggers: number; wiped_count: number; partial_count: number; live_rows: number; drops_count: number }
   wiped?: IntegrityRow[]
   partial?: IntegrityRow[]
+  drops?: DropRow[]
 }
 
 const ADMIN_CORS_HEADERS = { 'Content-Type': 'application/json' }
@@ -568,19 +572,45 @@ function IntegrityTab() {
   if (error)   return <div style={st.error}>{error}</div>
   if (!data)   return <div style={st.empty}>No data.</div>
 
+  const dropsSection = (
+    <>
+      <div style={st.sectionLabel}>Daily count drops — {data.drops?.length ?? 0}</div>
+      <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', lineHeight: 1.6, marginBottom: '10px' }}>
+        Accounts whose race count fell vs their previous daily snapshot. Self-contained signal (no PostHog needed) — a wipe shows up here within a day.
+      </p>
+      {data.drops && data.drops.length > 0
+        ? data.drops.map(d => (
+            <div key={d.user_id} style={st.cardRow}>
+              <div>
+                <div style={st.raceName}>{d.user_id.slice(0, 18)}…</div>
+                <div style={st.meta}><span style={st.pill}>{new Date(d.captured_at).toLocaleDateString()}</span></div>
+              </div>
+              <div style={{ ...st.btnRow, alignItems: 'center' }}>
+                <span style={st.pill}>{d.prev_races} → {d.current_races}</span>
+                <span style={{ ...st.pillOrange, color: 'var(--error)' }}>−{d.lost}</span>
+              </div>
+            </div>
+          ))
+        : <div style={st.empty}>No drops detected. 🎉</div>}
+    </>
+  )
+
   if (!data.enabled) {
     return (
-      <div style={st.card}>
-        <div style={st.sectionLabel}>Setup required</div>
-        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, margin: 0 }}>
-          {data.reason}
-        </p>
-        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', lineHeight: 1.6, marginTop: '12px' }}>
-          Create a PostHog <strong>personal API key</strong> (scope: <code>query:read</code>) and set both as production Worker secrets:
-          <br /><code>wrangler secret put POSTHOG_PERSONAL_API_KEY --env=""</code>
-          <br /><code>wrangler secret put POSTHOG_PROJECT_ID --env=""</code>
-        </p>
-      </div>
+      <>
+        {dropsSection}
+        <div style={{ ...st.card, marginTop: '20px' }}>
+          <div style={st.sectionLabel}>PostHog cross-ref — setup required</div>
+          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, margin: 0 }}>
+            {data.reason}
+          </p>
+          <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', lineHeight: 1.6, marginTop: '12px' }}>
+            Create a PostHog <strong>personal API key</strong> (scope: <code>query:read</code>) and set both as production Worker secrets:
+            <br /><code>wrangler secret put POSTHOG_PERSONAL_API_KEY --env=""</code>
+            <br /><code>wrangler secret put POSTHOG_PROJECT_ID --env=""</code>
+          </p>
+        </div>
+      </>
     )
   }
 
@@ -605,6 +635,8 @@ function IntegrityTab() {
 
   return (
     <>
+      {dropsSection}
+      <div style={{ ...st.sectionLabel, marginTop: '20px' }}>PostHog cross-ref</div>
       <div style={st.statGrid}>
         <div style={st.statCard}>
           <div style={st.statLabel}>Wiped</div>
