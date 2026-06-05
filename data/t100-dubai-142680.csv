@@ -1,18 +1,18 @@
 event_name,event_date,race_name,distance_m,athlete_name,finish_time,swim_time,bike_time,run_time,overall_position,category,country,bib,source
-T100 Triathlon World Tour - Dubai,2024-11-16,Pro Men,100000,Marten Van Riel,3:09:17,0:24:40,1:45:42,0:58:55,1,mpro,BEL,1,sportstats
-T100 Triathlon World Tour - Dubai,2024-11-16,Pro Men,100000,Rico Bogen,3:09:39,0:24:36,1:45:35,0:59:27,2,mpro,DEU,9,sportstats
-T100 Triathlon World Tour - Dubai,2024-11-16,Pro Men,100000,Alistair Brownlee,3:10:24,0:24:38,1:45:38,1:00:08,3,mpro,GBR,10,sportstats
-T100 Triathlon World Tour - Dubai,2024-11-16,Pro Men,100000,Kyle Smith,3:10:41,0:24:46,1:45:41,1:00:14,4,mpro,NZL,3,sportstats
-T100 Triathlon World Tour - Dubai,2024-11-16,Pro Men,100000,Mathis Margirier,3:11:43,0:24:40,1:45:39,1:01:24,5,mpro,FRA,8,sportstats
-T100 Triathlon World Tour - Dubai,2024-11-16,Pro Men,100000,Justus Nieschlag,3:12:30,0:24:42,1:47:38,1:00:10,6,mpro,DEU,24,sportstats
-T100 Triathlon World Tour - Dubai,2024-11-16,Pro Men,100000,Frederic Funk,3:12:48,0:24:43,1:45:32,1:02:34,7,mpro,DEU,11,sportstats
-T100 Triathlon World Tour - Dubai,2024-11-16,Pro Men,100000,Magnus Ditlev,3:13:29,0:25:51,1:46:09,1:01:29,8,mpro,DNK,2,sportstats
-T100 Triathlon World Tour - Dubai,2024-11-16,Pro Men,100000,Pieter Heemeryck,3:13:50,0:24:49,1:47:28,1:01:34,9,mpro,BEL,7,sportstats
-T100 Triathlon World Tour - Dubai,2024-11-16,Pro Men,100000,Sam Long,3:15:11,0:28:52,1:46:40,0:59:39,10,mpro,USA,5,sportstats
-T100 Triathlon World Tour - Dubai,2024-11-16,Pro Men,100000,Youri Keulen,3:15:41,0:24:39,1:49:39,1:01:23,11,mpro,NLD,6,sportstats
-T100 Triathlon World Tour - Dubai,2024-11-16,Pro Men,100000,David McNamee,3:16:47,0:24:54,1:50:15,1:01:38,12,mpro,GBR,17,sportstats
-T100 Triathlon World Tour - Dubai,2024-11-16,Pro Men,100000,Jason West,3:17:04,0:24:44,1:51:49,1:00:31,13,mpro,USA,14,sportstats
-T100 Triathlon World Tour - Dubai,2024-11-16,Pro Men,100000,Aaron Royle,3:17:37,0:24:35,1:48:13,1:04:49,14,mpro,AUS,15,sportstats
-T100 Triathlon World Tour - Dubai,2024-11-16,Pro Men,100000,Rudy Von Berg,3:23:15,0:25:22,1:51:13,1:06:40,15,mpro,USA,16,sportstats
-T100 Triathlon World Tour - Dubai,2024-11-16,Pro Men,100000,Leon Chevalier,3:23:31,0:27:51,1:53:25,1:02:15,16,mpro,FRA,18,sportstats
-T100 Triathlon World Tour - Dubai,2024-11-16,Pro Men,100000,Clement Mignon,3:26:54,0:25:21,1:52:04,1:09:29,17,mpro,FRA,19,sportstats
+T100 Triathlon World Tour - Dubai,2024-11-16,Pro Men,100000,Marten Van Riel,3:09:17,0:24:40,1:44:27,0:58:25,1,mpro,BEL,1,sportstats
+T100 Triathlon World Tour - Dubai,2024-11-16,Pro Men,100000,Rico Bogen,3:09:39,0:24:36,1:44:20,0:58:44,2,mpro,DEU,9,sportstats
+T100 Triathlon World Tour - Dubai,2024-11-16,Pro Men,100000,Alistair Brownlee,3:10:24,0:24:38,1:44:34,0:59:18,3,mpro,GBR,10,sportstats
+T100 Triathlon World Tour - Dubai,2024-11-16,Pro Men,100000,Kyle Smith,3:10:41,0:24:46,1:44:40,0:59:37,4,mpro,NZL,3,sportstats
+T100 Triathlon World Tour - Dubai,2024-11-16,Pro Men,100000,Mathis Margirier,3:11:43,0:24:40,1:44:36,1:00:40,5,mpro,FRA,8,sportstats
+T100 Triathlon World Tour - Dubai,2024-11-16,Pro Men,100000,Justus Nieschlag,3:12:30,0:24:42,1:46:37,0:59:33,6,mpro,DEU,24,sportstats
+T100 Triathlon World Tour - Dubai,2024-11-16,Pro Men,100000,Frederic Funk,3:12:48,0:24:43,1:44:18,1:01:48,7,mpro,DEU,11,sportstats
+T100 Triathlon World Tour - Dubai,2024-11-16,Pro Men,100000,Magnus Ditlev,3:13:29,0:25:51,1:44:59,1:00:40,8,mpro,DNK,2,sportstats
+T100 Triathlon World Tour - Dubai,2024-11-16,Pro Men,100000,Pieter Heemeryck,3:13:50,0:24:49,1:46:16,1:00:41,9,mpro,BEL,7,sportstats
+T100 Triathlon World Tour - Dubai,2024-11-16,Pro Men,100000,Sam Long,3:15:11,0:28:52,1:45:36,0:59:05,10,mpro,USA,5,sportstats
+T100 Triathlon World Tour - Dubai,2024-11-16,Pro Men,100000,Youri Keulen,3:15:41,0:24:39,1:48:33,1:00:33,11,mpro,NLD,6,sportstats
+T100 Triathlon World Tour - Dubai,2024-11-16,Pro Men,100000,David McNamee,3:16:47,0:24:54,1:49:10,1:00:51,12,mpro,GBR,17,sportstats
+T100 Triathlon World Tour - Dubai,2024-11-16,Pro Men,100000,Jason West,3:17:04,0:24:44,1:50:47,0:59:53,13,mpro,USA,14,sportstats
+T100 Triathlon World Tour - Dubai,2024-11-16,Pro Men,100000,Aaron Royle,3:17:37,0:24:35,1:47:00,1:04:03,14,mpro,AUS,15,sportstats
+T100 Triathlon World Tour - Dubai,2024-11-16,Pro Men,100000,Rudy Von Berg,3:23:15,0:25:22,1:50:02,1:05:54,15,mpro,USA,16,sportstats
+T100 Triathlon World Tour - Dubai,2024-11-16,Pro Men,100000,Leon Chevalier,3:23:31,0:27:51,1:51:47,1:01:20,16,mpro,FRA,18,sportstats
+T100 Triathlon World Tour - Dubai,2024-11-16,Pro Men,100000,Clement Mignon,3:26:54,0:25:21,1:50:41,1:08:27,17,mpro,FRA,19,sportstats
