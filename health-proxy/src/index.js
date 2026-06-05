@@ -809,6 +809,102 @@ export default {
       }
     }
 
+    // ── Race Import: Sporthive / Speedhive (MYLAPS — global name search) ─────
+    // True pure-name search across the whole MYLAPS network (any finisher, not
+    // just claimed accounts). Two open JSON GETs (Origin header only):
+    //  1. search.speedhive.com/api/search?term={name} → Participants (every race
+    //     the person did: eventName, raceName, date, raceId GUID, bib).
+    //  2. eventresults-api.speedhive.com/sporthive/races/{raceId}/bibs/{bib} →
+    //     the finisher's chip/gun time, placing, category, splits (incl. tri legs).
+    if (path === '/import/sporthive' && request.method === 'POST') {
+      const distinctId = request.headers.get('X-POSTHOG-DISTINCT-ID') || 'anon';
+      const posthog = makePostHog(env);
+      try {
+        const body = await request.json().catch(() => ({}));
+        const first = String(body.firstName || '').trim();
+        const last  = String(body.lastName || '').trim();
+        const term  = String(body.name || `${first} ${last}`).trim();
+        if (!term) return json({ results: [], status: 'ok' }, 200, origin);
+
+        const SH = { 'Accept': 'application/json', 'Origin': 'https://sporthive.com', 'Referer': 'https://sporthive.com/', 'User-Agent': 'Mozilla/5.0' };
+
+        // 1. Name search → participant rows.
+        const searchUrl = `https://search.speedhive.com/api/search?term=${encodeURIComponent(term)}`
+          + `&category=Active&count=40&offset=0&fuzzy=true`;
+        const searchData = await fetch(searchUrl, { headers: SH, signal: AbortSignal.timeout(10000) })
+          .then(r => r.ok ? r.json() : []).catch(() => []);
+        const parts = (Array.isArray(searchData) ? searchData : [])
+          .filter(x => x && x.entityType === 'Participants' && x.raceId && x.bib != null);
+
+        // Keep only rows whose name actually matches the query tokens — fuzzy
+        // search returns loose hits. Require every query token to appear.
+        const tokens = term.toLowerCase().split(/\s+/).filter(t => t.length > 1);
+        const matched = parts.filter(p => {
+          const n = String(p.name || '').toLowerCase();
+          return tokens.every(t => n.includes(t));
+        }).slice(0, 25); // bound the per-result fetch fan-out
+
+        // HH:MM:SS(.mmm) → strip fraction, drop a leading "00:" hour.
+        const cleanTime = (t) => {
+          if (!t) return '';
+          let s = String(t).split('.')[0];
+          const m = s.match(/^(\d+):(\d{2}):(\d{2})$/);
+          if (m) return Number(m[1]) > 0 ? `${Number(m[1])}:${m[2]}:${m[3]}` : `${Number(m[2])}:${m[3]}`;
+          return s;
+        };
+        const parseDistM = (s) => {
+          if (!s) return 0;
+          const km = String(s).match(/(\d+(?:\.\d+)?)\s*km/i);
+          if (km) return Math.round(parseFloat(km[1]) * 1000);
+          const mi = String(s).match(/(\d+(?:\.\d+)?)\s*mile/i);
+          if (mi) return Math.round(parseFloat(mi[1]) * 1609.34);
+          return 0;
+        };
+
+        // 2. Fetch each finisher result in parallel for time/placing/splits.
+        const results = (await Promise.all(matched.map(async (p) => {
+          try {
+            const r = await fetch(`https://eventresults-api.speedhive.com/sporthive/races/${encodeURIComponent(p.raceId)}/bibs/${encodeURIComponent(p.bib)}`,
+              { headers: SH, signal: AbortSignal.timeout(10000) }).then(x => x.ok ? x.json() : null);
+            if (!r || r.dns || r.dsq) return null;
+            const time = cleanTime(r.chipTimeOfParticipant) || cleanTime(r.gunTimeOfParticipant)
+              || cleanTime(r.legs && r.legs[0] && r.legs[0].totalDuration);
+            const distM = Number(r.distanceInMeter) || (r.legs && r.legs[0] && Number(r.legs[0].distanceInMeters)) || parseDistM(p.raceName);
+            const date = (p.date || '').slice(0, 10);
+            // Tri / multi-leg splits → import splits (Swim/Bike/Run, or named splits).
+            const splits = [];
+            for (const leg of (Array.isArray(r.legs) ? r.legs : [])) {
+              const dur = cleanTime(leg.totalDuration || leg.legDuration);
+              const label = leg.sportName ? leg.sportName.charAt(0).toUpperCase() + leg.sportName.slice(1) : '';
+              if (dur && label) splits.push({ label, split: dur });
+            }
+            return {
+              raceName:   p.eventName || 'Sporthive Event',
+              date,
+              time:       time || undefined,
+              distance_m: distM || undefined,
+              sport:      p.sportType || undefined,
+              placing:    r.overallPosition != null ? String(r.overallPosition) : '',
+              genderPlacing: r.genderPosition != null ? String(r.genderPosition) : '',
+              agLabel:    r.raceCategory || '',
+              country:    p.countryCode || '',
+              ...(splits.length ? { splits } : {}),
+              source:     'sporthive',
+            };
+          } catch (_) { return null; }
+        }))).filter(Boolean);
+
+        if (posthog) {
+          posthog.capture({ distinctId, event: 'race import searched', properties: { provider: 'sporthive', result_count: results.length, ...(sessionId && { $session_id: sessionId }) } });
+          await posthog.shutdown();
+        }
+        return json({ results, status: 'ok' }, 200, origin);
+      } catch (e) {
+        if (posthog) { posthog.captureException(e, distinctId); await posthog.shutdown(); }
+        return json({ results: [], status: 'error', message: e.message }, 502, origin);
+      }
+    }
+
     // ── RunSignup race results search ─────────────────────────────────────
     if (path === '/import/runsignup' && request.method === 'POST') {
       const distinctId = request.headers.get('X-POSTHOG-DISTINCT-ID') || 'anon';
