@@ -15,6 +15,9 @@
  */
 
 import { PostHog } from 'posthog-node';
+// Single source of truth for the server-side state merge (the permanent
+// data-loss fix). Shared with the unit tests so client/server can't drift.
+import { mergeUserState } from '../src/lib/stateMerge';
 
 // ── Utilities ────────────────────────────────────────────────────────────────
 
@@ -1685,11 +1688,12 @@ async function handleApiSync(request, env) {
   // Upsert via service role (bypasses RLS)
   const supabaseUrl = env.SUPABASE_URL || 'https://kmdpufauamadwavqsinj.supabase.co';
 
-  // Server-side UNION of delete tombstones. The write is a full state_json
-  // replace, so a device that never pulled a delete would otherwise wipe the
-  // tombstone and the deleted race would resurrect. Read the current row's
-  // tombstones, merge with the incoming (newest per id, prune >90d), and write
-  // the union back. Best-effort: on any error, fall back to the incoming set.
+  // MERGE the incoming state into the existing server row (never blind-replace).
+  // mergeUserState unions races/upcoming by id+updatedAt, drops tombstoned ids,
+  // and never lets an empty incoming slice shrink a populated server slice — so
+  // an empty/partial client flush can no longer wipe the row. Best-effort: on
+  // any error reading the current row, fall back to the incoming state as-is
+  // (still strictly safer than before — only affects the rare read-failure path).
   let stateJson = body.state_json ?? {};
   try {
     const cur = await fetch(`${supabaseUrl}/rest/v1/user_state?user_id=eq.${encodeURIComponent(userId)}&select=state_json`, {
@@ -1697,20 +1701,10 @@ async function handleApiSync(request, env) {
     });
     if (cur.ok) {
       const rows = await cur.json().catch(() => []);
-      const existing = Array.isArray(rows?.[0]?.state_json?.deleted_race_ids) ? rows[0].state_json.deleted_race_ids : [];
-      const incoming = Array.isArray(stateJson.deleted_race_ids) ? stateJson.deleted_race_ids : [];
-      const m = new Map();
-      for (const t of [...existing, ...incoming]) {
-        if (t && typeof t.id === 'string' && typeof t.at === 'number') {
-          m.set(t.id, Math.max(m.get(t.id) ?? 0, t.at));
-        }
-      }
-      const NINETY = 90 * 24 * 60 * 60 * 1000, now = Date.now();
-      const merged = [];
-      for (const [id, at] of m) { if (now - at < NINETY) merged.push({ id, at }); }
-      stateJson = { ...stateJson, deleted_race_ids: merged };
+      const existing = (rows && rows[0] && rows[0].state_json) ? rows[0].state_json : {};
+      stateJson = mergeUserState(existing, stateJson);
     }
-  } catch { /* fall back to incoming tombstones */ }
+  } catch { /* read failed — write incoming as-is (pre-merge fallback) */ }
 
   const res = await fetch(`${supabaseUrl}/rest/v1/user_state`, {
     method: 'POST',

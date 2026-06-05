@@ -102,18 +102,24 @@ export const useRaceStore = create<RaceState>()(
 
       autoMoveExpiredUpcoming: () => {
         const today = localToday()
-        const { upcomingRaces, races, deletedRaceIds } = get()
+        const { upcomingRaces, races } = get()
         const expired = upcomingRaces.filter(r => r.date < today)
         if (expired.length === 0) return
-        // Moved, not deleted — stamp so the past copy wins over a stale remote
-        // upcoming copy of the same id (cross-list dedup in the pull keeps past).
-        // Clear any tombstone for a moved id: a move means "this race is alive",
-        // so it must beat a stale delete from another device (else the result is lost).
-        const movedIds = new Set(expired.map(r => r.id))
+        // Pure lifecycle move (date passed) — NOT a user edit. Two deliberate
+        // non-actions here, both to stop cross-device resurrection:
+        //   1. Do NOT re-stamp updatedAt. This fires automatically on every
+        //      rehydrate; stamping `now` made a moved race beat a genuine remote
+        //      DELETE (tombstone.at < now), silently resurrecting it. The
+        //      past-wins cross-list dedup (pastIds filter, here + in the pull +
+        //      server merge) already keeps the past copy without a fresh stamp.
+        //   2. Do NOT clear tombstones. An automatic move must never override a
+        //      delete made on another device. If the user genuinely wants the
+        //      race back they re-add it (fresh stamp) or log it via the race-day
+        //      completion flow (dismissExpiredRace), which DOES clear the tomb
+        //      because that is an explicit user action.
         set({
-          races: [...races, ...expired.map(stamp)],
+          races: [...races, ...expired],
           upcomingRaces: upcomingRaces.filter(r => r.date >= today),
-          deletedRaceIds: deletedRaceIds.filter(t => !movedIds.has(t.id)),
         })
         get().promoteNextRace()
         void syncStateToSupabase()
