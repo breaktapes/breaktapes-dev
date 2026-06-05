@@ -578,7 +578,7 @@ export function Discover() {
       ...(priority ? { priority } : {}),
     }
     addUpcomingRace(race)
-    posthog.capture('race planned', {
+    posthog.capture('race_planned', {
       race_name: race.name,
       race_priority: priority ?? null,
       has_goal_time: !!goalTime,

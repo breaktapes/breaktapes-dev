@@ -234,4 +234,5 @@ export async function handleStravaCallback(code: string, returnedState: string):
   }
   await saveWearableToken(token)
   useWearableStore.getState().setToken('strava', token)
+  posthog.capture('wearable_connected', { provider: 'strava' })
 }
