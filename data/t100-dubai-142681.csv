@@ -1,20 +1,20 @@
 event_name,event_date,race_name,distance_m,athlete_name,finish_time,swim_time,bike_time,run_time,overall_position,category,country,bib,source
-T100 Triathlon World Tour - Dubai,2024-11-16,Pro Women,100000,Taylor Knibb,3:29:17,,,1:07:03,1,fpro,USA,1,sportstats
-T100 Triathlon World Tour - Dubai,2024-11-16,Pro Women,100000,Julie Derron,3:31:08,,,1:06:07,2,fpro,CHE,9,sportstats
-T100 Triathlon World Tour - Dubai,2024-11-16,Pro Women,100000,Ashleigh Gentle,3:31:42,,,1:06:43,3,fpro,AUS,2,sportstats
-T100 Triathlon World Tour - Dubai,2024-11-16,Pro Women,100000,Flora Duffy,3:33:05,,,1:04:14,4,fpro,BMU,11,sportstats
-T100 Triathlon World Tour - Dubai,2024-11-16,Pro Women,100000,Kat Matthews,3:34:17,,,1:06:17,5,fpro,GBR,6,sportstats
-T100 Triathlon World Tour - Dubai,2024-11-16,Pro Women,100000,Lucy Byram,3:34:55,,,1:08:29,6,fpro,GBR,8,sportstats
-T100 Triathlon World Tour - Dubai,2024-11-16,Pro Women,100000,Laura Philipp,3:36:01,,,1:07:58,7,fpro,DEU,5,sportstats
-T100 Triathlon World Tour - Dubai,2024-11-16,Pro Women,100000,Taylor Spivey,3:36:22,,,1:05:27,8,fpro,USA,14,sportstats
-T100 Triathlon World Tour - Dubai,2024-11-16,Pro Women,100000,Imogen Simmonds,3:36:41,,,1:11:35,9,fpro,CHE,4,sportstats
-T100 Triathlon World Tour - Dubai,2024-11-16,Pro Women,100000,Anne Haug,3:37:29,,,1:06:28,10,fpro,DEU,12,sportstats
-T100 Triathlon World Tour - Dubai,2024-11-16,Pro Women,100000,Paula Findlay,3:38:42,,,1:11:29,11,fpro,CAN,7,sportstats
-T100 Triathlon World Tour - Dubai,2024-11-16,Pro Women,100000,India Lee,3:40:33,,,1:14:15,12,fpro,GBR,3,sportstats
-T100 Triathlon World Tour - Dubai,2024-11-16,Pro Women,100000,Kaidi Kivioja,3:41:54,,,1:12:22,13,fpro,EST,15,sportstats
-T100 Triathlon World Tour - Dubai,2024-11-16,Pro Women,100000,Laura Madsen,3:42:04,,,1:10:59,14,fpro,DNK,16,sportstats
-T100 Triathlon World Tour - Dubai,2024-11-16,Pro Women,100000,Marlene De Boer,3:43:32,,,1:10:00,15,fpro,NLD,19,sportstats
-T100 Triathlon World Tour - Dubai,2024-11-16,Pro Women,100000,Sara Perez Sala,3:43:52,,,1:13:54,16,fpro,ESP,21,sportstats
-T100 Triathlon World Tour - Dubai,2024-11-16,Pro Women,100000,Kate Curran,3:46:11,,,1:09:32,17,fpro,GBR,17,sportstats
-T100 Triathlon World Tour - Dubai,2024-11-16,Pro Women,100000,Marjolaine Pierré,3:49:10,,,1:16:12,18,fpro,FRA,18,sportstats
-T100 Triathlon World Tour - Dubai,2024-11-16,Pro Women,100000,Diede Diederiks,3:52:25,,,1:14:33,19,fpro,NLD,20,sportstats
+T100 Triathlon World Tour - Dubai,2024-11-16,Pro Women,100000,Taylor Knibb,3:29:17,0:26:36,1:54:18,1:06:25,1,fpro,USA,1,sportstats
+T100 Triathlon World Tour - Dubai,2024-11-16,Pro Women,100000,Julie Derron,3:31:08,0:26:37,1:57:28,1:05:34,2,fpro,CHE,9,sportstats
+T100 Triathlon World Tour - Dubai,2024-11-16,Pro Women,100000,Ashleigh Gentle,3:31:42,0:26:42,1:57:14,1:05:59,3,fpro,AUS,2,sportstats
+T100 Triathlon World Tour - Dubai,2024-11-16,Pro Women,100000,Flora Duffy,3:33:05,0:26:39,2:01:03,1:03:32,4,fpro,BMU,11,sportstats
+T100 Triathlon World Tour - Dubai,2024-11-16,Pro Women,100000,Kat Matthews,3:34:17,0:29:17,1:57:22,1:05:27,5,fpro,GBR,6,sportstats
+T100 Triathlon World Tour - Dubai,2024-11-16,Pro Women,100000,Lucy Byram,3:34:55,0:29:12,1:56:13,1:07:46,6,fpro,GBR,8,sportstats
+T100 Triathlon World Tour - Dubai,2024-11-16,Pro Women,100000,Laura Philipp,3:36:01,0:29:43,1:57:03,1:07:16,7,fpro,DEU,5,sportstats
+T100 Triathlon World Tour - Dubai,2024-11-16,Pro Women,100000,Taylor Spivey,3:36:22,0:26:33,2:03:14,1:04:55,8,fpro,USA,14,sportstats
+T100 Triathlon World Tour - Dubai,2024-11-16,Pro Women,100000,Imogen Simmonds,3:36:41,0:26:41,1:57:12,1:10:54,9,fpro,CHE,4,sportstats
+T100 Triathlon World Tour - Dubai,2024-11-16,Pro Women,100000,Anne Haug,3:37:29,0:29:16,2:00:27,1:05:35,10,fpro,DEU,12,sportstats
+T100 Triathlon World Tour - Dubai,2024-11-16,Pro Women,100000,Paula Findlay,3:38:42,0:28:13,1:57:54,1:10:35,11,fpro,CAN,7,sportstats
+T100 Triathlon World Tour - Dubai,2024-11-16,Pro Women,100000,India Lee,3:40:33,0:26:49,1:58:21,1:13:22,12,fpro,GBR,3,sportstats
+T100 Triathlon World Tour - Dubai,2024-11-16,Pro Women,100000,Kaidi Kivioja,3:41:54,0:29:16,1:59:12,1:11:32,13,fpro,EST,15,sportstats
+T100 Triathlon World Tour - Dubai,2024-11-16,Pro Women,100000,Laura Madsen,3:42:04,0:29:17,2:00:47,1:10:09,14,fpro,DNK,16,sportstats
+T100 Triathlon World Tour - Dubai,2024-11-16,Pro Women,100000,Marlene De Boer,3:43:32,0:29:40,2:02:38,1:08:57,15,fpro,NLD,19,sportstats
+T100 Triathlon World Tour - Dubai,2024-11-16,Pro Women,100000,Sara Perez Sala,3:43:52,0:26:31,2:02:34,1:12:45,16,fpro,ESP,21,sportstats
+T100 Triathlon World Tour - Dubai,2024-11-16,Pro Women,100000,Kate Curran,3:46:11,0:28:11,2:07:07,1:08:37,17,fpro,GBR,17,sportstats
+T100 Triathlon World Tour - Dubai,2024-11-16,Pro Women,100000,Marjolaine Pierré,3:49:10,0:28:14,2:03:27,1:15:24,18,fpro,FRA,18,sportstats
+T100 Triathlon World Tour - Dubai,2024-11-16,Pro Women,100000,Diede Diederiks,3:52:25,0:33:23,2:03:23,1:13:32,19,fpro,NLD,20,sportstats

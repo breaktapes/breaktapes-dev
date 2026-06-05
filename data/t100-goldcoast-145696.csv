@@ -1,20 +1,20 @@
 event_name,event_date,race_name,distance_m,athlete_name,finish_time,swim_time,bike_time,run_time,overall_position,category,country,bib,source
-T100 Triathlon World Tour - Gold Coast,2026-03-22,T100 Triathlon - Pro Women,100000,Taylor Knibb,3:27:53,,,,1,fpro,USA,2,sportstats
-T100 Triathlon World Tour - Gold Coast,2026-03-22,T100 Triathlon - Pro Women,100000,Jessica Fullagar,3:28:53,,,,2,fpro,GBR,20,sportstats
-T100 Triathlon World Tour - Gold Coast,2026-03-22,T100 Triathlon - Pro Women,100000,Imogen Simmonds,3:33:11,,,,3,fpro,CHE,11,sportstats
-T100 Triathlon World Tour - Gold Coast,2026-03-22,T100 Triathlon - Pro Women,100000,Nicole Van Der Kaay,3:35:24,,,,4,fpro,NZL,18,sportstats
-T100 Triathlon World Tour - Gold Coast,2026-03-22,T100 Triathlon - Pro Women,100000,Bianca Bogen,3:36:12,,,,5,fpro,DEU,12,sportstats
-T100 Triathlon World Tour - Gold Coast,2026-03-22,T100 Triathlon - Pro Women,100000,Sara Perez Sala,3:36:41,,,,6,fpro,ESP,3,sportstats
-T100 Triathlon World Tour - Gold Coast,2026-03-22,T100 Triathlon - Pro Women,100000,Ellie Salthouse,3:37:40,,,,7,fpro,AUS,1,sportstats
-T100 Triathlon World Tour - Gold Coast,2026-03-22,T100 Triathlon - Pro Women,100000,Lotte Wilms,3:39:35,,,,8,fpro,NLD,7,sportstats
-T100 Triathlon World Tour - Gold Coast,2026-03-22,T100 Triathlon - Pro Women,100000,Natalie Van Coevorden,3:40:38,,,,9,fpro,AUS,9,sportstats
-T100 Triathlon World Tour - Gold Coast,2026-03-22,T100 Triathlon - Pro Women,100000,Alanis Siffert,3:40:50,,,,10,fpro,CHE,6,sportstats
-T100 Triathlon World Tour - Gold Coast,2026-03-22,T100 Triathlon - Pro Women,100000,Daniela Kleiser,3:43:24,,,,11,fpro,DEU,5,sportstats
-T100 Triathlon World Tour - Gold Coast,2026-03-22,T100 Triathlon - Pro Women,100000,Chloe Hartnett,3:44:25,,,,12,fpro,AUS,10,sportstats
-T100 Triathlon World Tour - Gold Coast,2026-03-22,T100 Triathlon - Pro Women,100000,Merle Brunnee,3:47:18,,,,13,fpro,DEU,22,sportstats
-T100 Triathlon World Tour - Gold Coast,2026-03-22,T100 Triathlon - Pro Women,100000,Hanne De Vet,3:48:09,,,,14,fpro,BEL,4,sportstats
-T100 Triathlon World Tour - Gold Coast,2026-03-22,T100 Triathlon - Pro Women,100000,Danielle De Francesco,3:49:40,,,,15,fpro,AUS,21,sportstats
-T100 Triathlon World Tour - Gold Coast,2026-03-22,T100 Triathlon - Pro Women,100000,Rebecca Clarke,3:49:47,,,,16,fpro,NZL,17,sportstats
-T100 Triathlon World Tour - Gold Coast,2026-03-22,T100 Triathlon - Pro Women,100000,Regan Hollioake,3:50:57,,,,17,fpro,AUS,16,sportstats
-T100 Triathlon World Tour - Gold Coast,2026-03-22,T100 Triathlon - Pro Women,100000,Rhianne Hughes,3:52:43,,,,18,fpro,GBR,14,sportstats
-T100 Triathlon World Tour - Gold Coast,2026-03-22,T100 Triathlon - Pro Women,100000,Lisa-Maria Dornauer,3:57:09,,,,19,fpro,AUT,15,sportstats
+T100 Triathlon World Tour - Gold Coast,2026-03-22,T100 Triathlon - Pro Women,100000,Taylor Knibb,3:27:53,0:26:39,1:54:26,1:04:34,1,fpro,USA,2,sportstats
+T100 Triathlon World Tour - Gold Coast,2026-03-22,T100 Triathlon - Pro Women,100000,Jessica Fullagar,3:28:53,0:26:04,1:56:47,1:04:18,2,fpro,GBR,20,sportstats
+T100 Triathlon World Tour - Gold Coast,2026-03-22,T100 Triathlon - Pro Women,100000,Imogen Simmonds,3:33:11,0:26:08,1:58:02,1:06:50,3,fpro,CHE,11,sportstats
+T100 Triathlon World Tour - Gold Coast,2026-03-22,T100 Triathlon - Pro Women,100000,Nicole Van Der Kaay,3:35:24,0:26:17,1:59:52,1:06:49,4,fpro,NZL,18,sportstats
+T100 Triathlon World Tour - Gold Coast,2026-03-22,T100 Triathlon - Pro Women,100000,Bianca Bogen,3:36:12,0:26:56,1:59:18,1:07:50,5,fpro,DEU,12,sportstats
+T100 Triathlon World Tour - Gold Coast,2026-03-22,T100 Triathlon - Pro Women,100000,Sara Perez Sala,3:36:41,0:26:40,1:59:46,1:08:00,6,fpro,ESP,3,sportstats
+T100 Triathlon World Tour - Gold Coast,2026-03-22,T100 Triathlon - Pro Women,100000,Ellie Salthouse,3:37:40,0:28:28,1:59:28,1:07:39,7,fpro,AUS,1,sportstats
+T100 Triathlon World Tour - Gold Coast,2026-03-22,T100 Triathlon - Pro Women,100000,Lotte Wilms,3:39:35,0:27:48,2:00:33,1:08:57,8,fpro,NLD,7,sportstats
+T100 Triathlon World Tour - Gold Coast,2026-03-22,T100 Triathlon - Pro Women,100000,Natalie Van Coevorden,3:40:38,0:26:17,2:03:15,1:09:03,9,fpro,AUS,9,sportstats
+T100 Triathlon World Tour - Gold Coast,2026-03-22,T100 Triathlon - Pro Women,100000,Alanis Siffert,3:40:50,0:27:00,2:03:50,1:08:09,10,fpro,CHE,6,sportstats
+T100 Triathlon World Tour - Gold Coast,2026-03-22,T100 Triathlon - Pro Women,100000,Daniela Kleiser,3:43:24,0:37:18,1:59:36,1:03:51,11,fpro,DEU,5,sportstats
+T100 Triathlon World Tour - Gold Coast,2026-03-22,T100 Triathlon - Pro Women,100000,Chloe Hartnett,3:44:25,0:27:51,2:01:10,1:13:08,12,fpro,AUS,10,sportstats
+T100 Triathlon World Tour - Gold Coast,2026-03-22,T100 Triathlon - Pro Women,100000,Merle Brunnee,3:47:18,0:37:21,1:59:26,1:08:10,13,fpro,DEU,22,sportstats
+T100 Triathlon World Tour - Gold Coast,2026-03-22,T100 Triathlon - Pro Women,100000,Hanne De Vet,3:48:09,0:28:16,2:01:49,1:15:54,14,fpro,BEL,4,sportstats
+T100 Triathlon World Tour - Gold Coast,2026-03-22,T100 Triathlon - Pro Women,100000,Danielle De Francesco,3:49:40,0:26:09,2:02:35,1:18:42,15,fpro,AUS,21,sportstats
+T100 Triathlon World Tour - Gold Coast,2026-03-22,T100 Triathlon - Pro Women,100000,Rebecca Clarke,3:49:47,0:26:12,2:08:33,1:12:48,16,fpro,NZL,17,sportstats
+T100 Triathlon World Tour - Gold Coast,2026-03-22,T100 Triathlon - Pro Women,100000,Regan Hollioake,3:50:57,0:27:14,2:04:04,1:17:08,17,fpro,AUS,16,sportstats
+T100 Triathlon World Tour - Gold Coast,2026-03-22,T100 Triathlon - Pro Women,100000,Rhianne Hughes,3:52:43,0:36:35,2:05:11,1:08:49,18,fpro,GBR,14,sportstats
+T100 Triathlon World Tour - Gold Coast,2026-03-22,T100 Triathlon - Pro Women,100000,Lisa-Maria Dornauer,3:57:09,0:35:59,2:05:44,1:12:54,19,fpro,AUT,15,sportstats
