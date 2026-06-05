@@ -1,0 +1,801 @@
+event_name,event_date,race_name,distance_m,athlete_name,finish_time,swim_time,bike_time,run_time,overall_position,category,country,bib,source
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Sam Beattie,1:03:27,0:09:41,0:34:10,0:19:35,1,n18-19,GBR,2666,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Liam Jordan,1:09:49,0:10:43,0:37:07,0:22:00,2,n20-24,GBR,2626,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,"Team Fast, Frail & Fat-Bootied",1:11:03,0:10:52,0:39:00,0:21:11,3,open relay,GBR,3612,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Maurten Uk,1:12:47,0:12:22,0:38:52,0:21:33,4,city am team,GBR,3669,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Hannah Wardley,1:13:32,0:11:17,0:39:06,0:23:09,5,f25-29,GBR,3271,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Terra Manufacturing,1:13:34,0:11:10,0:37:55,0:24:28,6,city am team,GBR,3658,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Axel Surirey,1:13:38,0:14:11,0:37:27,0:22:00,7,n20-24,FRA,2982,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Kieran Wye,1:14:51,0:11:07,0:41:19,0:22:25,8,n30-34,GBR,2669,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Oliver Payne,1:14:53,0:15:11,0:36:30,0:23:12,9,n25-29,GBR,2635,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Simon Hoppe,1:15:00,0:12:13,0:37:35,0:25:12,10,n55-59,GBR,2612,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Keir Strava,1:15:08,0:15:34,0:35:04,0:24:30,11,city am team,GBR,3655,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Andreas Adamides,1:15:11,0:12:48,0:39:04,0:23:18,12,n35-39,CYP,2674,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Supertri,1:15:11,0:13:41,0:38:42,0:22:48,13,city am team,BEL,3664,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Science In Sport,1:15:53,0:12:05,0:38:28,0:25:20,14,city am team,GBR,3661,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Pto Team 1,1:16:06,0:13:54,0:40:21,0:21:50,15,city am team,GBR,3665,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Talking Triathlon,1:16:27,0:11:42,0:40:46,0:23:58,16,city am team,GBR,3656,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Robert Evans,1:16:59,0:13:28,0:39:40,0:23:51,17,n25-29,GBR,2683,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Populous Parklife,1:17:08,0:15:34,0:40:14,0:21:19,18,city am team,AUS,3653,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Dara Dhesi,1:17:28,0:11:54,0:42:27,0:23:07,19,n18-19,GBR,2609,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Iron,1:17:49,0:13:55,0:37:22,0:26:32,20,city am team,GBR,3666,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Taylor Manning,1:18:20,0:13:01,0:41:19,0:24:00,21,n25-29,NZL,2652,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Simone Piacenti,1:18:27,0:12:31,0:39:46,0:26:11,22,n50-54,ITA,2673,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Luke Bishop,1:18:29,0:13:41,0:39:38,0:25:09,23,n25-29,GBR,2664,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Third Space Tb,1:18:40,0:15:15,0:35:42,0:27:43,24,city am team,GBR,3668,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ellie Garrett,1:19:20,0:13:41,0:38:35,0:27:04,25,f30-34,GBR,3402,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Harvey Taylor,1:19:42,0:14:04,0:42:22,0:23:17,26,n20-24,GBR,2646,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Enjoy Travel Sprint Team,1:19:44,0:14:54,0:39:57,0:24:53,27,city am team,GBR,3648,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Saskia Van Brakel,1:19:44,0:11:45,0:42:40,0:25:19,28,f25-29,NLD,3237,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Bethany Clifford,1:20:01,0:11:30,0:42:31,0:26:00,29,f18-19,GBR,3001,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Heming Media,1:20:02,0:14:15,0:42:38,0:23:09,30,city am team,GBR,3647,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Joe Spencer,1:20:22,0:12:36,0:43:58,0:23:48,31,n25-29,GBR,2630,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team World Triathlon,1:20:23,0:11:38,0:44:29,0:24:16,32,city am team,GBR,3663,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Team Zabel,1:20:24,0:14:16,0:38:03,0:28:05,33,city am team,DEU,3671,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Michael Garvey,1:21:00,0:13:08,0:42:48,0:25:03,34,n35-39,GBR,2983,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ben Brownleader,1:21:28,0:14:00,0:42:37,0:24:51,35,n20-24,GBR,2604,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Michael Hall,1:21:59,0:13:36,0:43:24,0:24:58,36,n35-39,GBR,3059,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Tom Dods,1:22:12,0:11:09,0:42:57,0:28:06,37,n25-29,NZL,2637,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Adam Conyers,1:22:18,0:15:16,0:41:00,0:26:02,38,n60-64,GBR,2639,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Challenge Family,1:22:21,0:13:21,0:42:46,0:26:14,39,city am team,NLD,3667,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Harry Williams,1:22:24,0:14:32,0:41:39,0:26:14,40,n25-29,GBR,2910,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Norry Passway,1:22:35,0:14:44,0:42:14,0:25:38,41,n60-64,GBR,2602,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Bob Craig-Wood,1:22:40,0:13:42,0:43:03,0:25:55,42,n20-24,GBR,2628,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Joshua Ward,1:22:45,0:15:20,0:41:19,0:26:06,43,n25-29,IRL,2645,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Andrew Magro,1:22:47,0:15:54,0:43:00,0:23:53,44,n35-39,GBR,2938,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Luke Blay,1:22:59,0:14:26,0:44:47,0:23:46,45,n20-24,GBR,2634,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Peter De Abreu,1:23:11,0:12:07,0:44:32,0:26:32,46,n35-39,PRT,2672,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Yellow Jersey Cycle Insurance,1:23:29,0:14:19,0:42:01,0:27:10,47,city am team,GBR,3670,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Giulio Beltramo,1:23:37,0:13:19,0:44:23,0:25:55,48,n25-29,ZAF,2790,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Jorge Del Bosque,1:24:18,0:14:00,0:43:59,0:26:20,49,n50-54,MEX,2603,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Kirsty Farquharson,1:24:23,0:13:59,0:43:11,0:27:13,50,f25-29,GBR,2859,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ian Gill,1:24:25,0:13:52,0:43:02,0:27:30,51,n30-34,GBR,3058,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Connor Thatcher,1:24:48,0:16:32,0:44:15,0:24:01,52,n25-29,GBR,2627,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Bobby Enright,1:25:00,0:16:06,0:43:32,0:25:22,53,n40-44,IRL,2742,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Michael Magro,1:25:21,0:14:41,0:44:27,0:26:13,54,n40-44,GBR,2819,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Steve Grainger,1:25:22,0:14:57,0:41:05,0:29:20,55,n50-54,GBR,2625,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Samuel Daw,1:25:33,0:17:45,0:41:08,0:26:40,56,n30-34,GBR,2798,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,John Whitfield,1:25:40,0:15:30,0:45:11,0:24:58,57,n25-29,GBR,2714,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Richard Dean,1:25:43,0:14:23,0:44:46,0:26:34,58,n45-49,GBR,3014,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Bny,1:25:44,0:17:33,0:42:28,0:25:43,59,city am team,GBR,3672,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Sarah Fowkes,1:25:56,0:13:14,0:47:12,0:25:30,60,f30-34,GBR,2994,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Oakvale Capital Team A,1:26:02,0:13:47,0:46:58,0:25:18,61,city am team,PRT,3650,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Charlie Lewington-Loades,1:26:08,0:13:42,0:42:44,0:29:42,62,f45-49,GBR,3323,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Adrien Laure,1:26:12,0:16:39,0:41:49,0:27:43,63,n25-29,FRA,2667,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Xavier Blackburn,1:26:16,0:12:33,0:44:41,0:29:02,64,n18-19,GBR,2648,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Reuters,1:26:22,0:12:57,0:48:16,0:25:09,65,open relay,GBR,3621,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Phoebe Kemp,1:26:47,0:13:48,0:44:58,0:28:01,66,f18-19,GBR,3304,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Yashish Dahiya,1:26:49,0:12:39,0:44:56,0:29:14,67,n50-54,GBR,2700,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Benchmark Sport,1:26:50,0:17:15,0:41:24,0:28:11,68,city am team,GBR,3674,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Martin Alsop,1:26:57,0:14:46,0:46:23,0:25:47,69,n35-39,GBR,2906,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ainsley Crawford,1:27:02,0:17:05,0:43:55,0:26:02,70,n30-34,GBR,2946,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Padraig Nagle,1:27:02,0:17:38,0:43:22,0:26:02,71,n30-34,IRL,2741,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Daniel Crocombe,1:27:05,0:12:56,0:49:28,0:24:41,72,n25-29,GBR,2740,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Jonny Smith,1:27:12,0:15:23,0:44:40,0:27:10,73,n55-59,GBR,2691,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Tom Swann,1:27:14,0:12:11,0:44:18,0:30:45,74,n30-34,GBR,2801,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Charlie Roberts,1:27:20,0:15:21,0:47:37,0:24:22,75,n25-29,AUS,2615,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Fei Pan,1:27:23,0:18:37,0:42:15,0:26:30,76,n30-34,AUS,2793,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Shannon McDermott,1:27:27,0:12:17,0:48:12,0:26:58,77,f30-34,GBR,3329,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Mark Nicholls,1:27:31,0:15:02,0:42:47,0:29:42,78,n40-44,IRL,2777,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Robert Young,1:27:32,0:13:50,0:45:30,0:28:12,79,n30-34,GBR,2744,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Tim Maitland,1:27:34,0:15:45,0:44:17,0:27:32,80,n35-39,GBR,2641,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Rory Cowlam,1:27:38,0:16:59,0:42:25,0:28:13,81,n30-34,GBR,2993,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Isaac Hirsch-Parker,1:27:40,0:15:45,0:43:37,0:28:18,82,n30-34,GBR,2644,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Jasson Robles,1:27:43,0:16:22,0:45:45,0:25:36,83,n35-39,COL,3079,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Thomas Bamber,1:27:50,0:14:13,0:46:03,0:27:35,84,n20-24,GBR,3081,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Sam Baluchon,1:27:53,0:13:34,0:46:39,0:27:41,85,n20-24,GBR,2794,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Marcus Hudson,1:27:57,0:17:51,0:41:43,0:28:23,86,n55-59,GBR,2607,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Rebecca Brown,1:28:01,0:14:42,0:43:17,0:30:02,87,f35-39,GBR,3335,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Daniel Walshe,1:28:09,0:17:01,0:43:56,0:27:12,88,n35-39,GBR,2931,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Edward Dorling,1:28:13,0:15:44,0:44:19,0:28:10,89,n30-34,GBR,2610,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Andrei Lebedev,1:28:32,0:16:40,0:45:32,0:26:20,90,n35-39,RUS,2636,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,William Dadd,1:28:36,0:17:02,0:43:40,0:27:53,91,n25-29,GBR,2681,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Jennifer Done,1:28:46,0:15:45,0:43:54,0:29:07,92,f35-39,GBR,2989,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Peter Trevitt,1:28:46,0:17:57,0:45:05,0:25:44,93,n65-69,GBR,2606,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Nicola Veronese,1:28:55,0:14:16,0:44:59,0:29:40,94,n30-34,ITA,2611,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Khaled Hammar,1:28:56,0:16:04,0:41:56,0:30:56,95,n35-39,TUN,2950,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Devin Johnson,1:28:56,0:16:03,0:44:11,0:28:42,96,n30-34,ZAF,2808,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Bisila Noha Pascual,1:28:59,0:13:53,0:47:21,0:27:46,97,f35-39,ESP,3405,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Pierre-Adrien Opinel,1:29:00,0:17:00,0:45:23,0:26:37,98,n35-39,FRA,3086,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Henry Kinnersley,1:29:01,0:17:07,0:45:42,0:26:11,99,n30-34,GBR,3064,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Billy Karby,1:29:08,0:15:24,0:47:18,0:26:26,100,n20-24,GBR,2655,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Emily Smith,1:29:13,0:16:07,0:45:59,0:27:07,101,f25-29,GBR,3034,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Sarah Berry,1:29:20,0:13:30,0:45:12,0:30:38,102,f50-54,GBR,3031,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Gerda Staurylaite,1:29:31,0:13:14,0:46:45,0:29:31,103,f25-29,LTU,3263,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Molly Gillett,1:29:37,0:15:55,0:43:53,0:29:50,104,f30-34,GBR,3301,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Megan Duffy,1:29:38,0:12:35,0:47:10,0:29:53,105,n25-29,IRL,2823,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Andrew Shoebridge,1:29:40,0:15:03,0:42:54,0:31:43,106,n30-34,GBR,3154,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Biomex,1:29:40,0:17:08,0:39:33,0:32:59,107,city am team,GBR,3640,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Thomas Brown,1:29:40,0:16:37,0:47:05,0:25:58,108,n30-34,AUS,2765,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Nicoletta Luongo,1:29:48,0:13:54,0:44:33,0:31:21,109,f30-34,ITA,3136,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ian Harris,1:29:51,0:20:01,0:43:42,0:26:08,110,n25-29,GBR,2709,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Simon Owens,1:29:56,0:18:42,0:45:29,0:25:44,111,n30-34,GBR,3019,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Alice Simmonds,1:30:01,0:17:10,0:46:17,0:26:34,112,f25-29,GBR,3322,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Artur Gasparotto,1:30:02,0:16:18,0:47:35,0:26:10,113,n30-34,BRA,2623,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Charlotte Perfect,1:30:06,0:16:57,0:48:58,0:24:11,114,f25-29,GBR,3006,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Alexander Bart Van Ameyde,1:30:07,0:15:07,0:45:44,0:29:17,115,n30-34,NLD,3049,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Alice Steele,1:30:13,0:17:20,0:45:54,0:26:59,116,f25-29,GBR,3084,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Kris Foster,1:30:20,0:16:08,0:45:49,0:28:23,117,n40-44,GBR,3066,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Max Short,1:30:30,0:17:34,0:43:29,0:29:27,118,n25-29,GBR,2660,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Mediclean Tri-Harder,1:30:30,0:15:43,0:43:54,0:30:53,119,city am team,GBR,3649,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Freya Kemp,1:30:32,0:17:35,0:43:17,0:29:40,120,f25-29,GBR,3379,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Emily Lilley,1:30:35,0:16:07,0:46:45,0:27:43,121,f25-29,GBR,3269,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Andrew Roberts,1:30:42,0:16:58,0:47:16,0:26:28,122,n35-39,GBR,2887,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Joe Hazeldine,1:30:44,0:15:43,0:45:12,0:29:50,123,n25-29,GBR,2633,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Andrew Griffin,1:30:50,0:17:37,0:43:26,0:29:47,124,n35-39,GBR,3072,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Florence Snelling,1:30:54,0:13:02,0:47:20,0:30:32,125,f20-24,GBR,3233,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Tara Copeland,1:30:56,0:16:48,0:45:28,0:28:41,126,f30-34,CAN,3057,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ailanore Harper,1:31:01,0:15:59,0:43:46,0:31:15,127,f40-44,GBR,3327,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ross Lynch,1:31:03,0:15:40,0:44:08,0:31:16,128,n25-29,GBR,2761,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,James Healey,1:31:04,0:17:28,0:43:00,0:30:36,129,n25-29,GBR,2703,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Sam Feltham,1:31:10,0:14:45,0:49:19,0:27:06,130,n20-24,GBR,2665,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Zachary Callari,1:31:10,0:16:11,0:47:19,0:27:40,131,n20-24,FRA,2782,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Paul Slavin,1:31:13,0:17:53,0:44:35,0:28:45,132,n50-54,GBR,3158,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Caroline Lote,1:31:15,0:17:54,0:45:51,0:27:30,133,f45-49,GBR,3421,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Olivier Altmeyer,1:31:16,0:17:37,0:44:21,0:29:18,134,n30-34,GBR,2705,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Rachel Barrie,1:31:18,0:15:19,0:45:43,0:30:16,135,f25-29,AUS,3434,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Megan Tranter,1:31:34,0:14:35,0:45:35,0:31:24,136,f30-34,GBR,3295,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ryan Wood,1:31:35,0:17:05,0:47:41,0:26:49,137,n20-24,GBR,2759,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Charlie Doran,1:31:41,0:16:33,0:46:24,0:28:44,138,n40-44,IRL,2757,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Olivia Spanos,1:31:47,0:14:41,0:47:53,0:29:13,139,f35-39,CAN,3244,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Alex Goldin,1:31:48,0:14:55,0:47:00,0:29:53,140,n30-34,GBR,3021,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Georgie Evagora,1:31:51,0:16:55,0:43:38,0:31:18,141,n30-34,GBR,2935,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Mate Atilla Kerti,1:31:53,0:15:41,0:46:20,0:29:52,142,n18-19,HUN,2622,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Abby Orr,1:32:01,0:13:39,0:48:05,0:30:17,143,f20-24,GBR,3344,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Kyra Waterfall,1:32:05,0:13:51,0:49:42,0:28:32,144,f20-24,ZWE,3106,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Jack Ogden,1:32:07,0:13:50,0:44:58,0:33:20,145,n25-29,GBR,2670,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Theo Thomas,1:32:07,0:16:07,0:48:57,0:27:03,146,n25-29,GBR,2699,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Grigoris Thanasis,1:32:13,0:14:42,0:42:21,0:35:10,147,n30-34,GRC,3231,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Connor Hein-Jones,1:32:14,0:17:29,0:46:32,0:28:13,148,n25-29,GBR,2662,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Denis Copko,1:32:16,0:18:53,0:46:17,0:27:06,149,n18-19,UKR,2760,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Katy Morrison,1:32:18,0:16:30,0:48:55,0:26:52,150,f25-29,GBR,3291,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Olly Sergeant,1:32:27,0:19:30,0:48:22,0:24:34,151,n25-29,GBR,2677,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Daniil Eliseev,1:32:31,0:15:24,0:47:56,0:29:11,152,n18-19,GBR,2806,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Jake Newbury,1:32:33,0:12:14,0:45:05,0:35:14,153,n25-29,GBR,2617,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Daniel Milner,1:32:33,0:14:10,0:48:02,0:30:20,154,n25-29,GBR,3025,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Douglas Hydorn,1:32:35,0:13:53,0:48:48,0:29:54,155,n45-49,USA,2659,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Daniel Nyatsanza,1:32:36,0:14:48,0:48:08,0:29:39,156,n30-34,GBR,2654,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Beth Schule,1:32:38,0:17:08,0:43:55,0:31:35,157,f30-34,GBR,3239,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Irwin Chan,1:32:42,0:19:15,0:45:18,0:28:09,158,n30-34,HKG,3013,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Brian Grogan,1:32:46,0:14:36,0:49:36,0:28:33,159,n35-39,IRL,2710,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Silvia Carozzo,1:32:46,0:10:05,0:48:44,0:33:57,160,f35-39,ITA,3113,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Elspeth Forsdick,1:32:51,0:15:35,0:47:42,0:29:34,161,f20-24,GBR,2985,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,David Caudrey,1:32:55,0:17:09,0:48:58,0:26:48,162,n20-24,GBR,2643,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ollie Lloyd,1:32:56,0:16:04,0:45:50,0:31:02,163,n18-19,GBR,2629,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Rohan Gardner,1:33:00,0:15:10,0:51:34,0:26:16,164,n25-29,GBR,2747,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Thomas Flint,1:33:05,0:16:33,0:44:54,0:31:38,165,n35-39,GBR,2697,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,James Ballard,1:33:05,0:18:45,0:42:48,0:31:33,166,n55-59,GBR,2951,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Catherine Ogrady,1:33:10,0:13:19,0:48:05,0:31:46,167,f30-34,AUS,3442,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Alex Terry,1:33:15,0:16:41,0:46:53,0:29:42,168,n35-39,GBR,2900,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Jeff Kelly,1:33:16,0:16:45,0:48:02,0:28:29,169,n25-29,IRL,2824,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Sean Woodward,1:33:18,0:19:12,0:45:17,0:28:49,170,n60-64,GBR,3381,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ron Pearson,1:33:25,0:18:11,0:45:10,0:30:04,171,n60-64,GBR,2979,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Mak Zie,1:33:25,0:19:20,0:45:29,0:28:36,172,n20-24,GBR,2889,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,David Cheng,1:33:26,0:17:09,0:44:52,0:31:26,173,n40-44,GBR,3160,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Jasper Mann,1:33:28,0:16:39,0:44:51,0:31:58,174,n45-49,GBR,2679,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Daniel Harness,1:33:31,0:13:55,0:46:12,0:33:24,175,n25-29,AUS,2754,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Christopher Losty,1:33:33,0:18:40,0:48:30,0:26:24,176,n25-29,IRL,2753,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Charlie Henry,1:33:36,0:15:04,0:49:09,0:29:22,177,n20-24,GBR,3357,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Kieran Flynn,1:33:41,0:17:39,0:46:40,0:29:21,178,n35-39,GBR,2913,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Hermann Jakobi,1:33:42,0:15:57,0:51:06,0:26:39,179,n30-34,DEU,2650,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Thomas Baldwin,1:33:45,0:19:56,0:44:47,0:29:02,180,n30-34,GBR,2804,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Orin Solomon,1:33:46,0:17:47,0:47:23,0:28:35,181,n50-54,GBR,2831,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Speedy Queens,1:33:48,0:16:40,0:49:38,0:27:30,182,female relay,GBR,3626,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Matthew Cheshire,1:33:56,0:13:37,0:49:22,0:30:57,183,n20-24,GBR,2708,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Lachlan Fitzroy-Ezzy,1:33:56,0:16:17,0:49:06,0:28:33,184,n30-34,GBR,2787,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Emiliano Short,1:34:01,0:16:53,0:46:24,0:30:44,185,n18-19,GBR,2694,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Team Brittri,1:34:07,0:17:40,0:45:25,0:31:02,186,city am team,GBR,3662,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Euan Youdale,1:34:09,0:12:04,0:51:27,0:30:37,187,n50-54,GBR,2925,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Amber Jayne,1:34:09,0:13:39,0:48:12,0:32:18,188,f30-34,GBR,3248,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Raphael Prevot,1:34:11,0:17:11,0:47:55,0:29:05,189,n18-19,FRA,2999,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Leo Harris,1:34:20,0:16:23,0:46:58,0:30:59,190,n25-29,GBR,2698,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Simone Folkes,1:34:20,0:15:35,0:48:29,0:30:16,191,f25-29,GBR,3313,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ilya Bochkov,1:34:24,0:11:28,0:49:37,0:33:19,192,n45-49,GBR,2862,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Charlie Search,1:34:24,0:20:00,0:45:42,0:28:42,193,n25-29,GBR,2642,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Tamsin Falshaw,1:34:25,0:14:50,0:50:51,0:28:44,194,f25-29,GBR,3315,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Adit Dahiya,1:34:25,0:13:13,0:51:55,0:29:18,195,n20-24,GBR,2701,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Christopher Ashbourne,1:34:28,0:16:24,0:46:26,0:31:38,196,n40-44,GBR,2684,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ciara Jacob,1:34:30,0:13:55,0:49:36,0:30:59,197,f25-29,IRL,3403,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Luke Maguire,1:34:34,0:17:03,0:47:56,0:29:35,198,n45-49,GBR,2695,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Imperial College London,1:34:37,0:16:13,0:47:34,0:30:51,199,city am team,GBR,3641,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Jonathan Harrison,1:34:40,0:20:17,0:45:27,0:28:56,200,n40-44,GBR,2657,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Dean Denman,1:34:41,0:15:09,0:47:14,0:32:19,201,n45-49,GBR,3009,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Andrew Young,1:34:42,0:16:06,0:45:12,0:33:24,202,n30-34,GBR,2731,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Joshua Hersant,1:34:44,0:16:45,0:48:29,0:29:30,203,n25-29,GBR,2692,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Julia Porter Davies,1:34:47,0:14:47,0:46:24,0:33:37,204,f55-59,GBR,3033,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Swim And Slay(Ter),1:34:49,0:13:23,0:47:53,0:33:32,205,open relay,GBR,3628,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Lara Washington,1:35:06,0:16:39,0:47:27,0:31:00,206,f25-29,CAN,3297,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Chris Collins,1:35:10,0:17:36,0:48:05,0:29:29,207,n25-29,AUS,2775,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Jarlath Gavin,1:35:11,0:21:26,0:44:54,0:28:51,208,n30-34,IRL,2934,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Rosie Pearce,1:35:14,0:14:54,0:51:12,0:29:08,209,f25-29,GBR,3333,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Laura Stewart,1:35:14,0:17:08,0:48:14,0:29:52,210,f25-29,GBR,3267,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Christopher Wilbraham,1:35:16,0:21:06,0:43:30,0:30:39,211,n60-64,GBR,2736,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Alastair Hughes,1:35:16,0:15:44,0:48:18,0:31:14,212,n30-34,GBR,2685,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Emilio Mazzotta,1:35:19,0:16:01,0:44:09,0:35:08,213,n60-64,GBR,2678,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Henry Thwaite,1:35:21,0:13:46,0:47:33,0:34:01,214,n30-34,GBR,2869,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Christian Wassell,1:35:27,0:19:15,0:48:16,0:27:55,215,n35-39,GBR,2616,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Annmarie Forster,1:35:30,0:18:09,0:47:04,0:30:17,216,f30-34,GBR,3251,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Oliver Lodge,1:35:30,0:19:14,0:48:34,0:27:43,217,n45-49,GBR,2916,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Francois Le Dain,1:35:31,0:19:26,0:45:41,0:30:24,218,n25-29,FRA,3028,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,James Bloxham,1:35:31,0:18:19,0:51:46,0:25:27,219,n25-29,GBR,2933,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ross Lasme,1:35:43,0:18:30,0:46:03,0:31:10,220,n30-34,GBR,2898,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Callum Kalbfell,1:35:45,0:16:15,0:47:31,0:32:00,221,n30-34,GBR,3032,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Timur Ustunsurmeli,1:35:49,0:23:18,0:44:49,0:27:42,222,n35-39,GBR,2704,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Oakvale Capital Team B,1:35:56,0:20:39,0:49:32,0:25:45,223,city am team,GBR,3651,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Tom Etherington,1:35:57,0:17:15,0:49:50,0:28:52,224,n30-34,GBR,3426,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Raphael Nahoum,1:35:59,0:16:39,0:49:02,0:30:18,225,n25-29,FRA,2908,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Alexandra Clarke,1:35:59,0:13:27,0:50:11,0:32:21,226,f20-24,GBR,3320,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Mark Hughes,1:36:05,0:14:23,0:51:18,0:30:23,227,n45-49,GBR,2959,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Vlad Cristea,1:36:10,0:21:42,0:46:51,0:27:38,228,n25-29,ITA,2868,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Mike Doidge,1:36:11,0:16:16,0:47:05,0:32:50,229,n50-54,GBR,2939,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Alex Vavelyuk,1:36:20,0:19:02,0:48:31,0:28:47,230,n30-34,GBR,2861,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Carlo Negri,1:36:21,0:18:16,0:45:38,0:32:27,231,n50-54,GBR,3043,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Goncalo Santos,1:36:23,0:17:52,0:48:18,0:30:13,232,n25-29,PRT,3141,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Gianluca Paci,1:36:24,0:13:11,0:53:01,0:30:12,233,n25-29,GBR,2944,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Renata Barros,1:36:24,0:12:19,0:50:26,0:33:39,234,f40-44,BRA,3358,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Rui Goncalves,1:36:30,0:16:03,0:48:20,0:32:07,235,n25-29,PRT,2897,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Otto Obric,1:36:38,0:17:35,0:43:23,0:35:40,236,n18-19,SWE,3027,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Toby Seeckts,1:36:39,0:25:01,0:46:41,0:24:58,237,n20-24,GBR,3026,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Daniel Barrett,1:36:44,0:17:18,0:47:18,0:32:09,238,n20-24,GBR,2907,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Constance Gilbert,1:36:47,0:14:17,0:45:49,0:36:41,239,f60-64,GBR,3389,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Nathan Sutton,1:36:51,0:16:48,0:51:17,0:28:46,240,n25-29,GBR,2809,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Seth Poulter,1:36:53,0:15:26,0:49:13,0:32:14,241,n40-44,GBR,2981,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Elizabeth Bradford,1:36:56,0:16:08,0:47:56,0:32:52,242,f25-29,GBR,2812,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Sophia Bonifacio,1:36:58,0:14:59,0:52:00,0:29:59,243,f25-29,GBR,3003,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Soul Mates,1:37:12,0:15:42,0:51:35,0:29:55,244,open relay,ESP,3624,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Marc Ibanez,1:37:14,0:17:53,0:47:14,0:32:07,245,n40-44,ESP,2997,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Clark Stevens,1:37:15,0:17:24,0:49:35,0:30:16,246,n40-44,GBR,2789,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Stephen Kemp,1:37:23,0:16:55,0:49:47,0:30:40,247,n30-34,GBR,2937,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Laurence Letki-Nicolay,1:37:25,0:16:30,0:46:57,0:33:58,248,f40-44,FRA,3409,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Alex Watkins,1:37:26,0:17:24,0:49:58,0:30:04,249,n35-39,GBR,2751,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Tierney Sharp,1:37:26,0:12:40,0:49:53,0:34:53,250,f20-24,GBR,3265,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ha Dinh,1:37:41,0:18:22,0:48:56,0:30:23,251,f35-39,GBR,3473,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Financial Conduct Authority (The Compliance Champions),1:37:42,0:12:44,0:53:24,0:31:35,252,city am team,GBR,3642,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Simon Buckmaster,1:37:47,0:16:51,0:50:15,0:30:41,253,n45-49,GBR,3140,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Calum Dawkins,1:37:57,0:17:46,0:50:19,0:29:51,254,n25-29,GBR,2905,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Franco Bizzi,1:37:58,0:17:43,0:48:50,0:31:25,255,n60-64,ITA,2608,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Sven-Jorgen Lindsetmo,1:38:01,0:16:09,0:47:18,0:34:34,256,n65-69,NOR,2632,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Emily Plummer,1:38:02,0:17:06,0:47:04,0:33:52,257,f25-29,GBR,3314,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Team Ramrod,1:38:03,0:15:07,0:53:31,0:29:24,258,open relay,GBR,3630,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Adam Shepperson,1:38:04,0:19:24,0:44:12,0:34:28,259,n50-54,GBR,2649,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Amy Valentin,1:38:06,0:17:40,0:50:50,0:29:36,260,f40-44,BEL,3249,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Conrad Cade,1:38:10,0:17:07,0:50:54,0:30:09,261,n25-29,GBR,2953,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Christine Goldsmith,1:38:11,0:16:34,0:54:32,0:27:05,262,f20-24,GBR,3423,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Diana Passinke,1:38:12,0:14:37,0:50:46,0:32:49,263,f30-34,POL,3448,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Hugo Yamaguchi,1:38:13,0:16:50,0:47:39,0:33:44,264,n25-29,GBR,2853,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Philip Mayo,1:38:14,0:14:52,0:52:00,0:31:23,265,n50-54,GBR,2687,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Toby Francis,1:38:15,0:16:42,0:51:27,0:30:06,266,n25-29,GBR,3183,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Paul Thornton,1:38:20,0:20:40,0:49:17,0:28:24,267,n40-44,IRL,2911,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Richard Withers,1:38:22,0:16:17,0:50:21,0:31:44,268,n50-54,GBR,2947,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Charlie Griffin-Jones,1:38:27,0:20:17,0:46:05,0:32:05,269,n30-34,GBR,2653,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Joe Higgins,1:38:29,0:15:10,0:51:25,0:31:54,270,n20-24,GBR,3080,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Toby Sayers,1:38:30,0:14:37,0:53:17,0:30:36,271,n25-29,GBR,2621,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Gary Inglis,1:38:33,0:17:55,0:46:49,0:33:48,272,n55-59,GBR,2661,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Philippa Adam Ed,1:38:39,0:16:17,0:47:27,0:34:55,273,female relay,GBR,3619,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ollie Clement,1:38:45,0:20:08,0:45:27,0:33:09,274,n20-24,GBR,2882,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Gillian Griffiths Molloy,1:38:45,0:14:20,0:50:46,0:33:39,275,f40-44,GBR,3376,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ian Gregory,1:38:45,0:18:14,0:50:55,0:29:36,276,n40-44,GBR,3078,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Naomi Roycroft,1:38:52,0:15:06,0:50:36,0:33:11,277,f35-39,GBR,3346,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Sergio Dadda,1:38:53,0:17:49,0:49:28,0:31:37,278,n35-39,ITA,2820,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Oliver Town,1:38:58,0:22:15,0:44:16,0:32:28,279,n35-39,NZL,2872,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Teamwass (Wasserman),1:38:59,0:25:00,0:47:58,0:26:00,280,city am team,GBR,3657,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Liam Peaker,1:38:59,0:16:51,0:51:34,0:30:33,281,n25-29,GBR,2693,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Woolim Chun,1:38:59,0:21:21,0:48:11,0:29:27,282,n35-39,KOR,2762,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Euwan Harrison,1:39:02,0:21:41,0:44:58,0:32:23,283,n40-44,GBR,2992,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Helen Hall,1:39:02,0:15:25,0:52:07,0:31:30,284,f35-39,GBR,3328,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Opinium,1:39:10,0:26:58,0:49:28,0:22:44,285,female relay,GBR,3618,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Graham Watson,1:39:12,0:15:30,0:48:04,0:35:38,286,n50-54,GBR,3871,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Jessica Brew,1:39:14,0:14:51,0:51:28,0:32:55,287,f25-29,GBR,3068,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ann Zie,1:39:17,0:17:38,0:50:43,0:30:56,288,f50-54,GBR,3241,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Charlotte Jeanne,1:39:21,0:16:41,0:53:41,0:28:59,289,f20-24,FRA,3029,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ben Gould,1:39:22,0:16:58,0:53:11,0:29:14,290,n25-29,GBR,2745,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,John Barber,1:39:23,0:21:33,0:48:46,0:29:04,291,n40-44,GBR,2711,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Lok Tin Victor Ho,1:39:26,0:19:04,0:52:39,0:27:42,292,n25-29,GBR,2766,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Fernando Barqueta,1:39:32,0:14:54,0:51:24,0:33:13,293,n50-54,ITA,2748,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Emese Szelle-Sido,1:39:43,0:17:54,0:46:50,0:34:59,294,f35-39,SVK,3022,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Max Weidlich,1:39:45,0:17:09,0:50:58,0:31:38,295,n30-34,DEU,2771,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Peter Wilkin,1:39:46,0:15:15,0:52:42,0:31:49,296,n30-34,GBR,2764,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Abi Carter,1:39:47,0:17:33,0:49:43,0:32:31,297,f30-34,GBR,2758,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Olivia Hazzard,1:39:51,0:16:23,0:51:08,0:32:20,298,f20-24,GBR,3007,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Jack Simpson,1:39:53,0:20:25,0:47:54,0:31:35,299,n35-39,GBR,3051,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Emily Cracknell,1:39:58,0:14:21,0:50:11,0:35:27,300,f25-29,GBR,3238,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Nick Isden,1:40:00,0:14:46,0:53:39,0:31:34,301,n40-44,GBR,2826,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Josh Davies,1:40:05,0:18:22,0:50:00,0:31:43,302,n25-29,GBR,3161,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Lilly Hampton,1:40:09,0:14:21,0:49:40,0:36:07,303,triathlon - sprint - individual,GBR,3056,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Paul Stent,1:40:12,0:17:23,0:47:01,0:35:48,304,n50-54,GBR,3011,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Lewis Heard,1:40:19,0:17:11,0:49:19,0:33:49,305,n35-39,GBR,2663,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Rebecca Pearce,1:40:19,0:14:09,0:53:47,0:32:23,306,f30-34,GBR,3062,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Thomas Popay,1:40:23,0:19:16,0:49:36,0:31:32,307,n35-39,GBR,2956,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Alex Weber-Zuanigh,1:40:23,0:16:43,0:49:41,0:34:00,308,n35-39,FRA,3123,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Madeline Silton,1:40:30,0:15:57,0:50:50,0:33:42,309,f25-29,USA,3407,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Matthieu Sylvestre,1:40:30,0:18:06,0:48:18,0:34:06,310,n30-34,FRA,3037,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Citrus Squad,1:40:30,0:15:30,0:50:59,0:34:01,311,female relay,FRA,3611,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Katie Parsons,1:40:31,0:17:14,0:50:16,0:33:02,312,f20-24,GBR,3260,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Sitara Rivers,1:40:32,0:18:43,0:50:18,0:31:31,313,f30-34,GBR,3432,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Laura-Ann Martens,1:40:34,0:20:19,0:48:25,0:31:51,314,f25-29,NLD,3276,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Zakaria Boumediane,1:40:35,0:19:00,0:49:41,0:31:54,315,n40-44,SWE,2886,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Georgia Carter,1:40:41,0:17:47,0:48:28,0:34:26,316,f25-29,GBR,3340,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Chris Cashin,1:40:42,0:17:59,0:50:04,0:32:40,317,n40-44,IRL,2858,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Lucy Lipfriend,1:40:49,0:17:26,0:51:37,0:31:46,318,f25-29,GBR,3253,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Nigel Pique,1:40:49,0:20:27,0:48:21,0:32:00,319,n35-39,NLD,3119,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,George Busch,1:40:52,0:17:45,0:50:12,0:32:55,320,n40-44,GBR,3191,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Mike Tison,1:40:55,0:20:57,0:50:47,0:29:11,321,n40-44,GBR,2879,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Connor Stevens,1:40:56,0:22:29,0:49:06,0:29:21,322,n30-34,GBR,2822,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Amy Morgan,1:40:58,0:15:14,0:59:00,0:26:45,323,f30-34,GBR,3232,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Stuart McMaster,1:41:05,0:16:50,0:49:16,0:34:59,324,n50-54,GBR,2680,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Sam McCarthy-Little,1:41:06,0:17:31,0:50:47,0:32:48,325,n40-44,GBR,2781,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Marina Dragovic,1:41:13,0:15:32,0:53:54,0:31:47,326,f25-29,GBR,3050,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Gaston Junique,1:41:15,0:15:36,0:48:38,0:37:01,327,n20-24,SGP,3109,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Financial Conduct Authority 8,1:41:18,0:19:32,0:46:41,0:35:05,328,city am team,POL,3646,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Elise Clark,1:41:19,0:13:00,0:54:48,0:33:30,329,f25-29,GBR,3281,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Holly Feary,1:41:20,0:12:54,0:56:24,0:32:02,330,f25-29,NZL,3331,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Attila Lukacs,1:41:23,0:18:18,0:52:38,0:30:27,331,n30-34,HUN,2796,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Oliver Burge,1:41:24,0:21:34,0:51:09,0:28:41,332,n20-24,GBR,3047,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Tom Harris,1:41:31,0:16:25,0:51:19,0:33:47,333,n40-44,GBR,2658,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Kate Fitzgerald,1:41:31,0:15:36,0:54:31,0:31:24,334,f25-29,GBR,3256,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Luca Belligoli,1:41:32,0:15:07,0:49:18,0:37:07,335,n30-34,ITA,2618,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Lisa McGillivray,1:41:38,0:23:30,0:50:40,0:27:28,336,f45-49,GBR,3312,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Carolina Name De Moraes Silva,1:41:40,0:16:55,0:51:08,0:33:36,337,f25-29,BRA,3252,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Finlay Pettengale,1:41:44,0:17:29,0:53:23,0:30:52,338,n25-29,GBR,3151,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Miguel De Jesus Montemayor Reese,1:41:45,0:20:28,0:49:20,0:31:56,339,n30-34,MEX,2857,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Alex Crawford,1:41:45,0:18:35,0:49:29,0:33:41,340,n35-39,GBR,2924,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Andrei Grib,1:41:48,0:17:31,0:52:12,0:32:05,341,n45-49,ROU,2864,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Nicola Murphy-Evans,1:41:53,0:19:58,0:47:30,0:34:25,342,f45-49,IRL,3283,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Elliot Link,1:41:54,0:21:52,0:46:36,0:33:25,343,n30-34,GBR,2675,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Jamie Weisz,1:41:57,0:16:23,0:55:21,0:30:14,344,n30-34,GBR,2922,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Rachael Crewdson,1:41:57,0:17:36,0:51:50,0:32:31,345,f20-24,GBR,3130,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Matthew Hall,1:41:59,0:18:03,0:50:53,0:33:02,346,n45-49,GBR,3063,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Henry Munro,1:42:05,0:15:13,0:56:35,0:30:17,347,n25-29,GBR,2768,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Jonathan Nulley,1:42:07,0:18:53,0:52:12,0:31:02,348,n40-44,AUS,3073,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Legs Miserables,1:42:11,0:17:15,0:57:25,0:27:31,349,open relay,GBR,3616,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Naomi Cumber,1:42:12,0:18:18,0:50:27,0:33:27,350,f30-34,GBR,3268,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Zak Wooster,1:42:12,0:16:52,0:51:52,0:33:29,351,n35-39,GBR,2624,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Camren Heywood,1:42:14,0:20:47,0:52:05,0:29:22,352,n20-24,GBR,2776,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Thomas McCluskey-Smith,1:42:15,0:17:25,0:53:47,0:31:03,353,n25-29,GBR,2860,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Kate Allen,1:42:16,0:19:36,0:55:17,0:27:23,354,f25-29,NZL,3330,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Brandon Wright,1:42:19,0:21:50,0:51:29,0:29:00,355,n20-24,GBR,2865,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Cheuk Yui Lam,1:42:24,0:25:35,0:47:13,0:29:36,356,n25-29,HKG,2818,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Benjamin Leung,1:42:25,0:18:55,0:52:57,0:30:33,357,n50-54,GBR,2996,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Populous Exp,1:42:26,0:17:16,0:50:50,0:34:19,358,city am team,GBR,3652,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Olivia Capocci,1:42:27,0:15:15,0:55:10,0:32:03,359,f25-29,GBR,3308,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Christopher Lam,1:42:41,0:19:24,0:52:15,0:31:01,360,n40-44,GBR,3005,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Zach Fihosy,1:42:42,0:21:02,0:53:05,0:28:34,361,n35-39,GBR,2876,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Tommy Lydon,1:42:42,0:17:27,0:52:22,0:32:52,362,n25-29,GBR,2909,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Chloe Chance,1:42:42,0:16:31,0:53:35,0:32:36,363,f20-24,GBR,3016,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Billy Monger,1:42:46,0:13:36,0:55:01,0:34:09,364,n25-29,GBR,3230,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Coralie Suissa,1:42:46,0:14:25,0:56:53,0:31:29,365,f35-39,GBR,3396,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Angel Herrera,1:42:46,0:19:22,0:51:20,0:32:03,366,n45-49,VEN,3065,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Merve Sassen,1:42:49,0:18:12,0:51:58,0:32:39,367,f20-24,DEU,3452,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Matthew Braisher,1:42:56,0:18:15,0:54:42,0:29:59,368,n30-34,GBR,3365,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Nathan Wood,1:42:58,0:14:55,0:52:17,0:35:47,369,n30-34,GBR,2874,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Lucia Keijer-Palau,1:42:59,0:17:55,0:52:24,0:32:40,370,f25-29,GBR,3318,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Adam Black,1:42:59,0:17:42,0:55:10,0:30:07,371,n25-29,GBR,3201,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Jessica Simpson,1:43:01,0:20:38,0:48:57,0:33:26,372,f35-39,GBR,3052,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Pukar Gurung,1:43:02,0:19:57,0:54:16,0:28:48,373,n25-29,NPL,2756,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Roy Malkin,1:43:02,0:22:35,0:48:28,0:31:59,374,n65-69,GBR,2817,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Antonio Gallo,1:43:05,0:21:23,0:52:33,0:29:09,375,n35-39,ITA,2601,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Paul Mason,1:43:06,0:27:36,0:50:28,0:25:02,376,n45-49,GBR,2877,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Eloise Tilbrook,1:43:08,0:17:09,0:52:07,0:33:52,377,f25-29,GBR,3342,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Connor Bashford,1:43:08,0:19:04,0:54:43,0:29:22,378,n30-34,GBR,2884,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Emma Steen,1:43:11,0:20:11,0:52:57,0:30:03,379,f30-34,NLD,3278,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Harry Crabtree,1:43:11,0:18:59,0:51:32,0:32:40,380,n25-29,GBR,2732,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Philippa Reeve,1:43:13,0:24:04,0:50:35,0:28:34,381,f35-39,GBR,3111,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Andrew Sixsmith,1:43:16,0:16:21,0:48:54,0:38:01,382,n65-69,CAN,2735,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Anna Latham,1:43:18,0:18:39,0:50:59,0:33:40,383,f25-29,GBR,3112,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Alex Mangan,1:43:21,0:13:43,0:53:12,0:36:25,384,n30-34,GBR,3010,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Lina Strand,1:43:22,0:18:56,0:55:04,0:29:22,385,f25-29,NOR,3146,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Francesca Bath,1:43:24,0:15:38,0:51:08,0:36:37,386,f25-29,GBR,3310,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Amy Shafto,1:43:26,0:14:26,0:58:01,0:31:00,387,f25-29,GBR,3175,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Financial Conduct Authority 6,1:43:27,0:12:18,0:46:21,0:44:47,388,city am team,GBR,3645,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Alec Bradford,1:43:30,0:15:01,0:55:11,0:33:17,389,n55-59,GBR,2811,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Karl Alexander,1:43:31,0:15:07,0:49:11,0:39:12,390,n35-39,GBR,2888,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Kanwar Siddhant Dhadwal,1:43:43,0:18:47,0:52:11,0:32:45,391,n25-29,IND,2688,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Clement Labbe,1:43:43,0:16:17,0:55:32,0:31:54,392,n30-34,GBR,2969,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,James English,1:43:46,0:17:37,0:57:49,0:28:20,393,n30-34,GBR,2795,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Rogerio Antelmi,1:43:47,0:18:25,0:50:41,0:34:41,394,n45-49,GBR,2774,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Matt Spurr,1:43:47,0:18:46,0:50:24,0:34:37,395,n35-39,GBR,2928,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Jessica Li,1:43:49,0:17:45,0:53:23,0:32:41,396,f25-29,CAN,3325,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Gabriel Pires,1:43:51,0:19:25,0:51:20,0:33:06,397,n30-34,BRA,3149,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Steven Smith,1:43:59,0:16:42,0:52:41,0:34:37,398,n40-44,GBR,2829,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Alexandre Jeanne,1:44:01,0:17:46,0:54:30,0:31:44,399,n20-24,FRA,3030,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Yun Li,1:44:01,0:19:35,0:49:33,0:34:53,400,f25-29,CHN,3401,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Harry Donne,1:44:02,0:17:36,0:52:41,0:33:45,401,n20-24,GBR,2995,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Mark Lockhart,1:44:09,0:20:44,0:50:27,0:32:58,402,n25-29,IRL,2923,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Magdalena Wisniewska,1:44:13,0:20:51,0:50:56,0:32:26,403,f35-39,POL,3262,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Leearni Hemmings,1:44:17,0:20:28,0:53:42,0:30:07,404,f25-29,AUS,3309,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Alfie Horan,1:44:25,0:20:35,0:54:08,0:29:43,405,n20-24,GBR,2656,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Adam Liffey,1:44:30,0:20:31,0:53:03,0:30:56,406,n25-29,IRL,2791,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Vitor Moreira,1:44:33,0:22:48,0:51:27,0:30:18,407,n30-34,BRA,2783,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Adam Cotterill,1:44:34,0:19:35,0:53:32,0:31:28,408,n30-34,GBR,2738,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Lewis Ratcliff,1:44:36,0:17:33,0:48:26,0:38:37,409,n25-29,GBR,2750,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ana Banha,1:44:37,0:17:04,0:54:43,0:32:50,410,f30-34,PRT,3000,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Phoebe Cobb,1:44:38,0:15:56,0:54:25,0:34:18,411,f30-34,GBR,3235,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Monica Di Mattia Peraire,1:44:39,0:16:38,0:56:06,0:31:56,412,f35-39,ESP,3375,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Will Reeves,1:44:40,0:23:11,0:46:23,0:35:06,413,n50-54,GBR,3042,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Jodie Nunn,1:44:43,0:16:45,0:56:18,0:31:40,414,f25-29,GBR,3108,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ted Corry,1:44:45,0:24:50,0:45:19,0:34:36,415,n20-24,IRL,2773,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Sinead Delany,1:44:50,0:19:33,0:45:07,0:40:10,416,f45-49,IRL,3399,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ana Flor,1:44:54,0:18:40,0:54:09,0:32:05,417,f30-34,PRT,3132,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Adrian Juscik-Johnson,1:44:54,0:17:42,0:56:51,0:30:22,418,n30-34,POL,2715,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Lisa Joy Kaiser,1:44:55,0:18:22,0:50:00,0:36:33,419,f25-29,DEU,3250,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Richard Barnes,1:44:58,0:19:14,0:53:45,0:32:00,420,n35-39,GBR,2797,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Graham Dyer,1:45:13,0:20:37,0:52:02,0:32:33,421,n65-69,GBR,3359,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Narcis Sauleda,1:45:18,0:16:10,0:51:59,0:37:10,422,n45-49,ESP,3077,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Stephen Morris,1:45:18,0:17:37,0:46:38,0:41:04,423,n55-59,GBR,3060,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Kirsty Odonnell,1:45:20,0:18:11,0:55:36,0:31:33,424,f30-34,GBR,3289,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Dillon Foley-Horan,1:45:22,0:17:29,0:57:27,0:30:26,425,n25-29,GBR,3197,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Stephen Hampton,1:45:24,0:18:00,0:45:53,0:41:32,426,n50-54,IRL,3055,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Tom Elliott,1:45:28,0:19:52,0:53:23,0:32:13,427,n30-34,GBR,2706,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Kieran Sweetapple,1:45:30,0:17:24,0:52:54,0:35:12,428,n20-24,GBR,2739,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Josephine Grist,1:45:31,0:17:30,0:54:14,0:33:47,429,f25-29,GBR,3061,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Nancy Lewis,1:45:31,0:14:57,0:49:30,0:41:04,430,f25-29,IRL,3240,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Maximiliano Chechile,1:45:33,0:14:59,0:55:13,0:35:21,431,n55-59,ITA,2929,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Audrey Price,1:45:33,0:17:50,0:54:57,0:32:47,432,f20-24,GBR,3195,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Jessica Oshodi,1:45:36,0:19:55,0:52:09,0:33:32,433,f25-29,GBR,3296,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Marco Erzingher,1:45:45,0:19:14,0:54:31,0:32:00,434,n35-39,GBR,2802,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Leon Holt,1:45:45,0:16:03,0:51:37,0:38:05,435,n50-54,GBR,3012,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Kiran Thaliwal,1:45:49,0:20:57,0:49:38,0:35:14,436,f35-39,GBR,3364,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Daphne Apostolidis,1:45:50,0:19:47,0:58:02,0:28:01,437,f30-34,GRC,3424,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Richard Mariano,1:45:52,0:19:30,0:54:11,0:32:10,438,n30-34,AUS,2883,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Dani Dunkley,1:45:52,0:18:36,0:52:27,0:34:48,439,f25-29,GBR,3288,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Joseph Hawes,1:45:53,0:18:44,0:51:43,0:35:27,440,n45-49,GBR,3070,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Alasdaire Boyle,1:45:55,0:13:56,0:54:49,0:37:10,441,n30-34,AUS,2727,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Clare-Louise Chadwick,1:45:57,0:19:07,0:53:07,0:33:43,442,f40-44,GBR,3294,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Jordan Taylor,1:46:07,0:15:02,0:56:33,0:34:32,443,f25-29,AUS,3298,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Finn Bannister,1:46:10,0:13:34,0:51:09,0:41:27,444,n18-19,GBR,2640,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Joshua Palmer,1:46:10,0:23:54,0:51:03,0:31:13,445,n20-24,GBR,3155,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Elle Winfield,1:46:12,0:19:39,0:52:34,0:33:59,446,f25-29,GBR,3292,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ian Goldin,1:46:14,0:18:51,0:49:48,0:37:34,447,n70+,GBR,3020,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Jessica Coombes,1:46:16,0:20:29,0:52:33,0:33:14,448,f30-34,GBR,2799,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Pavel Kim,1:46:18,0:14:32,0:56:48,0:34:58,449,n20-24,KAZ,2940,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Megan Wade,1:46:20,0:20:55,0:53:53,0:31:33,450,f25-29,GBR,3234,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Holly Thompson,1:46:25,0:22:07,0:53:16,0:31:02,451,f40-44,GBR,3429,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Jacek Szymanski,1:46:31,0:25:18,0:49:42,0:31:30,452,n60-64,POL,2605,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Chloe Hubbard,1:46:36,0:15:49,0:53:18,0:37:29,453,f40-44,GBR,3245,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Alexandra Loffstadt,1:46:37,0:12:21,0:52:18,0:41:58,454,f25-29,ZAF,3162,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Financial Conduct Authority 10,1:46:41,0:17:48,0:49:34,0:39:19,455,city am team,GBR,3643,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Sophie Higgins,1:46:43,0:17:04,0:53:49,0:35:50,456,f25-29,GBR,3184,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Victoria Taylor,1:46:47,0:13:02,0:56:46,0:36:59,457,f40-44,GBR,3361,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Holly Price,1:46:47,0:14:34,0:55:01,0:37:12,458,f25-29,GBR,3159,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ben Fisher,1:46:48,0:19:01,0:53:41,0:34:06,459,n25-29,GBR,2892,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Annabelle Walshe,1:46:49,0:17:55,0:53:04,0:35:50,460,f30-34,GBR,3044,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Harvey Pinder,1:46:55,0:19:07,0:50:20,0:37:28,461,n25-29,GBR,2816,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Sophie Macklin,1:46:55,0:18:18,0:54:56,0:33:41,462,f25-29,GBR,3261,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Tiffany Nairn,1:46:56,0:18:00,0:53:50,0:35:05,463,f35-39,IRL,3427,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Margaret Coppola,1:46:57,0:21:25,0:51:42,0:33:50,464,f25-29,USA,3254,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Kata Manuel,1:47:03,0:20:56,0:54:00,0:32:08,465,f25-29,NZL,3366,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Thea Gardiner,1:47:04,0:19:57,0:53:47,0:33:20,466,f30-34,GBR,3436,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Nicola Capiotto,1:47:05,0:19:28,0:52:47,0:34:50,467,n25-29,ITA,2855,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Jane Pickering,1:47:06,0:17:38,0:52:26,0:37:02,468,f35-39,GBR,3163,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Henry Edwards,1:47:07,0:19:33,0:53:35,0:33:59,469,n35-39,GBR,2763,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Georgios Michos,1:47:07,0:19:38,0:49:23,0:38:07,470,n35-39,GRC,2890,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Teo Netto,1:47:09,0:18:44,0:51:27,0:36:57,471,n40-44,BRA,2899,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Vanessa Simpungwe,1:47:14,0:19:16,0:57:58,0:30:00,472,f30-34,GBR,3465,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Gordon Cox,1:47:19,0:18:38,0:51:51,0:36:51,473,n60-64,GBR,3129,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ciara Seager,1:47:22,0:18:33,0:52:54,0:35:54,474,f30-34,GBR,3280,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Emily Davies,1:47:24,0:15:35,0:56:59,0:34:50,475,f25-29,GBR,3275,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Louise Irvin,1:47:32,0:18:16,0:53:24,0:35:52,476,f50-54,IRL,3015,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Tamsin Saunders,1:47:34,0:17:26,0:57:28,0:32:40,477,f25-29,GBR,3286,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Louisa Jones,1:47:35,0:18:59,0:53:48,0:34:47,478,f30-34,GBR,3420,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Helene Bruc,1:47:36,0:19:57,0:53:54,0:33:45,479,f35-39,FRA,2825,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Laura Putt,1:47:43,0:19:43,0:55:30,0:32:30,480,f35-39,GBR,3133,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Victoria Shi,1:47:44,0:22:41,0:52:10,0:32:53,481,f30-34,USA,3319,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Hannah Duffield,1:47:50,0:19:51,0:52:49,0:35:10,482,f25-29,GBR,3272,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Lauren Stanz,1:48:00,0:14:59,0:59:17,0:33:44,483,f35-39,USA,3127,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Marissa Lozano,1:48:02,0:20:12,0:56:25,0:31:25,484,f30-34,MEX,3397,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Paraic Cliffe,1:48:02,0:23:21,0:48:01,0:36:41,485,n55-59,IRL,2998,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Sailesh Pradhan,1:48:06,0:27:13,0:48:57,0:31:56,486,n40-44,GBR,2885,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Rebecca Randles,1:48:11,0:18:15,0:54:39,0:35:17,487,f40-44,GBR,3440,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Alexander Francis,1:48:14,0:16:06,0:58:43,0:33:26,488,n30-34,GBR,2815,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Patricia Cepeda,1:48:17,0:17:57,0:55:13,0:35:07,489,f45-49,VEN,3391,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Harrie Wood,1:48:31,0:20:43,0:55:13,0:32:35,490,f25-29,GBR,3156,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Oscar Charles,1:48:33,0:18:56,1:01:44,0:27:53,491,n30-34,GBR,2668,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Alice Wright-Dunne,1:48:35,0:20:15,0:51:58,0:36:22,492,f30-34,GBR,3290,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Jean Hendricks,1:48:42,0:25:38,0:51:34,0:31:30,493,n40-44,ZAF,2780,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ziyuan Xu,1:48:47,0:19:09,0:55:08,0:34:29,494,n25-29,CHN,2749,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ella Rogers,1:48:48,0:18:50,0:55:34,0:34:24,495,f30-34,GBR,3054,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Sofia Valero,1:48:51,0:14:37,1:00:11,0:34:03,496,f25-29,AUS,3435,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Kat Miles,1:49:02,0:20:00,0:56:33,0:32:29,497,f30-34,GBR,2778,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Chris Stuttard,1:49:06,0:14:29,0:54:14,0:40:23,498,n20-24,GBR,2707,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Reema Ismail,1:49:07,0:20:41,0:56:15,0:32:11,499,f25-29,GBR,2987,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Phil Johnson,1:49:10,0:17:17,0:55:44,0:36:09,500,n40-44,GBR,2814,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Henry Prior,1:49:13,0:18:28,1:00:48,0:29:57,501,n20-24,GBR,3362,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Amber Lowe,1:49:19,0:18:32,0:58:14,0:32:33,502,f25-29,GBR,3311,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Jessica Clough,1:49:22,0:19:55,0:56:30,0:32:57,503,f25-29,NZL,3137,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Ray'S Dream Team,1:49:28,0:14:14,0:54:23,0:40:50,504,female relay,GBR,3620,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Maya Gilbert,1:49:30,0:28:35,0:48:59,0:31:56,505,f25-29,GBR,3392,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Nicole Chan,1:49:32,0:17:06,0:54:24,0:38:02,506,f25-29,HKG,3443,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Amy Thomas,1:49:33,0:17:33,0:58:56,0:33:04,507,f45-49,GBR,3255,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Carolyn Conway,1:49:36,0:18:38,0:50:50,0:40:07,508,f65-69,GBR,2980,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Louis Wain,1:49:38,0:17:56,0:58:10,0:33:32,509,n25-29,GBR,2788,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Chris Stone,1:49:38,0:19:15,0:53:15,0:37:09,510,n45-49,GBR,2957,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Financial Conduct Authority 11,1:49:41,0:14:06,0:48:30,0:47:04,511,city am team,GBR,3644,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Kaelyn Schroeder,1:49:43,0:14:47,0:59:29,0:35:26,512,f25-29,CAN,3110,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Eva Kucich,1:49:43,0:15:34,0:53:35,0:40:33,513,f50-54,POL,3466,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Sophie Livett,1:49:46,0:14:32,1:00:05,0:35:09,514,f25-29,GBR,3437,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Josh Maloney,1:49:47,0:20:38,0:49:51,0:39:19,515,n30-34,GBR,2772,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Woodly McGoldrick,1:49:49,0:21:06,0:51:45,0:36:58,516,n30-34,GBR,2807,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ute Reutin-Hoffmann,1:49:50,0:19:40,0:55:33,0:34:37,517,f60-64,DEU,3242,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Gabrielle Stones,1:49:52,0:17:29,0:51:04,0:41:19,518,f55-59,GBR,3258,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Richie Sykes,1:49:55,0:25:11,0:54:30,0:30:15,519,n30-34,GBR,2785,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ramesh Sukar,1:49:58,0:29:12,0:54:39,0:26:06,520,n25-29,GBR,2638,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Dena Faulkner,1:49:58,0:23:58,0:49:38,0:36:21,521,f40-44,GBR,3464,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Lora Stoyanova,1:50:03,0:22:20,0:53:56,0:33:46,522,f30-34,GBR,3477,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ronan Tattan,1:50:03,0:19:16,0:52:19,0:38:28,523,n45-49,IRL,3194,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Yuet Man Chan,1:50:10,0:20:23,0:52:44,0:37:02,524,f30-34,GBR,3461,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Edyta Suchora,1:50:15,0:21:38,0:50:16,0:38:21,525,f50-54,POL,2986,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Lionel Ward,1:50:15,0:18:18,0:57:14,0:34:43,526,n40-44,GBR,2676,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Karley Webster,1:50:20,0:15:47,0:58:22,0:36:11,527,f30-34,USA,3339,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Terrence Hersant,1:50:24,0:26:01,0:48:17,0:36:06,528,n50-54,GBR,2682,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Gilmar Barretella,1:50:33,0:26:39,0:49:47,0:34:07,529,n40-44,BRA,3085,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Amber Ramsden,1:50:35,0:15:43,0:59:20,0:35:32,530,f25-29,ZAF,3419,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Connie Warde-Aldam,1:50:35,0:20:54,0:54:32,0:35:08,531,f25-29,GBR,3393,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Lottie Moore,1:50:40,0:23:07,0:53:40,0:33:53,532,f20-24,GBR,3307,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Claire Cheriyan,1:50:54,0:19:08,0:57:19,0:34:27,533,f35-39,GBR,3004,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Neil Johnson,1:50:54,0:18:13,0:58:24,0:34:16,534,n70+,GBR,2813,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Georgina Eaton,1:50:55,0:16:21,0:55:22,0:39:11,535,f25-29,GBR,3293,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Nick Shak,1:51:04,0:17:02,0:56:16,0:37:45,536,n45-49,GBR,2690,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Kitty Murphy,1:51:17,0:16:31,0:54:51,0:39:54,537,f30-34,GBR,3247,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ilona Jurkiewicz,1:51:17,0:23:00,0:54:35,0:33:42,538,f45-49,DEU,3186,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Neil Smallwood,1:51:22,0:13:23,0:55:59,0:42:00,539,n45-49,GBR,3193,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Qing Young,1:51:24,0:22:39,0:50:04,0:38:41,540,f45-49,GBR,2988,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Adam Rodgers,1:51:24,0:19:38,0:53:24,0:38:22,541,n35-39,GBR,2904,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Lauren McCausland,1:51:29,0:20:29,0:56:49,0:34:11,542,f30-34,GBR,3425,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Bruce Thew,1:51:31,0:19:10,0:50:26,0:41:55,543,n65-69,GBR,3024,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Millie Wakefield,1:51:31,0:21:33,0:53:08,0:36:50,544,f25-29,GBR,3472,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Andrew Leonard,1:51:39,0:20:41,1:03:48,0:27:09,545,n50-54,GBR,2647,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Nicholas Harte,1:51:44,0:21:26,0:53:44,0:36:35,546,n65-69,GBR,3076,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Lesleyanne Roddy,1:51:53,0:19:30,0:56:58,0:35:26,547,f35-39,IRL,3471,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Surreal But Nice,1:51:54,0:16:29,1:04:23,0:31:03,548,open relay,FRA,3627,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Megan Panesar,1:52:02,0:20:35,0:56:32,0:34:55,549,f35-39,GBR,3438,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Lisseth Saavedra,1:52:02,0:24:13,0:51:58,0:35:51,550,f35-39,COL,3040,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ana Paiva,1:52:03,0:18:49,0:57:24,0:35:50,551,f40-44,BRA,3082,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Amy Sankey,1:52:11,0:22:01,0:55:00,0:35:10,552,f20-24,GBR,3316,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Philip Ryan,1:52:14,0:17:51,0:53:24,0:41:00,553,n40-44,GBR,2878,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Rachael Mayo,1:52:16,0:16:24,0:57:41,0:38:11,554,f35-39,GBR,3167,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ruoxu Liu,1:52:20,0:22:51,0:51:57,0:37:32,555,f20-24,CHN,3117,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Jake McKenna,1:52:20,0:25:50,0:53:22,0:33:07,556,n25-29,GBR,3046,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Anna Carthy,1:52:27,0:17:57,0:58:42,0:35:49,557,f30-34,IRL,3135,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Julia Borella,1:52:31,0:18:25,0:58:02,0:36:04,558,f25-29,FIN,3287,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Martin Heaton,1:52:46,0:18:14,0:56:49,0:37:42,559,n35-39,GBR,2830,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Danielle McCarter,1:52:49,0:17:22,0:53:34,0:41:52,560,f35-39,GBR,3302,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Angela Bowley,1:52:56,0:21:13,0:58:25,0:33:18,561,f40-44,NZL,3394,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Ffs!,1:53:02,0:21:01,0:47:07,0:44:53,562,female relay,GBR,3613,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Louisa Berry,1:53:05,0:16:42,1:01:18,0:35:05,563,f30-34,GBR,3317,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Marisa Haigh,1:53:09,0:25:24,0:55:00,0:32:44,564,f40-44,GBR,3462,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Roberto Riccio,1:53:09,0:18:13,0:58:12,0:36:44,565,n35-39,BRA,3198,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Jamie Ripman,1:53:19,0:24:26,0:55:02,0:33:51,566,n65-69,GBR,3041,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Blazing Inferno,1:53:21,0:18:55,0:59:28,0:34:57,567,female relay,GBR,3610,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Julie Barrow,1:53:21,0:21:27,0:54:21,0:37:33,568,f45-49,GBR,3439,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Michael Kempster,1:53:22,0:19:56,0:57:24,0:36:01,569,n35-39,GBR,3128,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Aaron Gribben,1:53:23,0:27:35,0:52:10,0:33:38,570,n35-39,GBR,2875,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Karolina Gardocka,1:53:25,0:19:05,1:00:15,0:34:06,571,f40-44,POL,3285,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Rebecca Placucci,1:53:42,0:19:50,0:57:17,0:36:35,572,f25-29,ITA,3126,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Opemipo Ogunkola,1:53:42,0:27:34,0:48:02,0:38:06,573,n30-34,NGA,2755,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Georgie McKenzie,1:54:02,0:17:59,0:54:44,0:41:19,574,f25-29,GBR,3326,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Kelly Buckle,1:54:14,0:18:29,0:58:36,0:37:10,575,f45-49,GBR,3336,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Michelle Ayrton,1:54:28,0:20:34,0:59:57,0:33:56,576,f50-54,GBR,3417,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Gaelle Vandeputte,1:54:35,0:19:20,0:58:50,0:36:25,577,f25-29,FRA,3035,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Anna Yu Verpelstad,1:54:35,0:20:18,0:59:07,0:35:10,578,f25-29,NOR,2792,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ade Adeyemi,1:54:36,0:26:12,0:50:03,0:38:20,579,n55-59,GBR,2961,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Gillian Haywood,1:54:36,0:18:54,0:54:30,0:41:12,580,f45-49,GBR,3406,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Julian Osborne,1:54:36,0:21:53,0:51:03,0:41:40,581,n25-29,GBR,2613,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Kumiko Samejima,1:54:40,0:24:31,0:56:25,0:33:44,582,f60-64,JPN,3166,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Jenna Dominique,1:54:47,0:19:31,1:03:26,0:31:51,583,f35-39,GBR,3306,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Tanya Francis,1:54:57,0:17:29,0:59:26,0:38:03,584,f35-39,GBR,2821,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Arthur Granado,1:55:00,0:23:07,1:00:11,0:31:42,585,n40-44,ITA,2871,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Deborah Burgess,1:55:04,0:19:50,0:55:04,0:40:11,586,f35-39,GBR,3179,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,James McMahon,1:55:07,0:21:04,1:00:52,0:33:11,587,n25-29,GBR,3116,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Susan Robson,1:55:08,0:22:47,0:54:36,0:37:45,588,f60-64,GBR,3273,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Steve Rodgers,1:55:20,0:19:54,0:58:34,0:36:51,589,n45-49,GBR,2779,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Steven Griffin,1:55:23,0:17:49,0:55:47,0:41:46,590,n65-69,GBR,3038,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Jakub Paszak,1:55:26,0:23:38,0:53:11,0:38:37,591,n30-34,POL,2952,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Marie Sweeney,1:55:33,0:26:57,0:56:31,0:32:05,592,f35-39,IRL,2936,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Jill Olsen,1:55:36,0:22:08,0:51:02,0:42:26,593,f50-54,USA,3371,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Derek Wood,1:55:42,0:18:33,0:51:04,0:46:05,594,n55-59,GBR,2901,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Andy Armitage,1:55:43,0:22:15,0:52:10,0:41:17,595,n50-54,GBR,3069,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Kate Maier,1:55:43,0:17:44,0:58:07,0:39:52,596,f25-29,GBR,3469,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ross Auckloo,1:55:45,0:22:02,0:53:02,0:40:40,597,n30-34,GBR,2958,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Sylwia Kornas,1:55:54,0:15:30,0:59:45,0:40:39,598,f40-44,POL,3418,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Neil Pirie,1:55:59,0:19:19,0:57:22,0:39:18,599,n70+,GBR,2734,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Antonio Manganelli,1:56:08,0:21:03,0:54:50,0:40:15,600,n30-34,ITA,2978,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ope Otaniyi,1:56:18,0:27:50,0:56:59,0:31:28,601,n30-34,GBR,2866,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Victoria Filatova,1:56:18,0:20:13,0:55:24,0:40:41,602,f40-44,GBR,3324,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Giorgio Falusca,1:56:24,0:27:02,0:53:45,0:35:37,603,n45-49,ITA,2803,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Shu Lun Samson Tang,1:56:25,0:19:31,0:55:58,0:40:56,604,n65-69,GBR,2867,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Hadia White,1:56:28,0:17:13,1:03:51,0:35:24,605,f25-29,ZWE,3457,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Billy Lyle,1:56:31,0:24:26,0:56:44,0:35:21,606,n45-49,GBR,2743,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Mackenzie Soley,1:56:31,0:23:15,0:54:57,0:38:19,607,n40-44,GBR,2746,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Maciej Jedrzejczak,1:56:33,0:19:54,0:54:29,0:42:09,608,n70+,POL,3017,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Donna Mason,1:56:35,0:23:34,0:57:00,0:36:02,609,f50-54,GBR,3067,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Thomas Manning,1:56:43,0:19:38,1:03:38,0:33:27,610,n25-29,GBR,3074,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Joe Barber,1:56:51,0:16:50,1:07:56,0:32:05,611,n20-24,GBR,2784,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Sarah Bradbury,1:56:53,0:19:19,1:00:59,0:36:35,612,f40-44,GBR,3181,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Andy Callus,1:57:02,0:31:04,0:52:11,0:33:47,613,n35-39,GBR,3071,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Clare Foss,1:57:03,0:20:37,1:00:37,0:35:50,614,f25-29,GBR,3274,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Mark Waters,1:57:11,0:21:04,0:57:31,0:38:37,615,n55-59,GBR,3150,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Louie Beason,1:57:11,0:19:26,0:57:51,0:39:54,616,n20-24,GBR,2918,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Joe Romero Waters,1:57:17,0:21:16,1:00:32,0:35:29,617,n25-29,GBR,2920,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Harry Bumfrey,1:57:19,0:13:17,0:57:10,0:46:52,618,n25-29,GBR,2902,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Victoria Green,1:57:21,0:16:45,1:01:49,0:38:47,619,f30-34,GBR,3270,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Nellie Shefford,1:57:25,0:22:29,1:00:27,0:34:29,620,f30-34,GBR,2942,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Sophie Holt,1:57:48,0:21:34,0:54:01,0:42:13,621,f45-49,GBR,3373,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Lynsay Fisher,1:57:56,0:18:13,1:02:54,0:36:49,622,f40-44,GBR,3279,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Maria Eduarda May De Queiroz Ferreira,1:58:04,0:20:56,1:01:04,0:36:03,623,f30-34,BRA,3341,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Alexis McGivern,1:58:19,0:19:17,0:59:31,0:39:31,624,f30-34,IRL,3134,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Roisin Swann,1:58:21,0:21:37,1:00:25,0:36:19,625,f30-34,GBR,3413,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Philip Smith,1:58:22,0:26:15,0:57:38,0:34:30,626,n50-54,GBR,2713,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Nicholas Bamber,1:58:24,0:19:09,1:00:34,0:38:41,627,n50-54,GBR,3187,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Neil McGregor,1:58:32,0:16:46,0:58:53,0:42:53,628,n65-69,GBR,2880,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Lucy Patricia Olmos Caballero,1:58:34,0:23:23,0:56:42,0:38:30,629,f45-49,BOL,3416,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Laura Bryant,1:58:37,0:20:58,0:57:11,0:40:28,630,f40-44,GBR,3408,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Beatrice Colomb,1:58:37,0:18:42,1:00:49,0:39:06,631,f25-29,GBR,3189,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Jeevan Sohal,1:58:37,0:22:37,1:00:13,0:35:47,632,n30-34,GBR,3180,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Mehdi Amara,1:58:39,0:18:10,1:09:31,0:30:58,633,n20-24,MAR,2702,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Lesley Lawrence,1:58:47,0:15:49,1:02:14,0:40:43,634,f65-69,GBR,3398,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Megan James,1:58:51,0:17:02,0:52:59,0:48:50,635,f30-34,GBR,3144,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Sheenal Damani,1:58:52,0:18:39,1:01:26,0:38:47,636,f40-44,GBR,3300,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Benjamin Zhao,1:58:52,0:22:33,0:53:14,0:43:06,637,n25-29,AUS,2941,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Oliver Saxon,1:59:00,0:20:49,0:55:03,0:43:07,638,n35-39,GBR,3121,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Gonzalo Diaz,1:59:12,0:19:08,1:04:47,0:35:17,639,n25-29,ESP,2896,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Prayank Agarwal,1:59:15,0:19:02,1:00:09,0:40:04,640,n35-39,IND,2917,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Jessica Love,1:59:15,0:21:09,0:59:02,0:39:03,641,f20-24,AUS,3430,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Harriet Yale,1:59:15,0:16:38,0:54:28,0:48:09,642,f30-34,GBR,3148,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ashen Khosa,1:59:19,0:20:22,1:00:22,0:38:35,643,f30-34,GBR,3266,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Denver Vaz,1:59:20,0:19:55,1:00:23,0:39:03,644,n25-29,GBR,3171,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Hannah Lynn,1:59:20,0:19:57,0:59:45,0:39:39,645,f35-39,GBR,3190,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Akshayapradipa Behrendt,1:59:26,0:24:13,0:56:37,0:38:36,646,n40-44,GBR,3176,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Liz Merrett,1:59:45,0:18:07,0:50:09,0:51:29,647,f45-49,GBR,3048,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Sally Pickard,1:59:52,0:20:09,1:03:12,0:36:31,648,f45-49,GBR,3170,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Lauren Weaver,1:59:54,0:17:45,1:05:32,0:36:36,649,f25-29,GBR,3468,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Sarthak Prabhakar,1:59:56,0:11:32,1:08:19,0:40:06,650,n30-34,IND,2827,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Jack Glister,2:00:03,0:19:43,0:58:06,0:42:14,651,n30-34,GBR,2689,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Pedram Najafi,2:00:10,0:20:20,1:01:02,0:38:47,652,n35-39,GBR,2967,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Marion Vandeputte,2:00:13,0:22:32,0:59:24,0:38:17,653,f30-34,FRA,3036,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Yuxin Wan,2:00:13,0:26:28,0:57:44,0:36:02,654,f30-34,CHN,3185,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Juliana Santos,2:00:14,0:20:00,1:03:06,0:37:08,655,f40-44,GBR,2963,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Daniel Watson,2:00:16,0:27:26,0:56:26,0:36:25,656,n45-49,GBR,3143,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Alexander Iceton,2:00:16,0:27:47,0:58:05,0:34:25,657,n30-34,GBR,2828,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Georgia McDermott,2:00:21,0:23:47,1:02:12,0:34:22,658,f25-29,GBR,3455,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Eben Watson,2:00:22,0:27:35,0:56:28,0:36:19,659,n18-19,GBR,3145,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Kieran Dominy,2:00:28,0:25:10,0:59:05,0:36:13,660,n25-29,GBR,2620,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Joshua Johnston,2:00:32,0:19:31,1:02:55,0:38:06,661,n25-29,GBR,3008,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Tom Prance,2:00:40,0:27:20,0:57:36,0:35:44,662,n30-34,GBR,3400,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Gwen Heading,2:00:47,0:19:45,1:02:30,0:38:31,663,f50-54,GBR,3368,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Cheryl Mok,2:00:51,0:16:15,1:10:19,0:34:16,664,f30-34,CAN,3337,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Marion Steff,2:00:58,0:22:06,1:00:18,0:38:35,665,f45-49,FRA,3178,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Nicola Harries,2:01:04,0:23:19,0:54:59,0:42:46,666,f50-54,GBR,3002,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Luisa Nascimento,2:01:13,0:29:04,0:57:22,0:34:46,667,f30-34,BRA,3345,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Charlotte Kemp,2:01:14,0:14:23,1:06:09,0:40:41,668,f25-29,GBR,2891,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Valeria Sanchez Gonzalez,2:01:18,0:21:30,1:02:36,0:37:12,669,f25-29,ESP,3107,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Baltej Gill,2:01:30,0:18:10,1:03:45,0:39:35,670,n25-29,GBR,2914,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Akshat Shrivastava,2:01:36,0:29:12,0:55:45,0:36:38,671,n40-44,GBR,2729,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Jack Greene,2:01:51,0:34:51,0:56:54,0:30:06,672,n30-34,GBR,2968,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Lucy Anness,2:01:53,0:18:40,1:10:57,0:32:15,673,f25-29,GBR,3165,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Mathias Blumschein,2:01:55,0:26:35,0:53:25,0:41:54,674,n55-59,DEU,3131,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Tsz Ying Cheung,2:02:32,0:21:34,0:59:06,0:41:51,675,f20-24,HKG,3451,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Claire Sargeant,2:02:33,0:19:42,0:54:28,0:48:23,676,f45-49,GBR,3449,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Sydney Monkhouse,2:02:34,0:21:27,0:56:25,0:44:43,677,f20-24,GBR,3458,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Paul Miller,2:02:41,0:26:20,0:55:56,0:40:25,678,n40-44,GBR,2932,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Frederic Besson,2:02:42,0:20:02,1:04:49,0:37:51,679,n30-34,GBR,2800,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,"Team Smiles, Miles And Video Files",2:02:42,0:25:16,1:00:48,0:36:39,680,city am team,GBR,3673,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Jemma Griffiths,2:03:08,0:19:45,1:01:37,0:41:46,681,f40-44,GBR,3196,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Egor Kuzovenkov,2:03:10,0:22:29,1:00:23,0:40:19,682,n25-29,GBR,3173,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Nick Minty,2:03:20,0:15:58,0:53:51,0:53:30,683,n40-44,GBR,2960,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Adrian Jolley,2:03:24,0:23:40,1:02:04,0:37:39,684,n60-64,GBR,2893,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Jonathan Davies,2:03:25,0:18:01,1:02:04,0:43:19,685,n60-64,GBR,3182,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Olivia Campbell,2:03:34,0:26:44,0:51:18,0:45:32,686,f25-29,IRL,3236,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Chloe Ramsey,2:03:35,0:22:59,0:56:54,0:43:42,687,f20-24,GBR,3039,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Klaudia Mrozek,2:03:45,0:27:05,1:01:48,0:34:52,688,f25-29,POL,3264,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ellie Clark,2:03:53,0:17:21,1:02:48,0:43:44,689,f30-34,GBR,3277,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Bianca Patel,2:03:55,0:19:55,1:03:12,0:40:49,690,f30-34,GBR,3467,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Mia Hill,2:04:08,0:22:26,1:02:47,0:38:55,691,f20-24,USA,3192,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Jemma Challenger,2:04:16,0:18:12,0:57:18,0:48:46,692,f25-29,GBR,3360,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Rosie Down,2:04:26,0:20:54,1:11:22,0:32:10,693,f25-29,GBR,2919,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Oliva Outteridge-Fletcher,2:04:32,0:23:06,0:55:26,0:46:01,694,f30-34,GBR,3384,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Jason Chance,2:04:37,0:19:09,1:02:55,0:42:33,695,n55-59,GBR,3139,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ellie Lamb,2:04:40,0:16:55,1:05:20,0:42:24,696,f25-29,GBR,3480,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Natalie Stone,2:04:46,0:17:53,1:04:03,0:42:51,697,f35-39,GBR,3164,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Daniel Ajiteru,2:05:46,0:38:57,0:53:06,0:33:43,698,n25-29,GBR,2915,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ali Abdellatif,2:06:03,0:25:27,0:55:23,0:45:13,699,n45-49,GBR,2870,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Lok Yiu Lai,2:06:05,0:22:43,1:01:31,0:41:50,700,f30-34,GBR,3460,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Annie Harte,2:06:12,0:19:13,1:06:40,0:40:20,701,f25-29,GBR,3075,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ashley De La Cruz,2:06:29,0:30:11,0:57:22,0:38:56,702,n35-39,IRL,2737,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Isabella Gardner,2:06:36,0:19:55,0:55:24,0:51:17,703,f25-29,GBR,3444,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Paula Morgan,2:06:52,0:21:18,0:58:41,0:46:53,704,f55-59,GBR,3363,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Kay Bedford,2:07:02,0:28:24,0:55:15,0:43:23,705,f60-64,GBR,2984,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Raphael Sappa,2:08:01,0:27:39,0:58:51,0:41:31,706,n40-44,GBR,2930,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Chaniya Sultan,2:08:06,0:25:53,1:00:53,0:41:20,707,f35-39,GBR,3372,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Jorge Fonseca,2:08:23,0:27:10,0:58:21,0:42:53,708,n35-39,COL,3105,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Geoff Draper,2:08:42,0:24:48,1:04:14,0:39:40,709,n50-54,GBR,2881,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Emily Barker,2:08:44,0:17:07,1:04:15,0:47:23,710,f25-29,GBR,3299,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Diamar Ferrer Garcia,2:08:56,0:21:07,1:07:08,0:40:41,711,f30-34,ESP,3433,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Dom Ceraldi,2:09:10,0:27:54,0:56:25,0:44:51,712,n50-54,ITA,2943,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Kerry Barlow-Jones,2:09:21,0:20:41,0:56:09,0:52:32,713,f50-54,GBR,3321,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Xander Dyer,2:09:26,0:23:48,1:07:59,0:37:39,714,n20-24,GBR,2964,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Mandisa Khabo,2:09:36,0:32:40,0:54:53,0:42:03,715,f40-44,GBR,3147,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Martina Vlckova,2:10:18,0:26:00,0:55:12,0:49:06,716,f45-49,CZE,3453,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Aire Remmel,2:10:28,0:31:28,0:54:37,0:44:22,717,f40-44,EST,3395,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Grace Cowan,2:10:34,0:22:26,0:57:22,0:50:45,718,f35-39,GBR,3332,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Rishabh Bhatiya,2:10:47,0:29:02,1:00:03,0:41:42,719,n25-29,IND,2903,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Huw Francis,2:10:53,0:31:03,0:58:45,0:41:05,720,n25-29,GBR,2894,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Martin Thomas,2:11:26,0:23:05,0:57:19,0:51:02,721,n60-64,GBR,3168,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Krittika Dsilva,2:12:18,0:29:49,1:03:02,0:39:27,722,f30-34,CAN,3476,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Nikul Limani,2:12:34,0:25:54,1:00:41,0:45:59,723,n30-34,GBR,2854,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Eloise Orme,2:12:50,0:17:37,1:11:20,0:43:53,724,f30-34,GBR,3370,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Team Mh,2:13:12,0:24:37,1:07:18,0:41:17,725,female relay,GBR,3629,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Georgina Watson,2:13:14,0:22:05,1:00:09,0:51:00,726,f30-34,GBR,3456,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Aman Kapoor,2:13:26,0:21:53,1:13:02,0:38:31,727,n25-29,GBR,2696,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Asma Amla,2:13:30,0:21:23,1:02:41,0:49:25,728,f30-34,GBR,3474,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Lauren Matthews,2:13:32,0:20:42,1:07:31,0:45:18,729,f25-29,GBR,2945,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Diana Smirnova,2:13:36,0:30:55,0:58:07,0:44:34,730,f30-34,LVA,3053,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Jamila Virmani,2:13:40,0:24:32,1:03:25,0:45:42,731,f45-49,GBR,3411,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Joy Maestrocampo,2:14:00,0:20:20,1:13:57,0:39:43,732,f25-29,PHL,3334,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Aditya Kumar,2:14:10,0:40:54,0:59:36,0:33:40,733,n25-29,IND,2651,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Kerry-Ann Bertolla,2:14:20,0:19:19,1:12:33,0:42:28,734,f55-59,GBR,3378,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Bethany Lewin,2:14:35,0:21:40,1:03:56,0:48:59,735,f30-34,GBR,3282,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team 502wechi,2:14:49,0:18:40,1:18:53,0:37:16,736,open relay,GBR,3632,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Gary Jaggs,2:15:10,0:22:51,1:09:46,0:42:33,737,n55-59,GBR,2856,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Bibi Zwolman,2:15:27,0:23:25,0:59:27,0:52:35,738,f60-64,NLD,3414,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Anastasia Kuzovenkova,2:15:55,0:22:47,1:08:09,0:45:00,739,f25-29,GBR,3172,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Adrian Knight,2:16:16,0:26:42,1:09:18,0:40:16,740,n40-44,GBR,3122,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Karen Turner,2:16:20,0:26:55,1:09:09,0:40:16,741,f45-49,GBR,3124,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Bianca Manu,2:16:30,0:19:29,1:09:15,0:47:46,742,f25-29,ROU,3142,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Lydia Bamber,2:16:43,0:23:00,1:08:50,0:44:53,743,f18-19,GBR,3188,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Amanda Dolan,2:17:00,0:32:22,0:59:57,0:44:41,744,f50-54,GBR,3441,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Emma Hodgson,2:17:01,0:28:54,1:10:11,0:37:55,745,f40-44,GBR,3470,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Martin Hodder,2:17:13,0:22:40,1:07:10,0:47:23,746,n65-69,GBR,2912,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Eugenia Polo,2:17:32,0:29:13,1:02:48,0:45:32,747,f35-39,ESP,3410,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Hanaa Ahmed-Sheehan,2:18:10,0:19:47,1:10:12,0:48:11,748,f25-29,GBR,3412,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Kerry Hunt,2:18:13,0:23:18,1:07:34,0:47:21,749,f25-29,GBR,3246,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Becky Madders,2:18:23,0:17:05,1:13:14,0:48:04,750,f30-34,GBR,3177,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Foggy Camels,2:18:25,0:27:11,1:04:22,0:46:53,751,open relay,IND,3614,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Thalia Thiery,2:18:27,0:25:37,0:56:03,0:56:46,752,f18-19,DEU,3138,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ginna Do,2:18:58,0:38:48,0:59:35,0:40:35,753,f40-44,GBR,3120,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Lucy Barnard,2:19:05,0:26:05,1:07:03,0:45:57,754,f45-49,GBR,2927,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ejiro Okorodudu,2:19:18,0:24:20,1:10:47,0:44:11,755,f30-34,GBR,3422,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Slo-Mo,2:19:49,0:18:39,1:22:31,0:38:39,756,open relay,GBR,3622,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Soggy Horses,2:20:19,0:24:41,1:05:13,0:50:25,757,open relay,IND,3623,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Natasha Evans,2:20:56,0:26:27,1:20:53,0:33:36,758,f50-54,GBR,3257,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Jamie Rycroft,2:21:05,0:28:08,1:08:06,0:44:50,759,n30-34,GBR,2770,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Dean Carslake,2:22:25,0:32:35,1:07:09,0:42:42,760,n45-49,GBR,3114,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,James McCormick,2:22:34,0:34:53,1:05:00,0:42:42,761,n45-49,GBR,3115,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Meera Kotecha,2:22:52,0:29:34,1:11:10,0:42:08,762,f40-44,GBR,3445,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Elise Hardison,2:23:18,0:23:31,1:12:42,0:47:05,763,f30-34,GBR,3303,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Sophie Pickup,2:23:22,0:19:05,1:19:23,0:44:54,764,f20-24,GBR,3305,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Luke Hague,2:24:25,0:32:17,1:02:00,0:50:08,765,n20-24,GBR,2949,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Vincent Swan,2:24:29,0:27:38,1:04:37,0:52:14,766,n30-34,GBR,2921,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ricardo Turet,2:24:43,0:22:48,1:18:01,0:43:54,767,n20-24,ESP,2990,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Sam Roberts,2:25:04,0:29:42,0:59:46,0:55:36,768,n30-34,GBR,2895,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Nalin Shinghal,2:25:04,0:23:02,1:16:25,0:45:37,769,n60-64,IND,2962,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Blanca Martin Recio,2:25:15,0:20:39,1:20:25,0:44:11,770,f20-24,ESP,2991,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Gabriel Matache,2:25:21,0:53:59,0:53:57,0:37:25,771,n25-29,ITA,3157,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Fiona Gilligan,2:26:27,0:23:16,1:07:44,0:55:27,772,f60-64,IRL,3428,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Peter Staite,2:26:35,0:42:24,1:00:44,0:43:27,773,n50-54,GBR,2614,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Kristen Bailey,2:27:06,0:25:37,1:17:59,0:43:30,774,f20-24,GBR,3243,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Raj Manandhar,2:27:24,0:43:05,0:58:58,0:45:21,775,n25-29,GBR,2948,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Nerea Facundo Dieguez,2:29:52,0:33:18,1:07:05,0:49:28,776,f25-29,ESP,2619,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Steve Webb,2:30:59,0:32:06,1:11:49,0:47:04,777,n60-64,GBR,2926,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Guido Chamorro,2:30:59,0:17:47,1:17:54,0:55:18,778,n50-54,GBR,2786,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Rebecca Thomas,2:31:03,0:25:35,1:10:45,0:54:42,779,f30-34,GBR,3169,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Vicky Gadd,2:31:05,0:22:09,1:08:39,1:00:17,780,f55-59,GBR,3388,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Soul Sisters,2:32:08,0:25:11,1:10:18,0:56:38,781,female relay,GBR,3625,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ambereen Safdar,2:32:13,0:24:39,1:11:27,0:56:08,782,f45-49,GBR,3377,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Julie Hall,2:35:12,0:26:13,1:09:36,0:59:23,783,f60-64,GBR,3385,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Maria Knight,2:35:22,0:21:00,1:02:13,1:12:10,784,f55-59,GBR,3125,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Youssef Banoub,2:36:23,0:35:54,1:17:48,0:42:41,785,n30-34,EGY,2810,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Venkatesh Kondepudi,2:38:05,0:44:37,1:14:44,0:38:44,786,n35-39,IND,2966,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Daniel Prance,2:39:49,0:46:12,1:06:02,0:47:35,787,n35-39,GBR,3018,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Tom Trew,2:42:31,0:26:04,1:31:59,0:44:28,788,n35-39,GBR,2631,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Gregory Carroll,2:44:31,0:35:48,1:15:42,0:53:01,789,n25-29,GBR,2965,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Ken Summerfield,2:52:47,0:33:19,1:14:12,1:05:16,790,n55-59,GBR,3153,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Terry Watling,2:53:01,0:36:39,1:21:29,0:54:53,791,n55-59,GBR,3118,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Megan Carroll,2:53:28,0:31:41,1:29:42,0:52:05,792,f30-34,GBR,3174,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Geriatrics Anonymous,2:54:55,0:39:55,1:16:40,0:58:19,793,female relay,GBR,3615,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Johann Cupidon,1:41:05,,,0:34:20,1090,n35-39,AUS,2767,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Francesca Romana De Risi,1:46:27,0:31:24,0:54:54,0:20:09,1091,f50-54,ITA,3367,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Amrut Chari,1:48:04,,,0:29:13,1092,n25-29,IND,2671,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Nicky Hobbs,2:06:56,0:34:59,0:40:24,0:51:33,1093,f50-54,GBR,3478,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Samantha Tomlin,2:26:47,0:26:00,1:00:41,1:00:07,1094,f35-39,GBR,3387,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Maiser Asghar,2:26:54,0:26:12,,,1095,f50-54,GBR,3386,sportstats
+T100 Triathlon World Tour - London,2025-08-09,Sprint Triathlon,25750,Team Uniquecorn,2:52:34,0:29:56,1:59:40,0:22:57,1090,open relay,PHL,3631,sportstats
