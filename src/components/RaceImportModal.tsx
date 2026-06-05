@@ -5,6 +5,7 @@ import { useAthleteStore } from '@/stores/useAthleteStore'
 import { parseDistKm } from '@/lib/raceFormulas'
 import { fmtDateDDMM } from '@/lib/utils'
 import { posthog } from '@/lib/posthog'
+import { supabaseAnon } from '@/lib/supabase'
 import type { Race } from '@/types'
 
 const HEALTH_PROXY = 'https://health.breaktapes.com'
@@ -17,7 +18,7 @@ interface ImportResult {
   raceName: string
   date: string
   time?: string
-  source: 'ultrasignup' | 'marathonview' | 'athlinks' | 'runsignup' | 'coachcox' | 'hopasports' | 'sporthive'
+  source: 'ultrasignup' | 'marathonview' | 'athlinks' | 'runsignup' | 'coachcox' | 'hopasports' | 'sporthive' | 't100'
   distance_m?: number
   city?: string
   /** UltraSignup region: a US 2-letter state OR a 3-letter country code. */
@@ -227,6 +228,43 @@ export function RaceImportModal({ onClose, onPickByRace }: { onClose: () => void
     } else if (sp.status === 'rejected' || (sp.status === 'fulfilled' && sp.value?.status === 'error')) {
       errs.sporthive = true
     }
+
+    // T100 (sportstats) — bot-protected source harvested into our own Supabase
+    // table, so we query the DB instead of live-scraping at import time.
+    try {
+      const term = `${firstName.trim()} ${lastName.trim()}`.trim()
+      const needle = lastName.trim() || term
+      const { data: t100 } = await supabaseAnon
+        .from('t100_results')
+        .select('event_name,event_date,race_name,distance_m,athlete_name,finish_time,swim_time,t1_time,bike_time,t2_time,run_time,overall_position,gender_position,category,country')
+        .ilike('athlete_name', `%${needle}%`)
+        .limit(50)
+      const tokens = term.toLowerCase().split(/\s+/).filter(t => t.length > 1)
+      for (const r of (t100 ?? [])) {
+        const n = String(r.athlete_name || '').toLowerCase()
+        if (tokens.length && !tokens.every(t => n.includes(t))) continue
+        const splits = ([
+          r.swim_time && { label: 'Swim', split: r.swim_time },
+          r.t1_time   && { label: 'T1',   split: r.t1_time },
+          r.bike_time && { label: 'Bike', split: r.bike_time },
+          r.t2_time   && { label: 'T2',   split: r.t2_time },
+          r.run_time  && { label: 'Run',  split: r.run_time },
+        ].filter(Boolean) as ImportSplit[])
+        all.push({
+          raceName: r.event_name,
+          date: normalizeDateStr(r.event_date ?? ''),
+          time: normalizeImportTime(r.finish_time ?? undefined),
+          distance_m: r.distance_m ?? undefined,
+          sport: 'Triathlon',
+          placing: r.overall_position != null ? String(r.overall_position) : '',
+          genderPlacing: r.gender_position != null ? String(r.gender_position) : '',
+          agLabel: r.category || '',
+          country: r.country || '',
+          ...(splits.length ? { splits } : {}),
+          source: 't100',
+        })
+      }
+    } catch { /* table absent / no match — non-fatal */ }
 
     setSourceErrors(errs)
     setResults(all)
@@ -440,6 +478,7 @@ export function RaceImportModal({ onClose, onPickByRace }: { onClose: () => void
                 <span style={st.sourcePill}>✓ Coach Cox</span>
                 <span style={{ ...st.sourcePill, opacity: athlinksUrl.trim() ? 1 : 0.45 }}>✓ Athlinks</span>
                 <span style={st.sourcePill}>✓ Sporthive</span>
+                <span style={st.sourcePill}>✓ T100</span>
                 <span style={st.sourcePill}>✓ Hopasports (UAE)</span>
               </div>
               {onPickByRace && (
