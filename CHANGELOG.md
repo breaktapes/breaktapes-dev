@@ -3,6 +3,11 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.6.10] - 2026-06-05
+
+### Added
+- **Sporthive / Speedhive (MYLAPS) race import — true global name search.** Type your first + last name in the Import dialog and your races appear inline next to MarathonView, with finish time, placing, distance and (for triathlons) per-leg splits. Works for any finisher across the whole MYLAPS network, not just claimed accounts. Two open JSON GETs: `search.speedhive.com/api/search?term={name}` returns every race the person ran (event, race, date, raceId, bib), then `eventresults-api.speedhive.com/sporthive/races/{raceId}/bibs/{bib}` returns the finisher's chip time (gun fallback), overall/gender placing, category and splits. Wired into the existing `RaceImportModal` name fan-out as `POST /import/sporthive`. Results are name-token filtered (fuzzy search is loose) and capped at 25 races per search to bound the per-result fetch fan-out.
+
 ## [0.7.6.9] - 2026-06-04
 
 ### Added
