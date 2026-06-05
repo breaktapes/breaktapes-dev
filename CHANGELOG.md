@@ -3,6 +3,15 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.6.12] - 2026-06-05
+
+### Fixed
+- **Permanent fix for the recurring cross-device race data-loss bug** (races disappearing from history, races duplicating/resurrecting, upcoming races vanishing). Root cause across every prior recurrence: `/api/sync` did a full `state_json` REPLACE, so the client — which always syncs its entire state — could wipe the server row whenever it wrote with empty/partial local state (fresh device, cleared cache, incognito, a pull-error escape hatch, or any future mount-time write). Gating individual write paths was a deny-list that kept missing new paths.
+  - **Server-side merge (the gun removed):** `/api/sync` now MERGES incoming state into the existing row instead of replacing it — races/upcoming union by `id`+`updatedAt` (last-write-wins) minus tombstoned ids; lists/goals/athlete keep existing data when the incoming slice is empty. An empty/partial flush can no longer reduce a populated row. Delete intent travels only via tombstones, never via "absent from the list". Logic lives in `src/lib/stateMerge.ts`, imported by both the Worker and the tests (single source of truth, no client/server drift).
+  - **Write-gate belt:** the 8s offline fallback no longer opens the write gate on a pull error when local state is empty — nothing worth persisting, and a later successful pull opens it with real data.
+  - **Resurrection fix:** `autoMoveExpiredUpcoming` (fires automatically on every rehydrate) no longer re-stamps `updatedAt` or clears tombstones — that let an automatic move beat a genuine cross-device delete and resurrect it. The deliberate user-action path (`dismissExpiredRace`) keeps its tombstone-clear.
+  - **Regression guard:** `src/lib/__tests__/stateMerge.test.ts` asserts the core invariant — *a sync write with empty local state must never reduce the server race count* — so any future reintroduction of full-replace fails CI loud.
+
 ## [0.7.6.11] - 2026-06-05
 
 ### Added

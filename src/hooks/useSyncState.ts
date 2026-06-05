@@ -211,13 +211,23 @@ export function useSyncState() {
 
   // Offline / persistent-error fallback: don't block writes forever if the pull
   // never succeeds. After 8s open the gate — BUT only if the pull is no longer
-  // in flight (errored/settled). Opening it while a slow cold-start pull is still
-  // pending would let an empty local state overwrite the server (the exact
-  // data-loss class the gate exists to prevent).
+  // in flight (errored/settled) AND we actually have local data to persist.
+  //
+  // The empty-local guard is the belt to the server-merge suspenders: on a
+  // fresh device / cleared cache / incognito, a transient pull ERROR used to
+  // open this gate and flush an EMPTY full state, wiping the server row. Server
+  // merge now makes that flush non-destructive, but we still refuse to open the
+  // gate on empty-local-after-error — there is nothing worth persisting, and a
+  // later successful pull (query.isSuccess) will open it correctly with real
+  // data. We only auto-open for a returning user with warm local state who is
+  // genuinely offline, so their offline edits still persist.
   useEffect(() => {
     if (!authUser) return
     const t = setTimeout(() => {
-      if (!query.isLoading && !query.isFetching) markRemotePullComplete()
+      if (query.isLoading || query.isFetching) return
+      const { races, upcomingRaces, wishlistRaces } = useRaceStore.getState()
+      const hasLocalData = races.length > 0 || upcomingRaces.length > 0 || wishlistRaces.length > 0
+      if (hasLocalData) markRemotePullComplete()
     }, 8000)
     return () => clearTimeout(t)
   }, [authUser, query.isLoading, query.isFetching])
