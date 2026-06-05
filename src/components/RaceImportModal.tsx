@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { parseDistKm } from '@/lib/raceFormulas'
-import { fmtDateDDMM } from '@/lib/utils'
+import { fmtDateDDMM, resolveDistKm } from '@/lib/utils'
 import { posthog } from '@/lib/posthog'
 import { supabaseAnon } from '@/lib/supabase'
 import type { Race } from '@/types'
@@ -314,11 +314,29 @@ export function RaceImportModal({ onClose, onPickByRace }: { onClose: () => void
     setHopaFetching('')
   }
 
+  // Two races are the SAME only when they share a date AND a distance (~0.6km).
+  // Date-only matching wrongly collapsed same-day multi-distance events — e.g. a
+  // 10K + 5K + 3K festival on one morning all read as "duplicate" and got
+  // blocked / deleted. Compare distance; fall back to name only when distance is
+  // unknown on either side (never widen the block back to date-only).
+  function importKm(r: ImportResult): number {
+    return r.distance_m && r.distance_m > 0 ? r.distance_m / 1000 : parseDistKm(r.raceName)
+  }
+  function sameLoggedRace(ex: Race, r: ImportResult, date: string): boolean {
+    if (ex.date !== date) return false
+    const exKm = resolveDistKm(ex.distance ?? '')
+    const rKm = importKm(r)
+    if (exKm == null || !rKm) {
+      return (ex.name ?? '').toLowerCase() === r.raceName.toLowerCase()
+    }
+    return Math.abs(exKm - rKm) < 0.6
+  }
+
   function isDuplicate(r: ImportResult): boolean {
     const date = r.date || ''
     if (!date) return false
-    return existingRaces.some(ex => ex.date === date)
-        || upcomingRaces.some(ex => ex.date === date)
+    return existingRaces.some(ex => sameLoggedRace(ex, r, date))
+        || upcomingRaces.some(ex => sameLoggedRace(ex, r, date))
   }
 
   function toggleSelect(i: number) {
@@ -337,12 +355,9 @@ export function RaceImportModal({ onClose, onPickByRace }: { onClose: () => void
     for (const i of selected) {
       const r = results[i]
       const date = r.date || new Date().toISOString().split('T')[0]
-      const isDupe = existingRaces.some(
-        ex => ex.name?.toLowerCase() === r.raceName.toLowerCase() && ex.date === date
-      )
-      const dateMatch = existingRaces.some(ex => ex.date === date)
-                     || upcomingRaces.some(ex => ex.date === date)
-      if (isDupe || dateMatch) { skipped++; continue }
+      const dupe = existingRaces.some(ex => sameLoggedRace(ex, r, date))
+                || upcomingRaces.some(ex => sameLoggedRace(ex, r, date))
+      if (dupe) { skipped++; continue }
       const distKm = r.distance_m && r.distance_m > 0
         ? r.distance_m / 1000
         : parseDistKm(r.raceName)
