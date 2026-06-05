@@ -8,7 +8,7 @@ import { posthog } from '@/lib/posthog'
 // via /api/admin/check by AdminApp. No admin user IDs are shipped in the
 // client bundle. This page is only rendered after that probe returns 200.
 
-type AdminTab = 'catalog' | 'users' | 'feedback' | 'analytics' | 'errors'
+type AdminTab = 'catalog' | 'users' | 'feedback' | 'analytics' | 'errors' | 'integrity'
 
 interface Contribution {
   id: number; name: string; city: string; country: string; sport: string
@@ -46,6 +46,21 @@ interface Analytics {
   top_sports: [string, number][]
   top_distances: [string, number][]
   top_countries: [string, number][]
+}
+
+interface IntegrityRow {
+  user_id: string; username: string | null
+  logged_events: number; planned_events: number
+  current_races: number; current_upcoming: number
+  has_row: boolean; updated_at: string | null; created_at: string | null
+}
+interface DataIntegrity {
+  enabled: boolean
+  reason?: string
+  generated_at?: string
+  summary?: { identified_loggers: number; wiped_count: number; partial_count: number; live_rows: number }
+  wiped?: IntegrityRow[]
+  partial?: IntegrityRow[]
 }
 
 const ADMIN_CORS_HEADERS = { 'Content-Type': 'application/json' }
@@ -530,6 +545,108 @@ function ErrorsTab() {
   )
 }
 
+// ─── Data Integrity ───────────────────────────────────────────────────────────
+// Cross-references PostHog race_logged/race_planned events (keyed by Clerk
+// user_id via posthog.identify) against live user_state to surface accounts that
+// logged races but now have none — the fingerprint of the historical
+// full-replace data-loss bug (fixed v0.7.6.12). Self-heal: those users recover
+// by opening the app on a device whose localStorage still holds their races.
+function IntegrityTab() {
+  const [data, setData] = useState<DataIntegrity | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const load = useCallback(async () => {
+    setLoading(true); setError(null)
+    try { setData(await apiReq('/api/admin/data-integrity')) }
+    catch (e) { setError(e instanceof Error ? e.message : 'Failed to load') }
+    finally { setLoading(false) }
+  }, [])
+  useEffect(() => { load() }, [load])
+
+  if (loading) return <div style={st.empty}>Cross-referencing PostHog events…</div>
+  if (error)   return <div style={st.error}>{error}</div>
+  if (!data)   return <div style={st.empty}>No data.</div>
+
+  if (!data.enabled) {
+    return (
+      <div style={st.card}>
+        <div style={st.sectionLabel}>Setup required</div>
+        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, margin: 0 }}>
+          {data.reason}
+        </p>
+        <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', lineHeight: 1.6, marginTop: '12px' }}>
+          Create a PostHog <strong>personal API key</strong> (scope: <code>query:read</code>) and set both as production Worker secrets:
+          <br /><code>wrangler secret put POSTHOG_PERSONAL_API_KEY --env=""</code>
+          <br /><code>wrangler secret put POSTHOG_PROJECT_ID --env=""</code>
+        </p>
+      </div>
+    )
+  }
+
+  const s = data.summary!
+  const renderRow = (r: IntegrityRow) => (
+    <div key={r.user_id} style={st.cardRow}>
+      <div>
+        <div style={st.raceName}>{r.username ?? r.user_id.slice(0, 16)}</div>
+        <div style={st.meta}>
+          <span style={st.pill}>{r.user_id.slice(0, 18)}…</span>
+          {r.updated_at && <span style={st.pill}>updated {fmtTimeAgo(r.updated_at)}</span>}
+          {!r.has_row && <span style={st.pill}>no row</span>}
+        </div>
+      </div>
+      <div style={{ ...st.btnRow, alignItems: 'center' }}>
+        <span style={st.pillOrange}>{r.logged_events} logged</span>
+        <span style={st.pillGreen}>{r.current_races} now</span>
+        {r.planned_events > 0 && <span style={st.pill}>{r.current_upcoming}/{r.planned_events} upcoming</span>}
+      </div>
+    </div>
+  )
+
+  return (
+    <>
+      <div style={st.statGrid}>
+        <div style={st.statCard}>
+          <div style={st.statLabel}>Wiped</div>
+          <div style={{ ...st.statValue, color: 'var(--error)' }}>{s.wiped_count}</div>
+          <div style={st.statSub}>logged races · now 0</div>
+        </div>
+        <div style={st.statCard}>
+          <div style={st.statLabel}>Partial loss</div>
+          <div style={st.statValue}>{s.partial_count}</div>
+          <div style={st.statSub}>logged ≫ current</div>
+        </div>
+        <div style={st.statCard}>
+          <div style={st.statLabel}>Identified loggers</div>
+          <div style={{ ...st.statValue, color: 'var(--white)' }}>{s.identified_loggers}</div>
+          <div style={st.statSub}>ever fired race_logged</div>
+        </div>
+        <div style={st.statCard}>
+          <div style={st.statLabel}>Live rows</div>
+          <div style={{ ...st.statValue, color: 'var(--white)' }}>{s.live_rows}</div>
+          <div style={st.statSub}>user_state total</div>
+        </div>
+      </div>
+
+      <p style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', lineHeight: 1.6, marginBottom: '16px' }}>
+        These users fired <code>race_logged</code> events but now show 0 races. Recovery: ask them to open the app on the device/browser they last logged from (warm localStorage self-heals via the merge fix). Event counts are a lower bound — deletes inflate them.
+      </p>
+
+      <div style={st.sectionLabel}>Wiped — {s.wiped_count}</div>
+      {data.wiped && data.wiped.length > 0
+        ? data.wiped.map(renderRow)
+        : <div style={st.empty}>None. 🎉</div>}
+
+      {data.partial && data.partial.length > 0 && (
+        <>
+          <div style={{ ...st.sectionLabel, marginTop: '20px' }}>Partial loss — {s.partial_count}</div>
+          {data.partial.map(renderRow)}
+        </>
+      )}
+    </>
+  )
+}
+
 // ─── Root ─────────────────────────────────────────────────────────────────────
 export function Admin({ standalone, onSignOut }: { standalone?: boolean; onSignOut?: () => void } = {}) {
   const navigate  = useNavigate()
@@ -548,6 +665,7 @@ export function Admin({ standalone, onSignOut }: { standalone?: boolean; onSignO
 
   const TABS: { id: AdminTab; label: string }[] = [
     { id: 'analytics', label: 'Analytics' },
+    { id: 'integrity', label: 'Integrity' },
     { id: 'users',     label: 'Users'     },
     { id: 'feedback',  label: 'Feedback'  },
     { id: 'errors',    label: 'Errors'    },
@@ -574,6 +692,7 @@ export function Admin({ standalone, onSignOut }: { standalone?: boolean; onSignO
       </div>
 
       {tab === 'analytics' && <AnalyticsTab />}
+      {tab === 'integrity' && <IntegrityTab />}
       {tab === 'users'     && <UsersTab />}
       {tab === 'feedback'  && <FeedbackTab />}
       {tab === 'errors'    && <ErrorsTab />}
