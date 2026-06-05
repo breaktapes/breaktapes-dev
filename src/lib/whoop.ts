@@ -58,6 +58,7 @@ export async function handleWhoopCallback(code: string, returnedState: string): 
   }
   await saveWearableToken(token)
   useWearableStore.getState().setToken('whoop', token)
+  posthog.capture('wearable_connected', { provider: 'whoop' })
   scheduleWhoopRefresh(token)
 }
 

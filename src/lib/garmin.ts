@@ -76,6 +76,7 @@ export async function handleGarminCallback(code: string, returnedState: string):
   }
   await saveWearableToken(token)
   useWearableStore.getState().setToken('garmin', token)
+  posthog.capture('wearable_connected', { provider: 'garmin' })
 }
 
 export async function refreshGarminToken(): Promise<void> {
