@@ -1,25 +1,25 @@
 event_name,event_date,race_name,distance_m,athlete_name,finish_time,swim_time,bike_time,run_time,overall_position,category,country,bib,source
-T100 Triathlon World Tour - Singapore,2026-04-26,Youth Aquathlon,100000,Jun You Wong,0:16:54,,,,1,m14-18,MYS,5023,sportstats
-T100 Triathlon World Tour - Singapore,2026-04-26,Youth Aquathlon,100000,Kai Zheng Clarence Lim,0:17:28,,,,2,m14-18,SGP,5011,sportstats
-T100 Triathlon World Tour - Singapore,2026-04-26,Youth Aquathlon,100000,Maxime Tabardel,0:17:55,,,,3,m14-18,FRA,5015,sportstats
-T100 Triathlon World Tour - Singapore,2026-04-26,Youth Aquathlon,100000,Jacob Wong,0:18:17,,,,4,m14-18,SGP,5007,sportstats
-T100 Triathlon World Tour - Singapore,2026-04-26,Youth Aquathlon,100000,William Kim,0:18:19,,,,5,m14-18,HKG,5013,sportstats
-T100 Triathlon World Tour - Singapore,2026-04-26,Youth Aquathlon,100000,Nevin Pal,0:18:52,,,,6,m14-18,SGP,5006,sportstats
-T100 Triathlon World Tour - Singapore,2026-04-26,Youth Aquathlon,100000,Ahmad Uwais Bin Ahmad Johan Shah,0:19:03,,,,7,m14-18,SGP,5010,sportstats
-T100 Triathlon World Tour - Singapore,2026-04-26,Youth Aquathlon,100000,Davian Yeo,0:19:12,,,,8,m14-18,SGP,5008,sportstats
-T100 Triathlon World Tour - Singapore,2026-04-26,Youth Aquathlon,100000,Nur Isabella Schiering,0:19:23,,,,9,f14-18,SGP,5019,sportstats
-T100 Triathlon World Tour - Singapore,2026-04-26,Youth Aquathlon,100000,Celeste Chew,0:20:22,,,,10,f14-18,SGP,5005,sportstats
-T100 Triathlon World Tour - Singapore,2026-04-26,Youth Aquathlon,100000,Mira Pasad,0:20:51,,,,11,f14-18,IND,5002,sportstats
-T100 Triathlon World Tour - Singapore,2026-04-26,Youth Aquathlon,100000,Caleb Barter,0:21:05,,,,12,m14-18,SGP,5012,sportstats
-T100 Triathlon World Tour - Singapore,2026-04-26,Youth Aquathlon,100000,Kira Yonts,0:21:14,,,,13,f14-18,USA,5018,sportstats
-T100 Triathlon World Tour - Singapore,2026-04-26,Youth Aquathlon,100000,Ryven Harris,0:22:11,,,,14,m14-18,AUS,5024,sportstats
-T100 Triathlon World Tour - Singapore,2026-04-26,Youth Aquathlon,100000,Callum Grant,0:22:31,,,,15,m14-18,GBR,5014,sportstats
-T100 Triathlon World Tour - Singapore,2026-04-26,Youth Aquathlon,100000,Mikaella Renee Natural,0:23:07,,,,16,f14-18,PHL,5004,sportstats
-T100 Triathlon World Tour - Singapore,2026-04-26,Youth Aquathlon,100000,Elena Marty,0:24:26,,,,17,f14-18,FRA,5016,sportstats
-T100 Triathlon World Tour - Singapore,2026-04-26,Youth Aquathlon,100000,Alix Mansencal,0:24:26,,,,18,f14-18,FRA,5020,sportstats
-T100 Triathlon World Tour - Singapore,2026-04-26,Youth Aquathlon,100000,Brylle Neo,0:26:45,,,,19,m14-18,SGP,5025,sportstats
-T100 Triathlon World Tour - Singapore,2026-04-26,Youth Aquathlon,100000,Reyen Teo,0:30:58,,,,20,f14-18,SGP,5001,sportstats
-T100 Triathlon World Tour - Singapore,2026-04-26,Youth Aquathlon,100000,Andrew Ungerman,0:33:25,,,,21,m14-18,USA,5021,sportstats
-T100 Triathlon World Tour - Singapore,2026-04-26,Youth Aquathlon,100000,Alessia Carmelita Ang,0:36:31,,,,22,f14-18,SGP,5003,sportstats
-T100 Triathlon World Tour - Singapore,2026-04-26,Youth Aquathlon,100000,Ella Ungerman,0:36:38,,,,23,f14-18,USA,5017,sportstats
-T100 Triathlon World Tour - Singapore,2026-04-26,Youth Aquathlon,100000,Luis Ong,0:37:25,,,,24,m14-18,SGP,5022,sportstats
+T100 Triathlon World Tour - Singapore,2026-04-25,Youth Aquathlon,100000,Jun You Wong,0:16:54,,,,1,m14-18,MYS,5023,sportstats
+T100 Triathlon World Tour - Singapore,2026-04-25,Youth Aquathlon,100000,Kai Zheng Clarence Lim,0:17:28,,,,2,m14-18,SGP,5011,sportstats
+T100 Triathlon World Tour - Singapore,2026-04-25,Youth Aquathlon,100000,Maxime Tabardel,0:17:55,,,,3,m14-18,FRA,5015,sportstats
+T100 Triathlon World Tour - Singapore,2026-04-25,Youth Aquathlon,100000,Jacob Wong,0:18:17,,,,4,m14-18,SGP,5007,sportstats
+T100 Triathlon World Tour - Singapore,2026-04-25,Youth Aquathlon,100000,William Kim,0:18:19,,,,5,m14-18,HKG,5013,sportstats
+T100 Triathlon World Tour - Singapore,2026-04-25,Youth Aquathlon,100000,Nevin Pal,0:18:52,,,,6,m14-18,SGP,5006,sportstats
+T100 Triathlon World Tour - Singapore,2026-04-25,Youth Aquathlon,100000,Ahmad Uwais Bin Ahmad Johan Shah,0:19:03,,,,7,m14-18,SGP,5010,sportstats
+T100 Triathlon World Tour - Singapore,2026-04-25,Youth Aquathlon,100000,Davian Yeo,0:19:12,,,,8,m14-18,SGP,5008,sportstats
+T100 Triathlon World Tour - Singapore,2026-04-25,Youth Aquathlon,100000,Nur Isabella Schiering,0:19:23,,,,9,f14-18,SGP,5019,sportstats
+T100 Triathlon World Tour - Singapore,2026-04-25,Youth Aquathlon,100000,Celeste Chew,0:20:22,,,,10,f14-18,SGP,5005,sportstats
+T100 Triathlon World Tour - Singapore,2026-04-25,Youth Aquathlon,100000,Mira Pasad,0:20:51,,,,11,f14-18,IND,5002,sportstats
+T100 Triathlon World Tour - Singapore,2026-04-25,Youth Aquathlon,100000,Caleb Barter,0:21:05,,,,12,m14-18,SGP,5012,sportstats
+T100 Triathlon World Tour - Singapore,2026-04-25,Youth Aquathlon,100000,Kira Yonts,0:21:14,,,,13,f14-18,USA,5018,sportstats
+T100 Triathlon World Tour - Singapore,2026-04-25,Youth Aquathlon,100000,Ryven Harris,0:22:11,,,,14,m14-18,AUS,5024,sportstats
+T100 Triathlon World Tour - Singapore,2026-04-25,Youth Aquathlon,100000,Callum Grant,0:22:31,,,,15,m14-18,GBR,5014,sportstats
+T100 Triathlon World Tour - Singapore,2026-04-25,Youth Aquathlon,100000,Mikaella Renee Natural,0:23:07,,,,16,f14-18,PHL,5004,sportstats
+T100 Triathlon World Tour - Singapore,2026-04-25,Youth Aquathlon,100000,Elena Marty,0:24:26,,,,17,f14-18,FRA,5016,sportstats
+T100 Triathlon World Tour - Singapore,2026-04-25,Youth Aquathlon,100000,Alix Mansencal,0:24:26,,,,18,f14-18,FRA,5020,sportstats
+T100 Triathlon World Tour - Singapore,2026-04-25,Youth Aquathlon,100000,Brylle Neo,0:26:45,,,,19,m14-18,SGP,5025,sportstats
+T100 Triathlon World Tour - Singapore,2026-04-25,Youth Aquathlon,100000,Reyen Teo,0:30:58,,,,20,f14-18,SGP,5001,sportstats
+T100 Triathlon World Tour - Singapore,2026-04-25,Youth Aquathlon,100000,Andrew Ungerman,0:33:25,,,,21,m14-18,USA,5021,sportstats
+T100 Triathlon World Tour - Singapore,2026-04-25,Youth Aquathlon,100000,Alessia Carmelita Ang,0:36:31,,,,22,f14-18,SGP,5003,sportstats
+T100 Triathlon World Tour - Singapore,2026-04-25,Youth Aquathlon,100000,Ella Ungerman,0:36:38,,,,23,f14-18,USA,5017,sportstats
+T100 Triathlon World Tour - Singapore,2026-04-25,Youth Aquathlon,100000,Luis Ong,0:37:25,,,,24,m14-18,SGP,5022,sportstats
