@@ -3,6 +3,11 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.6.11] - 2026-06-05
+
+### Added
+- **T100 import via our own DB (`t100_results` table).** T100 results live on sportstats.one, which is bot-protected (DataDome-style) — live scraping from a Worker gets an empty shell. So instead we harvest results into a Supabase table and the import queries our own DB: type your name → your T100 races appear in the Import dialog (finish time, swim/T1/bike/T2/run splits, overall/gender placing, category). This decouples the hard, occasional harvest (one pull per event, ~8/year, done out-of-band with a real browser) from the runtime import (a fast, robust public-read query). Migration `20260605000000_t100_results.sql` adds the table (anon SELECT, pg_trgm name index, dedupe unique index); `RaceImportModal` queries it via `supabaseAnon` in the name fan-out. Table seeds out-of-band; the wiring is live and serves the moment rows land.
+
 ## [0.7.6.10] - 2026-06-05
 
 ### Added
