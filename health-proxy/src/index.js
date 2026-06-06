@@ -411,7 +411,7 @@ export default {
           'Content-Type':  'application/json',
         },
         body: JSON.stringify({
-          from:     'BREAKTAPES <hello@mail.breaktapes.com>',
+          from:     'BREAKTAPES <hello@breaktapes.com>',
           to,
           subject,
           html,
