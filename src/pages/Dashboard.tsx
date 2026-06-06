@@ -2734,7 +2734,7 @@ function RaceReadinessWidget() {
     return (
       <WidgetCard id="race-readiness" style={st.glowCard}>
         <div>
-          <div style={st.widgetLabel}>FORM CHECK</div>
+          <div style={st.widgetLabelGreen}>FORM CHECK</div>
           <div role="heading" aria-level={2} style={st.widgetTitle}>RECOVERY MODE</div>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', marginTop: 'auto' }}>
@@ -2790,7 +2790,7 @@ function RaceReadinessWidget() {
     <WidgetCard id="race-readiness" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
         <div>
-          <div style={st.widgetLabel}>FORM CHECK</div>
+          <div style={st.widgetLabelGreen}>FORM CHECK</div>
           <div role="heading" aria-level={2} style={st.widgetTitle}>RACE READINESS</div>
         </div>
         <span style={{ ...st.badgePill, background: `${sigColor}22`, color: sigColor, border: `1px solid ${sigColor}55`, flexShrink: 0 }}>{signal}</span>
@@ -3271,7 +3271,7 @@ function CourseFitWidget({ race }: { race: Race | null }) {
     return (
       <WidgetCard id="course-fit" style={st.glowCard}>
         <div>
-          <div style={st.widgetLabel}>COURSE FIT</div>
+          <div style={st.widgetLabelGreen}>COURSE FIT</div>
           <div role="heading" aria-level={2} style={st.widgetTitle}>{(nextRace?.name ?? 'NEXT RACE').toUpperCase()}</div>
         </div>
         <div style={{ marginTop: 'auto' }}>
@@ -3293,7 +3293,7 @@ function CourseFitWidget({ race }: { race: Race | null }) {
     return (
       <WidgetCard id="course-fit" style={st.glowCard}>
         <div>
-          <div style={st.widgetLabel}>COURSE FIT</div>
+          <div style={st.widgetLabelGreen}>COURSE FIT</div>
           <div role="heading" aria-level={2} style={st.widgetTitle}>NEXT RACE</div>
         </div>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginTop: '6px' }}>Add an upcoming race to calculate your course fit score.</div>
@@ -3305,7 +3305,7 @@ function CourseFitWidget({ race }: { race: Race | null }) {
     <WidgetCard id="course-fit" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
         <div style={{ minWidth: 0 }}>
-          <div style={st.widgetLabel}>COURSE FIT</div>
+          <div style={st.widgetLabelGreen}>COURSE FIT</div>
           <div role="heading" aria-level={2} style={st.widgetTitle}>{(nextRace.name ?? 'NEXT RACE').toUpperCase()}</div>
         </div>
         {result && <span style={{ ...st.badgePill, background: `${result.color}22`, color: result.color, border: `1px solid ${result.color}55`, flexShrink: 0 }}>{result.label}</span>}
@@ -3412,7 +3412,7 @@ function PBProbabilityWidget({ race }: { race: Race | null }) {
     return (
       <WidgetCard id="pb-probability" style={st.glowCard}>
         <div>
-          <div style={st.widgetLabel}>PB PROBABILITY</div>
+          <div style={st.widgetLabelGreen}>PB PROBABILITY</div>
           <div role="heading" aria-level={2} style={st.widgetTitle}>{(nextRace?.name ?? 'NEXT RACE').toUpperCase()}</div>
         </div>
         <div style={{ marginTop: 'auto' }}>
@@ -3434,7 +3434,7 @@ function PBProbabilityWidget({ race }: { race: Race | null }) {
     return (
       <WidgetCard id="pb-probability" style={st.glowCard}>
         <div>
-          <div style={st.widgetLabel}>PB PROBABILITY</div>
+          <div style={st.widgetLabelGreen}>PB PROBABILITY</div>
           <div role="heading" aria-level={2} style={st.widgetTitle}>NEXT RACE</div>
         </div>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginTop: '6px' }}>Add an upcoming race to estimate your PB chance.</div>
@@ -3446,7 +3446,7 @@ function PBProbabilityWidget({ race }: { race: Race | null }) {
     <WidgetCard id="pb-probability" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
         <div style={{ minWidth: 0 }}>
-          <div style={st.widgetLabel}>PB PROBABILITY</div>
+          <div style={st.widgetLabelGreen}>PB PROBABILITY</div>
           <div role="heading" aria-level={2} style={st.widgetTitle}>{(nextRace.name ?? 'NEXT RACE').toUpperCase()}</div>
         </div>
         {result && <span style={{ ...st.badgePill, background: `${result.color}22`, color: result.color, border: `1px solid ${result.color}55`, flexShrink: 0 }}>{result.label}</span>}
@@ -3627,7 +3627,7 @@ function WhatToRaceNextWidget() {
     return (
       <WidgetCard id="what-to-race-next" style={st.glowCard}>
         <div>
-          <div style={st.widgetLabel}>WHAT TO RACE NEXT</div>
+          <div style={st.widgetLabelGreen}>WHAT TO RACE NEXT</div>
           <div role="heading" aria-level={2} style={st.widgetTitle}>NO UPCOMING RACES</div>
         </div>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: 'var(--sp-1)' }}>Add upcoming races to get recommendations based on your performance trends.</div>
@@ -3641,7 +3641,7 @@ function WhatToRaceNextWidget() {
     <WidgetCard id="what-to-race-next" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
         <div>
-          <div style={st.widgetLabel}>WHAT TO RACE NEXT</div>
+          <div style={st.widgetLabelGreen}>WHAT TO RACE NEXT</div>
           <div role="heading" aria-level={2} style={st.widgetTitle}>{futureUpcoming.length} RACE{futureUpcoming.length !== 1 ? 'S' : ''} UPCOMING</div>
         </div>
         {recommendation && (
@@ -3814,7 +3814,7 @@ function PersonalBestsWidget() {
     return (
       <WidgetCard id="personal-bests" style={st.glowCard}>
         <div>
-          <div style={st.widgetLabel}>ALL TIME</div>
+          <div style={st.widgetLabelGreen}>ALL TIME</div>
           <div role="heading" aria-level={2} style={st.widgetTitle}>PERSONAL BESTS</div>
         </div>
         <div style={{ marginTop: 'auto' }}>
@@ -3833,7 +3833,7 @@ function PersonalBestsWidget() {
     return (
       <WidgetCard id="personal-bests" style={st.glowCard}>
         <div>
-          <div style={st.widgetLabel}>ALL TIME</div>
+          <div style={st.widgetLabelGreen}>ALL TIME</div>
           <div role="heading" aria-level={2} style={st.widgetTitle}>PERSONAL BESTS</div>
         </div>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: '8px' }}>
@@ -3848,7 +3848,7 @@ function PersonalBestsWidget() {
       {/* Header row */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
         <div>
-          <div style={st.widgetLabel}>ALL TIME</div>
+          <div style={st.widgetLabelGreen}>ALL TIME</div>
           <div role="heading" aria-level={2} style={st.widgetTitle}>PERSONAL BESTS</div>
         </div>
         {allDists.length > 0 && (
@@ -4773,7 +4773,7 @@ function GoalPaceWidget({ race }: { race: Race | null }) {
     return (
       <WidgetCard id="goal-pace" style={st.glowCard}>
         <div>
-          <div style={st.widgetLabel}>GOAL PACE</div>
+          <div style={st.widgetLabelGreen}>GOAL PACE</div>
           <div role="heading" aria-level={2} style={st.widgetTitle}>{(focusRace.name ?? 'TARGET PACE').toUpperCase()}</div>
         </div>
         <div style={{ marginTop: 'auto' }}>
@@ -4791,7 +4791,7 @@ function GoalPaceWidget({ race }: { race: Race | null }) {
   if (!result) return (
     <WidgetCard id="goal-pace" style={st.glowCard}>
       <div>
-        <div style={st.widgetLabel}>GOAL PACE</div>
+        <div style={st.widgetLabelGreen}>GOAL PACE</div>
         <div role="heading" aria-level={2} style={st.widgetTitle}>{(focusRace.name ?? 'TARGET PACE').toUpperCase()}</div>
       </div>
       <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: 0 }}>
@@ -4811,7 +4811,7 @@ function GoalPaceWidget({ race }: { race: Race | null }) {
   return (
     <WidgetCard id="goal-pace" style={st.glowCard}>
       <div>
-        <div style={st.widgetLabel}>GOAL PACE</div>
+        <div style={st.widgetLabelGreen}>GOAL PACE</div>
         <div role="heading" aria-level={2} style={st.widgetTitle}>{(focusRace.name ?? 'TARGET PACE').toUpperCase()}</div>
       </div>
 
@@ -6264,6 +6264,22 @@ const st = {
     letterSpacing: '0.14em',
     textTransform: 'uppercase' as const,
     color: 'var(--orange)',
+    lineHeight: 1,
+    marginBottom: '4px',
+    whiteSpace: 'nowrap' as const,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+  } as React.CSSProperties,
+
+  // Green variant — used on tint-g widgets (Course Fit, PB Probability,
+  // Race Readiness, Goal Pace, What to Race Next, Personal Bests) per V4 spec §11.
+  widgetLabelGreen: {
+    fontFamily: 'var(--headline)',
+    fontSize: 'var(--text-xs)',
+    fontWeight: 700,
+    letterSpacing: '0.14em',
+    textTransform: 'uppercase' as const,
+    color: 'var(--green)',
     lineHeight: 1,
     marginBottom: '4px',
     whiteSpace: 'nowrap' as const,
