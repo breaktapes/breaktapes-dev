@@ -395,6 +395,33 @@ export default {
       return json(data, resp.status, origin);
     }
 
+    // ── POST /email/send — transactional send via Resend ──────────────────
+    if (path === '/email/send' && request.method === 'POST') {
+      if (!env.RESEND_API_KEY) {
+        return json({ error: 'Email not configured on this server.' }, 503, origin);
+      }
+      const { to, subject, html, replyTo } = await request.json().catch(() => ({}));
+      if (!to || !subject || !html) {
+        return json({ error: 'Missing to, subject, or html' }, 400, origin);
+      }
+      const resp = await fetch('https://api.resend.com/emails', {
+        method:  'POST',
+        headers: {
+          'Authorization': `Bearer ${env.RESEND_API_KEY}`,
+          'Content-Type':  'application/json',
+        },
+        body: JSON.stringify({
+          from:     'BREAKTAPES <hello@mail.breaktapes.com>',
+          to,
+          subject,
+          html,
+          reply_to: replyTo || 'ayushkrishnan03@gmail.com',
+        }),
+      });
+      const data = await resp.json().catch(() => ({}));
+      return json(data, resp.status, origin);
+    }
+
     // ── Race Import: UltraSignup ──────────────────────────────────────────
     if (path === '/import/ultrasignup' && request.method === 'POST') {
       try {
