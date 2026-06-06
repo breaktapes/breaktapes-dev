@@ -400,10 +400,18 @@ export default {
       if (!env.RESEND_API_KEY) {
         return json({ error: 'Email not configured on this server.' }, 503, origin);
       }
-      const { to, subject, html, replyTo } = await request.json().catch(() => ({}));
+      const { to, subject, html, replyTo, from } = await request.json().catch(() => ({}));
       if (!to || !subject || !html) {
         return json({ error: 'Missing to, subject, or html' }, 400, origin);
       }
+      // Allowlisted senders — prevents the route being used as an open relay.
+      const SENDERS = {
+        hello:   'BREAKTAPES <hello@breaktapes.com>',
+        founder: 'Ayush · BREAKTAPES <founder@breaktapes.com>',
+        support: 'BREAKTAPES Support <support@breaktapes.com>',
+        noreply: 'BREAKTAPES <noreply@breaktapes.com>',
+      };
+      const fromHeader = SENDERS[from] || SENDERS.hello;
       const resp = await fetch('https://api.resend.com/emails', {
         method:  'POST',
         headers: {
@@ -411,11 +419,12 @@ export default {
           'Content-Type':  'application/json',
         },
         body: JSON.stringify({
-          from:     'BREAKTAPES <hello@breaktapes.com>',
+          from:     fromHeader,
           to,
           subject,
           html,
-          reply_to: replyTo || 'ayushkrishnan03@gmail.com',
+          // noreply: no reply-to (unmonitored). Others route replies to the inbox.
+          ...(from === 'noreply' ? {} : { reply_to: replyTo || 'ayushkrishnan03@gmail.com' }),
         }),
       });
       const data = await resp.json().catch(() => ({}));
