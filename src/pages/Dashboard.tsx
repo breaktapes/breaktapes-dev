@@ -555,6 +555,26 @@ function GreetingCard() {
 
 const DEFAULT_GEAR = ['Shoes', 'Watch', 'Race kit', 'Nutrition', 'Bib']
 
+// V4 §11 — Briefing hero topo backdrop (Direction C). Renders the SVG
+// contour layer + scrim that lives behind every briefing state.
+function BriefingTopo() {
+  return (
+    <>
+      <svg style={st.briefingTopo} viewBox="0 0 340 252" preserveAspectRatio="xMidYMid slice" fill="none" stroke="rgba(232,78,27,0.42)" strokeWidth={1.2} aria-hidden="true">
+        <path d="M-10,28 C70,2 150,56 230,26 S360,18 360,18" />
+        <path d="M-10,58 C70,30 150,90 230,58 S360,48 360,48" />
+        <path d="M-10,88 C70,58 150,120 230,88 S360,78 360,78" />
+        <path d="M-10,118 C70,86 150,150 230,118 S360,108 360,108" />
+        <path d="M-10,148 C70,116 150,180 230,148 S360,138 360,138" stroke="rgba(232,78,27,0.30)" />
+        <path d="M-10,178 C70,146 150,210 230,178 S360,168 360,168" stroke="rgba(232,78,27,0.26)" />
+        <path d="M-10,208 C70,176 150,240 230,208 S360,198 360,198" stroke="rgba(232,78,27,0.20)" />
+        <path d="M-10,238 C70,206 150,270 230,238 S360,228 360,228" stroke="rgba(232,78,27,0.15)" />
+      </svg>
+      <div style={st.briefingScrim} aria-hidden="true" />
+    </>
+  )
+}
+
 function RaceMorningBrief({ race, onEditRace, onComplete }: { race: Race; onEditRace?: (race: Race) => void; onComplete?: (race: Race) => void }) {
   const updateRace = useRaceStore(s => s.updateRace)
   const units = useUnits()
@@ -602,6 +622,7 @@ function RaceMorningBrief({ race, onEditRace, onComplete }: { race: Race; onEdit
 
   return (
     <div style={{ ...st.briefingCard, border: '1px solid rgba(232,78,27,0.4)' }}>
+      <BriefingTopo />
       <div style={st.briefingInner}>
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-1)' }}>
@@ -762,6 +783,7 @@ function PreRaceBriefing({ onAddRace, onEditRace, onComplete }: { onAddRace: () 
       const dLabel = d === 0 ? 'Today' : d === 1 ? 'Yesterday' : `${d} days ago`
       return (
         <div style={st.briefingCard}>
+          <BriefingTopo />
           <div style={st.briefingInner}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-1)' }}>
               <IconPin />
@@ -777,6 +799,7 @@ function PreRaceBriefing({ onAddRace, onEditRace, onComplete }: { onAddRace: () 
     }
     return (
       <div style={st.briefingCard}>
+        <BriefingTopo />
         <div style={st.briefingInner}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-1)' }}>
             <IconPin />
@@ -794,6 +817,7 @@ function PreRaceBriefing({ onAddRace, onEditRace, onComplete }: { onAddRace: () 
 
   return (
     <div style={st.briefingCard}>
+      <BriefingTopo />
       <div style={st.briefingInner}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-1)' }}>
           <IconPin />
@@ -5859,15 +5883,39 @@ const st = {
   } as React.CSSProperties,
 
   // ── Pre-race briefing
+  // V4 §11 — Athlete Briefing Hero: Topo Texture direction.
+  // Dark warm bg + SVG contour overlay + corner glow scrim. Content lives
+  // inside .briefingInner at z-index 1 to clear the backdrop layers.
   briefingCard: {
-    background: 'var(--surface2)',
-    border: '1px solid var(--border)',
+    position: 'relative' as const,
+    overflow: 'hidden',
+    background: 'radial-gradient(ellipse at 78% 12%, rgba(var(--orange-ch),0.14), transparent 52%), #0c0a08',
+    border: '1px solid rgba(255,255,255,0.08)',
     borderRadius: 'var(--radius-lg)',
     padding: 'var(--sp-5)',
     minWidth: 0,
   } as React.CSSProperties,
 
+  briefingTopo: {
+    position: 'absolute' as const,
+    inset: 0,
+    width: '100%',
+    height: '100%',
+    pointerEvents: 'none' as const,
+    zIndex: 0,
+  } as React.CSSProperties,
+
+  briefingScrim: {
+    position: 'absolute' as const,
+    inset: 0,
+    background: 'linear-gradient(135deg, rgba(12,10,8,0.15), rgba(12,10,8,0.9))',
+    pointerEvents: 'none' as const,
+    zIndex: 0,
+  } as React.CSSProperties,
+
   briefingInner: {
+    position: 'relative' as const,
+    zIndex: 1,
     display: 'flex',
     flexDirection: 'column' as const,
     gap: 'var(--sp-2)',
