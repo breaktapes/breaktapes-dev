@@ -897,7 +897,22 @@ export default {
           return 0;
         };
 
-        // 2. Fetch each finisher result in parallel for time/placing/splits.
+        // 2a. Resolve event-level location once per unique eventId. The
+        //     participant payload doesn't carry city; event API does.
+        //     `/sporthive/events/{eventId}` → { location: "Dubai", countryCode: "AE", eventName, date }.
+        //     Athlete's countryCode on the participant row is *nationality*,
+        //     not event location, so we override it with the event's country.
+        const eventIds = [...new Set(matched.map(p => p.eventId).filter(Boolean))];
+        const eventLocs = new Map();
+        await Promise.all(eventIds.map(async (eid) => {
+          try {
+            const e = await fetch(`https://eventresults-api.speedhive.com/sporthive/events/${encodeURIComponent(eid)}`,
+              { headers: SH, signal: AbortSignal.timeout(8000) }).then(x => x.ok ? x.json() : null);
+            if (e) eventLocs.set(eid, { city: e.location || '', country: e.countryCode || '' });
+          } catch (_) {}
+        }));
+
+        // 2b. Fetch each finisher result in parallel for time/placing/splits.
         const results = (await Promise.all(matched.map(async (p) => {
           try {
             const r = await fetch(`https://eventresults-api.speedhive.com/sporthive/races/${encodeURIComponent(p.raceId)}/bibs/${encodeURIComponent(p.bib)}`,
@@ -914,6 +929,7 @@ export default {
               const label = leg.sportName ? leg.sportName.charAt(0).toUpperCase() + leg.sportName.slice(1) : '';
               if (dur && label) splits.push({ label, split: dur });
             }
+            const loc = eventLocs.get(p.eventId) || {};
             return {
               raceName:   p.eventName || 'Sporthive Event',
               date,
@@ -923,7 +939,8 @@ export default {
               placing:    r.overallPosition != null ? String(r.overallPosition) : '',
               genderPlacing: r.genderPosition != null ? String(r.genderPosition) : '',
               agLabel:    r.raceCategory || '',
-              country:    p.countryCode || '',
+              city:       loc.city || '',
+              country:    loc.country || p.countryCode || '',
               ...(splits.length ? { splits } : {}),
               source:     'sporthive',
             };
