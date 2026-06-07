@@ -8,6 +8,7 @@ import { useThemeStore } from '@/stores/useThemeStore'
 import { setClerkToken } from '@/lib/supabase'
 import { syncStateToSupabase, resetRemotePullGate } from '@/lib/syncState'
 import { migrateEmbeddedPhotos } from '@/lib/migratePhotos'
+import { useCityBackfill } from '@/hooks/useCityBackfill'
 import { IS_STAGING } from '@/env'
 import { posthog } from '@/lib/posthog'
 
@@ -155,6 +156,9 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   const setForceDefault = useThemeStore(s => s.setForceDefault)
 
   useClerkSync()
+  // V4 retroactive backfill — fill missing city/country on existing races
+  // once per device, after Clerk has resolved + the user is signed in.
+  useCityBackfill(!!isSignedIn)
 
   // Force the default Carbon+Chrome theme on the logged-out login + loading
   // screens, ignoring any saved custom theme. The user's theme returns once
