@@ -3706,19 +3706,32 @@ const ZONE_LABELS: Record<string, { tag: string; label: string }> = {
 function ZoneHeader({ id, editMode }: { id: string; editMode: boolean }) {
   const meta = ZONE_LABELS[id] ?? { tag: id.replace('zone:', '').toUpperCase(), label: '' }
   const isFirst = id === 'zone:now'
+  // V4 §11 zrow layout — tag + label on the left, chevron on the right.
   return (
     <div style={{
       fontFamily: 'var(--headline)',
       display: 'flex',
-      flexDirection: 'column',
-      gap: 2,
+      alignItems: 'flex-end',
+      justifyContent: 'space-between',
+      gap: 'var(--sp-2)',
       padding: editMode ? '8px 0 4px' : '20px 0 6px',
       marginTop: isFirst ? 0 : 4,
       borderTop: isFirst ? undefined : '1px solid var(--border)',
       opacity: editMode ? 0.7 : 1,
     }}>
-      <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: 'var(--orange)' }}>{meta.tag}</span>
-      <span style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-lg)', fontWeight: 900, letterSpacing: '0.04em', textTransform: 'uppercase' as const, color: 'var(--white)', lineHeight: 1.1 }}>{meta.label}</span>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+        <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: 'var(--orange)' }}>{meta.tag}</span>
+        <span style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-lg)', fontWeight: 900, letterSpacing: '0.04em', textTransform: 'uppercase' as const, color: 'var(--white)', lineHeight: 1.1 }}>{meta.label}</span>
+      </div>
+      <span aria-hidden="true" style={{
+        flexShrink: 0,
+        fontFamily: 'var(--headline)',
+        fontSize: 'var(--text-lg)',
+        fontWeight: 700,
+        color: 'var(--muted)',
+        lineHeight: 1,
+        paddingBottom: 2,
+      }}>▾</span>
     </div>
   )
 }
