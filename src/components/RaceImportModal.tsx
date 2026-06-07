@@ -2,11 +2,49 @@ import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
+import { useRaceCatalog, type CatalogRace } from '@/hooks/useRaceCatalog'
 import { parseDistKm } from '@/lib/raceFormulas'
 import { fmtDateDDMM, resolveDistKm } from '@/lib/utils'
 import { posthog } from '@/lib/posthog'
 import { supabaseAnon } from '@/lib/supabase'
 import type { Race } from '@/types'
+
+// V4 import autofill — if scraper didn't return a city, look the race up in the
+// global catalog by normalized name + year, fall back to a name-based extraction
+// (strip year + common distance/sponsor words and use whatever remains).
+function normalizeRaceName(s: string): string {
+  return (s ?? '')
+    .toLowerCase()
+    .replace(/\b(20\d{2})\b/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+function lookupCatalogLocation(
+  name: string,
+  year: number | undefined,
+  catalog: CatalogRace[],
+): { city: string; country: string } | null {
+  if (!name || !catalog.length) return null
+  const target = normalizeRaceName(name)
+  let match = year != null
+    ? catalog.find(c => c.year === year && normalizeRaceName(c.name) === target)
+    : undefined
+  if (!match) match = catalog.find(c => normalizeRaceName(c.name) === target)
+  if (!match) return null
+  return { city: match.city || '', country: match.country || '' }
+}
+function extractCityFromName(name: string): string {
+  const cleaned = (name ?? '')
+    .replace(/\b(20\d{2})\b/g, ' ')
+    .replace(/\b(half\s+marathon|full\s+marathon|marathon|ultra(?:\s+marathon)?|10\s*mile|10\s*k|5\s*k|ironman|iron\s+man|70\.3|middle\s+distance|sprint|olympic|triathlon|tri|hyrox)\b/gi, ' ')
+    .replace(/\b(adnoc|tata|au|hsbc|nn|asics|virgin|tcs|skechers|garmin|standard\s+chartered)\b/gi, ' ')
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+  // Heuristic: only return if the leftover looks like a real city — at least
+  // one word that starts with a capital and is more than 2 chars.
+  return cleaned.length >= 2 && /[A-Za-z]{3,}/.test(cleaned) ? cleaned : ''
+}
 
 const HEALTH_PROXY = 'https://health.breaktapes.com'
 
@@ -105,6 +143,7 @@ export function RaceImportModal({ onClose, onPickByRace }: { onClose: () => void
   const existingRaces = useRaceStore(s => s.races)
   const upcomingRaces = useRaceStore(s => s.upcomingRaces)
   const athlete       = useAthleteStore(s => s.athlete)
+  const { data: catalog = [] } = useRaceCatalog()
 
   // Derive a birth year + gender from the signed-in athlete's DOB to soft-filter
   // namesake rows out of name-based import results (drop on conflict, keep on null).
@@ -362,6 +401,24 @@ export function RaceImportModal({ onClose, onPickByRace }: { onClose: () => void
         ? r.distance_m / 1000
         : parseDistKm(r.raceName)
       const distance = kmToDistLabel(distKm)
+
+      // V4 import autofill — fill missing city/country from race_catalog when
+      // the scraper left them blank, then fall back to a name extraction
+      // heuristic (Dubai Marathon → Dubai, Tata Mumbai Marathon → Mumbai, etc.).
+      const scrapedCity    = (r.city ?? '').trim()
+      const scrapedCountry = deriveImportCountry(r.country, r.state).trim()
+      let finalCity    = scrapedCity
+      let finalCountry = scrapedCountry
+      if (!finalCity || !finalCountry) {
+        const year = Number(date.slice(0, 4)) || undefined
+        const cat  = lookupCatalogLocation(r.raceName, year, catalog)
+        if (cat) {
+          if (!finalCity)    finalCity    = cat.city
+          if (!finalCountry) finalCountry = cat.country
+        }
+      }
+      if (!finalCity) finalCity = extractCityFromName(r.raceName)
+
       const race: Race = {
         id:       crypto.randomUUID(),
         name:     r.raceName,
@@ -369,8 +426,8 @@ export function RaceImportModal({ onClose, onPickByRace }: { onClose: () => void
         time:     normalizeImportTime(r.time),
         distance,
         sport:    r.sport ?? 'Running',
-        city:     r.city ?? '',
-        country:  deriveImportCountry(r.country, r.state),
+        city:     finalCity,
+        country:  finalCountry,
         // Rich fields from tri sources (Coach Cox / IRONMAN) — only set when present
         ...(r.splits && r.splits.length ? { splits: r.splits.filter(s => s.split).map(s => ({ label: s.label, split: s.split })) } : {}),
         ...(r.agLabel       ? { agLabel: r.agLabel }             : {}),
