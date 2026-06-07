@@ -2,49 +2,13 @@ import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
-import { useRaceCatalog, type CatalogRace } from '@/hooks/useRaceCatalog'
+import { useRaceCatalog } from '@/hooks/useRaceCatalog'
+import { lookupCatalogLocation, extractCityFromName } from '@/lib/importLocation'
 import { parseDistKm } from '@/lib/raceFormulas'
 import { fmtDateDDMM, resolveDistKm } from '@/lib/utils'
 import { posthog } from '@/lib/posthog'
 import { supabaseAnon } from '@/lib/supabase'
 import type { Race } from '@/types'
-
-// V4 import autofill — if scraper didn't return a city, look the race up in the
-// global catalog by normalized name + year, fall back to a name-based extraction
-// (strip year + common distance/sponsor words and use whatever remains).
-function normalizeRaceName(s: string): string {
-  return (s ?? '')
-    .toLowerCase()
-    .replace(/\b(20\d{2})\b/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-}
-function lookupCatalogLocation(
-  name: string,
-  year: number | undefined,
-  catalog: CatalogRace[],
-): { city: string; country: string } | null {
-  if (!name || !catalog.length) return null
-  const target = normalizeRaceName(name)
-  let match = year != null
-    ? catalog.find(c => c.year === year && normalizeRaceName(c.name) === target)
-    : undefined
-  if (!match) match = catalog.find(c => normalizeRaceName(c.name) === target)
-  if (!match) return null
-  return { city: match.city || '', country: match.country || '' }
-}
-function extractCityFromName(name: string): string {
-  const cleaned = (name ?? '')
-    .replace(/\b(20\d{2})\b/g, ' ')
-    .replace(/\b(half\s+marathon|full\s+marathon|marathon|ultra(?:\s+marathon)?|10\s*mile|10\s*k|5\s*k|ironman|iron\s+man|70\.3|middle\s+distance|sprint|olympic|triathlon|tri|hyrox)\b/gi, ' ')
-    .replace(/\b(adnoc|tata|au|hsbc|nn|asics|virgin|tcs|skechers|garmin|standard\s+chartered)\b/gi, ' ')
-    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-  // Heuristic: only return if the leftover looks like a real city — at least
-  // one word that starts with a capital and is more than 2 chars.
-  return cleaned.length >= 2 && /[A-Za-z]{3,}/.test(cleaned) ? cleaned : ''
-}
 
 const HEALTH_PROXY = 'https://health.breaktapes.com'
 
