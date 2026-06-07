@@ -42,20 +42,22 @@ describe('useThemeStore — comingSoon gate', () => {
     expect(useThemeStore.getState().theme).toBe('obsidian')
   })
 
-  it('acid-track is blocked (comingSoon)', () => {
+  // V4 §10b: acid-track / ember / polar-circuit are no longer comingSoon —
+  // they ship as Pro themes. Pro gating happens in Settings UI, not the store.
+  it('acid-track is settable (Pro, no longer comingSoon)', () => {
     const ok = useThemeStore.getState().setTheme('acid-track')
-    expect(ok).toBe(false)
-    expect(useThemeStore.getState().theme).toBe('carbon')
+    expect(ok).toBe(true)
+    expect(useThemeStore.getState().theme).toBe('acid-track')
   })
 
-  it('ember is blocked (comingSoon)', () => {
+  it('ember is settable (Pro, no longer comingSoon)', () => {
     const ok = useThemeStore.getState().setTheme('ember')
-    expect(ok).toBe(false)
+    expect(ok).toBe(true)
   })
 
-  it('polar-circuit is blocked (comingSoon)', () => {
+  it('polar-circuit is settable (Pro, no longer comingSoon)', () => {
     const ok = useThemeStore.getState().setTheme('polar-circuit')
-    expect(ok).toBe(false)
+    expect(ok).toBe(true)
   })
 })
 

@@ -48,6 +48,7 @@ export function Settings() {
   const { user: clerkUser } = useUser()
   const authUser = useAuthStore(s => s.authUser)
   const syncStatus = useAuthStore(s => s.syncStatus)
+  const hasProAccess = useAuthStore(s => s.proAccessGranted)
   const athlete = useAthleteStore(s => s.athlete)
   const updateAthlete = useAthleteStore(s => s.updateAthlete)
 
@@ -79,6 +80,12 @@ export function Settings() {
   }
 
   function applyTheme(themeId: ThemeId) {
+    // V4 §10b — Pro gating. Locked themes ignored on prod; staging unlocks all.
+    const theme = THEMES.find(t => t.id === themeId)
+    if (theme?.pro && !hasProAccess) {
+      posthog.capture('theme locked', { theme_id: themeId })
+      return
+    }
     storeSetTheme(themeId)
     posthog.capture('theme changed', { theme_id: themeId })
   }
@@ -377,24 +384,25 @@ export function Settings() {
         }}>
           {THEMES.map(theme => {
             const isActive = activeTheme === theme.id
+            const isLocked = theme.pro && !hasProAccess
             return (
               <button
                 key={theme.id}
-                onClick={() => theme.comingSoon ? undefined : applyTheme(theme.id)}
-                disabled={theme.comingSoon}
+                onClick={() => isLocked ? undefined : applyTheme(theme.id)}
+                disabled={isLocked}
                 style={{
                   height: '80px',
                   background: 'var(--surface2)',
                   border: isActive ? '2px solid var(--orange)' : '1px solid var(--border)',
                   borderRadius: 'var(--radius-md)',
-                  cursor: theme.comingSoon ? 'default' : 'pointer',
+                  cursor: isLocked ? 'not-allowed' : 'pointer',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: 'var(--sp-2)',
                   padding: '0.5rem',
-                  opacity: theme.comingSoon ? 0.45 : 1,
+                  opacity: isLocked ? 0.55 : 1,
                   position: 'relative',
                 }}
               >
@@ -410,19 +418,23 @@ export function Settings() {
                 }}>
                   {theme.label}
                 </span>
-                {theme.comingSoon && (
+                {theme.pro && (
                   <span style={{
-                    fontSize: 'var(--text-xs)',
+                    position: 'absolute',
+                    top: 6,
+                    right: 6,
+                    fontSize: '8px',
                     fontFamily: 'var(--headline)',
-                    fontWeight: 700,
-                    letterSpacing: '0.1em',
+                    fontWeight: 800,
+                    letterSpacing: '0.12em',
                     textTransform: 'uppercase',
-                    color: 'var(--muted)',
-                    background: 'rgba(245,245,245,0.06)',
+                    color: '#C8963C',
+                    background: 'rgba(200,150,60,0.12)',
+                    border: '1px solid rgba(200,150,60,0.3)',
                     padding: '1px 5px',
                     borderRadius: 'var(--radius-xs)',
                   }}>
-                    SOON
+                    PRO
                   </span>
                 )}
               </button>
