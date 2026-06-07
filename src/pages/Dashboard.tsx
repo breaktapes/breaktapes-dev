@@ -2371,7 +2371,7 @@ function RaceDNAWidget() {
                       }} />
                     </div>
                     <div style={{ width: '40px', fontSize: 'var(--text-xs)', color: b.isBest ? b.color : 'var(--muted)', fontWeight: b.isBest ? 700 : 400, textAlign: 'center' as const, flexShrink: 0 }}>
-                      {b.isBest ? 'BEST' : `+${b.delta}%`}
+                      {b.isBest ? '★' : `+${b.delta}%`}
                     </div>
                   </div>
                 ))}
