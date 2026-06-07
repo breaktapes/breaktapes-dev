@@ -1443,10 +1443,18 @@ function WeatherCard({ race }: { race: Race }) {
     }
   }, [race.date, race.city, race.country, isLive])
 
+  // V4 §11 cd-fc-pill — days-until-race chip on the right of the forecast row.
+  const daysPillLabel = days <= 0 ? 'TODAY' : days === 1 ? '1 DAY' : `${days} DAYS`
+
   return (
     <div style={st.weatherCard}>
-      <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '8px' }}>
-        {location}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--sp-2)', marginBottom: '8px' }}>
+        <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted)', textTransform: 'uppercase', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {location}
+        </div>
+        <span style={{ flexShrink: 0, fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-xs)', letterSpacing: '0.12em', color: 'var(--orange)', background: 'rgba(var(--orange-ch),0.12)', border: '1px solid rgba(var(--orange-ch),0.3)', borderRadius: 'var(--radius-pill)', padding: '3px 9px', textTransform: 'uppercase' as const }}>
+          {daysPillLabel}
+        </span>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
         <span style={{ fontSize: 'var(--text-2xl)', lineHeight: 1, flexShrink: 0 }}>
