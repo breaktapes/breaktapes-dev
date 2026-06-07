@@ -364,14 +364,11 @@ function WishlistRow({ race, onPlan, onRemove }: {
 // ── Races sheet ───────────────────────────────────────────────────────────────
 
 function YearDivider({ year }: { year: string }) {
+  // V4 §04 yr-b — orange dot + orange-gradient rule. CSS in styles/index.css.
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', padding: '12px 16px 6px' }}>
-      <span style={{
-        fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xs)',
-        letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)',
-        whiteSpace: 'nowrap',
-      }}>{year}</span>
-      <div style={{ flex: 1, height: '1px', background: 'var(--border2)' }} />
+    <div className="yr-b">
+      <span className="yr-b-dot" aria-hidden="true" />
+      <span className="yr-b-label">{year}</span>
     </div>
   )
 }
