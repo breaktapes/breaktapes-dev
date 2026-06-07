@@ -221,16 +221,18 @@ export interface Theme {
   comingSoon?: boolean
 }
 
+// V4 §10b — 2 free + 7 Pro. CSS for all 9 themes lives in styles/tokens.css.
+// Staging unlocks Pro via IS_STAGING in useAuthStore.
 export const THEMES: Theme[] = [
   { id: 'carbon',        label: 'Carbon + Chrome', pro: false },
   { id: 'light',         label: 'Light Mode',      pro: false },
-  { id: 'deep-space',    label: 'Deep Space',      pro: false },
-  { id: 'race-night',    label: 'Race Night',      pro: false },
-  { id: 'obsidian',      label: 'Obsidian',        pro: false },
-  { id: 'titanium',      label: 'Titanium',        pro: false },
-  { id: 'acid-track',    label: 'Acid Track',      pro: false, comingSoon: true },
-  { id: 'ember',         label: 'Ember',           pro: false, comingSoon: true },
-  { id: 'polar-circuit', label: 'Polar Circuit',   pro: false, comingSoon: true },
+  { id: 'deep-space',    label: 'Deep Space',      pro: true  },
+  { id: 'race-night',    label: 'Race Night',      pro: true  },
+  { id: 'obsidian',      label: 'Obsidian',        pro: true  },
+  { id: 'titanium',      label: 'Titanium',        pro: true  },
+  { id: 'acid-track',    label: 'Acid Track',      pro: true  },
+  { id: 'ember',         label: 'Ember',           pro: true  },
+  { id: 'polar-circuit', label: 'Polar Circuit',   pro: true  },
 ]
 
 export interface PBMap {
