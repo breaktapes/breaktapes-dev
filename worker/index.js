@@ -1920,6 +1920,19 @@ async function handleApiSync(request, env) {
     }
   } catch { /* read failed — write incoming as-is (pre-merge fallback) */ }
 
+  // Retention columns: email + opt-in feed the reminder/digest cron. Only set
+  // them when the client actually sends the key — omitting a column on a
+  // merge-duplicates upsert keeps the existing value, so a stale/older client
+  // can't clobber a server-side unsubscribe (which sets email_opt_in=false).
+  const upsertRow = {
+    user_id:    userId,
+    username:   body.username   ?? null,
+    is_public:  body.is_public  ?? false,
+    state_json: stateJson,
+  };
+  if (body.email !== undefined)        upsertRow.email = body.email;
+  if (body.email_opt_in !== undefined) upsertRow.email_opt_in = body.email_opt_in;
+
   const res = await fetch(`${supabaseUrl}/rest/v1/user_state`, {
     method: 'POST',
     headers: {
@@ -1928,12 +1941,7 @@ async function handleApiSync(request, env) {
       'Content-Type': 'application/json',
       Prefer: 'resolution=merge-duplicates,return=minimal',
     },
-    body: JSON.stringify({
-      user_id:    userId,
-      username:   body.username   ?? null,
-      is_public:  body.is_public  ?? false,
-      state_json: stateJson,
-    }),
+    body: JSON.stringify(upsertRow),
   });
 
   if (!res.ok) {
