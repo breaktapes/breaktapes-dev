@@ -198,11 +198,11 @@ const TAB_LABELS: { id: Tab; label: string }[] = [
 // ─── OW provider config ───────────────────────────────────────────────────────
 
 // Live = credentials exist + OW configured. Coming soon = pending developer approval.
-// stagingOnly = hidden on production until the provider's app exits dev limits
-// (Strava: 1-athlete cap until Strava approves a higher rate limit).
+// stagingOnly = hidden on production until the provider's app exits dev limits.
+// Strava is now live on production (rate limit raised — no longer dev-capped).
 const OW_PROVIDERS: { id: OWProvider; label: string; icon: string; note?: string; comingSoon?: boolean; stagingOnly?: boolean }[] = [
   { id: 'whoop',       label: 'WHOOP',       icon: '🔴' },
-  { id: 'strava',      label: 'Strava',      icon: '🟠', stagingOnly: true },
+  { id: 'strava',      label: 'Strava',      icon: '🟠' },
   { id: 'garmin',      label: 'Garmin',      icon: '⌚', comingSoon: true },
   { id: 'polar',       label: 'Polar',       icon: '🔵', comingSoon: true },
   { id: 'suunto',      label: 'Suunto',      icon: '⬛', comingSoon: true },
