@@ -3675,11 +3675,16 @@ function PersonalBestsWidget() {
     const triFiltered = filterVis(tri)
     const otherFiltered = filterVis(other)
 
-    // Pills grouped by sport so they render in ascending distance order per sport
+    // Pills grouped by sport so they render in ascending distance order per sport.
+    // Dedupe labels: several distinct ultra distances (50K/56K/89K) all resolve to the
+    // same "Ultra" badge — without dedup they produce duplicate React keys and redundant
+    // toggle rows that all target the same filterVis match.
+    const dedupeLabels = (entries: { key: string; r: Race }[]) =>
+      [...new Set(entries.map(e => distBadge(e.r.distance) || e.key))]
     const pillGroups: { sport: string; labels: string[] }[] = []
-    if (run.length) pillGroups.push({ sport: 'Running',   labels: run.map(e => distBadge(e.r.distance) || e.key) })
-    if (tri.length) pillGroups.push({ sport: 'Triathlon', labels: tri.map(e => distBadge(e.r.distance) || e.key) })
-    if (other.length) pillGroups.push({ sport: 'Other',   labels: other.map(e => distBadge(e.r.distance) || e.key) })
+    if (run.length) pillGroups.push({ sport: 'Running',   labels: dedupeLabels(run) })
+    if (tri.length) pillGroups.push({ sport: 'Triathlon', labels: dedupeLabels(tri) })
+    if (other.length) pillGroups.push({ sport: 'Other',   labels: dedupeLabels(other) })
 
     return {
       pillGroups,
