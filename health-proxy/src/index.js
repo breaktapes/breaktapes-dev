@@ -63,6 +63,40 @@ function json(data, status = 200, origin = '') {
   });
 }
 
+// ── Rate limiting (import/scraper routes only) ──────────────────────────────
+// Best-effort per-IP fixed-window limiter for the /import/* routes, which fan
+// out to third-party sites server-side. Caps abuse and reduces the chance of
+// our egress IP getting blocked by upstreams.
+//
+// NOTE: this is an in-memory, per-isolate counter. Cloudflare runs many
+// isolates (and recycles them), so the effective cap is SOFT — a determined
+// caller spread across isolates can exceed it. This is a first layer of
+// defense, not a hard guarantee. Follow-up for a hard, global limit is a
+// Durable Object or KV-backed limiter; kept dependency-free + in-memory here.
+const IMPORT_RATE_LIMIT  = 30;            // max requests per IP per window
+const IMPORT_RATE_WINDOW_MS = 60 * 1000;  // fixed window length (60s)
+const importRateBuckets = new Map();       // ip -> { count, windowStart }
+
+/**
+ * Fixed-window rate-limit check for a client IP.
+ * Returns { limited: boolean, retryAfter: number } where retryAfter is seconds
+ * until the current window resets (only meaningful when limited).
+ */
+function checkImportRateLimit(ip) {
+  const now = Date.now();
+  const bucket = importRateBuckets.get(ip);
+  if (!bucket || now - bucket.windowStart >= IMPORT_RATE_WINDOW_MS) {
+    importRateBuckets.set(ip, { count: 1, windowStart: now });
+    return { limited: false, retryAfter: 0 };
+  }
+  bucket.count += 1;
+  if (bucket.count > IMPORT_RATE_LIMIT) {
+    const retryAfter = Math.ceil((bucket.windowStart + IMPORT_RATE_WINDOW_MS - now) / 1000);
+    return { limited: true, retryAfter: Math.max(1, retryAfter) };
+  }
+  return { limited: false, retryAfter: 0 };
+}
+
 // ── Email (Resend) ──────────────────────────────────────────────────────────
 // Allowlisted senders — prevents the send path being used as an open relay.
 const SENDERS = {
@@ -352,6 +386,19 @@ export default {
 
     if (request.method === 'OPTIONS') {
       return new Response(null, { status: 204, headers: corsHeaders(origin) });
+    }
+
+    // ── Rate limit the import/scraper routes only ─────────────────────────
+    // Single central check for any /import/* path. OAuth callbacks, /email,
+    // /retention, and token routes are intentionally NOT rate-limited.
+    if (path.startsWith('/import/')) {
+      const ip = request.headers.get('cf-connecting-ip') || 'unknown';
+      const { limited, retryAfter } = checkImportRateLimit(ip);
+      if (limited) {
+        const res = json({ error: 'Rate limit exceeded. Please slow down and retry shortly.' }, 429, origin);
+        res.headers.set('Retry-After', String(retryAfter));
+        return res;
+      }
     }
 
     // ── POST /strava/token ────────────────────────────────────────────────
