@@ -579,6 +579,8 @@ function renderProfile(row, username) {
 function renderRaceCard(row, username, raceId) {
   const races = Array.isArray(row.races) ? row.races : [];
   const athlete = row.athlete || {};
+  const pv = athlete.profileVisibility || {};
+  if (pv.races !== true) return notFoundPage(username);
   const race = races.find(r => r.id === raceId || String(r.id) === raceId);
   if (!race) return notFoundPage(username);
 
