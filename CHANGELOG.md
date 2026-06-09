@@ -3,6 +3,15 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.7.0] - 2026-06-09
+
+### Changed
+- **Race import is now 1-tap.** PostHog showed the import funnel leaking ~86% (search → completed). The modal was already zero-form, so the leak was the non-obvious two-step (tick a row, then press IMPORT) and dead-end empty searches. On results, the single best non-duplicate match is now auto-selected and floated to the top of the list, so the user lands ready to commit in one confirm tap (we never auto-save — guards against a wrong namesake). Best-match ranking (`src/lib/importRank.ts`, unit-tested) favours richer payloads (splits/placing/time), exact name match, then recency.
+- **Empty-results dead-end replaced with a handoff.** "No results" now shows a primary **+ ADD RACE MANUALLY** CTA that opens the manual add-race form, instead of a back button only.
+
+### Added
+- **Import funnel instrumentation.** New client-side PostHog events the server-side per-provider events can't see: `race import results shown` (total/has_results/provider_counts), `race import no results`, `race import row selected` (with `was_auto`), and `race import add manual clicked`. These pin whether the real drop is no-results vs results-but-no-select vs select-but-no-import. IronmanRacePicker emits the same events for funnel parity.
+
 ## [0.7.6.12] - 2026-06-05
 
 ### Fixed

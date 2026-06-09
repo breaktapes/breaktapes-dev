@@ -5,6 +5,7 @@ import { useAthleteStore } from '@/stores/useAthleteStore'
 import { useRaceCatalog } from '@/hooks/useRaceCatalog'
 import { lookupCatalogLocation, extractCityFromName } from '@/lib/importLocation'
 import { parseDistKm } from '@/lib/raceFormulas'
+import { rankBestMatch } from '@/lib/importRank'
 import { fmtDateDDMM, resolveDistKm } from '@/lib/utils'
 import { posthog } from '@/lib/posthog'
 import { supabaseAnon } from '@/lib/supabase'
@@ -102,7 +103,7 @@ function normalizeDateStr(d: string): string {
   return d
 }
 
-export function RaceImportModal({ onClose, onPickByRace }: { onClose: () => void; onPickByRace?: () => void }) {
+export function RaceImportModal({ onClose, onPickByRace, onAddManual }: { onClose: () => void; onPickByRace?: () => void; onAddManual?: () => void }) {
   const addRace    = useRaceStore(s => s.addRace)
   const existingRaces = useRaceStore(s => s.races)
   const upcomingRaces = useRaceStore(s => s.upcomingRaces)
@@ -269,10 +270,42 @@ export function RaceImportModal({ onClose, onPickByRace }: { onClose: () => void
       }
     } catch { /* table absent / no match — non-fatal */ }
 
-    setSourceErrors(errs)
-    setResults(all)
     setSearching(false)
     setStep('results')
+
+    // 1-tap: pre-select the single best non-duplicate result and float it to the
+    // top so the pre-ticked row is immediately visible (a buried tick makes the
+    // "IMPORT 1 RACE" button read as a mystery). The IMPORT button still needs
+    // one confirm tap — we never auto-save, guarding against a wrong namesake.
+    const best = rankBestMatch(all, { isDuplicate: r => isDuplicate(r as ImportResult), lastName: lastName.trim() })
+    const ordered = best > 0 ? [all[best], ...all.slice(0, best), ...all.slice(best + 1)] : all
+    setResults(ordered)
+    if (best >= 0) {
+      setSelected(new Set([0]))
+    } else {
+      setSelected(new Set())
+    }
+
+    // Funnel instrumentation: the per-provider search/fetch is captured
+    // server-side (health-proxy, posthog-node). These are the client-side
+    // mid-funnel steps the server can't see — they pin whether the leak is
+    // no-results vs results-but-no-select vs select-but-no-import.
+    const providerCounts: Record<string, number> = {}
+    for (const r of all) providerCounts[r.source] = (providerCounts[r.source] ?? 0) + 1
+    posthog.capture('race import results shown', {
+      total_results: all.length,
+      has_results: all.length > 0,
+      provider_counts: providerCounts,
+      providers_errored: Object.keys(errs).filter(k => (errs as Record<string, boolean>)[k]),
+    })
+
+    if (all.length === 0) {
+      posthog.capture('race import no results', {
+        providers_queried: ['ultrasignup', 'marathonview', 'runsignup', 'coachcox', 'sporthive', 't100', ...(athlinksUrl.trim() ? ['athlinks'] : [])],
+      })
+    } else if (best >= 0) {
+      posthog.capture('race import row selected', { source: all[best].source, was_auto: true })
+    }
   }
 
   async function searchHopaEvents() {
@@ -311,8 +344,15 @@ export function RaceImportModal({ onClose, onPickByRace }: { onClose: () => void
       const who = `${firstName} ${lastName}`.trim()
       if (!rows.length) { setError(`No results for "${who}" in that event — check the spelling on your bib name.`); setHopaFetching(''); return }
       setResults(rows)
-      setSelected(new Set())
       setStep('results')
+      posthog.capture('race import results shown', { total_results: rows.length, has_results: true, provider_counts: { hopasports: rows.length }, providers_errored: [] })
+      const best = rankBestMatch(rows, { isDuplicate: r => isDuplicate(r as ImportResult), lastName: lastName.trim() })
+      if (best >= 0) {
+        setSelected(new Set([best]))
+        posthog.capture('race import row selected', { source: 'hopasports', was_auto: true })
+      } else {
+        setSelected(new Set())
+      }
     } catch { setError('Hopasports lookup failed — try again.') }
     setHopaFetching('')
   }
@@ -346,7 +386,12 @@ export function RaceImportModal({ onClose, onPickByRace }: { onClose: () => void
     if (isDuplicate(results[i])) return
     setSelected(prev => {
       const next = new Set(prev)
-      next.has(i) ? next.delete(i) : next.add(i)
+      if (next.has(i)) {
+        next.delete(i)
+      } else {
+        next.add(i)
+        posthog.capture('race import row selected', { source: results[i].source, was_auto: false })
+      }
       return next
     })
   }
@@ -559,14 +604,27 @@ export function RaceImportModal({ onClose, onPickByRace }: { onClose: () => void
                 </div>
               )}
               {results.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '32px 0' }}>
+                <div style={{ textAlign: 'center', padding: '24px 0 8px' }}>
                   <p style={{ color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 900, letterSpacing: '0.08em', fontSize: 'var(--text-compact)' }}>
                     NO RESULTS FOUND
                   </p>
-                  <p style={{ color: 'var(--muted)', fontSize: 'var(--text-xs)', marginTop: '8px' }}>
-                    Try a different spelling or add your race manually.
+                  <p style={{ color: 'var(--muted)', fontSize: 'var(--text-xs)', marginTop: '8px', lineHeight: 1.5 }}>
+                    We couldn't find a race under that name. Add it yourself in a few seconds — we'll keep your stats moving.
                   </p>
-                  <button style={{ ...st.cancelBtn, marginTop: '24px' }} onClick={() => setStep('search')}>← BACK</button>
+                  {onAddManual && (
+                    <button
+                      className="btn-v3 btn-primary-v3"
+                      style={{ ...st.saveBtn, marginTop: '20px' }}
+                      onClick={() => {
+                        posthog.capture('race import add manual clicked', { from: 'no_results' })
+                        onAddManual()
+                      }}
+                      type="button"
+                    >
+                      + ADD RACE MANUALLY
+                    </button>
+                  )}
+                  <button style={{ ...st.cancelBtn, marginTop: '12px' }} onClick={() => setStep('search')}>← TRY ANOTHER NAME</button>
                 </div>
               ) : (
                 <>
