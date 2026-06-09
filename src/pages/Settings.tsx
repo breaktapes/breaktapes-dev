@@ -6,6 +6,7 @@ import { useAthleteStore } from '@/stores/useAthleteStore'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { useWearableStore } from '@/stores/useWearableStore'
 import { syncStateToSupabase, resetRemotePullGate } from '@/lib/syncState'
+import { getClerkToken } from '@/lib/supabase'
 import { THEMES } from '@/types'
 import type { ThemeId } from '@/types'
 import { useThemeStore } from '@/stores/useThemeStore'
@@ -114,6 +115,30 @@ export function Settings() {
     // Re-arm the write gate so the next user's bootstrap sync defers until their remote pull lands.
     resetRemotePullGate()
     await signOut()
+  }
+
+  async function handleDeleteData() {
+    const ok = window.confirm(
+      'Delete all your BreakTapes data? This permanently removes your races, profile, and connected wearables from our servers. Your login account itself is managed separately under "Manage account". This cannot be undone.'
+    )
+    if (!ok) return
+    const token = getClerkToken()
+    if (!token) {
+      window.alert('Could not verify your session. Please try again.')
+      return
+    }
+    try {
+      const res = await fetch(`${APP_URL}/api/delete-account`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!res.ok) throw new Error(`delete failed: ${res.status}`)
+      posthog.capture('account data deleted')
+      // Clear local stores then sign out — mirrors the sign-out cleanup.
+      await handleSignOut()
+    } catch {
+      window.alert('Something went wrong deleting your data. Please try again.')
+    }
   }
 
   return (
@@ -234,6 +259,21 @@ export function Settings() {
                   <path d="M10 11l3-3-3-3M13 8H6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
                 <span style={{ fontSize: 'var(--text-compact)', fontWeight: 500 }}>Sign out</span>
+              </button>
+              <div style={{ height: '1px', background: 'var(--border)', margin: '0 4px' }} />
+              <button
+                onClick={() => { setAccountExpanded(false); handleDeleteData() }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 'var(--sp-2)',
+                  width: '100%', background: 'transparent', border: 'none',
+                  cursor: 'pointer', padding: '10px 4px', textAlign: 'left',
+                  color: '#FF4D4D',
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+                  <path d="M2 4h12M6 4V2.5a1 1 0 011-1h2a1 1 0 011 1V4M5 4l.5 9a1 1 0 001 1h3a1 1 0 001-1L11 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <span style={{ fontSize: 'var(--text-compact)', fontWeight: 500 }}>Delete all my data</span>
               </button>
             </div>
           )}
