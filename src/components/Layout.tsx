@@ -1,5 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom'
 import { BottomNav } from './BottomNav'
+import { SyncStatusIndicator } from './SyncStatusIndicator'
 import { useSyncState, useUserStateRealtime } from '@/hooks/useSyncState'
 
 function DataSync() {
@@ -62,6 +63,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
       <BottomNav />
       </div>
+      <SyncStatusIndicator />
     </div>
   )
 }
