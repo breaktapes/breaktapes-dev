@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 120" width="600" height="120">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@900&amp;display=swap');
+      text {
+        font-family: 'Barlow Condensed', 'Arial Narrow', Arial, sans-serif;
+        font-weight: 900;
+        font-size: 88px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+    </style>
+  </defs>
+  <rect width="600" height="120" fill="#0D0D0D"/>
+  <text x="28" y="98" fill="#E8E0D5">BREAK</text>
+  <text x="338" y="98" fill="#E84E1B" letter-spacing="0">/</text>
+  <text x="366" y="98" fill="#E8E0D5">TAPES</text>
+</svg>

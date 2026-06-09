@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" width="1000" height="1000">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@900&amp;display=swap');
+    </style>
+  </defs>
+  <rect width="1000" height="1000" rx="60" fill="#0D0D0D"/>
+  <text
+    x="500" y="536"
+    font-family="'Barlow Condensed', 'Arial Narrow', Arial, sans-serif"
+    font-weight="900"
+    font-size="80"
+    letter-spacing="8"
+    text-anchor="middle"
+    fill="#E8E0D5">BREAK<tspan fill="#E84E1B">/</tspan>TAPES</text>
+</svg>
