@@ -3,6 +3,11 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.7.5] - 2026-06-09
+
+### Added
+- **Isolated staging instance for the health-proxy Worker.** `health.breaktapes.com` was a single shared worker with no staging copy (it carries OAuth callbacks, registered once per provider). Added `[env.staging]` → `wrangler deploy --env staging` publishes a separate `breaktapes-health-staging` worker on `*.workers.dev` (no custom domain, no OAuth routes) so the retention cron can be tested against the staging Supabase without touching production. Plus a `GET /retention/run` manual trigger **gated on `RETENTION_TEST_ENABLED=1`** — set only in `[env.staging.vars]`, so the route returns 404 in production and never runs on `health.breaktapes.com`. Used to validate the full retention chain end-to-end (reminder send → `reminder_sends` idempotency → unsubscribe → opt-out filtering) on staging.
+
 ## [0.7.7.4] - 2026-06-09
 
 ### Changed
