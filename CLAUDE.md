@@ -915,6 +915,9 @@ PR #164 was squash-merged to main; subsequent fixes commit `6b8debd` from worktr
 
 ## Known Issues / Watch Points
 
+- **`parseDistKm` is map-first (Session 42):** `parseDistKm()` (`src/lib/raceFormulas.ts`) checks `DIST_KM_MAP` BEFORE `parseFloat`. This is load-bearing — `"70.3"` and `"140.6"` are race names in **miles** (113 km / 226 km), not km. If `parseFloat` ran first it would read `"70.3"` as 70.3 km → `detectTriType` buckets a 70.3 as **Olympic** → Triathlon Predictor silently corrupts (Olympic tab same-band, swim/bike unscaled via Riegel identity). Do NOT reorder to parseFloat-first. Canonical store for a 70.3 is `"113"` (AddRaceModal dropdown value); the map just rescues legacy/literal `"70.3"`.
+- **Retention email is LIVE on prod + uses TWO separate workers (Session 42):** `breaktapes-health` (prod, custom domain `health.breaktapes.com`, `wrangler deploy` no `--env`) and `breaktapes-health-staging` (`[env.staging]`, `*.workers.dev`, `wrangler deploy --env staging`) are INDEPENDENT workers with per-worker secrets + per-worker crons. Prod cron `0 13 * * *` is active (`SUPABASE_URL`=prod, `RESEND_API_KEY` + `SUPABASE_SERVICE_ROLE_KEY` set) and emails real opted-in users (default opt-in ON). Flipping/deploying one worker does NOT affect the other. health-proxy deploys MANUALLY (not CI): `cd health-proxy && CF_API_TOKEN="" CLOUDFLARE_API_TOKEN="" npx wrangler deploy`.
+- **Prod Supabase migration timestamp drift (Session 42):** if a migration was applied to prod via Supabase MCP `apply_migration`, MCP records its OWN timestamp version (e.g. `...133824`) which won't match the committed file prefix (e.g. `...133809`). CI `supabase db push` then fails: "Remote migration versions not found in local migrations directory" — and because `deploy-production.yml` runs `db push` before `wrangler deploy` with `-e`, the **app deploy silently skips**. Fix via MCP `execute_sql`: `UPDATE supabase_migrations.schema_migrations SET version='<file-ts>' WHERE version='<phantom-ts>'`, and `INSERT` history rows (ON CONFLICT DO NOTHING) for migrations whose objects already exist but whose row is missing. Then re-run the deploy.
 - **Core Web Vitals (Session 41):** `index.html` carries the only render hints — `preconnect`/`dns-prefetch` to `clerk.breaktapes.com` + Google Fonts `<link>`. Do NOT move fonts back to a CSS `@import` (chains behind the CSS bundle → text-LCP regression). `AuthGate` renders `<LandingScreen>` during `!isLoaded` for logged-out visitors (cookie-gated on `__client_uat`) — do not revert to the always-`AuthLoadingScreen` gate or text-LCP regresses. The auth modal overlay must stay top-anchored (`alignItems: flex-start` + `overflowY: auto`) and Clerk's card must keep its reserved `minHeight` (`clerkAppearance.elements.rootBox`/`card`) or the 0.251 CLS returns. Do not re-add `backdrop-filter: blur()` to the overlay (per-keystroke GPU recomposite → INP). `.pl-progress` is driven by the `--pl-progress` CSS var set on `#landing-screen` each scroll frame — keep `.pl-progress` a descendant of `#landing-screen` or the var stops inheriting.
 - `admin.breaktapes.com` shares the **production Worker** with `app.breaktapes.com/*` (both routes in `wrangler.toml`; `IS_ADMIN_HOST` switches the shell). There is no admin-only deploy — deploying prod updates both hosts. Auth-gating the admin dashboard view is runtime access control, NOT deploy isolation.
 - `getDashLayout()` is a **pure read** — must never call `set()`. If you add any write logic, it creates an infinite render loop (render → useMemo → getDashLayout → set → re-render). Any state mutation belongs in `initDashLayout()`, called from `useEffect` on mount only. This bug caused the Safari "page not responding" crash and was fixed in Session 36.
@@ -1381,6 +1384,28 @@ Direct DB access (psql/psycopg2) is blocked from localhost — Supabase only exp
 - When the same new fields exist on both HEAD and staging (from two parallel worktrees), `git merge origin/staging` produces duplicate-field conflicts in TypeScript interfaces — always check for duplicate property declarations after merge, they compile but are confusing.
 - `git worktree remove` mid-session kills the shell CWD — the kernel's `getcwd()` fails on every subsequent subprocess. No recovery possible without restarting from a valid directory. Always `cd` to main repo before any worktree cleanup.
 - PostToolUse linter hook can revert file edits made in the same session if the linter reformats aggressively — verify critical new fields persist after every hook run.
+
+---
+
+### Session 44 (2026-06-09) — parseDistKm tri-label fix + prod retention go-live (v0.7.7.3)
+
+**Branch:** `claude/adoring-cori-c5c5a4` → staging (PR #512) → main (PR #513; parallel promote #516). Doc follow-up PR #520. Prod live, verified.
+
+#### Shipped
+- **`parseDistKm` map-first fix** (`src/lib/raceFormulas.ts`) — was `parseFloat`-first, so `"70.3"`/`"140.6"` (race names in MILES) read as 70.3/140.6 **km** → `detectTriType` mis-bucketed a 70.3 as Olympic → Triathlon Predictor showed the Olympic tab same-band (Riegel identity, swim/bike unscaled — raw 43:37 swim / 3:38:00 bike leaked through) and IRONMAN cross-band with wrong `alpha`. Now checks `DIST_KM_MAP` before `parseFloat`. Added `'140.6'`/`'ironman 70.3'`/`'im 70.3'` aliases. Incidentally fixes `"50mi"/"100mi"/"10 mile"` (were read as 50/100/10 km).
+- **demoData** — 11 tri `distance` fields `"70.3"` → `"113"` (canonical km). Race names with "70.3" untouched.
+- **Regression test** `src/lib/__tests__/raceFormulas.test.ts`. Suite 592 green, tsc clean.
+- **Prod retention emails activated** (the Session 42 "prod cron not yet active" gate, now closed) — deployed new cron code to prod `breaktapes-health` worker (version `e6a3d149`), flipped `SUPABASE_URL` staging→prod, confirmed all 3 secrets (`RESEND_API_KEY` re-set from `~/breaktapes-setup-env.sh`, `SUPABASE_SERVICE_ROLE_KEY` + `SUPABASE_URL` set). Cron `0 13 * * *` live; first real send 2026-06-10 13:00 UTC. Staging runs on the SEPARATE `breaktapes-health-staging` worker — the two are independent (correcting the earlier "one worker, flipping prod kills staging" worry).
+
+#### Prod deploy incident (resolved)
+- First prod deploy FAILED at "Push migrations to production Supabase" — pre-existing drift: `race_count_audit_daily_snapshot` applied to prod via MCP as `...133824` but committed as `...133809`, and `race_count_audit` (130000) had no history row though its table existed. `deploy-production.yml` runs `db push` before `wrangler` with `-e`, so the app deploy was skipped (fix wasn't live).
+- Repaired prod `schema_migrations` via MCP: renamed phantom `133824`→`133809`, inserted `130000` row. Let CI apply `retention_email` (120000) to prod. Re-ran deploy → success.
+
+#### Key learnings
+- `parseDistKm` MUST be map-first — see Known Issues. `"70.3"`/`"140.6"` are miles.
+- health-proxy is two independent workers (prod `breaktapes-health` + `breaktapes-health-staging`), not one — see Known Issues. Earlier "flipping prod kills staging cron" assumption was wrong.
+- MCP-applied prod migrations record a divergent timestamp that breaks `supabase db push` later; the app deploy silently skips behind the failed migration step (`-e`). Repair the `schema_migrations` rows via `execute_sql`. (Same class as Session 32.)
+- Promote `staging`→`main` with `gh pr merge --merge` (not squash) to keep branches content-identical; then FF `origin/main`→staging for zero divergence.
 
 ---
 
