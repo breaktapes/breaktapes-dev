@@ -19,6 +19,25 @@ crons = ["0 13 * * *"]
 [vars]
 POSTHOG_HOST = "https://us.i.posthog.com"
 
+# ── Staging instance (isolated) ──────────────────────────────────────────────
+# `wrangler deploy --env staging` publishes a SEPARATE worker on *.workers.dev
+# (no custom domain, no OAuth routes) used to test the retention cron against the
+# staging Supabase without touching the prod health.breaktapes.com worker.
+# Secrets are per-worker: set SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY /
+# RESEND_API_KEY with `wrangler secret put <NAME> --env staging`.
+# RETENTION_TEST_ENABLED=1 (staging only) unlocks the manual /retention/run hook;
+# prod never sets it, so that route is inert in production.
+[env.staging]
+name = "breaktapes-health-staging"
+workers_dev = true
+
+[env.staging.triggers]
+crons = ["0 13 * * *"]
+
+[env.staging.vars]
+POSTHOG_HOST = "https://us.i.posthog.com"
+RETENTION_TEST_ENABLED = "1"
+
 # Secrets (set via wrangler secret put — never commit values here):
 #   wrangler secret put OW_BASE_URL              → paste Railway OW URL
 #   wrangler secret put OW_API_KEY               → paste OW admin API key

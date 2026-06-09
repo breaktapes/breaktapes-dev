@@ -161,7 +161,7 @@ async function claimSend(env, supabaseUrl, userId, kind, raceId) {
  * selection lives in retention.mjs; this is the I/O shell. No-ops safely if the
  * service-role key or Resend key isn't configured yet.
  */
-async function runRetention(env, nowMs) {
+async function runRetention(env, nowMs, onlyUserId) {
   if (!env.SUPABASE_SERVICE_ROLE_KEY || !env.RESEND_API_KEY) {
     console.warn('[retention] skipped — SUPABASE_SERVICE_ROLE_KEY or RESEND_API_KEY not set');
     return { skipped: true };
@@ -173,7 +173,8 @@ async function runRetention(env, nowMs) {
   const q = `${supabaseUrl}/rest/v1/user_state?select=user_id,email,email_opt_in,unsubscribe_token,state_json&email_opt_in=eq.true&email=not.is.null`;
   const res = await fetch(q, { headers: svcHeaders(env) });
   if (!res.ok) { console.warn('[retention] user_state read failed', res.status); return { error: 'read_failed' }; }
-  const users = await res.json().catch(() => []);
+  let users = await res.json().catch(() => []);
+  if (onlyUserId) users = users.filter(u => u.user_id === onlyUserId); // staging test scope
   const tokenByUser = new Map(users.map(u => [u.user_id, u.unsubscribe_token]));
   const unsub = (uid) => `${HEALTH_ORIGIN}/email/unsubscribe?token=${encodeURIComponent(tokenByUser.get(uid) || '')}`;
 
@@ -331,6 +332,18 @@ export default {
     // be handled BEFORE the ALLOWED_ORIGINS gate. It's a token-authenticated GET.
     if (path === '/email/unsubscribe' && request.method === 'GET') {
       return handleUnsubscribe(env, url);
+    }
+
+    // Manual retention trigger — STAGING ONLY. Gated on RETENTION_TEST_ENABLED,
+    // set solely in [env.staging.vars]; in production the var is unset so this
+    // returns 404 and never runs on health.breaktapes.com. Fires the cron on
+    // demand against the staging DB; `only`/`at` scope and date-pin the run.
+    if (path === '/retention/run' && request.method === 'GET') {
+      if (env.RETENTION_TEST_ENABLED !== '1') return new Response('Not found', { status: 404 });
+      const at = url.searchParams.get('at');
+      const nowMs = at ? Date.parse(at + 'T13:00:00Z') : Date.now();
+      const out = await runRetention(env, nowMs, url.searchParams.get('only') || undefined);
+      return new Response(JSON.stringify(out), { status: 200, headers: { 'Content-Type': 'application/json' } });
     }
 
     if (!ALLOWED_ORIGINS.has(origin)) {

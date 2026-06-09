@@ -3,6 +3,17 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.7.5] - 2026-06-09
+
+### Added
+- **Isolated staging instance for the health-proxy Worker.** `health.breaktapes.com` was a single shared worker with no staging copy (it carries OAuth callbacks, registered once per provider). Added `[env.staging]` → `wrangler deploy --env staging` publishes a separate `breaktapes-health-staging` worker on `*.workers.dev` (no custom domain, no OAuth routes) so the retention cron can be tested against the staging Supabase without touching production. Plus a `GET /retention/run` manual trigger **gated on `RETENTION_TEST_ENABLED=1`** — set only in `[env.staging.vars]`, so the route returns 404 in production and never runs on `health.breaktapes.com`. Used to validate the full retention chain end-to-end (reminder send → `reminder_sends` idempotency → unsubscribe → opt-out filtering) on staging.
+
+## [0.7.7.4] - 2026-06-09
+
+### Changed
+- **Strava integration now live on production.** The Strava connect card in Train → Wearables was gated to staging/localhost only (`stagingOnly: true` + `isStagingHost()`), because the Strava API app was capped at 1 athlete pending a rate-limit increase. The cap has been raised (10 users already authenticated), so the gate is removed — Strava now shows on `app.breaktapes.com` exactly like WHOOP. Connect flow (`startStravaOAuth` → `handleStravaCallback` → `fetchStravaActivities`) was already fully wired; no logic changed. The `stagingOnly` field + host filter are kept for future gated providers.
+  - **Deploy-time prerequisites** (config, not code): `VITE_STRAVA_CLIENT_ID` must be set in the production Cloudflare Pages env, and `https://app.breaktapes.com/train` must be a registered Authorized Callback Domain in the Strava API app settings.
+
 ## [0.7.7.3] - 2026-06-09
 
 ### Fixed
