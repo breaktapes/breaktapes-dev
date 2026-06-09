@@ -106,6 +106,14 @@ All migrations live in `supabase/migrations/`. Applied to both projects via `sup
 - **Tokens:** Stored in `localStorage`
 - **Token refresh:** `refreshStravaToken()` — client-side refresh
 - **Usage:** Sync recent activities to Training page; match activities to races
+- **Connect flow:** `startStravaOAuth()` → `handleStravaCallback()` → `fetchStravaActivities()` in `src/lib/strava.ts`. `startStravaOAuth` builds `redirect_uri = ${window.location.origin}/train`.
+
+### Production enablement (v0.7.7.4 — live on `app.breaktapes.com`)
+The Strava card in Train → Wearables (`OW_PROVIDERS` in `src/pages/Train.tsx`) was gated to staging/localhost (`stagingOnly: true` + `isStagingHost()`) while the Strava API app was capped at 1 athlete. The cap was lifted, so the flag was removed — Strava now shows on production like WHOOP. `stagingOnly` + `isStagingHost()` are kept for future gated providers; no connect-flow logic changed.
+
+**Two deploy-time prerequisites (config, not code — prod connect stays dead until both true):**
+1. `VITE_STRAVA_CLIENT_ID` set in the **production** Cloudflare Pages env. Falls back to `''` in `src/env.ts:10` → empty `client_id` → Strava OAuth error.
+2. `https://app.breaktapes.com/train` registered as an **Authorized Callback Domain** in the Strava API app dashboard. Strava 401s any unregistered redirect_uri domain. Authenticating via `dev.breaktapes.com` only proves the staging domain is registered, not the prod one.
 
 ---
 
