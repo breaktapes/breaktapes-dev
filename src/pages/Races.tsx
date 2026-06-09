@@ -864,7 +864,7 @@ export function Races() {
       <RacesSheet races={races} onAddRace={() => { setAddRaceOpen(true); posthog.capture('modal_opened', { modal: 'add_race', source: 'races' }) }} onImportRace={() => { setImportOpen(true); posthog.capture('modal_opened', { modal: 'import_race' }) }} onOpenPassport={(y) => { setPassportYear(y); setPassportOpen(true) }} onDiscover={() => navigate('/discover')} />
 
       {addRaceOpen  && <AddRaceModal     onClose={() => setAddRaceOpen(false)} />}
-      {importOpen   && <RaceImportModal  onClose={() => setImportOpen(false)} onPickByRace={() => { setImportOpen(false); setPickerOpen(true) }} />}
+      {importOpen   && <RaceImportModal  onClose={() => setImportOpen(false)} onPickByRace={() => { setImportOpen(false); setPickerOpen(true) }} onAddManual={() => { setImportOpen(false); setAddRaceOpen(true); posthog.capture('modal_opened', { modal: 'add_race', source: 'import_no_results' }) }} />}
       {pickerOpen   && <IronmanRacePicker onClose={() => setPickerOpen(false)} />}
 
       {passportOpen && (
