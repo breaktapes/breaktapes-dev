@@ -7,6 +7,7 @@
 import { useRef, useState, useEffect } from 'react'
 import type { Race } from '@/types'
 import { fmtDateDDMM, distLabel as distLabelUtil } from '@/lib/utils'
+import { posthog } from '@/lib/posthog'
 
 // ── Design tokens (canvas-safe, no CSS vars) ──────────────────────────────────
 const C = {
@@ -182,9 +183,11 @@ interface Props {
   race: Race
   athleteName: string
   onClose: () => void
+  /** Where the card was opened from — for share-loop funnel analysis. */
+  trigger?: 'post_log' | 'race_detail'
 }
 
-export function RaceShareCard({ race, athleteName, onClose }: Props) {
+export function RaceShareCard({ race, athleteName, onClose, trigger = 'race_detail' }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [drawn, setDrawn] = useState(false)
   const [copying, setCopying] = useState(false)
@@ -195,6 +198,8 @@ export function RaceShareCard({ race, athleteName, onClose }: Props) {
       drawCard(canvasRef.current, race, athleteName)
       setDrawn(true)
     }
+    posthog.capture('race share card opened', { trigger, sport: race.sport, has_medal: !!race.medal })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   function draw() {
@@ -209,6 +214,7 @@ export function RaceShareCard({ race, athleteName, onClose }: Props) {
     link.download = `${race.name ?? 'race'}-breaktapes.png`.replace(/\s+/g, '-').toLowerCase()
     link.href = canvasRef.current.toDataURL('image/png')
     link.click()
+    posthog.capture('race share downloaded', { trigger })
   }
 
   async function copyToClipboard() {
@@ -220,6 +226,7 @@ export function RaceShareCard({ race, athleteName, onClose }: Props) {
           try {
             if (!blob) throw new Error('Canvas toBlob failed')
             await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+            posthog.capture('race share copied', { trigger })
             resolve()
           } catch (e) {
             reject(e)

@@ -3,6 +3,15 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.7.1] - 2026-06-09
+
+### Added
+- **Logging a race now auto-opens the share card.** PostHog showed the share loop was effectively dead (5 profile toggles / 5 views in 90d) while logging was the one healthy action (53 in the burst week). After saving a new past race, the share-card passport opens automatically so every result becomes a chance to share; closing it closes the modal. Upcoming races and edits to existing races are unaffected.
+- **Share-loop instrumentation.** `RaceShareCard` now emits `race share card opened` (with `trigger: post_log | race_detail`), `race share copied`, and `race share downloaded` — previously the share card fired nothing, so the funnel was blind.
+
+### Changed
+- The post-save "Race added" toast in the log form is replaced by the share card itself.
+
 ## [0.7.7.0] - 2026-06-09
 
 ### Changed
