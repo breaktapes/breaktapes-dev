@@ -82,6 +82,7 @@ export interface Athlete {
   isPublic?: boolean
   imageUrl?: string              // Clerk profile photo URL — synced on login
   units?: 'metric' | 'imperial'  // distance + pace display preference (default: metric)
+  emailOptIn?: boolean           // race reminders + weekly digest emails (default: true / on)
   pbHiddenKeys?: string[]        // PB distance keys hidden via the ⚙ EDIT button on the You page
   owUserId?: string              // Open Wearables user ID — set once on first OW connection
   profileVisibility?: {

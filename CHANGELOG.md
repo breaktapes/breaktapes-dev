@@ -3,6 +3,15 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.7.2] - 2026-06-09
+
+### Added
+- **Retention emails — race-day reminders + weekly digest.** PostHog showed usage is spike-then-dead with zero re-engagement triggers. A daily Cloudflare cron (health-proxy `scheduled` handler, 13:00 UTC) emails opted-in users a reminder when an upcoming race is within 3 days, and a weekly digest every Monday (next race + prompt). Pure selection logic lives in `health-proxy/src/retention.mjs` (unit-tested in `src/lib/__tests__/retention.test.ts`); `reminder_sends` (new table) gives per-(user, kind, race) idempotency so nothing double-sends.
+  - **Opt-in: default ON** with a one-click **Unsubscribe** link in every email (`GET /email/unsubscribe?token=…`, flips `email_opt_in` on the column and in `state_json.athlete` so the client never re-enrolls). A toggle in Settings → Preferences ("Email reminders") lets users turn it off in-app.
+  - **Schema** (`20260609120000_retention_email.sql`): `user_state` gains `email`, `email_opt_in` (default true), `unsubscribe_token`; `reminder_sends` table for audit/idempotency. **Applied to staging only** — prod migration is gated.
+  - **Email plumbing:** the client now syncs `email` (from Clerk) + `email_opt_in` through `/api/sync` (Worker writes them as columns, omitted-key-safe so a stale client can't clobber an unsubscribe). The existing `/email/send` Resend path was refactored into a shared `sendEmail()`.
+  - **Gated on setup:** the cron no-ops until `SUPABASE_SERVICE_ROLE_KEY` + `RESEND_API_KEY` are set on the health-proxy Worker and the Resend sending domain is verified. Nothing emails real users until then.
+
 ## [0.7.7.1] - 2026-06-09
 
 ### Added
@@ -20,7 +29,6 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 - **Import funnel instrumentation.** New client-side PostHog events the server-side per-provider events can't see: `race import results shown` (total/has_results/provider_counts), `race import no results`, `race import row selected` (with `was_auto`), and `race import add manual clicked`. These pin whether the real drop is no-results vs results-but-no-select vs select-but-no-import. IronmanRacePicker emits the same events for funnel parity.
-
 ## [0.7.6.12] - 2026-06-05
 
 ### Fixed

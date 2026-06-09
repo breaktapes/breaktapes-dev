@@ -79,6 +79,16 @@ export function Settings() {
     posthog.capture('public profile toggled', { enabled: val })
   }
 
+  // Email reminders + weekly digest — default ON. Writes through updateAthlete
+  // (→ state_json) AND the email_opt_in column via the explicit sync so the
+  // reminder/digest cron sees the change immediately.
+  const emailOptIn = athlete?.emailOptIn ?? true
+  async function toggleEmailOptIn(val: boolean) {
+    updateAthlete({ emailOptIn: val })
+    await syncStateToSupabase()
+    posthog.capture('email opt in toggled', { enabled: val })
+  }
+
   function applyTheme(themeId: ThemeId) {
     // V4 §10b — Pro gating. Locked themes ignored on prod; staging unlocks all.
     const theme = THEMES.find(t => t.id === themeId)
@@ -370,6 +380,42 @@ export function Settings() {
                 )
               })}
             </div>
+          </div>
+
+          {/* Email reminders + weekly digest toggle */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--sp-3)', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
+            <div>
+              <p style={{ margin: 0, fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-sm)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>
+                Email reminders
+              </p>
+              <p style={{ margin: '4px 0 0', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
+                Race-day reminders &amp; a weekly digest. Unsubscribe anytime.
+              </p>
+            </div>
+            <button
+              onClick={() => toggleEmailOptIn(!emailOptIn)}
+              aria-label="Toggle email reminders"
+              style={{
+                width: '48px', height: '28px',
+                borderRadius: 'var(--radius-lg)',
+                border: 'none',
+                cursor: 'pointer',
+                background: emailOptIn ? 'var(--green)' : 'var(--surface3)',
+                position: 'relative',
+                transition: 'background 0.2s',
+                flexShrink: 0,
+              }}
+            >
+              <span style={{
+                position: 'absolute',
+                top: '3px',
+                left: emailOptIn ? '23px' : '3px',
+                width: '22px', height: '22px',
+                borderRadius: 'var(--radius-round)',
+                background: 'var(--black)',
+                transition: 'left 0.2s',
+              }} />
+            </button>
           </div>
         </div>
       </section>
