@@ -106,6 +106,14 @@ All migrations live in `supabase/migrations/`. Applied to both projects via `sup
 - **Tokens:** Stored in `localStorage`
 - **Token refresh:** `refreshStravaToken()` — client-side refresh
 - **Usage:** Sync recent activities to Training page; match activities to races
+- **Connect flow:** `startStravaOAuth()` → `handleStravaCallback()` → `fetchStravaActivities()` in `src/lib/strava.ts`. `startStravaOAuth` builds `redirect_uri = ${window.location.origin}/train`.
+
+### Production enablement (v0.7.7.4 — live on `app.breaktapes.com`)
+The Strava card in Train → Wearables (`OW_PROVIDERS` in `src/pages/Train.tsx`) was gated to staging/localhost (`stagingOnly: true` + `isStagingHost()`) while the Strava API app was capped at 1 athlete. The cap was lifted, so the flag was removed — Strava now shows on production like WHOOP. `stagingOnly` + `isStagingHost()` are kept for future gated providers; no connect-flow logic changed.
+
+**Two deploy-time prerequisites (config, not code — prod connect stays dead until both true):**
+1. `VITE_STRAVA_CLIENT_ID` set in the **production** Cloudflare Pages env. Falls back to `''` in `src/env.ts:10` → empty `client_id` → Strava OAuth error.
+2. `https://app.breaktapes.com/train` registered as an **Authorized Callback Domain** in the Strava API app dashboard. Strava 401s any unregistered redirect_uri domain. Authenticating via `dev.breaktapes.com` only proves the staging domain is registered, not the prod one.
 
 ---
 
@@ -168,6 +176,16 @@ All migrations live in `supabase/migrations/`. Applied to both projects via `sup
 
 - **Rotating DB passwords:** Use `PATCH https://api.supabase.com/v1/projects/{ref}/database/password` with `Authorization: Bearer <SUPABASE_ACCESS_TOKEN>`. Wait ~60s before the new password propagates.
 - **Rotating Cloudflare token:** Create at `dash.cloudflare.com/profile/api-tokens` → Edit Cloudflare Workers template → update `CLOUDFLARE_API_TOKEN` GitHub secret. Token format starts with `cfut_`.
+
+---
+
+## Email (Resend) + Retention cron
+
+- **Send route:** `POST health.breaktapes.com/email/send` (PR #494) via Resend. Allowlisted senders only (`hello`/`founder`/`support`/`noreply` @breaktapes.com) — refactored into a shared `sendEmail(env, …)` in `health-proxy/src/index.js`. Resend sending domain `breaktapes.com` is **verified + live** (test send returns an id).
+- **Retention cron (v0.7.7.2, Session 42):** `scheduled()` handler at 13:00 UTC daily — race-day reminders (upcoming race within 3 days) + Monday weekly digest. Pure selection logic in `health-proxy/src/retention.mjs` (unit-tested). `reminder_sends` table = per-(user,kind,race) idempotency. Default opt-in ON; `GET /email/unsubscribe?token=` flips `user_state.email_opt_in` + `state_json.athlete.emailOptIn`. Client syncs `email`+`email_opt_in` via `/api/sync`.
+- **Worker secrets** (per-worker — `wrangler secret put`): `RESEND_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`. Resend key value lives in `~/breaktapes-setup-env.sh` (local, outside git).
+- **Staging isolation:** `health.breaktapes.com` is a SINGLE prod worker (no staging copy — OAuth callbacks registered once per provider). `[env.staging]` in `health-proxy/wrangler.toml` → `wrangler deploy --env staging` publishes `breaktapes-health-staging` on `*.workers.dev` for cron testing. `GET /retention/run` (gated on `RETENTION_TEST_ENABLED=1`, staging-only) fires it on demand.
+- **PROD status:** frontend + DB migration live on prod; **prod cron NOT active** — needs `wrangler deploy` (no `--env`) on the prod health worker + its `SUPABASE_URL` corrected to the prod URL (currently the staging URL from testing).
 
 ---
 

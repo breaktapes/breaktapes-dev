@@ -1384,6 +1384,53 @@ Direct DB access (psql/psycopg2) is blocked from localhost — Supabase only exp
 
 ---
 
+### Session 43 (2026-06-09) — Docs: Strava production enablement (v0.7.7.4)
+
+**Branch:** `claude/docs-strava-prod` → staging → main. Docs-only follow-up to PR #514 (→ staging) / #516 (→ main), which shipped Strava on production but went unlogged in the session history.
+
+#### What shipped in v0.7.7.4 (the change being documented)
+- The Strava connect card in **Train → Wearables** (`OW_PROVIDERS` in `src/pages/Train.tsx`, ~line 205) was gated to staging/localhost via `stagingOnly: true` + the `isStagingHost()` filter, because the Strava API app was capped at 1 athlete pending a rate-limit raise. The cap was lifted (10 users already authenticated), so the `stagingOnly: true` flag was removed from the Strava entry → it now shows on `app.breaktapes.com` exactly like WHOOP.
+- **No connect-flow logic changed.** `startStravaOAuth` → `handleStravaCallback` → `fetchStravaActivities` in `src/lib/strava.ts` were already fully wired. Flag removal was the only code change.
+- The `stagingOnly` field + `isStagingHost()` filter were **kept** for future gated providers.
+
+#### Two deploy-time prerequisites (config, NOT code — prod connect is dead until both true)
+1. **`VITE_STRAVA_CLIENT_ID` set in the production Cloudflare Pages env.** Falls back to `''` in `src/env.ts:10` → empty `client_id` → Strava OAuth error page.
+2. **`https://app.breaktapes.com/train` registered as an Authorized Callback Domain** in the Strava API app dashboard. `startStravaOAuth` builds `redirect_uri = ${window.location.origin}/train`; Strava 401s any redirect_uri whose domain isn't registered. Users who authenticated via `dev.breaktapes.com` only prove the **staging** domain is registered — the prod domain is the likely gap.
+
+#### Key learnings
+- Re-enabling a host-gated OAuth provider on prod = check the Pages env var **and** the provider's callback-domain allowlist before assuming the code is wrong. Connect working on staging only confirms the staging domain is registered.
+- A `limit:reached` throw in `handleStravaCallback` (strava.ts:222) was part of the original 1-athlete cap; it stays (harmless once the cap is raised).
+
+---
+
+### Session 42 (2026-06-09) — PostHog-driven activation + retention (import 1-tap, post-log share, email reminders)
+
+**Branches:** `claude/import-funnel-1tap` → staging (PR #509, v0.7.7.0) · `claude/post-log-share` → staging (PR #510, v0.7.7.1) · `claude/retention-email-staging` → staging (PR #511, v0.7.7.2) · `claude/health-proxy-staging-env` → staging (PR #515, v0.7.7.5). All promoted to **main/prod** via PR #516 (parallel promote).
+
+#### Data-driven (live PostHog via MCP)
+Pulled real product analytics. Three signals: **import funnel leaks ~86%** (65 `race import searched` → 9 `completed` in 90d; the per-provider search/fetch events fire **server-side** from health-proxy via posthog-node), **share loop dead** (5 profile toggles / 5 views), **usage spike-then-dead** (no retention triggers). Rageclicks cluster on `/` + `/train`. Widgets: only 4 of 24 ever opened.
+
+#### A — Import 1-tap (`RaceImportModal.tsx`, `IronmanRacePicker.tsx`, `src/lib/importRank.ts`)
+The modal was already zero-form; the leak was the non-obvious two-step + dead-end empty searches. Auto-select the best non-duplicate match (`rankBestMatch`: richness→name-match→recency, unit-tested) and **float it to the top** of results so the pre-tick is visible; still one confirm tap (never auto-saves). Empty results → **+ ADD RACE MANUALLY** handoff into `AddRaceModal`. Client funnel events the server can't see: `race import results shown` / `no results` / `row selected` (`was_auto`) / `add manual clicked`.
+
+#### B — Post-log auto-share (`AddRaceModal.tsx`, `RaceShareCard.tsx`)
+After saving a NEW past race, early-return the `RaceShareCard` via portal (closing it closes the modal); upcoming + edit paths excluded. Added the share-loop instrumentation the card never had (`race share card opened`/`copied`/`downloaded`).
+
+#### C — Retention email (`health-proxy/`, `worker/index.js`, `syncState.ts`, `Settings.tsx`, migration)
+Daily cron (`scheduled()` 13:00 UTC) sends race-day reminders (race within 3 days) + Monday digest. Pure selection logic in `health-proxy/src/retention.mjs` (single source of truth, unit-tested from `src/lib/__tests__/retention.test.ts`). `reminder_sends` table = per-(user,kind,race) idempotency via `ignore-duplicates` insert. Default opt-in ON + one-click unsubscribe (`GET /email/unsubscribe` flips column **and** `state_json.athlete.emailOptIn`). Client syncs `email`+`email_opt_in` through `/api/sync` (worker writes them **omitted-key-safe**). Migration `20260609120000_retention_email.sql`.
+
+#### Isolated staging health-proxy (PR #515)
+`health.breaktapes.com` is a **single shared worker** (OAuth callbacks, one per provider) — no staging copy. Added `[env.staging]` → separate `breaktapes-health-staging` worker on `*.workers.dev` + a `GET /retention/run` trigger gated on `RETENTION_TEST_ENABLED=1` (staging-only var → 404 in prod). Validated the full chain there: send → idempotency → unsubscribe → opt-out filtering. Prod cron NOT yet active (prod health worker not redeployed; its `SUPABASE_URL` is currently the staging URL — must be fixed before prod cron). See `docs/memory/` + the retention memory.
+
+#### Key learnings
+- **Per-provider import analytics are server-side** (health-proxy posthog-node) — client should only add the mid-funnel events the server can't see, not duplicate `race import searched`.
+- **MCP `apply_migration` records its own timestamp version**, not the repo filename prefix. If they diverge, a later `supabase db push` fails ("remote ahead"). Fix: delete the orphan `supabase_migrations.schema_migrations` row so the repo file's version is what gets recorded. (Broke the staging deploy once this session; removing the orphan fixed it.)
+- **Sequential same-day PRs collide on VERSION/package.json/CHANGELOG** — each merge forces a rebase of the next, resolving those 3 files (source stays clean since features touch disjoint files).
+- **`health.breaktapes.com` = single prod worker, no staging.** Deploying it is a prod action; isolate cron testing with `[env.staging]` + a workers.dev worker.
+- Branch base matters: C was rebased main→staging because `/email/send` (Resend, PR #494) only existed on staging.
+
+---
+
 ### Session 41 (2026-06-04) — Core Web Vitals pass: auth + landing (v0.7.6.6)
 
 **Branch:** `claude/unruffled-proskuriakova-a40451` → staging (PR #464) → main (PR #465). Both green; promoted via `--merge` (zero divergence). Prod + admin verified live (HTTP 200, new build markers).
