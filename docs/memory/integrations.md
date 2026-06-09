@@ -171,6 +171,16 @@ All migrations live in `supabase/migrations/`. Applied to both projects via `sup
 
 ---
 
+## Email (Resend) + Retention cron
+
+- **Send route:** `POST health.breaktapes.com/email/send` (PR #494) via Resend. Allowlisted senders only (`hello`/`founder`/`support`/`noreply` @breaktapes.com) — refactored into a shared `sendEmail(env, …)` in `health-proxy/src/index.js`. Resend sending domain `breaktapes.com` is **verified + live** (test send returns an id).
+- **Retention cron (v0.7.7.2, Session 42):** `scheduled()` handler at 13:00 UTC daily — race-day reminders (upcoming race within 3 days) + Monday weekly digest. Pure selection logic in `health-proxy/src/retention.mjs` (unit-tested). `reminder_sends` table = per-(user,kind,race) idempotency. Default opt-in ON; `GET /email/unsubscribe?token=` flips `user_state.email_opt_in` + `state_json.athlete.emailOptIn`. Client syncs `email`+`email_opt_in` via `/api/sync`.
+- **Worker secrets** (per-worker — `wrangler secret put`): `RESEND_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`. Resend key value lives in `~/breaktapes-setup-env.sh` (local, outside git).
+- **Staging isolation:** `health.breaktapes.com` is a SINGLE prod worker (no staging copy — OAuth callbacks registered once per provider). `[env.staging]` in `health-proxy/wrangler.toml` → `wrangler deploy --env staging` publishes `breaktapes-health-staging` on `*.workers.dev` for cron testing. `GET /retention/run` (gated on `RETENTION_TEST_ENABLED=1`, staging-only) fires it on demand.
+- **PROD status:** frontend + DB migration live on prod; **prod cron NOT active** — needs `wrangler deploy` (no `--env`) on the prod health worker + its `SUPABASE_URL` corrected to the prod URL (currently the staging URL from testing).
+
+---
+
 ## gstack
 
 - **Repo:** `https://github.com/garrytan/gstack.git`
