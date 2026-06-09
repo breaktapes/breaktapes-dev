@@ -30,7 +30,8 @@ const DIST_KM_MAP: Record<string, number> = {
   marathon: 42.195, 'full marathon': 42.195,
   'half marathon': 21.0975, half: 21.0975,
   ironman: 226, 'full ironman': 226,
-  'half ironman': 113, '70.3': 113,
+  'half ironman': 113, '70.3': 113, 'ironman 70.3': 113, 'im 70.3': 113,
+  '140.6': 226, 'ironman 140.6': 226,
   olympic: 51.5, 'olympic triathlon': 51.5,
   sprint: 25.75, 'sprint triathlon': 25.75,
   '5k': 5, '10k': 10, '15k': 15, '20k': 20, '25k': 25,
@@ -43,9 +44,13 @@ const DIST_KM_MAP: Record<string, number> = {
 
 export function parseDistKm(d: string | undefined): number {
   if (!d) return 0
+  // Map-first: known race-name labels ("70.3"/"140.6" are MILES, not km) must
+  // resolve before parseFloat grabs the numeric literal as kilometres.
+  const mapped = DIST_KM_MAP[d.toLowerCase().trim()]
+  if (mapped != null) return mapped
   const n = parseFloat(d)
   if (!isNaN(n) && n > 0) return n
-  return DIST_KM_MAP[d.toLowerCase().trim()] ?? 0
+  return 0
 }
 
 export function secsToHMS(secs: number): string {

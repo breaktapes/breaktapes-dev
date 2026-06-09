@@ -229,7 +229,7 @@ ADNOC Abu Dhabi Marathon | Abu Dhabi | United Arab Emirates | 2024-12-07 | 10 | 
 Ras Al Khaimah Half Marathon | Ras Al Khaimah | United Arab Emirates | 2025-02-15 | 21.1 | running | 2:05:40 | 1800/5000 | 800/2400 | 120/600 | M30-34 | finisher | road | flat | 15 | 168 | Pegasus 41 | 22/clear | 25.79 | 55.94
 Dubai Marathon | Dubai | United Arab Emirates | 2024-01-19 | 5 | running | 26:30 | 410/2000 | 200/1000 | 30/200 | M30-34 | finisher | road | flat | 12 | 176 | Pegasus 41 | 21/clear | 25.20 | 55.27
 Berlin Marathon | Berlin | Germany | 2025-09-21 | 42.2 | running | 4:22:35 | 28500/47000 | 22000/33000 | 4100/8000 | M30-34 | finisher | road | flat | 80 | 169 | Pegasus 41 | 15/overcast | 52.5200 | 13.4050   (bucket-list WMM major)
-IRONMAN 70.3 Dubai | Dubai | United Arab Emirates | 2025-02-07 | 70.3 | triathlon | 6:48:20 | 1850/2400 | 1600/2000 | 280/360 | M30-34 | finisher | road | flat | 60 | 158 | Speed Concept | 24/clear | 25.20 | 55.27   (first local triathlon)
+IRONMAN 70.3 Dubai | Dubai | United Arab Emirates | 2025-02-07 | 113 | triathlon | 6:48:20 | 1850/2400 | 1600/2000 | 280/360 | M30-34 | finisher | road | flat | 60 | 158 | Speed Concept | 24/clear | 25.20 | 55.27   (first local triathlon)
 Abu Dhabi Triathlon (Sprint) | Abu Dhabi | United Arab Emirates | 2025-03-08 | Sprint | triathlon | 1:32:15 | 540/900 | 480/780 | 3/150 | M30-34 | bronze | road | flat | 20 | 165 | Speed Concept | 26/clear | 24.45 | 54.38   (local sprint tri)
 Songkhla Marathon 21.1K | Songkhla | Thailand | 2024-06-16 | 21.1 | running | 2:11:40 | 410/1200 | 320/850 | 55/180 | M30-34 | finisher | road | flat | 12 | 171 | Pegasus 41 | 31/humid | 7.19882 | 100.5951   (Asia)
 Venice Marathon 10K | Venice | Italy | 2024-10-27 | 10 | running | 55:10 | 1900/4500 | 1450/2900 | 240/520 | M30-34 | finisher | road | flat | 8 | 170 | Pegasus 41 | 16/clear | 45.4408 | 12.3155   (Europe)
@@ -328,26 +328,26 @@ name: Shanghai Marathon | date: 2026-11-29 | city: Shanghai | country: China | d
 const AUS_RACES = `
 IRONMAN Cairns | Cairns | Australia | 2025-06-15 | IRONMAN | triathlon | 10:42:05 | 210/2800 | 18/600 | 3/90 | F35-39 | bronze | road | rolling | 600 | 150 | Cervelo P5 | 26/humid | -16.92 | 145.77
 IRONMAN Western Australia | Busselton | Australia | 2024-12-01 | IRONMAN | triathlon | 10:58:40 | 340/3400 | 30/700 | 5/110 | F35-39 | finisher | road | flat | 200 | 148 | Cervelo P5 | 24/clear | -33.65 | 115.35
-T100 Gold Coast | Gold Coast | Australia | 2025-02-09 | 70.3 | triathlon | 4:58:12 | 6/1900 | 1/400 | 1/70 | F35-39 | gold | road | flat | 300 | 158 | Cervelo P5 | 27/clear | -28.00 | 153.43
+T100 Gold Coast | Gold Coast | Australia | 2025-02-09 | 113 | triathlon | 4:58:12 | 6/1900 | 1/400 | 1/70 | F35-39 | gold | road | flat | 300 | 158 | Cervelo P5 | 27/clear | -28.00 | 153.43
 IRONMAN New Zealand | Taupo | New Zealand | 2024-03-02 | IRONMAN | triathlon | 11:05:30 | 280/2500 | 24/550 | 2/100 | F35-39 | silver | road | rolling | 700 | 150 | Cervelo P5 | 19/cloudy | -38.69 | 176.08
 IRONMAN Japan Miyazaki | Miyazaki | Japan | 2024-10-13 | IRONMAN | triathlon | 11:20:15 | 900/2400 | 90/700 | 12/120 | F35-39 | finisher | road | rolling | 800 | 148 | Cervelo P5 | 24/clear | 31.9077 | 131.4202
 Cairns Marathon Festival 10K | Cairns | Australia | 2018-07-15 | 10 | running | 48:20 | 240/1200 | 90/600 | 20/110 | F30-34 | finisher | road | flat | 40 | 162 | Pegasus | 24/humid | -16.9203 | 145.7710   (year 1)
 Gold Coast Marathon 21.1K | Southport | Australia | 2018-07-01 | 21.1 | running | 1:48:10 | 1800/12000 | 700/6000 | 130/1100 | F30-34 | finisher | road | flat | 30 | 160 | Pegasus | 16/clear | -27.9719 | 153.4063
 Noosa Triathlon (Olympic) | Noosa Heads | Australia | 2019-11-03 | Olympic | triathlon | 2:48:30 | 900/8000 | 220/2500 | 40/400 | F30-34 | finisher | road | flat | 120 | 158 | road bike | 25/clear | -26.3983 | 153.0905   (first triathlon)
-70.3 Geelong | Geelong | Australia | 2020-02-09 | 70.3 | triathlon | 5:42:10 | 800/2200 | 140/500 | 24/85 | F30-34 | finisher | road | rolling | 350 | 152 | Cervelo P5 | 20/clear | -38.1499 | 144.3617   (first 70.3)
+70.3 Geelong | Geelong | Australia | 2020-02-09 | 113 | triathlon | 5:42:10 | 800/2200 | 140/500 | 24/85 | F30-34 | finisher | road | rolling | 350 | 152 | Cervelo P5 | 20/clear | -38.1499 | 144.3617   (first 70.3)
 Cole Classic Ocean Swim 2K | Sydney | Australia | 2021-02-07 | 2 (custom km) | swim | 38:40 | 320/3500 | 95/1600 | 18/260 | F30-34 | finisher | coastal | flat | 0 | 145 | wetsuit | 23/clear | -33.8915 | 151.2767
-70.3 Port Macquarie | Port Macquarie | Australia | 2022-05-01 | 70.3 | triathlon | 5:18:25 | 520/2000 | 90/460 | 14/80 | F30-34 | finisher | road | rolling | 300 | 154 | Cervelo P5 | 21/clear | -31.4333 | 152.9167   (70.3 PB)
+70.3 Port Macquarie | Port Macquarie | Australia | 2022-05-01 | 113 | triathlon | 5:18:25 | 520/2000 | 90/460 | 14/80 | F30-34 | finisher | road | rolling | 300 | 154 | Cervelo P5 | 21/clear | -31.4333 | 152.9167   (70.3 PB)
 IRONMAN Cairns | Cairns | Australia | 2022-06-12 | IRONMAN | triathlon | 11:48:30 | 620/2600 | 70/560 | 12/95 | F30-34 | finisher | road | rolling | 600 | 148 | Cervelo P5 | 26/humid | -16.9203 | 145.7710   (IRONMAN debut)
 Pier to Pub Ocean Swim 1.2K | Lorne | Australia | 2023-01-14 | 1.2 (custom km) | swim | 19:55 | 280/4000 | 80/1700 | 14/280 | F35-39 | finisher | coastal | flat | 0 | 150 | wetsuit | 22/clear | -38.5403 | 143.9744
 HYROX Melbourne | Melbourne | Australia | 2023-09-16 | HYROX | hyrox | 1:18:40 | 220/1400 | 200/1100 | 30/240 | F35-39 | finisher | road | flat | 0 | 172 | Nano X3 | 18/indoor | -37.8136 | 144.9631   (cross-training)
 Gold Coast Marathon 42.2K | Southport | Australia | 2023-07-02 | 42.2 | running | 3:38:20 | 900/9000 | 250/4500 | 45/850 | F35-39 | finisher | road | flat | 30 | 158 | Vaporfly 3 | 15/clear | -27.9719 | 153.4063   (standalone marathon)
 Cairns parkrun | Cairns | Australia | 2024-04-13 | 5 | running | 20:05 | 8/350 | 3/180 | 1/40 | F35-39 | gold | road | flat | 5 | 168 | Vaporfly 3 | 24/humid | -16.9203 | 145.7710
-IRONMAN 70.3 Cebu | Cebu | Philippines | 2019-08-04 | 70.3 | triathlon | 5:25:10 | 90/1800 | 14/420 | 4/70 | F30-34 | silver | road | rolling | 350 | 156 | Cervelo P5 | 30/humid | 10.3157 | 123.8854
+IRONMAN 70.3 Cebu | Cebu | Philippines | 2019-08-04 | 113 | triathlon | 5:25:10 | 90/1800 | 14/420 | 4/70 | F30-34 | silver | road | rolling | 350 | 156 | Cervelo P5 | 30/humid | 10.3157 | 123.8854
 Mooloolaba Triathlon | Mooloolaba | Australia | 2020-03-15 | Olympic | triathlon | 2:31:20 | 280/3000 | 60/900 | 8/150 | F30-34 | silver | road | flat | 60 | 158 | Cervelo P5 | 24/clear | -26.6817 | 153.1186
-Challenge Wanaka | Wanaka | New Zealand | 2021-02-20 | 70.3 | triathlon | 5:14:40 | 120/1400 | 20/360 | 5/60 | F30-34 | bronze | road | rolling | 400 | 154 | Cervelo P5 | 19/clear | -44.7032 | 169.1321
-IRONMAN 70.3 Bintan | Bintan | Indonesia | 2022-08-28 | 70.3 | triathlon | 5:02:30 | 60/2000 | 8/450 | 3/80 | F30-34 | bronze | road | rolling | 350 | 158 | Cervelo P5 | 30/humid | 1.0667 | 104.4000
+Challenge Wanaka | Wanaka | New Zealand | 2021-02-20 | 113 | triathlon | 5:14:40 | 120/1400 | 20/360 | 5/60 | F30-34 | bronze | road | rolling | 400 | 154 | Cervelo P5 | 19/clear | -44.7032 | 169.1321
+IRONMAN 70.3 Bintan | Bintan | Indonesia | 2022-08-28 | 113 | triathlon | 5:02:30 | 60/2000 | 8/450 | 3/80 | F30-34 | bronze | road | rolling | 350 | 158 | Cervelo P5 | 30/humid | 1.0667 | 104.4000
 IRONMAN Langkawi | Langkawi | Malaysia | 2023-11-18 | IRONMAN | triathlon | 10:50:20 | 300/2800 | 26/600 | 5/110 | F35-39 | finisher | road | rolling | 200 | 150 | Cervelo P5 | 31/humid | 6.3500 | 99.8000
-IRONMAN 70.3 Sunshine Coast | Maroochydore | Australia | 2024-09-08 | 70.3 | triathlon | 4:55:40 | 40/1900 | 5/420 | 1/75 | F35-39 | gold | road | rolling | 300 | 159 | Cervelo P5 | 23/clear | -26.6500 | 153.0900
+IRONMAN 70.3 Sunshine Coast | Maroochydore | Australia | 2024-09-08 | 113 | triathlon | 4:55:40 | 40/1900 | 5/420 | 1/75 | F35-39 | gold | road | rolling | 300 | 159 | Cervelo P5 | 23/clear | -26.6500 | 153.0900
 `
 const AUS_UP = `
 name: IRONMAN Cairns | date: 2026-06-14 | city: Cairns | country: Australia | distance: IRONMAN | sport: triathlon | goalTime: 10:30:00
@@ -420,10 +420,10 @@ Noosa Triathlon (Olympic) | Noosa Heads | Australia | 2026-03-22 | Olympic | tri
 Cairns Marathon Festival 10K | Cairns | Australia | 2026-05-10 | 10 | running | 45:50 | 120/1200 | 45/600 | 9/110 | F35-39 | finisher | road | flat | 40 | 161 | Vaporfly 3 | 24/humid | -16.9203 | 145.7710
 `
 const AUS_UPMORE = `
-name: 70.3 Geelong | date: 2026-08-09 | city: Geelong | country: Australia | distance: 70.3 | sport: triathlon | goalTime: 4:52:00
+name: 70.3 Geelong | date: 2026-08-09 | city: Geelong | country: Australia | distance: 113 | sport: triathlon | goalTime: 4:52:00
 name: IRONMAN Western Australia | date: 2026-12-06 | city: Busselton | country: Australia | distance: IRONMAN | sport: triathlon | goalTime: 10:40:00
-name: IRONMAN 70.3 Cebu | date: 2026-08-02 | city: Cebu | country: Philippines | distance: 70.3 | sport: triathlon | goalTime: 4:52:00
-name: IRONMAN 70.3 Bintan | date: 2026-08-29 | city: Bintan | country: Indonesia | distance: 70.3 | sport: triathlon | goalTime: 4:58:00
+name: IRONMAN 70.3 Cebu | date: 2026-08-02 | city: Cebu | country: Philippines | distance: 113 | sport: triathlon | goalTime: 4:52:00
+name: IRONMAN 70.3 Bintan | date: 2026-08-29 | city: Bintan | country: Indonesia | distance: 113 | sport: triathlon | goalTime: 4:58:00
 name: IRONMAN Japan Miyazaki | date: 2026-10-11 | city: Miyazaki | country: Japan | distance: IRONMAN | sport: triathlon | goalTime: 10:20:00
 name: Noosa Triathlon | date: 2026-11-01 | city: Noosa Heads | country: Australia | distance: Olympic | sport: triathlon | goalTime: 2:30:00
 name: IRONMAN New Zealand | date: 2027-03-06 | city: Taupo | country: New Zealand | distance: IRONMAN | sport: triathlon | goalTime: 10:35:00

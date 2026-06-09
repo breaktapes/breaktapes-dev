@@ -3,6 +3,15 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.7.3] - 2026-06-09
+
+### Fixed
+- **Triathlon distance "70.3"/"140.6" mis-classified as the wrong band.** `parseDistKm()` ran `parseFloat` before the label map, so `"70.3"` (a race name in MILES) was read as **70.3 km** → `detectTriType()` bucketed it as **Olympic** instead of 70.3. This silently corrupted the Triathlon Predictor: a real 70.3 used as the source showed the Olympic tab same-band (Riegel identity → swim/bike unscaled, e.g. raw 43:37 swim / 3:38:00 bike) and the IRONMAN tab cross-band, with mis-weighted `alpha`. Fix: `parseDistKm` is now **map-first** — known race-name labels resolve before the numeric fallback. Added `'140.6'`, `'ironman 70.3'`, `'im 70.3'` aliases. Incidentally also fixes `"50mi"/"100mi"/"10 mile"` (previously read as 50/100/10 km).
+- **Demo data normalized.** 11 demo triathlon `distance` fields stored the literal `"70.3"` → changed to canonical `"113"` (km, matching the AddRaceModal dropdown). Race names containing "70.3" left untouched.
+
+### Tests
+- `src/lib/__tests__/raceFormulas.test.ts` — regression coverage for `parseDistKm` (mile labels, word labels, genuine numeric km, garbage).
+
 ## [0.7.7.2] - 2026-06-09
 
 ### Added
