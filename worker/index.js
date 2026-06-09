@@ -377,7 +377,7 @@ function renderProfile(row, username) {
     if (r.country && !countryMap[r.country]) countryMap[r.country] = true;
   }
   const countryPills = Object.keys(countryMap).map(c =>
-    `<div class="country-pill">${countryFlagEmoji(c)} <span class="country-abbr">${escapeHtml(shortCountryName(c))}</span></div>`
+    `<span class="country-flag" title="${escapeHtml(shortCountryName(c))}">${countryFlagEmoji(c)}</span>`
   ).join('');
 
   // Bio + clubs
@@ -386,6 +386,39 @@ function renderProfile(row, username) {
   const clubPills = (Array.isArray(athlete.clubs) ? athlete.clubs : []).map(c =>
     `<span class="club-pill">${escapeHtml(c)}</span>`
   ).join('');
+
+  // V4 §10 — sport pills under name. Derive from race history + athlete.sport.
+  const SPORT_PILL_META = {
+    running:   { label: 'Runner',     color: '#E84E1B', bgRgb: '232,78,27' },
+    triathlon: { label: 'Triathlete', color: '#7C3AED', bgRgb: '124,58,237' },
+    iron:      { label: 'Triathlete', color: '#7C3AED', bgRgb: '124,58,237' },
+    cycling:   { label: 'Cyclist',    color: '#3B82F6', bgRgb: '59,130,246' },
+    cycle:     { label: 'Cyclist',    color: '#3B82F6', bgRgb: '59,130,246' },
+    swim:      { label: 'Swimmer',    color: '#06B6D4', bgRgb: '6,182,212'  },
+    hyrox:     { label: 'HYROX',      color: '#E84E1B', bgRgb: '232,78,27'  },
+  };
+  const sportSet = new Set();
+  if (athlete.sport) sportSet.add(athlete.sport.toLowerCase().trim());
+  for (const r of races) {
+    if (r.sport) sportSet.add(r.sport.toLowerCase().trim());
+  }
+  const sportPillsHtml = [...sportSet]
+    .map(s => {
+      for (const k of Object.keys(SPORT_PILL_META)) {
+        if (s.includes(k)) return SPORT_PILL_META[k];
+      }
+      return null;
+    })
+    .filter(Boolean)
+    .filter((m, i, arr) => arr.findIndex(x => x.label === m.label) === i) // dedupe by label
+    .map(m => `<span class="sport-pill" style="color:${m.color};background:rgba(${m.bgRgb},0.10);border-color:rgba(${m.bgRgb},0.30);">${m.label}</span>`)
+    .join('');
+
+  // V4 §10 — medals count (matches in-app medalCount in Dashboard.tsx:166).
+  const finished = races.filter(r => !r.outcome || r.outcome === 'Finished');
+  const finisherMedals = finished.filter(r => r.medal && r.medal !== '').length;
+  const podiumMedals = finished.filter(r => r.medal === 'gold' || r.medal === 'silver' || r.medal === 'bronze').length;
+  const totalMedals = finisherMedals + podiumMedals;
 
   // PB card grid — mirrors in-app PersonalBests component style
   const pbHiddenKeys = new Set(Array.isArray(athlete.pbHiddenKeys) ? athlete.pbHiddenKeys : []);
@@ -490,8 +523,9 @@ function renderProfile(row, username) {
       <div class="profile-identity">
         <h1 class="athlete-name">${displayName}</h1>
         ${location ? `<div class="athlete-location">📍 ${location}</div>` : ''}
-        ${sport ? `<div class="athlete-sport">${escapeHtml(sport)}</div>` : ''}
+        ${sportPillsHtml ? `<div class="sport-pills-row">${sportPillsHtml}</div>` : (sport ? `<div class="athlete-sport">${escapeHtml(sport)}</div>` : '')}
       </div>
+      <a href="/compare?a=${encodeURIComponent(username)}" class="compare-btn">Compare →</a>
     </div>
 
     ${showBio ? bioHtml : ''}
@@ -499,11 +533,10 @@ function renderProfile(row, username) {
 
     ${showStats ? `
     <section class="profile-section" style="margin-top:20px;">
-      <div class="career-stats">
-        <div class="stat-pill"><span class="stat-val">${totalRaces}</span><span class="stat-lbl">races</span></div>
-        <div class="stat-pill"><span class="stat-val">${km}</span><span class="stat-lbl">total km</span></div>
-        <div class="stat-pill"><span class="stat-val">${countries}</span><span class="stat-lbl">countr${countries === 1 ? 'y' : 'ies'}</span></div>
-        ${years > 0 ? `<div class="stat-pill"><span class="stat-val">${years}</span><span class="stat-lbl">year${years === 1 ? '' : 's'}</span></div>` : ''}
+      <div class="career-stats career-stats-v4">
+        <div class="stat-pill stat-pill-orange"><span class="stat-val stat-val-orange">${totalRaces}</span><span class="stat-lbl">races</span></div>
+        <div class="stat-pill stat-pill-gold"><span class="stat-val stat-val-gold">${totalMedals}</span><span class="stat-lbl">medals</span></div>
+        <div class="stat-pill stat-pill-green"><span class="stat-val stat-val-green">${countries}</span><span class="stat-lbl">countr${countries === 1 ? 'y' : 'ies'}</span></div>
       </div>
     </section>
     ${countryPills ? `<div class="country-row">${countryPills}</div>` : ''}` : ''}
@@ -725,7 +758,7 @@ function pageShell({ title, description, ogTitle, ogDescription, ogImage, canoni
     /* Profile header */
     .profile-header {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       gap: 16px;
       margin-bottom: 16px;
     }
@@ -767,6 +800,45 @@ function pageShell({ title, description, ogTitle, ogDescription, ogImage, canoni
       letter-spacing: 0.1em;
       margin-top: 5px;
     }
+
+    /* V4 §10 — sport pills under name (Runner orange, Triathlete purple, etc.) */
+    .sport-pills-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+    .sport-pill {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 800;
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      border: 1px solid;
+      border-radius: 5px;
+      padding: 3px 10px;
+      line-height: 1.4;
+    }
+
+    /* V4 §10 — Compare → button top-right of profile header */
+    .profile-identity { flex: 1; min-width: 0; }
+    .compare-btn {
+      flex-shrink: 0;
+      align-self: flex-start;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 800;
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--orange);
+      background: transparent;
+      border: 1px solid rgba(232,78,27,0.35);
+      border-radius: 8px;
+      padding: 7px 14px;
+      text-decoration: none;
+      transition: background 0.15s;
+    }
+    .compare-btn:hover { background: rgba(232,78,27,0.08); }
 
     .athlete-bio {
       font-size: 14px;
@@ -827,6 +899,15 @@ function pageShell({ title, description, ogTitle, ogDescription, ogImage, canoni
       margin-top: 4px;
     }
 
+    /* V4 §10 — 3-column color-tinted stats strip (Races/Medals/Countries) */
+    .career-stats-v4 { gap: 1px; background: var(--border); border-radius: 12px; overflow: hidden; }
+    .stat-pill-orange { background: linear-gradient(135deg, rgba(232,78,27,0.08) 0%, rgba(13,13,13,0.95) 100%); border: none; border-radius: 0; padding: 18px 12px; }
+    .stat-pill-gold   { background: linear-gradient(135deg, rgba(200,150,60,0.08) 0%, rgba(13,13,13,0.95) 100%); border: none; border-radius: 0; padding: 18px 12px; }
+    .stat-pill-green  { background: linear-gradient(135deg, rgba(0,255,136,0.06) 0%, rgba(13,13,13,0.95) 100%); border: none; border-radius: 0; padding: 18px 12px; }
+    .stat-val-orange  { font-size: 32px; background: linear-gradient(135deg, var(--white) 0%, var(--orange) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .stat-val-gold    { font-size: 32px; background: linear-gradient(135deg, var(--white) 0%, #C8963C 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .stat-val-green   { font-size: 32px; background: linear-gradient(135deg, var(--white) 0%, #00FF88 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
     /* Country flags */
     .country-row {
       display: flex;
@@ -835,15 +916,11 @@ function pageShell({ title, description, ogTitle, ogDescription, ogImage, canoni
       margin-bottom: 20px;
     }
 
-    .country-pill {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      background: var(--surface2);
-      border: 1px solid var(--border2);
-      border-radius: 8px;
-      padding: 5px 10px;
-      font-size: 13px;
+    .country-flag {
+      font-size: 22px;
+      line-height: 1;
+      cursor: default;
+      filter: drop-shadow(0 0 4px rgba(0,0,0,0.5));
     }
 
     .country-abbr {
@@ -1843,6 +1920,19 @@ async function handleApiSync(request, env) {
     }
   } catch { /* read failed — write incoming as-is (pre-merge fallback) */ }
 
+  // Retention columns: email + opt-in feed the reminder/digest cron. Only set
+  // them when the client actually sends the key — omitting a column on a
+  // merge-duplicates upsert keeps the existing value, so a stale/older client
+  // can't clobber a server-side unsubscribe (which sets email_opt_in=false).
+  const upsertRow = {
+    user_id:    userId,
+    username:   body.username   ?? null,
+    is_public:  body.is_public  ?? false,
+    state_json: stateJson,
+  };
+  if (body.email !== undefined)        upsertRow.email = body.email;
+  if (body.email_opt_in !== undefined) upsertRow.email_opt_in = body.email_opt_in;
+
   const res = await fetch(`${supabaseUrl}/rest/v1/user_state`, {
     method: 'POST',
     headers: {
@@ -1851,12 +1941,7 @@ async function handleApiSync(request, env) {
       'Content-Type': 'application/json',
       Prefer: 'resolution=merge-duplicates,return=minimal',
     },
-    body: JSON.stringify({
-      user_id:    userId,
-      username:   body.username   ?? null,
-      is_public:  body.is_public  ?? false,
-      state_json: stateJson,
-    }),
+    body: JSON.stringify(upsertRow),
   });
 
   if (!res.ok) {

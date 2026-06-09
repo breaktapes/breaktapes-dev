@@ -13,15 +13,23 @@ import type { Race, Athlete } from '@/types'
 import { resolveDistKm } from '@/lib/utils'
 
 // ── Runtime CSS var reader ─────────────────────────────────────────────────────
-function readCssPalette() {
+// V4 §07b — accept optional passportTheme override; non-classic themes replace
+// the orange accent triplet (orange / orangeDark / orangeDim / orangeFaint /
+// orangeCh / headerGrad0) so the dossier accent re-tints holistically.
+function readCssPalette(passportTheme?: PassportTheme | null) {
   const cs = getComputedStyle(document.documentElement)
   const get = (v: string) => cs.getPropertyValue(v).trim()
-  const orangeCh = get('--orange-ch') || '232, 78, 27'
+  const orangeCh = (passportTheme && passportTheme.id !== 'classic')
+    ? passportTheme.accentCh
+    : (get('--orange-ch') || '232, 78, 27')
   const greenCh  = get('--green-ch')  || '0, 255, 136'
   const goldCh   = get('--gold-ch')   || '200, 150, 60'
+  const accent   = (passportTheme && passportTheme.id !== 'classic')
+    ? passportTheme.accent
+    : (get('--orange') || '#E84E1B')
   return {
     bg:          get('--black')   || '#050505',
-    orange:      get('--orange')  || '#E84E1B',
+    orange:      accent,
     orangeDark:  `rgba(${orangeCh},0.6)`,
     orangeDim:   `rgba(${orangeCh},0.12)`,
     orangeFaint: `rgba(${orangeCh},0.18)`,
@@ -47,6 +55,27 @@ const RATIOS: { label: string; W: number; H: number }[] = [
   { label: '4:3',  W: 1200, H: 900 },
   { label: '3:4',  W: 900,  H: 1200 },
   { label: '1:1',  W: 1080, H: 1080 },
+]
+
+// ── Passport color themes (V4 §07b) ───────────────────────────────────────────
+// Each theme overrides the accent palette used by the dossier drawer. Classic
+// keeps the live app's --orange (and reads the theme from CSS vars so it
+// follows whichever app theme is active).
+export interface PassportTheme {
+  id: string
+  label: string
+  accent: string      // hex used for solid fills + accent gradient base
+  accentDark: string  // darker gradient stop
+  accentCh: string    // "R, G, B" channel string for rgba() composition
+}
+export const PASSPORT_THEMES: PassportTheme[] = [
+  { id: 'classic',   label: 'Classic',          accent: '#E84E1B', accentDark: '#C03A10', accentCh: '232, 78, 27'   },
+  { id: 'crimson',   label: 'Midnight Crimson', accent: '#FF3366', accentDark: '#CC0033', accentCh: '204, 0, 51'    },
+  { id: 'forest',    label: 'Forest Noir',      accent: '#00FF88', accentDark: '#00A844', accentCh: '0, 168, 68'    },
+  { id: 'rose-gold', label: 'Rose Gold',        accent: '#E8A0A8', accentDark: '#D4A060', accentCh: '232, 160, 168' },
+  { id: 'arctic',    label: 'Arctic White',     accent: '#1A6090', accentDark: '#0E3D5C', accentCh: '26, 96, 144'   },
+  { id: 'uv',        label: 'Ultraviolet',      accent: '#C090FF', accentDark: '#9D50FF', accentCh: '157, 80, 255'  },
+  { id: 'sand',      label: 'Desert Sand',      accent: '#F0C860', accentDark: '#D4A840', accentCh: '212, 168, 64'  },
 ]
 
 // ── Utilities ─────────────────────────────────────────────────────────────────
@@ -237,14 +266,15 @@ interface DrawOpts {
   W: number
   H: number
   avatarImg?: HTMLImageElement | null
+  passportTheme?: PassportTheme | null
 }
 
 function drawDossier(canvas: HTMLCanvasElement, opts: DrawOpts) {
-  const { races, allRaces, athlete, year, W, H, avatarImg } = opts
+  const { races, allRaces, athlete, year, W, H, avatarImg, passportTheme } = opts
   canvas.width = W
   canvas.height = H
   const ctx = canvas.getContext('2d')!
-  const D = readCssPalette()
+  const D = readCssPalette(passportTheme)
   const { orangeCh } = D
 
   const name = [athlete?.firstName, athlete?.lastName].filter(Boolean).join(' ') || 'Athlete'
@@ -887,9 +917,11 @@ export function RaceLogPassport({ races, athlete, onClose, initialYear = 'all', 
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [year, setYear] = useState<string>(initialYear)
   const [ratio, setRatio] = useState<string>('16:9')
+  const [passportThemeId, setPassportThemeId] = useState<string>('classic')
   const [drawn, setDrawn] = useState(false)
   const [exporting, setExporting] = useState(false)
   const [avatarImg, setAvatarImg] = useState<HTMLImageElement | null>(null)
+  const passportTheme = PASSPORT_THEMES.find(t => t.id === passportThemeId) ?? PASSPORT_THEMES[0]
 
   // Read theme channel vars for JSX inline styles (CSS vars resolve at render time)
   const orangeCh = getComputedStyle(document.documentElement).getPropertyValue('--orange-ch').trim() || '232, 78, 27'
@@ -922,17 +954,22 @@ export function RaceLogPassport({ races, athlete, onClose, initialYear = 'all', 
       W: currentRatio.W,
       H: currentRatio.H,
       avatarImg,
+      passportTheme,
     })
     setDrawn(true)
-  }, [filteredRaces, races, athlete, year, currentRatio, avatarImg])
+  }, [filteredRaces, races, athlete, year, currentRatio, avatarImg, passportTheme])
 
-  // Auto-draw when year/ratio changes if already drawn
+  // Auto-draw when year/ratio/theme changes if already drawn
   const handleYearChange = (y: string) => {
     setYear(y)
     setDrawn(false)
   }
   const handleRatioChange = (r: string) => {
     setRatio(r)
+    setDrawn(false)
+  }
+  const handleThemeChange = (id: string) => {
+    setPassportThemeId(id)
     setDrawn(false)
   }
 
@@ -1014,6 +1051,32 @@ export function RaceLogPassport({ races, athlete, onClose, initialYear = 'all', 
               {r.label}
             </button>
           ))}
+        </div>
+
+        {/* V4 §07b — Passport color theme swatches */}
+        <div style={{ display: 'flex', gap: 'var(--sp-2)', flexWrap: 'wrap', alignItems: 'center' }}>
+          <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)' }}>Theme</span>
+          {PASSPORT_THEMES.map(t => {
+            const active = passportThemeId === t.id
+            return (
+              <button
+                key={t.id}
+                title={t.label}
+                onClick={() => handleThemeChange(t.id)}
+                aria-label={t.label}
+                aria-pressed={active}
+                style={{
+                  width: 28, height: 28, padding: 0,
+                  borderRadius: '50%',
+                  cursor: 'pointer',
+                  background: `linear-gradient(135deg, ${t.accent}, ${t.accentDark})`,
+                  border: active ? '2px solid var(--white)' : '2px solid var(--border2)',
+                  boxShadow: active ? `0 0 0 2px rgba(${t.accentCh},0.35)` : 'none',
+                  transition: 'transform 0.12s, box-shadow 0.12s',
+                }}
+              />
+            )
+          })}
         </div>
 
         {/* Canvas preview */}

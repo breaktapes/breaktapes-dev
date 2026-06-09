@@ -48,6 +48,7 @@ export function Settings() {
   const { user: clerkUser } = useUser()
   const authUser = useAuthStore(s => s.authUser)
   const syncStatus = useAuthStore(s => s.syncStatus)
+  const hasProAccess = useAuthStore(s => s.proAccessGranted)
   const athlete = useAthleteStore(s => s.athlete)
   const updateAthlete = useAthleteStore(s => s.updateAthlete)
 
@@ -78,7 +79,23 @@ export function Settings() {
     posthog.capture('public profile toggled', { enabled: val })
   }
 
+  // Email reminders + weekly digest — default ON. Writes through updateAthlete
+  // (→ state_json) AND the email_opt_in column via the explicit sync so the
+  // reminder/digest cron sees the change immediately.
+  const emailOptIn = athlete?.emailOptIn ?? true
+  async function toggleEmailOptIn(val: boolean) {
+    updateAthlete({ emailOptIn: val })
+    await syncStateToSupabase()
+    posthog.capture('email opt in toggled', { enabled: val })
+  }
+
   function applyTheme(themeId: ThemeId) {
+    // V4 §10b — Pro gating. Locked themes ignored on prod; staging unlocks all.
+    const theme = THEMES.find(t => t.id === themeId)
+    if (theme?.pro && !hasProAccess) {
+      posthog.capture('theme locked', { theme_id: themeId })
+      return
+    }
     storeSetTheme(themeId)
     posthog.capture('theme changed', { theme_id: themeId })
   }
@@ -364,6 +381,42 @@ export function Settings() {
               })}
             </div>
           </div>
+
+          {/* Email reminders + weekly digest toggle */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--sp-3)', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
+            <div>
+              <p style={{ margin: 0, fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-sm)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>
+                Email reminders
+              </p>
+              <p style={{ margin: '4px 0 0', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
+                Race-day reminders &amp; a weekly digest. Unsubscribe anytime.
+              </p>
+            </div>
+            <button
+              onClick={() => toggleEmailOptIn(!emailOptIn)}
+              aria-label="Toggle email reminders"
+              style={{
+                width: '48px', height: '28px',
+                borderRadius: 'var(--radius-lg)',
+                border: 'none',
+                cursor: 'pointer',
+                background: emailOptIn ? 'var(--green)' : 'var(--surface3)',
+                position: 'relative',
+                transition: 'background 0.2s',
+                flexShrink: 0,
+              }}
+            >
+              <span style={{
+                position: 'absolute',
+                top: '3px',
+                left: emailOptIn ? '23px' : '3px',
+                width: '22px', height: '22px',
+                borderRadius: 'var(--radius-round)',
+                background: 'var(--black)',
+                transition: 'left 0.2s',
+              }} />
+            </button>
+          </div>
         </div>
       </section>
 
@@ -377,24 +430,25 @@ export function Settings() {
         }}>
           {THEMES.map(theme => {
             const isActive = activeTheme === theme.id
+            const isLocked = theme.pro && !hasProAccess
             return (
               <button
                 key={theme.id}
-                onClick={() => theme.comingSoon ? undefined : applyTheme(theme.id)}
-                disabled={theme.comingSoon}
+                onClick={() => isLocked ? undefined : applyTheme(theme.id)}
+                disabled={isLocked}
                 style={{
                   height: '80px',
                   background: 'var(--surface2)',
                   border: isActive ? '2px solid var(--orange)' : '1px solid var(--border)',
                   borderRadius: 'var(--radius-md)',
-                  cursor: theme.comingSoon ? 'default' : 'pointer',
+                  cursor: isLocked ? 'not-allowed' : 'pointer',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: 'var(--sp-2)',
                   padding: '0.5rem',
-                  opacity: theme.comingSoon ? 0.45 : 1,
+                  opacity: isLocked ? 0.55 : 1,
                   position: 'relative',
                 }}
               >
@@ -410,19 +464,23 @@ export function Settings() {
                 }}>
                   {theme.label}
                 </span>
-                {theme.comingSoon && (
+                {theme.pro && (
                   <span style={{
-                    fontSize: 'var(--text-xs)',
+                    position: 'absolute',
+                    top: 6,
+                    right: 6,
+                    fontSize: '8px',
                     fontFamily: 'var(--headline)',
-                    fontWeight: 700,
-                    letterSpacing: '0.1em',
+                    fontWeight: 800,
+                    letterSpacing: '0.12em',
                     textTransform: 'uppercase',
-                    color: 'var(--muted)',
-                    background: 'rgba(245,245,245,0.06)',
+                    color: '#C8963C',
+                    background: 'rgba(200,150,60,0.12)',
+                    border: '1px solid rgba(200,150,60,0.3)',
                     padding: '1px 5px',
                     borderRadius: 'var(--radius-xs)',
                   }}>
-                    SOON
+                    PRO
                   </span>
                 )}
               </button>

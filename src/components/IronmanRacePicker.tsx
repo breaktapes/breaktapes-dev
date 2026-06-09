@@ -97,7 +97,9 @@ export function IronmanRacePicker({ onClose }: { onClose: () => void }) {
       })
       const data = await resp.json()
       if (data.status !== 'ok') throw new Error(data.message || 'Failed to load results')
-      setResults(data.results ?? [])
+      const rows = data.results ?? []
+      setResults(rows)
+      posthog.capture('race import results shown', { total_results: rows.length, has_results: rows.length > 0, provider_counts: { ironman: rows.length }, providers_errored: [] })
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load results')
     } finally {
@@ -134,6 +136,7 @@ export function IronmanRacePicker({ onClose }: { onClose: () => void }) {
       ...(res.bibNumber     ? { bibNumber: res.bibNumber }         : {}),
     }
     if (dupe) { setError('A race on this date is already logged.'); return }
+    posthog.capture('race import row selected', { source: 'ironman', was_auto: false })
     addRace(race)
     posthog.capture('race import completed', { imported_count: 1, source: 'ironman-picker' })
     onClose()

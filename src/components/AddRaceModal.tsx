@@ -10,6 +10,8 @@ import { countryNameHaystack } from '@/lib/countries'
 import { normalizeName, resolveDistKm, isAlreadyInCatalog, findSportDistMatch, distLabel as distLabelUtil, RACE_PRIORITY_OPTIONS } from '@/lib/utils'
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@/env'
 import { useAuthStore } from '@/stores/useAuthStore'
+import { useAthleteStore } from '@/stores/useAthleteStore'
+import { RaceShareCard } from '@/components/RaceShareCard'
 import type { Race, Split } from '@/types'
 
 type Mode = 'past' | 'upcoming'
@@ -286,13 +288,16 @@ interface Props {
 
 export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, prefill }: Props) {
   const [mode, setMode] = useState<Mode>(defaultMode)
+  // After logging a new past race we auto-open the share card so every logged
+  // result becomes a chance to share (the share loop was effectively dead).
+  const [sharedRace, setSharedRace] = useState<Race | null>(null)
+  const athlete = useAthleteStore(s => s.athlete)
   const addRace         = useRaceStore(s => s.addRace)
   const addUpcomingRace = useRaceStore(s => s.addUpcomingRace)
   const pastRaces       = useRaceStore(s => s.races)
   const upcomingRaces   = useRaceStore(s => s.upcomingRaces)
   const authUser        = useAuthStore(s => s.authUser)
   const { data: catalog = [], isLoading: catalogLoading } = useRaceCatalog()
-  const [toastMsg, setToastMsg] = useState('')
 
   // When parent changes defaultMode (e.g. re-opens), sync
   useEffect(() => { setMode(defaultMode) }, [defaultMode])
@@ -660,11 +665,6 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
     })
   }
 
-  function showToast(msg: string) {
-    setToastMsg(msg)
-    setTimeout(() => setToastMsg(''), 5000)
-  }
-
   function validate() {
     if (!name.trim())  { setError('Race name is required'); return false }
     if (!date)         { setError('Date is required'); return false }
@@ -725,12 +725,28 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
       addRace(race)
       void contributeIfNew(race)
       setSaving(false)
-      showToast('Race added · Submitted to catalog for review')
-      setTimeout(onClose, 1200)
+      // Auto-open the share card for the race we just logged. Closing it closes
+      // the whole modal. (Upcoming races never reach here — nothing to share yet.)
+      setSharedRace(race)
     }
   }
 
   const distancePresets = DISTANCES_BY_SPORT[sport] ?? []
+
+  // Just logged a race → swap the form for the share card (same body-level
+  // portal). Closing the card tears down the whole modal.
+  if (sharedRace) {
+    const athleteName = `${athlete?.firstName ?? ''} ${athlete?.lastName ?? ''}`.trim() || 'Athlete'
+    return createPortal(
+      <RaceShareCard
+        race={sharedRace}
+        athleteName={athleteName}
+        trigger="post_log"
+        onClose={() => { setSharedRace(null); onClose() }}
+      />,
+      document.body,
+    )
+  }
 
   return createPortal((
     <div
@@ -748,11 +764,6 @@ export function AddRaceModal({ onClose, defaultMode = 'past', prefillDistance, p
       >
         {/* Drag handle */}
         <div style={st.handle} />
-
-        {/* Toast */}
-        {toastMsg && (
-          <div style={st.toast}>{toastMsg}</div>
-        )}
 
         {/* Header */}
         <div style={st.header}>

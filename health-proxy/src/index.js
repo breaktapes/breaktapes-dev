@@ -28,6 +28,7 @@
  */
 
 import { PostHog } from 'posthog-node';
+import { selectReminders, selectDigests, isMonday } from './retention.mjs';
 
 const ALLOWED_ORIGINS = new Set([
   'https://app.breaktapes.com',
@@ -60,6 +61,177 @@ function json(data, status = 200, origin = '') {
     status,
     headers: { 'Content-Type': 'application/json', ...corsHeaders(origin) },
   });
+}
+
+// ── Email (Resend) ──────────────────────────────────────────────────────────
+// Allowlisted senders — prevents the send path being used as an open relay.
+const SENDERS = {
+  hello:   'BREAKTAPES <hello@breaktapes.com>',
+  founder: 'Ayush · BREAKTAPES <founder@breaktapes.com>',
+  support: 'BREAKTAPES Support <support@breaktapes.com>',
+  noreply: 'BREAKTAPES <noreply@breaktapes.com>',
+};
+
+/** Send one email via Resend. Returns the upstream Response. Throws if unconfigured. */
+async function sendEmail(env, { to, subject, html, from = 'hello', replyTo }) {
+  if (!env.RESEND_API_KEY) throw new Error('RESEND_API_KEY not set');
+  const fromHeader = SENDERS[from] || SENDERS.hello;
+  return fetch('https://api.resend.com/emails', {
+    method:  'POST',
+    headers: { 'Authorization': `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      from: fromHeader,
+      to,
+      subject,
+      html,
+      ...(from === 'noreply' ? {} : { reply_to: replyTo || 'ayushkrishnan03@gmail.com' }),
+    }),
+  });
+}
+
+// ── Retention email pipeline (reminders + weekly digest) ────────────────────
+const APP_ORIGIN   = 'https://app.breaktapes.com';
+const HEALTH_ORIGIN = 'https://health.breaktapes.com';
+
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+}
+
+function emailShell(bodyHtml, unsubUrl) {
+  return `<!doctype html><html><body style="margin:0;background:#0D0D0D;font-family:Helvetica,Arial,sans-serif;color:#F5F5F5;">
+    <div style="max-width:520px;margin:0 auto;padding:32px 24px;">
+      <div style="font-weight:800;letter-spacing:0.12em;color:#E84E1B;font-size:14px;margin-bottom:24px;">BREAK / TAPES</div>
+      ${bodyHtml}
+      <div style="margin-top:32px;padding-top:16px;border-top:1px solid rgba(245,245,245,0.12);font-size:12px;color:rgba(245,245,245,0.35);">
+        You're getting this because email reminders are on for your BREAKTAPES account.
+        <a href="${esc(unsubUrl)}" style="color:rgba(245,245,245,0.55);">Unsubscribe</a>.
+      </div>
+    </div></body></html>`;
+}
+
+function reminderHtml(race, daysUntil, unsubUrl) {
+  const when = daysUntil === 0 ? 'is today' : daysUntil === 1 ? 'is tomorrow' : `is in ${daysUntil} days`;
+  return emailShell(`
+    <div style="font-size:13px;letter-spacing:0.08em;color:rgba(245,245,245,0.35);text-transform:uppercase;">Race day ${when}</div>
+    <div style="font-size:28px;font-weight:800;margin:8px 0 4px;color:#F5F5F5;">${esc(race.name || 'Your race')}</div>
+    <div style="font-size:15px;color:rgba(245,245,245,0.55);">${esc(race.date || '')}${race.city ? ' · ' + esc(race.city) : ''}</div>
+    <a href="${APP_ORIGIN}/races" style="display:inline-block;margin-top:20px;background:#E84E1B;color:#0D0D0D;font-weight:800;text-decoration:none;padding:12px 20px;border-radius:6px;">Open your race plan →</a>
+  `, unsubUrl);
+}
+
+function digestHtml(nextRace, nextRaceDays, unsubUrl) {
+  const next = nextRace
+    ? `<div style="font-size:13px;letter-spacing:0.08em;color:rgba(245,245,245,0.35);text-transform:uppercase;">Next up${typeof nextRaceDays === 'number' ? ` · in ${nextRaceDays} days` : ''}</div>
+       <div style="font-size:24px;font-weight:800;margin:8px 0 4px;">${esc(nextRace.name || '')}</div>
+       <div style="font-size:15px;color:rgba(245,245,245,0.55);">${esc(nextRace.date || '')}${nextRace.city ? ' · ' + esc(nextRace.city) : ''}</div>`
+    : `<div style="font-size:18px;font-weight:700;">No upcoming races on your calendar.</div>
+       <div style="font-size:15px;color:rgba(245,245,245,0.55);margin-top:4px;">Add your next start line to keep the streak going.</div>`;
+  return emailShell(`
+    <div style="font-size:13px;letter-spacing:0.08em;color:rgba(245,245,245,0.35);text-transform:uppercase;">Your week in racing</div>
+    <div style="height:16px;"></div>
+    ${next}
+    <a href="${APP_ORIGIN}/" style="display:inline-block;margin-top:20px;background:#E84E1B;color:#0D0D0D;font-weight:800;text-decoration:none;padding:12px 20px;border-radius:6px;">Open BREAKTAPES →</a>
+  `, unsubUrl);
+}
+
+function svcHeaders(env) {
+  const key = env.SUPABASE_SERVICE_ROLE_KEY;
+  return { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' };
+}
+
+/**
+ * Claim a send slot in reminder_sends. Idempotent: returns true only the first
+ * time for a given (user_id, kind, race_id) — PostgREST ignore-duplicates +
+ * return=representation yields the inserted row only on a fresh insert.
+ */
+async function claimSend(env, supabaseUrl, userId, kind, raceId) {
+  const res = await fetch(`${supabaseUrl}/rest/v1/reminder_sends`, {
+    method: 'POST',
+    headers: { ...svcHeaders(env), Prefer: 'resolution=ignore-duplicates,return=representation' },
+    body: JSON.stringify({ user_id: userId, kind, race_id: raceId || '' }),
+  });
+  if (!res.ok) return false;
+  const rows = await res.json().catch(() => []);
+  return Array.isArray(rows) && rows.length > 0;
+}
+
+/**
+ * The scheduled job: read opted-in users, send any due reminders + (Monday)
+ * weekly digests, recording each in reminder_sends for idempotency. Pure
+ * selection lives in retention.mjs; this is the I/O shell. No-ops safely if the
+ * service-role key or Resend key isn't configured yet.
+ */
+async function runRetention(env, nowMs) {
+  if (!env.SUPABASE_SERVICE_ROLE_KEY || !env.RESEND_API_KEY) {
+    console.warn('[retention] skipped — SUPABASE_SERVICE_ROLE_KEY or RESEND_API_KEY not set');
+    return { skipped: true };
+  }
+  const supabaseUrl = env.SUPABASE_URL || 'https://kmdpufauamadwavqsinj.supabase.co';
+  const todayStr = new Date(nowMs).toISOString().slice(0, 10);
+
+  // Opted-in users with an email. Service role bypasses RLS.
+  const q = `${supabaseUrl}/rest/v1/user_state?select=user_id,email,email_opt_in,unsubscribe_token,state_json&email_opt_in=eq.true&email=not.is.null`;
+  const res = await fetch(q, { headers: svcHeaders(env) });
+  if (!res.ok) { console.warn('[retention] user_state read failed', res.status); return { error: 'read_failed' }; }
+  const users = await res.json().catch(() => []);
+  const tokenByUser = new Map(users.map(u => [u.user_id, u.unsubscribe_token]));
+  const unsub = (uid) => `${HEALTH_ORIGIN}/email/unsubscribe?token=${encodeURIComponent(tokenByUser.get(uid) || '')}`;
+
+  let remindersSent = 0, digestsSent = 0;
+
+  for (const d of selectReminders(users, todayStr)) {
+    if (!(await claimSend(env, supabaseUrl, d.userId, d.kind, d.raceId))) continue;
+    const r = await sendEmail(env, {
+      to: d.email, from: 'hello',
+      subject: `${d.race.name || 'Your race'} ${d.daysUntil === 0 ? 'is today' : d.daysUntil === 1 ? 'is tomorrow' : `is in ${d.daysUntil} days`}`,
+      html: reminderHtml(d.race, d.daysUntil, unsub(d.userId)),
+    }).catch(() => null);
+    if (r && r.ok) remindersSent++;
+  }
+
+  for (const dg of selectDigests(users, todayStr, isMonday(todayStr))) {
+    if (!(await claimSend(env, supabaseUrl, dg.userId, dg.kind, ''))) continue;
+    const r = await sendEmail(env, {
+      to: dg.email, from: 'hello',
+      subject: 'Your week in racing — BREAKTAPES',
+      html: digestHtml(dg.nextRace, dg.nextRaceDays, unsub(dg.userId)),
+    }).catch(() => null);
+    if (r && r.ok) digestsSent++;
+  }
+
+  console.log(`[retention] ${todayStr} reminders=${remindersSent} digests=${digestsSent} users=${users.length}`);
+  return { remindersSent, digestsSent, users: users.length };
+}
+
+/** Token-authenticated one-click unsubscribe. Returns a small HTML page. */
+async function handleUnsubscribe(env, url) {
+  const page = (msg) => new Response(
+    `<!doctype html><html><body style="margin:0;background:#0D0D0D;color:#F5F5F5;font-family:Helvetica,Arial,sans-serif;display:flex;min-height:100vh;align-items:center;justify-content:center;text-align:center;">
+      <div style="max-width:420px;padding:32px;"><div style="font-weight:800;letter-spacing:0.12em;color:#E84E1B;margin-bottom:16px;">BREAK / TAPES</div><p style="font-size:16px;line-height:1.5;">${msg}</p></div>
+    </body></html>`,
+    { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8' } },
+  );
+  const token = url.searchParams.get('token');
+  if (!token) return page('Invalid unsubscribe link.');
+  if (!env.SUPABASE_SERVICE_ROLE_KEY) return page('Unsubscribe is temporarily unavailable. Please try again later.');
+  const supabaseUrl = env.SUPABASE_URL || 'https://kmdpufauamadwavqsinj.supabase.co';
+  try {
+    const sel = await fetch(`${supabaseUrl}/rest/v1/user_state?unsubscribe_token=eq.${encodeURIComponent(token)}&select=user_id,state_json`, { headers: svcHeaders(env) });
+    const rows = sel.ok ? await sel.json().catch(() => []) : [];
+    if (!rows.length) return page('This unsubscribe link is no longer valid.');
+    // Flip the column AND state_json.athlete.emailOptIn so the client reflects
+    // the opt-out on next pull and never silently re-enrolls the user.
+    const sj = rows[0].state_json || {};
+    if (sj.athlete && typeof sj.athlete === 'object') sj.athlete.emailOptIn = false;
+    await fetch(`${supabaseUrl}/rest/v1/user_state?unsubscribe_token=eq.${encodeURIComponent(token)}`, {
+      method: 'PATCH',
+      headers: { ...svcHeaders(env), Prefer: 'return=minimal' },
+      body: JSON.stringify({ email_opt_in: false, state_json: sj }),
+    });
+    return page("You're unsubscribed from BREAKTAPES emails. You can turn them back on anytime in Settings.");
+  } catch {
+    return page('Something went wrong. Please try again later.');
+  }
 }
 
 // ── Cryptographic Clerk JWT verification (RS256 via JWKS) ────────────────────
@@ -154,6 +326,12 @@ export default {
     const distinctId = request.headers.get('X-POSTHOG-DISTINCT-ID') || 'anonymous';
     const sessionId  = request.headers.get('X-POSTHOG-SESSION-ID') || undefined;
     const posthog    = makePostHog(env);
+
+    // Unsubscribe is clicked from an email client (no Origin header), so it must
+    // be handled BEFORE the ALLOWED_ORIGINS gate. It's a token-authenticated GET.
+    if (path === '/email/unsubscribe' && request.method === 'GET') {
+      return handleUnsubscribe(env, url);
+    }
 
     if (!ALLOWED_ORIGINS.has(origin)) {
       return new Response('Forbidden', { status: 403 });
@@ -392,6 +570,20 @@ export default {
         });
         await posthog.shutdown();
       }
+      return json(data, resp.status, origin);
+    }
+
+    // ── POST /email/send — transactional send via Resend ──────────────────
+    if (path === '/email/send' && request.method === 'POST') {
+      if (!env.RESEND_API_KEY) {
+        return json({ error: 'Email not configured on this server.' }, 503, origin);
+      }
+      const { to, subject, html, replyTo, from } = await request.json().catch(() => ({}));
+      if (!to || !subject || !html) {
+        return json({ error: 'Missing to, subject, or html' }, 400, origin);
+      }
+      const resp = await sendEmail(env, { to, subject, html, from, replyTo });
+      const data = await resp.json().catch(() => ({}));
       return json(data, resp.status, origin);
     }
 
@@ -861,7 +1053,22 @@ export default {
           return 0;
         };
 
-        // 2. Fetch each finisher result in parallel for time/placing/splits.
+        // 2a. Resolve event-level location once per unique eventId. The
+        //     participant payload doesn't carry city; event API does.
+        //     `/sporthive/events/{eventId}` → { location: "Dubai", countryCode: "AE", eventName, date }.
+        //     Athlete's countryCode on the participant row is *nationality*,
+        //     not event location, so we override it with the event's country.
+        const eventIds = [...new Set(matched.map(p => p.eventId).filter(Boolean))];
+        const eventLocs = new Map();
+        await Promise.all(eventIds.map(async (eid) => {
+          try {
+            const e = await fetch(`https://eventresults-api.speedhive.com/sporthive/events/${encodeURIComponent(eid)}`,
+              { headers: SH, signal: AbortSignal.timeout(8000) }).then(x => x.ok ? x.json() : null);
+            if (e) eventLocs.set(eid, { city: e.location || '', country: e.countryCode || '' });
+          } catch (_) {}
+        }));
+
+        // 2b. Fetch each finisher result in parallel for time/placing/splits.
         const results = (await Promise.all(matched.map(async (p) => {
           try {
             const r = await fetch(`https://eventresults-api.speedhive.com/sporthive/races/${encodeURIComponent(p.raceId)}/bibs/${encodeURIComponent(p.bib)}`,
@@ -878,6 +1085,7 @@ export default {
               const label = leg.sportName ? leg.sportName.charAt(0).toUpperCase() + leg.sportName.slice(1) : '';
               if (dur && label) splits.push({ label, split: dur });
             }
+            const loc = eventLocs.get(p.eventId) || {};
             return {
               raceName:   p.eventName || 'Sporthive Event',
               date,
@@ -887,7 +1095,8 @@ export default {
               placing:    r.overallPosition != null ? String(r.overallPosition) : '',
               genderPlacing: r.genderPosition != null ? String(r.genderPosition) : '',
               agLabel:    r.raceCategory || '',
-              country:    p.countryCode || '',
+              city:       loc.city || '',
+              country:    loc.country || p.countryCode || '',
               ...(splits.length ? { splits } : {}),
               source:     'sporthive',
             };
@@ -1520,5 +1729,15 @@ export default {
         ...corsHeaders(origin),
       },
     });
+  },
+
+  // ── Cron: retention emails (reminders + Monday weekly digest) ──────────────
+  // Fires daily (see [triggers] in wrangler.toml). No-ops safely until the
+  // SUPABASE_SERVICE_ROLE_KEY + RESEND_API_KEY secrets are set.
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(
+      runRetention(env, event.scheduledTime || Date.now())
+        .catch(err => console.error('[retention] failed', err)),
+    );
   },
 };

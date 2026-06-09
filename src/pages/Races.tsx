@@ -364,14 +364,11 @@ function WishlistRow({ race, onPlan, onRemove }: {
 // ── Races sheet ───────────────────────────────────────────────────────────────
 
 function YearDivider({ year }: { year: string }) {
+  // V4 §04 yr-b — orange dot + orange-gradient rule. CSS in styles/index.css.
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', padding: '12px 16px 6px' }}>
-      <span style={{
-        fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xs)',
-        letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)',
-        whiteSpace: 'nowrap',
-      }}>{year}</span>
-      <div style={{ flex: 1, height: '1px', background: 'var(--border2)' }} />
+    <div className="yr-b">
+      <span className="yr-b-dot" aria-hidden="true" />
+      <span className="yr-b-label">{year}</span>
     </div>
   )
 }
@@ -864,7 +861,7 @@ export function Races() {
       <RacesSheet races={races} onAddRace={() => { setAddRaceOpen(true); posthog.capture('modal_opened', { modal: 'add_race', source: 'races' }) }} onImportRace={() => { setImportOpen(true); posthog.capture('modal_opened', { modal: 'import_race' }) }} onOpenPassport={(y) => { setPassportYear(y); setPassportOpen(true) }} onDiscover={() => navigate('/discover')} />
 
       {addRaceOpen  && <AddRaceModal     onClose={() => setAddRaceOpen(false)} />}
-      {importOpen   && <RaceImportModal  onClose={() => setImportOpen(false)} onPickByRace={() => { setImportOpen(false); setPickerOpen(true) }} />}
+      {importOpen   && <RaceImportModal  onClose={() => setImportOpen(false)} onPickByRace={() => { setImportOpen(false); setPickerOpen(true) }} onAddManual={() => { setImportOpen(false); setAddRaceOpen(true); posthog.capture('modal_opened', { modal: 'add_race', source: 'import_no_results' }) }} />}
       {pickerOpen   && <IronmanRacePicker onClose={() => setPickerOpen(false)} />}
 
       {passportOpen && (

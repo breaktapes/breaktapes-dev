@@ -3,6 +3,41 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.7.3] - 2026-06-09
+
+### Fixed
+- **Triathlon distance "70.3"/"140.6" mis-classified as the wrong band.** `parseDistKm()` ran `parseFloat` before the label map, so `"70.3"` (a race name in MILES) was read as **70.3 km** → `detectTriType()` bucketed it as **Olympic** instead of 70.3. This silently corrupted the Triathlon Predictor: a real 70.3 used as the source showed the Olympic tab same-band (Riegel identity → swim/bike unscaled, e.g. raw 43:37 swim / 3:38:00 bike) and the IRONMAN tab cross-band, with mis-weighted `alpha`. Fix: `parseDistKm` is now **map-first** — known race-name labels resolve before the numeric fallback. Added `'140.6'`, `'ironman 70.3'`, `'im 70.3'` aliases. Incidentally also fixes `"50mi"/"100mi"/"10 mile"` (previously read as 50/100/10 km).
+- **Demo data normalized.** 11 demo triathlon `distance` fields stored the literal `"70.3"` → changed to canonical `"113"` (km, matching the AddRaceModal dropdown). Race names containing "70.3" left untouched.
+
+### Tests
+- `src/lib/__tests__/raceFormulas.test.ts` — regression coverage for `parseDistKm` (mile labels, word labels, genuine numeric km, garbage).
+
+## [0.7.7.2] - 2026-06-09
+
+### Added
+- **Retention emails — race-day reminders + weekly digest.** PostHog showed usage is spike-then-dead with zero re-engagement triggers. A daily Cloudflare cron (health-proxy `scheduled` handler, 13:00 UTC) emails opted-in users a reminder when an upcoming race is within 3 days, and a weekly digest every Monday (next race + prompt). Pure selection logic lives in `health-proxy/src/retention.mjs` (unit-tested in `src/lib/__tests__/retention.test.ts`); `reminder_sends` (new table) gives per-(user, kind, race) idempotency so nothing double-sends.
+  - **Opt-in: default ON** with a one-click **Unsubscribe** link in every email (`GET /email/unsubscribe?token=…`, flips `email_opt_in` on the column and in `state_json.athlete` so the client never re-enrolls). A toggle in Settings → Preferences ("Email reminders") lets users turn it off in-app.
+  - **Schema** (`20260609120000_retention_email.sql`): `user_state` gains `email`, `email_opt_in` (default true), `unsubscribe_token`; `reminder_sends` table for audit/idempotency. **Applied to staging only** — prod migration is gated.
+  - **Email plumbing:** the client now syncs `email` (from Clerk) + `email_opt_in` through `/api/sync` (Worker writes them as columns, omitted-key-safe so a stale client can't clobber an unsubscribe). The existing `/email/send` Resend path was refactored into a shared `sendEmail()`.
+  - **Gated on setup:** the cron no-ops until `SUPABASE_SERVICE_ROLE_KEY` + `RESEND_API_KEY` are set on the health-proxy Worker and the Resend sending domain is verified. Nothing emails real users until then.
+
+## [0.7.7.1] - 2026-06-09
+
+### Added
+- **Logging a race now auto-opens the share card.** PostHog showed the share loop was effectively dead (5 profile toggles / 5 views in 90d) while logging was the one healthy action (53 in the burst week). After saving a new past race, the share-card passport opens automatically so every result becomes a chance to share; closing it closes the modal. Upcoming races and edits to existing races are unaffected.
+- **Share-loop instrumentation.** `RaceShareCard` now emits `race share card opened` (with `trigger: post_log | race_detail`), `race share copied`, and `race share downloaded` — previously the share card fired nothing, so the funnel was blind.
+
+### Changed
+- The post-save "Race added" toast in the log form is replaced by the share card itself.
+
+## [0.7.7.0] - 2026-06-09
+
+### Changed
+- **Race import is now 1-tap.** PostHog showed the import funnel leaking ~86% (search → completed). The modal was already zero-form, so the leak was the non-obvious two-step (tick a row, then press IMPORT) and dead-end empty searches. On results, the single best non-duplicate match is now auto-selected and floated to the top of the list, so the user lands ready to commit in one confirm tap (we never auto-save — guards against a wrong namesake). Best-match ranking (`src/lib/importRank.ts`, unit-tested) favours richer payloads (splits/placing/time), exact name match, then recency.
+- **Empty-results dead-end replaced with a handoff.** "No results" now shows a primary **+ ADD RACE MANUALLY** CTA that opens the manual add-race form, instead of a back button only.
+
+### Added
+- **Import funnel instrumentation.** New client-side PostHog events the server-side per-provider events can't see: `race import results shown` (total/has_results/provider_counts), `race import no results`, `race import row selected` (with `was_auto`), and `race import add manual clicked`. These pin whether the real drop is no-results vs results-but-no-select vs select-but-no-import. IronmanRacePicker emits the same events for funnel parity.
 ## [0.7.6.12] - 2026-06-05
 
 ### Fixed

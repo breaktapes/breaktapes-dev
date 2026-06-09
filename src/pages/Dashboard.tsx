@@ -555,6 +555,26 @@ function GreetingCard() {
 
 const DEFAULT_GEAR = ['Shoes', 'Watch', 'Race kit', 'Nutrition', 'Bib']
 
+// V4 §11 — Briefing hero topo backdrop (Direction C). Renders the SVG
+// contour layer + scrim that lives behind every briefing state.
+function BriefingTopo() {
+  return (
+    <>
+      <svg style={st.briefingTopo} viewBox="0 0 340 252" preserveAspectRatio="xMidYMid slice" fill="none" stroke="rgba(232,78,27,0.42)" strokeWidth={1.2} aria-hidden="true">
+        <path d="M-10,28 C70,2 150,56 230,26 S360,18 360,18" />
+        <path d="M-10,58 C70,30 150,90 230,58 S360,48 360,48" />
+        <path d="M-10,88 C70,58 150,120 230,88 S360,78 360,78" />
+        <path d="M-10,118 C70,86 150,150 230,118 S360,108 360,108" />
+        <path d="M-10,148 C70,116 150,180 230,148 S360,138 360,138" stroke="rgba(232,78,27,0.30)" />
+        <path d="M-10,178 C70,146 150,210 230,178 S360,168 360,168" stroke="rgba(232,78,27,0.26)" />
+        <path d="M-10,208 C70,176 150,240 230,208 S360,198 360,198" stroke="rgba(232,78,27,0.20)" />
+        <path d="M-10,238 C70,206 150,270 230,238 S360,228 360,228" stroke="rgba(232,78,27,0.15)" />
+      </svg>
+      <div style={st.briefingScrim} aria-hidden="true" />
+    </>
+  )
+}
+
 function RaceMorningBrief({ race, onEditRace, onComplete }: { race: Race; onEditRace?: (race: Race) => void; onComplete?: (race: Race) => void }) {
   const updateRace = useRaceStore(s => s.updateRace)
   const units = useUnits()
@@ -602,6 +622,7 @@ function RaceMorningBrief({ race, onEditRace, onComplete }: { race: Race; onEdit
 
   return (
     <div style={{ ...st.briefingCard, border: '1px solid rgba(232,78,27,0.4)' }}>
+      <BriefingTopo />
       <div style={st.briefingInner}>
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-1)' }}>
@@ -762,6 +783,7 @@ function PreRaceBriefing({ onAddRace, onEditRace, onComplete }: { onAddRace: () 
       const dLabel = d === 0 ? 'Today' : d === 1 ? 'Yesterday' : `${d} days ago`
       return (
         <div style={st.briefingCard}>
+          <BriefingTopo />
           <div style={st.briefingInner}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-1)' }}>
               <IconPin />
@@ -777,6 +799,7 @@ function PreRaceBriefing({ onAddRace, onEditRace, onComplete }: { onAddRace: () 
     }
     return (
       <div style={st.briefingCard}>
+        <BriefingTopo />
         <div style={st.briefingInner}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-1)' }}>
             <IconPin />
@@ -794,6 +817,7 @@ function PreRaceBriefing({ onAddRace, onEditRace, onComplete }: { onAddRace: () 
 
   return (
     <div style={st.briefingCard}>
+      <BriefingTopo />
       <div style={st.briefingInner}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-1)' }}>
           <IconPin />
@@ -1419,10 +1443,18 @@ function WeatherCard({ race }: { race: Race }) {
     }
   }, [race.date, race.city, race.country, isLive])
 
+  // V4 §11 cd-fc-pill — days-until-race chip on the right of the forecast row.
+  const daysPillLabel = days <= 0 ? 'TODAY' : days === 1 ? '1 DAY' : `${days} DAYS`
+
   return (
     <div style={st.weatherCard}>
-      <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '8px' }}>
-        {location}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--sp-2)', marginBottom: '8px' }}>
+        <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted)', textTransform: 'uppercase', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {location}
+        </div>
+        <span style={{ flexShrink: 0, fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-xs)', letterSpacing: '0.12em', color: 'var(--orange)', background: 'rgba(var(--orange-ch),0.12)', border: '1px solid rgba(var(--orange-ch),0.3)', borderRadius: 'var(--radius-pill)', padding: '3px 9px', textTransform: 'uppercase' as const }}>
+          {daysPillLabel}
+        </span>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
         <span style={{ fontSize: 'var(--text-2xl)', lineHeight: 1, flexShrink: 0 }}>
@@ -2347,7 +2379,7 @@ function RaceDNAWidget() {
                       }} />
                     </div>
                     <div style={{ width: '40px', fontSize: 'var(--text-xs)', color: b.isBest ? b.color : 'var(--muted)', fontWeight: b.isBest ? 700 : 400, textAlign: 'center' as const, flexShrink: 0 }}>
-                      {b.isBest ? 'BEST' : `+${b.delta}%`}
+                      {b.isBest ? '★' : `+${b.delta}%`}
                     </div>
                   </div>
                 ))}
@@ -2734,7 +2766,7 @@ function RaceReadinessWidget() {
     return (
       <WidgetCard id="race-readiness" style={st.glowCard}>
         <div>
-          <div style={st.widgetLabel}>FORM CHECK</div>
+          <div style={st.widgetLabelGreen}>FORM CHECK</div>
           <div role="heading" aria-level={2} style={st.widgetTitle}>RECOVERY MODE</div>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', marginTop: 'auto' }}>
@@ -2790,7 +2822,7 @@ function RaceReadinessWidget() {
     <WidgetCard id="race-readiness" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
         <div>
-          <div style={st.widgetLabel}>FORM CHECK</div>
+          <div style={st.widgetLabelGreen}>FORM CHECK</div>
           <div role="heading" aria-level={2} style={st.widgetTitle}>RACE READINESS</div>
         </div>
         <span style={{ ...st.badgePill, background: `${sigColor}22`, color: sigColor, border: `1px solid ${sigColor}55`, flexShrink: 0 }}>{signal}</span>
@@ -3271,7 +3303,7 @@ function CourseFitWidget({ race }: { race: Race | null }) {
     return (
       <WidgetCard id="course-fit" style={st.glowCard}>
         <div>
-          <div style={st.widgetLabel}>COURSE FIT</div>
+          <div style={st.widgetLabelGreen}>COURSE FIT</div>
           <div role="heading" aria-level={2} style={st.widgetTitle}>{(nextRace?.name ?? 'NEXT RACE').toUpperCase()}</div>
         </div>
         <div style={{ marginTop: 'auto' }}>
@@ -3293,7 +3325,7 @@ function CourseFitWidget({ race }: { race: Race | null }) {
     return (
       <WidgetCard id="course-fit" style={st.glowCard}>
         <div>
-          <div style={st.widgetLabel}>COURSE FIT</div>
+          <div style={st.widgetLabelGreen}>COURSE FIT</div>
           <div role="heading" aria-level={2} style={st.widgetTitle}>NEXT RACE</div>
         </div>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginTop: '6px' }}>Add an upcoming race to calculate your course fit score.</div>
@@ -3305,7 +3337,7 @@ function CourseFitWidget({ race }: { race: Race | null }) {
     <WidgetCard id="course-fit" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
         <div style={{ minWidth: 0 }}>
-          <div style={st.widgetLabel}>COURSE FIT</div>
+          <div style={st.widgetLabelGreen}>COURSE FIT</div>
           <div role="heading" aria-level={2} style={st.widgetTitle}>{(nextRace.name ?? 'NEXT RACE').toUpperCase()}</div>
         </div>
         {result && <span style={{ ...st.badgePill, background: `${result.color}22`, color: result.color, border: `1px solid ${result.color}55`, flexShrink: 0 }}>{result.label}</span>}
@@ -3412,7 +3444,7 @@ function PBProbabilityWidget({ race }: { race: Race | null }) {
     return (
       <WidgetCard id="pb-probability" style={st.glowCard}>
         <div>
-          <div style={st.widgetLabel}>PB PROBABILITY</div>
+          <div style={st.widgetLabelGreen}>PB PROBABILITY</div>
           <div role="heading" aria-level={2} style={st.widgetTitle}>{(nextRace?.name ?? 'NEXT RACE').toUpperCase()}</div>
         </div>
         <div style={{ marginTop: 'auto' }}>
@@ -3434,7 +3466,7 @@ function PBProbabilityWidget({ race }: { race: Race | null }) {
     return (
       <WidgetCard id="pb-probability" style={st.glowCard}>
         <div>
-          <div style={st.widgetLabel}>PB PROBABILITY</div>
+          <div style={st.widgetLabelGreen}>PB PROBABILITY</div>
           <div role="heading" aria-level={2} style={st.widgetTitle}>NEXT RACE</div>
         </div>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginTop: '6px' }}>Add an upcoming race to estimate your PB chance.</div>
@@ -3446,7 +3478,7 @@ function PBProbabilityWidget({ race }: { race: Race | null }) {
     <WidgetCard id="pb-probability" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
         <div style={{ minWidth: 0 }}>
-          <div style={st.widgetLabel}>PB PROBABILITY</div>
+          <div style={st.widgetLabelGreen}>PB PROBABILITY</div>
           <div role="heading" aria-level={2} style={st.widgetTitle}>{(nextRace.name ?? 'NEXT RACE').toUpperCase()}</div>
         </div>
         {result && <span style={{ ...st.badgePill, background: `${result.color}22`, color: result.color, border: `1px solid ${result.color}55`, flexShrink: 0 }}>{result.label}</span>}
@@ -3627,7 +3659,7 @@ function WhatToRaceNextWidget() {
     return (
       <WidgetCard id="what-to-race-next" style={st.glowCard}>
         <div>
-          <div style={st.widgetLabel}>WHAT TO RACE NEXT</div>
+          <div style={st.widgetLabelGreen}>WHAT TO RACE NEXT</div>
           <div role="heading" aria-level={2} style={st.widgetTitle}>NO UPCOMING RACES</div>
         </div>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: 'var(--sp-1)' }}>Add upcoming races to get recommendations based on your performance trends.</div>
@@ -3641,7 +3673,7 @@ function WhatToRaceNextWidget() {
     <WidgetCard id="what-to-race-next" style={st.glowCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
         <div>
-          <div style={st.widgetLabel}>WHAT TO RACE NEXT</div>
+          <div style={st.widgetLabelGreen}>WHAT TO RACE NEXT</div>
           <div role="heading" aria-level={2} style={st.widgetTitle}>{futureUpcoming.length} RACE{futureUpcoming.length !== 1 ? 'S' : ''} UPCOMING</div>
         </div>
         {recommendation && (
@@ -3682,19 +3714,32 @@ const ZONE_LABELS: Record<string, { tag: string; label: string }> = {
 function ZoneHeader({ id, editMode }: { id: string; editMode: boolean }) {
   const meta = ZONE_LABELS[id] ?? { tag: id.replace('zone:', '').toUpperCase(), label: '' }
   const isFirst = id === 'zone:now'
+  // V4 §11 zrow layout — tag + label on the left, chevron on the right.
   return (
     <div style={{
       fontFamily: 'var(--headline)',
       display: 'flex',
-      flexDirection: 'column',
-      gap: 2,
+      alignItems: 'flex-end',
+      justifyContent: 'space-between',
+      gap: 'var(--sp-2)',
       padding: editMode ? '8px 0 4px' : '20px 0 6px',
       marginTop: isFirst ? 0 : 4,
       borderTop: isFirst ? undefined : '1px solid var(--border)',
       opacity: editMode ? 0.7 : 1,
     }}>
-      <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: 'var(--orange)' }}>{meta.tag}</span>
-      <span style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-lg)', fontWeight: 900, letterSpacing: '0.04em', textTransform: 'uppercase' as const, color: 'var(--white)', lineHeight: 1.1 }}>{meta.label}</span>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+        <span style={{ fontSize: 'var(--text-xs)', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: 'var(--orange)' }}>{meta.tag}</span>
+        <span style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-lg)', fontWeight: 900, letterSpacing: '0.04em', textTransform: 'uppercase' as const, color: 'var(--white)', lineHeight: 1.1 }}>{meta.label}</span>
+      </div>
+      <span aria-hidden="true" style={{
+        flexShrink: 0,
+        fontFamily: 'var(--headline)',
+        fontSize: 'var(--text-lg)',
+        fontWeight: 700,
+        color: 'var(--muted)',
+        lineHeight: 1,
+        paddingBottom: 2,
+      }}>▾</span>
     </div>
   )
 }
@@ -3814,7 +3859,7 @@ function PersonalBestsWidget() {
     return (
       <WidgetCard id="personal-bests" style={st.glowCard}>
         <div>
-          <div style={st.widgetLabel}>ALL TIME</div>
+          <div style={st.widgetLabelGreen}>ALL TIME</div>
           <div role="heading" aria-level={2} style={st.widgetTitle}>PERSONAL BESTS</div>
         </div>
         <div style={{ marginTop: 'auto' }}>
@@ -3833,7 +3878,7 @@ function PersonalBestsWidget() {
     return (
       <WidgetCard id="personal-bests" style={st.glowCard}>
         <div>
-          <div style={st.widgetLabel}>ALL TIME</div>
+          <div style={st.widgetLabelGreen}>ALL TIME</div>
           <div role="heading" aria-level={2} style={st.widgetTitle}>PERSONAL BESTS</div>
         </div>
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5, marginTop: '8px' }}>
@@ -3848,7 +3893,7 @@ function PersonalBestsWidget() {
       {/* Header row */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
         <div>
-          <div style={st.widgetLabel}>ALL TIME</div>
+          <div style={st.widgetLabelGreen}>ALL TIME</div>
           <div role="heading" aria-level={2} style={st.widgetTitle}>PERSONAL BESTS</div>
         </div>
         {allDists.length > 0 && (
@@ -4773,7 +4818,7 @@ function GoalPaceWidget({ race }: { race: Race | null }) {
     return (
       <WidgetCard id="goal-pace" style={st.glowCard}>
         <div>
-          <div style={st.widgetLabel}>GOAL PACE</div>
+          <div style={st.widgetLabelGreen}>GOAL PACE</div>
           <div role="heading" aria-level={2} style={st.widgetTitle}>{(focusRace.name ?? 'TARGET PACE').toUpperCase()}</div>
         </div>
         <div style={{ marginTop: 'auto' }}>
@@ -4791,7 +4836,7 @@ function GoalPaceWidget({ race }: { race: Race | null }) {
   if (!result) return (
     <WidgetCard id="goal-pace" style={st.glowCard}>
       <div>
-        <div style={st.widgetLabel}>GOAL PACE</div>
+        <div style={st.widgetLabelGreen}>GOAL PACE</div>
         <div role="heading" aria-level={2} style={st.widgetTitle}>{(focusRace.name ?? 'TARGET PACE').toUpperCase()}</div>
       </div>
       <p style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', margin: 0 }}>
@@ -4811,7 +4856,7 @@ function GoalPaceWidget({ race }: { race: Race | null }) {
   return (
     <WidgetCard id="goal-pace" style={st.glowCard}>
       <div>
-        <div style={st.widgetLabel}>GOAL PACE</div>
+        <div style={st.widgetLabelGreen}>GOAL PACE</div>
         <div role="heading" aria-level={2} style={st.widgetTitle}>{(focusRace.name ?? 'TARGET PACE').toUpperCase()}</div>
       </div>
 
@@ -5859,15 +5904,39 @@ const st = {
   } as React.CSSProperties,
 
   // ── Pre-race briefing
+  // V4 §11 — Athlete Briefing Hero: Topo Texture direction.
+  // Dark warm bg + SVG contour overlay + corner glow scrim. Content lives
+  // inside .briefingInner at z-index 1 to clear the backdrop layers.
   briefingCard: {
-    background: 'var(--surface2)',
-    border: '1px solid var(--border)',
+    position: 'relative' as const,
+    overflow: 'hidden',
+    background: 'radial-gradient(ellipse at 78% 12%, rgba(var(--orange-ch),0.14), transparent 52%), #0c0a08',
+    border: '1px solid rgba(255,255,255,0.08)',
     borderRadius: 'var(--radius-lg)',
     padding: 'var(--sp-5)',
     minWidth: 0,
   } as React.CSSProperties,
 
+  briefingTopo: {
+    position: 'absolute' as const,
+    inset: 0,
+    width: '100%',
+    height: '100%',
+    pointerEvents: 'none' as const,
+    zIndex: 0,
+  } as React.CSSProperties,
+
+  briefingScrim: {
+    position: 'absolute' as const,
+    inset: 0,
+    background: 'linear-gradient(135deg, rgba(12,10,8,0.15), rgba(12,10,8,0.9))',
+    pointerEvents: 'none' as const,
+    zIndex: 0,
+  } as React.CSSProperties,
+
   briefingInner: {
+    position: 'relative' as const,
+    zIndex: 1,
     display: 'flex',
     flexDirection: 'column' as const,
     gap: 'var(--sp-2)',
@@ -6264,6 +6333,22 @@ const st = {
     letterSpacing: '0.14em',
     textTransform: 'uppercase' as const,
     color: 'var(--orange)',
+    lineHeight: 1,
+    marginBottom: '4px',
+    whiteSpace: 'nowrap' as const,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+  } as React.CSSProperties,
+
+  // Green variant — used on tint-g widgets (Course Fit, PB Probability,
+  // Race Readiness, Goal Pace, What to Race Next, Personal Bests) per V4 spec §11.
+  widgetLabelGreen: {
+    fontFamily: 'var(--headline)',
+    fontSize: 'var(--text-xs)',
+    fontWeight: 700,
+    letterSpacing: '0.14em',
+    textTransform: 'uppercase' as const,
+    color: 'var(--green)',
     lineHeight: 1,
     marginBottom: '4px',
     whiteSpace: 'nowrap' as const,

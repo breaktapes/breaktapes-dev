@@ -112,6 +112,10 @@ async function _doSync() {
         body: JSON.stringify({
           username:   athlete?.username   ?? null,
           is_public:  athlete?.isPublic   ?? false,
+          // Retention: email (from Clerk via authUser) + opt-in feed the
+          // reminder/digest cron. Default opt-in ON; user controls it in Settings.
+          email:        authUser.email ?? null,
+          email_opt_in: athlete?.emailOptIn ?? true,
           state_json: stateJson,
         }),
       })
