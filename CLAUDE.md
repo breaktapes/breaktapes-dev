@@ -1384,6 +1384,25 @@ Direct DB access (psql/psycopg2) is blocked from localhost — Supabase only exp
 
 ---
 
+### Session 43 (2026-06-09) — Docs: Strava production enablement (v0.7.7.4)
+
+**Branch:** `claude/docs-strava-prod` → staging → main. Docs-only follow-up to PR #514 (→ staging) / #516 (→ main), which shipped Strava on production but went unlogged in the session history.
+
+#### What shipped in v0.7.7.4 (the change being documented)
+- The Strava connect card in **Train → Wearables** (`OW_PROVIDERS` in `src/pages/Train.tsx`, ~line 205) was gated to staging/localhost via `stagingOnly: true` + the `isStagingHost()` filter, because the Strava API app was capped at 1 athlete pending a rate-limit raise. The cap was lifted (10 users already authenticated), so the `stagingOnly: true` flag was removed from the Strava entry → it now shows on `app.breaktapes.com` exactly like WHOOP.
+- **No connect-flow logic changed.** `startStravaOAuth` → `handleStravaCallback` → `fetchStravaActivities` in `src/lib/strava.ts` were already fully wired. Flag removal was the only code change.
+- The `stagingOnly` field + `isStagingHost()` filter were **kept** for future gated providers.
+
+#### Two deploy-time prerequisites (config, NOT code — prod connect is dead until both true)
+1. **`VITE_STRAVA_CLIENT_ID` set in the production Cloudflare Pages env.** Falls back to `''` in `src/env.ts:10` → empty `client_id` → Strava OAuth error page.
+2. **`https://app.breaktapes.com/train` registered as an Authorized Callback Domain** in the Strava API app dashboard. `startStravaOAuth` builds `redirect_uri = ${window.location.origin}/train`; Strava 401s any redirect_uri whose domain isn't registered. Users who authenticated via `dev.breaktapes.com` only prove the **staging** domain is registered — the prod domain is the likely gap.
+
+#### Key learnings
+- Re-enabling a host-gated OAuth provider on prod = check the Pages env var **and** the provider's callback-domain allowlist before assuming the code is wrong. Connect working on staging only confirms the staging domain is registered.
+- A `limit:reached` throw in `handleStravaCallback` (strava.ts:222) was part of the original 1-athlete cap; it stays (harmless once the cap is raised).
+
+---
+
 ### Session 42 (2026-06-09) — PostHog-driven activation + retention (import 1-tap, post-log share, email reminders)
 
 **Branches:** `claude/import-funnel-1tap` → staging (PR #509, v0.7.7.0) · `claude/post-log-share` → staging (PR #510, v0.7.7.1) · `claude/retention-email-staging` → staging (PR #511, v0.7.7.2) · `claude/health-proxy-staging-env` → staging (PR #515, v0.7.7.5). All promoted to **main/prod** via PR #516 (parallel promote).

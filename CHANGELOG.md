@@ -3,6 +3,11 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.7.7] - 2026-06-09
+
+### Docs
+- **Documented the Strava production enablement (v0.7.7.4).** Added a Session 43 entry to `CLAUDE.md` session history and a "Production enablement" note to the Strava section of `docs/memory/integrations.md`. Captures that the `stagingOnly` gate was removed (no connect-flow logic changed) and the two config-not-code prerequisites that keep prod connect dead until set: `VITE_STRAVA_CLIENT_ID` in the production Cloudflare Pages env, and `https://app.breaktapes.com/train` registered as a Strava Authorized Callback Domain. Docs only — no code or behavior change.
+
 ## [0.7.7.5] - 2026-06-09
 
 ### Added
