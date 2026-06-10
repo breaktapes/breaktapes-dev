@@ -3,6 +3,7 @@
  */
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Settings } from '../Settings'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { useAuthStore } from '@/stores/useAuthStore'
@@ -18,10 +19,13 @@ vi.mock('@/lib/strava', () => ({ startStravaOAuth: vi.fn() }))
 vi.mock('@/lib/wearableUtils', () => ({ removeWearableToken: vi.fn() }))
 
 function renderSettings() {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
-    <MemoryRouter>
-      <Settings />
-    </MemoryRouter>
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>
+        <Settings />
+      </MemoryRouter>
+    </QueryClientProvider>
   )
 }
 

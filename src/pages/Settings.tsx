@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { useClerk, useUser } from '@clerk/clerk-react'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { useWearableStore } from '@/stores/useWearableStore'
 import { syncStateToSupabase, resetRemotePullGate } from '@/lib/syncState'
+import { getClerkToken } from '@/lib/supabase'
 import { THEMES } from '@/types'
 import type { ThemeId } from '@/types'
 import { useThemeStore } from '@/stores/useThemeStore'
@@ -58,6 +60,34 @@ export function Settings() {
   const [accountExpanded, setAccountExpanded] = useState(false)
   const [copyToast, setCopyToast] = useState(false)
   function showCopyToast() { setCopyToast(true); setTimeout(() => setCopyToast(false), 2500) }
+
+  // Manual "Restore from server" — PULL-ONLY recovery. Re-runs the sync-state
+  // query (useSyncState), which fetches /api/state and merges the server copy
+  // into local via applyRemoteSafe. It never writes to the server, so it can
+  // only ever restore data, never overwrite it. Safety net for the rare case
+  // where a client shows empty while the server holds the user's real data.
+  const queryClient = useQueryClient()
+  const [syncing, setSyncing] = useState(false)
+  const [syncMsg, setSyncMsg] = useState<string | null>(null)
+  async function handleManualSync() {
+    if (!authUser || syncing) return
+    setSyncing(true)
+    setSyncMsg(null)
+    try {
+      await queryClient.refetchQueries({ queryKey: ['sync-state', authUser.id] })
+      const n = useRaceStore.getState().races.length
+      setSyncMsg(
+        n > 0
+          ? `Restored ${n} race${n === 1 ? '' : 's'} from the server.`
+          : 'No saved data found on the server for this account.',
+      )
+      posthog.capture('manual sync', { races_restored: n })
+    } catch {
+      setSyncMsg('Sync failed — check your connection and try again.')
+    } finally {
+      setSyncing(false)
+    }
+  }
 
   const activeTheme = useThemeStore(s => s.theme)
   const storeSetTheme = useThemeStore(s => s.setTheme)
@@ -119,6 +149,30 @@ export function Settings() {
     await signOut()
   }
 
+  async function handleDeleteData() {
+    const ok = window.confirm(
+      'Delete all your BreakTapes data? This permanently removes your races, profile, and connected wearables from our servers. Your login account itself is managed separately under "Manage account". This cannot be undone.'
+    )
+    if (!ok) return
+    const token = getClerkToken()
+    if (!token) {
+      window.alert('Could not verify your session. Please try again.')
+      return
+    }
+    try {
+      const res = await fetch(`${APP_URL}/api/delete-account`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      if (!res.ok) throw new Error(`delete failed: ${res.status}`)
+      posthog.capture('account data deleted')
+      // Clear local stores then sign out — mirrors the sign-out cleanup.
+      await handleSignOut()
+    } catch {
+      window.alert('Something went wrong deleting your data. Please try again.')
+    }
+  }
+
   return (
     <>
     <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -152,6 +206,26 @@ export function Settings() {
             <span style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', color: 'var(--muted)', textTransform: 'uppercase' }}>
               {syncStatus === 'ok' ? 'Synced' : syncStatus === 'error' ? 'Sync failed' : syncStatus === 'syncing' ? 'Syncing…' : 'Not synced'}
             </span>
+            {/* Tiny pull-only "Restore from server" button — re-downloads server
+                state, never writes. Lives next to the sync status indicator. */}
+            <button
+              onClick={handleManualSync}
+              disabled={syncing}
+              title={syncMsg ?? 'Restore from server (pull-only — never overwrites the server)'}
+              aria-label="Restore from server"
+              style={{
+                width: '20px', height: '20px', flexShrink: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+                background: 'var(--surface3)', border: '1px solid var(--border2)',
+                borderRadius: 'var(--radius-sm)', color: 'var(--muted)',
+                cursor: syncing ? 'default' : 'pointer',
+                opacity: syncing ? 0.5 : 1, transition: 'opacity 0.2s, color 0.2s',
+              }}
+            >
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+                <path d="M13.6 8a5.6 5.6 0 1 1-1.7-4M13.5 2.2V5.4h-3.2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
           </div>
         )}
       </div>
@@ -237,6 +311,21 @@ export function Settings() {
                   <path d="M10 11l3-3-3-3M13 8H6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
                 <span style={{ fontSize: 'var(--text-compact)', fontWeight: 500 }}>Sign out</span>
+              </button>
+              <div style={{ height: '1px', background: 'var(--border)', margin: '0 4px' }} />
+              <button
+                onClick={() => { setAccountExpanded(false); handleDeleteData() }}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 'var(--sp-2)',
+                  width: '100%', background: 'transparent', border: 'none',
+                  cursor: 'pointer', padding: '10px 4px', textAlign: 'left',
+                  color: '#FF4D4D',
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+                  <path d="M2 4h12M6 4V2.5a1 1 0 011-1h2a1 1 0 011 1V4M5 4l.5 9a1 1 0 001 1h3a1 1 0 001-1L11 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <span style={{ fontSize: 'var(--text-compact)', fontWeight: 500 }}>Delete all my data</span>
               </button>
             </div>
           )}

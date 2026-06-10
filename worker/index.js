@@ -579,6 +579,8 @@ function renderProfile(row, username) {
 function renderRaceCard(row, username, raceId) {
   const races = Array.isArray(row.races) ? row.races : [];
   const athlete = row.athlete || {};
+  const pv = athlete.profileVisibility || {};
+  if (pv.races !== true) return notFoundPage(username);
   const race = races.find(r => r.id === raceId || String(r.id) === raceId);
   if (!race) return notFoundPage(username);
 
@@ -2001,6 +2003,69 @@ async function handleApiState(request, env) {
   });
 }
 
+// POST /api/delete-account — purge the authenticated user's Supabase data.
+// Clerk-side user deletion is handled separately in the Clerk UserProfile modal;
+// this only removes the rows BreakTapes stores for the user. Auth mirrors
+// /api/sync: cryptographically verify the Clerk JWT (verifyClerkJwt, not the
+// naive decode) + service-role REST writes that bypass RLS.
+async function handleApiDeleteAccount(request, env) {
+  if (request.method === 'OPTIONS') {
+    return new Response(null, {
+      headers: { ...apiCorsHeaders(request), 'Access-Control-Allow-Methods': 'POST, OPTIONS' },
+    });
+  }
+
+  if (request.method !== 'POST') {
+    return new Response('Method not allowed', { status: 405, headers: apiCorsHeaders(request) });
+  }
+
+  const authHeader = request.headers.get('Authorization') ?? '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+  if (!token) return new Response('Unauthorized', { status: 401, headers: apiCorsHeaders(request) });
+
+  const payload = await verifyClerkJwt(token);
+  if (!payload || !payload.sub) return new Response('Invalid token', { status: 401, headers: apiCorsHeaders(request) });
+  const userId = payload.sub;
+
+  const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceKey) {
+    return new Response('Service unavailable — SUPABASE_SERVICE_ROLE_KEY not set', { status: 503, headers: apiCorsHeaders(request) });
+  }
+
+  const supabaseUrl = env.SUPABASE_URL || 'https://kmdpufauamadwavqsinj.supabase.co';
+  const svcHeaders = { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` };
+  const uid = encodeURIComponent(userId);
+
+  // Issue a service-role DELETE; resolve true only on a 2xx response. Some
+  // tables may match zero rows (or no longer exist) — that's tolerated, the
+  // summary just reports false. user_state is the one hard requirement.
+  const del = async (qs) => {
+    try {
+      const res = await fetch(`${supabaseUrl}/rest/v1/${qs}`, { method: 'DELETE', headers: svcHeaders });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  };
+
+  const userStateOk = await del(`user_state?user_id=eq.${uid}`);
+  if (!userStateOk) {
+    return new Response(JSON.stringify({ ok: false, error: 'Failed to delete user_state' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json', ...apiCorsHeaders(request) },
+    });
+  }
+
+  const deleted = { user_state: true };
+  deleted.reminder_sends     = await del(`reminder_sends?user_id=eq.${uid}`);
+  deleted.wearable_tokens    = await del(`wearable_tokens?user_id=eq.${uid}`);
+  deleted.apple_health_data  = await del(`apple_health_data?user_id=eq.${uid}`);
+
+  return new Response(JSON.stringify({ ok: true, deleted }), {
+    headers: { 'Content-Type': 'application/json', ...apiCorsHeaders(request) },
+  });
+}
+
 // POST /api/upload-photo — upload a race/medal photo to Supabase Storage via the
 // service role and return its public URL. Keeps base64 blobs OUT of the synced
 // state_json (the cause of the slow-save / quota-crash bug). Body: { data_url }.
@@ -2111,6 +2176,12 @@ async function handleRequest(request, env) {
     // POST /api/sync — profile state sync via service role (no Clerk-Supabase JWT needed)
     if ((request.method === 'POST' || request.method === 'OPTIONS') && path === '/api/sync') {
       return handleApiSync(request, env);
+    }
+
+    // POST /api/delete-account — purge the user's Supabase data (Clerk-side
+    // user deletion is handled in the Clerk UserProfile modal separately)
+    if ((request.method === 'POST' || request.method === 'OPTIONS') && path === '/api/delete-account') {
+      return handleApiDeleteAccount(request, env);
     }
 
     // POST /api/upload-photo — store a race/medal photo in Supabase Storage,

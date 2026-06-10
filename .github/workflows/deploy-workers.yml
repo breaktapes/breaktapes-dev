@@ -1,0 +1,182 @@
+name: Deploy → Workers (health-proxy + og-worker)
+
+# The health-proxy/ and og-worker/ Cloudflare Workers were previously deployed
+# by hand (`cd health-proxy && wrangler deploy`) and drifted from the repo.
+# This workflow deploys them automatically, mirroring the app deploy pattern:
+#   • push to staging → staging worker (wrangler deploy --env staging)
+#   • push to main    → prod worker    (wrangler deploy)
+# Each job is path-filtered so it only runs when its worker dir changes.
+# No Supabase migrations — these workers have none.
+
+on:
+  push:
+    branches:
+      - staging
+      - main
+    paths:
+      - 'health-proxy/**'
+      - 'og-worker/**'
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  # ── health-proxy → staging (breaktapes-health-staging) ─────────────────────
+  health-proxy-staging:
+    name: Deploy health-proxy (staging)
+    if: github.ref_name == 'staging'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 2
+
+      - name: Check for health-proxy changes
+        id: changes
+        run: |
+          if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -q '^health-proxy/'; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Node.js
+        if: steps.changes.outputs.changed == 'true'
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: health-proxy/package-lock.json
+
+      - name: Install dependencies
+        if: steps.changes.outputs.changed == 'true'
+        run: npm ci
+        working-directory: health-proxy
+
+      - name: Deploy to Cloudflare staging
+        if: steps.changes.outputs.changed == 'true'
+        run: npx wrangler deploy --env staging
+        working-directory: health-proxy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+  # ── health-proxy → production (breaktapes-health) ──────────────────────────
+  health-proxy-production:
+    name: Deploy health-proxy (production)
+    if: github.ref_name == 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 2
+
+      - name: Check for health-proxy changes
+        id: changes
+        run: |
+          if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -q '^health-proxy/'; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Node.js
+        if: steps.changes.outputs.changed == 'true'
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: health-proxy/package-lock.json
+
+      - name: Install dependencies
+        if: steps.changes.outputs.changed == 'true'
+        run: npm ci
+        working-directory: health-proxy
+
+      - name: Deploy to Cloudflare production
+        if: steps.changes.outputs.changed == 'true'
+        run: npx wrangler deploy
+        working-directory: health-proxy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+  # ── og-worker → staging (breaktapes-og-staging) ────────────────────────────
+  og-worker-staging:
+    name: Deploy og-worker (staging)
+    if: github.ref_name == 'staging'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 2
+
+      - name: Check for og-worker changes
+        id: changes
+        run: |
+          if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -q '^og-worker/'; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Node.js
+        if: steps.changes.outputs.changed == 'true'
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: og-worker/package-lock.json
+
+      - name: Install dependencies
+        if: steps.changes.outputs.changed == 'true'
+        run: npm ci
+        working-directory: og-worker
+
+      - name: Deploy to Cloudflare staging
+        if: steps.changes.outputs.changed == 'true'
+        run: npx wrangler deploy --env staging
+        working-directory: og-worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+  # ── og-worker → production (breaktapes-og) ─────────────────────────────────
+  og-worker-production:
+    name: Deploy og-worker (production)
+    if: github.ref_name == 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 2
+
+      - name: Check for og-worker changes
+        id: changes
+        run: |
+          if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -q '^og-worker/'; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Node.js
+        if: steps.changes.outputs.changed == 'true'
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: og-worker/package-lock.json
+
+      - name: Install dependencies
+        if: steps.changes.outputs.changed == 'true'
+        run: npm ci
+        working-directory: og-worker
+
+      - name: Deploy to Cloudflare production
+        if: steps.changes.outputs.changed == 'true'
+        run: npx wrangler deploy
+        working-directory: og-worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
