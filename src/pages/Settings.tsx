@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { useClerk, useUser } from '@clerk/clerk-react'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
@@ -56,6 +57,34 @@ export function Settings() {
   const [accountExpanded, setAccountExpanded] = useState(false)
   const [copyToast, setCopyToast] = useState(false)
   function showCopyToast() { setCopyToast(true); setTimeout(() => setCopyToast(false), 2500) }
+
+  // Manual "Restore from server" — PULL-ONLY recovery. Re-runs the sync-state
+  // query (useSyncState), which fetches /api/state and merges the server copy
+  // into local via applyRemoteSafe. It never writes to the server, so it can
+  // only ever restore data, never overwrite it. Safety net for the rare case
+  // where a client shows empty while the server holds the user's real data.
+  const queryClient = useQueryClient()
+  const [syncing, setSyncing] = useState(false)
+  const [syncMsg, setSyncMsg] = useState<string | null>(null)
+  async function handleManualSync() {
+    if (!authUser || syncing) return
+    setSyncing(true)
+    setSyncMsg(null)
+    try {
+      await queryClient.refetchQueries({ queryKey: ['sync-state', authUser.id] })
+      const n = useRaceStore.getState().races.length
+      setSyncMsg(
+        n > 0
+          ? `Restored ${n} race${n === 1 ? '' : 's'} from the server.`
+          : 'No saved data found on the server for this account.',
+      )
+      posthog.capture('manual sync', { races_restored: n })
+    } catch {
+      setSyncMsg('Sync failed — check your connection and try again.')
+    } finally {
+      setSyncing(false)
+    }
+  }
 
   const activeTheme = useThemeStore(s => s.theme)
   const storeSetTheme = useThemeStore(s => s.setTheme)
@@ -276,6 +305,37 @@ export function Settings() {
                 <span style={{ fontSize: 'var(--text-compact)', fontWeight: 500 }}>Delete all my data</span>
               </button>
             </div>
+          )}
+        </div>
+      </section>
+
+      {/* ── Sync / recovery section ── */}
+      <section>
+        <p style={sectionLabel}>Sync</p>
+        <div style={card}>
+          <button
+            onClick={handleManualSync}
+            disabled={syncing || !authUser}
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'var(--sp-2)',
+              width: '100%', padding: '12px 16px',
+              cursor: syncing || !authUser ? 'default' : 'pointer',
+              background: 'var(--orange)', color: 'var(--black)', border: 'none',
+              borderRadius: 'var(--radius-md)', fontWeight: 700,
+              fontSize: 'var(--text-compact)', letterSpacing: '0.02em',
+              opacity: syncing || !authUser ? 0.6 : 1,
+            }}
+          >
+            {syncing ? 'Restoring…' : '↓ Restore from server'}
+          </button>
+          <p style={{ color: 'var(--muted)', fontSize: 'var(--text-xs)', marginTop: '10px', lineHeight: 1.45 }}>
+            Re-downloads your races, medals, and profile from the server. Use this if your data looks
+            missing. It only pulls from the server — it never overwrites what's saved there.
+          </p>
+          {syncMsg && (
+            <p role="status" aria-live="polite" style={{ color: 'var(--white)', fontSize: 'var(--text-xs)', fontWeight: 600, marginTop: '8px' }}>
+              {syncMsg}
+            </p>
           )}
         </div>
       </section>
