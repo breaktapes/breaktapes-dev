@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { useNavigate } from 'react-router-dom'
 import { useClerk, useUser } from '@clerk/clerk-react'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
@@ -11,6 +12,7 @@ import type { ThemeId } from '@/types'
 import { useThemeStore } from '@/stores/useThemeStore'
 import { APP_URL, APP_VERSION } from '@/env'
 import { posthog } from '@/lib/posthog'
+import { useTourStore } from '@/stores/useTourStore'
 
 const btnGhost: React.CSSProperties = {
   background: 'transparent',
@@ -44,6 +46,7 @@ const sectionLabel: React.CSSProperties = {
 }
 
 export function Settings() {
+  const navigate = useNavigate()
   const { signOut, openUserProfile } = useClerk()
   const { user: clerkUser } = useUser()
   const authUser = useAuthStore(s => s.authUser)
@@ -529,6 +532,16 @@ export function Settings() {
 
         {/* Legal + Help links */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.75rem' }}>
+          <button
+            onClick={() => { navigate('/'); useTourStore.getState().startTour('settings') }}
+            style={{ ...card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', cursor: 'pointer', width: '100%', textAlign: 'left' }}
+          >
+            <div>
+              <span style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', fontFamily: 'var(--body)', display: 'block' }}>Take the App Tour</span>
+              <span style={{ fontSize: 11, color: 'var(--muted)', fontFamily: 'var(--body)' }}>A 60-second walkthrough of the dashboard</span>
+            </div>
+            <span style={{ color: 'var(--muted)', fontSize: 12 }}>→</span>
+          </button>
           <a
             href="/help"
             style={{ ...card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', textDecoration: 'none', padding: '14px 16px' }}

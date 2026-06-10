@@ -7,6 +7,7 @@ import { PostHogProvider } from 'posthog-js/react'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import { AuthGate } from '@/components/AuthGate'
 import { Layout } from '@/components/Layout'
+import { TourOverlay } from '@/components/TourOverlay'
 import { CLERK_PUBLISHABLE_KEY, POSTHOG_KEY, POSTHOG_HOST } from '@/env'
 import { posthog } from '@/lib/posthog'
 import { useThemeStore } from '@/stores/useThemeStore'
@@ -208,6 +209,7 @@ export function App() {
                       <AuthGate>
                         <Layout>
                           <AnimatedRoutes />
+                          <TourOverlay />
                         </Layout>
                       </AuthGate>
                     </QueryClientProvider>

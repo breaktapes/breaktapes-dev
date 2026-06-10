@@ -85,6 +85,7 @@ export interface Athlete {
   emailOptIn?: boolean           // race reminders + weekly digest emails (default: true / on)
   pbHiddenKeys?: string[]        // PB distance keys hidden via the ⚙ EDIT button on the You page
   owUserId?: string              // Open Wearables user ID — set once on first OW connection
+  tourCompletedAt?: number       // epoch ms — onboarding tour finished/skipped; suppresses auto-start on every device
   profileVisibility?: {
     races?: boolean       // race history & finish times (default true)
     pbs?: boolean         // personal bests (default true)
