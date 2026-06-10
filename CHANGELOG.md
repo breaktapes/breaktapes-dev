@@ -3,6 +3,13 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.7.10] - 2026-06-10
+
+### Fixed
+- **Sporthive race import returned 0 results for common names.** PostHog showed 8/8 sporthive searches with `result_count=0` in the week of 2026-06-08. Root cause: the Speedhive search API (`search.speedhive.com/api/search`) ranks by OR-semantics relevance — an unquoted two-token term like "Maria Santos" fills the top 40 hits with single-token matches, and the worker's every-token name filter then discards all of them. Rare names ranked their exact match high enough to survive, which is why spot checks passed while real users got nothing. Fix in `health-proxy/src/index.js`: search with the term **quoted** first (`term="Maria Santos"` switches upstream to all-tokens-required mode; verified "Maria Santos" goes 0 → 25 results), fall back to the unquoted search when the quoted pass matches nothing.
+- **Sporthive upstream failures no longer masquerade as empty results.** The search fetch swallowed non-OK responses and timeouts into `[]`, logging `result_count: 0, status: ok` — outages were indistinguishable from no-data in analytics. Now, if every search attempt fails upstream, the route returns `status: error` (frontend flags the source as errored) and the exception is captured. The `race import searched` event also gains `search_hits`, `matched_count`, and `fallback_used` properties for future diagnosis.
+- health-proxy worker redeployed manually to both prod (`breaktapes-health`) and staging (`breaktapes-health-staging`); fix verified live on `health.breaktapes.com`.
+
 ## [0.7.7.9] - 2026-06-10
 
 ### Fixed

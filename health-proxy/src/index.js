@@ -1080,21 +1080,43 @@ export default {
 
         const SH = { 'Accept': 'application/json', 'Origin': 'https://sporthive.com', 'Referer': 'https://sporthive.com/', 'User-Agent': 'Mozilla/5.0' };
 
-        // 1. Name search → participant rows.
-        const searchUrl = `https://search.speedhive.com/api/search?term=${encodeURIComponent(term)}`
-          + `&category=Active&count=40&offset=0&fuzzy=true`;
-        const searchData = await fetch(searchUrl, { headers: SH, signal: AbortSignal.timeout(10000) })
-          .then(r => r.ok ? r.json() : []).catch(() => []);
-        const parts = (Array.isArray(searchData) ? searchData : [])
-          .filter(x => x && x.entityType === 'Participants' && x.raceId && x.bib != null);
-
-        // Keep only rows whose name actually matches the query tokens — fuzzy
-        // search returns loose hits. Require every query token to appear.
+        // 1. Name search → participant rows. The upstream search is OR-semantics
+        //    relevance ranking: an unquoted two-token term ("Maria Santos") fills
+        //    the top 40 with single-token hits, so the every-token filter below
+        //    zeroes out common names. Quoting the term switches upstream to AND
+        //    mode (all tokens required, adjacency not required). Quoted first;
+        //    unquoted fallback preserves recall for odd inputs.
+        const runSearch = async (q) => {
+          const url = `https://search.speedhive.com/api/search?term=${encodeURIComponent(q)}`
+            + `&category=Active&count=40&offset=0&fuzzy=true`;
+          const r = await fetch(url, { headers: SH, signal: AbortSignal.timeout(10000) });
+          if (!r.ok) throw new Error(`speedhive search ${r.status}`);
+          const data = await r.json();
+          return (Array.isArray(data) ? data : [])
+            .filter(x => x && x.entityType === 'Participants' && x.raceId && x.bib != null);
+        };
         const tokens = term.toLowerCase().split(/\s+/).filter(t => t.length > 1);
-        const matched = parts.filter(p => {
+        const matchesTokens = (p) => {
           const n = String(p.name || '').toLowerCase();
           return tokens.every(t => n.includes(t));
-        }).slice(0, 25); // bound the per-result fetch fan-out
+        };
+
+        let searchAttempts = 0, searchFailures = 0, searchHits = 0, fallbackUsed = false;
+        const trySearch = async (q) => {
+          searchAttempts++;
+          try { const p = await runSearch(q); searchHits = Math.max(searchHits, p.length); return p; }
+          catch (_) { searchFailures++; return null; }
+        };
+        let matched = ((await trySearch(`"${term}"`)) || []).filter(matchesTokens);
+        if (!matched.length) {
+          fallbackUsed = true;
+          matched = ((await trySearch(term)) || []).filter(matchesTokens);
+        }
+        // Every upstream attempt failed → surface as provider error, not an
+        // empty result set. The frontend flags the source; analytics stops
+        // recording outages as legitimate result_count=0.
+        if (searchFailures === searchAttempts) throw new Error('speedhive search unavailable');
+        matched = matched.slice(0, 25); // bound the per-result fetch fan-out
 
         // HH:MM:SS(.mmm) → strip fraction, drop a leading "00:" hour.
         const cleanTime = (t) => {
@@ -1164,7 +1186,7 @@ export default {
         }))).filter(Boolean);
 
         if (posthog) {
-          posthog.capture({ distinctId, event: 'race import searched', properties: { provider: 'sporthive', result_count: results.length, ...(sessionId && { $session_id: sessionId }) } });
+          posthog.capture({ distinctId, event: 'race import searched', properties: { provider: 'sporthive', result_count: results.length, search_hits: searchHits, matched_count: matched.length, fallback_used: fallbackUsed, ...(sessionId && { $session_id: sessionId }) } });
           await posthog.shutdown();
         }
         return json({ results, status: 'ok' }, 200, origin);
