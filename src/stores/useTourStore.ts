@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { posthog } from '@/lib/posthog'
 import { useAthleteStore } from '@/stores/useAthleteStore'
+import { isRemotePullComplete } from '@/lib/syncState'
 import { TOUR_STEPS } from '@/lib/tourSteps'
 
 // Local finished-flag (per device). Cross-device suppression rides on
@@ -41,6 +42,13 @@ export function hasFinishedTour(): boolean {
 function markFinished() {
   // Stamp the athlete so other devices never auto-start the tour again.
   // updateAthlete strips undefined, stamps updatedAt, and triggers sync.
+  //
+  // SAFETY: never stamp before the remote pull has landed. updateAthlete on a
+  // null/skeleton athlete creates an object with a fresh updatedAt that wins
+  // the whole-object LWW merge (applyRemoteSafe + stateMerge) and would wipe
+  // the user's real profile on every device. The localStorage flag alone
+  // suppresses re-runs on this device until a later finish re-stamps.
+  if (!isRemotePullComplete()) return
   useAthleteStore.getState().updateAthlete({ tourCompletedAt: Date.now() })
 }
 
@@ -49,13 +57,19 @@ function markFinished() {
 export const TOUR_AUTOSTART_DELAY_MS = 1800
 
 /** Auto-start gate: tour brand-new users only. Called from the Dashboard mount
- *  effect after TOUR_AUTOSTART_DELAY_MS. Returns true if the tour started. */
-export function maybeAutoStartTour(raceCounts: { races: number; upcoming: number }): boolean {
-  if (raceCounts.races > 0 || raceCounts.upcoming > 0) return false
-  if (hasFinishedTour()) return false
-  if (useTourStore.getState().active) return false
+ *  effect after TOUR_AUTOSTART_DELAY_MS. Returns 'started', 'suppressed', or
+ *  'pull-pending' (remote state not yet landed — caller should retry). The
+ *  pull gate is load-bearing: starting before the pull can tour an existing
+ *  user AND lets a skip stamp a skeleton athlete (see markFinished). */
+export function maybeAutoStartTour(
+  raceCounts: { races: number; upcoming: number },
+): 'started' | 'suppressed' | 'pull-pending' {
+  if (!isRemotePullComplete()) return 'pull-pending'
+  if (raceCounts.races > 0 || raceCounts.upcoming > 0) return 'suppressed'
+  if (hasFinishedTour()) return 'suppressed'
+  if (useTourStore.getState().active) return 'suppressed'
   useTourStore.getState().startTour('auto')
-  return true
+  return 'started'
 }
 
 export interface TourState {

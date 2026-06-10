@@ -34,6 +34,7 @@ export function TourOverlay() {
   // null = centered card (no target); undefined = still resolving
   const [rect, setRect] = useState<SpotRect | null | undefined>(undefined)
   const targetRef = useRef<Element | null>(null)
+  const nextBtnRef = useRef<HTMLButtonElement | null>(null)
 
   const stepDef = TOUR_STEPS[step]
 
@@ -87,6 +88,14 @@ export function TourOverlay() {
       cancelAnimationFrame(raf)
       raf = requestAnimationFrame(() => {
         if (!targetRef.current) return
+        if (!targetRef.current.isConnected) {
+          // target unmounted mid-step (e.g. remote sync repopulated races and
+          // the GET STARTED card disappeared) — move on instead of measuring
+          // a detached node, which returns an all-zero rect
+          targetRef.current = null
+          skipMissingStep()
+          return
+        }
         const next = measure(targetRef.current)
         // bail on identical rects — scroll fires every frame and a fresh object
         // would re-render the overlay even when nothing moved
@@ -114,6 +123,14 @@ export function TourOverlay() {
     return () => window.removeEventListener('keydown', onKey)
   }, [active, skipTour])
 
+  // Move keyboard focus into the dialog on each step so Tab doesn't operate
+  // the dimmed app underneath.
+  useEffect(() => {
+    if (!active) return
+    const raf = requestAnimationFrame(() => nextBtnRef.current?.focus({ preventScroll: true }))
+    return () => cancelAnimationFrame(raf)
+  }, [active, step])
+
   if (!active || !stepDef) return null
 
   const isLast = step === TOUR_STEPS.length - 1
@@ -121,20 +138,20 @@ export function TourOverlay() {
   const vh = window.innerHeight
   const cardW = Math.min(CARD_W, vw - 32)
 
-  // Card placement: centered when no target; otherwise below the spotlight
-  // when there's room, above it when not. Horizontally clamped to viewport.
-  let cardStyle: React.CSSProperties
-  if (rect === null) {
-    cardStyle = { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }
-  } else if (rect) {
+  // Card placement: below the spotlight when there's room, above when there's
+  // room above, centered otherwise (incl. no-target steps and while the target
+  // is still resolving — the card with its Skip/Next controls is always
+  // reachable; a bare dimmed screen is never shown). Horizontally clamped.
+  const CENTERED: React.CSSProperties = { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }
+  let cardStyle: React.CSSProperties = CENTERED
+  if (rect) {
     const below = rect.top + rect.height + CARD_GAP
-    const placeBelow = below + CARD_EST_H < vh
+    const roomBelow = below + CARD_EST_H < vh
+    const roomAbove = rect.top - CARD_GAP - CARD_EST_H >= 16
     const left = Math.min(Math.max(16, rect.left + rect.width / 2 - cardW / 2), vw - cardW - 16)
-    cardStyle = placeBelow
-      ? { top: below, left }
-      : { top: Math.max(16, rect.top - CARD_GAP), left, transform: 'translateY(-100%)' }
-  } else {
-    return createPortal(<div style={st.backdrop} />, document.body) // resolving target — dim only
+    if (roomBelow) cardStyle = { top: below, left }
+    else if (roomAbove) cardStyle = { top: rect.top - CARD_GAP, left, transform: 'translateY(-100%)' }
+    // else: tall target eats the viewport — keep the card centered over it
   }
 
   return createPortal(
@@ -158,7 +175,7 @@ export function TourOverlay() {
           <button style={st.skipBtn} onClick={skipTour}>Skip tour</button>
           <div style={{ display: 'flex', gap: 'var(--sp-2)' }}>
             {step > 0 && <button style={st.backBtn} onClick={prevStep}>Back</button>}
-            <button style={st.nextBtn} onClick={nextStep}>{isLast ? 'Done' : 'Next'}</button>
+            <button ref={nextBtnRef} style={st.nextBtn} onClick={nextStep}>{isLast ? 'Done' : 'Next'}</button>
           </div>
         </div>
       </div>

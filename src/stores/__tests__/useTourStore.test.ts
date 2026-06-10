@@ -1,7 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 vi.mock('@/lib/posthog', () => ({ posthog: { capture: vi.fn() } }))
-vi.mock('@/lib/syncState', () => ({ syncStateToSupabase: vi.fn() }))
+const mockPullComplete = vi.fn(() => true)
+vi.mock('@/lib/syncState', () => ({
+  syncStateToSupabase: vi.fn(),
+  isRemotePullComplete: () => mockPullComplete(),
+}))
 
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
@@ -16,6 +20,7 @@ beforeEach(() => {
   useTourStore.setState({ active: false, step: 0 })
   useAthleteStore.setState({ athlete: null })
   vi.clearAllMocks()
+  mockPullComplete.mockReturnValue(true)
 })
 
 describe('TOUR_STEPS registry', () => {
@@ -195,34 +200,53 @@ describe('useTourStore — persistence + suppression', () => {
   })
 
   it('maybeAutoStartTour starts the tour for a truly-new user', () => {
-    expect(maybeAutoStartTour({ races: 0, upcoming: 0 })).toBe(true)
+    expect(maybeAutoStartTour({ races: 0, upcoming: 0 })).toBe('started')
     expect(useTourStore.getState().active).toBe(true)
     expect(posthog.capture).toHaveBeenCalledWith('tour_started', { trigger: 'auto' })
   })
 
   it('maybeAutoStartTour suppresses when the user has races', () => {
-    expect(maybeAutoStartTour({ races: 3, upcoming: 0 })).toBe(false)
-    expect(maybeAutoStartTour({ races: 0, upcoming: 1 })).toBe(false)
+    expect(maybeAutoStartTour({ races: 3, upcoming: 0 })).toBe('suppressed')
+    expect(maybeAutoStartTour({ races: 0, upcoming: 1 })).toBe('suppressed')
     expect(useTourStore.getState().active).toBe(false)
   })
 
   it('maybeAutoStartTour suppresses when the tour was already finished', () => {
     useTourStore.getState().startTour('auto')
     useTourStore.getState().completeTour()
-    expect(maybeAutoStartTour({ races: 0, upcoming: 0 })).toBe(false)
+    expect(maybeAutoStartTour({ races: 0, upcoming: 0 })).toBe('suppressed')
     expect(useTourStore.getState().active).toBe(false)
   })
 
   it('maybeAutoStartTour suppresses when a synced athlete stamp arrives', () => {
     useAthleteStore.setState({ athlete: { tourCompletedAt: 1234567890 } })
-    expect(maybeAutoStartTour({ races: 0, upcoming: 0 })).toBe(false)
+    expect(maybeAutoStartTour({ races: 0, upcoming: 0 })).toBe('suppressed')
   })
 
   it('maybeAutoStartTour is a no-op while the tour is already active', () => {
     useTourStore.getState().startTour('settings')
     useTourStore.getState().nextStep()
-    expect(maybeAutoStartTour({ races: 0, upcoming: 0 })).toBe(false)
+    expect(maybeAutoStartTour({ races: 0, upcoming: 0 })).toBe('suppressed')
     expect(useTourStore.getState().step).toBe(1) // not reset to 0
+  })
+
+  it('maybeAutoStartTour defers until the remote pull lands (profile-wipe guard)', () => {
+    mockPullComplete.mockReturnValue(false)
+    expect(maybeAutoStartTour({ races: 0, upcoming: 0 })).toBe('pull-pending')
+    expect(useTourStore.getState().active).toBe(false)
+    mockPullComplete.mockReturnValue(true)
+    expect(maybeAutoStartTour({ races: 0, upcoming: 0 })).toBe('started')
+  })
+
+  it('finishing the tour before the pull lands writes localStorage but never stamps the athlete', () => {
+    mockPullComplete.mockReturnValue(false)
+    useTourStore.getState().startTour('settings')
+    useTourStore.getState().completeTour()
+    // local suppression works...
+    expect(JSON.parse(localStorage.getItem('fl2_tour_state')!).completedAt).toBeGreaterThan(0)
+    expect(hasFinishedTour()).toBe(true)
+    // ...but no skeleton athlete was created (would win LWW and wipe the real profile)
+    expect(useAthleteStore.getState().athlete).toBeNull()
   })
 
   it('completeTour after an earlier skip preserves skippedAtStep (merge semantics)', () => {

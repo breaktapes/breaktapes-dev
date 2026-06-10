@@ -5595,13 +5595,18 @@ export function Dashboard() {
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-start the onboarding tour for brand-new users (gate logic + delay
-  // rationale live in useTourStore).
+  // rationale live in useTourStore). The gate returns 'pull-pending' until the
+  // remote-state pull lands, so we poll on the same cadence and give up after
+  // ~10 ticks (offline / very slow sync — better no tour than a wrong one).
   useEffect(() => {
-    const t = setTimeout(() => {
+    let ticks = 0
+    const iv = setInterval(() => {
+      ticks += 1
       const { races, upcomingRaces } = useRaceStore.getState()
-      maybeAutoStartTour({ races: races.length, upcoming: upcomingRaces.length })
+      const result = maybeAutoStartTour({ races: races.length, upcoming: upcomingRaces.length })
+      if (result !== 'pull-pending' || ticks >= 10) clearInterval(iv)
     }, TOUR_AUTOSTART_DELAY_MS)
-    return () => clearTimeout(t)
+    return () => clearInterval(iv)
   }, [])
 
   // widgetOrder from store (may be updated by migration)
