@@ -13,6 +13,7 @@ import { useAthleteStore } from '@/stores/useAthleteStore'
 import { useWearableStore } from '@/stores/useWearableStore'
 import { avgHRV, latestRecoveryScore } from '@/lib/openWearables'
 import { useDashStore, initDashV3Migration } from '@/stores/useDashStore'
+import { maybeAutoStartTour, TOUR_AUTOSTART_DELAY_MS } from '@/stores/useTourStore'
 import { selectRaces, selectNextRace, selectAthlete, selectUpcomingRaces, selectFocusRaceId } from '@/stores/selectors'
 import { AddRaceModal } from '@/components/AddRaceModal'
 import { ViewEditRaceModal } from '@/components/ViewEditRaceModal'
@@ -5477,7 +5478,7 @@ function NewUserOnboarding({ onLogRace, onImport, onAddUpcoming, onDiscover }: {
   if (races.length > 0 || upcomingRaces.length > 0) return null
 
   return (
-    <div style={{
+    <div data-tour="get-started" style={{
       background: 'linear-gradient(135deg, rgba(var(--orange-ch),0.08) 0%, var(--surface2) 100%)',
       border: '1px solid rgba(var(--orange-ch),0.25)',
       borderRadius: 'var(--radius-lg)',
@@ -5592,6 +5593,21 @@ export function Dashboard() {
     initDashLayout()
     posthog.capture('page_viewed', { page: 'dashboard' })
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-start the onboarding tour for brand-new users (gate logic + delay
+  // rationale live in useTourStore). The gate returns 'pull-pending' until the
+  // remote-state pull lands, so we poll on the same cadence and give up after
+  // ~10 ticks (offline / very slow sync — better no tour than a wrong one).
+  useEffect(() => {
+    let ticks = 0
+    const iv = setInterval(() => {
+      ticks += 1
+      const { races, upcomingRaces } = useRaceStore.getState()
+      const result = maybeAutoStartTour({ races: races.length, upcoming: upcomingRaces.length })
+      if (result !== 'pull-pending' || ticks >= 10) clearInterval(iv)
+    }, TOUR_AUTOSTART_DELAY_MS)
+    return () => clearInterval(iv)
+  }, [])
 
   // widgetOrder from store (may be updated by migration)
   const widgetOrder = useMemo(() => {
@@ -5749,6 +5765,7 @@ export function Dashboard() {
           <button
             onClick={enterEditMode}
             aria-label="Edit dashboard"
+            data-tour="customize"
             style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: 8, border: '1px solid rgba(232,224,213,0.20)', background: 'transparent', color: 'var(--white)', cursor: 'pointer', flexShrink: 0, marginLeft: 'var(--sp-3)', padding: 0 }}
           >
             <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">

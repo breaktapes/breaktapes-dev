@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
+import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { useClerk, useUser } from '@clerk/clerk-react'
 import { useAuthStore } from '@/stores/useAuthStore'
@@ -13,6 +14,7 @@ import type { ThemeId } from '@/types'
 import { useThemeStore } from '@/stores/useThemeStore'
 import { APP_URL, APP_VERSION } from '@/env'
 import { posthog } from '@/lib/posthog'
+import { useTourStore } from '@/stores/useTourStore'
 
 const btnGhost: React.CSSProperties = {
   background: 'transparent',
@@ -46,6 +48,7 @@ const sectionLabel: React.CSSProperties = {
 }
 
 export function Settings() {
+  const navigate = useNavigate()
   const { signOut, openUserProfile } = useClerk()
   const { user: clerkUser } = useUser()
   const authUser = useAuthStore(s => s.authUser)
@@ -133,6 +136,9 @@ export function Settings() {
   async function handleSignOut() {
     localStorage.removeItem('bt_new_user')
     localStorage.removeItem('bt_modal_shown')
+    // Tour suppression is per-account (athlete.tourCompletedAt syncs) — don't let
+    // user A's local flag hide the tour from user B on a shared device.
+    localStorage.removeItem('fl2_tour_state')
     // Clear persisted Zustand stores so the next user on this device starts clean.
     // Without this, user B rehydrates user A's full race history from localStorage.
     useRaceStore.persist.clearStorage()
@@ -618,6 +624,16 @@ export function Settings() {
 
         {/* Legal + Help links */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.75rem' }}>
+          <button
+            onClick={() => { navigate('/'); useTourStore.getState().startTour('settings') }}
+            style={{ ...card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', cursor: 'pointer', width: '100%', textAlign: 'left' }}
+          >
+            <div>
+              <span style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', fontFamily: 'var(--body)', display: 'block' }}>Take the App Tour</span>
+              <span style={{ fontSize: 11, color: 'var(--muted)', fontFamily: 'var(--body)' }}>A 60-second walkthrough of the dashboard</span>
+            </div>
+            <span style={{ color: 'var(--muted)', fontSize: 12 }}>→</span>
+          </button>
           <a
             href="/help"
             style={{ ...card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', textDecoration: 'none', padding: '14px 16px' }}

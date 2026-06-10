@@ -3,6 +3,15 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.7.8] - 2026-06-10
+
+### Added
+- **Onboarding tour.** New users get a 6-step spotlight walkthrough on their first dashboard visit: welcome, log/import your first race, tappable dashboard widgets, the customize button, and the Races and You tabs. Steps spotlight the real UI with a dimmed backdrop and a card explaining each stop; anything not on screen is skipped automatically. Replayable anytime from Settings → About → "Take the App Tour". Finishing or skipping the tour is remembered across devices, and signing out hands the next account on the device a fresh tour. Instrumented end to end (`tour_started` / `tour_step_viewed` / `tour_skipped` / `tour_completed`) so the new-user funnel is measurable.
+
+### Fixed
+- **Tour can never clobber an existing profile.** The tour only auto-starts (and only writes its done-flag to the synced profile) after the remote-state pull has landed — finishing or skipping it on a fresh device before sync completes can no longer create a skeleton profile that would win the last-write merge and wipe the real one.
+- **Tour overlay hardening.** The explainer card (with its Skip button) stays on screen while a step's target is still loading instead of briefly dimming the app with no controls; the spotlight no longer jumps to a corner if its target disappears mid-step; the card stays fully on-screen on short viewports; keyboard focus follows the tour so Tab can't operate the page underneath; all tour buttons meet the 44px touch minimum.
+
 ## [0.7.7.7] - 2026-06-09
 
 ### Docs

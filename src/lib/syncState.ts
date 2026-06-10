@@ -46,6 +46,12 @@ export function markRemotePullComplete() {
   }
 }
 
+/** Read-only gate check — lets feature code (e.g. the onboarding tour) defer
+ *  decisions that depend on remote state having landed. */
+export function isRemotePullComplete(): boolean {
+  return _pullComplete
+}
+
 /** Re-arm the gate on sign-out so the next user re-gates before their pull. */
 export function resetRemotePullGate() {
   _pullComplete = false

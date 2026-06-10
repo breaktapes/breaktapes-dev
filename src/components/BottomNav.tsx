@@ -69,6 +69,7 @@ export function BottomNav() {
             key={to}
             to={to}
             aria-current={isActive ? 'page' : undefined}
+            data-tour={`nav-${to === '/' ? 'home' : to.slice(1)}`}
             style={{
               flex: 1,
               position: 'relative',
