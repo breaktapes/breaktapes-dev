@@ -3,6 +3,11 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.7.9] - 2026-06-10
+
+### Fixed
+- **Tour analytics are now trustworthy.** `tour_step_viewed` fires exactly once per step per run (Back-button revisits and dev double-mounts no longer inflate the funnel); a mid-tour page refresh reports `restart: true` on `tour_started` instead of looking like a second new user; `tour_skipped` and `tour_completed` carry `steps_shown` (+ `steps_total`) so a "completion" where steps auto-skipped — e.g. a broken spotlight selector — is visible in the data instead of counting as a full tour.
+
 ## [0.7.7.8] - 2026-06-10
 
 ### Added

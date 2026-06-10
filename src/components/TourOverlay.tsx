@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { posthog } from '@/lib/posthog'
 import { useTourStore } from '@/stores/useTourStore'
 import { TOUR_STEPS } from '@/lib/tourSteps'
 
@@ -30,6 +29,7 @@ export function TourOverlay() {
   const prevStep = useTourStore(s => s.prevStep)
   const skipTour = useTourStore(s => s.skipTour)
   const skipMissingStep = useTourStore(s => s.skipMissingStep)
+  const markStepViewed = useTourStore(s => s.markStepViewed)
 
   // null = centered card (no target); undefined = still resolving
   const [rect, setRect] = useState<SpotRect | null | undefined>(undefined)
@@ -46,7 +46,7 @@ export function TourOverlay() {
     if (!stepDef.target) {
       targetRef.current = null
       setRect(null)
-      posthog.capture('tour_step_viewed', { step, step_id: stepDef.id })
+      markStepViewed(step) // store dedups Back revisits + StrictMode double-mounts
       return
     }
 
@@ -63,7 +63,7 @@ export function TourOverlay() {
         targetRef.current = el
         el.scrollIntoView({ block: 'center', behavior: 'auto' })
         // capture only once the step actually shows — auto-skipped steps stay out of the funnel
-        posthog.capture('tour_step_viewed', { step, step_id: stepDef.id })
+        markStepViewed(step)
         // measure after scroll settles
         raf = requestAnimationFrame(() => { if (!cancelled) setRect(measure(el)) })
         return

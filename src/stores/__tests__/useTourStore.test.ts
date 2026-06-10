@@ -17,7 +17,7 @@ import { posthog } from '@/lib/posthog'
 
 beforeEach(() => {
   localStorage.clear()
-  useTourStore.setState({ active: false, step: 0 })
+  useTourStore.setState({ active: false, step: 0, viewed: [] })
   useAthleteStore.setState({ athlete: null })
   vi.clearAllMocks()
   mockPullComplete.mockReturnValue(true)
@@ -66,7 +66,33 @@ describe('useTourStore — lifecycle', () => {
     useTourStore.getState().startTour('auto')
     expect(useTourStore.getState().active).toBe(true)
     expect(useTourStore.getState().step).toBe(0)
-    expect(posthog.capture).toHaveBeenCalledWith('tour_started', { trigger: 'auto' })
+    expect(posthog.capture).toHaveBeenCalledWith('tour_started', { trigger: 'auto', restart: false })
+  })
+
+  it('a second startTour reports restart: true (mid-tour refresh dedup)', () => {
+    useTourStore.getState().startTour('auto')
+    useTourStore.getState().startTour('auto')
+    expect(posthog.capture).toHaveBeenLastCalledWith('tour_started', { trigger: 'auto', restart: true })
+  })
+
+  it('markStepViewed captures once per step per run', () => {
+    useTourStore.getState().startTour('auto')
+    vi.clearAllMocks()
+    useTourStore.getState().markStepViewed(0)
+    useTourStore.getState().markStepViewed(0) // StrictMode double-mount / Back revisit
+    useTourStore.getState().markStepViewed(1)
+    expect(posthog.capture).toHaveBeenCalledTimes(2)
+    expect(posthog.capture).toHaveBeenCalledWith('tour_step_viewed', { step: 0, step_id: TOUR_STEPS[0].id })
+    expect(posthog.capture).toHaveBeenCalledWith('tour_step_viewed', { step: 1, step_id: TOUR_STEPS[1].id })
+  })
+
+  it('startTour resets the viewed set for a fresh run', () => {
+    useTourStore.getState().startTour('auto')
+    useTourStore.getState().markStepViewed(0)
+    useTourStore.getState().startTour('settings')
+    vi.clearAllMocks()
+    useTourStore.getState().markStepViewed(0)
+    expect(posthog.capture).toHaveBeenCalledTimes(1)
   })
 
   it('nextStep advances through steps', () => {
@@ -84,12 +110,14 @@ describe('useTourStore — lifecycle', () => {
     expect(useTourStore.getState().step).toBe(0)
   })
 
-  it('nextStep on the last step completes the tour', () => {
+  it('nextStep on the last step completes the tour with steps_shown', () => {
     useTourStore.getState().startTour('auto')
+    useTourStore.getState().markStepViewed(0)
+    useTourStore.getState().markStepViewed(1)
     useTourStore.setState({ step: TOUR_STEPS.length - 1 })
     useTourStore.getState().nextStep()
     expect(useTourStore.getState().active).toBe(false)
-    expect(posthog.capture).toHaveBeenCalledWith('tour_completed')
+    expect(posthog.capture).toHaveBeenCalledWith('tour_completed', { steps_shown: 2, steps_total: TOUR_STEPS.length })
   })
 
   it('skipMissingStep advances without analytics noise', () => {
@@ -100,19 +128,20 @@ describe('useTourStore — lifecycle', () => {
     expect(posthog.capture).not.toHaveBeenCalled()
   })
 
-  it('skipMissingStep on the last step completes the tour', () => {
+  it('skipMissingStep on the last step completes the tour — steps_shown exposes an all-skipped run', () => {
     useTourStore.getState().startTour('auto')
     useTourStore.setState({ step: TOUR_STEPS.length - 1 })
     useTourStore.getState().skipMissingStep()
     expect(useTourStore.getState().active).toBe(false)
     expect(hasFinishedTour()).toBe(true)
-    expect(posthog.capture).toHaveBeenCalledWith('tour_completed')
+    // nothing was ever shown — the completion is visibly hollow in the funnel
+    expect(posthog.capture).toHaveBeenCalledWith('tour_completed', { steps_shown: 0, steps_total: TOUR_STEPS.length })
   })
 
   it('startTour from Settings captures the settings trigger', () => {
     useTourStore.getState().startTour('settings')
     expect(useTourStore.getState().active).toBe(true)
-    expect(posthog.capture).toHaveBeenCalledWith('tour_started', { trigger: 'settings' })
+    expect(posthog.capture).toHaveBeenCalledWith('tour_started', { trigger: 'settings', restart: false })
   })
 
   it('startTour resets to step 0 when replayed mid-state', () => {
@@ -145,7 +174,7 @@ describe('useTourStore — persistence + suppression', () => {
     expect(hasFinishedTour()).toBe(true)
     const saved = JSON.parse(localStorage.getItem('fl2_tour_state')!)
     expect(saved.skippedAtStep).toBe(1)
-    expect(posthog.capture).toHaveBeenCalledWith('tour_skipped', { step: 1, step_id: TOUR_STEPS[1].id })
+    expect(posthog.capture).toHaveBeenCalledWith('tour_skipped', { step: 1, step_id: TOUR_STEPS[1].id, steps_shown: 0 })
   })
 
   it('remote athlete.tourCompletedAt suppresses auto-start on a fresh device', () => {
@@ -171,7 +200,7 @@ describe('useTourStore — persistence + suppression', () => {
     expect(saved.skippedAtStep).toBe(0)
     // falsy 0 must not defeat the !== undefined check
     expect(hasFinishedTour()).toBe(true)
-    expect(posthog.capture).toHaveBeenCalledWith('tour_skipped', { step: 0, step_id: TOUR_STEPS[0].id })
+    expect(posthog.capture).toHaveBeenCalledWith('tour_skipped', { step: 0, step_id: TOUR_STEPS[0].id, steps_shown: 0 })
   })
 
   it('non-object JSON primitives in localStorage are treated as not finished', () => {
@@ -193,7 +222,7 @@ describe('useTourStore — persistence + suppression', () => {
       // ...but the synced athlete stamp still marks the tour finished
       expect(useAthleteStore.getState().athlete?.tourCompletedAt).toBeGreaterThan(0)
       expect(hasFinishedTour()).toBe(true)
-      expect(posthog.capture).toHaveBeenCalledWith('tour_completed')
+      expect(posthog.capture).toHaveBeenCalledWith('tour_completed', expect.objectContaining({ steps_total: TOUR_STEPS.length }))
     } finally {
       spy.mockRestore()
     }
@@ -202,7 +231,7 @@ describe('useTourStore — persistence + suppression', () => {
   it('maybeAutoStartTour starts the tour for a truly-new user', () => {
     expect(maybeAutoStartTour({ races: 0, upcoming: 0 })).toBe('started')
     expect(useTourStore.getState().active).toBe(true)
-    expect(posthog.capture).toHaveBeenCalledWith('tour_started', { trigger: 'auto' })
+    expect(posthog.capture).toHaveBeenCalledWith('tour_started', { trigger: 'auto', restart: false })
   })
 
   it('maybeAutoStartTour suppresses when the user has races', () => {
