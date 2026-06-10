@@ -8,15 +8,6 @@ let _clerkToken: string | null = null
 
 export function setClerkToken(token: string | null) {
   _clerkToken = token
-  // Propagate the token to the Realtime socket too. Previously realtime ran on
-  // the bare anon key — the `global.fetch` override below only authenticates the
-  // REST client, never the WebSocket connection, so the `postgres_changes`
-  // subscription on `user_state` (see src/hooks/useSyncState.ts) connected
-  // unauthenticated. setAuth makes the socket carry the user's JWT (null clears
-  // it on sign-out). Full RLS-scoped realtime delivery additionally requires the
-  // Clerk→Supabase JWT template to be configured (a Supabase dashboard setting),
-  // but this makes the socket correctly carry the token regardless.
-  supabase.realtime.setAuth(token ?? '')
 }
 
 /** Returns true once a Clerk JWT has been installed into the Supabase client. */
