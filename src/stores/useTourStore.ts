@@ -44,13 +44,28 @@ function markFinished() {
   useAthleteStore.getState().updateAthlete({ tourCompletedAt: Date.now() })
 }
 
+/** Delay before the auto-start check so the remote-state pull can land first —
+ *  an existing user on a fresh device briefly has 0 races until sync completes. */
+export const TOUR_AUTOSTART_DELAY_MS = 1800
+
+/** Auto-start gate: tour brand-new users only. Called from the Dashboard mount
+ *  effect after TOUR_AUTOSTART_DELAY_MS. Returns true if the tour started. */
+export function maybeAutoStartTour(raceCounts: { races: number; upcoming: number }): boolean {
+  if (raceCounts.races > 0 || raceCounts.upcoming > 0) return false
+  if (hasFinishedTour()) return false
+  if (useTourStore.getState().active) return false
+  useTourStore.getState().startTour('auto')
+  return true
+}
+
 export interface TourState {
   active: boolean
   step: number
   startTour: (trigger: 'auto' | 'settings') => void
   nextStep: () => void
   prevStep: () => void
-  /** Advance past a step whose target element is absent — no analytics noise. */
+  /** Advance past a step whose target element is absent. Same state change as
+   *  nextStep — the overlay never showed the step, so there's nothing extra to do. */
   skipMissingStep: () => void
   skipTour: () => void
   completeTour: () => void
@@ -79,14 +94,7 @@ export const useTourStore = create<TourState>()((set, get) => ({
     if (step > 0) set({ step: step - 1 })
   },
 
-  skipMissingStep: () => {
-    const { step } = get()
-    if (step >= TOUR_STEPS.length - 1) {
-      get().completeTour()
-      return
-    }
-    set({ step: step + 1 })
-  },
+  skipMissingStep: () => { get().nextStep() },
 
   skipTour: () => {
     const { step } = get()

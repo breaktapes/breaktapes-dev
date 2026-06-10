@@ -136,6 +136,9 @@ export function Settings() {
   async function handleSignOut() {
     localStorage.removeItem('bt_new_user')
     localStorage.removeItem('bt_modal_shown')
+    // Tour suppression is per-account (athlete.tourCompletedAt syncs) — don't let
+    // user A's local flag hide the tour from user B on a shared device.
+    localStorage.removeItem('fl2_tour_state')
     // Clear persisted Zustand stores so the next user on this device starts clean.
     // Without this, user B rehydrates user A's full race history from localStorage.
     useRaceStore.persist.clearStorage()

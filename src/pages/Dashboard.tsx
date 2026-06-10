@@ -13,7 +13,7 @@ import { useAthleteStore } from '@/stores/useAthleteStore'
 import { useWearableStore } from '@/stores/useWearableStore'
 import { avgHRV, latestRecoveryScore } from '@/lib/openWearables'
 import { useDashStore, initDashV3Migration } from '@/stores/useDashStore'
-import { useTourStore, hasFinishedTour } from '@/stores/useTourStore'
+import { maybeAutoStartTour, TOUR_AUTOSTART_DELAY_MS } from '@/stores/useTourStore'
 import { selectRaces, selectNextRace, selectAthlete, selectUpcomingRaces, selectFocusRaceId } from '@/stores/selectors'
 import { AddRaceModal } from '@/components/AddRaceModal'
 import { ViewEditRaceModal } from '@/components/ViewEditRaceModal'
@@ -5594,17 +5594,13 @@ export function Dashboard() {
     posthog.capture('page_viewed', { page: 'dashboard' })
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-start the onboarding tour for brand-new users. Delayed so the
-  // remote-state pull can land first — an existing user on a fresh device
-  // briefly has 0 races until sync completes; firing instantly would tour them.
+  // Auto-start the onboarding tour for brand-new users (gate logic + delay
+  // rationale live in useTourStore).
   useEffect(() => {
     const t = setTimeout(() => {
       const { races, upcomingRaces } = useRaceStore.getState()
-      if (races.length > 0 || upcomingRaces.length > 0) return
-      if (hasFinishedTour()) return
-      if (useTourStore.getState().active) return
-      useTourStore.getState().startTour('auto')
-    }, 1800)
+      maybeAutoStartTour({ races: races.length, upcoming: upcomingRaces.length })
+    }, TOUR_AUTOSTART_DELAY_MS)
     return () => clearTimeout(t)
   }, [])
 

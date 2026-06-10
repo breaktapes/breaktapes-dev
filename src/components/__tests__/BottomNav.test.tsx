@@ -71,4 +71,14 @@ describe('BottomNav', () => {
     expect(screen.getByText('Train').closest('a')).toHaveAttribute('href', '/train')
     expect(screen.getByText('You').closest('a')).toHaveAttribute('href', '/you')
   })
+
+  it('exposes data-tour anchors matching the onboarding tour nav selectors', async () => {
+    const { TOUR_STEPS } = await import('@/lib/tourSteps')
+    const { container } = renderNav()
+    const navSteps = TOUR_STEPS.filter(s => s.target?.startsWith('[data-tour="nav-'))
+    expect(navSteps.length).toBeGreaterThan(0)
+    for (const step of navSteps) {
+      expect(container.querySelector(step.target!)).not.toBeNull()
+    }
+  })
 })

@@ -6,6 +6,7 @@ import { TOUR_STEPS } from '@/lib/tourSteps'
 
 const SPOT_PAD = 6           // px breathing room around the target
 const CARD_W = 320           // card max width
+const CARD_EST_H = 230       // approx card height used for above/below placement
 const CARD_GAP = 14          // gap between spotlight and card
 const TARGET_POLL_MS = 100   // target lookup retry interval
 const TARGET_POLL_MAX = 25   // ~2.5s before giving up and skipping the step
@@ -40,14 +41,15 @@ export function TourOverlay() {
   // transitions / lazy renders), then skip the step if it never appears.
   useEffect(() => {
     if (!active || !stepDef) return
-    posthog.capture('tour_step_viewed', { step, step_id: stepDef.id })
 
     if (!stepDef.target) {
       targetRef.current = null
       setRect(null)
+      posthog.capture('tour_step_viewed', { step, step_id: stepDef.id })
       return
     }
 
+    targetRef.current = null // don't let scroll remeasure snap to the previous step's target
     setRect(undefined)
     let tries = 0
     let cancelled = false
@@ -59,6 +61,8 @@ export function TourOverlay() {
       if (el) {
         targetRef.current = el
         el.scrollIntoView({ block: 'center', behavior: 'auto' })
+        // capture only once the step actually shows — auto-skipped steps stay out of the funnel
+        posthog.capture('tour_step_viewed', { step, step_id: stepDef.id })
         // measure after scroll settles
         raf = requestAnimationFrame(() => { if (!cancelled) setRect(measure(el)) })
         return
@@ -82,7 +86,13 @@ export function TourOverlay() {
     const remeasure = () => {
       cancelAnimationFrame(raf)
       raf = requestAnimationFrame(() => {
-        if (targetRef.current) setRect(measure(targetRef.current))
+        if (!targetRef.current) return
+        const next = measure(targetRef.current)
+        // bail on identical rects — scroll fires every frame and a fresh object
+        // would re-render the overlay even when nothing moved
+        setRect(prev =>
+          prev && prev.top === next.top && prev.left === next.left &&
+          prev.width === next.width && prev.height === next.height ? prev : next)
       })
     }
     window.addEventListener('resize', remeasure)
@@ -118,7 +128,7 @@ export function TourOverlay() {
     cardStyle = { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }
   } else if (rect) {
     const below = rect.top + rect.height + CARD_GAP
-    const placeBelow = below + 230 < vh
+    const placeBelow = below + CARD_EST_H < vh
     const left = Math.min(Math.max(16, rect.left + rect.width / 2 - cardW / 2), vw - cardW - 16)
     cardStyle = placeBelow
       ? { top: below, left }
@@ -177,7 +187,8 @@ const st: Record<string, React.CSSProperties> = {
     boxShadow: '0 0 0 9999px rgba(0,0,0,0.78), 0 0 24px rgba(var(--orange-ch), 0.45)',
     border: '2px solid var(--orange)',
     pointerEvents: 'none',
-    transition: 'top 0.2s ease, left 0.2s ease, width 0.2s ease, height 0.2s ease',
+    // no transition: top/left/width/height animate on the main thread and the
+    // 9999px shadow makes every frame a full-viewport repaint (Session 41 lesson)
   },
   card: {
     position: 'fixed',
@@ -215,7 +226,7 @@ const st: Record<string, React.CSSProperties> = {
   },
   dots: {
     display: 'flex',
-    gap: '6px',
+    gap: 'var(--sp-2)',
   },
   dot: {
     width: 6,
@@ -238,7 +249,8 @@ const st: Record<string, React.CSSProperties> = {
     letterSpacing: '0.06em',
     textTransform: 'uppercase',
     cursor: 'pointer',
-    padding: '8px 0',
+    minHeight: 44,
+    padding: 'var(--sp-2) 0',
   },
   backBtn: {
     background: 'transparent',
@@ -251,7 +263,8 @@ const st: Record<string, React.CSSProperties> = {
     letterSpacing: '0.08em',
     textTransform: 'uppercase',
     cursor: 'pointer',
-    padding: '10px 14px',
+    minHeight: 44,
+    padding: 'var(--sp-2) var(--sp-4)',
   },
   nextBtn: {
     background: 'var(--orange)',
@@ -264,6 +277,7 @@ const st: Record<string, React.CSSProperties> = {
     letterSpacing: '0.1em',
     textTransform: 'uppercase',
     cursor: 'pointer',
-    padding: '10px 18px',
+    minHeight: 44,
+    padding: 'var(--sp-2) var(--sp-5)',
   },
 }

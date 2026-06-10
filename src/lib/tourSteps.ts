@@ -18,7 +18,7 @@ export const TOUR_STEPS: TourStep[] = [
     id: 'welcome',
     target: null,
     title: 'Welcome to Breaktapes',
-    body: 'Your race history, medals, and personal bests — one place. Sixty seconds, five stops.',
+    body: 'Your race history, medals, and personal bests — one place. Sixty seconds, quick lap of the app.',
   },
   {
     id: 'log-import',
