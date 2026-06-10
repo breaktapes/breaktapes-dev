@@ -11,6 +11,9 @@ const LS_KEY = 'fl2_tour_state'
 interface TourLocalState {
   completedAt?: number
   skippedAtStep?: number
+  /** Set on first tour_started — lets a mid-tour refresh report restart: true
+   *  so the funnel can distinguish genuine first starts from re-entries. */
+  startedAt?: number
 }
 
 function readLocal(): TourLocalState {
@@ -75,7 +78,13 @@ export function maybeAutoStartTour(
 export interface TourState {
   active: boolean
   step: number
+  /** Step indices the user actually saw this run — drives tour_step_viewed
+   *  dedup (Back revisits, StrictMode double-mounts) and steps_shown. */
+  viewed: number[]
   startTour: (trigger: 'auto' | 'settings') => void
+  /** Capture tour_step_viewed exactly once per step per tour run. Called by
+   *  TourOverlay when a step actually renders (target resolved or no-target). */
+  markStepViewed: (step: number) => void
   nextStep: () => void
   prevStep: () => void
   /** Advance past a step whose target element is absent. Same state change as
@@ -88,10 +97,20 @@ export interface TourState {
 export const useTourStore = create<TourState>()((set, get) => ({
   active: false,
   step: 0,
+  viewed: [],
 
   startTour: (trigger) => {
-    set({ active: true, step: 0 })
-    posthog.capture('tour_started', { trigger })
+    const restart = readLocal().startedAt !== undefined
+    set({ active: true, step: 0, viewed: [] })
+    writeLocal({ ...readLocal(), startedAt: Date.now() })
+    posthog.capture('tour_started', { trigger, restart })
+  },
+
+  markStepViewed: (step) => {
+    const { viewed } = get()
+    if (viewed.includes(step)) return
+    set({ viewed: [...viewed, step] })
+    posthog.capture('tour_step_viewed', { step, step_id: TOUR_STEPS[step]?.id })
   },
 
   nextStep: () => {
@@ -111,17 +130,20 @@ export const useTourStore = create<TourState>()((set, get) => ({
   skipMissingStep: () => { get().nextStep() },
 
   skipTour: () => {
-    const { step } = get()
+    const { step, viewed } = get()
     set({ active: false, step: 0 })
     writeLocal({ ...readLocal(), skippedAtStep: step })
     markFinished()
-    posthog.capture('tour_skipped', { step, step_id: TOUR_STEPS[step]?.id })
+    posthog.capture('tour_skipped', { step, step_id: TOUR_STEPS[step]?.id, steps_shown: viewed.length })
   },
 
   completeTour: () => {
+    const { viewed } = get()
     set({ active: false, step: 0 })
     writeLocal({ ...readLocal(), completedAt: Date.now() })
     markFinished()
-    posthog.capture('tour_completed')
+    // steps_shown makes the funnel honest: a "completion" where most steps
+    // auto-skipped (broken selectors) is visible as steps_shown < total.
+    posthog.capture('tour_completed', { steps_shown: viewed.length, steps_total: TOUR_STEPS.length })
   },
 }))
