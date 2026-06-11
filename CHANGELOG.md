@@ -3,6 +3,11 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.7.14] - 2026-06-11
+
+### Improved
+- **Onboarding tour polish (review follow-ups).** Keyboard focus is now trapped inside the tour card — Tab cycles Skip/Back/Next instead of walking into the dimmed app (a11y). Pressing Back onto a step whose spotlight target is missing continues backward instead of bouncing you forward. The tour overlay code now lazy-loads only when a tour starts, keeping ~3 KB out of the app's first-paint bundle. Sign-out clears the tour flag through the store (cache-safe), and the finished-check no longer re-parses localStorage on every dashboard visit.
+
 ## [0.7.7.13] - 2026-06-11
 
 ### Changed

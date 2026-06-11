@@ -35,6 +35,7 @@ export function TourOverlay() {
   const [rect, setRect] = useState<SpotRect | null | undefined>(undefined)
   const targetRef = useRef<Element | null>(null)
   const nextBtnRef = useRef<HTMLButtonElement | null>(null)
+  const cardRef = useRef<HTMLDivElement | null>(null)
 
   const stepDef = TOUR_STEPS[step]
 
@@ -115,10 +116,24 @@ export function TourOverlay() {
     }
   }, [active])
 
-  // Escape skips the tour.
+  // Escape skips the tour; Tab is trapped inside the card so keyboard focus
+  // can't walk into the dimmed app underneath.
   useEffect(() => {
     if (!active) return
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') skipTour() }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { skipTour(); return }
+      if (e.key !== 'Tab') return
+      const card = cardRef.current
+      if (!card) return
+      const focusables = Array.from(card.querySelectorAll<HTMLElement>('button'))
+      if (!focusables.length) return
+      const first = focusables[0]
+      const last = focusables[focusables.length - 1]
+      const inside = card.contains(document.activeElement)
+      if (!inside) { e.preventDefault(); first.focus(); return }
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus() }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus() }
+    }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [active, skipTour])
@@ -160,7 +175,7 @@ export function TourOverlay() {
         ? <div style={{ ...st.spotlight, top: rect.top, left: rect.left, width: rect.width, height: rect.height }} />
         : <div style={st.backdrop} />}
 
-      <div style={{ ...st.card, ...cardStyle, width: cardW }}>
+      <div ref={cardRef} style={{ ...st.card, ...cardStyle, width: cardW }}>
         <div style={st.eyebrow}>App tour · {step + 1}/{TOUR_STEPS.length}</div>
         <div style={st.title}>{stepDef.title}</div>
         <div style={st.body}>{stepDef.body}</div>

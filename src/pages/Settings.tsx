@@ -14,7 +14,7 @@ import type { ThemeId } from '@/types'
 import { useThemeStore } from '@/stores/useThemeStore'
 import { APP_URL, APP_VERSION } from '@/env'
 import { posthog } from '@/lib/posthog'
-import { useTourStore } from '@/stores/useTourStore'
+import { useTourStore, clearTourLocalState } from '@/stores/useTourStore'
 
 const btnGhost: React.CSSProperties = {
   background: 'transparent',
@@ -138,7 +138,8 @@ export function Settings() {
     localStorage.removeItem('bt_modal_shown')
     // Tour suppression is per-account (athlete.tourCompletedAt syncs) — don't let
     // user A's local flag hide the tour from user B on a shared device.
-    localStorage.removeItem('fl2_tour_state')
+    // Goes through the store helper so its module-level cache stays in sync.
+    clearTourLocalState()
     // Clear persisted Zustand stores so the next user on this device starts clean.
     // Without this, user B rehydrates user A's full race history from localStorage.
     useRaceStore.persist.clearStorage()

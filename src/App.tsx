@@ -7,7 +7,7 @@ import { PostHogProvider } from 'posthog-js/react'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import { AuthGate } from '@/components/AuthGate'
 import { Layout } from '@/components/Layout'
-import { TourOverlay } from '@/components/TourOverlay'
+import { useTourStore } from '@/stores/useTourStore'
 import { CLERK_PUBLISHABLE_KEY, POSTHOG_KEY, POSTHOG_HOST } from '@/env'
 import { posthog } from '@/lib/posthog'
 import { useThemeStore } from '@/stores/useThemeStore'
@@ -28,6 +28,19 @@ const Help               = lazy(() => import('@/pages/Help'))
 const Demo               = lazy(() => import('@/pages/Demo'))
 const LandingPage        = lazy(() => import('@/components/LandingPage'))
 const AdminApp           = lazy(() => import('@/components/AdminApp').then(m => ({ default: m.AdminApp })))
+const TourOverlay        = lazy(() => import('@/components/TourOverlay').then(m => ({ default: m.TourOverlay })))
+
+/** Mount-gate: the tour chunk loads only when a tour actually starts —
+ *  keeps ~3 KB of overlay code out of the entry path (Session 41 LCP watch). */
+function TourOverlayGate() {
+  const active = useTourStore(s => s.active)
+  if (!active) return null
+  return (
+    <Suspense fallback={null}>
+      <TourOverlay />
+    </Suspense>
+  )
+}
 
 // The cinematic marketing landing lives on the apex marketing domain
 // (breaktapes.com). app.breaktapes.com is the login/app only. `?marketing=1`
@@ -209,7 +222,7 @@ export function App() {
                       <AuthGate>
                         <Layout>
                           <AnimatedRoutes />
-                          <TourOverlay />
+                          <TourOverlayGate />
                         </Layout>
                       </AuthGate>
                     </QueryClientProvider>

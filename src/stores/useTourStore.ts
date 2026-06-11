@@ -16,23 +16,43 @@ interface TourLocalState {
   startedAt?: number
 }
 
+// Module-level cache so hasFinishedTour() (called on every Dashboard mount)
+// doesn't JSON.parse localStorage repeatedly. All reads/writes/removals of
+// LS_KEY must go through these helpers or the cache goes stale.
+let localCache: TourLocalState | null = null
+
 function readLocal(): TourLocalState {
+  if (localCache) return localCache
   try {
     const raw = localStorage.getItem(LS_KEY)
     if (!raw) return {}
     const parsed = JSON.parse(raw)
-    return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {}
+    localCache = parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {}
   } catch {
-    return {}
+    localCache = {}
   }
+  return localCache!
 }
 
 function writeLocal(state: TourLocalState) {
+  // cache the intended state even if the write fails — keeps this session
+  // consistent; quota failures fall back to the athlete stamp after reload
+  localCache = state
   try {
     localStorage.setItem(LS_KEY, JSON.stringify(state))
   } catch {
     // quota exceeded — non-critical, athlete.tourCompletedAt still suppresses re-runs
   }
+}
+
+/** Remove the per-device tour flag (sign-out path — tour suppression is
+ *  per-account via athlete.tourCompletedAt, so user B on a shared device must
+ *  not inherit user A's flag). Keeps the module cache in sync. */
+export function clearTourLocalState() {
+  localCache = null
+  try {
+    localStorage.removeItem(LS_KEY)
+  } catch { /* ignore */ }
 }
 
 /** True when the tour was completed or skipped on this device or any synced device. */
@@ -78,6 +98,9 @@ export function maybeAutoStartTour(
 export interface TourState {
   active: boolean
   step: number
+  /** Last navigation direction (+1 next, -1 back) — lets skipMissingStep keep
+   *  moving the way the user was going instead of always bouncing forward. */
+  dir: 1 | -1
   /** Step indices the user actually saw this run — drives tour_step_viewed
    *  dedup (Back revisits, StrictMode double-mounts) and steps_shown. */
   viewed: number[]
@@ -87,8 +110,8 @@ export interface TourState {
   markStepViewed: (step: number) => void
   nextStep: () => void
   prevStep: () => void
-  /** Advance past a step whose target element is absent. Same state change as
-   *  nextStep — the overlay never showed the step, so there's nothing extra to do. */
+  /** Advance past a step whose target element is absent, continuing in the
+   *  user's travel direction (Back onto a missing step keeps going back). */
   skipMissingStep: () => void
   skipTour: () => void
   completeTour: () => void
@@ -97,11 +120,12 @@ export interface TourState {
 export const useTourStore = create<TourState>()((set, get) => ({
   active: false,
   step: 0,
+  dir: 1,
   viewed: [],
 
   startTour: (trigger) => {
     const restart = readLocal().startedAt !== undefined
-    set({ active: true, step: 0, viewed: [] })
+    set({ active: true, step: 0, dir: 1, viewed: [] })
     writeLocal({ ...readLocal(), startedAt: Date.now() })
     posthog.capture('tour_started', { trigger, restart })
   },
@@ -119,15 +143,27 @@ export const useTourStore = create<TourState>()((set, get) => ({
       get().completeTour()
       return
     }
-    set({ step: step + 1 })
+    set({ step: step + 1, dir: 1 })
   },
 
   prevStep: () => {
     const { step } = get()
-    if (step > 0) set({ step: step - 1 })
+    if (step > 0) set({ step: step - 1, dir: -1 })
   },
 
-  skipMissingStep: () => { get().nextStep() },
+  skipMissingStep: () => {
+    const { step, dir } = get()
+    if (dir === -1 && step > 0) {
+      // step 0 (welcome) has no target, so backward skips always terminate
+      set({ step: step - 1 })
+      return
+    }
+    if (step >= TOUR_STEPS.length - 1) {
+      get().completeTour()
+      return
+    }
+    set({ step: step + 1 })
+  },
 
   skipTour: () => {
     const { step, viewed } = get()

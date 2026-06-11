@@ -9,7 +9,7 @@ vi.mock('@/lib/syncState', () => ({
 
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { useTourStore, hasFinishedTour, maybeAutoStartTour } from '../useTourStore'
+import { useTourStore, hasFinishedTour, maybeAutoStartTour, clearTourLocalState } from '../useTourStore'
 import { useAthleteStore } from '../useAthleteStore'
 import { TOUR_STEPS } from '@/lib/tourSteps'
 import { FIXED_SIZE_WIDGETS, WIDGET_SIZES } from '../useDashStore'
@@ -17,7 +17,8 @@ import { posthog } from '@/lib/posthog'
 
 beforeEach(() => {
   localStorage.clear()
-  useTourStore.setState({ active: false, step: 0, viewed: [] })
+  clearTourLocalState() // readLocal() memoizes — raw localStorage.clear() alone leaves the cache stale
+  useTourStore.setState({ active: false, step: 0, dir: 1, viewed: [] })
   useAthleteStore.setState({ athlete: null })
   vi.clearAllMocks()
   mockPullComplete.mockReturnValue(true)
@@ -126,6 +127,35 @@ describe('useTourStore — lifecycle', () => {
     useTourStore.getState().skipMissingStep()
     expect(useTourStore.getState().step).toBe(1)
     expect(posthog.capture).not.toHaveBeenCalled()
+  })
+
+  it('skipMissingStep continues backward when the user was going back', () => {
+    useTourStore.getState().startTour('auto')
+    useTourStore.getState().nextStep() // 1
+    useTourStore.getState().nextStep() // 2
+    useTourStore.getState().prevStep() // 1, dir -1
+    useTourStore.getState().skipMissingStep() // missing step 1 while going back → 0
+    expect(useTourStore.getState().step).toBe(0)
+    expect(useTourStore.getState().active).toBe(true) // did not complete
+  })
+
+  it('skipMissingStep resumes forward after a forward move follows a back', () => {
+    useTourStore.getState().startTour('auto')
+    useTourStore.getState().nextStep() // 1
+    useTourStore.getState().prevStep() // 0, dir -1
+    useTourStore.getState().nextStep() // 1, dir +1 again
+    useTourStore.getState().skipMissingStep()
+    expect(useTourStore.getState().step).toBe(2)
+  })
+
+  it('clearTourLocalState resets suppression including the memoized cache', () => {
+    useTourStore.getState().startTour('auto')
+    useTourStore.getState().completeTour()
+    expect(hasFinishedTour()).toBe(true) // served from cache
+    clearTourLocalState()
+    useAthleteStore.setState({ athlete: null }) // sign-out clears the athlete store separately
+    expect(localStorage.getItem('fl2_tour_state')).toBeNull()
+    expect(hasFinishedTour()).toBe(false) // cache invalidated, not stale-true
   })
 
   it('skipMissingStep on the last step completes the tour — steps_shown exposes an all-skipped run', () => {
