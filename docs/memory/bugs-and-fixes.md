@@ -95,6 +95,12 @@
 - **Fix:** Check for existing race with same date + distance before inserting
 - **Commit:** (part of Strava integration work)
 
+### Pre-pull updateAthlete wipes the user's profile (caught pre-merge, Session 45)
+- **Symptom (would-have-been):** skipping/completing the onboarding tour during the first ~2s of a session (before remote sync lands) silently erased the user's profile (name, DOB, units, clubs) on every device
+- **Root cause:** athlete merges by whole-object last-write-wins on `updatedAt` in both `applyRemoteSafe` (client) and `stateMerge.ts` (server). `updateAthlete({tourCompletedAt})` on a null/skeleton athlete creates a fresh-`updatedAt` object that wins both merges. The sync write gate only defers the POST — it does not prevent the local LWW loss
+- **Fix:** gate the write on `isRemotePullComplete()` (now exported from `src/lib/syncState.ts`); tour retries the auto-start when the pull is pending. Regression tests in `useTourStore.test.ts`
+- **Commit:** PR #535 (v0.7.7.8)
+
 ---
 
 ## Patterns to Watch

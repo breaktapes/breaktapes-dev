@@ -915,6 +915,9 @@ PR #164 was squash-merged to main; subsequent fixes commit `6b8debd` from worktr
 
 ## Known Issues / Watch Points
 
+- **Never `updateAthlete()` before the remote pull lands (Session 45):** the athlete object merges by **whole-object last-write-wins on `updatedAt`** in BOTH `applyRemoteSafe` (client) and `stateMerge.ts` (server). Any write while `athlete` is null/skeleton (pre-pull) creates a fresh-`updatedAt` object that wins both merges and silently wipes the user's real profile on every device. The sync write gate only defers the outbound POST — it does NOT prevent the local LWW loss. Gate any early-session athlete write on `isRemotePullComplete()` (exported from `src/lib/syncState.ts`). Pattern lives in `markFinished()` / `maybeAutoStartTour()` in `src/stores/useTourStore.ts`.
+- **Onboarding tour spotlight anchors are contracts (Session 45):** `TOUR_STEPS` (`src/lib/tourSteps.ts`) targets `[data-tour="get-started"]`, `[data-widget-id="stats-strip"]`, `[data-tour="customize"]` (Dashboard.tsx), `[data-tour="nav-races"]`/`[data-tour="nav-you"]` (BottomNav, derived from route segments). The overlay silently auto-skips a step whose target is missing — renaming/removing these anchors deletes tour steps with no error. Contract tests pin them (`useTourStore.test.ts`, `BottomNav.test.tsx`); `steps_shown < steps_total` on `tour_completed` in PostHog is the prod signal that a selector broke.
+- **`CLOUDFLARE_API_TOKEN` GitHub secret going flaky (Session 45):** two staging deploys in two days failed at the wrangler step with `Unable to authenticate request [code: 10001]`; both fixed by re-running the job. If it recurs, mint a fresh token at dash.cloudflare.com/profile/api-tokens and update the `CLOUDFLARE_API_TOKEN` secret (Session 28 precedent). Always check `gh run list --branch staging` after merging — green PR CI does NOT mean the deploy ran.
 - **`parseDistKm` is map-first (Session 42):** `parseDistKm()` (`src/lib/raceFormulas.ts`) checks `DIST_KM_MAP` BEFORE `parseFloat`. This is load-bearing — `"70.3"` and `"140.6"` are race names in **miles** (113 km / 226 km), not km. If `parseFloat` ran first it would read `"70.3"` as 70.3 km → `detectTriType` buckets a 70.3 as **Olympic** → Triathlon Predictor silently corrupts (Olympic tab same-band, swim/bike unscaled via Riegel identity). Do NOT reorder to parseFloat-first. Canonical store for a 70.3 is `"113"` (AddRaceModal dropdown value); the map just rescues legacy/literal `"70.3"`.
 - **Retention email is LIVE on prod + uses TWO separate workers (Session 42):** `breaktapes-health` (prod, custom domain `health.breaktapes.com`, `wrangler deploy` no `--env`) and `breaktapes-health-staging` (`[env.staging]`, `*.workers.dev`, `wrangler deploy --env staging`) are INDEPENDENT workers with per-worker secrets + per-worker crons. Prod cron `0 13 * * *` is active (`SUPABASE_URL`=prod, `RESEND_API_KEY` + `SUPABASE_SERVICE_ROLE_KEY` set) and emails real opted-in users (default opt-in ON). Flipping/deploying one worker does NOT affect the other. health-proxy deploys MANUALLY (not CI): `cd health-proxy && CF_API_TOKEN="" CLOUDFLARE_API_TOKEN="" npx wrangler deploy`.
 - **Prod Supabase migration timestamp drift (Session 42):** if a migration was applied to prod via Supabase MCP `apply_migration`, MCP records its OWN timestamp version (e.g. `...133824`) which won't match the committed file prefix (e.g. `...133809`). CI `supabase db push` then fails: "Remote migration versions not found in local migrations directory" — and because `deploy-production.yml` runs `db push` before `wrangler deploy` with `-e`, the **app deploy silently skips**. Fix via MCP `execute_sql`: `UPDATE supabase_migrations.schema_migrations SET version='<file-ts>' WHERE version='<phantom-ts>'`, and `INSERT` history rows (ON CONFLICT DO NOTHING) for migrations whose objects already exist but whose row is missing. Then re-run the deploy.
@@ -1384,6 +1387,34 @@ Direct DB access (psql/psycopg2) is blocked from localhost — Supabase only exp
 - When the same new fields exist on both HEAD and staging (from two parallel worktrees), `git merge origin/staging` produces duplicate-field conflicts in TypeScript interfaces — always check for duplicate property declarations after merge, they compile but are confusing.
 - `git worktree remove` mid-session kills the shell CWD — the kernel's `getcwd()` fails on every subsequent subprocess. No recovery possible without restarting from a valid directory. Always `cd` to main repo before any worktree cleanup.
 - PostToolUse linter hook can revert file edits made in the same session if the linter reformats aggressively — verify critical new fields persist after every hook run.
+
+---
+
+### Session 45 (2026-06-10) — Onboarding tour + tour analytics integrity (v0.7.7.8 / v0.7.7.9)
+
+**Branches:** `claude/heuristic-kapitsa-972053` → staging (PR #535, v0.7.7.8) · `claude/tour-analytics-dedup` → staging (PR #536, v0.7.7.9). Both squash-merged + deploy-verified on dev.breaktapes.com. NOT yet promoted to main.
+
+#### Context (PostHog-driven, via MCP)
+Widget discovery confirmed dead (8 `widget_detail_opened` events ever, 4 of 24 widgets). Import funnel still ~10% — root cause is providers returning zero results (sporthive 8/8 = 100% zero week of Jun 8 — likely broken scraper, fix pending), not UX. Rageclicks: all spikes pre-date the Session 41 CWV fix; closed.
+
+#### Shipped — onboarding tour (v0.7.7.8)
+- **`src/lib/tourSteps.ts`** — 6-step registry: welcome (centered, `target: null`) → get-started card → stats-strip widget → customize pencil → Races nav → You nav. All steps on/around the dashboard — no cross-route navigation (deliberate: kills route-timing fragility).
+- **`src/stores/useTourStore.ts`** — zustand, not persisted. `startTour/nextStep/prevStep/skipMissingStep/skipTour/completeTour`, `maybeAutoStartTour()` (extracted, unit-tested gate), `TOUR_AUTOSTART_DELAY_MS = 1800`. Local flag `fl2_tour_state` + cross-device stamp `athlete.tourCompletedAt` (rides whole-athlete sync — no migration). `markFinished()` gated on `isRemotePullComplete()` (see Known Issues — profile-wipe bug caught by adversarial review).
+- **`src/components/TourOverlay.tsx`** — portal overlay, box-shadow-cutout spotlight (`0 0 0 9999px` — no backdrop-filter, no layout transitions, rect-equality bail on scroll remeasure: all Session 41 INP lessons). Target polling 100ms×25 → auto-skip missing steps. Card placement below/above with viewport clamp; centered fallback when spotlight unusable. 44px touch targets.
+- **Wiring:** auto-start effect in Dashboard (1.8s delay, retry-on-pull-pending), "Take the App Tour" in Settings → About, `data-tour` anchors, sign-out clears `fl2_tour_state` (shared-device).
+- **Review army caught:** CRITICAL pre-pull `updateAthlete` profile wipe (adversarial), step_viewed firing for never-shown steps (testing+maintainability multi-confirm), per-frame scroll re-renders, sub-44px buttons, stale-spotlight-during-poll, label-derived nav selectors. All fixed pre-merge. 624 tests, ~90% feature coverage.
+
+#### Shipped — tour analytics integrity (v0.7.7.9)
+- `tour_step_viewed` deduped per step per run (`viewed` set in store; TourOverlay routes through `markStepViewed()`) — Back revisits + StrictMode double-mounts no longer inflate the funnel.
+- `tour_started` carries `restart: boolean` via `fl2_tour_state.startedAt` — mid-tour refresh ≠ second new user.
+- `tour_skipped`/`tour_completed` carry `steps_shown` (+ `steps_total`) — an all-auto-skipped "completion" (broken selector) is visible in data. 627 tests.
+
+#### Key learnings
+- Whole-object LWW athlete merge means ANY pre-pull `updateAthlete` wipes profiles — see Known Issues. The write gate does not protect against this; it only defers the POST.
+- Single-page tour design (spotlight nav tabs instead of navigating to pages) eliminated the entire class of route-transition timing bugs; missing-target auto-skip makes anchors safe to refactor but silently — pin anchors with contract tests + `steps_shown` telemetry.
+- Spotlight technique: fixed div + `box-shadow: 0 0 0 9999px rgba(0,0,0,0.78)` cutout + orange border. No transitions on top/left/width/height (full-viewport repaint per frame), no backdrop-filter.
+- Local-dev Clerk testing: `*+clerk_test@example.com` sign-ups verify with OTP `424242` — full new-user flows testable in the preview browser without real emails.
+- Staging deploys failed twice in 2 days on Cloudflare auth 10001; re-run fixed both. Token watch — see Known Issues.
 
 ---
 
