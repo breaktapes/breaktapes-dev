@@ -3,6 +3,11 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.7.12] - 2026-06-11
+
+### Added
+- **Search-term shape on import analytics (PII-safe).** Every `race import searched` event (all six providers) now carries `term_tokens` + `term_length` — the shape of what was searched, never the name itself. Diagnosing the v0.7.7.10 sporthive incident required manually brute-forcing name patterns because the events carried no signal about the query; with shape props, a pattern like "common two-token names always return zero" is visible directly in PostHog.
+
 ## [0.7.7.11] - 2026-06-11
 
 ### Fixed
