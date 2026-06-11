@@ -3,6 +3,11 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.7.13] - 2026-06-11
+
+### Changed
+- **Sporthive search recall headroom.** Speedhive name-search `count` raised 40 → 100 (upstream's max, verified). With quoted AND-mode search (v0.7.7.10) the top results are already real matches; this widens the candidate pool for very common names with more than 40 namesakes. Per-result fetch fan-out stays capped at 25.
+
 ## [0.7.7.12] - 2026-06-11
 
 ### Added
