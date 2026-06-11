@@ -1101,7 +1101,7 @@ export default {
         //    unquoted fallback preserves recall for odd inputs.
         const runSearch = async (q) => {
           const url = `https://search.speedhive.com/api/search?term=${encodeURIComponent(q)}`
-            + `&category=Active&count=40&offset=0&fuzzy=true`;
+            + `&category=Active&count=100&offset=0&fuzzy=true`; // upstream accepts 100; more headroom for very common names
           const r = await fetch(url, { headers: SH, signal: AbortSignal.timeout(10000) });
           if (!r.ok) throw new Error(`speedhive search ${r.status}`);
           const data = await r.json();
