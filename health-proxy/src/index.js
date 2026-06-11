@@ -690,6 +690,7 @@ export default {
             properties: {
               provider: 'ultrasignup',
               result_count: results.length,
+              persons_matched: Array.isArray(persons) ? persons.length : 0,
               ...(sessionId && { $session_id: sessionId }),
             },
           });
@@ -810,10 +811,14 @@ export default {
 
         // MarathonView server-renders results as `const json = {...};` inside a <script> tag.
         // Brace-balanced extractor (must respect string literals).
+        // The `const json=` payload is present even on zero-result pages
+        // (verified: gibberish names render `{"data":{"results":[]…`), so a
+        // missing marker or unparseable payload means the page shape changed —
+        // surface as an error instead of a silent result_count=0.
         const startIdx = html.indexOf('const json=');
-        if (startIdx === -1) return json({ results: [], status: 'ok' }, 200, origin);
+        if (startIdx === -1) throw new Error('MarathonView payload marker missing');
         const braceStart = html.indexOf('{', startIdx);
-        if (braceStart === -1) return json({ results: [], status: 'ok' }, 200, origin);
+        if (braceStart === -1) throw new Error('MarathonView payload marker missing');
         let depth = 0, inStr = false, esc = false, end = -1;
         for (let i = braceStart; i < html.length; i++) {
           const ch = html[i];
@@ -830,10 +835,10 @@ export default {
             if (depth === 0) { end = i; break; }
           }
         }
-        if (end === -1) return json({ results: [], status: 'ok' }, 200, origin);
+        if (end === -1) throw new Error('MarathonView payload unbalanced');
         let payload;
         try { payload = JSON.parse(html.slice(braceStart, end + 1)); }
-        catch (_) { return json({ results: [], status: 'ok' }, 200, origin); }
+        catch (_) { throw new Error('MarathonView payload unparseable'); }
 
         const raceList = (payload && payload.data && Array.isArray(payload.data.results))
           ? payload.data.results
@@ -898,6 +903,8 @@ export default {
             properties: {
               provider: 'marathonview',
               result_count: results.length,
+              raw_rows: raceList.length,
+              filtered_rows: filteredList.length,
               ...(sessionId && { $session_id: sessionId }),
             },
           });
@@ -919,7 +926,6 @@ export default {
     // every race (21km / 10km / 5km …) for that athlete in parallel and return
     // matches tagged with distance. finishtime is chip/net (ms) — no gun/net issue.
     if (path === '/import/hopasports' && request.method === 'POST') {
-      const distinctId = request.headers.get('X-POSTHOG-DISTINCT-ID') || 'anon';
       const posthog = makePostHog(env);
       try {
         const body = await request.json().catch(() => ({}));
@@ -1069,7 +1075,6 @@ export default {
     //  2. eventresults-api.speedhive.com/sporthive/races/{raceId}/bibs/{bib} →
     //     the finisher's chip/gun time, placing, category, splits (incl. tri legs).
     if (path === '/import/sporthive' && request.method === 'POST') {
-      const distinctId = request.headers.get('X-POSTHOG-DISTINCT-ID') || 'anon';
       const posthog = makePostHog(env);
       try {
         const body = await request.json().catch(() => ({}));
@@ -1151,11 +1156,13 @@ export default {
         }));
 
         // 2b. Fetch each finisher result in parallel for time/placing/splits.
+        let fetchFailures = 0; // per-result fetch errors — partial loss is otherwise invisible in result_count
         const results = (await Promise.all(matched.map(async (p) => {
           try {
             const r = await fetch(`https://eventresults-api.speedhive.com/sporthive/races/${encodeURIComponent(p.raceId)}/bibs/${encodeURIComponent(p.bib)}`,
               { headers: SH, signal: AbortSignal.timeout(10000) }).then(x => x.ok ? x.json() : null);
-            if (!r || r.dns || r.dsq) return null;
+            if (!r) { fetchFailures++; return null; }
+            if (r.dns || r.dsq) return null;
             const time = cleanTime(r.chipTimeOfParticipant) || cleanTime(r.gunTimeOfParticipant)
               || cleanTime(r.legs && r.legs[0] && r.legs[0].totalDuration);
             const distM = Number(r.distanceInMeter) || (r.legs && r.legs[0] && Number(r.legs[0].distanceInMeters)) || parseDistM(p.raceName);
@@ -1182,11 +1189,11 @@ export default {
               ...(splits.length ? { splits } : {}),
               source:     'sporthive',
             };
-          } catch (_) { return null; }
+          } catch (_) { fetchFailures++; return null; }
         }))).filter(Boolean);
 
         if (posthog) {
-          posthog.capture({ distinctId, event: 'race import searched', properties: { provider: 'sporthive', result_count: results.length, search_hits: searchHits, matched_count: matched.length, fallback_used: fallbackUsed, ...(sessionId && { $session_id: sessionId }) } });
+          posthog.capture({ distinctId, event: 'race import searched', properties: { provider: 'sporthive', result_count: results.length, search_hits: searchHits, matched_count: matched.length, fallback_used: fallbackUsed, fetch_failures: fetchFailures, ...(sessionId && { $session_id: sessionId }) } });
           await posthog.shutdown();
         }
         return json({ results, status: 'ok' }, 200, origin);
@@ -1198,7 +1205,6 @@ export default {
 
     // ── RunSignup race results search ─────────────────────────────────────
     if (path === '/import/runsignup' && request.method === 'POST') {
-      const distinctId = request.headers.get('X-POSTHOG-DISTINCT-ID') || 'anon';
       const posthog = makePostHog(env);
       try {
         const body = await request.json().catch(() => ({}));
@@ -1261,7 +1267,7 @@ export default {
           posthog.capture({
             distinctId,
             event: 'race import searched',
-            properties: { provider: 'runsignup', result_count: results.length },
+            properties: { provider: 'runsignup', result_count: results.length, ...(sessionId && { $session_id: sessionId }) },
           });
           await posthog.shutdown();
         }

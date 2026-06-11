@@ -3,6 +3,14 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.7.11] - 2026-06-11
+
+### Fixed
+- **Race-import analytics now tie to real users.** The import wizard's six provider fetches never sent PostHog identity, so every server-side `race import searched` event logged as `anonymous`/`anon` — funnels couldn't connect search → select → complete to a user or session. `RaceImportModal` now forwards `X-POSTHOG-DISTINCT-ID` + `X-POSTHOG-SESSION-ID` (already CORS-allowlisted), and the three worker routes that shadowed the shared distinct-id with their own `'anon'` default (sporthive, hopasports, runsignup) use the shared one.
+- **MarathonView page-shape changes no longer masquerade as zero results.** A missing/unparseable `const json=` payload returned `status: ok, results: []` — indistinguishable from a real no-match (verified zero-result pages still carry the payload). Now throws → `status: error`, frontend flags the source, exception captured.
+- **Import diagnostics in analytics.** `race import searched` gains per-provider props: marathonview `raw_rows`/`filtered_rows` (namesake-filter visibility), ultrasignup `persons_matched`, sporthive `fetch_failures` (partial per-result fetch loss was invisible), runsignup `$session_id`.
+- health-proxy redeployed to prod + staging workers; routes verified live.
+
 ## [0.7.7.10] - 2026-06-10
 
 ### Fixed
