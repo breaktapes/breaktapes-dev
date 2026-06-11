@@ -399,6 +399,7 @@ If a widget needs a different visual treatment, change the token in one place. N
 | `countryNameHaystack(code)` | Resolve ISO-2 country code to full name string for autocomplete haystack expansion |
 | `addUpcomingRace(race)` | Add a future race to `upcomingRaces` array in `useRaceStore` |
 | `autoMoveExpiredUpcoming()` | Move past-dated entries from `upcomingRaces` → `races` on app rehydration |
+| `dedupeWorkouts(workouts)` | (dedupeWorkouts.ts) Merge cross-provider duplicate workouts in the Open Wearables feed — ±5 min start, ≤10% duration delta, compatible sport; richest record wins, missing metrics folded in, `sources[]` lists merged providers |
 
 ---
 
@@ -855,7 +856,7 @@ If a widget needs a different visual treatment, change the token in one place. N
 
 #### Changes shipped
 - **TrainingCorrelWidget** — full live implementation replacing the dashed stub. `useEffect` on mount calls `fetchStravaActivities(200)`. For each past race with a finish time, computes 42-day pre-race training load (sum Strava km in window `[race - 49d, race - 7d]`) and performance delta vs PB (`(pbSecs - raceSecs) / pbSecs * 100`). Renders best/worst/most-recent data points with horizontal load bars and delta color coding. Shows "Need more data — log N more races" when fewer than 3 data points.
-- **ActivityPreviewWidget** — merges Strava (up to 10 fetched on mount) + WHOOP activities sorted by date descending, shows top 5. Strava: sport icon (🏃/🚴/🏊/🚶/🏋/⚡) from type string, `name` from activity, `km · min` meta. WHOOP: `WHOOP_SPORT_NAMES` map inline (0=Activity, 1=Running, 2=Cycling, 3=Swimming, etc.), minutes from start/end delta.
+- **ActivityPreviewWidget** — *(stale as of v0.7.7.13 — activities now flow through the Open Wearables unified feed in Train.tsx ActivitiesTab, deduped cross-provider via `dedupeWorkouts()` in `src/lib/dedupeWorkouts.ts`)* merges Strava (up to 10 fetched on mount) + WHOOP activities sorted by date descending, shows top 5. Strava: sport icon (🏃/🚴/🏊/🚶/🏋/⚡) from type string, `name` from activity, `km · min` meta. WHOOP: `WHOOP_SPORT_NAMES` map inline (0=Activity, 1=Running, 2=Cycling, 3=Swimming, etc.), minutes from start/end delta.
 - **RecoveryIntelWidget** — added Strava fallback tier between WHOOP and race-based fallback. When Strava token exists and no race logged: shows days since last activity as large numeral + load ratio (last 7d km / avg prior 3 weeks). When race logged + Strava: appends load stats to existing race-based view.
 - **RaceImportModal** — auto-detect distance from race name via `parseDistKm()` + `kmToDistLabel()` mapper (Marathon/Half/Ironman/70.3 etc.); dedupe guard before `addRace()` checks name+date against existing races, shows "N already logged — skipped" inline; MarathonView filter: skip rows with `raceName.length < 3` (header rows); date normalization `MM/DD/YYYY → YYYY-MM-DD`; Athlinks pill now green with inline "pending API access" note instead of faded opacity.
 
