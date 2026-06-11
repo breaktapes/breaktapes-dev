@@ -147,31 +147,41 @@ export function RaceImportModal({ onClose, onPickByRace, onAddManual }: { onClos
     const settle = <T,>(p: Promise<T>): Promise<PromiseSettledResult<T>> =>
       Promise.allSettled([p]).then(([r]) => r)
 
+    // Forward PostHog identity so the server-side `race import searched`
+    // events (health-proxy) tie to this user + session instead of "anonymous".
+    const phHeaders: Record<string, string> = { 'Content-Type': 'application/json' }
+    try {
+      const did = posthog.get_distinct_id?.()
+      const sid = posthog.get_session_id?.()
+      if (did) phHeaders['X-POSTHOG-DISTINCT-ID'] = did
+      if (sid) phHeaders['X-POSTHOG-SESSION-ID'] = sid
+    } catch { /* posthog not initialized (no key) — headers stay minimal */ }
+
     const [us, mv, al, rs, cc, sp] = await Promise.all([
       settle(fetch(`${HEALTH_PROXY}/import/ultrasignup`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: phHeaders,
         body: JSON.stringify({ firstName: firstName.trim(), lastName: lastName.trim() }),
       }).then(r => r.json())),
       settle(fetch(`${HEALTH_PROXY}/import/marathonview`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: phHeaders,
         body: JSON.stringify({ name: `${firstName.trim()} ${lastName.trim()}`.trim(), birthYear, gender }),
       }).then(r => r.json())),
       athlinksUrl.trim()
         ? settle(fetch(`${HEALTH_PROXY}/import/athlinks`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            method: 'POST', headers: phHeaders,
             body: JSON.stringify({ profileUrl: athlinksUrl.trim() }),
           }).then(r => r.json()))
         : Promise.resolve({ status: 'fulfilled', value: { status: 'skipped', results: [] } } as PromiseSettledResult<{ status: string; results?: ImportResult[] }>),
       settle(fetch(`${HEALTH_PROXY}/import/runsignup`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: phHeaders,
         body: JSON.stringify({ firstName: firstName.trim(), lastName: lastName.trim() }),
       }).then(r => r.json())),
       settle(fetch(`${HEALTH_PROXY}/import/coachcox`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: phHeaders,
         body: JSON.stringify({ firstName: firstName.trim(), lastName: lastName.trim() }),
       }).then(r => r.json())),
       settle(fetch(`${HEALTH_PROXY}/import/sporthive`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: phHeaders,
         body: JSON.stringify({ firstName: firstName.trim(), lastName: lastName.trim() }),
       }).then(r => r.json())),
     ])
