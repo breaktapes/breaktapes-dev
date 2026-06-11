@@ -130,6 +130,7 @@ The Strava card in Train → Wearables (`OW_PROVIDERS` in `src/pages/Train.tsx`)
   - `GET /api/v1/users/{uid}/summaries/activity` — steps, active calories
   - `GET /api/v1/users/{uid}/metrics/vo2max` — VO2 max trend
   - `GET /api/v1/users/{uid}/workouts` — workout feed
+- **Feed dedupe (v0.7.7.13):** `dedupeWorkouts()` (`src/lib/dedupeWorkouts.ts`) merges cross-provider duplicates (same session from WHOOP + Strava, etc.) before the 20-row slice in Train → Activities. Match window: start within ±5 min, duration within 10%, compatible sport. Richest record wins (GPS distance > name > heart rate); missing metrics folded in from duplicates; merged rows show provider source badges.
 
 ---
 
