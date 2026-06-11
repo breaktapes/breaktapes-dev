@@ -361,6 +361,12 @@ export default {
     const distinctId = request.headers.get('X-POSTHOG-DISTINCT-ID') || 'anonymous';
     const sessionId  = request.headers.get('X-POSTHOG-SESSION-ID') || undefined;
     const posthog    = makePostHog(env);
+    // Search-term shape for import analytics — PII-safe (no raw name). Lets us
+    // see patterns like "common 2-token names fail" without logging identities.
+    const termShape = (s) => {
+      const t = String(s || '').trim();
+      return { term_tokens: t ? t.split(/\s+/).length : 0, term_length: t.length };
+    };
 
     // Unsubscribe is clicked from an email client (no Origin header), so it must
     // be handled BEFORE the ALLOWED_ORIGINS gate. It's a token-authenticated GET.
@@ -691,6 +697,7 @@ export default {
               provider: 'ultrasignup',
               result_count: results.length,
               persons_matched: Array.isArray(persons) ? persons.length : 0,
+              ...termShape(`${(firstName || '').trim()} ${(lastName || '').trim()}`),
               ...(sessionId && { $session_id: sessionId }),
             },
           });
@@ -905,6 +912,7 @@ export default {
               result_count: results.length,
               raw_rows: raceList.length,
               filtered_rows: filteredList.length,
+              ...termShape(trimmed),
               ...(sessionId && { $session_id: sessionId }),
             },
           });
@@ -1016,7 +1024,7 @@ export default {
           posthog.capture({
             distinctId,
             event: 'race import searched',
-            properties: { provider: 'hopasports', result_count: results.length, ...(sessionId && { $session_id: sessionId }) },
+            properties: { provider: 'hopasports', result_count: results.length, ...termShape(q), ...(sessionId && { $session_id: sessionId }) },
           });
           await posthog.shutdown();
         }
@@ -1193,7 +1201,7 @@ export default {
         }))).filter(Boolean);
 
         if (posthog) {
-          posthog.capture({ distinctId, event: 'race import searched', properties: { provider: 'sporthive', result_count: results.length, search_hits: searchHits, matched_count: matched.length, fallback_used: fallbackUsed, fetch_failures: fetchFailures, ...(sessionId && { $session_id: sessionId }) } });
+          posthog.capture({ distinctId, event: 'race import searched', properties: { provider: 'sporthive', result_count: results.length, search_hits: searchHits, matched_count: matched.length, fallback_used: fallbackUsed, fetch_failures: fetchFailures, ...termShape(term), ...(sessionId && { $session_id: sessionId }) } });
           await posthog.shutdown();
         }
         return json({ results, status: 'ok' }, 200, origin);
@@ -1267,7 +1275,7 @@ export default {
           posthog.capture({
             distinctId,
             event: 'race import searched',
-            properties: { provider: 'runsignup', result_count: results.length, ...(sessionId && { $session_id: sessionId }) },
+            properties: { provider: 'runsignup', result_count: results.length, ...termShape(`${firstName} ${lastName}`), ...(sessionId && { $session_id: sessionId }) },
           });
           await posthog.shutdown();
         }
@@ -1367,7 +1375,7 @@ export default {
           posthog.capture({
             distinctId,
             event: 'race import searched',
-            properties: { provider: 'coachcox', result_count: results.length, ...(sessionId && { $session_id: sessionId }) },
+            properties: { provider: 'coachcox', result_count: results.length, ...termShape(name), ...(sessionId && { $session_id: sessionId }) },
           });
           await posthog.shutdown();
         }
