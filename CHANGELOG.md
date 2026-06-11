@@ -3,6 +3,14 @@
 All notable changes to BREAKTAPES are documented here.
 Format loosely follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [0.7.7.13] - 2026-06-11
+
+### Fixed
+- **Duplicate workouts collapse into one row in the activity feed.** A user connected to both WHOOP and Strava (especially with WHOOP's own Strava push enabled) saw the same session 2–3 times in Train → Activities, eating the 20-row feed window. Workouts from different providers starting within ±5 minutes with durations within 10% now merge into a single row (`src/lib/dedupeWorkouts.ts`): the richest record wins (GPS distance > name > heart rate), and missing metrics — heart rate, distance, name, duration — are folded in from the duplicates. Clearly different sports (e.g. a Strava ride vs a concurrent WHOOP strength auto-detection) never merge, and grouping anchors to each group's first record so near-miss sessions can't chain together past the time window.
+
+### Added
+- **Source badges on merged activities.** A merged feed row shows small provider logos (e.g. Strava + WHOOP) with a "Merged from …" tooltip, so it's visible that two records were combined rather than one lost. 16 unit tests cover the merge rules.
+
 ## [0.7.7.12] - 2026-06-11
 
 ### Added
