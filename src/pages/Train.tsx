@@ -16,6 +16,7 @@ import {
 } from '@/lib/openWearables'
 import { useUser } from '@clerk/clerk-react'
 import { ProviderLogo } from '@/components/ProviderLogo'
+import { dedupeWorkouts } from '@/lib/dedupeWorkouts'
 import type { HMS } from '@/components/TimePickerWheel'
 import type { Race } from '@/types'
 
@@ -326,7 +327,10 @@ function ActivitiesTab() {
 
   const connectedIds = new Set(owConnections.filter(c => c.connected).map(c => c.provider))
   const hasAny = connectedIds.size > 0
-  const recentWorkouts = owWorkouts.slice(0, 20)
+  // Dedupe BEFORE slicing — a WHOOP+Strava user can have the same session 2-3×
+  // (watch + WHOOP + WHOOP's own Strava push), which would otherwise eat the
+  // 20-row window with duplicates.
+  const recentWorkouts = useMemo(() => dedupeWorkouts(owWorkouts).slice(0, 20), [owWorkouts])
 
   function sportIcon(sport: string): string {
     const s = sport.toLowerCase()
@@ -439,6 +443,14 @@ function ActivitiesTab() {
                     {w.duration_seconds ? ` · ${fmtDuration(w.duration_seconds)}` : ''}
                   </div>
                 </div>
+                {w.sources.length > 1 && (
+                  <div
+                    title={`Merged from ${w.sources.map(s => owProviderLabel(s)).join(' + ')}`}
+                    style={{ display: 'flex', alignItems: 'center', gap: '2px', flexShrink: 0 }}
+                  >
+                    {w.sources.map(s => <ProviderLogo key={s} provider={s} size={14} />)}
+                  </div>
+                )}
                 {w.average_heart_rate && (
                   <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color: 'var(--muted)', flexShrink: 0 }}>
                     {Math.round(w.average_heart_rate)} <span style={{ fontSize: 'var(--text-xs)' }}>bpm</span>
