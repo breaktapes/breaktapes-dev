@@ -154,8 +154,8 @@ describe('WidgetDetailModal', () => {
     }, {
       actions: { openAddRace },
     })
-    // race-readiness has 'Connect a wearable' → /settings. Test the nav action.
-    fireEvent.click(screen.getByText(/Connect a wearable/i))
+    // race-readiness now points athletes back to their race history for context.
+    fireEvent.click(screen.getByText(/Review recent races/i))
     // Should close modal (navigate happens)
     expect(onClose).toHaveBeenCalled()
   })

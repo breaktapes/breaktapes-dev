@@ -10,8 +10,6 @@ import { SortableContext, useSortable, verticalListSortingStrategy, arrayMove } 
 import { CSS } from '@dnd-kit/utilities'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
-import { useWearableStore } from '@/stores/useWearableStore'
-import { avgHRV, latestRecoveryScore } from '@/lib/openWearables'
 import { useDashStore, initDashV3Migration } from '@/stores/useDashStore'
 import { maybeAutoStartTour, TOUR_AUTOSTART_DELAY_MS } from '@/stores/useTourStore'
 import { selectRaces, selectNextRace, selectAthlete, selectUpcomingRaces, selectFocusRaceId } from '@/stores/selectors'
@@ -2753,7 +2751,6 @@ function OnThisDayWidget() {
 
 function RaceReadinessWidget() {
   const races      = useRaceStore(selectRaces)
-  const owRecovery = useWearableStore(s => s.owRecovery)
   const injuries   = useAthleteStore(s => s.injuries)
   const today      = todayStr()
   const ctx        = useWidgetCardContext()
@@ -2790,32 +2787,19 @@ function RaceReadinessWidget() {
     )
   }
 
-  const { signal, score, daysSince, recoveryDays, lastDist, hrvAvg, recoveryScore, hasWearable } = useMemo(() => {
+  const { signal, score, daysSince, recoveryDays, lastDist } = useMemo(() => {
     const past = races.filter(r => r.date <= today).sort((a, b) => b.date.localeCompare(a.date))
     const last = past[0]
 
-    // Wearable data from OW (Garmin HRV, WHOOP recovery score, etc.)
-    const hrv  = avgHRV(owRecovery, 7)
-    const rs   = latestRecoveryScore(owRecovery)
-    const hasWearable = hrv !== null || rs !== null
-
-    if (!last) return { signal: 'BUILDING', score: 50, daysSince: null, recoveryDays: null, lastDist: null, hrvAvg: hrv, recoveryScore: rs, hasWearable }
+    if (!last) return { signal: 'BUILDING', score: 50, daysSince: null, recoveryDays: null, lastDist: null }
 
     const dist = distanceToKm(last.distance)
     const recoveryDays = dist >= 42 ? 14 : dist >= 21 ? 7 : dist >= 10 ? 3 : 2
     const daysSince = daysAgo(last.date)
-
-    // If wearable recovery score available, blend it with race-based estimate
-    let baseScore = Math.round(Math.min(1, daysSince / recoveryDays) * 100)
-    let blended = baseScore
-    if (rs !== null) {
-      // rs is 0-100 from WHOOP/Suunto: weight it 60% recovery score, 40% days-since
-      blended = Math.round(rs * 0.6 + baseScore * 0.4)
-    }
-
-    const signal = blended >= 80 ? 'READY' : blended >= 50 ? 'BUILDING' : 'UNDERCOOKED'
-    return { signal, score: blended, daysSince, recoveryDays, lastDist: last.distance, hrvAvg: hrv, recoveryScore: rs, hasWearable }
-  }, [races, owRecovery, today])
+    const score = Math.round(Math.min(1, daysSince / recoveryDays) * 100)
+    const signal = score >= 80 ? 'READY' : score >= 50 ? 'BUILDING' : 'UNDERCOOKED'
+    return { signal, score, daysSince, recoveryDays, lastDist: last.distance }
+  }, [races, today])
 
   const sigColor = signal === 'READY' ? 'var(--green)' : signal === 'BUILDING' ? 'var(--gold)' : 'var(--orange)'
 
@@ -2845,7 +2829,6 @@ function RaceReadinessWidget() {
         <>
           <div style={st.widgetDivider} />
           <div style={{ display: 'flex', gap: 'var(--sp-3)' }}>
-            {/* Days since last race — always shown */}
             {daysSince !== null && (
               <div style={{ flex: 1, background: 'var(--surface3)', borderRadius: 'var(--radius-sm)', padding: 'var(--sp-3)' }}>
                 <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xl)', color: 'var(--white)', lineHeight: 1 }}>{daysSince}d</div>
@@ -2853,20 +2836,7 @@ function RaceReadinessWidget() {
                 {lastDist && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', marginTop: '2px' }}>{distBadge(lastDist)}</div>}
               </div>
             )}
-            {/* HRV (from Garmin/WHOOP via OW) — replaces recovery window when real data available */}
-            {hasWearable ? (
-              <div style={{ flex: 1, background: 'var(--surface3)', borderRadius: 'var(--radius-sm)', padding: 'var(--sp-3)' }}>
-                <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xl)', color: 'var(--green)', lineHeight: 1 }}>
-                  {hrvAvg !== null ? `${hrvAvg}ms` : `${Math.round(recoveryScore ?? 0)}`}
-                </div>
-                <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted)', textTransform: 'uppercase', marginTop: '4px' }}>
-                  {hrvAvg !== null ? 'HRV 7D AVG' : 'RECOVERY'}
-                </div>
-                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', marginTop: '2px' }}>
-                  {hrvAvg !== null ? 'RMSSD' : '/ 100'}
-                </div>
-              </div>
-            ) : recoveryDays !== null ? (
+            {recoveryDays !== null ? (
               <div style={{ flex: 1, background: 'var(--surface3)', borderRadius: 'var(--radius-sm)', padding: 'var(--sp-3)' }}>
                 <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xl)', color: 'var(--white)', lineHeight: 1 }}>{recoveryDays}d</div>
                 <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted)', textTransform: 'uppercase', marginTop: '4px' }}>RECOVERY</div>
@@ -2874,12 +2844,9 @@ function RaceReadinessWidget() {
               </div>
             ) : null}
           </div>
-          {/* Prompt to connect wearable if no data yet */}
-          {!hasWearable && (
-            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', marginTop: 'var(--sp-2)', textAlign: 'center' }}>
-              Connect Garmin or WHOOP for real HRV data
-            </div>
-          )}
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', marginTop: 'var(--sp-2)', textAlign: 'center' }}>
+            Based on race recency and distance, not live wearable data
+          </div>
         </>
       )}
     </WidgetCard>

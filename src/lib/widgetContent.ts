@@ -54,11 +54,11 @@ export const WIDGET_CONTENT: Record<string, WidgetContent> = {
     id: 'race-readiness',
     title: 'RACE READINESS',
     tagline: 'How recovered you are, right now.',
-    whatItIs: 'A 0–100 score estimating how fresh your body is today. When WHOOP is connected, it uses your latest WHOOP recovery score directly. Without wearable data, it derives a number from how recently you raced and how demanding that race was.',
+    whatItIs: 'A 0–100 score estimating how fresh you are based on how recently you raced and how demanding that race was. Longer races create longer recovery windows, so the score rises as you move farther from your last hard effort.',
     howToRead: 'READY (85+) means you can hit a hard session or race. BUILDING (50–84) means you are still absorbing recent work — stay steady. UNDERCOOKED (under 50) means back off.',
-    howItImpactsPerformance: 'Racing undercooked burns matches you do not have. Tracking readiness across weeks exposes which races you were truly primed for, and correlates tightly with your PB vs. fade pattern in Pacing IQ.',
+    howItImpactsPerformance: 'Racing undercooked burns matches you do not have. Tracking readiness across weeks exposes which races you were truly primed for and helps you space hard efforts more intelligently across a season.',
     relatedActions: [
-      { label: 'Connect a wearable', to: '/settings' },
+      { label: 'Review recent races', to: '/races' },
     ],
   },
 
