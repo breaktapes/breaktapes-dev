@@ -1,0 +1,33 @@
+name: Keep Supabase Active
+
+on:
+  schedule:
+    # Run a few times per day so the Free-plan project keeps seeing regular
+    # database activity across the full 7-day inactivity window.
+    - cron: '17 */8 * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    name: Ping production Supabase
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Read a public row from Supabase
+        env:
+          SUPABASE_URL: https://kmdpufauamadwavqsinj.supabase.co
+          SUPABASE_ANON_KEY: sb_publishable_aXlZ54g7bW8dckyl3N-kCA_Jzy_Nt0B
+        run: |
+          set -euo pipefail
+          response="$(curl --silent --show-error --fail-with-body \
+            "${SUPABASE_URL}/rest/v1/race_catalog?select=id&limit=1" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}")"
+
+          if [ -z "${response}" ] || [ "${response}" = "[]" ]; then
+            echo "Supabase keepalive returned no rows."
+            exit 1
+          fi
+
+          echo "Supabase keepalive succeeded at $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+          echo "Response: ${response}"
