@@ -108,12 +108,11 @@ export default function PrivacyPolicy() {
           </SubSection>
           <SubSection title="2.3 Wearable and health data">
             <P>
-              If you connect a third-party wearable service you authorise us to receive:
+              If you use an available third-party integration or upload a health-data export,
+              you authorise us to receive or process:
             </P>
             <ul style={{ paddingLeft: '1.25rem', lineHeight: 1.9 }}>
-              <li><strong>WHOOP</strong> — workout activities and daily recovery scores.</li>
-              <li><strong>Garmin</strong> — wellness activities from the Garmin Health API.</li>
-              <li><strong>Strava</strong> — activities, distances, and durations.</li>
+              <li><strong>Third-party activity platforms</strong> — activities, distances, durations, and other workout metadata where an integration is available.</li>
               <li>
                 <strong>Apple Health</strong> — health records exported by you from the iOS
                 Health app and uploaded directly. The file is processed on your device and the
@@ -128,21 +127,20 @@ export default function PrivacyPolicy() {
             <P>
               <strong>Read-only access.</strong> Our access to your connected wearable accounts is
               strictly read-only. BREAKTAPES never writes to, edits, or deletes anything on your
-              source account (WHOOP, Strava, Garmin, etc.). We only read your activities to display
-              them in the app.
+              source account. We only read or process imported activity data to display
+              it in the app.
             </P>
             <P>
-              <strong>Deleting wearable data.</strong> You can permanently delete the activities
-              synced from any connected device at any time from <em>Train &rarr; Activities &rarr;
-              device settings &rarr; Delete my data</em>. Disconnecting a device stops new syncing
-              and leaves your existing activities in place until you delete them. Deletion is
-              permanent and cannot be undone. Your source account and its data are never affected.
+              <strong>Deleting imported health or activity data.</strong> If BREAKTAPES stores
+              imported health or activity data for your account, you can request its removal by
+              deleting your account or contacting support. Deletion is permanent and cannot be
+              undone. Your source account and its data are never affected.
             </P>
             <P>
               <strong>Account deletion.</strong> If you delete your BREAKTAPES account, all of your
-              data &mdash; including every activity synced from your connected devices &mdash; is
+              data &mdash; including imported health or activity data &mdash; is
               permanently deleted with no method of recovery. This does not affect the original data
-              held by WHOOP, Strava, Garmin, or any other source service.
+              held by any external service you used outside BREAKTAPES.
             </P>
           </SubSection>
           <SubSection title="2.4 Location data">
@@ -199,9 +197,9 @@ export default function PrivacyPolicy() {
               Each provider is bound by a data processing agreement.
             </li>
             <li>
-              <strong>Third-party wearable platforms</strong> — OAuth tokens for WHOOP, Garmin,
-              and Strava are stored server-side to fetch your activity data on your behalf.
-              We access only the scopes you explicitly grant.
+              <strong>Third-party data providers</strong> — if you use an available integration,
+              the credentials or tokens needed to fetch your imported activity data are stored
+              server-side and used only for the scopes you explicitly grant.
             </li>
             <li>
               <strong>Legal requirements</strong> — We may disclose information if required
@@ -223,14 +221,14 @@ export default function PrivacyPolicy() {
             retained indefinitely.
           </P>
           <P>
-            Wearable activity data is retained until you disconnect the integration or delete
-            your account. You may also manually clear imported Apple Health data from Settings.
+            Imported health or activity data is retained until you delete your account or request
+            its removal. You may also clear Apple Health imports that you uploaded directly.
           </P>
         </Section>
 
         <Section title="7. Security">
           <P>
-            All data is transmitted over HTTPS/TLS. Wearable OAuth client secrets are stored
+            All data is transmitted over HTTPS/TLS. Any integration client secrets are stored
             exclusively server-side in encrypted environment variables and are never exposed
             to the browser. Supabase row-level security ensures each user can only read and
             write their own data. Passwords are hashed by Clerk using industry-standard

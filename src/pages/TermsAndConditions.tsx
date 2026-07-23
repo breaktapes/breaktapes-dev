@@ -109,12 +109,12 @@ export default function TermsAndConditions() {
 
         <Section title="4. Permitted Use">
           <P>
-            BREAKTAPES is a personal training and race-tracking tool. You may use the
+            BREAKTAPES is a personal race-tracking and planning tool. You may use the
             Service to:
           </P>
           <ul style={{ paddingLeft: '1.25rem', lineHeight: 2 }}>
-            <li>Log your own race history, training activities, and performance data.</li>
-            <li>Connect wearable devices to import your health and activity data.</li>
+            <li>Log your own race history, goals, results, and performance data.</li>
+            <li>Use pacing, prediction, and race-planning tools we make available.</li>
             <li>Share a public athlete profile if you choose to enable one.</li>
             <li>Discover races and plan your racing season.</li>
           </ul>
@@ -177,10 +177,10 @@ export default function TermsAndConditions() {
 
         <Section title="7. Wearable and Third-Party Integrations">
           <P>
-            Connecting a third-party service (WHOOP, Garmin, Strava, Apple Health) is optional.
-            By connecting, you authorise us to access data from that service on your behalf
-            under the scopes you grant. You can revoke access at any time from Settings →
-            Train → Wearables, or by revoking permissions directly in the third-party platform.
+            From time to time, BREAKTAPES may offer optional third-party or file-based data
+            imports, including health or activity data. If you choose to use an available
+            integration or import flow, you authorise us to access or process that data only
+            for the purpose of operating the Service under the permissions you grant.
           </P>
           <P>
             We are not responsible for the availability, accuracy, or content of third-party

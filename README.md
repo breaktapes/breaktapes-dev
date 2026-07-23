@@ -1,6 +1,6 @@
 # BREAKTAPES
 
-Race history, medals, personal bests, upcoming races and wearable data for endurance athletes.
+Race history, medals, personal bests, upcoming races, and race-day tools for endurance athletes.
 
 - **Production:** [app.breaktapes.com](https://app.breaktapes.com)
 - **Staging:** [dev.breaktapes.com](https://dev.breaktapes.com)
