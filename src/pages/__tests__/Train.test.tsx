@@ -21,9 +21,11 @@ beforeEach(() => {
 })
 
 describe('Train — tab navigation', () => {
-  it('renders Pace tab', () => {
+  it('renders Benchmark, Pacing, and Builder tabs', () => {
     renderTrain()
-    expect(screen.getByText('Pace')).toBeInTheDocument()
+    expect(screen.getByText('Benchmark')).toBeInTheDocument()
+    expect(screen.getByText('Pacing')).toBeInTheDocument()
+    expect(screen.getByText('Builder')).toBeInTheDocument()
   })
 
   it('does not render removed sync tabs', () => {
@@ -34,10 +36,9 @@ describe('Train — tab navigation', () => {
 })
 
 describe('Train — pace calculator', () => {
-  it('shows pace calculator content by default', () => {
+  it('shows benchmark content by default', () => {
     renderTrain()
-    // Pace tab is active by default
-    expect(screen.getByText('Pace')).toBeInTheDocument()
+    expect(screen.getByText('VDOT Benchmark')).toBeInTheDocument()
   })
 
   it('shows the VDOT benchmark section', () => {
@@ -91,6 +92,7 @@ describe('Train — pace calculator', () => {
 
     renderTrain()
     fireEvent.click(screen.getByText('Calculate VDOT'))
+    fireEvent.click(screen.getByText('Builder'))
 
     await waitFor(() => {
       expect(screen.getByText('Workout Generator')).toBeInTheDocument()

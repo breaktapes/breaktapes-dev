@@ -190,10 +190,12 @@ function findTriPB(races: Race[], targetKm: number, tolerance = 5): Race | null 
   })
 }
 
-type Tab = 'pace'
+type Tab = 'benchmark' | 'pacing' | 'builder'
 
 const TAB_LABELS: { id: Tab; label: string }[] = [
-  { id: 'pace',       label: 'Pace' },
+  { id: 'benchmark', label: 'Benchmark' },
+  { id: 'pacing',    label: 'Pacing' },
+  { id: 'builder',   label: 'Builder' },
 ]
 
 // ─── Triathlon result type ────────────────────────────────────────────────────
@@ -217,7 +219,7 @@ interface BenchmarkResult {
 }
 
 export function Train() {
-  const [activeTab, setActiveTab] = useState<Tab>('pace')
+  const [activeTab, setActiveTab] = useState<Tab>('benchmark')
   const units = useUnits()
   const athlete = useAthleteStore(s => s.athlete)
   const updateAthlete = useAthleteStore(s => s.updateAthlete)
@@ -540,17 +542,22 @@ export function Train() {
       {/* Tab bar */}
       <div style={{ display: 'flex', borderBottom: '1px solid var(--border)', marginBottom: '0.25rem', gap: '0.25rem' }}>
         {TAB_LABELS.map(t => (
-          <button key={t.id} style={tabStyle(t.id)} onClick={() => { setActiveTab(t.id); posthog.capture('train_tab_changed', { tab: t.id }) }}>
+          <button key={t.id} style={tabStyle(t.id)} onClick={() => {
+            setActiveTab(t.id)
+            if (t.id !== 'pacing') setSport('running')
+            posthog.capture('train_tab_changed', { tab: t.id })
+          }}>
             {t.label}
           </button>
         ))}
       </div>
 
-      {/* ══════════════════════ PACE TAB ══════════════════════════════════════ */}
-      {activeTab === 'pace' && (
+      {/* ══════════════════════ TRAIN TOOLS ═══════════════════════════════════ */}
+      {activeTab && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
 
           {/* Sport selector */}
+          {activeTab === 'pacing' && (
           <div style={{ display: 'flex', gap: 'var(--sp-2)' }}>
             {(['running', 'triathlon'] as const).map(s => (
               <button
@@ -576,10 +583,12 @@ export function Train() {
               </button>
             ))}
           </div>
+          )}
 
           {/* ─── RUNNING CALCULATOR ─── */}
           {sport === 'running' && (
             <>
+              {activeTab === 'benchmark' && (
               <div style={card}>
                 <p style={sectionLabel}>VDOT Benchmark</p>
                 <p style={{ margin: '0 0 12px', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
@@ -762,7 +771,9 @@ export function Train() {
                   </div>
                 )}
               </div>
+              )}
 
+              {activeTab === 'pacing' && (
               <div style={card}>
                 <p style={sectionLabel}>Pace Calculator</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -908,9 +919,10 @@ export function Train() {
                   )}
                 </div>
               </div>
+              )}
 
               {/* Splits table — shown after Calculate */}
-              {runResult && (() => {
+              {activeTab === 'pacing' && runResult && (() => {
                 const totalSecs = hmsToSecs(goalHMS)
                 const km = getRunKm()
                 if (!totalSecs || !km) return null
@@ -1066,7 +1078,7 @@ export function Train() {
               })()}
 
               {/* Training zones */}
-              {runZones && (
+              {activeTab === 'pacing' && runZones && (
                 <div style={card}>
                   <p style={sectionLabel}>Goal-Time Zones</p>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
@@ -1096,7 +1108,7 @@ export function Train() {
                 </div>
               )}
 
-              {benchmarkResult && (
+              {activeTab === 'benchmark' && benchmarkResult && (
                 <div style={card}>
                   <p style={sectionLabel}>Benchmark Training Zones</p>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
@@ -1130,6 +1142,7 @@ export function Train() {
                 </div>
               )}
 
+              {activeTab === 'builder' && (
               <div style={card}>
                 <p style={sectionLabel}>Workout Generator</p>
                 <p style={{ margin: '0 0 12px', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
@@ -1279,8 +1292,9 @@ export function Train() {
                   </div>
                 )}
               </div>
+              )}
               {/* Age-Grade Pace Projection */}
-              {(() => {
+              {activeTab === 'pacing' && (() => {
                 const resolvedCurrentAge = ageCalcCurrentAge !== '' ? parseInt(ageCalcCurrentAge) : currentAge
                 const targetAge = parseInt(ageCalcTargetAge)
                 const gender = athlete?.gender ?? 'M'
@@ -1431,7 +1445,7 @@ export function Train() {
           )}
 
           {/* ─── TRIATHLON CALCULATOR ─── */}
-          {sport === 'triathlon' && (
+          {activeTab === 'pacing' && sport === 'triathlon' && (
             <div style={card}>
               <p style={sectionLabel}>Triathlon Calculator</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
