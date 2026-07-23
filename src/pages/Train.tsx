@@ -248,9 +248,14 @@ export function Train() {
   const [workoutType, setWorkoutType] = useState<WorkoutType>('tempo')
   const [workoutMinutes, setWorkoutMinutes] = useState<number>(45)
   const [goalFocus, setGoalFocus] = useState<GoalFocus>('10k')
+  const [appliedWorkoutType, setAppliedWorkoutType] = useState<WorkoutType>('tempo')
+  const [appliedWorkoutMinutes, setAppliedWorkoutMinutes] = useState<number>(45)
+  const [appliedGoalFocus, setAppliedGoalFocus] = useState<GoalFocus>('10k')
   const [selectedWorkoutId, setSelectedWorkoutId] = useState<string | null>(null)
   const [dayIntent, setDayIntent] = useState<DayIntent>('quality')
   const [freshness, setFreshness] = useState<Freshness>('normal')
+  const [appliedDayIntent, setAppliedDayIntent] = useState<DayIntent>('quality')
+  const [appliedFreshness, setAppliedFreshness] = useState<Freshness>('normal')
 
   // Age-grade pace projection
   const currentAge = useMemo(() => {
@@ -320,20 +325,20 @@ export function Train() {
       })
       .sort((a, b) => b.recordedAt.localeCompare(a.recordedAt))[0]?.feedback ?? null
     return buildWorkoutRecommendation({
-      goal: goalFocus,
-      minutes: workoutMinutes,
-      dayIntent,
-      freshness,
+      goal: appliedGoalFocus,
+      minutes: appliedWorkoutMinutes,
+      dayIntent: appliedDayIntent,
+      freshness: appliedFreshness,
       daysToRace: daysToNextRace,
       latestFeedback: latestRecentFeedback,
     })
-  }, [goalFocus, workoutMinutes, dayIntent, freshness, daysToNextRace, workoutFeedback])
+  }, [appliedGoalFocus, appliedWorkoutMinutes, appliedDayIntent, appliedFreshness, daysToNextRace, workoutFeedback])
   const workoutSuggestions = useMemo(() => {
     if (!activeZones) return null
     const suggestions = buildWorkoutSuggestions({
-      type: workoutType,
-      minutes: workoutMinutes,
-      goal: goalFocus,
+      type: appliedWorkoutType,
+      minutes: appliedWorkoutMinutes,
+      goal: appliedGoalFocus,
       zones: activeZones,
     })
     const preferred = recommendation.preferredWorkoutIds
@@ -345,7 +350,7 @@ export function Train() {
       const bRank = bi === -1 ? 999 : bi
       return aRank - bRank
     })
-  }, [activeZones, workoutType, workoutMinutes, goalFocus, recommendation.preferredWorkoutIds])
+  }, [activeZones, appliedWorkoutType, appliedWorkoutMinutes, appliedGoalFocus, recommendation.preferredWorkoutIds])
   const workoutSuggestion = useMemo(() => {
     if (!workoutSuggestions?.length) return null
     return workoutSuggestions.find(w => w.id === selectedWorkoutId) ?? workoutSuggestions[0]
@@ -482,8 +487,8 @@ export function Train() {
       subtitle: workoutSuggestion.subtitle,
       rationale: workoutSuggestion.rationale,
       totalMinutes: workoutSuggestion.totalMinutes,
-      goalFocus,
-      workoutType,
+      goalFocus: appliedGoalFocus,
+      workoutType: appliedWorkoutType,
       benchmarkLabel: activeVdotSourceLabel ?? undefined,
       savedAt,
       segments: workoutSuggestion.segments,
@@ -492,7 +497,7 @@ export function Train() {
     updateAthlete({
       savedWorkouts: [workout, ...savedWorkouts.filter(w => w.workoutId !== workout.workoutId)].slice(0, 12),
     })
-    posthog.capture('workout_saved', { workout_id: workout.workoutId, workout_type: workoutType, goal_focus: goalFocus })
+    posthog.capture('workout_saved', { workout_id: workout.workoutId, workout_type: appliedWorkoutType, goal_focus: appliedGoalFocus })
   }
 
   function recordWorkoutFeedback(feedback: WorkoutFeedback) {
@@ -501,8 +506,8 @@ export function Train() {
       id: crypto.randomUUID(),
       workoutId: workoutSuggestion.id,
       workoutTitle: workoutSuggestion.title,
-      workoutType,
-      goalFocus,
+      workoutType: appliedWorkoutType,
+      goalFocus: appliedGoalFocus,
       feedback,
       benchmarkLabel: activeVdotSourceLabel ?? undefined,
       recordedAt: todayStr(),
@@ -511,6 +516,21 @@ export function Train() {
       workoutFeedback: [entry, ...workoutFeedback.filter(f => f.workoutId !== entry.workoutId)].slice(0, 30),
     })
     posthog.capture('workout_feedback_recorded', { workout_id: entry.workoutId, feedback })
+  }
+
+  function generateWorkout() {
+    setAppliedWorkoutType(workoutType)
+    setAppliedWorkoutMinutes(workoutMinutes)
+    setAppliedGoalFocus(goalFocus)
+    setAppliedDayIntent(dayIntent)
+    setAppliedFreshness(freshness)
+    posthog.capture('workout_generated', {
+      workout_type: workoutType,
+      goal_focus: goalFocus,
+      minutes: workoutMinutes,
+      day_intent: dayIntent,
+      freshness,
+    })
   }
 
   function applyRunPB(pb: Race) {
@@ -1413,6 +1433,13 @@ export function Train() {
                     ))}
                   </div>
                 </div>
+
+                <button
+                  onClick={generateWorkout}
+                  style={{ ...btnMain, width: '100%', marginBottom: '12px' }}
+                >
+                  Generate Workout
+                </button>
 
                 {activeVdot && activeZones && workoutSuggestion ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>

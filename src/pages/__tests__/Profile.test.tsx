@@ -1,7 +1,7 @@
 /**
  * Profile — achievements, PBs, heatmap smoke tests
  */
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { Profile } from '../Profile'
 import { useRaceStore } from '@/stores/useRaceStore'
@@ -113,7 +113,37 @@ describe('Profile — with races', () => {
     })
     renderProfile()
     expect(screen.getByText('Saved Workouts')).toBeInTheDocument()
-    expect(screen.getByText('Classic threshold reps')).toBeInTheDocument()
+    expect(screen.getAllByText('Classic threshold reps').length).toBeGreaterThan(0)
+  })
+
+  it('opens full saved workout details when a saved workout is clicked', () => {
+    useAthleteStore.setState({
+      athlete: {
+        savedWorkouts: [{
+          id: 'saved-1',
+          workoutId: 'tempo_classic',
+          title: 'Tempo Session',
+          subtitle: 'Classic threshold reps',
+          rationale: 'Threshold work for race durability.',
+          totalMinutes: 60,
+          goalFocus: '10k',
+          workoutType: 'tempo',
+          benchmarkLabel: 'City 10K',
+          savedAt: '2026-07-23',
+          segments: [
+            { label: 'Warm-up', detail: '15 min easy', zone: 'E', pace: '5:00 - 5:30 /km' },
+            { label: 'Main Set', detail: '3 x 8 min with 2 min easy jog', zone: 'T', pace: '4:05 - 4:10 /km' },
+          ],
+          notes: ['Keep the opening rep controlled.', 'Aim for even pacing.'],
+        }],
+      } as any,
+      seasonPlans: [],
+    })
+    renderProfile()
+    fireEvent.click(screen.getAllByText('Classic threshold reps')[0])
+    expect(screen.getByText('Threshold work for race durability.')).toBeInTheDocument()
+    expect(screen.getByText(/3 x 8 min with 2 min easy jog/i)).toBeInTheDocument()
+    expect(screen.getByText('Session Notes')).toBeInTheDocument()
   })
 })
 

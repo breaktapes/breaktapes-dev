@@ -2992,8 +2992,14 @@ function SavedWorkoutsSection() {
   const athlete = useAthleteStore(selectAthlete)
   const savedWorkouts = athlete?.savedWorkouts ?? []
   const feedback = athlete?.workoutFeedback ?? []
+  const [selectedWorkoutId, setSelectedWorkoutId] = useState<string | null>(savedWorkouts[0]?.id ?? null)
 
   if (!savedWorkouts.length) return null
+
+  const selectedWorkout = savedWorkouts.find(workout => workout.id === selectedWorkoutId) ?? savedWorkouts[0]
+  const selectedFeedback = selectedWorkout
+    ? feedback.find(entry => entry.workoutId === selectedWorkout.workoutId) ?? null
+    : null
 
   return (
     <section style={st.section}>
@@ -3002,8 +3008,19 @@ function SavedWorkoutsSection() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
           {savedWorkouts.slice(0, 5).map(workout => {
             const latestFeedback = feedback.find(entry => entry.workoutId === workout.workoutId)
+            const selected = workout.id === selectedWorkout?.id
             return (
-              <div key={workout.id} style={st.pbCard}>
+              <button
+                key={workout.id}
+                onClick={() => setSelectedWorkoutId(workout.id)}
+                style={{
+                  ...st.pbCard,
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  background: selected ? 'rgba(var(--orange-ch),0.1)' : st.pbCard.background,
+                  border: selected ? '1px solid rgba(var(--orange-ch),0.35)' : st.pbCard.border,
+                }}
+              >
                 <div style={st.pbDist}>{workout.title}</div>
                 <div style={st.pbTime}>{workout.subtitle}</div>
                 <div style={st.pbRaceName}>
@@ -3014,10 +3031,63 @@ function SavedWorkoutsSection() {
                     Feedback: {latestFeedback.feedback.replace('-', ' ')}
                   </div>
                 )}
-              </div>
+              </button>
             )
           })}
         </div>
+        {selectedWorkout && (
+          <div style={{ ...st.subsection, marginTop: 'var(--sp-2)', background: 'var(--surface3)' }}>
+            <h3 style={{ ...st.sectionTitle, fontSize: 'var(--text-sm)' }}>{selectedWorkout.title}</h3>
+            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{selectedWorkout.subtitle}</div>
+            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)' }}>
+              {selectedWorkout.totalMinutes} min{selectedWorkout.benchmarkLabel ? ` · ${selectedWorkout.benchmarkLabel}` : ''}{selectedWorkout.savedAt ? ` · saved ${selectedWorkout.savedAt}` : ''}
+            </div>
+            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--white)', lineHeight: 1.5 }}>
+              {selectedWorkout.rationale}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+              {selectedWorkout.segments.map(segment => (
+                <div key={`${segment.label}-${segment.detail}`} style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '10px 12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--sp-2)', alignItems: 'flex-start' }}>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color: 'var(--white)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                        {segment.label}
+                      </div>
+                      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '4px' }}>
+                        {segment.detail}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                        {segment.zone} pace
+                      </div>
+                      <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color: 'var(--orange)', marginTop: '4px' }}>
+                        {segment.pace}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '10px 12px' }}>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--headline)', fontWeight: 700, marginBottom: '6px' }}>
+                Session Notes
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {selectedWorkout.notes.map(note => (
+                  <div key={note} style={{ fontSize: 'var(--text-xs)', color: 'var(--white)', lineHeight: 1.5 }}>
+                    {note}
+                  </div>
+                ))}
+              </div>
+            </div>
+            {selectedFeedback && (
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)' }}>
+                Latest feedback: {selectedFeedback.feedback.replace('-', ' ')} on {selectedFeedback.recordedAt}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </section>
   )

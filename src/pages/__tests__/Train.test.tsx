@@ -229,6 +229,38 @@ describe('Train — pace calculator', () => {
     })
   })
 
+  it('updates Builder when Generate Workout is clicked', async () => {
+    useRaceStore.setState({
+      races: [{
+        id: 'race-1',
+        name: 'City 10K',
+        date: '2026-06-01',
+        city: 'Dubai',
+        country: 'UAE',
+        distance: '10',
+        sport: 'running',
+        time: '0:45:00',
+      }],
+      nextRace: null,
+      upcomingRaces: [],
+    })
+
+    renderTrain()
+    fireEvent.click(screen.getByText('Calculate VDOT'))
+    fireEvent.click(screen.getByText('Builder'))
+
+    await waitFor(() => {
+      expect(screen.getByText('Generate Workout')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByText('Long'))
+    fireEvent.click(screen.getByText('Generate Workout'))
+
+    await waitFor(() => {
+      expect(screen.getByText(/long run|long aerobic run/i)).toBeInTheDocument()
+    })
+  })
+
   it('adapts recommendation copy for marathon-focused work', async () => {
     useRaceStore.setState({
       races: [{
@@ -257,6 +289,7 @@ describe('Train — pace calculator', () => {
     fireEvent.click(screen.getByText('Calculate VDOT'))
     fireEvent.click(screen.getByText('Builder'))
     fireEvent.click(screen.getByText('Full'))
+    fireEvent.click(screen.getByText('Generate Workout'))
 
     await waitFor(() => {
       expect(screen.getByText(/Marathon focus/i)).toBeInTheDocument()
