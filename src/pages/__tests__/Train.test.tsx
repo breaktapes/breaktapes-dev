@@ -37,6 +37,12 @@ describe('Train — pace calculator', () => {
     // Pace tab is active by default
     expect(screen.getByText('Pace')).toBeInTheDocument()
   })
+
+  it('shows the VDOT benchmark section', () => {
+    renderTrain()
+    expect(screen.getByText('VDOT Benchmark')).toBeInTheDocument()
+    expect(screen.getByText('Calculate VDOT')).toBeInTheDocument()
+  })
 })
 
 describe('Train — no crash on empty store', () => {

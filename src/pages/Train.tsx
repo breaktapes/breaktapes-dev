@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { posthog } from '@/lib/posthog'
-import { computeVDOT, paceZones, parseDistKm, parseTimeSecs, secsToHMS } from '@/lib/raceFormulas'
+import { computeVDOT, equivalentPerformances, paceZones, parseDistKm, parseTimeSecs, secsToHMS, type PaceZone } from '@/lib/raceFormulas'
 import { useUnits } from '@/lib/units'
 import { TimePickerWheel } from '@/components/TimePickerWheel'
 import type { HMS } from '@/components/TimePickerWheel'
@@ -140,6 +140,14 @@ function secsToHMS_obj(secs: number): HMS {
   return { h: Math.floor(s / 3600), m: Math.floor((s % 3600) / 60), s: s % 60 }
 }
 
+function fmtDateCompact(dateStr: string): string {
+  return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })
+}
+
 
 // Find fastest race at a given distance (with tolerance ±tolerance km)
 function findRunPB(races: Race[], targetKm: number, tolerance = 0.5): Race | null {
@@ -193,6 +201,15 @@ interface TriResult {
   totalSec: number
 }
 
+interface BenchmarkResult {
+  raceName: string
+  dateLabel?: string
+  distLabel: string
+  timeLabel: string
+  vdot: number
+  zones: PaceZone[]
+}
+
 export function Train() {
   const [activeTab, setActiveTab] = useState<Tab>('pace')
   const units = useUnits()
@@ -210,6 +227,13 @@ export function Train() {
   const [splitVariancePct, setSplitVariancePct] = useState(3)
   const [runResult, setRunResult]     = useState<{ km: string; mi: string } | null>(null)
   const [runZones, setRunZones]       = useState<ReturnType<typeof paceZones> | null>(null)
+  const [benchmarkMode, setBenchmarkMode] = useState<'race' | 'manual'>('race')
+  const [benchmarkRaceId, setBenchmarkRaceId] = useState('')
+  const [benchmarkDistId, setBenchmarkDistId] = useState<RunDistId>('10k')
+  const [benchmarkCustomVal, setBenchmarkCustomVal] = useState('')
+  const [benchmarkCustomUnit, setBenchmarkCustomUnit] = useState<'km' | 'mi'>('km')
+  const [benchmarkHMS, setBenchmarkHMS] = useState<HMS>({ h: 0, m: 45, s: 0 })
+  const [benchmarkResult, setBenchmarkResult] = useState<BenchmarkResult | null>(null)
 
   // Age-grade pace projection
   const athlete = useAthleteStore(s => s.athlete)
@@ -239,6 +263,21 @@ export function Train() {
   const [runTH,  setRunTH]  = useState(1);   const [runTM2, setRunTM2]   = useState(45);  const [runTS, setRunTS] = useState(0)
 
   const races = useRaceStore(s => s.races)
+  const benchmarkCandidates = useMemo(() => {
+    return races
+      .filter(r => Boolean(r.id && r.time && r.date))
+      .filter(r => !r.outcome || r.outcome === 'Finished')
+      .filter(r => {
+        const km = parseDistKm(r.distance)
+        return km > 0 && km <= 42.3 && (r.sport?.toLowerCase().includes('run') || !r.sport)
+      })
+      .sort((a, b) => b.date.localeCompare(a.date))
+  }, [races])
+
+  useEffect(() => {
+    if (!benchmarkCandidates.length) return
+    setBenchmarkRaceId(prev => prev || benchmarkCandidates[0].id)
+  }, [benchmarkCandidates])
 
   // Track page view on mount
   useEffect(() => { posthog.capture('page_viewed', { page: 'train' }) }, [])
@@ -254,6 +293,15 @@ export function Train() {
     return RUN_DISTANCES.find(d => d.id === runDistId)!.km
   }
 
+  function getBenchmarkKm(): number {
+    if (benchmarkDistId === 'custom') {
+      const n = parseFloat(benchmarkCustomVal)
+      if (isNaN(n) || n <= 0) return 0
+      return benchmarkCustomUnit === 'mi' ? n * 1.60934 : n
+    }
+    return RUN_DISTANCES.find(d => d.id === benchmarkDistId)?.km ?? 0
+  }
+
   function calcRun() {
     const totalSecs = hmsToSecs(goalHMS)
     if (!totalSecs) return
@@ -264,6 +312,42 @@ export function Train() {
     setRunResult({ km: secsToMMSS(paceKm), mi: secsToMMSS(paceMi) })
     const vdot = computeVDOT(totalSecs, km)
     setRunZones(vdot ? paceZones(vdot, units) : null)
+  }
+
+  function calcBenchmark() {
+    if (benchmarkMode === 'race') {
+      const race = benchmarkCandidates.find(r => r.id === benchmarkRaceId)
+      if (!race?.time) return
+      const timeSecs = parseTimeSecs(race.time)
+      const distKm = parseDistKm(race.distance)
+      if (!timeSecs || !distKm) return
+      const vdot = computeVDOT(timeSecs, distKm)
+      if (!vdot) return
+      setBenchmarkResult({
+        raceName: race.name,
+        dateLabel: fmtDateCompact(race.date),
+        distLabel: race.distance,
+        timeLabel: race.time,
+        vdot,
+        zones: paceZones(vdot, units),
+      })
+      return
+    }
+
+    const totalSecs = hmsToSecs(benchmarkHMS)
+    const km = getBenchmarkKm()
+    if (!totalSecs || !km) return
+    const vdot = computeVDOT(totalSecs, km)
+    if (!vdot) return
+    setBenchmarkResult({
+      raceName: 'Custom benchmark',
+      distLabel: benchmarkDistId === 'custom'
+        ? `${benchmarkCustomVal}${benchmarkCustomUnit}`
+        : RUN_DISTANCES.find(d => d.id === benchmarkDistId)?.label ?? 'Custom',
+      timeLabel: secsToHMS(totalSecs),
+      vdot,
+      zones: paceZones(vdot, units),
+    })
   }
 
   function applyRunPB(pb: Race) {
@@ -439,6 +523,189 @@ export function Train() {
           {/* ─── RUNNING CALCULATOR ─── */}
           {sport === 'running' && (
             <>
+              <div style={card}>
+                <p style={sectionLabel}>VDOT Benchmark</p>
+                <p style={{ margin: '0 0 12px', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
+                  Start with a recent race result. We&apos;ll estimate your VDOT and turn it into usable training paces.
+                </p>
+
+                <div style={{ display: 'flex', gap: '4px', marginBottom: '12px' }}>
+                  {([
+                    { id: 'race', label: 'Use a race' },
+                    { id: 'manual', label: 'Enter manually' },
+                  ] as const).map(option => (
+                    <button
+                      key={option.id}
+                      onClick={() => setBenchmarkMode(option.id)}
+                      style={{
+                        flex: 1,
+                        padding: '7px 0',
+                        background: benchmarkMode === option.id ? 'rgba(var(--orange-ch),0.12)' : 'var(--surface3)',
+                        border: `1px solid ${benchmarkMode === option.id ? 'rgba(var(--orange-ch),0.4)' : 'var(--border2)'}`,
+                        borderRadius: 'var(--radius-sm)',
+                        color: benchmarkMode === option.id ? 'var(--orange)' : 'var(--muted)',
+                        fontFamily: 'var(--headline)',
+                        fontWeight: 700,
+                        fontSize: 'var(--text-xs)',
+                        letterSpacing: '0.08em',
+                        textTransform: 'uppercase',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+
+                {benchmarkMode === 'race' ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div>
+                      <label style={fieldLabel}>Benchmark Race</label>
+                      <div style={{ position: 'relative' }}>
+                        <select
+                          value={benchmarkRaceId}
+                          onChange={e => setBenchmarkRaceId(e.target.value)}
+                          style={{
+                            width: '100%',
+                            background: 'var(--surface3)',
+                            border: '1px solid var(--border2)',
+                            borderRadius: 'var(--radius-md)',
+                            color: 'var(--white)',
+                            fontFamily: 'var(--headline)',
+                            fontWeight: 700,
+                            fontSize: 'var(--text-compact)',
+                            letterSpacing: '0.04em',
+                            padding: '0.75rem 2.5rem 0.75rem 0.85rem',
+                            cursor: 'pointer',
+                            appearance: 'none',
+                            WebkitAppearance: 'none' as any,
+                            boxSizing: 'border-box',
+                          } as React.CSSProperties}
+                        >
+                          {benchmarkCandidates.length === 0 && <option value="">No running races logged yet</option>}
+                          {benchmarkCandidates.map(r => (
+                            <option key={r.id} value={r.id}>
+                              {r.name} — {r.time} · {r.distance}
+                            </option>
+                          ))}
+                        </select>
+                        <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--muted)', fontSize: 'var(--text-compact)' }}>▾</span>
+                      </div>
+                    </div>
+                    {benchmarkCandidates.length === 0 && (
+                      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
+                        Log a finished running race up to marathon distance to use it as a benchmark, or switch to manual entry.
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div>
+                      <label style={fieldLabel}>Distance</label>
+                      <div style={{ position: 'relative' }}>
+                        <select
+                          value={benchmarkDistId}
+                          onChange={e => setBenchmarkDistId(e.target.value as RunDistId)}
+                          style={{
+                            width: '100%',
+                            background: 'var(--surface3)',
+                            border: '1px solid var(--border2)',
+                            borderRadius: 'var(--radius-md)',
+                            color: 'var(--white)',
+                            fontFamily: 'var(--headline)',
+                            fontWeight: 700,
+                            fontSize: 'var(--text-compact)',
+                            letterSpacing: '0.05em',
+                            padding: '0.75rem 2.5rem 0.75rem 0.85rem',
+                            cursor: 'pointer',
+                            appearance: 'none',
+                            WebkitAppearance: 'none' as any,
+                            boxSizing: 'border-box',
+                          } as React.CSSProperties}
+                        >
+                          {RUN_DISTANCES.map(d => (
+                            <option key={d.id} value={d.id}>{d.label}</option>
+                          ))}
+                        </select>
+                        <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--muted)', fontSize: 'var(--text-compact)' }}>▾</span>
+                      </div>
+                    </div>
+
+                    {benchmarkDistId === 'custom' && (
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 'var(--sp-2)' }}>
+                        <input
+                          type="number"
+                          inputMode="decimal"
+                          placeholder="Distance"
+                          value={benchmarkCustomVal}
+                          onChange={e => setBenchmarkCustomVal(e.target.value)}
+                          style={textInput}
+                        />
+                        <select
+                          value={benchmarkCustomUnit}
+                          onChange={e => setBenchmarkCustomUnit(e.target.value as 'km' | 'mi')}
+                          style={{ ...textInput, width: '84px', paddingRight: '0.75rem' }}
+                        >
+                          <option value="km">km</option>
+                          <option value="mi">mi</option>
+                        </select>
+                      </div>
+                    )}
+
+                    <div>
+                      <label style={fieldLabel}>Benchmark Time</label>
+                      <TimePickerWheel value={benchmarkHMS} onChange={setBenchmarkHMS} maxHours={9} />
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  style={{ ...btnMain, width: '100%', marginTop: '12px' }}
+                  onClick={calcBenchmark}
+                  disabled={benchmarkMode === 'race' ? benchmarkCandidates.length === 0 : false}
+                >
+                  Calculate VDOT
+                </button>
+
+                {benchmarkResult && (
+                  <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-md)', padding: '14px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
+                        <div>
+                          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                            {benchmarkResult.raceName}
+                          </div>
+                          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', marginTop: '3px' }}>
+                            {benchmarkResult.distLabel} · {benchmarkResult.timeLabel}{benchmarkResult.dateLabel ? ` · ${benchmarkResult.dateLabel}` : ''}
+                          </div>
+                        </div>
+                        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '36px', lineHeight: 1, color: 'var(--orange)' }}>
+                            {benchmarkResult.vdot.toFixed(1)}
+                          </div>
+                          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                            VDOT
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-2)' }}>
+                      {equivalentPerformances(benchmarkResult.vdot).filter(p => ['5K', '10K', 'Half Marathon', 'Marathon'].includes(p.distance)).map(perf => (
+                        <div key={perf.distance} style={{ background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: 'var(--sp-3)' }}>
+                          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                            {perf.distance}
+                          </div>
+                          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-lg)', color: 'var(--white)', marginTop: '4px' }}>
+                            {perf.timeStr}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <div style={card}>
                 <p style={sectionLabel}>Pace Calculator</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -744,7 +1011,7 @@ export function Train() {
               {/* Training zones */}
               {runZones && (
                 <div style={card}>
-                  <p style={sectionLabel}>Training Zones</p>
+                  <p style={sectionLabel}>Goal-Time Zones</p>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
                     {runZones.map(z => {
                       const zoneColors = ['#4ade80','#60a5fa','#facc15','#f97316','#ef4444']
@@ -763,6 +1030,40 @@ export function Train() {
                             </div>
                             <div style={{ height: '4px', background: 'var(--surface3)', borderRadius: 'var(--radius-xs)', marginTop: '4px', overflow: 'hidden' }}>
                               <div style={{ height: '100%', width: `${(z.zone / 5) * 100}%`, background: color, borderRadius: 'var(--radius-xs)' }} />
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {benchmarkResult && (
+                <div style={card}>
+                  <p style={sectionLabel}>Benchmark Training Zones</p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+                    {benchmarkResult.zones.map(z => {
+                      const zoneColors = ['#4ade80', '#60a5fa', '#facc15', '#f97316', '#ef4444']
+                      const color = zoneColors[z.zone - 1] ?? 'var(--orange)'
+                      return (
+                        <div key={z.zone} style={{ background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: 'var(--sp-3)' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--sp-2)', alignItems: 'flex-start' }}>
+                            <div style={{ minWidth: 0 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
+                                <span style={{ width: '26px', height: '26px', borderRadius: 'var(--radius-sm)', background: `${color}22`, border: `1px solid ${color}55`, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color }}>
+                                  {z.abbr}
+                                </span>
+                                <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color: 'var(--white)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                                  {z.label}
+                                </div>
+                              </div>
+                              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '6px', lineHeight: 1.4 }}>
+                                {z.description}
+                              </div>
+                            </div>
+                            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color, whiteSpace: 'nowrap', flexShrink: 0 }}>
+                              {z.minPaceStr} – {z.maxPaceStr}
                             </div>
                           </div>
                         </div>
