@@ -1,32 +1,10 @@
 /**
- * Train — pace calculator + zone tabs smoke tests
+ * Train — tools-first pace calculator smoke tests
  */
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { Train } from '../Train'
 import { useRaceStore } from '@/stores/useRaceStore'
-import { useWearableStore } from '@/stores/useWearableStore'
-
-vi.mock('@clerk/clerk-react', () => ({
-  useUser: () => ({ user: null }),
-}))
-
-vi.mock('@/lib/whoop', () => ({
-  handleWhoopCallback: vi.fn(),
-  fetchWhoopActivities: vi.fn().mockResolvedValue([]),
-  fetchWhoopRecovery: vi.fn().mockResolvedValue([]),
-}))
-
-vi.mock('@/lib/garmin', () => ({
-  handleGarminCallback: vi.fn(),
-  fetchGarminActivities: vi.fn().mockResolvedValue([]),
-}))
-
-vi.mock('@/lib/strava', () => ({
-  handleStravaCallback: vi.fn(),
-  fetchStravaActivities: vi.fn().mockResolvedValue([]),
-  stravaActivitiesToRaces: vi.fn().mockReturnValue([]),
-}))
 
 function renderTrain() {
   return render(
@@ -38,7 +16,6 @@ function renderTrain() {
 
 beforeEach(() => {
   useRaceStore.setState({ races: [], nextRace: null, upcomingRaces: [] })
-  useWearableStore.setState({ stravaToken: null, whoopToken: null, garminToken: null } as any)
 })
 
 describe('Train — tab navigation', () => {
@@ -47,14 +24,10 @@ describe('Train — tab navigation', () => {
     expect(screen.getByText('Pace')).toBeInTheDocument()
   })
 
-  it('renders Activities tab', () => {
+  it('does not render removed sync tabs', () => {
     renderTrain()
-    expect(screen.getByText('Activities')).toBeInTheDocument()
-  })
-
-  it('renders Readiness tab', () => {
-    renderTrain()
-    expect(screen.getByText('Readiness')).toBeInTheDocument()
+    expect(screen.queryByText('Activities')).not.toBeInTheDocument()
+    expect(screen.queryByText('Readiness')).not.toBeInTheDocument()
   })
 })
 
