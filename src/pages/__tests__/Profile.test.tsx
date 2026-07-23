@@ -90,6 +90,31 @@ describe('Profile — with races', () => {
     renderProfile()
     expect(screen.getByText('YOUR ACHIEVEMENTS')).toBeInTheDocument()
   })
+
+  it('renders saved workouts section when workouts exist', () => {
+    useAthleteStore.setState({
+      athlete: {
+        savedWorkouts: [{
+          id: 'saved-1',
+          workoutId: 'tempo_classic',
+          title: 'Tempo Session',
+          subtitle: 'Classic threshold reps',
+          rationale: 'Threshold work',
+          totalMinutes: 60,
+          goalFocus: '10k',
+          workoutType: 'tempo',
+          benchmarkLabel: 'City 10K',
+          savedAt: '2026-07-23',
+          segments: [],
+          notes: [],
+        }],
+      } as any,
+      seasonPlans: [],
+    })
+    renderProfile()
+    expect(screen.getByText('Saved Workouts')).toBeInTheDocument()
+    expect(screen.getByText('Classic threshold reps')).toBeInTheDocument()
+  })
 })
 
 describe('Profile — edit button', () => {

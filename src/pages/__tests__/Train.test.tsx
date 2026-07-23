@@ -262,6 +262,47 @@ describe('Train — pace calculator', () => {
       expect(screen.getByText(/Marathon focus/i)).toBeInTheDocument()
     })
   })
+
+  it('softens the recommendation after too-hard feedback', async () => {
+    useRaceStore.setState({
+      races: [{
+        id: 'race-1',
+        name: 'City 10K',
+        date: '2026-06-01',
+        city: 'Dubai',
+        country: 'UAE',
+        distance: '10',
+        sport: 'running',
+        time: '0:45:00',
+      }],
+      nextRace: null,
+      upcomingRaces: [],
+    })
+    useAthleteStore.setState({
+      athlete: {
+        workoutFeedback: [{
+          id: 'wf-1',
+          workoutId: 'vo2_3min',
+          workoutTitle: 'VO2 Max Session',
+          workoutType: 'vo2',
+          goalFocus: '10k',
+          feedback: 'too-hard',
+          recordedAt: '2026-07-22',
+        }],
+      } as any,
+      seasonPlans: [],
+      goals: { annual: {}, distGoals: [] },
+      injuries: [],
+    })
+
+    renderTrain()
+    fireEvent.click(screen.getByText('Calculate VDOT'))
+    fireEvent.click(screen.getByText('Builder'))
+
+    await waitFor(() => {
+      expect(screen.getByText(/last session felt too hard/i)).toBeInTheDocument()
+    })
+  })
 })
 
 describe('Train — no crash on empty store', () => {

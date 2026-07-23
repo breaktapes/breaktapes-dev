@@ -1,4 +1,5 @@
 import type { PaceZone } from '@/lib/raceFormulas'
+import type { WorkoutFeedback } from '@/types'
 
 export type WorkoutType = 'recovery' | 'tempo' | 'vo2' | 'long' | 'race-pace'
 export type GoalFocus = '5k' | '10k' | 'half' | 'marathon' | 'general'
@@ -463,6 +464,7 @@ export function buildWorkoutRecommendation(args: {
   dayIntent: DayIntent
   freshness: Freshness
   daysToRace: number | null
+  latestFeedback?: WorkoutFeedback | null
 }): WorkoutRecommendation {
   const raceWindow = toRaceWindow(args.daysToRace)
   let recommendedType: WorkoutType
@@ -500,6 +502,22 @@ export function buildWorkoutRecommendation(args: {
     reasonBullets.push('You marked yourself as fresh, so the recommendation can support more quality.')
   } else {
     reasonBullets.push('The recommendation assumes a normal training day, not a peak or a recovery trough.')
+  }
+
+  if (args.latestFeedback === 'too-hard') {
+    if (recommendedType === 'vo2') recommendedType = 'tempo'
+    else if (recommendedType === 'tempo' || recommendedType === 'race-pace' || recommendedType === 'long') recommendedType = 'recovery'
+    reasonBullets.push('Your latest workout feedback said the last session felt too hard, so today is softened.')
+  } else if (args.latestFeedback === 'too-easy') {
+    if (recommendedType === 'recovery') recommendedType = 'tempo'
+    else if (recommendedType === 'tempo' && args.goal !== 'marathon') recommendedType = 'vo2'
+    reasonBullets.push('Your latest workout feedback said the last session felt too easy, so today can carry a little more bite.')
+  } else if (args.latestFeedback === 'skipped') {
+    if (recommendedType === 'vo2') recommendedType = 'tempo'
+    else if (recommendedType === 'long') recommendedType = 'recovery'
+    reasonBullets.push('Your latest workout was skipped, so today stays achievable rather than overly ambitious.')
+  } else if (args.latestFeedback === 'completed') {
+    reasonBullets.push('Your latest workout was completed, so the recommendation stays on a normal progression path.')
   }
 
   if (raceWindow === '3-7') {

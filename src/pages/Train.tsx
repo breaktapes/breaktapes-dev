@@ -310,15 +310,24 @@ export function Train() {
     const race = new Date(nextRace.date + 'T00:00:00').getTime()
     return Math.max(0, Math.round((race - start) / 86400000))
   }, [nextRace?.date])
+  const savedWorkouts = athlete?.savedWorkouts ?? []
+  const workoutFeedback = athlete?.workoutFeedback ?? []
   const recommendation = useMemo(() => {
+    const latestRecentFeedback = workoutFeedback
+      .filter(entry => {
+        const diff = Math.round((new Date(todayStr() + 'T00:00:00').getTime() - new Date(entry.recordedAt + 'T00:00:00').getTime()) / 86400000)
+        return diff >= 0 && diff <= 14
+      })
+      .sort((a, b) => b.recordedAt.localeCompare(a.recordedAt))[0]?.feedback ?? null
     return buildWorkoutRecommendation({
       goal: goalFocus,
       minutes: workoutMinutes,
       dayIntent,
       freshness,
       daysToRace: daysToNextRace,
+      latestFeedback: latestRecentFeedback,
     })
-  }, [goalFocus, workoutMinutes, dayIntent, freshness, daysToNextRace])
+  }, [goalFocus, workoutMinutes, dayIntent, freshness, daysToNextRace, workoutFeedback])
   const workoutSuggestions = useMemo(() => {
     if (!activeZones) return null
     const suggestions = buildWorkoutSuggestions({
@@ -341,8 +350,6 @@ export function Train() {
     if (!workoutSuggestions?.length) return null
     return workoutSuggestions.find(w => w.id === selectedWorkoutId) ?? workoutSuggestions[0]
   }, [workoutSuggestions, selectedWorkoutId])
-  const savedWorkouts = athlete?.savedWorkouts ?? []
-  const workoutFeedback = athlete?.workoutFeedback ?? []
   const currentWorkoutFeedback = workoutSuggestion
     ? workoutFeedback.find(entry => entry.workoutId === workoutSuggestion.id) ?? null
     : null

@@ -2988,6 +2988,41 @@ function GoalsSection() {
   )
 }
 
+function SavedWorkoutsSection() {
+  const athlete = useAthleteStore(selectAthlete)
+  const savedWorkouts = athlete?.savedWorkouts ?? []
+  const feedback = athlete?.workoutFeedback ?? []
+
+  if (!savedWorkouts.length) return null
+
+  return (
+    <section style={st.section}>
+      <div style={st.subsection}>
+        <h2 style={st.sectionTitle}>Saved Workouts</h2>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+          {savedWorkouts.slice(0, 5).map(workout => {
+            const latestFeedback = feedback.find(entry => entry.workoutId === workout.workoutId)
+            return (
+              <div key={workout.id} style={st.pbCard}>
+                <div style={st.pbDist}>{workout.title}</div>
+                <div style={st.pbTime}>{workout.subtitle}</div>
+                <div style={st.pbRaceName}>
+                  {workout.totalMinutes} min{workout.benchmarkLabel ? ` · ${workout.benchmarkLabel}` : ''}
+                </div>
+                {latestFeedback && (
+                  <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)' }}>
+                    Feedback: {latestFeedback.feedback.replace('-', ' ')}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </section>
+  )
+}
+
 // ─── Profile Page ─────────────────────────────────────────────────────────────
 
 // ─── Onboarding Banner ───────────────────────────────────────────────────────
@@ -3107,6 +3142,7 @@ export function Profile() {
       <RacePersonality />
       <InjuryTrackerSection />
       <GoalsSection />
+      <SavedWorkoutsSection />
     </main>
   )
 }
