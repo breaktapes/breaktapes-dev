@@ -160,6 +160,41 @@ describe('Train — pace calculator', () => {
       expect(athlete?.savedWorkouts?.[0]?.title).toBe('Tempo Session')
     })
   })
+
+  it("shows today's recommendation controls in Builder", async () => {
+    useRaceStore.setState({
+      races: [{
+        id: 'race-1',
+        name: 'City 10K',
+        date: '2026-06-01',
+        city: 'Dubai',
+        country: 'UAE',
+        distance: '10',
+        sport: 'running',
+        time: '0:45:00',
+      }],
+      nextRace: {
+        id: 'upcoming-1',
+        name: 'Half Marathon Tune-Up',
+        date: '2026-08-10',
+        city: 'Dubai',
+        country: 'UAE',
+        distance: '21.1',
+        sport: 'running',
+      },
+      upcomingRaces: [],
+    } as any)
+
+    renderTrain()
+    fireEvent.click(screen.getByText('Calculate VDOT'))
+    fireEvent.click(screen.getByText('Builder'))
+
+    await waitFor(() => {
+      expect(screen.getByText("Today's Recommendation")).toBeInTheDocument()
+      expect(screen.getByText('Day Intent')).toBeInTheDocument()
+      expect(screen.getByText('How You Feel')).toBeInTheDocument()
+    })
+  })
 })
 
 describe('Train — no crash on empty store', () => {

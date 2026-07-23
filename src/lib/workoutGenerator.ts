@@ -2,6 +2,9 @@ import type { PaceZone } from '@/lib/raceFormulas'
 
 export type WorkoutType = 'recovery' | 'tempo' | 'vo2' | 'long' | 'race-pace'
 export type GoalFocus = '5k' | '10k' | 'half' | 'marathon' | 'general'
+export type DayIntent = 'recovery' | 'quality' | 'long' | 'race-specific'
+export type Freshness = 'fresh' | 'normal' | 'tired'
+export type RaceWindow = '0-2' | '3-7' | '8-14' | '15-28' | '29+'
 
 export interface WorkoutSegment {
   label: string
@@ -18,6 +21,14 @@ export interface WorkoutSuggestion {
   rationale: string
   segments: WorkoutSegment[]
   notes: string[]
+}
+
+export interface WorkoutRecommendation {
+  recommendedType: WorkoutType
+  alternateTypes: WorkoutType[]
+  raceWindow: RaceWindow
+  summary: string
+  reasonBullets: string[]
 }
 
 interface WorkoutTemplate {
@@ -383,4 +394,96 @@ export function buildWorkoutSuggestions(args: {
   const templates = buildTemplates(args.type, args.minutes, args.goal)
   const zones = zoneMap(args.zones)
   return templates.map(template => buildSuggestion(template, args.minutes, zones))
+}
+
+export function toRaceWindow(daysToRace: number | null): RaceWindow {
+  if (daysToRace === null || daysToRace >= 29) return '29+'
+  if (daysToRace <= 2) return '0-2'
+  if (daysToRace <= 7) return '3-7'
+  if (daysToRace <= 14) return '8-14'
+  return '15-28'
+}
+
+function goalPrimaryQuality(goal: GoalFocus): WorkoutType {
+  if (goal === 'marathon') return 'race-pace'
+  if (goal === 'half') return 'tempo'
+  if (goal === 'general') return 'tempo'
+  return 'vo2'
+}
+
+export function buildWorkoutRecommendation(args: {
+  goal: GoalFocus
+  minutes: number
+  dayIntent: DayIntent
+  freshness: Freshness
+  daysToRace: number | null
+}): WorkoutRecommendation {
+  const raceWindow = toRaceWindow(args.daysToRace)
+  let recommendedType: WorkoutType
+  const reasonBullets: string[] = []
+
+  if (raceWindow === '0-2') {
+    recommendedType = 'recovery'
+    reasonBullets.push('Your next race is very close, so the recommendation stays light.')
+  } else if (args.dayIntent === 'recovery') {
+    recommendedType = 'recovery'
+    reasonBullets.push('You marked today as a recovery day.')
+  } else if (args.dayIntent === 'long') {
+    recommendedType = raceWindow === '3-7' ? 'recovery' : 'long'
+    reasonBullets.push(
+      raceWindow === '3-7'
+        ? 'A long run is too costly this close to race day, so the recommendation is softened.'
+        : 'You marked today as a long-run day.'
+    )
+  } else if (args.dayIntent === 'race-specific') {
+    recommendedType = raceWindow === '15-28' || raceWindow === '8-14' || raceWindow === '3-7'
+      ? 'race-pace'
+      : 'tempo'
+    reasonBullets.push('You asked for race-specific work, so the recommendation leans toward race rhythm.')
+  } else {
+    recommendedType = goalPrimaryQuality(args.goal)
+    reasonBullets.push(`For a ${GOAL_LABELS[args.goal]} focus, this is the most useful quality emphasis today.`)
+  }
+
+  if (args.freshness === 'tired') {
+    if (recommendedType === 'vo2') recommendedType = 'tempo'
+    else if (recommendedType === 'tempo' || recommendedType === 'race-pace') recommendedType = 'recovery'
+    else if (recommendedType === 'long') recommendedType = 'recovery'
+    reasonBullets.push('You marked yourself as tired, so intensity is reduced.')
+  } else if (args.freshness === 'fresh') {
+    reasonBullets.push('You marked yourself as fresh, so the recommendation can support more quality.')
+  } else {
+    reasonBullets.push('The recommendation assumes a normal training day, not a peak or a recovery trough.')
+  }
+
+  if (raceWindow === '3-7') {
+    reasonBullets.push('The next race is close enough that sessions should sharpen rather than drain you.')
+    if (recommendedType === 'vo2') recommendedType = 'race-pace'
+    if (recommendedType === 'long') recommendedType = 'recovery'
+  } else if (raceWindow === '8-14') {
+    reasonBullets.push('There is still enough time for useful quality, but not for reckless fatigue.')
+  } else if (raceWindow === '15-28' || raceWindow === '29+') {
+    reasonBullets.push('You are far enough from race day to absorb a normal development session.')
+  }
+
+  const orderedPool: WorkoutType[] = ['recovery', 'tempo', 'vo2', 'long', 'race-pace']
+  const alternateTypes = orderedPool.filter(t => t !== recommendedType)
+    .sort((a, b) => {
+      const pref = [recommendedType, goalPrimaryQuality(args.goal), 'race-pace', 'tempo', 'vo2', 'long', 'recovery']
+      return pref.indexOf(a) - pref.indexOf(b)
+    })
+    .slice(0, 2)
+
+  return {
+    recommendedType,
+    alternateTypes,
+    raceWindow,
+    summary:
+      recommendedType === 'recovery' ? 'Keep the day light and absorb recent work.'
+      : recommendedType === 'tempo' ? 'A controlled threshold session is the best fit today.'
+      : recommendedType === 'vo2' ? 'A sharper aerobic-power session fits today best.'
+      : recommendedType === 'long' ? 'A longer aerobic run is the best use of today.'
+      : 'A race-rhythm session fits your current context best.',
+    reasonBullets,
+  }
 }

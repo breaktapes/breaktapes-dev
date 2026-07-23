@@ -4,10 +4,11 @@ import { useAthleteStore } from '@/stores/useAthleteStore'
 import { posthog } from '@/lib/posthog'
 import { computeVDOT, equivalentPerformances, paceZones, parseDistKm, parseTimeSecs, secsToHMS, type PaceZone } from '@/lib/raceFormulas'
 import { useUnits } from '@/lib/units'
-import { buildWorkoutSuggestions, type GoalFocus, type WorkoutType } from '@/lib/workoutGenerator'
+import { buildWorkoutRecommendation, buildWorkoutSuggestions, type DayIntent, type Freshness, type GoalFocus, type WorkoutType } from '@/lib/workoutGenerator'
 import { TimePickerWheel } from '@/components/TimePickerWheel'
 import type { HMS } from '@/components/TimePickerWheel'
 import type { Race, SavedWorkout } from '@/types'
+import { selectNextRace } from '@/stores/selectors'
 
 // WA age-grading factors — lookup table with linear interpolation
 // Source: WA Masters Athletics 2023 (marathon, representative for road running)
@@ -248,6 +249,8 @@ export function Train() {
   const [workoutMinutes, setWorkoutMinutes] = useState<number>(45)
   const [goalFocus, setGoalFocus] = useState<GoalFocus>('10k')
   const [selectedWorkoutId, setSelectedWorkoutId] = useState<string | null>(null)
+  const [dayIntent, setDayIntent] = useState<DayIntent>('quality')
+  const [freshness, setFreshness] = useState<Freshness>('normal')
 
   // Age-grade pace projection
   const currentAge = useMemo(() => {
@@ -276,6 +279,7 @@ export function Train() {
   const [runTH,  setRunTH]  = useState(1);   const [runTM2, setRunTM2]   = useState(45);  const [runTS, setRunTS] = useState(0)
 
   const races = useRaceStore(s => s.races)
+  const nextRace = useRaceStore(selectNextRace)
   const benchmarkCandidates = useMemo(() => {
     return races
       .filter(r => Boolean(r.id && r.time && r.date))
@@ -312,6 +316,22 @@ export function Train() {
     if (!workoutSuggestions?.length) return null
     return workoutSuggestions.find(w => w.id === selectedWorkoutId) ?? workoutSuggestions[0]
   }, [workoutSuggestions, selectedWorkoutId])
+  const daysToNextRace = useMemo(() => {
+    if (!nextRace?.date) return null
+    const today = todayStr()
+    const start = new Date(today + 'T00:00:00').getTime()
+    const race = new Date(nextRace.date + 'T00:00:00').getTime()
+    return Math.max(0, Math.round((race - start) / 86400000))
+  }, [nextRace?.date])
+  const recommendation = useMemo(() => {
+    return buildWorkoutRecommendation({
+      goal: goalFocus,
+      minutes: workoutMinutes,
+      dayIntent,
+      freshness,
+      daysToRace: daysToNextRace,
+    })
+  }, [goalFocus, workoutMinutes, dayIntent, freshness, daysToNextRace])
   const savedWorkouts = athlete?.savedWorkouts ?? []
 
   useEffect(() => {
@@ -323,6 +343,12 @@ export function Train() {
       prev && workoutSuggestions.some(s => s.id === prev) ? prev : workoutSuggestions[0].id
     )
   }, [workoutSuggestions])
+
+  useEffect(() => {
+    if (!workoutSuggestions?.length) return
+    const preferred = workoutSuggestions.find(w => w.id.startsWith(recommendation.recommendedType))
+    if (preferred) setSelectedWorkoutId(preferred.id)
+  }, [recommendation.recommendedType, workoutSuggestions])
 
   // Track page view on mount
   useEffect(() => { posthog.capture('page_viewed', { page: 'train' }) }, [])
@@ -1188,6 +1214,34 @@ export function Train() {
                   Use your saved benchmark fitness to get a session with exact paces for today&apos;s intent.
                 </p>
 
+                <div style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-3)', marginBottom: '12px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-2)' }}>
+                    <div>
+                      <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color: 'var(--orange)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                        Today&apos;s Recommendation
+                      </div>
+                      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--white)', marginTop: '4px', lineHeight: 1.5 }}>
+                        {recommendation.summary}
+                      </div>
+                    </div>
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                      <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color: 'var(--white)' }}>
+                        {daysToNextRace === null ? 'No race' : `${daysToNextRace}d`}
+                      </div>
+                      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                        {daysToNextRace === null ? 'to race' : 'to next race'}
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '10px' }}>
+                    {recommendation.reasonBullets.map(reason => (
+                      <div key={reason} style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', lineHeight: 1.4 }}>
+                        {reason}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-2)', marginBottom: '12px' }}>
                   <div>
                     <label style={fieldLabel}>Session Type</label>
@@ -1219,6 +1273,71 @@ export function Train() {
                         ))}
                       </select>
                       <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--muted)', fontSize: 'var(--text-compact)' }}>▾</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-2)', marginBottom: '12px' }}>
+                  <div>
+                    <label style={fieldLabel}>Day Intent</label>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px' }}>
+                      {([
+                        ['recovery', 'Recovery'],
+                        ['quality', 'Quality'],
+                        ['long', 'Long'],
+                        ['race-specific', 'Race Specific'],
+                      ] as Array<[DayIntent, string]>).map(([value, label]) => (
+                        <button
+                          key={value}
+                          onClick={() => setDayIntent(value)}
+                          style={{
+                            padding: '6px 4px',
+                            background: dayIntent === value ? 'rgba(var(--orange-ch),0.12)' : 'var(--surface3)',
+                            border: `1px solid ${dayIntent === value ? 'rgba(var(--orange-ch),0.4)' : 'var(--border2)'}`,
+                            borderRadius: 'var(--radius-sm)',
+                            color: dayIntent === value ? 'var(--orange)' : 'var(--muted)',
+                            fontFamily: 'var(--headline)',
+                            fontWeight: 700,
+                            fontSize: 'var(--text-xs)',
+                            letterSpacing: '0.06em',
+                            textTransform: 'uppercase',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={fieldLabel}>How You Feel</label>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px' }}>
+                      {([
+                        ['fresh', 'Fresh'],
+                        ['normal', 'Normal'],
+                        ['tired', 'Tired'],
+                      ] as Array<[Freshness, string]>).map(([value, label]) => (
+                        <button
+                          key={value}
+                          onClick={() => setFreshness(value)}
+                          style={{
+                            padding: '6px 4px',
+                            background: freshness === value ? 'rgba(var(--orange-ch),0.12)' : 'var(--surface3)',
+                            border: `1px solid ${freshness === value ? 'rgba(var(--orange-ch),0.4)' : 'var(--border2)'}`,
+                            borderRadius: 'var(--radius-sm)',
+                            color: freshness === value ? 'var(--orange)' : 'var(--muted)',
+                            fontFamily: 'var(--headline)',
+                            fontWeight: 700,
+                            fontSize: 'var(--text-xs)',
+                            letterSpacing: '0.06em',
+                            textTransform: 'uppercase',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          {label}
+                        </button>
+                      ))}
                     </div>
                   </div>
                 </div>
