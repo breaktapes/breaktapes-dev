@@ -148,6 +148,11 @@ function fmtDateCompact(dateStr: string): string {
   })
 }
 
+function todayStr(): string {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
 
 // Find fastest race at a given distance (with tolerance ±tolerance km)
 function findRunPB(races: Race[], targetKm: number, tolerance = 0.5): Race | null {
@@ -213,6 +218,7 @@ interface BenchmarkResult {
 export function Train() {
   const [activeTab, setActiveTab] = useState<Tab>('pace')
   const units = useUnits()
+  const updateAthlete = useAthleteStore(s => s.updateAthlete)
 
   // ── Pace tab: sport selector ───────────────────────────────────────────────
   const [sport, setSport] = useState<'running' | 'triathlon'>('running')
@@ -331,6 +337,12 @@ export function Train() {
         vdot,
         zones: paceZones(vdot, units),
       })
+      updateAthlete({
+        currentVdot: vdot,
+        currentVdotSource: 'race',
+        currentVdotRaceName: race.name,
+        currentVdotUpdatedAt: todayStr(),
+      })
       return
     }
 
@@ -347,6 +359,12 @@ export function Train() {
       timeLabel: secsToHMS(totalSecs),
       vdot,
       zones: paceZones(vdot, units),
+    })
+    updateAthlete({
+      currentVdot: vdot,
+      currentVdotSource: 'manual',
+      currentVdotRaceName: 'Custom benchmark',
+      currentVdotUpdatedAt: todayStr(),
     })
   }
 

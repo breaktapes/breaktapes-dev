@@ -1,10 +1,11 @@
 /**
  * Train — tools-first pace calculator smoke tests
  */
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { Train } from '../Train'
 import { useRaceStore } from '@/stores/useRaceStore'
+import { useAthleteStore } from '@/stores/useAthleteStore'
 
 function renderTrain() {
   return render(
@@ -16,6 +17,7 @@ function renderTrain() {
 
 beforeEach(() => {
   useRaceStore.setState({ races: [], nextRace: null, upcomingRaces: [] })
+  useAthleteStore.setState({ athlete: null, seasonPlans: [], goals: { annual: {}, distGoals: [] }, injuries: [] })
 })
 
 describe('Train — tab navigation', () => {
@@ -42,6 +44,33 @@ describe('Train — pace calculator', () => {
     renderTrain()
     expect(screen.getByText('VDOT Benchmark')).toBeInTheDocument()
     expect(screen.getByText('Calculate VDOT')).toBeInTheDocument()
+  })
+
+  it('saves the calculated VDOT to athlete state', async () => {
+    useRaceStore.setState({
+      races: [{
+        id: 'race-1',
+        name: 'City 10K',
+        date: '2026-06-01',
+        city: 'Dubai',
+        country: 'UAE',
+        distance: '10',
+        sport: 'running',
+        time: '0:45:00',
+      }],
+      nextRace: null,
+      upcomingRaces: [],
+    })
+
+    renderTrain()
+    fireEvent.click(screen.getByText('Calculate VDOT'))
+
+    await waitFor(() => {
+      const athlete = useAthleteStore.getState().athlete
+      expect(athlete?.currentVdot).toBeGreaterThan(0)
+      expect(athlete?.currentVdotSource).toBe('race')
+      expect(athlete?.currentVdotRaceName).toBe('City 10K')
+    })
   })
 })
 
