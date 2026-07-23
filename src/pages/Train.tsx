@@ -4,7 +4,7 @@ import { useAthleteStore } from '@/stores/useAthleteStore'
 import { posthog } from '@/lib/posthog'
 import { computeVDOT, equivalentPerformances, paceZones, parseDistKm, parseTimeSecs, secsToHMS, type PaceZone } from '@/lib/raceFormulas'
 import { useUnits } from '@/lib/units'
-import { buildWorkoutSuggestion, type GoalFocus, type WorkoutType } from '@/lib/workoutGenerator'
+import { buildWorkoutSuggestions, type GoalFocus, type WorkoutType } from '@/lib/workoutGenerator'
 import { TimePickerWheel } from '@/components/TimePickerWheel'
 import type { HMS } from '@/components/TimePickerWheel'
 import type { Race } from '@/types'
@@ -247,6 +247,7 @@ export function Train() {
   const [workoutType, setWorkoutType] = useState<WorkoutType>('tempo')
   const [workoutMinutes, setWorkoutMinutes] = useState<number>(45)
   const [goalFocus, setGoalFocus] = useState<GoalFocus>('10k')
+  const [selectedWorkoutId, setSelectedWorkoutId] = useState<string | null>(null)
 
   // Age-grade pace projection
   const currentAge = useMemo(() => {
@@ -298,15 +299,29 @@ export function Train() {
     if (athlete?.currentVdot) return paceZones(athlete.currentVdot, units)
     return null
   }, [benchmarkResult, athlete?.currentVdot, units])
-  const workoutSuggestion = useMemo(() => {
+  const workoutSuggestions = useMemo(() => {
     if (!activeZones) return null
-    return buildWorkoutSuggestion({
+    return buildWorkoutSuggestions({
       type: workoutType,
       minutes: workoutMinutes,
       goal: goalFocus,
       zones: activeZones,
     })
   }, [activeZones, workoutType, workoutMinutes, goalFocus])
+  const workoutSuggestion = useMemo(() => {
+    if (!workoutSuggestions?.length) return null
+    return workoutSuggestions.find(w => w.id === selectedWorkoutId) ?? workoutSuggestions[0]
+  }, [workoutSuggestions, selectedWorkoutId])
+
+  useEffect(() => {
+    if (!workoutSuggestions?.length) {
+      setSelectedWorkoutId(null)
+      return
+    }
+    setSelectedWorkoutId(prev =>
+      prev && workoutSuggestions.some(s => s.id === prev) ? prev : workoutSuggestions[0].id
+    )
+  }, [workoutSuggestions])
 
   // Track page view on mount
   useEffect(() => { posthog.capture('page_viewed', { page: 'train' }) }, [])
@@ -1219,6 +1234,36 @@ export function Train() {
 
                 {activeVdot && activeZones && workoutSuggestion ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+                    {workoutSuggestions && workoutSuggestions.length > 1 && (
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-2)' }}>
+                        {workoutSuggestions.map(option => {
+                          const selected = option.id === workoutSuggestion.id
+                          return (
+                            <button
+                              key={option.id}
+                              onClick={() => setSelectedWorkoutId(option.id)}
+                              style={{
+                                textAlign: 'left',
+                                padding: 'var(--sp-3)',
+                                background: selected ? 'rgba(var(--orange-ch),0.12)' : 'var(--surface3)',
+                                border: `1px solid ${selected ? 'rgba(var(--orange-ch),0.4)' : 'var(--border2)'}`,
+                                borderRadius: 'var(--radius-sm)',
+                                color: selected ? 'var(--white)' : 'var(--muted)',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', letterSpacing: '0.04em', textTransform: 'uppercase', color: selected ? 'var(--orange)' : 'var(--white)' }}>
+                                {option.title}
+                              </div>
+                              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '4px' }}>
+                                {option.subtitle}
+                              </div>
+                            </button>
+                          )
+                        })}
+                      </div>
+                    )}
+
                     <div style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-3)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-2)' }}>
                         <div>

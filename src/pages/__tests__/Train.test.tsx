@@ -100,6 +100,33 @@ describe('Train — pace calculator', () => {
       expect(screen.getAllByText(/Tempo Session|VO2 Max Session|Recovery Run|Long Run|Goal-Pace Session/i).length).toBeGreaterThan(0)
     })
   })
+
+  it('shows multiple workout variants in Builder', async () => {
+    useRaceStore.setState({
+      races: [{
+        id: 'race-1',
+        name: 'City 10K',
+        date: '2026-06-01',
+        city: 'Dubai',
+        country: 'UAE',
+        distance: '10',
+        sport: 'running',
+        time: '0:45:00',
+      }],
+      nextRace: null,
+      upcomingRaces: [],
+    })
+
+    renderTrain()
+    fireEvent.click(screen.getByText('Calculate VDOT'))
+    fireEvent.click(screen.getByText('Builder'))
+
+    await waitFor(() => {
+      expect(screen.getByText('Workout Generator')).toBeInTheDocument()
+      expect(screen.getAllByText('Tempo Session').length).toBeGreaterThan(0)
+      expect(screen.getByText('Cruise Intervals')).toBeInTheDocument()
+    })
+  })
 })
 
 describe('Train — no crash on empty store', () => {
