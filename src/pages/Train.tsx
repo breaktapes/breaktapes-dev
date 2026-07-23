@@ -7,7 +7,7 @@ import { useUnits } from '@/lib/units'
 import { buildWorkoutRecommendation, buildWorkoutSuggestions, type DayIntent, type Freshness, type GoalFocus, type WorkoutType } from '@/lib/workoutGenerator'
 import { TimePickerWheel } from '@/components/TimePickerWheel'
 import type { HMS } from '@/components/TimePickerWheel'
-import type { Race, SavedWorkout } from '@/types'
+import type { Race, SavedWorkout, WorkoutFeedback, WorkoutFeedbackEntry } from '@/types'
 import { selectNextRace } from '@/stores/selectors'
 
 // WA age-grading factors — lookup table with linear interpolation
@@ -342,6 +342,10 @@ export function Train() {
     return workoutSuggestions.find(w => w.id === selectedWorkoutId) ?? workoutSuggestions[0]
   }, [workoutSuggestions, selectedWorkoutId])
   const savedWorkouts = athlete?.savedWorkouts ?? []
+  const workoutFeedback = athlete?.workoutFeedback ?? []
+  const currentWorkoutFeedback = workoutSuggestion
+    ? workoutFeedback.find(entry => entry.workoutId === workoutSuggestion.id) ?? null
+    : null
 
   useEffect(() => {
     if (!workoutSuggestions?.length) {
@@ -482,6 +486,24 @@ export function Train() {
       savedWorkouts: [workout, ...savedWorkouts.filter(w => w.workoutId !== workout.workoutId)].slice(0, 12),
     })
     posthog.capture('workout_saved', { workout_id: workout.workoutId, workout_type: workoutType, goal_focus: goalFocus })
+  }
+
+  function recordWorkoutFeedback(feedback: WorkoutFeedback) {
+    if (!workoutSuggestion) return
+    const entry: WorkoutFeedbackEntry = {
+      id: crypto.randomUUID(),
+      workoutId: workoutSuggestion.id,
+      workoutTitle: workoutSuggestion.title,
+      workoutType,
+      goalFocus,
+      feedback,
+      benchmarkLabel: activeVdotSourceLabel ?? undefined,
+      recordedAt: todayStr(),
+    }
+    updateAthlete({
+      workoutFeedback: [entry, ...workoutFeedback.filter(f => f.workoutId !== entry.workoutId)].slice(0, 30),
+    })
+    posthog.capture('workout_feedback_recorded', { workout_id: entry.workoutId, feedback })
   }
 
   function applyRunPB(pb: Race) {
@@ -1450,6 +1472,42 @@ export function Train() {
                       >
                         Save Workout
                       </button>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px', marginTop: '10px' }}>
+                        {([
+                          ['completed', 'Completed'],
+                          ['skipped', 'Skipped'],
+                          ['too-hard', 'Too Hard'],
+                          ['too-easy', 'Too Easy'],
+                        ] as Array<[WorkoutFeedback, string]>).map(([value, label]) => {
+                          const selected = currentWorkoutFeedback?.feedback === value
+                          return (
+                            <button
+                              key={value}
+                              onClick={() => recordWorkoutFeedback(value)}
+                              style={{
+                                padding: '7px 8px',
+                                background: selected ? 'rgba(var(--orange-ch),0.12)' : 'var(--surface2)',
+                                border: `1px solid ${selected ? 'rgba(var(--orange-ch),0.4)' : 'var(--border2)'}`,
+                                borderRadius: 'var(--radius-sm)',
+                                color: selected ? 'var(--orange)' : 'var(--muted)',
+                                fontFamily: 'var(--headline)',
+                                fontWeight: 700,
+                                fontSize: 'var(--text-xs)',
+                                letterSpacing: '0.06em',
+                                textTransform: 'uppercase',
+                                cursor: 'pointer',
+                              }}
+                            >
+                              {label}
+                            </button>
+                          )
+                        })}
+                      </div>
+                      {currentWorkoutFeedback && (
+                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', marginTop: '8px' }}>
+                          Latest feedback: {currentWorkoutFeedback.feedback.replace('-', ' ')} on {currentWorkoutFeedback.recordedAt}
+                        </div>
+                      )}
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
@@ -1509,6 +1567,15 @@ export function Train() {
                               <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '4px' }}>
                                 {workout.subtitle}
                               </div>
+                              {(() => {
+                                const feedback = workoutFeedback.find(entry => entry.workoutId === workout.workoutId)
+                                if (!feedback) return null
+                                return (
+                                  <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', marginTop: '4px' }}>
+                                    Feedback: {feedback.feedback.replace('-', ' ')}
+                                  </div>
+                                )
+                              })()}
                             </div>
                           ))}
                         </div>

@@ -161,6 +161,39 @@ describe('Train — pace calculator', () => {
     })
   })
 
+  it('records workout feedback to athlete state', async () => {
+    useRaceStore.setState({
+      races: [{
+        id: 'race-1',
+        name: 'City 10K',
+        date: '2026-06-01',
+        city: 'Dubai',
+        country: 'UAE',
+        distance: '10',
+        sport: 'running',
+        time: '0:45:00',
+      }],
+      nextRace: null,
+      upcomingRaces: [],
+    })
+
+    renderTrain()
+    fireEvent.click(screen.getByText('Calculate VDOT'))
+    fireEvent.click(screen.getByText('Builder'))
+
+    await waitFor(() => {
+      expect(screen.getByText('Completed')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByText('Too Hard'))
+
+    await waitFor(() => {
+      const athlete = useAthleteStore.getState().athlete
+      expect(athlete?.workoutFeedback?.length).toBeGreaterThan(0)
+      expect(athlete?.workoutFeedback?.[0]?.feedback).toBe('too-hard')
+    })
+  })
+
   it("shows today's recommendation controls in Builder", async () => {
     useRaceStore.setState({
       races: [{

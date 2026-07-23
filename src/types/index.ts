@@ -67,6 +67,7 @@ export interface Athlete {
   currentVdotRaceName?: string
   currentVdotUpdatedAt?: string    // YYYY-MM-DD
   savedWorkouts?: SavedWorkout[]
+  workoutFeedback?: WorkoutFeedbackEntry[]
   firstName?: string
   lastName?: string
   dob?: string          // YYYY-MM-DD
@@ -266,6 +267,23 @@ export interface SavedWorkout {
   savedAt: string // YYYY-MM-DD
   segments: SavedWorkoutSegment[]
   notes: string[]
+}
+
+export type WorkoutFeedback =
+  | 'completed'
+  | 'skipped'
+  | 'too-hard'
+  | 'too-easy'
+
+export interface WorkoutFeedbackEntry {
+  id: string
+  workoutId: string
+  workoutTitle: string
+  workoutType: string
+  goalFocus: string
+  feedback: WorkoutFeedback
+  benchmarkLabel?: string
+  recordedAt: string // YYYY-MM-DD
 }
 
 export interface PlacingResult {
