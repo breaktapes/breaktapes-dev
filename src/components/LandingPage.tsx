@@ -483,126 +483,6 @@ function DashboardMockup() {
     </div>
   )
 }
-
-
-
-
-/* Clean stroke icons (21st.dev / lucide style) — no emoji anywhere. */
-function ActIcon({ k }: { k: string }) {
-  const c = { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
-  if (k === 'run') return (<svg {...c}><circle cx="17" cy="5" r="2" /><path d="M14.5 8 11 10l2 3-3 5" /><path d="M8 9.5 11.5 8l3 2.5 3 1" /><path d="m6 21 2.5-3.5" /></svg>)
-  if (k === 'bike') return (<svg {...c}><circle cx="6" cy="17" r="3" /><circle cx="18" cy="17" r="3" /><path d="M6 17l4.5-7.5H15l-2-3" /><path d="M12.5 6.5H16" /></svg>)
-  if (k === 'swim') return (<svg {...c}><circle cx="17" cy="6.5" r="1.7" /><path d="M5 12l5-3 3.5 2.5" /><path d="M3 17c1.5 0 1.5-1.2 3-1.2s1.5 1.2 3 1.2 1.5-1.2 3-1.2 1.5 1.2 3 1.2 1.5-1.2 3-1.2" /></svg>)
-  if (k === 'hyrox') return (<svg {...{ ...c, fill: 'currentColor', stroke: 'none' }}><path d="M13 2 5 13h5l-1 9 9-12h-5l3-8z" /></svg>)
-  return (<svg {...c}><path d="M4 8v8M7.5 6v12M16.5 6v12M20 8v8M7.5 12h9" /></svg>)
-}
-function MiniHeart() { return (<svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor" style={{ display: 'block' }}><path d="M12 21s-7-4.6-9.3-8.4C.8 9.3 2.3 6 5.6 6c1.9 0 3.2 1.1 4 2.2.8-1.1 2.1-2.2 4-2.2 3.3 0 4.8 3.3 2.9 6.6C19 16.4 12 21 12 21z" /></svg>) }
-
-/* Wearables — only WHOOP is production-authorized. Others are "Coming soon".
-   Rendered as a rectangle mockup to match the other showcases. */
-type Act = { k: string; name: string; sub: string; m: [string, string][]; zone: number; accent: string }
-const WEARABLE_ACTS: Record<string, Act[]> = {
-  running: [
-    { k: 'run', name: 'TEMPO RUN', sub: '12.4 km · 52:18', m: [['AVG PACE', '4:12/km'], ['AVG HR', '158'], ['CADENCE', '182']], zone: 0.84, accent: 'var(--orange)' },
-    { k: 'run', name: 'LONG RUN', sub: '28.0 km · 2:14:30', m: [['AVG PACE', '4:48/km'], ['AVG HR', '148'], ['CADENCE', '176']], zone: 0.62, accent: 'var(--orange)' },
-    { k: 'run', name: 'TRACK INTERVALS', sub: '10 × 400m', m: [['AVG PACE', '3:18/km'], ['AVG HR', '176'], ['REST', '90s']], zone: 0.95, accent: 'var(--green)' },
-    { k: 'strength', name: 'STRENGTH & CORE', sub: '42:00 · 280 kcal', m: [['AVG HR', '118'], ['PEAK HR', '148'], ['LOAD', '6.2']], zone: 0.5, accent: 'var(--orange)' },
-  ],
-  cycling: [
-    { k: 'bike', name: 'THRESHOLD RIDE', sub: '64.0 km · 2:03:40', m: [['AVG SPEED', '31.2 km/h'], ['AVG HR', '146'], ['AVG POWER', '245 W']], zone: 0.82, accent: 'var(--orange)' },
-    { k: 'bike', name: 'ENDURANCE RIDE', sub: '128 km · 4:18:00', m: [['AVG SPEED', '28.6 km/h'], ['AVG HR', '134'], ['AVG POWER', '198 W']], zone: 0.6, accent: 'var(--orange)' },
-    { k: 'bike', name: 'CLIMBING REPEATS', sub: '1,420 m gain', m: [['AVG SPEED', '14.2 km/h'], ['AVG HR', '162'], ['AVG POWER', '288 W']], zone: 0.92, accent: 'var(--green)' },
-    { k: 'run', name: 'BRICK RUN', sub: '6.0 km · 27:10', m: [['AVG PACE', '4:31/km'], ['AVG HR', '152'], ['CADENCE', '180']], zone: 0.55, accent: 'var(--orange)' },
-  ],
-  triathlon: [
-    { k: 'swim', name: 'OPEN-WATER SWIM', sub: '2.0 km · 32:40', m: [['AVG PACE', '1:38/100m'], ['AVG HR', '138'], ['SWOLF', '36']], zone: 0.62, accent: 'var(--green)' },
-    { k: 'bike', name: 'THRESHOLD RIDE', sub: '90 km · 2:38:00', m: [['AVG SPEED', '34.2 km/h'], ['AVG HR', '148'], ['AVG POWER', '228 W']], zone: 0.84, accent: 'var(--orange)' },
-    { k: 'run', name: 'BRICK RUN', sub: '14 km · 58:20', m: [['AVG PACE', '4:10/km'], ['AVG HR', '156'], ['CADENCE', '184']], zone: 0.78, accent: 'var(--orange)' },
-    { k: 'swim', name: 'POOL INTERVALS', sub: '3.0 km · 50:00', m: [['AVG PACE', '1:40/100m'], ['AVG HR', '142'], ['SWOLF', '35']], zone: 0.7, accent: 'var(--green)' },
-  ],
-  hyrox: [
-    { k: 'hyrox', name: 'HYROX SIM', sub: '58:20 · 8 stations', m: [['AVG SPEED', '11.4 km/h'], ['AVG HR', '164'], ['STRAIN', '12.1']], zone: 0.92, accent: 'var(--green)' },
-    { k: 'run', name: 'TEMPO RUN', sub: '10.0 km · 38:40', m: [['AVG PACE', '3:52/km'], ['AVG HR', '162'], ['CADENCE', '186']], zone: 0.8, accent: 'var(--orange)' },
-    { k: 'strength', name: 'STRENGTH & CORE', sub: '48:00 · 312 kcal', m: [['AVG HR', '128'], ['PEAK HR', '168'], ['LOAD', '8.4']], zone: 0.6, accent: 'var(--orange)' },
-    { k: 'strength', name: 'ERG INTERVALS', sub: '5,000 m row', m: [['SPLIT', '1:52/500m'], ['AVG HR', '170'], ['STRAIN', '11.2']], zone: 0.88, accent: 'var(--green)' },
-  ],
-}
-function WearablesMockup({ persona }: { persona: DemoPersonaId }) {
-  const soon = ['STRAVA', 'GARMIN', 'APPLE', 'COROS', 'OURA']
-  const sport = DEMO_PERSONAS[persona].athlete.mainSport || 'running'
-  const metrics: [string, string, string][] = [
-    ['STRAIN', '14.2', 'var(--orange)'],
-    ['SLEEP', '7h 48m', 'var(--white)'],
-    ['RESTING HR', '46', 'var(--green)'],
-  ]
-  const acts = WEARABLE_ACTS[sport] ?? WEARABLE_ACTS.running
-  return (
-    <Shell>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 10px', borderRadius: 'var(--radius-pill)', background: 'var(--green-dim)', border: '1px solid rgba(var(--green-ch),0.45)' }}>
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--green)' }} />
-          <span style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 10, letterSpacing: '0.06em', color: 'var(--white)' }}>WHOOP · LIVE</span>
-        </span>
-        {soon.map(b => (
-          <span key={b} style={{ padding: '5px 9px', borderRadius: 'var(--radius-pill)', background: 'var(--surface3)', border: '1px solid var(--border)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 9, letterSpacing: '0.05em', color: 'var(--muted)' }}>{b} · SOON</span>
-        ))}
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 7, marginTop: 8 }}>
-        <div style={{ ...cardSurface, padding: '9px 10px', background: 'linear-gradient(150deg, rgba(var(--green-ch),0.12), var(--surface2))' }}>
-          <div style={{ fontFamily: 'var(--body)', fontSize: 8, letterSpacing: '0.1em', color: 'var(--muted)' }}>RECOVERY</div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 23, color: 'var(--green)', lineHeight: 1 }}>88<span style={{ fontSize: 12 }}>%</span></div>
-          <div style={{ fontFamily: 'var(--body)', fontSize: 8.5, color: 'var(--muted)', marginTop: 2 }}>Ready to train</div>
-        </div>
-        <div style={{ ...cardSurface, padding: '9px 10px' }}>
-          <div style={{ fontFamily: 'var(--body)', fontSize: 8, letterSpacing: '0.1em', color: 'var(--muted)' }}>TRAINING LOAD</div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 23, color: 'var(--white)', lineHeight: 1 }}>14.2</div>
-          <div style={{ display: 'flex', gap: 3, marginTop: 6, alignItems: 'flex-end', height: 16 }}>
-            {[40, 62, 51, 78, 88, 70, 95].map((h, i) => (
-              <motion.div key={i} initial={{ height: 0 }} whileInView={{ height: `${h}%` }} viewport={{ once: true }} transition={{ duration: 0.5, delay: i * 0.06, ease: 'easeOut' }} style={{ flex: 1, borderRadius: '2px 2px 0 0', background: i === 6 ? 'var(--green)' : 'rgba(var(--orange-ch),0.5)' }} />
-            ))}
-          </div>
-        </div>
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 7, marginTop: 7 }}>
-        {metrics.map(([l, v, c]) => (
-          <div key={l} style={{ ...cardSurface, padding: '7px 8px' }}>
-            <div style={{ fontFamily: 'var(--body)', fontSize: 7.5, letterSpacing: '0.08em', color: 'var(--muted)' }}>{l}</div>
-            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 15, color: c, lineHeight: 1, marginTop: 2 }}>{v}</div>
-          </div>
-        ))}
-      </div>
-      <div style={{ ...sectionLabel, fontSize: 10, marginTop: 10 }}>RECENT ACTIVITY</div>
-      <div style={{ display: 'grid', gap: 6, marginTop: 7 }}>
-        {acts.slice(0, 3).map((a, i) => (
-          <motion.div key={a.name} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.08 }} style={{ ...cardSurface, padding: '8px 10px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ width: 25, height: 25, borderRadius: 'var(--radius-sm)', background: `color-mix(in srgb, ${a.accent} 16%, transparent)`, color: a.accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><ActIcon k={a.k} /></span>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 10.5, letterSpacing: '0.02em', color: 'var(--white)' }}>{a.name}</div>
-                <div style={{ fontFamily: 'var(--body)', fontSize: 8, color: 'var(--muted)' }}>{a.sub}</div>
-              </div>
-            </div>
-            <div style={{ display: 'flex', gap: 5, marginTop: 6 }}>
-              {a.m.map(([l, v]) => (
-                <div key={l} style={{ flex: 1, background: 'var(--surface3)', borderRadius: 'var(--radius-sm)', padding: '4px 3px', textAlign: 'center' }}>
-                  <div style={{ fontFamily: 'var(--body)', fontSize: 6.5, letterSpacing: '0.04em', color: 'var(--muted)' }}>{l}</div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 2, fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 10, color: 'var(--white)', marginTop: 1 }}>
-                    {l === 'AVG HR' ? <span style={{ color: '#FF5A3C', display: 'inline-flex' }}><MiniHeart /></span> : null}{v}
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div style={{ height: 4, borderRadius: 3, background: 'var(--surface3)', overflow: 'hidden', marginTop: 6 }}>
-              <motion.div initial={{ width: 0 }} whileInView={{ width: `${a.zone * 100}%` }} viewport={{ once: true }} transition={{ duration: 0.9, delay: 0.1 + i * 0.08, ease: 'easeOut' }} style={{ height: '100%', borderRadius: 3, background: 'linear-gradient(90deg, var(--green), var(--orange))' }} />
-            </div>
-          </motion.div>
-        ))}
-      </div>
-    </Shell>
-  )
-}
-
-
 /* =====================================================================
    PHONE-SCROLL STAGE — a pinned device cycles through screens on scroll.
    ===================================================================== */
@@ -1151,7 +1031,7 @@ function Testimonials() {
 const FAQS = [
   { q: 'Is BREAKTAPES free?', a: 'Yes, free to start. Core tracking (races, PRs, medals, history, your race map) is free. A Pro tier with advanced analytics and themes is coming later.' },
   { q: 'Do I need an AI or API key?', a: 'No. BREAKTAPES works fully without any AI key or external setup. Just sign up and start logging.' },
-  { q: 'Which wearables can I connect?', a: 'WHOOP is live today. Recovery and workouts sync straight in. Strava, Garmin, Apple Health, COROS and Oura are on the way.' },
+  { q: 'What tools do I get?', a: 'BREAKTAPES is race-first: race history, PB tracking, medal wall, public profile, maps, pacing tools, and race planning calculators are the core experience.' },
   { q: 'Is my data private, and can I export it?', a: 'Your data is yours. Your profile is private by default. You choose what (if anything) to make public, and you can export everything any time.' },
 ]
 function FAQItem({ q, a }: { q: string; a: string }) {
@@ -1343,14 +1223,6 @@ export default function LandingPage({ onSignUp, onSignIn }: LandingPageProps) {
         bullets={['Gold, silver, bronze, finisher & custom tiers', 'PB-flagged podium results', 'Every medal, kept for good']}
         mockup={<MedalMockup persona={persona} />}
       />
-      <FeatureShowcase
-        id="wearables" reverse
-        eyebrow="Training & Wearables" title="Your training, side by side"
-        desc={'Connect WHOOP today and see the training that built every result, right next to the race. More integrations are on the way.'}
-        bullets={['WHOOP live now, recovery & workouts', 'Strava, Garmin, Apple Health coming soon', 'Training load vs race performance']}
-        mockup={<WearablesMockup persona={persona} />}
-      />
-
       {/* ---------------- PHONE-SCROLL CENTERPIECE ---------------- */}
       <PhoneStage screen={screen} stageRef={stageRef} persona={persona} />
 

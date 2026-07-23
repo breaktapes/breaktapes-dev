@@ -7,7 +7,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Settings } from '../Settings'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { useAuthStore } from '@/stores/useAuthStore'
-import { useWearableStore } from '@/stores/useWearableStore'
 
 vi.mock('@clerk/clerk-react', () => ({
   useClerk: () => ({ signOut: vi.fn(), openUserProfile: vi.fn() }),
@@ -15,9 +14,6 @@ vi.mock('@clerk/clerk-react', () => ({
 }))
 
 vi.mock('@/lib/syncState', () => ({ syncStateToSupabase: vi.fn() }))
-vi.mock('@/lib/strava', () => ({ startStravaOAuth: vi.fn() }))
-vi.mock('@/lib/wearableUtils', () => ({ removeWearableToken: vi.fn() }))
-
 function renderSettings() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
@@ -32,7 +28,6 @@ function renderSettings() {
 beforeEach(() => {
   useAthleteStore.setState({ athlete: null, seasonPlans: [] })
   useAuthStore.setState({ authUser: { id: 'u1', email: 'test@example.com' } as any, proAccessGranted: false })
-  useWearableStore.setState({ stravaToken: null } as any)
 })
 
 describe('Settings — section headers', () => {
@@ -51,14 +46,14 @@ describe('Settings — section headers', () => {
     expect(screen.getByText('Preferences')).toBeInTheDocument()
   })
 
-  it('renders Wearables section', () => {
-    renderSettings()
-    expect(screen.getByText('Wearables')).toBeInTheDocument()
-  })
-
   it('renders Theme section', () => {
     renderSettings()
     expect(screen.getByText('Theme')).toBeInTheDocument()
+  })
+
+  it('renders About section', () => {
+    renderSettings()
+    expect(screen.getByText('About')).toBeInTheDocument()
   })
 })
 
@@ -78,9 +73,9 @@ describe('Settings — units preference', () => {
   })
 })
 
-describe('Settings — Wearables section', () => {
-  it('shows coming soon text for wearables', () => {
+describe('Settings — race-first cleanup', () => {
+  it('does not render removed Wearables section', () => {
     renderSettings()
-    expect(screen.getByText(/coming soon/i)).toBeInTheDocument()
+    expect(screen.queryByText('Wearables')).not.toBeInTheDocument()
   })
 })

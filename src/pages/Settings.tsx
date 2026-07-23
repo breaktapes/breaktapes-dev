@@ -397,7 +397,6 @@ export function Settings() {
                 { key: 'medals',    label: 'Medal wall',                  desc: 'Photos and medal collection' },
                 { key: 'stats',     label: 'Stats & countries',           desc: 'Race count, distance, countries' },
                 { key: 'upcoming',  label: 'Upcoming races',              desc: 'Your race calendar' },
-                { key: 'wearables', label: 'Activity feed',               desc: 'Strava & wearable workouts' },
               ] as const).map(({ key, label, desc }, i, arr) => {
                 const vis = athlete?.profileVisibility ?? {}
                 const enabled = vis[key] === true
@@ -581,15 +580,6 @@ export function Settings() {
               </button>
             )
           })}
-        </div>
-      </section>
-
-      {/* ── Wearables section ── */}
-      <section>
-        <p style={sectionLabel}>Wearables</p>
-        <div style={card}>
-          <p style={{ margin: 0, fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>Wearable Sync</p>
-          <p style={{ margin: '4px 0 0', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>Strava, WHOOP, Garmin and more — coming soon</p>
         </div>
       </section>
 
