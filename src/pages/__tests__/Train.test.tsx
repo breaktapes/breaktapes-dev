@@ -127,6 +127,39 @@ describe('Train — pace calculator', () => {
       expect(screen.getByText('Cruise Intervals')).toBeInTheDocument()
     })
   })
+
+  it('saves a workout to athlete state', async () => {
+    useRaceStore.setState({
+      races: [{
+        id: 'race-1',
+        name: 'City 10K',
+        date: '2026-06-01',
+        city: 'Dubai',
+        country: 'UAE',
+        distance: '10',
+        sport: 'running',
+        time: '0:45:00',
+      }],
+      nextRace: null,
+      upcomingRaces: [],
+    })
+
+    renderTrain()
+    fireEvent.click(screen.getByText('Calculate VDOT'))
+    fireEvent.click(screen.getByText('Builder'))
+
+    await waitFor(() => {
+      expect(screen.getByText('Save Workout')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByText('Save Workout'))
+
+    await waitFor(() => {
+      const athlete = useAthleteStore.getState().athlete
+      expect(athlete?.savedWorkouts?.length).toBeGreaterThan(0)
+      expect(athlete?.savedWorkouts?.[0]?.title).toBe('Tempo Session')
+    })
+  })
 })
 
 describe('Train — no crash on empty store', () => {

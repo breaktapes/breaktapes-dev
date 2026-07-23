@@ -66,6 +66,7 @@ export interface Athlete {
   currentVdotSource?: 'race' | 'manual'
   currentVdotRaceName?: string
   currentVdotUpdatedAt?: string    // YYYY-MM-DD
+  savedWorkouts?: SavedWorkout[]
   firstName?: string
   lastName?: string
   dob?: string          // YYYY-MM-DD
@@ -243,6 +244,28 @@ export const THEMES: Theme[] = [
 
 export interface PBMap {
   [distanceKey: string]: Race
+}
+
+export interface SavedWorkoutSegment {
+  label: string
+  detail: string
+  zone: string
+  pace: string
+}
+
+export interface SavedWorkout {
+  id: string
+  workoutId: string
+  title: string
+  subtitle: string
+  rationale: string
+  totalMinutes: number
+  goalFocus: string
+  workoutType: string
+  benchmarkLabel?: string
+  savedAt: string // YYYY-MM-DD
+  segments: SavedWorkoutSegment[]
+  notes: string[]
 }
 
 export interface PlacingResult {

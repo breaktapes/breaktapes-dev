@@ -7,7 +7,7 @@ import { useUnits } from '@/lib/units'
 import { buildWorkoutSuggestions, type GoalFocus, type WorkoutType } from '@/lib/workoutGenerator'
 import { TimePickerWheel } from '@/components/TimePickerWheel'
 import type { HMS } from '@/components/TimePickerWheel'
-import type { Race } from '@/types'
+import type { Race, SavedWorkout } from '@/types'
 
 // WA age-grading factors — lookup table with linear interpolation
 // Source: WA Masters Athletics 2023 (marathon, representative for road running)
@@ -312,6 +312,7 @@ export function Train() {
     if (!workoutSuggestions?.length) return null
     return workoutSuggestions.find(w => w.id === selectedWorkoutId) ?? workoutSuggestions[0]
   }, [workoutSuggestions, selectedWorkoutId])
+  const savedWorkouts = athlete?.savedWorkouts ?? []
 
   useEffect(() => {
     if (!workoutSuggestions?.length) {
@@ -422,6 +423,29 @@ export function Train() {
         currentVdotUpdatedAt: todayStr(),
       })
     }
+  }
+
+  function saveWorkout() {
+    if (!workoutSuggestion) return
+    const savedAt = todayStr()
+    const workout: SavedWorkout = {
+      id: crypto.randomUUID(),
+      workoutId: workoutSuggestion.id,
+      title: workoutSuggestion.title,
+      subtitle: workoutSuggestion.subtitle,
+      rationale: workoutSuggestion.rationale,
+      totalMinutes: workoutSuggestion.totalMinutes,
+      goalFocus,
+      workoutType,
+      benchmarkLabel: activeVdotSourceLabel ?? undefined,
+      savedAt,
+      segments: workoutSuggestion.segments,
+      notes: workoutSuggestion.notes,
+    }
+    updateAthlete({
+      savedWorkouts: [workout, ...savedWorkouts.filter(w => w.workoutId !== workout.workoutId)].slice(0, 12),
+    })
+    posthog.capture('workout_saved', { workout_id: workout.workoutId, workout_type: workoutType, goal_focus: goalFocus })
   }
 
   function applyRunPB(pb: Race) {
@@ -1291,6 +1315,12 @@ export function Train() {
                       <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '8px', lineHeight: 1.5 }}>
                         {workoutSuggestion.rationale}
                       </div>
+                      <button
+                        onClick={saveWorkout}
+                        style={{ ...btnMain, width: '100%', marginTop: '12px' }}
+                      >
+                        Save Workout
+                      </button>
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
@@ -1330,6 +1360,31 @@ export function Train() {
                         ))}
                       </div>
                     </div>
+
+                    {savedWorkouts.length > 0 && (
+                      <div style={{ background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: 'var(--sp-3)' }}>
+                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--headline)', fontWeight: 700, marginBottom: '8px' }}>
+                          Saved Workouts
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          {savedWorkouts.slice(0, 3).map(workout => (
+                            <div key={workout.id} style={{ padding: '8px 10px', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--sp-2)', alignItems: 'baseline' }}>
+                                <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color: 'var(--white)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                                  {workout.title}
+                                </div>
+                                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', whiteSpace: 'nowrap' }}>
+                                  {workout.savedAt}
+                                </div>
+                              </div>
+                              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '4px' }}>
+                                {workout.subtitle}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
