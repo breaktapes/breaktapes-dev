@@ -4,6 +4,7 @@ import { useAthleteStore } from '@/stores/useAthleteStore'
 import { posthog } from '@/lib/posthog'
 import { computeVDOT, equivalentPerformances, paceZones, parseDistKm, parseTimeSecs, secsToHMS, type PaceZone } from '@/lib/raceFormulas'
 import { useUnits } from '@/lib/units'
+import { buildWorkoutSuggestion, type GoalFocus, type WorkoutType } from '@/lib/workoutGenerator'
 import { TimePickerWheel } from '@/components/TimePickerWheel'
 import type { HMS } from '@/components/TimePickerWheel'
 import type { Race } from '@/types'
@@ -241,6 +242,9 @@ export function Train() {
   const [benchmarkCustomUnit, setBenchmarkCustomUnit] = useState<'km' | 'mi'>('km')
   const [benchmarkHMS, setBenchmarkHMS] = useState<HMS>({ h: 0, m: 45, s: 0 })
   const [benchmarkResult, setBenchmarkResult] = useState<BenchmarkResult | null>(null)
+  const [workoutType, setWorkoutType] = useState<WorkoutType>('tempo')
+  const [workoutMinutes, setWorkoutMinutes] = useState<number>(45)
+  const [goalFocus, setGoalFocus] = useState<GoalFocus>('10k')
 
   // Age-grade pace projection
   const currentAge = useMemo(() => {
@@ -284,6 +288,23 @@ export function Train() {
     if (!benchmarkCandidates.length) return
     setBenchmarkRaceId(prev => prev || benchmarkCandidates[0].id)
   }, [benchmarkCandidates])
+
+  const activeVdot = benchmarkResult?.vdot ?? athlete?.currentVdot ?? null
+  const activeVdotSourceLabel = benchmarkResult?.raceName ?? athlete?.currentVdotRaceName ?? null
+  const activeZones = useMemo(() => {
+    if (benchmarkResult?.zones) return benchmarkResult.zones
+    if (athlete?.currentVdot) return paceZones(athlete.currentVdot, units)
+    return null
+  }, [benchmarkResult, athlete?.currentVdot, units])
+  const workoutSuggestion = useMemo(() => {
+    if (!activeZones) return null
+    return buildWorkoutSuggestion({
+      type: workoutType,
+      minutes: workoutMinutes,
+      goal: goalFocus,
+      zones: activeZones,
+    })
+  }, [activeZones, workoutType, workoutMinutes, goalFocus])
 
   // Track page view on mount
   useEffect(() => { posthog.capture('page_viewed', { page: 'train' }) }, [])
@@ -1108,6 +1129,156 @@ export function Train() {
                   </div>
                 </div>
               )}
+
+              <div style={card}>
+                <p style={sectionLabel}>Workout Generator</p>
+                <p style={{ margin: '0 0 12px', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
+                  Use your saved benchmark fitness to get a session with exact paces for today&apos;s intent.
+                </p>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-2)', marginBottom: '12px' }}>
+                  <div>
+                    <label style={fieldLabel}>Session Type</label>
+                    <div style={{ position: 'relative' }}>
+                      <select
+                        value={workoutType}
+                        onChange={e => setWorkoutType(e.target.value as WorkoutType)}
+                        style={{ ...textInput, paddingRight: '2.5rem', appearance: 'none', WebkitAppearance: 'none' as any }}
+                      >
+                        <option value="recovery">Recovery Run</option>
+                        <option value="tempo">Tempo / Threshold</option>
+                        <option value="vo2">VO2 Max</option>
+                        <option value="long">Long Run</option>
+                        <option value="race-pace">Goal Pace</option>
+                      </select>
+                      <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--muted)', fontSize: 'var(--text-compact)' }}>▾</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label style={fieldLabel}>Time Available</label>
+                    <div style={{ position: 'relative' }}>
+                      <select
+                        value={String(workoutMinutes)}
+                        onChange={e => setWorkoutMinutes(parseInt(e.target.value, 10))}
+                        style={{ ...textInput, paddingRight: '2.5rem', appearance: 'none', WebkitAppearance: 'none' as any }}
+                      >
+                        {[30, 45, 60, 75, 90].map(minutes => (
+                          <option key={minutes} value={minutes}>{minutes} min</option>
+                        ))}
+                      </select>
+                      <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--muted)', fontSize: 'var(--text-compact)' }}>▾</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '12px' }}>
+                  <label style={fieldLabel}>Goal Focus</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '4px' }}>
+                    {([
+                      ['5k', '5K'],
+                      ['10k', '10K'],
+                      ['half', 'Half'],
+                      ['marathon', 'Full'],
+                      ['general', 'General'],
+                    ] as Array<[GoalFocus, string]>).map(([value, label]) => (
+                      <button
+                        key={value}
+                        onClick={() => setGoalFocus(value)}
+                        style={{
+                          padding: '6px 4px',
+                          background: goalFocus === value ? 'rgba(var(--orange-ch),0.12)' : 'var(--surface3)',
+                          border: `1px solid ${goalFocus === value ? 'rgba(var(--orange-ch),0.4)' : 'var(--border2)'}`,
+                          borderRadius: 'var(--radius-sm)',
+                          color: goalFocus === value ? 'var(--orange)' : 'var(--muted)',
+                          fontFamily: 'var(--headline)',
+                          fontWeight: 700,
+                          fontSize: 'var(--text-xs)',
+                          letterSpacing: '0.06em',
+                          textTransform: 'uppercase',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {activeVdot && activeZones && workoutSuggestion ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+                    <div style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-3)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-2)' }}>
+                        <div>
+                          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color: 'var(--white)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                            {workoutSuggestion.title}
+                          </div>
+                          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '4px' }}>
+                            {workoutSuggestion.subtitle}
+                          </div>
+                        </div>
+                        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-lg)', color: 'var(--orange)' }}>
+                            {activeVdot.toFixed(1)}
+                          </div>
+                          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                            VDOT
+                          </div>
+                        </div>
+                      </div>
+                      {activeVdotSourceLabel && (
+                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', marginTop: '8px' }}>
+                          Using benchmark: {activeVdotSourceLabel}
+                        </div>
+                      )}
+                      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '8px', lineHeight: 1.5 }}>
+                        {workoutSuggestion.rationale}
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+                      {workoutSuggestion.segments.map(segment => (
+                        <div key={`${segment.label}-${segment.detail}`} style={{ background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: 'var(--sp-3)' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-2)' }}>
+                            <div style={{ minWidth: 0 }}>
+                              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color: 'var(--white)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                                {segment.label}
+                              </div>
+                              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '4px' }}>
+                                {segment.detail}
+                              </div>
+                            </div>
+                            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                                {segment.zone} pace
+                              </div>
+                              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color: 'var(--orange)', marginTop: '4px' }}>
+                                {segment.pace}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div style={{ background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: 'var(--sp-3)' }}>
+                      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--headline)', fontWeight: 700, marginBottom: '6px' }}>
+                        Session Notes
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        {workoutSuggestion.notes.map(note => (
+                          <div key={note} style={{ fontSize: 'var(--text-xs)', color: 'var(--white)', lineHeight: 1.5 }}>
+                            {note}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
+                    Calculate and save a VDOT benchmark first to unlock session suggestions.
+                  </div>
+                )}
+              </div>
               {/* Age-Grade Pace Projection */}
               {(() => {
                 const resolvedCurrentAge = ageCalcCurrentAge !== '' ? parseInt(ageCalcCurrentAge) : currentAge
