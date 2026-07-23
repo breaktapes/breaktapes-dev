@@ -218,6 +218,7 @@ interface BenchmarkResult {
 export function Train() {
   const [activeTab, setActiveTab] = useState<Tab>('pace')
   const units = useUnits()
+  const athlete = useAthleteStore(s => s.athlete)
   const updateAthlete = useAthleteStore(s => s.updateAthlete)
 
   // ── Pace tab: sport selector ───────────────────────────────────────────────
@@ -242,7 +243,6 @@ export function Train() {
   const [benchmarkResult, setBenchmarkResult] = useState<BenchmarkResult | null>(null)
 
   // Age-grade pace projection
-  const athlete = useAthleteStore(s => s.athlete)
   const currentAge = useMemo(() => {
     if (!athlete?.dob) return null
     const dob = new Date(athlete.dob)
@@ -337,12 +337,21 @@ export function Train() {
         vdot,
         zones: paceZones(vdot, units),
       })
-      updateAthlete({
+      const nextBenchmark = {
         currentVdot: vdot,
-        currentVdotSource: 'race',
+        currentVdotSource: 'race' as const,
         currentVdotRaceName: race.name,
-        currentVdotUpdatedAt: todayStr(),
-      })
+      }
+      const benchmarkChanged =
+        athlete?.currentVdot !== nextBenchmark.currentVdot ||
+        athlete?.currentVdotSource !== nextBenchmark.currentVdotSource ||
+        athlete?.currentVdotRaceName !== nextBenchmark.currentVdotRaceName
+      if (benchmarkChanged) {
+        updateAthlete({
+          ...nextBenchmark,
+          currentVdotUpdatedAt: todayStr(),
+        })
+      }
       return
     }
 
@@ -360,12 +369,21 @@ export function Train() {
       vdot,
       zones: paceZones(vdot, units),
     })
-    updateAthlete({
+    const nextBenchmark = {
       currentVdot: vdot,
-      currentVdotSource: 'manual',
+      currentVdotSource: 'manual' as const,
       currentVdotRaceName: 'Custom benchmark',
-      currentVdotUpdatedAt: todayStr(),
-    })
+    }
+    const benchmarkChanged =
+      athlete?.currentVdot !== nextBenchmark.currentVdot ||
+      athlete?.currentVdotSource !== nextBenchmark.currentVdotSource ||
+      athlete?.currentVdotRaceName !== nextBenchmark.currentVdotRaceName
+    if (benchmarkChanged) {
+      updateAthlete({
+        ...nextBenchmark,
+        currentVdotUpdatedAt: todayStr(),
+      })
+    }
   }
 
   function applyRunPB(pb: Race) {
