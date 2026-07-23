@@ -303,19 +303,6 @@ export function Train() {
     if (athlete?.currentVdot) return paceZones(athlete.currentVdot, units)
     return null
   }, [benchmarkResult, athlete?.currentVdot, units])
-  const workoutSuggestions = useMemo(() => {
-    if (!activeZones) return null
-    return buildWorkoutSuggestions({
-      type: workoutType,
-      minutes: workoutMinutes,
-      goal: goalFocus,
-      zones: activeZones,
-    })
-  }, [activeZones, workoutType, workoutMinutes, goalFocus])
-  const workoutSuggestion = useMemo(() => {
-    if (!workoutSuggestions?.length) return null
-    return workoutSuggestions.find(w => w.id === selectedWorkoutId) ?? workoutSuggestions[0]
-  }, [workoutSuggestions, selectedWorkoutId])
   const daysToNextRace = useMemo(() => {
     if (!nextRace?.date) return null
     const today = todayStr()
@@ -332,6 +319,28 @@ export function Train() {
       daysToRace: daysToNextRace,
     })
   }, [goalFocus, workoutMinutes, dayIntent, freshness, daysToNextRace])
+  const workoutSuggestions = useMemo(() => {
+    if (!activeZones) return null
+    const suggestions = buildWorkoutSuggestions({
+      type: workoutType,
+      minutes: workoutMinutes,
+      goal: goalFocus,
+      zones: activeZones,
+    })
+    const preferred = recommendation.preferredWorkoutIds
+    if (!preferred.length) return suggestions
+    return [...suggestions].sort((a, b) => {
+      const ai = preferred.indexOf(a.id)
+      const bi = preferred.indexOf(b.id)
+      const aRank = ai === -1 ? 999 : ai
+      const bRank = bi === -1 ? 999 : bi
+      return aRank - bRank
+    })
+  }, [activeZones, workoutType, workoutMinutes, goalFocus, recommendation.preferredWorkoutIds])
+  const workoutSuggestion = useMemo(() => {
+    if (!workoutSuggestions?.length) return null
+    return workoutSuggestions.find(w => w.id === selectedWorkoutId) ?? workoutSuggestions[0]
+  }, [workoutSuggestions, selectedWorkoutId])
   const savedWorkouts = athlete?.savedWorkouts ?? []
 
   useEffect(() => {
@@ -346,9 +355,10 @@ export function Train() {
 
   useEffect(() => {
     if (!workoutSuggestions?.length) return
-    const preferred = workoutSuggestions.find(w => w.id.startsWith(recommendation.recommendedType))
+    const preferred = workoutSuggestions.find(w => recommendation.preferredWorkoutIds.includes(w.id))
+      ?? workoutSuggestions.find(w => w.id.startsWith(recommendation.recommendedType))
     if (preferred) setSelectedWorkoutId(preferred.id)
-  }, [recommendation.recommendedType, workoutSuggestions])
+  }, [recommendation.recommendedType, recommendation.preferredWorkoutIds, workoutSuggestions])
 
   // Track page view on mount
   useEffect(() => { posthog.capture('page_viewed', { page: 'train' }) }, [])

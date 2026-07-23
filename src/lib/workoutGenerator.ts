@@ -26,6 +26,7 @@ export interface WorkoutSuggestion {
 export interface WorkoutRecommendation {
   recommendedType: WorkoutType
   alternateTypes: WorkoutType[]
+  preferredWorkoutIds: string[]
   raceWindow: RaceWindow
   summary: string
   reasonBullets: string[]
@@ -411,6 +412,51 @@ function goalPrimaryQuality(goal: GoalFocus): WorkoutType {
   return 'vo2'
 }
 
+function preferredWorkoutIdsFor(args: {
+  recommendedType: WorkoutType
+  goal: GoalFocus
+  raceWindow: RaceWindow
+  minutes: number
+}): string[] {
+  const { recommendedType, goal, raceWindow, minutes } = args
+
+  if (recommendedType === 'recovery') {
+    return minutes <= 30 ? ['recovery_continuous'] : ['recovery_strides', 'recovery_continuous']
+  }
+
+  if (recommendedType === 'tempo') {
+    if (goal === 'marathon') {
+      return raceWindow === '3-7'
+        ? ['tempo_progression', 'tempo_broken']
+        : ['tempo_continuous', 'tempo_extended', 'tempo_progression']
+    }
+    if (goal === 'half') {
+      return ['tempo_classic', 'tempo_progression', 'tempo_broken']
+    }
+    return minutes <= 50
+      ? ['tempo_cruise', 'tempo_broken']
+      : ['tempo_classic', 'tempo_progression', 'tempo_extended']
+  }
+
+  if (recommendedType === 'vo2') {
+    if (goal === '5k') return ['vo2_3min', 'vo2_2min', 'vo2_ladder']
+    if (goal === '10k') return ['vo2_3min', 'vo2_ladder', 'vo2_extended']
+    return ['vo2_extended', 'vo2_ladder', 'vo2_3min']
+  }
+
+  if (recommendedType === 'long') {
+    return goal === 'marathon'
+      ? ['long_progression', 'long_chunks']
+      : ['long_chunks', 'long_progression', 'long_aerobic']
+  }
+
+  if (goal === 'marathon') return ['racepace_continuous', 'racepace_reps']
+  if (goal === 'half') return ['racepace_reps', 'racepace_continuous']
+  return raceWindow === '3-7'
+    ? ['racepace_reps', 'racepace_continuous']
+    : ['racepace_continuous', 'racepace_reps']
+}
+
 export function buildWorkoutRecommendation(args: {
   goal: GoalFocus
   minutes: number
@@ -477,13 +523,32 @@ export function buildWorkoutRecommendation(args: {
   return {
     recommendedType,
     alternateTypes,
+    preferredWorkoutIds: preferredWorkoutIdsFor({
+      recommendedType,
+      goal: args.goal,
+      raceWindow,
+      minutes: args.minutes,
+    }),
     raceWindow,
     summary:
       recommendedType === 'recovery' ? 'Keep the day light and absorb recent work.'
-      : recommendedType === 'tempo' ? 'A controlled threshold session is the best fit today.'
-      : recommendedType === 'vo2' ? 'A sharper aerobic-power session fits today best.'
-      : recommendedType === 'long' ? 'A longer aerobic run is the best use of today.'
-      : 'A race-rhythm session fits your current context best.',
+      : recommendedType === 'tempo'
+        ? args.goal === 'marathon'
+          ? 'Controlled aerobic-threshold work is the best fit for your marathon build today.'
+          : args.goal === 'half'
+            ? 'A threshold session fits your half-marathon build best today.'
+            : 'A controlled threshold session is the best fit today.'
+      : recommendedType === 'vo2'
+        ? args.goal === '5k'
+          ? 'Sharper aerobic-power work is the best fit for your 5K focus today.'
+          : 'A sharper aerobic-power session fits today best.'
+      : recommendedType === 'long'
+        ? args.goal === 'marathon'
+          ? 'A longer endurance run is the best use of today for your marathon build.'
+          : 'A longer aerobic run is the best use of today.'
+      : args.goal === 'marathon'
+        ? 'A marathon-rhythm session fits your current context best.'
+        : 'A race-rhythm session fits your current context best.',
     reasonBullets,
   }
 }

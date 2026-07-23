@@ -195,6 +195,40 @@ describe('Train — pace calculator', () => {
       expect(screen.getByText('How You Feel')).toBeInTheDocument()
     })
   })
+
+  it('adapts recommendation copy for marathon-focused work', async () => {
+    useRaceStore.setState({
+      races: [{
+        id: 'race-1',
+        name: 'City 10K',
+        date: '2026-06-01',
+        city: 'Dubai',
+        country: 'UAE',
+        distance: '10',
+        sport: 'running',
+        time: '0:45:00',
+      }],
+      nextRace: {
+        id: 'upcoming-1',
+        name: 'Autumn Marathon',
+        date: '2026-09-20',
+        city: 'Berlin',
+        country: 'Germany',
+        distance: '42.2',
+        sport: 'running',
+      },
+      upcomingRaces: [],
+    } as any)
+
+    renderTrain()
+    fireEvent.click(screen.getByText('Calculate VDOT'))
+    fireEvent.click(screen.getByText('Builder'))
+    fireEvent.click(screen.getByText('Full'))
+
+    await waitFor(() => {
+      expect(screen.getByText(/Marathon focus/i)).toBeInTheDocument()
+    })
+  })
 })
 
 describe('Train — no crash on empty store', () => {
