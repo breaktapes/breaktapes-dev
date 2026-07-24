@@ -95,6 +95,16 @@ const BLOCK_TYPES: Array<{ id: CustomBlockType; label: string }> = [
   { id: 'cooldown', label: 'Cool-down' },
 ]
 
+const BLOCK_LABELS: Record<CustomBlockType, string> = {
+  warmup: 'Warm-up',
+  easy: 'Easy',
+  marathon: 'Marathon',
+  threshold: 'Threshold',
+  interval: 'Interval',
+  repetition: 'Repetition',
+  cooldown: 'Cool-down',
+}
+
 function todayStr(): string {
   const d = new Date()
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -316,7 +326,18 @@ export function CustomWorkoutBuilder({
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
               {blocks.map(block => (
                 <div key={block.id} style={{ background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: 'var(--sp-3)' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: block.repeatCount > 1 ? '1.2fr 0.72fr 0.62fr 0.62fr 0.8fr auto' : '1.4fr 0.82fr 0.72fr 0.72fr auto', gap: 'var(--sp-2)', alignItems: 'end' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 'var(--sp-2)', marginBottom: '10px' }}>
+                    <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color: 'var(--white)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                      {BLOCK_LABELS[block.blockType]}
+                    </div>
+                    <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', lineHeight: 1.4, textAlign: 'right' }}>
+                      {block.repeatCount > 1
+                        ? `${block.repeatCount} x ${block.value} ${block.unitType === 'time' ? 'min' : 'km'}${block.recoveryValue > 0 ? ` • ${block.recoveryValue} ${block.recoveryUnitType === 'time' ? 'min' : 'km'} rec` : ''}`
+                        : `${block.value} ${block.unitType === 'time' ? 'min' : 'km'}`}
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1.35fr 0.85fr 0.7fr 0.7fr', gap: 'var(--sp-2)', alignItems: 'end' }}>
                     <div>
                       <label style={fieldLabel}>Block</label>
                       <select
@@ -360,10 +381,13 @@ export function CustomWorkoutBuilder({
                         style={textInput}
                       />
                     </div>
-                    {block.repeatCount > 1 && (
-                      <div>
-                        <label style={fieldLabel}>Recovery</label>
-                        <div style={{ display: 'grid', gridTemplateColumns: '0.9fr 0.7fr', gap: '4px' }}>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'end', gap: 'var(--sp-2)', marginTop: '10px' }}>
+                    {block.repeatCount > 1 ? (
+                      <div style={{ display: 'grid', gridTemplateColumns: '0.9fr 0.7fr', gap: '4px', flex: 1 }}>
+                        <div>
+                          <label style={fieldLabel}>Recovery Unit</label>
                           <select
                             value={block.recoveryUnitType}
                             onChange={e => updateBlock(block.id, { recoveryUnitType: e.target.value as CustomUnitType })}
@@ -372,6 +396,9 @@ export function CustomWorkoutBuilder({
                             <option value="time">Time</option>
                             <option value="distance">Distance</option>
                           </select>
+                        </div>
+                        <div>
+                          <label style={fieldLabel}>{block.recoveryUnitType === 'time' ? 'Recovery Min' : 'Recovery Km'}</label>
                           <input
                             type="number"
                             min={0}
@@ -382,10 +409,10 @@ export function CustomWorkoutBuilder({
                           />
                         </div>
                       </div>
-                    )}
+                    ) : <div />}
                     <button
                       onClick={() => removeBlock(block.id)}
-                      style={{ ...textInput, cursor: 'pointer', width: 'auto', color: 'var(--muted)', padding: '0.65rem 0.75rem' }}
+                      style={{ ...textInput, cursor: 'pointer', width: 'auto', color: 'var(--muted)', padding: '0.65rem 0.9rem', minWidth: '92px' }}
                     >
                       Remove
                     </button>
