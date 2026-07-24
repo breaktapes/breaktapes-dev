@@ -1675,16 +1675,27 @@ function StatsStrip() {
 
   return (
     <WidgetCard id="stats-strip" className="" style={{ padding: 0 }} hint={false} noDetailPreview>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--sp-2)' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 'var(--sp-2)' }}>
         {stats.map(s => (
-          <div key={s.label} className="card-v3 card-orange" style={{ padding: '10px 12px', textAlign: 'center' }}>
-            <div style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-lg)', fontWeight: 900, lineHeight: 1, color: 'var(--white)', letterSpacing: '0.02em' }}>
-              {s.value}
-            </div>
-            <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--orange)', marginTop: '3px' }}>
+          <div
+            key={s.label}
+            className="card-v3 card-orange"
+            style={{
+              padding: '12px 14px',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              alignItems: 'flex-start',
+              minHeight: '92px',
+            }}
+          >
+            <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--orange)' }}>
               {s.label}
             </div>
-            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '1px' }}>{s.sub}</div>
+            <div style={{ ...NUMERIC_STYLE, fontSize: 'var(--text-lg)', lineHeight: 1, color: 'var(--white)', marginTop: '8px' }}>
+              {s.value}
+            </div>
+            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '6px' }}>{s.sub}</div>
           </div>
         ))}
       </div>
@@ -2204,7 +2215,7 @@ function AgeGradeWidget() {
                 <div style={{ fontSize: 'var(--text-xs)', color: 'var(--white)', wordBreak: 'break-word' as const, lineHeight: 1.3 }}>{e.race.name ?? e.race.distance}</div>
                 <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>{distBadge(e.race.distance, e.race.sport)} · {e.race.time}</div>
               </div>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', color: e.ageGrade >= 70 ? 'var(--orange)' : 'var(--white)', minWidth: '44px', textAlign: 'right', flexShrink: 0 }}>{e.ageGrade.toFixed(1)}%</div>
+              <div style={{ ...NUMERIC_STYLE, fontSize: 'var(--text-base)', color: e.ageGrade >= 70 ? 'var(--orange)' : 'var(--white)', minWidth: '44px', textAlign: 'right', flexShrink: 0 }}>{e.ageGrade.toFixed(1)}%</div>
             </div>
           ))}
         </div>
@@ -3839,7 +3850,7 @@ function PersonalBestsWidget() {
           <div role="heading" aria-level={2} style={st.widgetTitle}>PERSONAL BESTS</div>
         </div>
         <div style={{ marginTop: 'auto' }}>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: smMetricFont(timeDisplay), lineHeight: 1, color: 'var(--green)', letterSpacing: '-0.02em' }}>
+          <div style={{ ...NUMERIC_STYLE, fontSize: smMetricFont(timeDisplay), lineHeight: 1, color: 'var(--green)' }}>
             {timeDisplay}
           </div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
@@ -4798,7 +4809,7 @@ function GoalPaceWidget({ race }: { race: Race | null }) {
           <div role="heading" aria-level={2} style={st.widgetTitle}>{(focusRace.name ?? 'TARGET PACE').toUpperCase()}</div>
         </div>
         <div style={{ marginTop: 'auto' }}>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: smMetricFont(result ? paceStr : '—'), lineHeight: 1, color: result ? 'var(--orange)' : 'var(--muted)', letterSpacing: '-0.02em' }}>
+          <div style={{ ...NUMERIC_STYLE, fontSize: smMetricFont(result ? paceStr : '—'), lineHeight: 1, color: result ? 'var(--orange)' : 'var(--muted)' }}>
             {result ? `${paceStr}` : '—'}
           </div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

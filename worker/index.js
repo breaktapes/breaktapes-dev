@@ -432,7 +432,7 @@ function renderProfile(row, username) {
     const raceName = escapeHtml((pbs[key].raceName || '').replace(/\s+\d{4}$/, '').substring(0, 24));
     return `<div style="background:linear-gradient(145deg,#141414 0%,${accent.bg} 100%);border:1px solid rgba(245,245,245,0.10);border-left:3px solid ${accent.color};border-radius:14px;padding:14px 14px 12px;min-width:0;box-shadow:inset 0 1px 0 ${accent.glow},0 4px 20px rgba(0,0,0,0.4);">
       <div style="font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:rgba(232,224,213,0.45);margin-bottom:6px;">${escapeHtml(entry.label)}</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-weight:900;font-size:28px;color:${accent.color};line-height:1;letter-spacing:-0.01em;margin-bottom:8px;">${time}</div>
+      <div style="font-family:'Poppins','Barlow',sans-serif;font-weight:600;font-size:28px;color:${accent.color};line-height:1;letter-spacing:-0.03em;font-variant-numeric:tabular-nums;font-feature-settings:'tnum' 1,'zero' 1;margin-bottom:8px;">${time}</div>
       ${raceName ? `<div style="font-size:11px;color:rgba(232,224,213,0.40);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${raceName}</div>` : ''}
     </div>`;
   }
