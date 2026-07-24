@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { posthog } from '@/lib/posthog'
@@ -6,6 +6,7 @@ import { computeVDOT, equivalentPerformances, paceZones, parseDistKm, parseTimeS
 import { useUnits } from '@/lib/units'
 import { buildWorkoutRecommendation, buildWorkoutSuggestions, type DayIntent, type Freshness, type GoalFocus, type WorkoutType } from '@/lib/workoutGenerator'
 import { TimePickerWheel } from '@/components/TimePickerWheel'
+import { CustomWorkoutBuilder } from '@/components/CustomWorkoutBuilder'
 import type { HMS } from '@/components/TimePickerWheel'
 import type { Race, SavedWorkout, WorkoutFeedback, WorkoutFeedbackEntry } from '@/types'
 import { selectNextRace } from '@/stores/selectors'
@@ -762,6 +763,7 @@ export function Train() {
   const [freshness, setFreshness] = useState<Freshness>('normal')
   const [appliedDayIntent, setAppliedDayIntent] = useState<DayIntent>('quality')
   const [appliedFreshness, setAppliedFreshness] = useState<Freshness>('normal')
+  const [builderMode, setBuilderMode] = useState<'generator' | 'custom'>('generator')
 
   // Age-grade pace projection
   const currentAge = useMemo(() => {
@@ -1773,6 +1775,36 @@ export function Train() {
               )}
 
               {activeTab === 'builder' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+              <div style={{ ...card, padding: 'var(--sp-2)' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px' }}>
+                  {([
+                    ['generator', 'Generator'],
+                    ['custom', 'Custom Builder'],
+                  ] as const).map(([value, label]) => (
+                    <button
+                      key={value}
+                      onClick={() => setBuilderMode(value)}
+                      style={{
+                        padding: '8px 6px',
+                        background: builderMode === value ? 'rgba(var(--orange-ch),0.12)' : 'var(--surface3)',
+                        border: `1px solid ${builderMode === value ? 'rgba(var(--orange-ch),0.4)' : 'var(--border2)'}`,
+                        borderRadius: 'var(--radius-sm)',
+                        color: builderMode === value ? 'var(--orange)' : 'var(--muted)',
+                        fontFamily: 'var(--headline)',
+                        fontWeight: 700,
+                        fontSize: 'var(--text-xs)',
+                        letterSpacing: '0.08em',
+                        textTransform: 'uppercase',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {builderMode === 'generator' && (
               <div style={card}>
                 <p style={sectionLabel}>Workout Generator</p>
                 <p style={{ margin: '0 0 12px', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
@@ -2127,6 +2159,16 @@ export function Train() {
                     Calculate and save a VDOT benchmark first to unlock session suggestions.
                   </div>
                 )}
+              </div>
+              )}
+              {builderMode === 'custom' && (
+                <CustomWorkoutBuilder
+                  activeZones={activeZones}
+                  benchmarkLabel={activeVdotSourceLabel}
+                  nextRace={nextRace}
+                  daysToNextRace={daysToNextRace}
+                />
+              )}
               </div>
               )}
               {/* Age-Grade Pace Projection */}
