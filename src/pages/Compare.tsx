@@ -39,6 +39,14 @@ interface AthleteRow {
 
 type LoadState = 'idle' | 'loading' | 'ok' | 'error'
 
+const NUMERIC_STYLE: React.CSSProperties = {
+  fontFamily: 'var(--mono)',
+  fontWeight: 500,
+  letterSpacing: 'var(--num-track)',
+  fontVariantNumeric: 'tabular-nums',
+  fontFeatureSettings: '"tnum" 1, "zero" 1',
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function parseHMS(str: string | undefined): number | null {
@@ -143,8 +151,7 @@ function StatRow({
       borderBottom: '1px solid var(--border)',
     }}>
       <div style={{
-        fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)',
-        letterSpacing: '0.02em', color: better === 'a' ? 'var(--orange)' : 'var(--white)',
+        ...NUMERIC_STYLE, fontSize: 'var(--text-base)', color: better === 'a' ? 'var(--orange)' : 'var(--white)',
         textAlign: 'right',
       }}>
         {a ?? '—'}
@@ -157,8 +164,7 @@ function StatRow({
         {label}
       </div>
       <div style={{
-        fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)',
-        letterSpacing: '0.02em', color: better === 'b' ? 'var(--orange)' : 'var(--white)',
+        ...NUMERIC_STYLE, fontSize: 'var(--text-base)', color: better === 'b' ? 'var(--orange)' : 'var(--white)',
       }}>
         {b ?? '—'}
       </div>

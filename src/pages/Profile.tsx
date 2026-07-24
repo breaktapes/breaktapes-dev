@@ -2173,7 +2173,7 @@ function AgeGradeTrajectory() {
           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', fontSize: 'var(--text-xs)' }}>
             <div style={{ color: 'var(--muted)', width: '80px', flexShrink: 0, fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{h.raceDate.slice(0, 7)}</div>
             <div style={{ color: 'var(--muted)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{h.distance} · {h.raceName}</div>
-            <div style={{ color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-xs)', flexShrink: 0 }}>{h.pct.toFixed(1)}%</div>
+            <div style={{ ...NUMERIC_STYLE, color: 'var(--orange)', fontSize: 'var(--text-xs)', flexShrink: 0 }}>{h.pct.toFixed(1)}%</div>
           </div>
         ))}
       </div>
@@ -2415,7 +2415,7 @@ function RaceActivityHeatmap() {
                         {fmtDDMMMYYYY(r.date)}
                       </div>
                       {r.time && (
-                        <div style={{ fontSize: 'var(--text-sm)', fontFamily: 'var(--headline)', fontWeight: 800, color: 'var(--orange)', letterSpacing: '0.04em' }}>
+                        <div style={{ ...NUMERIC_STYLE, fontSize: 'var(--text-sm)', color: 'var(--orange)' }}>
                           {r.time}
                         </div>
                       )}
@@ -2837,7 +2837,7 @@ function GoalsSection() {
               <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '4px' }}>
                 {year} · {type === 'km' ? 'KM' : 'RACES'}
               </div>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xl)', color: 'var(--white)', lineHeight: 1 }}>
+              <div style={{ ...NUMERIC_STYLE, fontSize: 'var(--text-xl)', color: 'var(--white)', lineHeight: 1 }}>
                 {current}
                 <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontWeight: 400 }}> / {target || '—'}{type === 'km' ? ' km' : ''}</span>
               </div>
@@ -2846,7 +2846,7 @@ function GoalsSection() {
                   <div style={{ height: '4px', background: 'var(--surface)', borderRadius: 'var(--radius-xs)', marginTop: '8px', overflow: 'hidden' }}>
                     <div style={{ height: '100%', width: `${pct}%`, background: achieved ? 'var(--green)' : 'var(--orange)', borderRadius: 'var(--radius-xs)', transition: 'width 0.3s' }} />
                   </div>
-                  <div style={{ fontSize: 'var(--text-xs)', color: achieved ? 'var(--green)' : 'var(--muted)', marginTop: '4px', fontFamily: 'var(--headline)', fontWeight: 700 }}>
+                  <div style={{ ...NUMERIC_STYLE, fontSize: 'var(--text-xs)', color: achieved ? 'var(--green)' : 'var(--muted)', marginTop: '4px' }}>
                     {pct}%{achieved ? ' · Achieved!' : ''}
                   </div>
                 </>

@@ -885,11 +885,14 @@ function pageShell({ title, description, ogTitle, ogDescription, ogImage, canoni
 
     .stat-val {
       display: block;
-      font-family: 'Barlow Condensed', sans-serif;
-      font-weight: 900;
+      font-family: 'Geist Mono', 'Courier New', monospace;
+      font-weight: 500;
       font-size: 24px;
       color: var(--white);
       line-height: 1;
+      letter-spacing: -0.04em;
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: 'tnum' 1, 'zero' 1;
     }
 
     .stat-lbl {
@@ -982,10 +985,13 @@ function pageShell({ title, description, ogTitle, ogDescription, ogImage, canoni
     }
 
     .pb-time {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-weight: 800;
+      font-family: 'Geist Mono', 'Courier New', monospace;
+      font-weight: 500;
       font-size: 18px;
       color: var(--orange);
+      letter-spacing: -0.035em;
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: 'tnum' 1, 'zero' 1;
     }
 
     /* Races */
@@ -1047,13 +1053,16 @@ function pageShell({ title, description, ogTitle, ogDescription, ogImage, canoni
     }
 
     .race-row-time {
-      font-family: 'Barlow Condensed', sans-serif;
-      font-weight: 900;
+      font-family: 'Geist Mono', 'Courier New', monospace;
+      font-weight: 500;
       font-size: 20px;
       color: var(--orange);
       flex-shrink: 0;
       text-align: right;
       line-height: 1;
+      letter-spacing: -0.035em;
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: 'tnum' 1, 'zero' 1;
     }
 
     .race-row-meta {

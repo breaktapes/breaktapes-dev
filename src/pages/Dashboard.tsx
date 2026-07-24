@@ -2129,7 +2129,7 @@ function CareerMomentumWidget() {
           <div role="heading" aria-level={2} style={st.widgetTitle}>FORM TREND</div>
         </div>
         <div style={{ marginTop: 'auto' }}>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: scoreColor, letterSpacing: '-0.02em' }}>
+          <div style={{ ...NUMERIC_STYLE, fontSize: '64px', lineHeight: 1, color: scoreColor }}>
             {hasData ? scoreNum : '—'}
           </div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
@@ -2151,9 +2151,9 @@ function CareerMomentumWidget() {
       </div>
 
       <div>
-        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: 'var(--green)', letterSpacing: '-0.02em' }}>
-          {score.toFixed(2)}
-        </div>
+          <div style={{ ...NUMERIC_STYLE, fontSize: '64px', lineHeight: 1, color: 'var(--green)' }}>
+            {score.toFixed(2)}
+          </div>
         <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
           MOMENTUM
         </div>
@@ -2822,7 +2822,7 @@ function RaceReadinessWidget() {
       </div>
 
       <div style={{ marginTop: 'auto' }}>
-        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: sigColor, letterSpacing: '-0.02em' }}>
+        <div style={{ ...NUMERIC_STYLE, fontSize: '64px', lineHeight: 1, color: sigColor }}>
           {score}%
         </div>
         <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
@@ -2839,14 +2839,14 @@ function RaceReadinessWidget() {
           <div style={{ display: 'flex', gap: 'var(--sp-3)' }}>
             {daysSince !== null && (
               <div style={{ flex: 1, background: 'var(--surface3)', borderRadius: 'var(--radius-sm)', padding: 'var(--sp-3)' }}>
-                <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xl)', color: 'var(--white)', lineHeight: 1 }}>{daysSince}d</div>
+                <div style={{ ...NUMERIC_STYLE, fontSize: 'var(--text-xl)', color: 'var(--white)', lineHeight: 1 }}>{daysSince}d</div>
                 <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted)', textTransform: 'uppercase', marginTop: '4px' }}>SINCE LAST</div>
                 {lastDist && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', marginTop: '2px' }}>{distBadge(lastDist)}</div>}
               </div>
             )}
             {recoveryDays !== null ? (
               <div style={{ flex: 1, background: 'var(--surface3)', borderRadius: 'var(--radius-sm)', padding: 'var(--sp-3)' }}>
-                <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xl)', color: 'var(--white)', lineHeight: 1 }}>{recoveryDays}d</div>
+                <div style={{ ...NUMERIC_STYLE, fontSize: 'var(--text-xl)', color: 'var(--white)', lineHeight: 1 }}>{recoveryDays}d</div>
                 <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted)', textTransform: 'uppercase', marginTop: '4px' }}>RECOVERY</div>
                 <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', marginTop: '2px' }}>WINDOW</div>
               </div>
@@ -2957,7 +2957,7 @@ function GapToGoalWidget({ race }: { race: Race | null }) {
           </div>
         </div>
         <div style={{ marginTop: 'auto', minWidth: 0 }}>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: smMetricFont(result.goal), color: 'var(--white)', lineHeight: 1, letterSpacing: '-0.02em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{result.goal}</div>
+          <div style={{ ...NUMERIC_STYLE, fontSize: smMetricFont(result.goal), color: 'var(--white)', lineHeight: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{result.goal}</div>
           <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.12em', color: gapColor, textTransform: 'uppercase', marginTop: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{gapLabel}</div>
         </div>
       </WidgetCard>
@@ -2981,12 +2981,12 @@ function GapToGoalWidget({ race }: { race: Race | null }) {
 
       <div style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'flex-end' }}>
         <div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: smMetricFont(result.goal), color: 'var(--white)', lineHeight: 1, letterSpacing: '-0.02em' }}>{result.goal}</div>
+          <div style={{ ...NUMERIC_STYLE, fontSize: smMetricFont(result.goal), color: 'var(--white)', lineHeight: 1 }}>{result.goal}</div>
           <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase', marginTop: '4px' }}>GOAL TIME</div>
         </div>
         {result.pb && (
           <div style={{ paddingBottom: '2px' }}>
-            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', color: 'var(--muted)', lineHeight: 1, letterSpacing: '-0.01em' }}>{result.pb}</div>
+            <div style={{ ...NUMERIC_STYLE, fontSize: 'var(--text-2xl)', color: 'var(--muted)', lineHeight: 1 }}>{result.pb}</div>
             <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted2)', textTransform: 'uppercase', marginTop: '4px' }}>
               {result.isCourse ? 'COURSE PB' : 'DISTANCE PB'}
             </div>
@@ -3007,13 +3007,13 @@ function GapToGoalWidget({ race }: { race: Race | null }) {
           <div style={{ display: 'flex', gap: 'var(--sp-3)' }}>
             {weeksToRace !== null && (
               <div style={{ flex: 1, background: 'var(--surface3)', borderRadius: 'var(--radius-sm)', padding: 'var(--sp-3)' }}>
-                <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xl)', color: 'var(--white)', lineHeight: 1 }}>{weeksToRace}w</div>
+                <div style={{ ...NUMERIC_STYLE, fontSize: 'var(--text-xl)', color: 'var(--white)', lineHeight: 1 }}>{weeksToRace}w</div>
                 <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted)', textTransform: 'uppercase', marginTop: '4px' }}>WEEKS TO RACE</div>
               </div>
             )}
             {result.gap !== null && (
               <div style={{ flex: 1, background: 'var(--surface3)', borderRadius: 'var(--radius-sm)', padding: 'var(--sp-3)' }}>
-                <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xl)', color: gapColor, lineHeight: 1 }}>{result.gap <= 0 ? `-${secsToHMS(Math.abs(result.gap))}` : `+${secsToHMS(result.gap)}`}</div>
+                <div style={{ ...NUMERIC_STYLE, fontSize: 'var(--text-xl)', color: gapColor, lineHeight: 1 }}>{result.gap <= 0 ? `-${secsToHMS(Math.abs(result.gap))}` : `+${secsToHMS(result.gap)}`}</div>
                 <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--muted)', textTransform: 'uppercase', marginTop: '4px' }}>PB GAP</div>
               </div>
             )}
@@ -3283,7 +3283,7 @@ function CourseFitWidget({ race }: { race: Race | null }) {
           <div role="heading" aria-level={2} style={st.widgetTitle}>{(nextRace?.name ?? 'NEXT RACE').toUpperCase()}</div>
         </div>
         <div style={{ marginTop: 'auto' }}>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: scoreColor, letterSpacing: '-0.02em' }}>
+          <div style={{ ...NUMERIC_STYLE, fontSize: '64px', lineHeight: 1, color: scoreColor }}>
             {scoreStr}
           </div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
@@ -3324,7 +3324,7 @@ function CourseFitWidget({ race }: { race: Race | null }) {
       ) : (
         <>
           <div>
-            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: result.color, letterSpacing: '-0.02em' }}>
+            <div style={{ ...NUMERIC_STYLE, fontSize: '64px', lineHeight: 1, color: result.color }}>
               {result.score}
             </div>
             <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
@@ -3588,23 +3588,23 @@ function RaceComparerWidget() {
           <select value={safeIdxA} onChange={e => setIdxA(Number(e.target.value))} style={{ ...selStyle, color: 'var(--orange)' }}>
             {filtered.map((r, i) => <option key={r.id} value={i}>{r.name ?? r.date}</option>)}
           </select>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'calc(var(--text-xl) - 2px)', color: comparison?.faster === 'A' ? 'var(--green)' : 'var(--white)', lineHeight: 1.1 }}>{raceA?.time ?? '—'}</div>
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--orange)', marginTop: '3px', fontFamily: 'var(--headline)', fontWeight: 700 }}>{fmtPace(comparison?.paceA ?? null)}</div>
+          <div style={{ ...NUMERIC_STYLE, fontSize: 'calc(var(--text-xl) - 2px)', color: comparison?.faster === 'A' ? 'var(--green)' : 'var(--white)', lineHeight: 1.1 }}>{raceA?.time ?? '—'}</div>
+          <div style={{ ...NUMERIC_STYLE, fontSize: 'var(--text-xs)', color: 'var(--orange)', marginTop: '3px' }}>{fmtPace(comparison?.paceA ?? null)}</div>
           <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '3px' }}>{fmtDateOrdinal(raceA?.date)}</div>
         </div>
         <div style={{ background: 'var(--surface3)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-2)', borderLeft: comparison?.faster === 'B' ? '2px solid var(--green)' : '2px solid transparent' }}>
           <select value={safeIdxB} onChange={e => setIdxB(Number(e.target.value))} style={{ ...selStyle, color: 'var(--muted)' }}>
             {filtered.map((r, i) => <option key={r.id} value={i}>{r.name ?? r.date}</option>)}
           </select>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'calc(var(--text-xl) - 2px)', color: comparison?.faster === 'B' ? 'var(--green)' : 'var(--white)', lineHeight: 1.1 }}>{raceB?.time ?? '—'}</div>
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--orange)', marginTop: '3px', fontFamily: 'var(--headline)', fontWeight: 700 }}>{fmtPace(comparison?.paceB ?? null)}</div>
+          <div style={{ ...NUMERIC_STYLE, fontSize: 'calc(var(--text-xl) - 2px)', color: comparison?.faster === 'B' ? 'var(--green)' : 'var(--white)', lineHeight: 1.1 }}>{raceB?.time ?? '—'}</div>
+          <div style={{ ...NUMERIC_STYLE, fontSize: 'var(--text-xs)', color: 'var(--orange)', marginTop: '3px' }}>{fmtPace(comparison?.paceB ?? null)}</div>
           <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '3px' }}>{fmtDateOrdinal(raceB?.date)}</div>
         </div>
       </div>
 
       {comparison && safeIdxA !== safeIdxB && (
         <div style={{ padding: 'var(--sp-2)', background: 'var(--surface3)', borderRadius: 'var(--radius-md)', textAlign: 'center' }}>
-          <span style={{ fontFamily: 'var(--headline)', fontSize: 'calc(var(--text-xl) - 2px)', fontWeight: 900, color: 'var(--green)' }}>{secsToHMS(comparison.diffSecs)}</span>
+          <span style={{ ...NUMERIC_STYLE, fontSize: 'calc(var(--text-xl) - 2px)', color: 'var(--green)' }}>{secsToHMS(comparison.diffSecs)}</span>
           <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginLeft: 'var(--sp-2)' }}>faster · {comparison.faster === 'A' ? (raceA?.name ?? 'Race A') : (raceB?.name ?? 'Race B')}</span>
         </div>
       )}
