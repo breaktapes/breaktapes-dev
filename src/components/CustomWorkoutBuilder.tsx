@@ -234,36 +234,35 @@ export function CustomWorkoutBuilder({
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: 'var(--sp-3)' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
-            <div>
-              <label style={fieldLabel}>Session Objective</label>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '4px' }}>
-                {OBJECTIVES.map(option => (
-                  <button
-                    key={option.id}
-                    onClick={() => setObjective(option.id)}
-                    style={{
-                      padding: '7px 4px',
-                      background: objective === option.id ? 'rgba(var(--orange-ch),0.12)' : 'var(--surface2)',
-                      border: `1px solid ${objective === option.id ? 'rgba(var(--orange-ch),0.4)' : 'var(--border2)'}`,
-                      borderRadius: 'var(--radius-sm)',
-                      color: objective === option.id ? 'var(--orange)' : 'var(--muted)',
-                      fontFamily: 'var(--headline)',
-                      fontWeight: 700,
-                      fontSize: 'var(--text-xs)',
-                      letterSpacing: '0.06em',
-                      textTransform: 'uppercase',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {option.label}
-                  </button>
-                ))}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+          <div style={{ ...card, padding: 'var(--sp-3)', background: 'var(--surface2)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr 0.7fr', gap: 'var(--sp-2)' }}>
+              <div>
+                <label style={fieldLabel}>Session Objective</label>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '4px' }}>
+                  {OBJECTIVES.map(option => (
+                    <button
+                      key={option.id}
+                      onClick={() => setObjective(option.id)}
+                      style={{
+                        padding: '7px 4px',
+                        background: objective === option.id ? 'rgba(var(--orange-ch),0.12)' : 'var(--surface3)',
+                        border: `1px solid ${objective === option.id ? 'rgba(var(--orange-ch),0.4)' : 'var(--border2)'}`,
+                        borderRadius: 'var(--radius-sm)',
+                        color: objective === option.id ? 'var(--orange)' : 'var(--muted)',
+                        fontFamily: 'var(--headline)',
+                        fontWeight: 700,
+                        fontSize: 'var(--text-xs)',
+                        letterSpacing: '0.06em',
+                        textTransform: 'uppercase',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-2)' }}>
               <div>
                 <label style={fieldLabel}>Freshness</label>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px' }}>
@@ -273,7 +272,7 @@ export function CustomWorkoutBuilder({
                       onClick={() => setFreshness(option)}
                       style={{
                         padding: '7px 4px',
-                        background: freshness === option ? 'rgba(var(--orange-ch),0.12)' : 'var(--surface2)',
+                        background: freshness === option ? 'rgba(var(--orange-ch),0.12)' : 'var(--surface3)',
                         border: `1px solid ${freshness === option ? 'rgba(var(--orange-ch),0.4)' : 'var(--border2)'}`,
                         borderRadius: 'var(--radius-sm)',
                         color: freshness === option ? 'var(--orange)' : 'var(--muted)',
@@ -302,76 +301,69 @@ export function CustomWorkoutBuilder({
                 />
               </div>
             </div>
+          </div>
 
-            <div style={{ ...card, padding: 'var(--sp-3)', background: 'var(--surface2)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--sp-2)' }}>
-                <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color: 'var(--white)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-                  Block Builder
-                </div>
-                <button onClick={() => addBlock('easy')} style={{ ...btnMain, padding: '0.55rem 0.9rem', fontSize: 'var(--text-xs)' }}>
-                  Add Block
-                </button>
+          <div style={{ ...card, padding: 'var(--sp-3)', background: 'var(--surface2)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--sp-2)' }}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color: 'var(--white)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                Session Blocks
               </div>
+              <button onClick={() => addBlock('easy')} style={{ ...btnMain, padding: '0.55rem 0.9rem', fontSize: 'var(--text-xs)' }}>
+                Add Block
+              </button>
+            </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
-                {blocks.map(block => (
-                  <div key={block.id} style={{ background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: 'var(--sp-3)' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.7fr 0.55fr 0.55fr auto', gap: 'var(--sp-2)', alignItems: 'end' }}>
-                      <div>
-                        <label style={fieldLabel}>Block Type</label>
-                        <select
-                          value={block.blockType}
-                          onChange={e => updateBlock(block.id, { blockType: e.target.value as CustomBlockType })}
-                          style={textInput}
-                        >
-                          {BLOCK_TYPES.map(option => <option key={option.id} value={option.id}>{option.label}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label style={fieldLabel}>Unit</label>
-                        <select
-                          value={block.unitType}
-                          onChange={e => updateBlock(block.id, { unitType: e.target.value as CustomUnitType })}
-                          style={textInput}
-                        >
-                          <option value="time">Time</option>
-                          <option value="distance">Distance</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label style={fieldLabel}>{block.unitType === 'time' ? 'Min' : 'Km'}</label>
-                        <input
-                          type="number"
-                          min={1}
-                          max={60}
-                          value={block.value}
-                          onChange={e => updateBlock(block.id, { value: Math.max(1, parseFloat(e.target.value) || 1) })}
-                          style={textInput}
-                        />
-                      </div>
-                      <div>
-                        <label style={fieldLabel}>Repeats</label>
-                        <input
-                          type="number"
-                          min={1}
-                          max={10}
-                          value={block.repeatCount}
-                          onChange={e => updateBlock(block.id, { repeatCount: Math.max(1, parseInt(e.target.value, 10) || 1) })}
-                          style={textInput}
-                        />
-                      </div>
-                      <button
-                        onClick={() => removeBlock(block.id)}
-                        style={{ ...textInput, cursor: 'pointer', width: 'auto', color: 'var(--muted)', padding: '0.65rem 0.75rem' }}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+              {blocks.map(block => (
+                <div key={block.id} style={{ background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: 'var(--sp-3)' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: block.repeatCount > 1 ? '1.2fr 0.72fr 0.62fr 0.62fr 0.8fr auto' : '1.4fr 0.82fr 0.72fr 0.72fr auto', gap: 'var(--sp-2)', alignItems: 'end' }}>
+                    <div>
+                      <label style={fieldLabel}>Block</label>
+                      <select
+                        value={block.blockType}
+                        onChange={e => updateBlock(block.id, { blockType: e.target.value as CustomBlockType })}
+                        style={textInput}
                       >
-                        Remove
-                      </button>
+                        {BLOCK_TYPES.map(option => <option key={option.id} value={option.id}>{option.label}</option>)}
+                      </select>
                     </div>
-
+                    <div>
+                      <label style={fieldLabel}>Unit</label>
+                      <select
+                        value={block.unitType}
+                        onChange={e => updateBlock(block.id, { unitType: e.target.value as CustomUnitType })}
+                        style={textInput}
+                      >
+                        <option value="time">Time</option>
+                        <option value="distance">Distance</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style={fieldLabel}>{block.unitType === 'time' ? 'Min' : 'Km'}</label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={60}
+                        value={block.value}
+                        onChange={e => updateBlock(block.id, { value: Math.max(1, parseFloat(e.target.value) || 1) })}
+                        style={textInput}
+                      />
+                    </div>
+                    <div>
+                      <label style={fieldLabel}>Reps</label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={10}
+                        value={block.repeatCount}
+                        onChange={e => updateBlock(block.id, { repeatCount: Math.max(1, parseInt(e.target.value, 10) || 1) })}
+                        style={textInput}
+                      />
+                    </div>
                     {block.repeatCount > 1 && (
-                      <div style={{ display: 'grid', gridTemplateColumns: '0.7fr 0.55fr 1fr', gap: 'var(--sp-2)', marginTop: 'var(--sp-2)' }}>
-                        <div>
-                          <label style={fieldLabel}>Recovery Unit</label>
+                      <div>
+                        <label style={fieldLabel}>Recovery</label>
+                        <div style={{ display: 'grid', gridTemplateColumns: '0.9fr 0.7fr', gap: '4px' }}>
                           <select
                             value={block.recoveryUnitType}
                             onChange={e => updateBlock(block.id, { recoveryUnitType: e.target.value as CustomUnitType })}
@@ -380,9 +372,6 @@ export function CustomWorkoutBuilder({
                             <option value="time">Time</option>
                             <option value="distance">Distance</option>
                           </select>
-                        </div>
-                        <div>
-                          <label style={fieldLabel}>{block.recoveryUnitType === 'time' ? 'Rec Min' : 'Rec Km'}</label>
                           <input
                             type="number"
                             min={0}
@@ -392,21 +381,23 @@ export function CustomWorkoutBuilder({
                             style={textInput}
                           />
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'end', fontSize: 'var(--text-xs)', color: 'var(--muted)', lineHeight: 1.45 }}>
-                          Recovery is applied between reps and counted into total load and time.
-                        </div>
                       </div>
                     )}
+                    <button
+                      onClick={() => removeBlock(block.id)}
+                      style={{ ...textInput, cursor: 'pointer', width: 'auto', color: 'var(--muted)', padding: '0.65rem 0.75rem' }}
+                    >
+                      Remove
+                    </button>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
-            {summary && (
-              <>
-                <div style={{ ...card, background: 'linear-gradient(180deg, rgba(var(--orange-ch),0.06), rgba(255,255,255,0.01)), var(--surface2)' }}>
+          {summary && (
+            <>
+              <div style={{ ...card, background: 'linear-gradient(180deg, rgba(var(--orange-ch),0.06), rgba(255,255,255,0.01)), var(--surface2)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--sp-2)', alignItems: 'flex-start', marginBottom: 'var(--sp-2)' }}>
                     <div>
                       <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color: 'var(--orange)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
@@ -451,9 +442,9 @@ export function CustomWorkoutBuilder({
                     <span>Slower pace</span>
                     <span>Faster pace = taller bar</span>
                   </div>
-                </div>
+              </div>
 
-                <div style={{ ...card, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-2)' }}>
+              <div style={{ ...card, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 'var(--sp-2)' }}>
                   {[
                     ['Total time', `${Math.round(summary.totalMinutes)} min`],
                     ['Est distance', `${summary.totalDistanceKm.toFixed(1)} km`],
@@ -465,9 +456,9 @@ export function CustomWorkoutBuilder({
                       <div style={{ ...NUMERIC_STYLE, fontSize: 'var(--text-lg)', color: 'var(--white)', marginTop: '4px' }}>{value}</div>
                     </div>
                   ))}
-                </div>
+              </div>
 
-                <div style={card}>
+              <div style={{ ...card, background: 'var(--surface2)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--sp-2)', alignItems: 'baseline', marginBottom: '8px' }}>
                     <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color: 'var(--white)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
                       Coaching Verdict
@@ -480,36 +471,47 @@ export function CustomWorkoutBuilder({
                     {summary.verdict}
                   </p>
                   <div style={{ display: 'grid', gap: '6px', marginBottom: summary.suggestions.length ? '10px' : 0 }}>
-                    {summary.risks.map(risk => (
+                    {summary.risks.slice(0, 1).map(risk => (
                       <div key={risk} style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', lineHeight: 1.45 }}>
                         {risk}
                       </div>
                     ))}
                   </div>
                   {summary.suggestions.length > 0 && (
-                    <div style={{ paddingTop: '10px', borderTop: '1px solid var(--border)' }}>
+                    <div style={{ paddingTop: '10px', borderTop: '1px solid var(--border)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-3)' }}>
+                      <div>
                       <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: 'var(--headline)', fontWeight: 700, marginBottom: '6px' }}>
                         BREAKTAPES would change
                       </div>
-                      {summary.suggestions.map(suggestion => (
+                      {summary.suggestions.slice(0, 2).map(suggestion => (
                         <div key={suggestion} style={{ fontSize: 'var(--text-xs)', color: 'var(--white)', lineHeight: 1.45, marginBottom: '4px' }}>
                           {suggestion}
                         </div>
                       ))}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: 'var(--headline)', fontWeight: 700, marginBottom: '6px' }}>
+                          Session Read
+                        </div>
+                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--white)', lineHeight: 1.45 }}>
+                          {summary.primaryStimulus} is the main payoff, with {summary.secondaryStimulus.toLowerCase()} as the secondary effect.
+                        </div>
+                      </div>
                     </div>
                   )}
-                </div>
+              </div>
 
-                <button onClick={saveCustomWorkout} style={{ ...btnMain, width: '100%' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: customSaved.length > 0 ? '0.95fr 1.05fr' : '1fr', gap: 'var(--sp-3)' }}>
+                <button onClick={saveCustomWorkout} style={{ ...btnMain, width: '100%', minHeight: '48px' }}>
                   Save Custom Workout
                 </button>
 
                 {customSaved.length > 0 && (
-                  <div style={card}>
+                  <div style={{ ...card, background: 'var(--surface2)' }}>
                     <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: 'var(--headline)', fontWeight: 700, marginBottom: '8px' }}>
                       Saved Custom Workouts
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
                       {customSaved.map(workout => (
                         <button
                           key={workout.id}
@@ -527,9 +529,9 @@ export function CustomWorkoutBuilder({
                     </div>
                   </div>
                 )}
-              </>
-            )}
-          </div>
+              </div>
+	            </>
+	          )}
         </div>
       </div>
     </div>
