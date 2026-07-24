@@ -380,7 +380,8 @@ Keep:
 
 - `Barlow Condensed` for display and section emphasis
 - `Barlow` for body copy and explanatory interface text
-- `Geist Mono` for metrics, chips, axes, and technical detail
+- `Geist Mono` for chips, axes, and technical detail labels
+- `Poppins Semi Bold` for actionable numbers
 
 What changes is scope and floor.
 
@@ -401,8 +402,15 @@ What changes is scope and floor.
 #### Technical
 
 - `Geist Mono`
-- use by default for timing, pace, labels, chips, dates, measured values, and actionable numbers
+- use for chips, labels, axes, dates, and technical metadata
 - do not let it dominate paragraph-like reading
+
+#### Numeric
+
+- `Poppins`
+- semibold by default
+- use for timing, pace, counts, percentages, scores, PBs, and actionable values
+- keep spacing tight but not compressed
 
 ### v6 Size Scale
 
@@ -432,7 +440,7 @@ The app should stop using its most expressive font for low-level repeated metada
 That means:
 
 - less uppercase condensed repetition
-- most important numbers move to `Geist Mono` at sturdier weights
+- most important numbers move to `Poppins Semi Bold`
 - more sentence-case support text
 - higher contrast for explanation
 
@@ -452,7 +460,7 @@ Used for:
 
 Rules:
 
-- `Geist Mono`
+- `Poppins`
 - tabular numerals required
 - large enough to read at a glance from laptop distance
 - separators quieter than the digits
@@ -469,7 +477,7 @@ Used for:
 
 Rules:
 
-- default to `Geist Mono`
+- default to `Poppins`
 - `500` weight minimum
 - large, isolated, and visually dominant
 - labels must be quieter than values
@@ -485,7 +493,7 @@ Used for:
 
 Rules:
 
-- always `Geist Mono`
+- always `Poppins`
 - tabular numerals required
 - never smaller than supporting explanatory text when they are the primary output
 - range values should align visually and avoid cramped separators
@@ -503,7 +511,7 @@ Used for:
 
 Rules:
 
-- `Geist Mono`
+- `Poppins`
 - stronger than their label
 - compact, but not decorative
 
@@ -519,7 +527,7 @@ Used for:
 
 Rules:
 
-- `Geist Mono`
+- `Poppins`
 - percentages must read as numbers first, badges second
 - if a score is central to the card, it needs hero treatment
 
@@ -540,9 +548,9 @@ Rules:
 
 ### Canonical Numeric Rules
 
-- All actionable numeric values use `Geist Mono`
+- All actionable numeric values use `Poppins`
 - All actionable numeric values use tabular numerals
-- `font-weight: 500` is the default numeric floor
+- `font-weight: 600` is the default numeric floor
 - Numeric tracking should be slightly tightened, not heavily compressed
 - Labels around numbers should usually use `Barlow` or restrained `Barlow Condensed`, never overpower the value itself
 - A surface should not mix multiple numeric scales unless the hierarchy is obvious

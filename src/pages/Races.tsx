@@ -286,7 +286,7 @@ function DetailedRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onCli
           </div>
         </div>
         <div style={{ textAlign: 'right', flexShrink: 0 }}>
-          <div style={{ fontFamily: 'var(--mono)', fontWeight: 500, fontVariantNumeric: 'tabular-nums', fontFeatureSettings: '"tnum" 1, "zero" 1', fontSize: '17px', color: nonFinish ? 'var(--muted)' : (isPB ? 'var(--green)' : 'var(--orange)'), letterSpacing: 'var(--num-track)' }}>
+          <div style={{ fontFamily: 'var(--num)', fontWeight: 600, fontVariantNumeric: 'tabular-nums', fontFeatureSettings: '"tnum" 1, "zero" 1', fontSize: '17px', color: nonFinish ? 'var(--muted)' : (isPB ? 'var(--green)' : 'var(--orange)'), letterSpacing: 'var(--num-track)' }}>
             {nonFinish ?? (padTime(race.time) ?? '—')}
           </div>
           {label && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textAlign: 'right', marginTop: '1px' }}>{label}</div>}

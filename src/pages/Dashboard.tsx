@@ -45,8 +45,8 @@ import { posthog } from '@/lib/posthog'
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const NUMERIC_STYLE: React.CSSProperties = {
-  fontFamily: 'var(--mono)',
-  fontWeight: 500,
+  fontFamily: 'var(--num)',
+  fontWeight: 600,
   letterSpacing: 'var(--num-track)',
   fontVariantNumeric: 'tabular-nums',
   fontFeatureSettings: '"tnum" 1, "zero" 1',
@@ -1582,7 +1582,7 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
             {r.name ?? 'Untitled'}
           </div>
           {r.time && (
-            <div style={{ fontFamily: 'var(--mono)', fontWeight: 700, fontSize: 'var(--text-xl)', color: isPB ? 'var(--gold)' : 'var(--orange)', letterSpacing: '-0.02em', lineHeight: 1, marginTop: '4px' }}>
+            <div style={{ fontFamily: 'var(--num)', fontWeight: 600, fontVariantNumeric: 'tabular-nums', fontFeatureSettings: '"tnum" 1, "zero" 1', fontSize: 'var(--text-xl)', color: isPB ? 'var(--gold)' : 'var(--orange)', letterSpacing: 'var(--num-track)', lineHeight: 1, marginTop: '4px' }}>
               {toHHMMSS(r.time)}
             </div>
           )}
@@ -1631,7 +1631,7 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
               </div>
               {/* Right: time — monospace for alignment */}
               {r.time && (
-                <div style={{ fontFamily: 'var(--mono)', fontWeight: 700, fontSize: 'var(--text-base)', color: isPB ? 'var(--gold)' : 'var(--orange)', flexShrink: 0, letterSpacing: '0.02em' }}>
+                <div style={{ fontFamily: 'var(--num)', fontWeight: 600, fontVariantNumeric: 'tabular-nums', fontFeatureSettings: '"tnum" 1, "zero" 1', fontSize: 'var(--text-base)', color: isPB ? 'var(--gold)' : 'var(--orange)', flexShrink: 0, letterSpacing: 'var(--num-track)' }}>
                   {toHHMMSS(r.time)}
                 </div>
               )}
@@ -4534,7 +4534,7 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
                 {zones.map(z => (
                   <div key={z.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
                     <span style={{ fontSize: 'var(--text-xs)', color: z.color, fontFamily: 'var(--headline)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{z.label}</span>
-                    <span style={{ fontFamily: 'var(--mono)', fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--white)' }}>{z.pace}/km</span>
+                    <span style={{ fontFamily: 'var(--num)', fontWeight: 600, fontVariantNumeric: 'tabular-nums', fontFeatureSettings: '"tnum" 1, "zero" 1', fontSize: 'var(--text-sm)', color: 'var(--white)', letterSpacing: 'var(--num-track)' }}>{z.pace}/km</span>
                   </div>
                 ))}
               </div>
@@ -4698,7 +4698,7 @@ function TriPredictorWidget() {
                   <div style={{ flex: 1, height: '6px', background: 'var(--surface3)', borderRadius: '3px', overflow: 'hidden', minWidth: 0 }}>
                     <div style={{ width: `${pct}%`, height: '100%', background: color, opacity: isTransition ? 0.4 : 0.85 }} />
                   </div>
-                  <span style={{ width: '64px', flexShrink: 0, textAlign: 'right', fontFamily: 'var(--mono)', fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--white)' }}>
+                  <span style={{ width: '64px', flexShrink: 0, textAlign: 'right', fontFamily: 'var(--num)', fontWeight: 600, fontVariantNumeric: 'tabular-nums', fontFeatureSettings: '"tnum" 1, "zero" 1', fontSize: 'var(--text-sm)', color: 'var(--white)', letterSpacing: 'var(--num-track)' }}>
                     {leg.time}
                   </span>
                 </div>
@@ -6079,8 +6079,8 @@ const st = {
   } as React.CSSProperties,
 
   countdownNum: {
-    fontFamily: 'var(--mono)',
-    fontWeight: 500,
+    fontFamily: 'var(--num)',
+    fontWeight: 600,
     fontSize: '56px',
     color: 'var(--white)',
     lineHeight: 1,
@@ -6237,9 +6237,9 @@ const st = {
   } as React.CSSProperties,
 
   raceTime: {
-    fontFamily: 'var(--mono)',
+    fontFamily: 'var(--num)',
     fontSize: 'var(--text-sm)',
-    fontWeight: 500,
+    fontWeight: 600,
     letterSpacing: 'var(--num-track)',
     color: 'var(--white)',
     whiteSpace: 'nowrap' as const,

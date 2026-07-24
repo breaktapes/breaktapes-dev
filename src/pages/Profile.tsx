@@ -19,8 +19,8 @@ import { APP_URL } from '@/env'
 import { supabase } from '@/lib/supabase'
 
 const NUMERIC_STYLE: React.CSSProperties = {
-  fontFamily: 'var(--mono)',
-  fontWeight: 500,
+  fontFamily: 'var(--num)',
+  fontWeight: 600,
   letterSpacing: 'var(--num-track)',
   fontVariantNumeric: 'tabular-nums',
   fontFeatureSettings: '"tnum" 1, "zero" 1',
@@ -3341,9 +3341,9 @@ const st = {
   } as React.CSSProperties,
 
   heroStatValue: {
-    fontFamily: 'var(--mono)',
+    fontFamily: 'var(--num)',
     fontSize: 'var(--text-lg)',
-    fontWeight: 500,
+    fontWeight: 600,
     lineHeight: 1,
     color: 'var(--white)',
     letterSpacing: 'var(--num-track)',

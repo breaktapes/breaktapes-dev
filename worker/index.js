@@ -665,7 +665,7 @@ function pageShell({ title, description, ogTitle, ogDescription, ogImage, canoni
   <link rel="canonical" href="${escapeHtml(canonical)}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;800;900&family=Barlow:wght@400;500;600&family=Poppins:wght@600&display=swap" rel="stylesheet">
 
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -885,8 +885,8 @@ function pageShell({ title, description, ogTitle, ogDescription, ogImage, canoni
 
     .stat-val {
       display: block;
-      font-family: 'Geist Mono', 'Courier New', monospace;
-      font-weight: 500;
+      font-family: 'Poppins', 'Barlow', sans-serif;
+      font-weight: 600;
       font-size: 24px;
       color: var(--white);
       line-height: 1;
@@ -985,8 +985,8 @@ function pageShell({ title, description, ogTitle, ogDescription, ogImage, canoni
     }
 
     .pb-time {
-      font-family: 'Geist Mono', 'Courier New', monospace;
-      font-weight: 500;
+      font-family: 'Poppins', 'Barlow', sans-serif;
+      font-weight: 600;
       font-size: 18px;
       color: var(--orange);
       letter-spacing: -0.035em;
@@ -1053,8 +1053,8 @@ function pageShell({ title, description, ogTitle, ogDescription, ogImage, canoni
     }
 
     .race-row-time {
-      font-family: 'Geist Mono', 'Courier New', monospace;
-      font-weight: 500;
+      font-family: 'Poppins', 'Barlow', sans-serif;
+      font-weight: 600;
       font-size: 20px;
       color: var(--orange);
       flex-shrink: 0;

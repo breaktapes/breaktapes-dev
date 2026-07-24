@@ -68,8 +68,8 @@ const MEDAL_COLORS: Record<string, string> = {
 }
 
 const NUMERIC_STYLE: React.CSSProperties = {
-  fontFamily: 'var(--mono)',
-  fontWeight: 500,
+  fontFamily: 'var(--num)',
+  fontWeight: 600,
   letterSpacing: 'var(--num-track)',
   fontVariantNumeric: 'tabular-nums',
   fontFeatureSettings: '"tnum" 1, "zero" 1',

@@ -95,8 +95,8 @@ const textInput: React.CSSProperties = {
 }
 
 const NUMERIC_STYLE: React.CSSProperties = {
-  fontFamily: 'var(--mono)',
-  fontWeight: 500,
+  fontFamily: 'var(--num)',
+  fontWeight: 600,
   letterSpacing: 'var(--num-track)',
   fontVariantNumeric: 'tabular-nums',
   fontFeatureSettings: '"tnum" 1, "zero" 1',
@@ -639,7 +639,7 @@ function ReadinessTab() {
   function metricCard(label: string, value: string | null, unit: string, color = 'var(--white)') {
     return (
       <div style={{ ...cardStyle, textAlign: 'center' }}>
-        <div style={{ fontFamily: 'var(--mono)', fontWeight: 500, fontVariantNumeric: 'tabular-nums', fontFeatureSettings: '"tnum" 1, "zero" 1', fontSize: 'var(--text-2xl)', lineHeight: 1, color, letterSpacing: 'var(--num-track)' }}>
+        <div style={{ fontFamily: 'var(--num)', fontWeight: 600, fontVariantNumeric: 'tabular-nums', fontFeatureSettings: '"tnum" 1, "zero" 1', fontSize: 'var(--text-2xl)', lineHeight: 1, color, letterSpacing: 'var(--num-track)' }}>
           {value ?? '—'}
         </div>
         <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '4px', textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: 'var(--headline)', fontWeight: 700 }}>
@@ -1533,14 +1533,14 @@ export function Train() {
                     }}>
                       <div>
                         <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Per km</p>
-                        <p style={{ margin: '4px 0 0', fontFamily: 'var(--mono)', fontWeight: 500, fontVariantNumeric: 'tabular-nums', fontFeatureSettings: '"tnum" 1, "zero" 1', letterSpacing: 'var(--num-track)', fontSize: 'var(--text-xl)', color: units !== 'imperial' ? 'var(--orange)' : 'var(--white)' }}>
+                        <p style={{ margin: '4px 0 0', fontFamily: 'var(--num)', fontWeight: 600, fontVariantNumeric: 'tabular-nums', fontFeatureSettings: '"tnum" 1, "zero" 1', letterSpacing: 'var(--num-track)', fontSize: 'var(--text-xl)', color: units !== 'imperial' ? 'var(--orange)' : 'var(--white)' }}>
                           {runResult.km}
                         </p>
                         <p style={{ margin: '2px 0 0', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>min/km{units !== 'imperial' && ' ✓'}</p>
                       </div>
                       <div>
                         <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Per mile</p>
-                        <p style={{ margin: '4px 0 0', fontFamily: 'var(--mono)', fontWeight: 500, fontVariantNumeric: 'tabular-nums', fontFeatureSettings: '"tnum" 1, "zero" 1', letterSpacing: 'var(--num-track)', fontSize: 'var(--text-xl)', color: units === 'imperial' ? 'var(--orange)' : 'var(--white)' }}>
+                        <p style={{ margin: '4px 0 0', fontFamily: 'var(--num)', fontWeight: 600, fontVariantNumeric: 'tabular-nums', fontFeatureSettings: '"tnum" 1, "zero" 1', letterSpacing: 'var(--num-track)', fontSize: 'var(--text-xl)', color: units === 'imperial' ? 'var(--orange)' : 'var(--white)' }}>
                           {runResult.mi}
                         </p>
                         <p style={{ margin: '2px 0 0', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>min/mi{units === 'imperial' && ' ✓'}</p>
