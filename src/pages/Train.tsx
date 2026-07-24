@@ -697,7 +697,6 @@ function ReadinessTab() {
   )
 }
 
->>>>>>> e536f4e (Improve numeric readability across the athlete app)
 // ─── Triathlon result type ────────────────────────────────────────────────────
 
 interface TriResult {
