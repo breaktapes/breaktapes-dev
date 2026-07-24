@@ -94,6 +94,14 @@ const textInput: React.CSSProperties = {
   boxSizing: 'border-box' as const,
 }
 
+const NUMERIC_STYLE: React.CSSProperties = {
+  fontFamily: 'var(--mono)',
+  fontWeight: 500,
+  letterSpacing: 'var(--num-track)',
+  fontVariantNumeric: 'tabular-nums',
+  fontFeatureSettings: '"tnum" 1, "zero" 1',
+}
+
 // ─── Running distances ────────────────────────────────────────────────────────
 
 type RunDistId = '5k' | '10k' | '10mi' | 'hm' | 'm' | '50k' | '100k' | 'custom'
@@ -1213,7 +1221,7 @@ export function Train() {
               {activeTab === 'benchmark' && (
               <div style={card}>
                 <p style={sectionLabel}>VDOT Benchmark</p>
-                <p style={{ margin: '0 0 12px', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
+                <p style={{ margin: '0 0 14px', fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.55 }}>
                   Start with a recent race result. We&apos;ll estimate your VDOT and turn it into usable training paces.
                 </p>
 
@@ -1227,14 +1235,14 @@ export function Train() {
                       onClick={() => setBenchmarkMode(option.id)}
                       style={{
                         flex: 1,
-                        padding: '7px 0',
+                        padding: '10px 0',
                         background: benchmarkMode === option.id ? 'rgba(var(--orange-ch),0.12)' : 'var(--surface3)',
                         border: `1px solid ${benchmarkMode === option.id ? 'rgba(var(--orange-ch),0.4)' : 'var(--border2)'}`,
                         borderRadius: 'var(--radius-sm)',
                         color: benchmarkMode === option.id ? 'var(--orange)' : 'var(--muted)',
                         fontFamily: 'var(--headline)',
                         fontWeight: 700,
-                        fontSize: 'var(--text-xs)',
+                        fontSize: 'var(--text-sm)',
                         letterSpacing: '0.08em',
                         textTransform: 'uppercase',
                         cursor: 'pointer',
@@ -1259,10 +1267,10 @@ export function Train() {
                             border: '1px solid var(--border2)',
                             borderRadius: 'var(--radius-md)',
                             color: 'var(--white)',
-                            fontFamily: 'var(--headline)',
-                            fontWeight: 700,
-                            fontSize: 'var(--text-compact)',
-                            letterSpacing: '0.04em',
+                            fontFamily: 'var(--body)',
+                            fontWeight: 600,
+                            fontSize: '15px',
+                            letterSpacing: '0',
                             padding: '0.75rem 2.5rem 0.75rem 0.85rem',
                             cursor: 'pointer',
                             appearance: 'none',
@@ -1281,7 +1289,7 @@ export function Train() {
                       </div>
                     </div>
                     {benchmarkCandidates.length === 0 && (
-                      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
+                      <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5 }}>
                         Log a finished running race up to marathon distance to use it as a benchmark, or switch to manual entry.
                       </div>
                     )}
@@ -1300,10 +1308,10 @@ export function Train() {
                             border: '1px solid var(--border2)',
                             borderRadius: 'var(--radius-md)',
                             color: 'var(--white)',
-                            fontFamily: 'var(--headline)',
-                            fontWeight: 700,
-                            fontSize: 'var(--text-compact)',
-                            letterSpacing: '0.05em',
+                            fontFamily: 'var(--body)',
+                            fontWeight: 600,
+                            fontSize: '15px',
+                            letterSpacing: '0',
                             padding: '0.75rem 2.5rem 0.75rem 0.85rem',
                             cursor: 'pointer',
                             appearance: 'none',
@@ -1357,18 +1365,18 @@ export function Train() {
 
                 {benchmarkResult && (
                   <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <div style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-md)', padding: '14px' }}>
+                    <div style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-md)', padding: '16px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
                         <div>
-                          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', fontFamily: 'var(--headline)', fontWeight: 800, letterSpacing: '0.03em' }}>
                             {benchmarkResult.raceName}
                           </div>
-                          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', marginTop: '3px' }}>
+                          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginTop: '4px', lineHeight: 1.45 }}>
                             {benchmarkResult.distLabel} · {benchmarkResult.timeLabel}{benchmarkResult.dateLabel ? ` · ${benchmarkResult.dateLabel}` : ''}
                           </div>
                         </div>
                         <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '36px', lineHeight: 1, color: 'var(--orange)' }}>
+                          <div style={{ ...NUMERIC_STYLE, fontSize: '44px', lineHeight: 1, color: 'var(--orange)' }}>
                             {benchmarkResult.vdot.toFixed(1)}
                           </div>
                           <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
@@ -1380,11 +1388,11 @@ export function Train() {
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-2)' }}>
                       {equivalentPerformances(benchmarkResult.vdot).filter(p => ['5K', '10K', 'Half Marathon', 'Marathon'].includes(p.distance)).map(perf => (
-                        <div key={perf.distance} style={{ background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: 'var(--sp-3)' }}>
+                        <div key={perf.distance} style={{ background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: '14px' }}>
                           <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                             {perf.distance}
                           </div>
-                          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-lg)', color: 'var(--white)', marginTop: '4px' }}>
+                          <div style={{ ...NUMERIC_STYLE, fontSize: '28px', color: 'var(--white)', marginTop: '6px' }}>
                             {perf.timeStr}
                           </div>
                         </div>
@@ -1745,15 +1753,15 @@ export function Train() {
                                 <span style={{ width: '26px', height: '26px', borderRadius: 'var(--radius-sm)', background: `${color}22`, border: `1px solid ${color}55`, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color }}>
                                   {z.abbr}
                                 </span>
-                                <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color: 'var(--white)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                                <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '15px', color: 'var(--white)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
                                   {z.label}
                                 </div>
                               </div>
-                              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '6px', lineHeight: 1.4 }}>
+                              <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginTop: '6px', lineHeight: 1.5 }}>
                                 {z.description}
                               </div>
                             </div>
-                            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color, whiteSpace: 'nowrap', flexShrink: 0 }}>
+                            <div style={{ ...NUMERIC_STYLE, fontSize: '15px', color, whiteSpace: 'nowrap', flexShrink: 0 }}>
                               {z.minPaceStr} – {z.maxPaceStr}
                             </div>
                           </div>
