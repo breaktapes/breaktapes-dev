@@ -67,6 +67,14 @@ const MEDAL_COLORS: Record<string, string> = {
   finisher: '#E84E1B',
 }
 
+const NUMERIC_STYLE: React.CSSProperties = {
+  fontFamily: 'var(--mono)',
+  fontWeight: 500,
+  letterSpacing: 'var(--num-track)',
+  fontVariantNumeric: 'tabular-nums',
+  fontFeatureSettings: '"tnum" 1, "zero" 1',
+}
+
 /** Personal bests: best time per distance */
 function buildPBs(races: PublicRace[]): Record<string, PublicRace> {
   const pb: Record<string, PublicRace> = {}
@@ -101,14 +109,14 @@ export function PublicProfile({ profile }: PublicProfileProps) {
     level: { fontSize: 'var(--text-xs)', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, letterSpacing: '0.1em', color: 'var(--orange)', background: 'var(--orange-dim)', padding: '2px 6px', borderRadius: 'var(--radius-xs)' },
     statsGrid: { display: 'grid' as const, gridTemplateColumns: 'repeat(3,1fr)', gap: '0.5rem', marginTop: '1rem' },
     statCell: { textAlign: 'center' as const, background: 'var(--surface3)', borderRadius: 'var(--radius-md)', padding: '0.5rem' },
-    statVal: { fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: 'var(--text-xl)', color: 'var(--white)', display: 'block' },
+    statVal: { ...NUMERIC_STYLE, fontSize: 'var(--text-xl)', color: 'var(--white)', display: 'block' },
     statLabel: { fontSize: 'var(--text-xs)', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: 'var(--muted)' },
     section: { marginBottom: '1rem' },
     sectionTitle: { fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase' as const, color: 'var(--muted)', marginBottom: '0.5rem' },
     raceRow: { display: 'flex' as const, justifyContent: 'space-between', alignItems: 'center', padding: '0.55rem 0', borderBottom: '1px solid var(--border)' },
     raceName: { fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 800, fontSize: 'var(--text-compact)', color: 'var(--white)' },
     raceMeta: { fontSize: 'var(--text-xs)', color: 'var(--muted)' },
-    raceTime: { fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--orange)', textAlign: 'right' as const },
+    raceTime: { ...NUMERIC_STYLE, fontSize: 'var(--text-sm)', color: 'var(--orange)', textAlign: 'right' as const },
     cta: { display: 'block', textAlign: 'center' as const, background: 'var(--orange)', color: 'var(--black)', fontFamily: "'Barlow Condensed', sans-serif", fontWeight: 900, fontSize: 'var(--text-compact)', letterSpacing: '0.1em', textTransform: 'uppercase' as const, padding: '0.85rem', borderRadius: 'var(--radius-xs)', textDecoration: 'none', marginTop: '1.5rem' },
   }
 
@@ -158,7 +166,7 @@ export function PublicProfile({ profile }: PublicProfileProps) {
             .map(([d, label]) => (
               <div key={d} style={cardStyle(accent)}>
                 <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 800, fontSize: 'var(--text-xs)', letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: 'var(--muted2)', marginBottom: '4px', lineHeight: 1 }}>{label}</div>
-                <div style={{ fontFamily: "'Barlow Condensed',sans-serif", fontWeight: 900, fontSize: 'var(--text-lg)', color: 'var(--orange)', lineHeight: 1, letterSpacing: '-0.02em' }}>{escapeHtml(pbMap[d].time)}</div>
+                <div style={{ ...NUMERIC_STYLE, fontSize: 'var(--text-lg)', color: 'var(--orange)', lineHeight: 1 }}>{escapeHtml(pbMap[d].time)}</div>
               </div>
             ))
         const runCards = renderCards(RUN_DISTS, '#00FF88')

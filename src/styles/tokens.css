@@ -46,6 +46,8 @@
   --shell-gradient:linear-gradient(180deg, var(--black) 0%, var(--surface) 100%);
   /* mono font */
   --mono: 'Geist Mono', 'Courier New', monospace;
+  --num-weight: 500;
+  --num-track: -0.035em;
   /* error states */
   --error:      #ff5555;
   --error-ch:   255, 85, 85;

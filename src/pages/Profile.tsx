@@ -18,6 +18,14 @@ import { distLabel } from '@/lib/utils'
 import { APP_URL } from '@/env'
 import { supabase } from '@/lib/supabase'
 
+const NUMERIC_STYLE: React.CSSProperties = {
+  fontFamily: 'var(--mono)',
+  fontWeight: 500,
+  letterSpacing: 'var(--num-track)',
+  fontVariantNumeric: 'tabular-nums',
+  fontFeatureSettings: '"tnum" 1, "zero" 1',
+}
+
 // ─── Goal distance presets (static, not from race history) ───────────────────
 
 const GOAL_SPORTS = ['Running', 'Triathlon', 'Cycling', 'Swimming', 'HYROX'] as const
@@ -2136,7 +2144,7 @@ function AgeGradeTrajectory() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', marginBottom: '4px' }}>
         <h2 style={st.sectionTitle}>AGE-GRADE</h2>
         <div style={{ height: '1px', flex: 1, background: 'var(--border)' }} />
-        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xl)', color: 'var(--orange)', letterSpacing: '0.02em' }}>
+        <div style={{ ...NUMERIC_STYLE, fontSize: 'var(--text-xl)', color: 'var(--orange)' }}>
           {latestPct.toFixed(1)}%
         </div>
       </div>
@@ -2259,7 +2267,7 @@ function PerformanceTimeline() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
         {timeline.map(row => (
           <div key={row.year} style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: 'var(--sp-4)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
-            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', letterSpacing: '0.04em', color: 'var(--orange)' }}>
+            <div style={{ ...NUMERIC_STYLE, fontSize: 'var(--text-base)', color: 'var(--orange)' }}>
               {row.year}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
@@ -2553,7 +2561,7 @@ function RacePersonality() {
                 <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)' }}>
                   {t.trait}
                 </div>
-                <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-lg)', color: 'var(--orange)', letterSpacing: '0.02em' }}>
+                <div style={{ ...NUMERIC_STYLE, fontSize: 'var(--text-lg)', color: 'var(--orange)' }}>
                   {t.score}
                 </div>
               </div>
@@ -3333,12 +3341,14 @@ const st = {
   } as React.CSSProperties,
 
   heroStatValue: {
-    fontFamily: 'var(--headline)',
+    fontFamily: 'var(--mono)',
     fontSize: 'var(--text-lg)',
-    fontWeight: 900,
+    fontWeight: 500,
     lineHeight: 1,
     color: 'var(--white)',
-    letterSpacing: '0.02em',
+    letterSpacing: 'var(--num-track)',
+    fontVariantNumeric: 'tabular-nums',
+    fontFeatureSettings: '"tnum" 1, "zero" 1',
   } as React.CSSProperties,
 
   heroStatLabel: {

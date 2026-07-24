@@ -44,6 +44,14 @@ import { posthog } from '@/lib/posthog'
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+const NUMERIC_STYLE: React.CSSProperties = {
+  fontFamily: 'var(--mono)',
+  fontWeight: 500,
+  letterSpacing: 'var(--num-track)',
+  fontVariantNumeric: 'tabular-nums',
+  fontFeatureSettings: '"tnum" 1, "zero" 1',
+}
+
 // LOCAL date (not UTC) — must match useRaceStore.localToday() so a race dated
 // "today" isn't classified past by one and future by the other in UTC+/- zones.
 function todayStr() {
@@ -644,11 +652,11 @@ function RaceMorningBrief({ race, onEditRace, onComplete }: { race: Race; onEdit
           <div style={{ marginTop: '10px', background: 'var(--surface3)', borderRadius: 'var(--radius-md)', padding: '10px 12px', display: 'flex', gap: '1.5rem' }}>
             <div>
               <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xs)', letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '2px' }}>Goal Pace</div>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-md)', color: 'var(--orange)', letterSpacing: '0.02em' }}>{goalPace.pace}</div>
+              <div style={{ ...NUMERIC_STYLE, fontSize: 'var(--text-md)', color: 'var(--orange)' }}>{goalPace.pace}</div>
             </div>
             <div>
               <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xs)', letterSpacing: '0.12em', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: '2px' }}>Target</div>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-md)', color: 'var(--white)', letterSpacing: '0.02em' }}>{goalPace.target}</div>
+              <div style={{ ...NUMERIC_STYLE, fontSize: 'var(--text-md)', color: 'var(--white)' }}>{goalPace.target}</div>
             </div>
           </div>
         ) : (
@@ -2710,7 +2718,7 @@ function OnThisDayWidget() {
           <div role="heading" aria-level={2} style={st.widgetTitle}>RACE FLASHBACK</div>
         </div>
         <div style={{ marginTop: 'auto' }}>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: 'var(--orange)', letterSpacing: '-0.02em' }}>
+          <div style={{ ...NUMERIC_STYLE, fontSize: '64px', lineHeight: 1, color: 'var(--orange)' }}>
             {race.date.slice(0, 4)}
           </div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -2737,7 +2745,7 @@ function OnThisDayWidget() {
             {yearStr}{race.city ? ` · ${race.city}` : ''}{race.country ? `, ${race.country}` : ''}
           </div>
           {race.time && (
-            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', color: 'var(--orange)', marginTop: '4px' }}>
+            <div style={{ ...NUMERIC_STYLE, fontSize: 'var(--text-compact)', color: 'var(--orange)', marginTop: '4px' }}>
               {race.time}
             </div>
           )}
@@ -4416,7 +4424,7 @@ function RiegelPredictorWidget({ onAddGoal: _onAddGoal }: { onAddGoal?: (distanc
           <div role="heading" aria-level={2} style={st.widgetTitle}>RIEGEL PREDICTOR</div>
         </div>
         <div style={{ marginTop: 'auto' }}>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: smMetricFont(targetRow?.predictedTime ?? '—'), lineHeight: 1, color: 'var(--orange)', letterSpacing: '-0.02em' }}>
+          <div style={{ ...NUMERIC_STYLE, fontSize: smMetricFont(targetRow?.predictedTime ?? '—'), lineHeight: 1, color: 'var(--orange)' }}>
             {targetRow?.predictedTime ?? '—'}
           </div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
@@ -4610,7 +4618,7 @@ function TriPredictorWidget() {
       <WidgetCard id="tri-predictor" style={st.glowCard}>
         {Header}
         <div style={{ marginTop: 'auto' }}>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: smMetricFont(pred.totalTime), lineHeight: 1, color: 'var(--orange)', letterSpacing: '-0.02em' }}>
+          <div style={{ ...NUMERIC_STYLE, fontSize: smMetricFont(pred.totalTime), lineHeight: 1, color: 'var(--orange)' }}>
             {pred.totalTime}
           </div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
@@ -4664,7 +4672,7 @@ function TriPredictorWidget() {
           {/* Finish total + confidence band */}
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 'var(--sp-2)', marginTop: '2px' }}>
             <div>
-              <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', lineHeight: 1, color: 'var(--orange)', letterSpacing: '-0.02em' }}>
+              <div style={{ ...NUMERIC_STYLE, fontSize: 'var(--text-2xl)', lineHeight: 1, color: 'var(--orange)' }}>
                 {pred.totalTime}
               </div>
               <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '3px' }}>
@@ -4832,11 +4840,11 @@ function GoalPaceWidget({ race }: { race: Race | null }) {
       <div style={{ display: 'flex', gap: 'var(--sp-3)' }}>
         <div style={{ flex: 1, background: 'var(--surface3)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-4)', border: '1px solid var(--border2)', textAlign: 'center' }}>
           <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, color: 'var(--muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>per KM</div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xl)', color: 'var(--orange)', lineHeight: 1.1, marginTop: '4px' }}>{result.pacePaceStr.split(' ')[0]}</div>
+          <div style={{ ...NUMERIC_STYLE, fontSize: 'var(--text-xl)', color: 'var(--orange)', lineHeight: 1.1, marginTop: '4px' }}>{result.pacePaceStr.split(' ')[0]}</div>
         </div>
         <div style={{ flex: 1, background: 'var(--surface3)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-4)', border: '1px solid var(--border2)', textAlign: 'center' }}>
           <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, color: 'var(--muted)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>per MILE</div>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xl)', color: 'var(--white)', lineHeight: 1.1, marginTop: '4px' }}>{result.paceMileStr.split(' ')[0]}</div>
+          <div style={{ ...NUMERIC_STYLE, fontSize: 'var(--text-xl)', color: 'var(--white)', lineHeight: 1.1, marginTop: '4px' }}>{result.paceMileStr.split(' ')[0]}</div>
         </div>
       </div>
 
@@ -4859,7 +4867,7 @@ function GoalPaceWidget({ race }: { race: Race | null }) {
             {result.splitTargets.map(s => (
               <div key={s.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 8px', background: 'var(--surface3)', borderRadius: 'var(--radius-xs)' }}>
                 <span style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{s.label}</span>
-                <span style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--white)' }}>{s.cumStr}</span>
+                <span style={{ ...NUMERIC_STYLE, fontSize: 'var(--text-sm)', color: 'var(--white)' }}>{s.cumStr}</span>
               </div>
             ))}
           </div>
@@ -4885,7 +4893,7 @@ function DistanceMilestonesWidget() {
           <div role="heading" aria-level={2} style={st.widgetTitle}>DISTANCE TOTAL</div>
         </div>
         <div style={{ marginTop: 'auto' }}>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: smMetricFont(result.totalKm.toLocaleString()), lineHeight: 1, color: 'var(--orange)', letterSpacing: '-0.02em' }}>
+          <div style={{ ...NUMERIC_STYLE, fontSize: smMetricFont(result.totalKm.toLocaleString()), lineHeight: 1, color: 'var(--orange)' }}>
             {result.totalKm.toLocaleString()}
           </div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
@@ -4915,7 +4923,7 @@ function DistanceMilestonesWidget() {
 
       {/* Hero number */}
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 'var(--sp-2)' }}>
-        <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-3xl)', lineHeight: 1, color: 'var(--orange)' }}>
+        <span style={{ ...NUMERIC_STYLE, fontSize: 'var(--text-3xl)', lineHeight: 1, color: 'var(--orange)' }}>
           {result.totalKm.toLocaleString()}
         </span>
         <span style={{ fontSize: 'var(--text-compact)', color: 'var(--muted)', paddingBottom: '6px', fontFamily: 'var(--headline)', fontWeight: 700 }}>KM TOTAL</span>
@@ -5090,7 +5098,7 @@ function CourseRepeatsWidget() {
           <div role="heading" aria-level={2} style={st.widgetTitle}>COURSE REPEATS</div>
         </div>
         <div style={{ marginTop: 'auto' }}>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: 'var(--orange)', letterSpacing: '-0.02em' }}>
+          <div style={{ ...NUMERIC_STYLE, fontSize: '64px', lineHeight: 1, color: 'var(--orange)' }}>
             {courses.length || '—'}
           </div>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '4px' }}>
@@ -5131,7 +5139,7 @@ function CourseRepeatsWidget() {
               </div>
               <div style={{ textAlign: 'right', flexShrink: 0 }}>
                 {c.pb?.time && (
-                  <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', color: 'var(--orange)' }}>{c.pb.time}</div>
+                  <div style={{ ...NUMERIC_STYLE, fontSize: 'var(--text-base)', color: 'var(--orange)' }}>{c.pb.time}</div>
                 )}
                 <div style={{ fontSize: 'var(--text-xs)', marginTop: '2px' }}>
                   {c.trend === 'improving' && <span style={{ color: 'var(--green)' }}>▲ FASTER</span>}
@@ -5155,7 +5163,7 @@ function CourseRepeatsWidget() {
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
                         {isPB && <span style={{ fontSize: 'var(--text-xs)', color: 'var(--gold-a)', fontFamily: 'var(--headline)', fontWeight: 700 }}>PB</span>}
-                        <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', color: isPB ? 'var(--orange)' : 'var(--white)' }}>{r.time}</span>
+                        <span style={{ ...NUMERIC_STYLE, fontSize: 'var(--text-compact)', color: isPB ? 'var(--orange)' : 'var(--white)' }}>{r.time}</span>
                       </div>
                     </div>
                   )
@@ -6071,12 +6079,14 @@ const st = {
   } as React.CSSProperties,
 
   countdownNum: {
-    fontFamily: 'var(--headline)',
-    fontWeight: 900,
+    fontFamily: 'var(--mono)',
+    fontWeight: 500,
     fontSize: '56px',
     color: 'var(--white)',
     lineHeight: 1,
-    letterSpacing: '-0.02em',
+    letterSpacing: 'var(--num-track)',
+    fontVariantNumeric: 'tabular-nums',
+    fontFeatureSettings: '"tnum" 1, "zero" 1',
   } as React.CSSProperties,
 
   countdownUnitLabel: {
@@ -6227,12 +6237,14 @@ const st = {
   } as React.CSSProperties,
 
   raceTime: {
-    fontFamily: 'var(--headline)',
+    fontFamily: 'var(--mono)',
     fontSize: 'var(--text-sm)',
-    fontWeight: 700,
-    letterSpacing: '0.04em',
+    fontWeight: 500,
+    letterSpacing: 'var(--num-track)',
     color: 'var(--white)',
     whiteSpace: 'nowrap' as const,
+    fontVariantNumeric: 'tabular-nums',
+    fontFeatureSettings: '"tnum" 1, "zero" 1',
   } as React.CSSProperties,
 
   pbTag: {
