@@ -2184,7 +2184,7 @@ function CareerMomentumWidget() {
         <span style={{ ...st.badgePill, background: `${bc}22`, color: bc, border: `1px solid ${bc}55`, flexShrink: 0 }}>{badge}</span>
       </div>
 
-      <div>
+      <div style={{ padding: '14px 16px', borderRadius: '14px', background: 'var(--surface2)', border: '1px solid var(--border)' }}>
           <div style={{ ...NUMERIC_STYLE, fontSize: '64px', lineHeight: 1, color: 'var(--green)' }}>
             {score.toFixed(2)}
           </div>
@@ -2233,12 +2233,12 @@ function AgeGradeWidget() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', marginTop: '8px' }}>
           {entries.slice(0, agLimit).map((e, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', padding: '6px 0', borderBottom: '1px solid var(--border)' }}>
+            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)', padding: '12px 14px', borderRadius: '14px', background: 'var(--surface2)', border: '1px solid var(--border)' }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--white)', wordBreak: 'break-word' as const, lineHeight: 1.3 }}>{e.race.name ?? e.race.distance}</div>
-                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>{distBadge(e.race.distance, e.race.sport)} · {e.race.time}</div>
+                <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-sm)', color: 'var(--white)', letterSpacing: '0.03em', textTransform: 'uppercase', wordBreak: 'break-word' as const, lineHeight: 1.2 }}>{e.race.name ?? e.race.distance}</div>
+                <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginTop: '4px', lineHeight: 1.4 }}>{distBadge(e.race.distance, e.race.sport)} · {e.race.time}</div>
               </div>
-              <div style={{ ...NUMERIC_STYLE, fontSize: 'var(--text-base)', color: e.ageGrade >= 70 ? 'var(--orange)' : 'var(--white)', minWidth: '44px', textAlign: 'right', flexShrink: 0 }}>{e.ageGrade.toFixed(1)}%</div>
+              <div style={{ ...NUMERIC_STYLE, fontSize: 'var(--text-lg)', color: e.ageGrade >= 70 ? 'var(--orange)' : 'var(--white)', minWidth: '64px', textAlign: 'right', flexShrink: 0 }}>{e.ageGrade.toFixed(1)}%</div>
             </div>
           ))}
         </div>
@@ -3133,9 +3133,9 @@ function PressurePerformerWidget() {
           <div style={st.lockedText}>Log 3+ races with placing data and mark A-races to see your pressure profile.</div>
         </div>
       ) : (
-        <div style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'flex-end' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-3)' }}>
           {result.aPct !== null && (
-            <div>
+            <div style={{ padding: '14px 16px', borderRadius: '14px', background: 'var(--surface2)', border: '1px solid var(--border)' }}>
               <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', color: 'var(--white)', lineHeight: 1 }}>
                 Top {Math.min(100, 101 - result.aPct)}%
               </div>
@@ -3143,7 +3143,7 @@ function PressurePerformerWidget() {
             </div>
           )}
           {result.otherPct !== null && (
-            <div style={{ paddingBottom: '2px' }}>
+            <div style={{ padding: '14px 16px', borderRadius: '14px', background: 'var(--surface2)', border: '1px solid var(--border)' }}>
               <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-lg)', color: 'var(--muted)', lineHeight: 1 }}>
                 Top {Math.min(100, 101 - result.otherPct)}%
               </div>
@@ -3225,9 +3225,9 @@ function TravelLoadWidget() {
           <div style={st.lockedText}>Log 3+ races and set your home country in athlete profile.</div>
         </div>
       ) : (
-        <div style={{ display: 'flex', gap: 'var(--sp-5)', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-3)' }}>
           {result.localPct !== null && (
-            <div>
+            <div style={{ padding: '14px 16px', borderRadius: '14px', background: 'var(--surface2)', border: '1px solid var(--border)' }}>
               <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-2xl)', color: 'var(--green)', lineHeight: 1 }}>
                 Top {Math.min(100, 101 - result.localPct)}%
               </div>
@@ -3237,7 +3237,7 @@ function TravelLoadWidget() {
             </div>
           )}
           {result.awayPct !== null && (
-            <div style={{ paddingBottom: '2px' }}>
+            <div style={{ padding: '14px 16px', borderRadius: '14px', background: 'var(--surface2)', border: '1px solid var(--border)' }}>
               <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-lg)', color: 'var(--muted)', lineHeight: 1 }}>
                 Top {Math.min(100, 101 - result.awayPct)}%
               </div>
@@ -3248,8 +3248,7 @@ function TravelLoadWidget() {
           )}
           {result.localPct !== null && result.awayPct !== null && (
             <>
-              <div style={st.widgetDivider} />
-              <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.55 }}>
+              <div style={{ gridColumn: '1 / -1', fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.55, padding: '12px 14px', borderRadius: '14px', background: 'var(--surface2)', border: '1px solid var(--border)' }}>
                 {result.localPct > result.awayPct + 5
                   ? 'You perform better at home-country races.'
                   : result.awayPct > result.localPct + 5
@@ -4956,7 +4955,7 @@ function DistanceMilestonesWidget() {
       </div>
 
       {/* Hero number */}
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 'var(--sp-2)' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 'var(--sp-2)', padding: '14px 16px', borderRadius: '14px', background: 'var(--surface2)', border: '1px solid var(--border)' }}>
         <span style={{ ...NUMERIC_STYLE, fontSize: 'var(--text-3xl)', lineHeight: 1, color: 'var(--orange)' }}>
           {result.totalKm.toLocaleString()}
         </span>
@@ -4984,7 +4983,7 @@ function DistanceMilestonesWidget() {
       )}
 
       {/* Fun fact */}
-      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontStyle: 'italic', padding: '8px 10px', background: 'var(--surface3)', borderRadius: 'var(--radius-sm)', borderLeft: '2px solid var(--orange)' }}>
+      <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', fontStyle: 'italic', padding: '12px 14px', background: 'var(--surface2)', borderRadius: 'var(--radius-md)', borderLeft: '3px solid var(--orange)', lineHeight: 1.5 }}>
         {result.funFact}
       </div>
 
@@ -5165,15 +5164,15 @@ function CourseRepeatsWidget() {
             <div
               data-no-widget-detail
               onClick={e => { e.stopPropagation(); setExpanded(expanded === c.key ? null : c.key) }}
-              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: 'var(--surface3)', borderRadius: expanded === c.key ? '8px 8px 0 0' : '8px', border: '1px solid var(--border)', cursor: 'pointer' }}
+              style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', background: 'var(--surface2)', borderRadius: expanded === c.key ? '14px 14px 0 0' : '14px', border: '1px solid var(--border)', cursor: 'pointer' }}
             >
               <div>
-                <div style={{ fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--white)' }}>{c.displayName}</div>
-                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>{c.count}× · since {fmtDateDDMM(c.first)}</div>
+                <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-sm)', color: 'var(--white)', letterSpacing: '0.03em', textTransform: 'uppercase' }}>{c.displayName}</div>
+                <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginTop: '4px', lineHeight: 1.45 }}>{c.count}× · since {fmtDateDDMM(c.first)}</div>
               </div>
               <div style={{ textAlign: 'right', flexShrink: 0 }}>
                 {c.pb?.time && (
-                  <div style={{ ...NUMERIC_STYLE, fontSize: 'var(--text-base)', color: 'var(--orange)' }}>{c.pb.time}</div>
+                  <div style={{ ...NUMERIC_STYLE, fontSize: 'var(--text-lg)', color: 'var(--orange)' }}>{c.pb.time}</div>
                 )}
                 <div style={{ fontSize: 'var(--text-xs)', marginTop: '2px' }}>
                   {c.trend === 'improving' && <span style={{ color: 'var(--green)' }}>▲ FASTER</span>}
@@ -5184,7 +5183,7 @@ function CourseRepeatsWidget() {
             </div>
             {/* Year-by-year comparison */}
             {expanded === c.key && (
-              <div style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderTop: 'none', borderRadius: '0 0 var(--radius-md) var(--radius-md)', padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+              <div style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderTop: 'none', borderRadius: '0 0 14px 14px', padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
                 {c.timed.map(r => {
                   const isPB = r.id === c.pb?.id
                   return (
