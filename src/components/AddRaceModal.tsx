@@ -4,6 +4,7 @@ import { useRaceStore } from '@/stores/useRaceStore'
 import { useRaceCatalog, type CatalogRace } from '@/hooks/useRaceCatalog'
 import { DateInput } from '@/components/DateInput'
 import { TimePickerWheel, type HMS } from '@/components/TimePickerWheel'
+import { sharedSheetStyles } from '@/components/ui/sheetStyles'
 import { CustomDistInput } from '@/components/CustomDistInput'
 import { CityPicker } from '@/components/CityPicker'
 import { countryNameHaystack } from '@/lib/countries'
@@ -1214,41 +1215,19 @@ const st = {
   } as React.CSSProperties,
 
   sheet: {
-    width: '100%',
-    maxWidth: '680px',
+    ...sharedSheetStyles.sheet,
     maxHeight: '100%',
-    background: 'var(--surface2)',
-    borderTop: '2px solid var(--orange)',
-    borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0',
-    display: 'flex',
-    flexDirection: 'column',
-    overflow: 'hidden',
   } as React.CSSProperties,
 
-  handle: {
-    width: '36px',
-    height: '4px',
-    background: 'var(--border2)',
-    borderRadius: 'var(--radius-xs)',
-    margin: '12px auto 0',
-    flexShrink: 0,
-  } as React.CSSProperties,
+  handle: sharedSheetStyles.handle,
 
   header: {
-    display: 'flex',
+    ...sharedSheetStyles.header,
     alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    padding: '12px 16px 0',
-    flexShrink: 0,
   } as React.CSSProperties,
 
   title: {
-    fontFamily: 'var(--headline)',
-    fontWeight: 900,
-    fontSize: 'var(--text-xl)',
-    letterSpacing: '0.06em',
-    textTransform: 'uppercase',
-    color: 'var(--white)',
+    ...sharedSheetStyles.title,
     display: 'block',
   } as React.CSSProperties,
 
@@ -1259,16 +1238,7 @@ const st = {
     fontFamily: 'var(--body)',
   } as React.CSSProperties,
 
-  closeBtn: {
-    background: 'transparent',
-    border: 'none',
-    color: 'var(--muted)',
-    fontSize: 'var(--text-md)',
-    cursor: 'pointer',
-    padding: '4px 8px',
-    lineHeight: 1,
-    flexShrink: 0,
-  } as React.CSSProperties,
+  closeBtn: sharedSheetStyles.closeBtn,
 
   toast: {
     position: 'absolute',

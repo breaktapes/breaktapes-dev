@@ -10,6 +10,7 @@ import { fmtDateDDMM, resolveDistKm } from '@/lib/utils'
 import { posthog } from '@/lib/posthog'
 import { supabaseAnon } from '@/lib/supabase'
 import type { Race } from '@/types'
+import { sharedSheetStyles } from '@/components/ui/sheetStyles'
 
 const HEALTH_PROXY = 'https://health.breaktapes.com'
 
@@ -742,18 +743,18 @@ export function RaceImportModal({ onClose, onPickByRace, onAddManual }: { onClos
 
 const st = {
   overlay:    { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)', zIndex: 960, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' } as React.CSSProperties,
-  sheet:      { width: '100%', maxWidth: '680px', maxHeight: '85dvh', background: 'var(--surface2)', borderTop: '2px solid var(--orange)', borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0', display: 'flex', flexDirection: 'column', overflow: 'hidden' } as React.CSSProperties,
-  handle:     { width: '36px', height: '4px', background: 'var(--border2)', borderRadius: 'var(--radius-xs)', margin: '12px auto 0', flexShrink: 0 } as React.CSSProperties,
-  header:     { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px 0', flexShrink: 0 } as React.CSSProperties,
-  title:      { fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-lg)', letterSpacing: '0.06em', textTransform: 'uppercase' as const, color: 'var(--white)' } as React.CSSProperties,
-  closeBtn:   { background: 'transparent', border: 'none', color: 'var(--muted)', fontSize: 'var(--text-md)', cursor: 'pointer', padding: '4px 8px', lineHeight: 1 } as React.CSSProperties,
+  sheet:      sharedSheetStyles.sheet,
+  handle:     sharedSheetStyles.handle,
+  header:     sharedSheetStyles.header,
+  title:      { ...sharedSheetStyles.title, fontSize: 'var(--text-lg)' } as React.CSSProperties,
+  closeBtn:   sharedSheetStyles.closeBtn,
   body:       { padding: 'var(--sp-4)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)', overflowY: 'auto', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain', flex: 1, paddingBottom: 'calc(var(--safe-bottom) + 32px)' } as React.CSSProperties,
   fieldLabel: { fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' as const, color: 'var(--muted)' } as React.CSSProperties,
-  input:      { width: '100%', background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-sm)', color: 'var(--white)', fontSize: 'var(--text-compact)', padding: '0.6rem 0.75rem', fontFamily: 'var(--body)', boxSizing: 'border-box' as const, minWidth: 0 } as React.CSSProperties,
+  input:      sharedSheetStyles.input,
   hint:       { margin: 0, fontSize: 'var(--text-sm)', color: 'var(--muted)', fontFamily: 'var(--body)' } as React.CSSProperties,
   sourcePill: { background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-pill)', padding: '4px 10px', fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', color: 'var(--green)' } as React.CSSProperties,
   resultRow:  { width: '100%', borderRadius: 'var(--radius-md)', padding: 'var(--sp-3)', cursor: 'pointer', textAlign: 'left' as const, transition: 'background 0.15s' } as React.CSSProperties,
   saveBtn:    { width: '100%', padding: 'var(--sp-4)' } as React.CSSProperties,
-  cancelBtn:  { background: 'transparent', color: 'var(--muted)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-4)', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', letterSpacing: '0.1em', textTransform: 'uppercase' as const, cursor: 'pointer', width: '100%' } as React.CSSProperties,
+  cancelBtn:  sharedSheetStyles.secondaryBtn,
   errorText:  { margin: 0, fontSize: 'var(--text-xs)', color: 'var(--error)' } as React.CSSProperties,
 }
