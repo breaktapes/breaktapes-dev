@@ -47,6 +47,196 @@ const sectionLabel: React.CSSProperties = {
   marginBottom: '0.75rem',
 }
 
+const panel: React.CSSProperties = {
+  background: 'linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0) 100%), var(--surface2)',
+  border: '1px solid var(--border)',
+  borderRadius: 'calc(var(--radius-lg) + 2px)',
+  boxShadow: '0 18px 36px rgba(0,0,0,0.24)',
+}
+
+const softPanel: React.CSSProperties = {
+  background: 'linear-gradient(180deg, rgba(var(--orange-ch),0.04) 0%, rgba(255,255,255,0) 100%), var(--surface2)',
+  border: '1px solid var(--border)',
+  borderRadius: 'var(--radius-lg)',
+}
+
+const rowTitle: React.CSSProperties = {
+  margin: 0,
+  fontFamily: 'var(--headline)',
+  fontWeight: 800,
+  fontSize: 'var(--text-sm)',
+  letterSpacing: '0.06em',
+  textTransform: 'uppercase',
+  color: 'var(--white)',
+}
+
+const rowBody: React.CSSProperties = {
+  margin: '4px 0 0',
+  fontSize: 'var(--text-xs)',
+  color: 'var(--muted)',
+  lineHeight: 1.55,
+}
+
+const themePreviewMap: Record<string, { base: string; glow: string; accent: string }> = {
+  light: { base: '#EDE9E0', glow: 'rgba(212,66,26,0.15)', accent: '#D4421A' },
+  'deep-space': { base: '#0A0A14', glow: 'rgba(91,110,245,0.22)', accent: '#5B6EF5' },
+  'race-night': { base: '#0D0D0D', glow: 'rgba(232,240,0,0.18)', accent: '#E8F000' },
+  obsidian: { base: '#080808', glow: 'rgba(184,196,208,0.18)', accent: '#B8C4D0' },
+  'acid-track': { base: '#080E08', glow: 'rgba(57,255,20,0.2)', accent: '#39FF14' },
+  titanium: { base: '#10141A', glow: 'rgba(143,160,176,0.18)', accent: '#8FA0B0' },
+  ember: { base: '#140800', glow: 'rgba(255,140,0,0.2)', accent: '#FF8C00' },
+}
+
+function SectionHeader({ title, kicker }: { title: string; kicker?: string }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+      <p style={{ ...sectionLabel, marginBottom: 0 }}>{title}</p>
+      {kicker ? (
+        <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: 'var(--muted)', lineHeight: 1.5 }}>
+          {kicker}
+        </p>
+      ) : null}
+    </div>
+  )
+}
+
+function SyncBadge({ syncStatus }: { syncStatus: string | null | undefined }) {
+  return (
+    <div style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: 'var(--sp-2)',
+      padding: '7px 10px',
+      borderRadius: 'var(--radius-pill)',
+      border: '1px solid var(--border)',
+      background: 'rgba(255,255,255,0.02)',
+      backdropFilter: 'blur(10px)',
+    }}>
+      <div style={{
+        width: '7px',
+        height: '7px',
+        borderRadius: 'var(--radius-round)',
+        background: syncStatus === 'ok' ? '#00FF88'
+          : syncStatus === 'error' ? '#FF4444'
+          : syncStatus === 'syncing' ? 'var(--orange)'
+          : 'var(--muted2)',
+        boxShadow: syncStatus === 'ok' ? '0 0 8px rgba(0,255,136,0.5)'
+          : syncStatus === 'error' ? '0 0 8px rgba(255,68,68,0.45)'
+          : syncStatus === 'syncing' ? '0 0 8px rgba(var(--orange-ch),0.5)'
+          : 'none',
+      }} />
+      <span style={{
+        fontSize: 'var(--text-xs)',
+        fontFamily: 'var(--headline)',
+        fontWeight: 700,
+        letterSpacing: '0.08em',
+        color: 'var(--muted)',
+        textTransform: 'uppercase',
+      }}>
+        {syncStatus === 'ok' ? 'Synced' : syncStatus === 'error' ? 'Sync failed' : syncStatus === 'syncing' ? 'Syncing…' : 'Not synced'}
+      </span>
+    </div>
+  )
+}
+
+function ToggleSwitch({
+  checked,
+  onClick,
+  disabled = false,
+  accent = 'var(--orange)',
+  offLabel,
+  onLabel,
+}: {
+  checked: boolean
+  onClick: () => void
+  disabled?: boolean
+  accent?: string
+  offLabel?: string
+  onLabel?: string
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        width: '58px',
+        height: '32px',
+        borderRadius: '999px',
+        border: '1px solid transparent',
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        background: checked ? accent : 'var(--surface3)',
+        position: 'relative',
+        transition: 'background 0.2s',
+        flexShrink: 0,
+        opacity: disabled ? 0.5 : 1,
+      }}
+    >
+      <span style={{
+        position: 'absolute',
+        inset: '1px',
+        borderRadius: '999px',
+        border: '1px solid rgba(255,255,255,0.08)',
+      }} />
+      <span style={{
+        position: 'absolute',
+        top: '3px',
+        left: checked ? '29px' : '3px',
+        width: '24px',
+        height: '24px',
+        borderRadius: 'var(--radius-round)',
+        background: 'var(--black)',
+        transition: 'left 0.2s',
+        boxShadow: '0 4px 10px rgba(0,0,0,0.35)',
+      }} />
+      <span style={{
+        position: 'absolute',
+        inset: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: checked ? 'flex-start' : 'flex-end',
+        padding: '0 9px',
+        fontSize: '9px',
+        fontFamily: 'var(--headline)',
+        fontWeight: 800,
+        letterSpacing: '0.12em',
+        textTransform: 'uppercase',
+        color: checked ? '#000' : 'var(--muted)',
+      }}>
+        {checked ? (onLabel ?? 'On') : (offLabel ?? 'Off')}
+      </span>
+    </button>
+  )
+}
+
+function SettingRow({
+  title,
+  body,
+  control,
+  divider = false,
+}: {
+  title: string
+  body: React.ReactNode
+  control: React.ReactNode
+  divider?: boolean
+}) {
+  return (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      gap: 'var(--sp-4)',
+      padding: '14px 0',
+      borderTop: divider ? '1px solid var(--border)' : 'none',
+    }}>
+      <div style={{ minWidth: 0, flex: 1 }}>
+        <p style={rowTitle}>{title}</p>
+        <div style={rowBody}>{body}</div>
+      </div>
+      {control}
+    </div>
+  )
+}
+
 export function Settings() {
   const navigate = useNavigate()
   const { signOut, openUserProfile } = useClerk()
@@ -176,144 +366,232 @@ export function Settings() {
     }
   }
 
+  const displayName =
+    [clerkUser?.firstName, clerkUser?.lastName].filter(Boolean).join(' ') ||
+    [athlete?.firstName, athlete?.lastName].filter(Boolean).join(' ') ||
+    authUser?.email ||
+    'Athlete'
+
+  const initials =
+    [clerkUser?.firstName?.[0], clerkUser?.lastName?.[0]].filter(Boolean).join('').toUpperCase() ||
+    athlete?.firstName?.[0]?.toUpperCase() ||
+    authUser?.email?.[0]?.toUpperCase() ||
+    '?'
+
   return (
     <>
-    <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+    <div style={{ padding: '1rem 1rem 6.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
       {/* Page heading */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <h1 style={{
-          fontFamily: 'var(--headline)',
-          fontSize: 'var(--text-xl)',
-          fontWeight: 900,
-          letterSpacing: '0.1em',
-          textTransform: 'uppercase',
-          color: 'var(--white)',
-          margin: 0,
-        }}>
-          Settings
-        </h1>
-        {authUser && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)' }}>
-            <div style={{
-              width: '7px', height: '7px', borderRadius: 'var(--radius-round)',
-              background: syncStatus === 'ok' ? '#00FF88'
-                : syncStatus === 'error' ? '#FF4444'
-                : syncStatus === 'syncing' ? 'var(--orange)'
-                : 'var(--muted2)',
-              boxShadow: syncStatus === 'ok' ? '0 0 6px rgba(0,255,136,0.5)'
-                : syncStatus === 'error' ? '0 0 6px rgba(255,68,68,0.5)'
-                : syncStatus === 'syncing' ? '0 0 6px rgba(var(--orange-ch),0.5)'
-                : 'none',
-              transition: 'background 0.4s, box-shadow 0.4s',
-            }} />
-            <span style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', color: 'var(--muted)', textTransform: 'uppercase' }}>
-              {syncStatus === 'ok' ? 'Synced' : syncStatus === 'error' ? 'Sync failed' : syncStatus === 'syncing' ? 'Syncing…' : 'Not synced'}
-            </span>
-            {/* Tiny pull-only "Restore from server" button — re-downloads server
-                state, never writes. Lives next to the sync status indicator. */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 'var(--sp-3)' }}>
+        <div>
+          <p style={{ ...sectionLabel, marginBottom: '6px' }}>Control Center</p>
+          <h1 style={{
+            fontFamily: 'var(--headline)',
+            fontSize: 'clamp(28px, 8vw, 38px)',
+            fontWeight: 900,
+            letterSpacing: '0.05em',
+            textTransform: 'uppercase',
+            color: 'var(--white)',
+            lineHeight: 0.95,
+            margin: 0,
+          }}>
+            Settings
+          </h1>
+        </div>
+        {authUser ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+            <SyncBadge syncStatus={syncStatus} />
             <button
               onClick={handleManualSync}
               disabled={syncing}
               title={syncMsg ?? 'Restore from server (pull-only — never overwrites the server)'}
               aria-label="Restore from server"
               style={{
-                width: '20px', height: '20px', flexShrink: 0,
-                display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
-                background: 'var(--surface3)', border: '1px solid var(--border2)',
-                borderRadius: 'var(--radius-sm)', color: 'var(--muted)',
+                width: '32px',
+                height: '32px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: 0,
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid var(--border)',
+                borderRadius: '10px',
+                color: 'var(--muted)',
                 cursor: syncing ? 'default' : 'pointer',
-                opacity: syncing ? 0.5 : 1, transition: 'opacity 0.2s, color 0.2s',
+                opacity: syncing ? 0.5 : 1,
+                transition: 'opacity 0.2s, color 0.2s',
               }}
             >
-              <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
                 <path d="M13.6 8a5.6 5.6 0 1 1-1.7-4M13.5 2.2V5.4h-3.2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </button>
           </div>
-        )}
+        ) : null}
       </div>
 
-      {/* ── Auth section ── */}
-      <section>
-        <p style={sectionLabel}>Account</p>
-        <div style={{ ...card, padding: 0, overflow: 'hidden' }}>
-          {/* Profile card row — tap to expand */}
-          <button
-            onClick={() => setAccountExpanded(v => !v)}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 'var(--sp-4)',
-              width: '100%', background: 'transparent', border: 'none',
-              cursor: 'pointer', padding: '14px 16px', textAlign: 'left',
-            }}
-          >
+      <section style={{
+        ...panel,
+        position: 'relative',
+        overflow: 'hidden',
+        padding: '20px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '18px',
+      }}>
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'radial-gradient(circle at top right, rgba(var(--orange-ch),0.18), transparent 38%), radial-gradient(circle at bottom left, rgba(255,255,255,0.05), transparent 32%)',
+          pointerEvents: 'none',
+        }} />
+        <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-4)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-4)', minWidth: 0 }}>
             <div style={{
-              width: '42px', height: '42px', borderRadius: 'var(--radius-round)',
-              background: 'var(--orange)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontFamily: 'var(--headline)', fontWeight: 900,
-              fontSize: 'var(--text-base)', color: 'var(--black)',
-              flexShrink: 0, letterSpacing: '0.04em',
+              width: '54px',
+              height: '54px',
+              borderRadius: '18px',
+              background: 'linear-gradient(135deg, var(--orange) 0%, rgba(var(--orange-ch),0.55) 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontFamily: 'var(--headline)',
+              fontWeight: 900,
+              fontSize: 'var(--text-lg)',
+              color: 'var(--black)',
+              flexShrink: 0,
+              overflow: 'hidden',
+              boxShadow: '0 14px 30px rgba(var(--orange-ch),0.24)',
             }}>
               {clerkUser?.imageUrl
-                ? <img src={clerkUser.imageUrl} alt="" style={{ width: '100%', height: '100%', borderRadius: 'var(--radius-round)', objectFit: 'cover' }} />
-                : ([clerkUser?.firstName?.[0], clerkUser?.lastName?.[0]].filter(Boolean).join('').toUpperCase() ||
-                   athlete?.firstName?.[0]?.toUpperCase() ||
-                   authUser?.email?.[0]?.toUpperCase() || '?')}
+                ? <img src={clerkUser.imageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                : initials}
             </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ minWidth: 0 }}>
+              <p style={{ ...sectionLabel, marginBottom: '6px', color: 'rgba(var(--orange-ch),0.9)' }}>Athlete ID</p>
               <div style={{
-                color: 'var(--white)', fontSize: 'var(--text-base)',
-                fontWeight: 600, lineHeight: 1.25,
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                fontFamily: 'var(--headline)',
+                fontWeight: 900,
+                fontSize: 'clamp(20px, 5vw, 28px)',
+                letterSpacing: '0.04em',
+                textTransform: 'uppercase',
+                color: 'var(--white)',
+                lineHeight: 1,
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
               }}>
-                {[clerkUser?.firstName, clerkUser?.lastName].filter(Boolean).join(' ') ||
-                 [athlete?.firstName, athlete?.lastName].filter(Boolean).join(' ') ||
-                 authUser?.email || '—'}
+                {displayName}
               </div>
-              <div style={{ color: 'var(--muted)', fontSize: 'var(--text-xs)', marginTop: '2px' }}>
-                {authUser?.email}
-              </div>
+              <p style={{ margin: '6px 0 0', color: 'var(--muted)', fontSize: 'var(--text-sm)', lineHeight: 1.45 }}>
+                {authUser?.email || 'Signed in athlete'}
+              </p>
             </div>
+          </div>
+          <button
+            onClick={() => setAccountExpanded(v => !v)}
+            aria-label={accountExpanded ? 'Collapse account controls' : 'Expand account controls'}
+            style={{
+              width: '38px',
+              height: '38px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: '12px',
+              border: '1px solid var(--border2)',
+              background: 'rgba(255,255,255,0.03)',
+              color: 'var(--white)',
+              cursor: 'pointer',
+              flexShrink: 0,
+            }}
+          >
             <svg
               width="12" height="12" viewBox="0 0 12 12" fill="none"
-              style={{ flexShrink: 0, opacity: 0.35, transition: 'transform 0.2s', transform: accountExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
+              style={{ opacity: 0.65, transition: 'transform 0.2s', transform: accountExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
             >
               <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </button>
+        </div>
 
-          {accountExpanded && (
-            <div style={{ borderTop: '1px solid var(--border)', padding: '8px 12px 12px' }}>
+        <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
+          <div style={{ ...softPanel, padding: '14px 16px' }}>
+            <div style={{ ...sectionLabel, marginBottom: '4px' }}>Profile State</div>
+            <div style={{ ...rowTitle, fontSize: 'var(--text-base)' }}>
+              {athlete?.username ? 'Public profile ready' : 'Username still needed'}
+            </div>
+            <p style={rowBody}>
+              {athlete?.username ? `${APP_URL}/u/${athlete.username}` : 'Set a username in account settings first.'}
+            </p>
+          </div>
+          <div style={{ ...softPanel, padding: '14px 16px' }}>
+            <div style={{ ...sectionLabel, marginBottom: '4px' }}>App Theme</div>
+            <div style={{ ...rowTitle, fontSize: 'var(--text-base)' }}>
+              {THEMES.find(theme => theme.id === activeTheme)?.label ?? 'Default'}
+            </div>
+            <p style={rowBody}>
+              {hasProAccess ? 'All themes unlocked in this environment.' : 'Pro themes stay locked outside staging.'}
+            </p>
+          </div>
+        </div>
+
+        {accountExpanded ? (
+          <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+            <button
+              onClick={() => { setAccountExpanded(false); openUserProfile() }}
+              style={{
+                ...btnGhost,
+                borderRadius: 'var(--radius-md)',
+                background: 'rgba(255,255,255,0.03)',
+                padding: '0.95rem 1rem',
+              }}
+            >
+              Manage Account
+            </button>
+            <button
+              onClick={() => { setAccountExpanded(false); handleSignOut() }}
+              style={{
+                ...btnGhost,
+                borderRadius: 'var(--radius-md)',
+                padding: '0.95rem 1rem',
+                color: 'var(--orange)',
+                borderColor: 'rgba(var(--orange-ch),0.28)',
+                background: 'rgba(var(--orange-ch),0.08)',
+              }}
+            >
+              Sign out
+            </button>
+          </div>
+        ) : null}
+      </section>
+
+      {/* ── Auth section ── */}
+      <section>
+        <SectionHeader
+          title="Account"
+          kicker="Identity, public profile controls, and what other athletes can see."
+        />
+        <div style={{ ...panel, padding: '0 18px 6px' }}>
+          <SettingRow
+            title="Make profile public"
+            body={athlete?.username ? `${APP_URL}/u/${athlete.username}` : 'Set a username in account settings first'}
+            control={(
+              <ToggleSwitch
+                checked={isPublic}
+                onClick={() => togglePublic(!isPublic)}
+                disabled={!athlete?.username}
+                accent="var(--green)"
+              />
+            )}
+          />
+
+          {athlete?.isPublic && athlete?.username ? (
+            <div style={{ padding: '0 0 14px' }}>
               <button
-                onClick={() => { setAccountExpanded(false); openUserProfile() }}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 'var(--sp-2)',
-                  width: '100%', background: 'transparent', border: 'none',
-                  cursor: 'pointer', padding: '10px 4px', textAlign: 'left',
-                  color: 'var(--white)',
-                }}
+                style={{ ...btnGhost, width: '100%', borderRadius: 'var(--radius-md)', fontSize: 'var(--text-xs)' }}
+                onClick={() => navigator.clipboard.writeText(`${APP_URL}/u/${athlete.username}`).then(() => showCopyToast()).catch(() => showCopyToast())}
               >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ opacity: 0.6, flexShrink: 0 }}>
-                  <circle cx="8" cy="5" r="3" stroke="currentColor" strokeWidth="1.4"/>
-                  <path d="M2 14c0-3.314 2.686-6 6-6s6 2.686 6 6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-                </svg>
-                <span style={{ fontSize: 'var(--text-compact)', fontWeight: 500 }}>Manage account</span>
-              </button>
-              <div style={{ height: '1px', background: 'var(--border)', margin: '0 4px' }} />
-              <button
-                onClick={() => { setAccountExpanded(false); handleSignOut() }}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 'var(--sp-2)',
-                  width: '100%', background: 'transparent', border: 'none',
-                  cursor: 'pointer', padding: '10px 4px', textAlign: 'left',
-                  color: 'var(--orange)',
-                }}
-              >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
-                  <path d="M6 14H3a1 1 0 01-1-1V3a1 1 0 011-1h3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
-                  <path d="M10 11l3-3-3-3M13 8H6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                <span style={{ fontSize: 'var(--text-compact)', fontWeight: 500 }}>Sign out</span>
+                Copy Profile Link
               </button>
               <div style={{ height: '1px', background: 'var(--border)', margin: '0 4px' }} />
               <button
@@ -331,239 +609,221 @@ export function Settings() {
                 <span style={{ fontSize: 'var(--text-compact)', fontWeight: 500 }}>Delete all my data</span>
               </button>
             </div>
-          )}
+          ) : null}
+
+          {isPublic ? (
+            <>
+              <div style={{ height: '1px', background: 'var(--border)', marginBottom: '4px' }} />
+              <div style={{ padding: '12px 0 4px' }}>
+                <p style={{ ...sectionLabel, marginBottom: '10px' }}>What to show on your profile</p>
+                {([
+                  { key: 'races',     label: 'Race history & finish times', desc: 'All logged races and results' },
+                  { key: 'pbs',       label: 'Personal bests',              desc: 'Your PR grid per distance' },
+                  { key: 'medals',    label: 'Medal wall',                  desc: 'Photos and medal collection' },
+                  { key: 'stats',     label: 'Stats & countries',           desc: 'Race count, distance, countries' },
+                  { key: 'upcoming',  label: 'Upcoming races',              desc: 'Your race calendar' },
+                  { key: 'wearables', label: 'Activity feed',               desc: 'Strava & wearable workouts' },
+                ] as const).map(({ key, label, desc }, i) => {
+                  const vis = athlete?.profileVisibility ?? {}
+                  const enabled = vis[key] === true
+                  return (
+                    <SettingRow
+                      key={key}
+                      title={label}
+                      body={desc}
+                      divider={i > 0}
+                      control={(
+                        <ToggleSwitch
+                          checked={enabled}
+                          onClick={() => updateAthlete({ profileVisibility: { ...vis, [key]: !enabled } })}
+                        />
+                      )}
+                    />
+                  )
+                })}
+              </div>
+            </>
+          ) : null}
         </div>
       </section>
 
       {/* ── Public Profile section ── */}
       <section>
-        <p style={sectionLabel}>Public Profile</p>
-        <div style={{ ...card, display: 'flex', flexDirection: 'column', gap: '0' }}>
-
-          {/* Public toggle row */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '2px 0 14px' }}>
+        <SectionHeader
+          title="Public Profile"
+          kicker="Your shareable athlete card is now treated like a published surface, not a buried toggle."
+        />
+        <div style={{ ...panel, padding: '18px' }}>
+          <div style={{
+            ...softPanel,
+            padding: '16px',
+            display: 'grid',
+            gridTemplateColumns: '1fr auto',
+            gap: 'var(--sp-4)',
+            alignItems: 'center',
+          }}>
             <div>
-              <p style={{ margin: 0, fontSize: 'var(--text-sm)', color: 'var(--white)', fontWeight: 600 }}>Make profile public</p>
-              <p style={{ margin: '2px 0 0', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
-                {athlete?.username ? `${APP_URL}/u/${athlete.username}` : 'Set a username in account settings first'}
+              <p style={{ ...sectionLabel, marginBottom: '6px', color: 'rgba(var(--green-ch),0.88)' }}>Visibility</p>
+              <div style={{ ...rowTitle, fontSize: 'var(--text-base)' }}>
+                {isPublic ? 'Published to the world' : 'Private to you'}
+              </div>
+              <p style={rowBody}>
+                {isPublic
+                  ? 'Your card, stats, and selected sections are shareable from a clean public URL.'
+                  : 'Turn this on when you want other athletes to compare, browse, and follow your story.'}
               </p>
             </div>
-            <button
+            <ToggleSwitch
+              checked={isPublic}
               onClick={() => togglePublic(!isPublic)}
               disabled={!athlete?.username}
-              style={{
-                width: '48px', height: '28px',
-                borderRadius: 'var(--radius-lg)',
-                border: 'none',
-                cursor: athlete?.username ? 'pointer' : 'not-allowed',
-                background: isPublic ? 'var(--green)' : 'var(--surface3)',
-                position: 'relative',
-                transition: 'background 0.2s',
-                flexShrink: 0,
-              }}
-            >
-              <span style={{
-                position: 'absolute',
-                top: '3px',
-                left: isPublic ? '23px' : '3px',
-                width: '22px', height: '22px',
-                borderRadius: 'var(--radius-round)',
-                background: 'var(--black)',
-                transition: 'left 0.2s',
-              }} />
-            </button>
+              accent="var(--green)"
+              onLabel="Live"
+              offLabel="Off"
+            />
           </div>
-
-          {/* Copy link */}
-          {athlete?.isPublic && athlete?.username && (
-            <button
-              style={{ ...btnGhost, fontSize: 'var(--text-xs)', padding: '0.6rem 1rem', marginBottom: '14px' }}
-              onClick={() => navigator.clipboard.writeText(`${APP_URL}/u/${athlete.username}`).then(() => showCopyToast()).catch(() => showCopyToast())}
-            >
-              Copy Profile Link
-            </button>
-          )}
-
-          {/* Visibility controls — only shown when public */}
-          {isPublic && (
-            <>
-              <div style={{ height: '1px', background: 'var(--border)', marginBottom: '14px' }} />
-              <p style={{ margin: '0 0 10px', fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', fontFamily: 'var(--headline)', fontWeight: 700 }}>
-                What to show on your profile
-              </p>
-              {([
-                { key: 'races',     label: 'Race history & finish times', desc: 'All logged races and results' },
-                { key: 'pbs',       label: 'Personal bests',              desc: 'Your PR grid per distance' },
-                { key: 'medals',    label: 'Medal wall',                  desc: 'Photos and medal collection' },
-                { key: 'stats',     label: 'Stats & countries',           desc: 'Race count, distance, countries' },
-                { key: 'upcoming',  label: 'Upcoming races',              desc: 'Your race calendar' },
-              ] as const).map(({ key, label, desc }, i, arr) => {
-                const vis = athlete?.profileVisibility ?? {}
-                const enabled = vis[key] === true
-                return (
-                  <div key={key}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0' }}>
-                      <div style={{ minWidth: 0, flex: 1, paddingRight: '12px' }}>
-                        <p style={{ margin: 0, fontSize: 'var(--text-compact)', color: 'var(--white)', fontWeight: 500 }}>{label}</p>
-                        <p style={{ margin: '2px 0 0', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>{desc}</p>
-                      </div>
-                      <button
-                        onClick={() => updateAthlete({ profileVisibility: { ...vis, [key]: !enabled } })}
-                        style={{
-                          width: '42px', height: '24px',
-                          borderRadius: 'var(--radius-lg)', border: 'none',
-                          cursor: 'pointer',
-                          background: enabled ? 'var(--orange)' : 'var(--surface3)',
-                          position: 'relative', transition: 'background 0.2s',
-                          flexShrink: 0,
-                        }}
-                      >
-                        <span style={{
-                          position: 'absolute', top: '3px',
-                          left: enabled ? '20px' : '3px',
-                          width: '18px', height: '18px',
-                          borderRadius: 'var(--radius-round)', background: 'var(--black)',
-                          transition: 'left 0.2s',
-                        }} />
-                      </button>
-                    </div>
-                    {i < arr.length - 1 && <div style={{ height: '1px', background: 'var(--border)' }} />}
-                  </div>
-                )
-              })}
-            </>
-          )}
         </div>
       </section>
 
       {/* ── Preferences section ── */}
       <section>
-        <p style={sectionLabel}>Preferences</p>
-        <div style={{ ...card, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {/* Units toggle */}
-          <div>
-            <p style={{ margin: '0 0 10px', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-sm)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>
-              Units
-            </p>
-            <p style={{ margin: '0 0 10px', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
-              Distances, paces, and speeds across the app
-            </p>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-2)' }}>
-              {(['metric', 'imperial'] as const).map(u => {
-                const active = (athlete?.units ?? 'metric') === u
-                return (
-                  <button
-                    key={u}
-                    onClick={() => updateAthlete({ units: u })}
-                    style={{
-                      padding: 'var(--sp-3)',
-                      borderRadius: 'var(--radius-md)',
-                      border: active ? '2px solid var(--orange)' : '1px solid var(--border2)',
-                      background: active ? 'rgba(var(--orange-ch),0.1)' : 'var(--surface3)',
-                      cursor: 'pointer',
-                      textAlign: 'center' as const,
-                    }}
-                  >
-                    <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', letterSpacing: '0.08em', textTransform: 'uppercase', color: active ? 'var(--orange)' : 'var(--white)' }}>
-                      {u === 'metric' ? 'Metric' : 'Imperial'}
-                    </div>
-                    <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '3px' }}>
-                      {u === 'metric' ? 'km · min/km' : 'mi · min/mi'}
-                    </div>
-                  </button>
-                )
-              })}
-            </div>
+        <SectionHeader
+          title="Preferences"
+          kicker="App-wide defaults should feel fast to scan and easy to trust."
+        />
+        <div style={{ ...panel, padding: '18px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-2)', marginBottom: '8px' }}>
+            {(['metric', 'imperial'] as const).map(u => {
+              const active = (athlete?.units ?? 'metric') === u
+              return (
+                <button
+                  key={u}
+                  onClick={() => updateAthlete({ units: u })}
+                  style={{
+                    ...softPanel,
+                    padding: '16px 14px',
+                    border: active ? '1px solid rgba(var(--orange-ch),0.44)' : '1px solid var(--border)',
+                    background: active
+                      ? 'linear-gradient(180deg, rgba(var(--orange-ch),0.14) 0%, rgba(var(--orange-ch),0.04) 100%), var(--surface2)'
+                      : 'linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0) 100%), var(--surface2)',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    boxShadow: active ? '0 10px 20px rgba(var(--orange-ch),0.12)' : 'none',
+                  }}
+                >
+                  <div style={{ ...rowTitle, color: active ? 'var(--orange)' : 'var(--white)' }}>
+                    {u === 'metric' ? 'Metric' : 'Imperial'}
+                  </div>
+                  <div style={{ ...rowBody, marginTop: '6px' }}>
+                    {u === 'metric' ? 'km · min/km' : 'mi · min/mi'}
+                  </div>
+                </button>
+              )
+            })}
           </div>
 
-          {/* Email reminders + weekly digest toggle */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--sp-3)', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
-            <div>
-              <p style={{ margin: 0, fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-sm)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>
-                Email reminders
-              </p>
-              <p style={{ margin: '4px 0 0', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
-                Race-day reminders &amp; a weekly digest. Unsubscribe anytime.
-              </p>
-            </div>
-            <button
-              onClick={() => toggleEmailOptIn(!emailOptIn)}
-              aria-label="Toggle email reminders"
-              style={{
-                width: '48px', height: '28px',
-                borderRadius: 'var(--radius-lg)',
-                border: 'none',
-                cursor: 'pointer',
-                background: emailOptIn ? 'var(--green)' : 'var(--surface3)',
-                position: 'relative',
-                transition: 'background 0.2s',
-                flexShrink: 0,
-              }}
-            >
-              <span style={{
-                position: 'absolute',
-                top: '3px',
-                left: emailOptIn ? '23px' : '3px',
-                width: '22px', height: '22px',
-                borderRadius: 'var(--radius-round)',
-                background: 'var(--black)',
-                transition: 'left 0.2s',
-              }} />
-            </button>
-          </div>
+          <SettingRow
+            title="Email reminders"
+            body="Race-day reminders and a weekly digest. Unsubscribe anytime."
+            divider
+            control={(
+              <ToggleSwitch
+                checked={emailOptIn}
+                onClick={() => toggleEmailOptIn(!emailOptIn)}
+                accent="var(--green)"
+                onLabel="Send"
+                offLabel="Mute"
+              />
+            )}
+          />
         </div>
       </section>
 
       {/* ── Theme section ── */}
       <section>
-        <p style={sectionLabel}>Theme</p>
+        <SectionHeader
+          title="Theme"
+          kicker="The new theme picker should feel like a curated pack, not a utility grid."
+        />
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: '0.5rem',
+          gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+          gap: '0.75rem',
         }}>
           {THEMES.map(theme => {
             const isActive = activeTheme === theme.id
             const isLocked = theme.pro && !hasProAccess
+            const preview = themePreviewMap[theme.id] ?? { base: '#141414', glow: 'rgba(var(--orange-ch),0.14)', accent: 'var(--orange)' }
             return (
               <button
                 key={theme.id}
                 onClick={() => isLocked ? undefined : applyTheme(theme.id)}
                 disabled={isLocked}
                 style={{
-                  height: '80px',
-                  background: 'var(--surface2)',
-                  border: isActive ? '2px solid var(--orange)' : '1px solid var(--border)',
-                  borderRadius: 'var(--radius-md)',
+                  ...panel,
+                  border: isActive ? '1px solid rgba(var(--orange-ch),0.46)' : '1px solid var(--border)',
+                  minHeight: '118px',
                   cursor: isLocked ? 'not-allowed' : 'pointer',
                   display: 'flex',
                   flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 'var(--sp-2)',
-                  padding: '0.5rem',
+                  alignItems: 'stretch',
+                  justifyContent: 'space-between',
+                  gap: 'var(--sp-3)',
+                  padding: '12px',
                   opacity: isLocked ? 0.55 : 1,
                   position: 'relative',
+                  textAlign: 'left',
+                  overflow: 'hidden',
+                  boxShadow: isActive ? '0 14px 26px rgba(var(--orange-ch),0.14)' : panel.boxShadow,
                 }}
               >
+                <div style={{
+                  height: '46px',
+                  borderRadius: '12px',
+                  background: `
+                    radial-gradient(circle at 18% 50%, ${preview.glow}, transparent 34%),
+                    radial-gradient(circle at 82% 35%, rgba(255,255,255,0.08), transparent 26%),
+                    linear-gradient(135deg, ${preview.base} 0%, rgba(0,0,0,0.35) 100%)
+                  `,
+                  border: '1px solid rgba(255,255,255,0.06)',
+                  position: 'relative',
+                  overflow: 'hidden',
+                }}>
+                  <span style={{
+                    position: 'absolute',
+                    left: 10,
+                    right: 10,
+                    bottom: 10,
+                    height: '3px',
+                    borderRadius: '999px',
+                    background: preview.accent,
+                    opacity: 0.85,
+                  }} />
+                </div>
                 <span style={{
                   fontFamily: 'var(--headline)',
                   fontWeight: 900,
-                  fontSize: 'var(--text-xs)',
+                  fontSize: 'var(--text-sm)',
                   color: isActive ? 'var(--orange)' : 'var(--white)',
                   letterSpacing: '0.06em',
                   textTransform: 'uppercase',
-                  textAlign: 'center',
                   lineHeight: 1.2,
                 }}>
                   {theme.label}
                 </span>
+                <span style={{
+                  fontSize: '11px',
+                  color: isActive ? 'var(--white)' : 'var(--muted)',
+                  lineHeight: 1.4,
+                }}>
+                  {isLocked ? 'Locked to Pro access.' : isActive ? 'Active across the app.' : 'Tap to preview this mood.'}
+                </span>
                 {theme.pro && (
                   <span style={{
                     position: 'absolute',
-                    top: 6,
-                    right: 6,
-                    fontSize: '8px',
+                    top: 10,
+                    right: 10,
+                    fontSize: '9px',
                     fontFamily: 'var(--headline)',
                     fontWeight: 800,
                     letterSpacing: '0.12em',
@@ -571,7 +831,7 @@ export function Settings() {
                     color: '#C8963C',
                     background: 'rgba(200,150,60,0.12)',
                     border: '1px solid rgba(200,150,60,0.3)',
-                    padding: '1px 5px',
+                    padding: '2px 6px',
                     borderRadius: 'var(--radius-xs)',
                   }}>
                     PRO
@@ -585,8 +845,11 @@ export function Settings() {
 
       {/* ── About section ── */}
       <section>
-        <p style={sectionLabel}>About</p>
-        <div style={{ ...card, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <SectionHeader
+          title="About"
+          kicker="Product metadata and support links now get the same card quality as the rest of the shell."
+        />
+        <div style={{ ...panel, padding: '18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--sp-3)' }}>
           <div>
             <p style={{ margin: 0, fontSize: 'var(--text-xs)', color: 'var(--muted)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
               Version
@@ -604,6 +867,7 @@ export function Settings() {
               textDecoration: 'none',
               display: 'inline-block',
               fontSize: 'var(--text-xs)',
+              borderRadius: 'var(--radius-md)',
             }}
           >
             breaktapes.com
@@ -616,20 +880,20 @@ export function Settings() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.75rem' }}>
           <button
             onClick={() => { navigate('/'); useTourStore.getState().startTour('settings') }}
-            style={{ ...card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', cursor: 'pointer', width: '100%', textAlign: 'left' }}
+            style={{ ...panel, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 18px', cursor: 'pointer', width: '100%', textAlign: 'left' }}
           >
             <div>
-              <span style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', fontFamily: 'var(--body)', display: 'block' }}>Take the App Tour</span>
+              <span style={{ ...rowTitle, display: 'block' }}>Take the App Tour</span>
               <span style={{ fontSize: 11, color: 'var(--muted)', fontFamily: 'var(--body)' }}>A 60-second walkthrough of the dashboard</span>
             </div>
             <span style={{ color: 'var(--muted)', fontSize: 12 }}>→</span>
           </button>
           <a
             href="/help"
-            style={{ ...card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', textDecoration: 'none', padding: '14px 16px' }}
+            style={{ ...panel, display: 'flex', alignItems: 'center', justifyContent: 'space-between', textDecoration: 'none', padding: '16px 18px' }}
           >
             <div>
-              <span style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', fontFamily: 'var(--body)', display: 'block' }}>Help & Contact</span>
+              <span style={{ ...rowTitle, display: 'block' }}>Help & Contact</span>
               <span style={{ fontSize: 11, color: 'var(--muted)', fontFamily: 'var(--body)' }}>Report an issue or request data deletion</span>
             </div>
             <span style={{ color: 'var(--muted)', fontSize: 12 }}>→</span>
@@ -637,16 +901,16 @@ export function Settings() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
             <a
               href="/privacy"
-              style={{ ...card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', textDecoration: 'none', padding: '14px 16px' }}
+              style={{ ...panel, display: 'flex', alignItems: 'center', justifyContent: 'space-between', textDecoration: 'none', padding: '16px 18px' }}
             >
-              <span style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', fontFamily: 'var(--body)' }}>Privacy Policy</span>
+              <span style={{ ...rowTitle, fontFamily: 'var(--body)', fontWeight: 600, textTransform: 'none', letterSpacing: 0 }}>Privacy Policy</span>
               <span style={{ color: 'var(--muted)', fontSize: 12 }}>→</span>
             </a>
             <a
               href="/terms"
-              style={{ ...card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', textDecoration: 'none', padding: '14px 16px' }}
+              style={{ ...panel, display: 'flex', alignItems: 'center', justifyContent: 'space-between', textDecoration: 'none', padding: '16px 18px' }}
             >
-              <span style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', fontFamily: 'var(--body)' }}>Terms & Conditions</span>
+              <span style={{ ...rowTitle, fontFamily: 'var(--body)', fontWeight: 600, textTransform: 'none', letterSpacing: 0 }}>Terms & Conditions</span>
               <span style={{ color: 'var(--muted)', fontSize: 12 }}>→</span>
             </a>
           </div>
