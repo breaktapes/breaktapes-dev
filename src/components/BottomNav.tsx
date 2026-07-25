@@ -50,72 +50,103 @@ export function BottomNav() {
       aria-label="Main navigation"
       style={{
         height: 'calc(var(--bottom-nav-base-height) + var(--safe-bottom))',
-        paddingBottom: 'var(--safe-bottom)',
+        padding: '6px 12px calc(6px + var(--safe-bottom))',
         flexShrink: 0,
         display: 'flex',
-        borderTop: '1px solid var(--border2)',
-        background: 'linear-gradient(180deg, var(--surface2) 0%, var(--surface) 100%)',
-        backdropFilter: 'blur(20px)',
-        boxShadow: '0 -2px 24px rgba(0,0,0,0.3), inset 0 1px 0 var(--border)',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(180deg, rgba(5,5,5,0.08) 0%, rgba(5,5,5,0.32) 100%)',
+        backdropFilter: 'blur(18px)',
       }}
     >
-      {NAV_TABS.map(({ to, label, Icon }) => {
-        const isActive = to === '/'
-          ? location.pathname === '/'
-          : location.pathname.startsWith(to)
+      <div
+        style={{
+          width: '100%',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+          gap: '8px',
+          padding: '8px',
+          borderRadius: '18px',
+          border: '1px solid var(--border2)',
+          background: 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.02) 100%)',
+          boxShadow: '0 -10px 30px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.04)',
+        }}
+      >
+        {NAV_TABS.map(({ to, label, Icon }) => {
+          const isActive = to === '/'
+            ? location.pathname === '/'
+            : location.pathname.startsWith(to)
 
-        return (
-          <NavLink
-            key={to}
-            to={to}
-            aria-current={isActive ? 'page' : undefined}
-            data-tour={`nav-${to === '/' ? 'home' : to.slice(1)}`}
-            style={{
-              flex: 1,
-              position: 'relative',
-              overflow: 'hidden',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '4px',
-              textDecoration: 'none',
-              color: isActive ? 'var(--orange)' : 'var(--muted)',
-              minHeight: '44px',
-              background: isActive
-                ? 'linear-gradient(180deg, rgba(var(--orange-ch), 0.10) 0%, rgba(var(--orange-ch), 0.04) 100%)'
-                : 'transparent',
-              transition: 'background 0.18s ease',
-            }}
-          >
-            <Icon />
-            <span style={{
-              fontFamily: 'var(--headline)',
-              fontSize: 'var(--text-xs)',
-              fontWeight: 700,
-              letterSpacing: '0.08em',
-              textTransform: 'uppercase',
-              color: isActive ? 'var(--orange)' : 'var(--muted)',
-              transition: 'color 0.18s',
-            }}>
-              {label}
-            </span>
-            {isActive && (
+          return (
+            <NavLink
+              key={to}
+              to={to}
+              aria-current={isActive ? 'page' : undefined}
+              data-tour={`nav-${to === '/' ? 'home' : to.slice(1)}`}
+              style={{
+                position: 'relative',
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '5px',
+                minHeight: '54px',
+                borderRadius: '14px',
+                textDecoration: 'none',
+                color: isActive ? 'var(--white)' : 'var(--muted)',
+                background: isActive
+                  ? 'linear-gradient(180deg, rgba(var(--orange-ch), 0.18) 0%, rgba(var(--orange-ch), 0.08) 100%)'
+                  : 'transparent',
+                boxShadow: isActive
+                  ? 'inset 0 1px 0 rgba(255,255,255,0.06), 0 8px 18px rgba(0,0,0,0.22)'
+                  : 'none',
+                transition: 'background 0.18s ease, color 0.18s ease, transform 0.18s ease',
+                transform: isActive ? 'translateY(-1px)' : 'translateY(0)',
+              }}
+            >
+              {isActive && (
+                <span
+                  style={{
+                    position: 'absolute',
+                    inset: '0 auto auto 50%',
+                    transform: 'translateX(-50%)',
+                    width: '30px',
+                    height: '3px',
+                    borderRadius: '999px',
+                    background: 'linear-gradient(90deg, rgba(var(--orange-ch),0.7) 0%, var(--orange) 100%)',
+                    boxShadow: '0 0 14px rgba(var(--orange-ch),0.38)',
+                  }}
+                />
+              )}
               <span
                 style={{
-                  position: 'absolute',
-                  top: 0, left: '20%', right: '20%',
-                  height: '2px',
-                  background: 'linear-gradient(135deg, var(--orange) 0%, color-mix(in srgb, var(--orange) 70%, black) 100%)',
-                  borderRadius: '0 0 var(--radius-xs) var(--radius-xs)',
-                  boxShadow: '0 0 10px rgba(var(--orange-ch), 0.6)',
-                  animation: 'fadeIn 0.15s ease-out',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '28px',
+                  height: '28px',
+                  color: isActive ? 'var(--orange)' : 'var(--muted)',
+                  transition: 'color 0.18s ease',
                 }}
-              />
-            )}
-          </NavLink>
-        )
-      })}
+              >
+                <Icon />
+              </span>
+              <span style={{
+                fontFamily: 'var(--headline)',
+                fontSize: 'var(--text-xs)',
+                fontWeight: 700,
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                color: isActive ? 'var(--white)' : 'var(--muted)',
+                transition: 'color 0.18s ease',
+              }}>
+                {label}
+              </span>
+            </NavLink>
+          )
+        })}
+      </div>
     </nav>
   )
 }
