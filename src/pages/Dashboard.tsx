@@ -1601,9 +1601,9 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
           <div style={st.widgetLabel}>YOUR RECAP</div>
           <div role="heading" aria-level={2} style={st.widgetTitle}>RECENT RACES</div>
         </div>
-        {narrative && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontStyle: 'italic', flexShrink: 0 }}>{narrative}</div>}
+        {narrative && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontStyle: 'italic', flexShrink: 0, padding: '6px 10px', borderRadius: 'var(--radius-pill)', background: 'var(--surface2)', border: '1px solid var(--border)' }}>{narrative}</div>}
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', marginTop: '4px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', marginTop: '6px' }}>
         {recent.map((r, i) => {
           const isPB = !!r.time && pbMap[normalizeDistKey(r.distance)]?.id === r.id
           const dateStr = fmtDateDDMM(r.date)
@@ -1612,9 +1612,17 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
           return (
             <div key={r.id} style={{
               display: 'flex', alignItems: 'center', gap: 'var(--sp-3)',
-              padding: '10px 0',
-              borderBottom: i < recent.length - 1 ? '1px solid var(--border)' : 'none',
+              padding: '12px 14px',
+              border: '1px solid var(--border)',
+              borderRadius: '14px',
+              background: isPB
+                ? 'linear-gradient(120deg, rgba(var(--gold-ch),0.08), rgba(var(--orange-ch),0.04))'
+                : 'var(--surface2)',
             }}>
+              <div style={{ width: '50px', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', alignSelf: 'stretch', borderRadius: '10px', background: isPB ? 'rgba(var(--gold-ch),0.12)' : 'rgba(255,255,255,0.03)', border: `1px solid ${isPB ? 'rgba(var(--gold-ch),0.18)' : 'var(--border)'}` }}>
+                <div style={{ fontFamily: 'var(--headline)', fontSize: '10px', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: isPB ? 'var(--gold)' : 'var(--orange)' }}>{dateStr.split(' ')[1] ?? dateStr}</div>
+                <div style={{ ...NUMERIC_STYLE, fontSize: 'var(--text-lg)', color: 'var(--white)', lineHeight: 1 }}>{dateStr.split(' ')[0] ?? '—'}</div>
+              </div>
               {/* Left: name + meta */}
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', flexWrap: 'wrap' }}>
@@ -1625,14 +1633,19 @@ function RecentRaces({ onAddRace }: { onAddRace: () => void }) {
                     <span style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--gold)', background: 'rgba(var(--gold-ch),0.12)', border: '1px solid rgba(var(--gold-ch),0.3)', borderRadius: 'var(--radius-xs)', padding: '2px 6px', flexShrink: 0 }}>PB</span>
                   )}
                 </div>
-                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>
-                  {dateStr}{cityMeta ? ` · ${cityMeta}` : ''}
+                <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginTop: '4px', lineHeight: 1.45 }}>
+                  {cityMeta}
                 </div>
               </div>
               {/* Right: time — monospace for alignment */}
               {r.time && (
-                <div style={{ fontFamily: 'var(--num)', fontWeight: 600, fontVariantNumeric: 'tabular-nums', fontFeatureSettings: '"tnum" 1, "zero" 1', fontSize: 'var(--text-base)', color: isPB ? 'var(--gold)' : 'var(--orange)', flexShrink: 0, letterSpacing: 'var(--num-track)' }}>
-                  {toHHMMSS(r.time)}
+                <div style={{ minWidth: '102px', textAlign: 'right', flexShrink: 0 }}>
+                  <div style={{ fontFamily: 'var(--num)', fontWeight: 600, fontVariantNumeric: 'tabular-nums', fontFeatureSettings: '"tnum" 1, "zero" 1', fontSize: 'var(--text-lg)', color: isPB ? 'var(--gold)' : 'var(--orange)', letterSpacing: 'var(--num-track)' }}>
+                    {toHHMMSS(r.time)}
+                  </div>
+                  <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', marginTop: '4px', fontFamily: 'var(--headline)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                    {distBadge(r.distance, r.sport)}
+                  </div>
                 </div>
               )}
             </div>
@@ -1750,9 +1763,18 @@ function SeasonPlannerWidget({ onAddRace, onOpenPlanner }: { onAddRace: () => vo
         const { taper, recover } = taperFor(r.distance)
         const p = r.priority ?? 'C'
         return (
-          <div key={r.id} style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.5 }}>
-            <span style={{ color: p === 'A' ? 'var(--white)' : p === 'B' ? 'rgba(245,245,245,0.6)' : 'var(--muted)' }}>{p}</span>
-            {` · ${r.name} · taper ${taper}d / recover ${recover}d`}
+          <div key={r.id} style={{ display: 'grid', gridTemplateColumns: '32px 1fr auto', gap: 'var(--sp-3)', alignItems: 'center', padding: '10px 12px', borderRadius: '12px', background: 'var(--surface2)', border: '1px solid var(--border)' }}>
+            <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: p === 'A' ? 'rgba(var(--orange-ch),0.14)' : p === 'B' ? 'rgba(var(--gold-ch),0.12)' : 'rgba(255,255,255,0.04)', border: `1px solid ${p === 'A' ? 'rgba(var(--orange-ch),0.25)' : p === 'B' ? 'rgba(var(--gold-ch),0.22)' : 'var(--border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xs)', color: p === 'A' ? 'var(--orange)' : p === 'B' ? 'var(--gold)' : 'var(--muted)' }}>
+              {p}
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-sm)', color: 'var(--white)', letterSpacing: '0.03em', textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.name}</div>
+              <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginTop: '2px' }}>{distBadge(r.distance, r.sport)}</div>
+            </div>
+            <div style={{ textAlign: 'right', fontSize: 'var(--text-xs)', color: 'var(--muted)', lineHeight: 1.45 }}>
+              <div>Taper {taper}d</div>
+              <div>Recover {recover}d</div>
+            </div>
           </div>
         )
       })}
@@ -2058,8 +2080,8 @@ function PacingIQWidget() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
           {/* Primary persona */}
-          <div>
-            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xl)', color: primaryMeta.color, letterSpacing: '0.04em' }}>
+          <div style={{ padding: '14px 16px', borderRadius: '14px', background: 'var(--surface2)', border: '1px solid var(--border)' }}>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xl)', color: primaryMeta.color, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
               {primaryMeta.label}
             </div>
             <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginTop: '4px', lineHeight: 1.5 }}>
@@ -2110,7 +2132,7 @@ function PacingIQWidget() {
           )}
 
           {/* Coaching prescription */}
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontStyle: 'italic', padding: '8px 10px', background: 'var(--surface3)', borderRadius: 'var(--radius-sm)', borderLeft: `2px solid ${primaryMeta.color}` }}>
+          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', fontStyle: 'italic', padding: '12px 14px', background: 'var(--surface2)', borderRadius: 'var(--radius-md)', borderLeft: `3px solid ${primaryMeta.color}`, lineHeight: 1.5 }}>
             {agg.coachingNote}
           </div>
         </div>
@@ -3955,12 +3977,12 @@ function PersonalBestsWidget() {
                   data-no-widget-detail
                   style={{
                     position: 'relative',
-                    minWidth: '160px', maxWidth: '160px',
+                    minWidth: '176px', maxWidth: '176px',
                     background: `linear-gradient(145deg, #141414 0%, ${accentBg} 100%)`,
                     border: `1px solid var(--border2)`,
                     borderLeft: `3px solid ${accentColor}`,
-                    borderRadius: 'var(--radius-lg)',
-                    padding: '14px 14px 12px',
+                    borderRadius: '16px',
+                    padding: '16px 16px 14px',
                     overflow: 'hidden',
                     flexShrink: 0,
                     cursor: 'pointer',
@@ -3968,11 +3990,11 @@ function PersonalBestsWidget() {
                   }}
                 >
                   {/* Distance label */}
-                  <div style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-xs)', fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '6px' }}>
+                  <div style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-xs)', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '8px' }}>
                     {displayKey}
                   </div>
                   {/* Time */}
-                  <div style={{ fontFamily: 'var(--headline)', fontSize: 'var(--text-2xl)', fontWeight: 900, letterSpacing: '-0.01em', lineHeight: 1, marginBottom: '8px', color: accentColor }}>
+                  <div style={{ fontFamily: 'var(--num)', fontSize: '34px', fontWeight: 600, letterSpacing: 'var(--num-track)', lineHeight: 1, marginBottom: '10px', color: accentColor, fontVariantNumeric: 'tabular-nums', fontFeatureSettings: '"tnum" 1, "zero" 1' }}>
                     {r.time}
                   </div>
                   {/* Race name */}
