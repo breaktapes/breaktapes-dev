@@ -10,6 +10,7 @@ import { DateInput } from '@/components/DateInput'
 import { CustomDistInput } from '@/components/CustomDistInput'
 import { CityPicker } from '@/components/CityPicker'
 import { TimePickerWheel, type HMS } from '@/components/TimePickerWheel'
+import { sharedSheetStyles } from '@/components/ui/sheetStyles'
 import type { Race, Split } from '@/types'
 import { useUnits, fmtDistKm, distUnit, fmtPaceSecPerKm, computePaceSecPerKm, fmtSpeedKmh } from '@/lib/units'
 import { removeMedalBackground } from '@/lib/removeBg'
@@ -793,15 +794,12 @@ function SplitsEditor({ splits, onChange, sport }: {
   }
 
   const inputBase: React.CSSProperties = {
-    background: 'var(--surface3)',
-    border: '1px solid var(--border2)',
-    borderRadius: 'var(--radius-sm)',
-    color: 'var(--white)',
+    ...sharedSheetStyles.input,
     fontSize: 'var(--text-xs)',
     padding: '5px 8px',
     height: '32px',
+    minHeight: '32px',
     width: '100%',
-    boxSizing: 'border-box',
     fontFamily: 'var(--body)',
     minWidth: 0,
   }
@@ -1630,41 +1628,18 @@ const st = {
   } as React.CSSProperties,
 
   sheet: {
-    width: '100%',
-    maxWidth: '680px',
+    ...sharedSheetStyles.sheet,
     maxHeight: '92dvh',
-    background: 'var(--surface2)',
-    borderTop: '2px solid var(--orange)',
-    borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0',
-    display: 'flex',
-    flexDirection: 'column',
-    overflow: 'hidden',
   } as React.CSSProperties,
 
-  handle: {
-    width: '36px',
-    height: '4px',
-    background: 'var(--border2)',
-    borderRadius: 'var(--radius-xs)',
-    margin: '12px auto 0',
-    flexShrink: 0,
-  } as React.CSSProperties,
+  handle: sharedSheetStyles.handle,
 
-  header: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '12px 16px 0',
-    flexShrink: 0,
-  } as React.CSSProperties,
+  header: sharedSheetStyles.header,
 
   title: {
-    fontFamily: 'var(--headline)',
-    fontWeight: 900,
+    ...sharedSheetStyles.title,
     fontSize: 'var(--text-md)',
     letterSpacing: '0.12em',
-    textTransform: 'uppercase',
-    color: 'var(--white)',
   } as React.CSSProperties,
 
   titleMono: {
@@ -1676,15 +1651,7 @@ const st = {
     color: 'var(--muted)',
   } as React.CSSProperties,
 
-  closeBtn: {
-    background: 'transparent',
-    border: 'none',
-    color: 'var(--muted)',
-    fontSize: 'var(--text-md)',
-    cursor: 'pointer',
-    padding: '4px 8px',
-    lineHeight: 1,
-  } as React.CSSProperties,
+  closeBtn: sharedSheetStyles.closeBtn,
 
   scrollBody: {
     overflowY: 'auto',

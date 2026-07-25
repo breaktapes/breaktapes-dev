@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import type { DashWidget } from '@/types'
 import { getWidgetContent, type WidgetDynamicContext, type WidgetRelatedAction } from '@/lib/widgetContent'
 import { markWidgetDetailDiscovered, type WidgetCardActions } from '@/components/WidgetCard'
+import { sharedSheetStyles } from '@/components/ui/sheetStyles'
 
 interface Props {
   widget: DashWidget
@@ -174,11 +175,11 @@ const st = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: '14px 16px 10px',
+    padding: '16px 16px 12px',
     gap: 'var(--sp-3)',
     position: 'sticky',
     top: 0,
-    background: 'var(--surface)',
+    background: 'linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01)), var(--surface)',
     zIndex: 5,
     borderBottom: '1px solid var(--border)',
   } as React.CSSProperties,
@@ -208,12 +209,8 @@ const st = {
 
   title: {
     margin: 0,
-    fontFamily: 'var(--headline)',
-    fontWeight: 900,
-    fontSize: 'var(--text-xl)',
-    letterSpacing: '0.04em',
+    ...sharedSheetStyles.title,
     color: 'var(--white)',
-    lineHeight: 1.1,
   } as React.CSSProperties,
 
   proPill: {
@@ -230,19 +227,8 @@ const st = {
   } as React.CSSProperties,
 
   closeBtn: {
-    background: 'transparent',
-    border: '1px solid var(--border2)',
+    ...sharedSheetStyles.closeBtn,
     color: 'var(--white)',
-    fontSize: 'var(--text-md)',
-    cursor: 'pointer',
-    width: '36px',
-    height: '36px',
-    borderRadius: 'var(--radius-round)',
-    lineHeight: 1,
-    flexShrink: 0,
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
   } as React.CSSProperties,
 
   tagline: {
@@ -291,20 +277,22 @@ const st = {
     display: 'flex',
     flexDirection: 'column' as const,
     gap: 'var(--sp-4)',
-    background: 'var(--surface2)',
-    border: '1px solid var(--border)',
-    borderRadius: 'var(--radius-lg)',
+    background: 'linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015)), var(--surface2)',
+    border: '1px solid rgba(255,255,255,0.08)',
+    borderRadius: '16px',
     padding: 'var(--sp-4)',
+    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.03)',
   } as React.CSSProperties,
 
   metricBlock: {
-    background: 'var(--surface3)',
-    border: '1px solid var(--border2)',
-    borderRadius: 'var(--radius-lg)',
+    background: 'linear-gradient(180deg, rgba(var(--orange-ch),0.06), rgba(255,255,255,0.01)), var(--surface3)',
+    border: '1px solid rgba(var(--orange-ch),0.15)',
+    borderRadius: '16px',
     padding: 'var(--sp-4)',
     display: 'flex',
     flexDirection: 'column' as const,
     gap: 'var(--sp-2)',
+    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.03)',
   } as React.CSSProperties,
 
   metricLabel: {
@@ -392,21 +380,21 @@ const st = {
   } as React.CSSProperties,
 
   actionsGrid: {
-    display: 'flex',
-    flexDirection: 'column' as const,
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
     gap: 'var(--sp-2)',
   } as React.CSSProperties,
 
   actionBtn: {
-    background: 'transparent',
+    background: 'rgba(var(--orange-ch),0.08)',
     color: 'var(--orange)',
-    border: '1px solid var(--orange)',
-    borderRadius: 'var(--radius-lg)',
+    border: '1px solid rgba(var(--orange-ch),0.28)',
+    borderRadius: '14px',
     padding: 'var(--sp-4)',
     fontFamily: 'var(--headline)',
     fontWeight: 800,
     fontSize: 'var(--text-sm)',
-    letterSpacing: '0.1em',
+    letterSpacing: '0.08em',
     textTransform: 'uppercase' as const,
     cursor: 'pointer',
     textAlign: 'left' as const,
