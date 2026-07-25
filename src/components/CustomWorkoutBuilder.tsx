@@ -513,7 +513,7 @@ export function CustomWorkoutBuilder({
                         title={`${segment.label} • ${segment.paceLabel}`}
                         style={{
                           flex: segment.width,
-                          minWidth: '20px',
+                          minWidth: segment.kind === 'recovery' ? '34px' : '20px',
                           height: `${segment.height}px`,
                           borderRadius: '16px 16px 8px 8px',
                           background: segment.color,
@@ -524,7 +524,14 @@ export function CustomWorkoutBuilder({
                           boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.12), 0 8px 18px rgba(0,0,0,0.18)',
                         }}
                       >
-                        <span style={{ ...NUMERIC_STYLE, fontSize: '10px', color: 'rgba(255,255,255,0.9)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                        <span style={{
+                          ...NUMERIC_STYLE,
+                          fontSize: segment.kind === 'recovery' ? 'var(--text-xs)' : '10px',
+                          color: 'rgba(255,255,255,0.9)',
+                          letterSpacing: segment.kind === 'recovery' ? '0.03em' : '0.08em',
+                          textTransform: 'uppercase',
+                          lineHeight: 1,
+                        }}>
                           {segment.shortLabel}
                         </span>
                       </div>
