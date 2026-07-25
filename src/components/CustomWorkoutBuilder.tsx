@@ -4,6 +4,7 @@ import { useAthleteStore } from '@/stores/useAthleteStore'
 import type { Race, SavedWorkout } from '@/types'
 import type { PaceZone } from '@/lib/raceFormulas'
 import {
+  blockPacePreview,
   buildCustomWorkoutNotes,
   createDefaultCustomBlocks,
   makeCustomWorkoutTitle,
@@ -105,6 +106,17 @@ const BLOCK_LABELS: Record<CustomBlockType, string> = {
   cooldown: 'Cool-down',
 }
 
+const tileCard: React.CSSProperties = {
+  background: 'var(--surface2)',
+  border: '1px solid var(--border)',
+  borderRadius: 'var(--radius-sm)',
+  padding: 'var(--sp-3)',
+  minHeight: '88px',
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'space-between',
+}
+
 function todayStr(): string {
   const d = new Date()
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
@@ -163,6 +175,7 @@ export function CustomWorkoutBuilder({
         repeatCount: blockType === 'threshold' || blockType === 'interval' ? 3 : 1,
         recoveryValue: blockType === 'threshold' || blockType === 'interval' ? 2 : 0,
         recoveryUnitType: 'time',
+        paceBias: blockType === 'warmup' || blockType === 'easy' || blockType === 'cooldown' ? 30 : 55,
       },
     ])
   }
@@ -177,16 +190,17 @@ export function CustomWorkoutBuilder({
       else if (label.includes('interval')) blockType = 'interval'
       else if (label.includes('marathon')) blockType = 'marathon'
       else if (label.includes('repetition')) blockType = 'repetition'
-      return {
-        id: crypto.randomUUID(),
-        blockType,
-        unitType: 'time' as CustomUnitType,
-        value: 10,
-        repeatCount: 1,
-        recoveryValue: 0,
-        recoveryUnitType: 'time' as CustomUnitType,
-      }
-    })
+        return {
+          id: crypto.randomUUID(),
+          blockType,
+          unitType: 'time' as CustomUnitType,
+          value: 10,
+          repeatCount: 1,
+          recoveryValue: 0,
+          recoveryUnitType: 'time' as CustomUnitType,
+          paceBias: blockType === 'warmup' || blockType === 'easy' || blockType === 'cooldown' ? 30 : 55,
+        }
+      })
     if (rebuilt.length) setBlocks(rebuilt)
   }
 
@@ -247,7 +261,7 @@ export function CustomWorkoutBuilder({
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
           <div style={{ ...card, padding: 'var(--sp-3)', background: 'var(--surface2)' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr 0.7fr', gap: 'var(--sp-2)' }}>
-              <div>
+              <div style={tileCard}>
                 <label style={fieldLabel}>Session Objective</label>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '4px' }}>
                   {OBJECTIVES.map(option => (
@@ -273,7 +287,7 @@ export function CustomWorkoutBuilder({
                   ))}
                 </div>
               </div>
-              <div>
+              <div style={tileCard}>
                 <label style={fieldLabel}>Freshness</label>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px' }}>
                   {(['fresh', 'normal', 'tired'] as const).map(option => (
@@ -299,7 +313,7 @@ export function CustomWorkoutBuilder({
                   ))}
                 </div>
               </div>
-              <div>
+              <div style={tileCard}>
                 <label style={fieldLabel}>Available Time</label>
                 <input
                   type="number"
@@ -325,7 +339,11 @@ export function CustomWorkoutBuilder({
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
               {blocks.map(block => (
-                <div key={block.id} style={{ background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: 'var(--sp-3)' }}>
+                <div key={block.id} style={{ background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: 'var(--sp-3)', minHeight: block.repeatCount > 1 ? '224px' : '184px' }}>
+                  {(() => {
+                    const pacePreview = blockPacePreview(block, activeZones)
+                    return (
+                      <>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 'var(--sp-2)', marginBottom: '10px' }}>
                     <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color: 'var(--white)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                       {BLOCK_LABELS[block.blockType]}
@@ -337,7 +355,7 @@ export function CustomWorkoutBuilder({
                     </div>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1.35fr 0.85fr 0.7fr 0.7fr', gap: 'var(--sp-2)', alignItems: 'end' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1.25fr 0.8fr 0.72fr 0.72fr', gap: 'var(--sp-2)', alignItems: 'end' }}>
                     <div>
                       <label style={fieldLabel}>Block</label>
                       <select
@@ -383,6 +401,29 @@ export function CustomWorkoutBuilder({
                     </div>
                   </div>
 
+                  <div style={{ marginTop: '12px', padding: '10px 12px', background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 'var(--sp-2)', marginBottom: '8px' }}>
+                      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: 'var(--headline)', fontWeight: 700 }}>
+                        Pace Range
+                      </div>
+                      <div style={{ ...NUMERIC_STYLE, fontSize: 'var(--text-sm)', color: 'var(--orange)' }}>
+                        {pacePreview.target}
+                      </div>
+                    </div>
+                    <input
+                      type="range"
+                      min={0}
+                      max={100}
+                      value={block.paceBias}
+                      onChange={e => updateBlock(block.id, { paceBias: parseInt(e.target.value, 10) || 0 })}
+                      style={{ width: '100%', accentColor: 'var(--orange)', cursor: 'pointer' }}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px', fontSize: '11px', color: 'var(--muted)' }}>
+                      <span>{pacePreview.min}</span>
+                      <span>{pacePreview.max}</span>
+                    </div>
+                  </div>
+
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'end', gap: 'var(--sp-2)', marginTop: '10px' }}>
                     {block.repeatCount > 1 ? (
                       <div style={{ display: 'grid', gridTemplateColumns: '0.9fr 0.7fr', gap: '4px', flex: 1 }}>
@@ -417,6 +458,9 @@ export function CustomWorkoutBuilder({
                       Remove
                     </button>
                   </div>
+                      </>
+                    )
+                  })()}
                 </div>
               ))}
             </div>

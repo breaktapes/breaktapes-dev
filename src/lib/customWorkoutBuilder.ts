@@ -28,6 +28,7 @@ export interface CustomWorkoutBlock {
   repeatCount: number
   recoveryValue: number
   recoveryUnitType: CustomUnitType
+  paceBias: number
 }
 
 export interface CustomVisualSegment {
@@ -112,13 +113,22 @@ function getZone(zones: PaceZone[], abbr: string): PaceZone | null {
   return zones.find(zone => zone.abbr === abbr) ?? null
 }
 
-function repPaceSecPerKm(zone: PaceZone | null, blockType: CustomBlockType): number {
+function repPaceSecPerKm(zone: PaceZone | null, blockType: CustomBlockType, paceBias = 50): number {
   if (!zone) return 360
-  if (blockType === 'warmup' || blockType === 'easy' || blockType === 'cooldown') return zone.maxSecPerKm
-  if (blockType === 'marathon') return (zone.minSecPerKm + zone.maxSecPerKm) / 2
-  if (blockType === 'threshold') return zone.maxSecPerKm - (zone.maxSecPerKm - zone.minSecPerKm) * 0.35
-  if (blockType === 'interval') return zone.maxSecPerKm - (zone.maxSecPerKm - zone.minSecPerKm) * 0.6
-  return zone.minSecPerKm
+  const normalized = clamp(paceBias / 100, 0, 1)
+  if (blockType === 'warmup' || blockType === 'easy' || blockType === 'cooldown') {
+    return zone.maxSecPerKm - (zone.maxSecPerKm - zone.minSecPerKm) * normalized * 0.55
+  }
+  if (blockType === 'marathon') {
+    return zone.maxSecPerKm - (zone.maxSecPerKm - zone.minSecPerKm) * normalized
+  }
+  if (blockType === 'threshold') {
+    return zone.maxSecPerKm - (zone.maxSecPerKm - zone.minSecPerKm) * normalized
+  }
+  if (blockType === 'interval') {
+    return zone.maxSecPerKm - (zone.maxSecPerKm - zone.minSecPerKm) * normalized
+  }
+  return zone.maxSecPerKm - (zone.maxSecPerKm - zone.minSecPerKm) * normalized
 }
 
 function paceLabel(zone: PaceZone | null): string {
@@ -271,9 +281,9 @@ function fitAssessment(
 
 export function createDefaultCustomBlocks(): CustomWorkoutBlock[] {
   return [
-    { id: crypto.randomUUID(), blockType: 'warmup', unitType: 'time', value: 15, repeatCount: 1, recoveryValue: 0, recoveryUnitType: 'time' },
-    { id: crypto.randomUUID(), blockType: 'threshold', unitType: 'time', value: 8, repeatCount: 4, recoveryValue: 2, recoveryUnitType: 'time' },
-    { id: crypto.randomUUID(), blockType: 'cooldown', unitType: 'time', value: 10, repeatCount: 1, recoveryValue: 0, recoveryUnitType: 'time' },
+    { id: crypto.randomUUID(), blockType: 'warmup', unitType: 'time', value: 15, repeatCount: 1, recoveryValue: 0, recoveryUnitType: 'time', paceBias: 30 },
+    { id: crypto.randomUUID(), blockType: 'threshold', unitType: 'time', value: 8, repeatCount: 4, recoveryValue: 2, recoveryUnitType: 'time', paceBias: 55 },
+    { id: crypto.randomUUID(), blockType: 'cooldown', unitType: 'time', value: 10, repeatCount: 1, recoveryValue: 0, recoveryUnitType: 'time', paceBias: 25 },
   ]
 }
 
@@ -310,7 +320,7 @@ export function summarizeCustomWorkout(args: {
 
   blocks.forEach((block) => {
     const zone = getZone(zones, zoneForBlock(block.blockType)) ?? easyZone
-    const zonePaceSec = repPaceSecPerKm(zone, block.blockType)
+    const zonePaceSec = repPaceSecPerKm(zone, block.blockType, block.paceBias)
     const workMinutes = durationFromBlock(block.value, block.unitType, zonePaceSec)
     const workKm = distanceFromBlock(block.value, block.unitType, zonePaceSec)
     const repeats = Math.max(1, block.repeatCount)
@@ -416,6 +426,20 @@ export function summarizeCustomWorkout(args: {
     verdict,
     visualSegments: repSegments,
     savedSegments,
+  }
+}
+
+export function blockPacePreview(block: CustomWorkoutBlock, zones: PaceZone[]): { min: string; max: string; target: string } {
+  const zone = getZone(zones, zoneForBlock(block.blockType))
+  if (!zone) return { min: '—', max: '—', target: '—' }
+  const targetSec = repPaceSecPerKm(zone, block.blockType, block.paceBias)
+  const targetMin = Math.floor(targetSec / 60)
+  const targetSecs = Math.round(targetSec % 60)
+  const target = `${targetMin}:${String(targetSecs).padStart(2, '0')} /km`
+  return {
+    min: zone.maxPaceStr,
+    max: zone.minPaceStr,
+    target,
   }
 }
 
