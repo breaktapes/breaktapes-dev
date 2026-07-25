@@ -293,7 +293,7 @@ function DetailedRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onCli
           </div>
         </div>
         <div style={{ textAlign: 'right', flexShrink: 0 }}>
-          <div style={{ fontFamily: 'var(--num)', fontWeight: 600, fontVariantNumeric: 'tabular-nums', fontFeatureSettings: '"tnum" 1, "zero" 1', fontSize: '20px', color: nonFinish ? 'var(--muted)' : (isPB ? 'var(--gold)' : 'var(--orange)'), letterSpacing: 'var(--num-track)' }}>
+          <div style={{ fontFamily: 'var(--num)', fontWeight: 600, fontVariantNumeric: 'tabular-nums', fontFeatureSettings: '"tnum" 1, "zero" 1', fontSize: 'var(--text-xl)', color: nonFinish ? 'var(--muted)' : (isPB ? 'var(--gold)' : 'var(--orange)'), letterSpacing: 'var(--num-track)' }}>
             {nonFinish ?? (padTime(race.time) ?? '—')}
           </div>
           <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textAlign: 'right', marginTop: '3px', letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: 'var(--headline)', fontWeight: 700 }}>{d.getFullYear()}</div>
