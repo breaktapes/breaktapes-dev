@@ -188,6 +188,13 @@ function loadSPA({
   global.handleStravaCallback   = () => {};
   global.applyEnvRestrictions   = () => {};
   global.dismissLanding         = () => {};
+  // Legacy nav aliases schedule these after go('history'|'map'|'wishlist').
+  // In Vitest the environment may tear down before the timeout fires, causing
+  // document/classList access after jsdom disposal. Keep them as no-ops for
+  // navigation tests — those tests assert alias routing, not sheet animation.
+  global.expandRacesSheet       = () => {};
+  global.collapseRacesSheet     = () => {};
+  global.openWishlistModal      = () => {};
 
   // go() calls render() at the end, which calls page-specific render functions
   // that assume a fully built DOM. Override render() to a no-op so navigation
