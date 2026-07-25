@@ -227,9 +227,6 @@ function CompactRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onClic
       onClick={onClick}
       style={{
         cursor: 'pointer',
-        // Extend PB gradient to full list width; calc(1rem - 3px) keeps content
-        // column-aligned with non-PB rows (border-left: 3px eats back the 3px)
-        ...(isPB ? { marginLeft: '-1rem', marginRight: '-1rem', paddingLeft: 'calc(1rem - 3px)', paddingRight: '1rem' } : {}),
       }}
     >
       <div className={`rrc-date-chip${isPB ? ' is-pb' : ''}`}>
@@ -237,8 +234,18 @@ function CompactRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onClic
         <div className="rrc-date-chip-day">{day}</div>
       </div>
       <div style={{ minWidth: 0 }}>
-        <div className="rrc-name">{race.name}</div>
-        {city && <div className="rrc-meta">{city}</div>}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', flexWrap: 'wrap' }}>
+          <div className="rrc-name">{race.name}</div>
+          {isPB && <span className="tag tag-pb">PB</span>}
+          {race.medal && (
+            <span className={`medal-chip medal-${race.medal}`} style={{ padding: '3px 8px', fontSize: 'var(--text-xs)', borderRadius: 'var(--radius-sm)' }}>
+              {race.medal.toUpperCase()}
+            </span>
+          )}
+        </div>
+        <div className="rrc-meta">
+          {[city, label].filter(Boolean).join(' · ')}
+        </div>
       </div>
       <div style={{ textAlign: 'right', flexShrink: 0 }}>
         <div
@@ -247,7 +254,7 @@ function CompactRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onClic
         >
           {nonFinish ?? (padTime(race.time) ?? '—')}
         </div>
-        {label && <div className="rrc-dist">{label}</div>}
+        <div className="rrc-dist">{d.getFullYear()}</div>
       </div>
     </div>
   )
@@ -272,24 +279,24 @@ function DetailedRow({ race, isPB, onClick }: { race: Race; isPB: boolean; onCli
       style={{ cursor: 'pointer' }}
     >
       {/* Top row: date chip + name + time */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: 'var(--sp-2)', alignItems: 'center' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto', gap: 'var(--sp-3)', alignItems: 'center' }}>
         <div className={`rrc-date-chip${isPB ? ' is-pb' : ''}`}>
           <div className="rrc-date-chip-mon">{mon}</div>
           <div className="rrc-date-chip-day">{day}</div>
         </div>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-compact)', color: 'var(--white)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', color: 'var(--white)', letterSpacing: '0.03em', textTransform: 'uppercase', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {race.name}
           </div>
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {[race.city, race.country].filter(Boolean).join(', ')}
+          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginTop: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {[race.city, race.country].filter(Boolean).join(', ')}{label ? ` · ${label}` : ''}
           </div>
         </div>
         <div style={{ textAlign: 'right', flexShrink: 0 }}>
-          <div style={{ fontFamily: 'var(--num)', fontWeight: 600, fontVariantNumeric: 'tabular-nums', fontFeatureSettings: '"tnum" 1, "zero" 1', fontSize: '17px', color: nonFinish ? 'var(--muted)' : (isPB ? 'var(--green)' : 'var(--orange)'), letterSpacing: 'var(--num-track)' }}>
+          <div style={{ fontFamily: 'var(--num)', fontWeight: 600, fontVariantNumeric: 'tabular-nums', fontFeatureSettings: '"tnum" 1, "zero" 1', fontSize: '20px', color: nonFinish ? 'var(--muted)' : (isPB ? 'var(--gold)' : 'var(--orange)'), letterSpacing: 'var(--num-track)' }}>
             {nonFinish ?? (padTime(race.time) ?? '—')}
           </div>
-          {label && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textAlign: 'right', marginTop: '1px' }}>{label}</div>}
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textAlign: 'right', marginTop: '3px', letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: 'var(--headline)', fontWeight: 700 }}>{d.getFullYear()}</div>
         </div>
       </div>
 
@@ -323,21 +330,23 @@ function WishlistRow({ race, onPlan, onRemove }: {
 }) {
   return (
     <div style={{
-      padding: '12px 14px',
-      borderBottom: '1px solid var(--border)',
+      padding: '14px 16px',
+      border: '1px solid var(--border)',
+      borderRadius: '14px',
+      background: 'linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))',
       display: 'flex',
       alignItems: 'center',
-      gap: 'var(--sp-2)',
+      gap: 'var(--sp-3)',
     }}>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-compact)', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', color: 'var(--white)', letterSpacing: '0.03em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {race.name}
         </div>
-        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>
+        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginTop: '4px', lineHeight: 1.5 }}>
           {[race.distance ? distLabel(race.distance, race.sport) : null, race.city, race.country].filter(Boolean).join(' · ')}
         </div>
         {race.date && (
-          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px' }}>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', marginTop: '4px', fontFamily: 'var(--headline)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
             {new Date(race.date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
           </div>
         )}
@@ -521,7 +530,7 @@ function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport, onDiscover
 
       {/* Search bar — below stats, above list (hidden in wishlist mode) */}
       {!showWishlist && (
-        <div style={{ padding: '0 12px 6px', position: 'relative' }}>
+        <div style={{ padding: '2px 12px 10px', position: 'relative' }}>
           <input
             type="search"
             placeholder="Search races, cities, countries…"
@@ -534,7 +543,7 @@ function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport, onDiscover
               borderRadius: 'var(--radius-sm)',
               color: 'var(--white)',
               fontSize: 'var(--text-sm)',
-              padding: '7px 30px 7px 10px',
+              padding: '10px 34px 10px 12px',
               fontFamily: 'var(--body)',
               outline: 'none',
             }}
@@ -618,7 +627,7 @@ function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport, onDiscover
             {sorted.length > visibleCount && (
               <button
                 onClick={() => setVisibleCount(c => c + 20)}
-                style={{ width: '100%', padding: 'var(--sp-3)', background: 'none', border: 'none', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer' }}
+                style={{ width: '100%', padding: 'var(--sp-4)', background: 'none', border: 'none', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer' }}
               >
                 Show more ({sorted.length - visibleCount} remaining)
               </button>
@@ -644,7 +653,7 @@ function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport, onDiscover
             {sorted.length > visibleCount && (
               <button
                 onClick={() => setVisibleCount(c => c + 20)}
-                style={{ width: '100%', padding: 'var(--sp-3)', background: 'none', border: 'none', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer' }}
+                style={{ width: '100%', padding: 'var(--sp-4)', background: 'none', border: 'none', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer' }}
               >
                 Show more ({sorted.length - visibleCount} remaining)
               </button>
