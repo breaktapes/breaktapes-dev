@@ -47,6 +47,9 @@ const textInput: React.CSSProperties = {
   padding: '0.65rem 0.85rem',
   fontFamily: 'var(--body)',
   boxSizing: 'border-box',
+  minHeight: '44px',
+  height: '44px',
+  lineHeight: 1.1,
 }
 
 const btnMain: React.CSSProperties = {
@@ -115,6 +118,19 @@ const tileCard: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'space-between',
+}
+
+const selectInputStyle: React.CSSProperties = {
+  ...textInput,
+  appearance: 'none',
+  WebkitAppearance: 'none' as any,
+  MozAppearance: 'none' as any,
+  paddingRight: '2.25rem',
+}
+
+const numberInputStyle: React.CSSProperties = {
+  ...textInput,
+  paddingRight: '0.65rem',
 }
 
 function todayStr(): string {
@@ -326,7 +342,7 @@ export function CustomWorkoutBuilder({
                     max={180}
                     value={availableMinutes}
                     onChange={e => setAvailableMinutes(Math.max(20, Math.min(180, parseInt(e.target.value, 10) || 20)))}
-                    style={{ ...textInput, minHeight: '44px', fontSize: 'var(--text-lg)' }}
+                    style={{ ...numberInputStyle, fontSize: 'var(--text-lg)' }}
                   />
                 </div>
               </div>
@@ -367,7 +383,7 @@ export function CustomWorkoutBuilder({
                       <select
                         value={block.blockType}
                         onChange={e => updateBlock(block.id, { blockType: e.target.value as CustomBlockType })}
-                        style={textInput}
+                        style={selectInputStyle}
                       >
                         {BLOCK_TYPES.map(option => <option key={option.id} value={option.id}>{option.label}</option>)}
                       </select>
@@ -377,7 +393,7 @@ export function CustomWorkoutBuilder({
                       <select
                         value={block.unitType}
                         onChange={e => updateBlock(block.id, { unitType: e.target.value as CustomUnitType })}
-                        style={textInput}
+                        style={selectInputStyle}
                       >
                         <option value="time">Time</option>
                         <option value="distance">Distance</option>
@@ -391,7 +407,7 @@ export function CustomWorkoutBuilder({
                         max={60}
                         value={block.value}
                         onChange={e => updateBlock(block.id, { value: Math.max(1, parseFloat(e.target.value) || 1) })}
-                        style={textInput}
+                        style={numberInputStyle}
                       />
                     </div>
                     <div>
@@ -402,7 +418,7 @@ export function CustomWorkoutBuilder({
                         max={10}
                         value={block.repeatCount}
                         onChange={e => updateBlock(block.id, { repeatCount: Math.max(1, parseInt(e.target.value, 10) || 1) })}
-                        style={textInput}
+                        style={numberInputStyle}
                       />
                     </div>
                   </div>
@@ -438,7 +454,7 @@ export function CustomWorkoutBuilder({
                           <select
                             value={block.recoveryUnitType}
                             onChange={e => updateBlock(block.id, { recoveryUnitType: e.target.value as CustomUnitType })}
-                            style={textInput}
+                            style={selectInputStyle}
                           >
                             <option value="time">Time</option>
                             <option value="distance">Distance</option>
@@ -452,7 +468,7 @@ export function CustomWorkoutBuilder({
                             max={20}
                             value={block.recoveryValue}
                             onChange={e => updateBlock(block.id, { recoveryValue: Math.max(0, parseFloat(e.target.value) || 0) })}
-                            style={textInput}
+                            style={numberInputStyle}
                           />
                         </div>
                       </div>
@@ -593,7 +609,7 @@ export function CustomWorkoutBuilder({
                         <button
                           key={workout.id}
                           onClick={() => loadSavedWorkout(workout)}
-                          style={{ ...textInput, textAlign: 'left', cursor: 'pointer', background: 'var(--surface2)' }}
+                          style={{ ...textInput, textAlign: 'left', cursor: 'pointer', background: 'var(--surface2)', minHeight: 'unset', height: 'auto' }}
                         >
                           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color: 'var(--white)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                             {workout.title}
