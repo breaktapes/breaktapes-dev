@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
+import { sharedFormControlStyles } from '@/components/ui/formControlStyles'
 
 const SUBJECTS = [
   'Account compromised',
@@ -263,16 +264,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 }
 
 const inputStyle: React.CSSProperties = {
-  background: 'var(--surface2)',
-  border: '1px solid var(--border2)',
-  borderRadius: 'var(--radius-lg)',
-  padding: '12px 14px',
-  color: 'var(--white)',
-  fontSize: 15,
-  fontFamily: "'Barlow', sans-serif",
-  width: '100%',
-  boxSizing: 'border-box',
-  outline: 'none',
+  ...sharedFormControlStyles.input,
   appearance: 'none',
   WebkitAppearance: 'none',
 }

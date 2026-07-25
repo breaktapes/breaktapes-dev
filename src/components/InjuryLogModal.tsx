@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import type { Injury, InjuryBodyPart, InjuryPhase, InjuryType } from '@/types'
+import { sharedFormControlStyles } from '@/components/ui/formControlStyles'
 import { INJURY_BODY_PARTS, INJURY_PHASES, INJURY_TYPES } from '@/types'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 
@@ -116,8 +117,7 @@ export function InjuryLogModal({ injury, onClose }: Props) {
       cursor: 'pointer', textAlign: 'left' as const, display: 'flex', gap: 'var(--sp-1)',
     }),
     select: {
-      width: '100%', background: 'var(--surface3)', border: '1px solid var(--border)',
-      borderRadius: 'var(--radius-sm)', color: 'var(--white)', padding: 'var(--sp-2) var(--sp-3)',
+      ...sharedFormControlStyles.select,
       fontFamily: 'var(--headline)', fontSize: 'var(--text-sm)', height: 40,
       appearance: 'none' as const, WebkitAppearance: 'none' as const,
     },
@@ -140,16 +140,13 @@ export function InjuryLogModal({ injury, onClose }: Props) {
       letterSpacing: '0.08em', textTransform: 'uppercase' as const, cursor: 'pointer',
     }),
     input: {
-      width: '100%', background: 'var(--surface3)', border: '1px solid var(--border)',
-      borderRadius: 'var(--radius-sm)', color: 'var(--white)', padding: 'var(--sp-2) var(--sp-3)',
+      ...sharedFormControlStyles.input,
       fontFamily: 'var(--headline)', fontSize: 'var(--text-sm)', height: 40, boxSizing: 'border-box' as const,
       appearance: 'none' as const, WebkitAppearance: 'none' as const, maxWidth: '100%',
     },
     textarea: {
-      width: '100%', background: 'var(--surface3)', border: '1px solid var(--border)',
-      borderRadius: 'var(--radius-sm)', color: 'var(--white)', padding: 'var(--sp-2) var(--sp-3)',
-      fontFamily: 'var(--body)', fontSize: 'var(--text-sm)', minHeight: 72, resize: 'vertical' as const,
-      boxSizing: 'border-box' as const,
+      ...sharedFormControlStyles.textarea,
+      fontFamily: 'var(--body)', fontSize: 'var(--text-sm)', minHeight: 72, boxSizing: 'border-box' as const,
     },
     disclaimer: {
       fontSize: 'var(--text-xs)', color: 'var(--muted2)', marginTop: 'var(--sp-3)',

@@ -11,6 +11,8 @@ import { supabase } from '@/lib/supabase'
 import { useAthleteStore } from '@/stores/useAthleteStore'
 import { APP_URL } from '@/env'
 import { resolveDistKm } from '@/lib/utils'
+import { sharedSheetStyles } from '@/components/ui/sheetStyles'
+import { sharedFormControlStyles } from '@/components/ui/formControlStyles'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -234,14 +236,14 @@ function SearchSheet({
       zIndex: 1000, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
     }} onClick={onClose}>
       <div
-        style={{ background: 'var(--surface2)', borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0', padding: '1.25rem 1rem 2rem' }}
+        style={{ ...sharedSheetStyles.sheet, maxWidth: '100%', maxHeight: 'unset', borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0', padding: '1.25rem 1rem 2rem' }}
         onClick={e => e.stopPropagation()}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--sp-3)', marginBottom: '0.75rem' }}>
           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)' }}>
             {placeholder}
           </div>
-          <button onClick={onClose} aria-label="Close" style={{ background: 'transparent', border: 'none', color: 'var(--muted)', fontSize: 'var(--text-md)', cursor: 'pointer', padding: '4px 8px', lineHeight: 1 }}>✕</button>
+          <button onClick={onClose} aria-label="Close" style={sharedSheetStyles.closeBtn}>✕</button>
         </div>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <input
@@ -256,11 +258,7 @@ function SearchSheet({
                 onClose()
               }
             }}
-            style={{
-              flex: 1, background: 'var(--surface3)', border: '1px solid var(--border2)',
-              borderRadius: 'var(--radius-md)', padding: '10px 12px',
-              fontFamily: 'var(--body)', fontSize: 'var(--text-compact)', color: 'var(--white)', outline: 'none',
-            }}
+            style={{ ...sharedFormControlStyles.input, flex: 1 }}
           />
           <button
             onClick={() => { if (q.trim()) { onSelect(q.trim().replace(/^@/, '')); onClose() } }}
