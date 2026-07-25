@@ -418,7 +418,7 @@ export function CustomWorkoutBuilder({
                       onChange={e => updateBlock(block.id, { paceBias: parseInt(e.target.value, 10) || 0 })}
                       style={{ width: '100%', accentColor: 'var(--orange)', cursor: 'pointer' }}
                     />
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px', fontSize: '11px', color: 'var(--muted)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px', fontSize: 'var(--text-xs)', color: 'var(--muted)' }}>
                       <span>{pacePreview.min}</span>
                       <span>{pacePreview.max}</span>
                     </div>
