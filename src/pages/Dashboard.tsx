@@ -2401,7 +2401,7 @@ function RaceDNAWidget() {
 
           {/* ── TEMP PERFORMANCE BARS ────────────────────────────────── */}
           {dna.bucketWithPace.length > 0 ? (
-            <div>
+            <div style={{ padding: '14px 16px', borderRadius: '14px', background: 'var(--surface2)', border: '1px solid var(--border)' }}>
               <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
                 TEMP PERFORMANCE
               </div>
@@ -2439,7 +2439,7 @@ function RaceDNAWidget() {
 
           {/* ── PACING PERSONA ───────────────────────────────────────── */}
           {dna.pacingPersona ? (
-            <div style={{ background: 'var(--surface3)', borderRadius: 'var(--radius-lg)', padding: '10px 12px' }}>
+            <div style={{ background: 'var(--surface2)', borderRadius: '14px', padding: '14px 16px', border: '1px solid var(--border)' }}>
               <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '6px' }}>
                 PACING PATTERN
               </div>
@@ -2467,7 +2467,7 @@ function RaceDNAWidget() {
               </div>
             </div>
           ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', background: 'var(--surface3)', borderRadius: 'var(--radius-lg)', padding: '10px 12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', background: 'var(--surface2)', borderRadius: '14px', padding: '14px 16px', border: '1px solid var(--border)' }}>
               <div>
                 <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 800, color: 'var(--muted)' }}>NO SPLIT DATA</div>
                 <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted2)', marginTop: '2px' }}>Add splits to 2+ races to see your pacing pattern</div>
@@ -2477,7 +2477,7 @@ function RaceDNAWidget() {
 
           {/* ── SURFACE BARS ─────────────────────────────────────────── */}
           {dna.surfaces.length > 0 && (
-            <div>
+            <div style={{ padding: '14px 16px', borderRadius: '14px', background: 'var(--surface2)', border: '1px solid var(--border)' }}>
               <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
                 SURFACE BREAKDOWN
               </div>
@@ -2505,7 +2505,7 @@ function RaceDNAWidget() {
 
           {/* ── COUNTRY CLUSTERS ─────────────────────────────────────── */}
           {dnaSize === 'large' && dna.travelCount > 0 && (
-            <div>
+            <div style={{ padding: '14px 16px', borderRadius: '14px', background: 'var(--surface2)', border: '1px solid var(--border)' }}>
               <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '8px' }}>
                 {dna.travelCount} {dna.travelCount === 1 ? 'COUNTRY' : 'COUNTRIES'}
               </div>
@@ -3357,7 +3357,7 @@ function CourseFitWidget({ race }: { race: Race | null }) {
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>Log 3+ races with placing data to see course fit.</div>
       ) : (
         <>
-          <div>
+          <div style={{ padding: '14px 16px', borderRadius: '14px', background: 'var(--surface2)', border: '1px solid var(--border)' }}>
             <div style={{ ...NUMERIC_STYLE, fontSize: '64px', lineHeight: 1, color: result.color }}>
               {result.score}
             </div>
@@ -3369,7 +3369,7 @@ function CourseFitWidget({ race }: { race: Race | null }) {
             </div>
           </div>
           <div style={st.widgetDivider} />
-          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.55 }}>
+          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.55, padding: '12px 14px', borderRadius: '14px', background: 'var(--surface2)', border: '1px solid var(--border)' }}>
             Surface: {result.nextSurface.toUpperCase()}
             {result.surfaceRaceCount > 0 ? ` · ${result.surfaceRaceCount} prior ${result.nextSurface} races` : ' · no prior races on this surface'}
           </div>
@@ -3498,7 +3498,7 @@ function PBProbabilityWidget({ race }: { race: Race | null }) {
         <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)' }}>Log 2+ races to calculate PB probability.</div>
       ) : (
         <>
-          <div>
+          <div style={{ padding: '14px 16px', borderRadius: '14px', background: 'var(--surface2)', border: '1px solid var(--border)' }}>
             <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: '64px', lineHeight: 1, color: result.color, letterSpacing: '-0.02em' }}>
               {result.probability}%
             </div>
@@ -3510,7 +3510,7 @@ function PBProbabilityWidget({ race }: { race: Race | null }) {
             </div>
           </div>
           <div style={st.widgetDivider} />
-          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.55 }}>
+          <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.55, padding: '12px 14px', borderRadius: '14px', background: 'var(--surface2)', border: '1px solid var(--border)' }}>
             {!result.hasPBForDist
               ? 'No PB logged for this distance — every finish is a new PB.'
               : 'Based on form trend, surface fit, and recent recovery.'}
@@ -3692,15 +3692,15 @@ function WhatToRaceNextWidget() {
           </span>
         )}
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 0, marginTop: 'var(--sp-2)' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)', marginTop: 'var(--sp-2)' }}>
         {racesToShow.map(r => (
-          <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 'var(--sp-2) 0', borderBottom: '1px solid var(--border)' }}>
+          <div key={r.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 'var(--sp-3)', padding: '12px 14px', borderRadius: '14px', background: 'var(--surface2)', border: '1px solid var(--border)' }}>
             <div style={{ minWidth: 0, flex: 1 }}>
-              <div style={{ fontSize: 'var(--text-sm)', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name ?? 'Unnamed Race'}</div>
-              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: 'var(--sp-1)' }}>{fmtDateOrdinal(r.date)} · {distBadge(r.distance) || r.distance}</div>
+              <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-sm)', color: 'var(--white)', letterSpacing: '0.03em', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.name ?? 'Unnamed Race'}</div>
+              <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginTop: '4px', lineHeight: 1.45 }}>{fmtDateOrdinal(r.date)} · {distBadge(r.distance) || r.distance}</div>
             </div>
             {r.priority && (
-              <span style={{ fontSize: 'var(--text-xs)', color: r.priority === 'A' ? 'var(--orange)' : 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, flexShrink: 0, marginLeft: 'var(--sp-2)' }}>
+              <span style={{ fontSize: 'var(--text-xs)', color: r.priority === 'A' ? 'var(--orange)' : 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, flexShrink: 0, padding: '6px 10px', borderRadius: 'var(--radius-pill)', background: r.priority === 'A' ? 'rgba(var(--orange-ch),0.12)' : 'rgba(255,255,255,0.03)', border: `1px solid ${r.priority === 'A' ? 'rgba(var(--orange-ch),0.3)' : 'var(--border)'}` }}>
                 {r.priority}-RACE
               </span>
             )}
