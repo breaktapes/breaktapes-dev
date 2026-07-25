@@ -450,24 +450,17 @@ function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport, onDiscover
       {/* Action bar — primary CTAs always visible at top of sheet */}
       <div className="races-sheet-footer races-sheet-actions">
         <button
+          className="races-action-primary"
           style={{
-            flex: 1, background: 'var(--orange)', color: 'var(--black)',
-            border: 'none', borderRadius: 'var(--radius-md)', padding: '0.8rem',
-            fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)',
-            letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer',
-            boxShadow: '0 4px 20px rgba(232,78,27,0.35)',
-            transition: 'box-shadow 0.18s, transform 0.18s',
+            flex: 1,
           }}
           onClick={onAddRace}
         >
           + Log Race
         </button>
         <button
+          className="races-action-secondary"
           style={{
-            background: 'transparent', color: 'var(--muted)',
-            border: '1px solid var(--border2)', borderRadius: 'var(--radius-md)', padding: '0.8rem',
-            fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xs)',
-            letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer',
             whiteSpace: 'nowrap', flexShrink: 0,
           }}
           onClick={onImportRace}
@@ -475,11 +468,8 @@ function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport, onDiscover
           ↓ Import
         </button>
         <button
+          className="races-action-secondary"
           style={{
-            background: 'transparent', color: 'var(--muted)',
-            border: '1px solid var(--border2)', borderRadius: 'var(--radius-md)', padding: '0.8rem',
-            fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xs)',
-            letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer',
             whiteSpace: 'nowrap', flexShrink: 0,
           }}
           onClick={onDiscover}
@@ -530,32 +520,19 @@ function RacesSheet({ races, onAddRace, onImportRace, onOpenPassport, onDiscover
 
       {/* Search bar — below stats, above list (hidden in wishlist mode) */}
       {!showWishlist && (
-        <div style={{ padding: '2px 12px 10px', position: 'relative' }}>
+        <div className="races-search-wrap" style={{ position: 'relative' }}>
           <input
             type="search"
             placeholder="Search races, cities, countries…"
             value={search}
             onChange={e => onSearchChange(e.target.value)}
-            style={{
-              width: '100%', boxSizing: 'border-box',
-              background: 'var(--surface3)',
-              border: '1px solid var(--border2)',
-              borderRadius: 'var(--radius-sm)',
-              color: 'var(--white)',
-              fontSize: 'var(--text-sm)',
-              padding: '10px 34px 10px 12px',
-              fontFamily: 'var(--body)',
-              outline: 'none',
-            }}
+            className="races-search-input"
           />
           {search && (
             <button
               onClick={() => { setSearch(''); setDebouncedSearch('') }}
-              style={{
-                position: 'absolute', right: '20px', top: '50%', transform: 'translateY(-50%)',
-                background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer',
-                fontSize: 'var(--text-compact)', padding: 0, lineHeight: 1,
-              }}
+              className="races-search-clear"
+              style={{ position: 'absolute', right: '20px', top: '50%', transform: 'translateY(-50%)' }}
               aria-label="Clear search"
             >✕</button>
           )}
