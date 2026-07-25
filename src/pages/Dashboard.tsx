@@ -1675,7 +1675,7 @@ function StatsStrip() {
 
   return (
     <WidgetCard id="stats-strip" className="" style={{ padding: 0 }} hint={false} noDetailPreview>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 'var(--sp-2)' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 'var(--sp-2)' }}>
         {stats.map(s => (
           <div
             key={s.label}
@@ -1685,8 +1685,9 @@ function StatsStrip() {
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'space-between',
-              alignItems: 'flex-start',
+              alignItems: 'center',
               minHeight: '92px',
+              textAlign: 'center',
             }}
           >
             <div style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--orange)' }}>
@@ -4086,14 +4087,14 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
           <div style={{ width: '40px', height: '4px', background: 'var(--border2)', borderRadius: 'var(--radius-xs)', margin: '0 auto 20px', flexShrink: 0 }} />
 
           {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexShrink: 0 }}>
-            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-lg)', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--white)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px', flexShrink: 0 }}>
+            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xl)', letterSpacing: '0.05em', textTransform: 'uppercase', color: 'var(--white)', lineHeight: 1.05 }}>
               UPCOMING RACES
-              <span style={{ marginLeft: '8px', fontFamily: 'var(--body)', fontWeight: 600, fontSize: 'var(--text-sm)', color: 'var(--muted)', letterSpacing: 0, textTransform: 'none' }}>
+              <span style={{ marginLeft: '10px', fontFamily: 'var(--body)', fontWeight: 600, fontSize: 'var(--text-base)', color: 'var(--muted)', letterSpacing: 0, textTransform: 'none' }}>
                 {sorted.length > 0 ? `${sorted.length} race${sorted.length !== 1 ? 's' : ''}` : ''}
               </span>
             </div>
-            <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 'var(--text-lg)', cursor: 'pointer', padding: 'var(--sp-1)', lineHeight: 1 }} aria-label="Close">✕</button>
+            <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--muted)', fontSize: 'var(--text-xl)', cursor: 'pointer', padding: 'var(--sp-1)', lineHeight: 1 }} aria-label="Close">✕</button>
           </div>
 
           {/* Race list — scrollable */}
@@ -4114,9 +4115,9 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                 <div key={r.id}>
                   {/* Gap divider */}
                   {gapDays !== null && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', margin: '6px 0' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', margin: '8px 0' }}>
                       <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
-                      <span style={{ fontFamily: 'var(--body)', fontSize: 'var(--text-xs)', fontWeight: 600, color: gapDays < 21 ? '#ff9966' : 'var(--muted)', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>
+                      <span style={{ fontFamily: 'var(--body)', fontSize: 'var(--text-sm)', fontWeight: 600, color: gapDays < 21 ? '#ff9966' : 'var(--muted)', letterSpacing: '0.02em', whiteSpace: 'nowrap' }}>
                         {gapDays < 21 ? '⚠ ' : ''}{gapDays}d gap
                       </span>
                       <div style={{ flex: 1, height: '1px', background: 'var(--border)' }} />
@@ -4125,29 +4126,29 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
 
                   {/* A-race — large highlighted card */}
                   {isA ? (
-                    <div onClick={() => selectFocus(r.id)} style={{ background: 'linear-gradient(135deg, rgba(var(--orange-ch),0.18) 0%, rgba(var(--orange-ch),0.08) 100%)', border: focusRaceId === r.id ? '2px solid var(--orange)' : '1.5px solid rgba(var(--orange-ch),0.5)', borderRadius: 'var(--radius-lg)', padding: 'var(--sp-4)', position: 'relative', overflow: 'hidden', cursor: 'pointer' }}>
+                    <div onClick={() => selectFocus(r.id)} style={{ background: 'linear-gradient(135deg, rgba(var(--orange-ch),0.18) 0%, rgba(var(--orange-ch),0.08) 100%)', border: focusRaceId === r.id ? '2px solid var(--orange)' : '1.5px solid rgba(var(--orange-ch),0.5)', borderRadius: 'var(--radius-lg)', padding: '18px 18px 16px', position: 'relative', overflow: 'hidden', cursor: 'pointer' }}>
                       <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: '4px', background: 'var(--orange)', borderRadius: 'var(--radius-lg) 0 0 var(--radius-lg)' }} />
                       {focusRaceId === r.id && (
                         <div style={{ position: 'absolute', top: '10px', right: '10px', width: '18px', height: '18px', borderRadius: 'var(--radius-round)', background: 'var(--orange)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'var(--text-xs)', color: '#000', fontWeight: 900 }}>✓</div>
                       )}
                       <div style={{ paddingLeft: '10px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--sp-2)', marginBottom: '6px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--sp-2)', marginBottom: '8px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', flex: 1, minWidth: 0 }}>
-                            <span style={{ background: 'var(--orange)', color: '#000', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xs)', letterSpacing: '0.08em', padding: '2px 7px', borderRadius: 'var(--radius-xs)', flexShrink: 0 }}>{racePriorityLabel(r.priority)}</span>
-                            <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0 }}>{r.name ?? 'Unnamed race'}</span>
+                            <span style={{ background: 'var(--orange)', color: '#000', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', letterSpacing: '0.06em', padding: '4px 10px', borderRadius: 'var(--radius-xs)', flexShrink: 0 }}>{racePriorityLabel(r.priority)}</span>
+                            <span style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-lg)', letterSpacing: '0.03em', textTransform: 'uppercase', color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1, minWidth: 0, lineHeight: 1.05 }}>{r.name ?? 'Unnamed race'}</span>
                           </div>
                           <div style={{ display: 'flex', gap: 'var(--sp-2)', flexShrink: 0 }}>
-                            <button onClick={e => { e.stopPropagation(); setEditingId(r.id) }} style={{ background: 'rgba(var(--orange-ch),0.15)', border: '1px solid rgba(var(--orange-ch),0.4)', borderRadius: 'var(--radius-sm)', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.06em', padding: '5px 10px', cursor: 'pointer', flexShrink: 0 }}>EDIT</button>
+                            <button onClick={e => { e.stopPropagation(); setEditingId(r.id) }} style={{ background: 'rgba(var(--orange-ch),0.15)', border: '1px solid rgba(var(--orange-ch),0.4)', borderRadius: 'var(--radius-sm)', color: 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-sm)', letterSpacing: '0.05em', padding: '7px 12px', cursor: 'pointer', flexShrink: 0 }}>EDIT</button>
                           </div>
                         </div>
-                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', lineHeight: 1.5 }}>
+                        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.55 }}>
                           {[r.city, r.country].filter(Boolean).join(', ')}
                           {r.distance ? ` · ${distBadge(r.distance, r.sport)}` : ''}
                           {' · '}{fmtDateIntl(r.date)}
                           {r.goalTime ? <span style={{ color: 'var(--orange)', marginLeft: '6px' }}>Goal {r.goalTime}</span> : ''}
                         </div>
-                        <div style={{ marginTop: '10px' }}>
-                          <span style={{ display: 'inline-block', background: d === 0 ? 'var(--orange)' : 'rgba(var(--orange-ch),0.2)', color: d === 0 ? '#000' : 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-compact)', letterSpacing: '0.06em', padding: '4px 12px', borderRadius: 'var(--radius-sm)' }}>
+                        <div style={{ marginTop: '14px' }}>
+                          <span style={{ display: 'inline-block', background: d === 0 ? 'var(--orange)' : 'rgba(var(--orange-ch),0.2)', color: d === 0 ? '#000' : 'var(--orange)', fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', letterSpacing: '0.04em', padding: '8px 14px', borderRadius: 'var(--radius-sm)' }}>
                             {d === 0 ? 'TODAY' : `${d} DAYS`}
                           </span>
                         </div>
@@ -4155,13 +4156,13 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                     </div>
                   ) : (
                     /* Standard B/C card */
-                    <div onClick={() => selectFocus(r.id)} style={{ background: focusRaceId === r.id ? 'rgba(var(--orange-ch),0.08)' : 'var(--surface3)', border: focusRaceId === r.id ? '1px solid rgba(var(--orange-ch),0.5)' : '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--sp-3)', cursor: 'pointer' }}>
+                    <div onClick={() => selectFocus(r.id)} style={{ background: focusRaceId === r.id ? 'rgba(var(--orange-ch),0.08)' : 'var(--surface3)', border: focusRaceId === r.id ? '1px solid rgba(var(--orange-ch),0.5)' : '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--sp-3)', cursor: 'pointer' }}>
                       <div style={{ minWidth: 0, flex: 1 }}>
-                        <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-compact)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {r.priority && r.priority !== 'A' && <span style={{ color: 'var(--muted)', marginRight: '6px', fontSize: 'var(--text-xs)' }}>{r.priority}</span>}
+                        <div style={{ fontFamily: 'var(--headline)', fontWeight: 800, fontSize: 'var(--text-base)', letterSpacing: '0.03em', textTransform: 'uppercase', color: 'var(--white)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', lineHeight: 1.1 }}>
+                          {r.priority && r.priority !== 'A' && <span style={{ color: 'var(--muted)', marginRight: '6px', fontSize: 'var(--text-sm)' }}>{r.priority}</span>}
                           {r.name ?? 'Unnamed race'}
                         </div>
-                        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '3px' }}>
+                        <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', marginTop: '4px', lineHeight: 1.5 }}>
                           {[r.city, r.country].filter(Boolean).join(', ')}
                           {r.distance ? ` · ${distBadge(r.distance, r.sport)}` : ''}
                           {' · '}{fmtDateIntl(r.date)}
@@ -4169,11 +4170,11 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                         </div>
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 'var(--sp-2)', flexShrink: 0 }}>
-                        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color: d === 0 ? 'var(--orange)' : 'var(--muted)', letterSpacing: '0.04em' }}>
+                        <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', color: d === 0 ? 'var(--orange)' : 'var(--muted)', letterSpacing: '0.03em' }}>
                           {d === 0 ? 'TODAY' : `${d}D`}
                         </div>
                         <div style={{ display: 'flex', gap: '4px' }}>
-                          <button onClick={e => { e.stopPropagation(); setEditingId(r.id) }} style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-sm)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.06em', padding: '3px 8px', cursor: 'pointer' }}>EDIT</button>
+                          <button onClick={e => { e.stopPropagation(); setEditingId(r.id) }} style={{ background: 'var(--surface2)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-sm)', color: 'var(--muted)', fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-sm)', letterSpacing: '0.05em', padding: '5px 10px', cursor: 'pointer' }}>EDIT</button>
                         </div>
                       </div>
                     </div>
@@ -4187,7 +4188,7 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                       <div style={{ marginTop: '6px' }}>
                         <button
                           onClick={e => { e.stopPropagation(); setAltsOpenId(isOpen ? null : r.id) }}
-                          style={{ background: 'none', border: 'none', padding: '4px 0', cursor: 'pointer', fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.06em', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '4px' }}
+                          style={{ background: 'none', border: 'none', padding: '6px 0', cursor: 'pointer', fontSize: 'var(--text-sm)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.05em', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '6px' }}
                         >
                           <span style={{ fontSize: 'var(--text-xs)' }}>{isOpen ? '▲' : '▼'}</span>
                           {isOpen ? 'HIDE ALTERNATIVES' : 'FIND ALTERNATIVES'}
@@ -4195,7 +4196,7 @@ function AllUpcomingModal({ onClose, onAddRace }: { onClose: () => void; onAddRa
                         {isOpen && (
                           <div style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
                             {alts.length === 0 ? (
-                              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', padding: '8px 0' }}>
+                              <div style={{ fontSize: 'var(--text-sm)', color: 'var(--muted)', padding: '10px 0', lineHeight: 1.5 }}>
                                 No catalog matches within ±21 days for this distance.
                               </div>
                             ) : alts.map(alt => {
