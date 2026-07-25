@@ -103,6 +103,25 @@ const NUMERIC_STYLE: React.CSSProperties = {
   fontFeatureSettings: '"tnum" 1, "zero" 1',
 }
 
+const controlPanelCard: React.CSSProperties = {
+  background: 'var(--surface3)',
+  border: '1px solid var(--border)',
+  borderRadius: 'var(--radius-md)',
+  padding: 'var(--sp-3)',
+}
+
+const segmentedButtonBase: React.CSSProperties = {
+  minHeight: '40px',
+  padding: '8px 6px',
+  borderRadius: 'var(--radius-sm)',
+  fontFamily: 'var(--headline)',
+  fontWeight: 700,
+  fontSize: 'var(--text-xs)',
+  letterSpacing: '0.06em',
+  textTransform: 'uppercase',
+  cursor: 'pointer',
+}
+
 // ─── Running distances ────────────────────────────────────────────────────────
 
 type RunDistId = '5k' | '10k' | '10mi' | 'hm' | 'm' | '50k' | '100k' | 'custom'
@@ -1811,7 +1830,7 @@ export function Train() {
                   Use your saved benchmark fitness to get a session with exact paces for today&apos;s intent.
                 </p>
 
-                <div style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-3)', marginBottom: '12px' }}>
+                <div style={{ ...controlPanelCard, marginBottom: '12px', background: 'linear-gradient(180deg, rgba(var(--orange-ch),0.06), rgba(255,255,255,0.01)), var(--surface3)', border: '1px solid rgba(var(--orange-ch),0.16)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-2)' }}>
                     <div>
                       <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color: 'var(--orange)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
@@ -1840,7 +1859,7 @@ export function Train() {
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-2)', marginBottom: '12px' }}>
-                  <div>
+                  <div style={controlPanelCard}>
                     <label style={fieldLabel}>Session Type</label>
                     <div style={{ position: 'relative' }}>
                       <select
@@ -1857,7 +1876,7 @@ export function Train() {
                       <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--muted)', fontSize: 'var(--text-compact)' }}>▾</span>
                     </div>
                   </div>
-                  <div>
+                  <div style={controlPanelCard}>
                     <label style={fieldLabel}>Time Available</label>
                     <div style={{ position: 'relative' }}>
                       <select
@@ -1875,7 +1894,7 @@ export function Train() {
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-2)', marginBottom: '12px' }}>
-                  <div>
+                  <div style={controlPanelCard}>
                     <label style={fieldLabel}>Day Intent</label>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px' }}>
                       {([
@@ -1888,17 +1907,10 @@ export function Train() {
                           key={value}
                           onClick={() => setDayIntent(value)}
                           style={{
-                            padding: '6px 4px',
+                            ...segmentedButtonBase,
                             background: dayIntent === value ? 'rgba(var(--orange-ch),0.12)' : 'var(--surface3)',
                             border: `1px solid ${dayIntent === value ? 'rgba(var(--orange-ch),0.4)' : 'var(--border2)'}`,
-                            borderRadius: 'var(--radius-sm)',
                             color: dayIntent === value ? 'var(--orange)' : 'var(--muted)',
-                            fontFamily: 'var(--headline)',
-                            fontWeight: 700,
-                            fontSize: 'var(--text-xs)',
-                            letterSpacing: '0.06em',
-                            textTransform: 'uppercase',
-                            cursor: 'pointer',
                           }}
                         >
                           {label}
@@ -1907,7 +1919,7 @@ export function Train() {
                     </div>
                   </div>
 
-                  <div>
+                  <div style={controlPanelCard}>
                     <label style={fieldLabel}>How You Feel</label>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '4px' }}>
                       {([
@@ -1919,17 +1931,10 @@ export function Train() {
                           key={value}
                           onClick={() => setFreshness(value)}
                           style={{
-                            padding: '6px 4px',
+                            ...segmentedButtonBase,
                             background: freshness === value ? 'rgba(var(--orange-ch),0.12)' : 'var(--surface3)',
                             border: `1px solid ${freshness === value ? 'rgba(var(--orange-ch),0.4)' : 'var(--border2)'}`,
-                            borderRadius: 'var(--radius-sm)',
                             color: freshness === value ? 'var(--orange)' : 'var(--muted)',
-                            fontFamily: 'var(--headline)',
-                            fontWeight: 700,
-                            fontSize: 'var(--text-xs)',
-                            letterSpacing: '0.06em',
-                            textTransform: 'uppercase',
-                            cursor: 'pointer',
                           }}
                         >
                           {label}
@@ -1939,7 +1944,7 @@ export function Train() {
                   </div>
                 </div>
 
-                <div style={{ marginBottom: '12px' }}>
+                <div style={{ ...controlPanelCard, marginBottom: '12px' }}>
                   <label style={fieldLabel}>Goal Focus</label>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '4px' }}>
                     {([
@@ -1953,17 +1958,10 @@ export function Train() {
                         key={value}
                         onClick={() => setGoalFocus(value)}
                         style={{
-                          padding: '6px 4px',
+                          ...segmentedButtonBase,
                           background: goalFocus === value ? 'rgba(var(--orange-ch),0.12)' : 'var(--surface3)',
                           border: `1px solid ${goalFocus === value ? 'rgba(var(--orange-ch),0.4)' : 'var(--border2)'}`,
-                          borderRadius: 'var(--radius-sm)',
                           color: goalFocus === value ? 'var(--orange)' : 'var(--muted)',
-                          fontFamily: 'var(--headline)',
-                          fontWeight: 700,
-                          fontSize: 'var(--text-xs)',
-                          letterSpacing: '0.06em',
-                          textTransform: 'uppercase',
-                          cursor: 'pointer',
                         }}
                       >
                         {label}
@@ -1991,12 +1989,13 @@ export function Train() {
                               onClick={() => setSelectedWorkoutId(option.id)}
                               style={{
                                 textAlign: 'left',
-                                padding: 'var(--sp-3)',
+                                padding: '14px',
                                 background: selected ? 'rgba(var(--orange-ch),0.12)' : 'var(--surface3)',
                                 border: `1px solid ${selected ? 'rgba(var(--orange-ch),0.4)' : 'var(--border2)'}`,
                                 borderRadius: 'var(--radius-sm)',
                                 color: selected ? 'var(--white)' : 'var(--muted)',
                                 cursor: 'pointer',
+                                minHeight: '96px',
                               }}
                             >
                               <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', letterSpacing: '0.04em', textTransform: 'uppercase', color: selected ? 'var(--orange)' : 'var(--white)' }}>
@@ -2011,7 +2010,7 @@ export function Train() {
                       </div>
                     )}
 
-                    <div style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-3)' }}>
+                    <div style={{ ...controlPanelCard, border: '1px solid rgba(var(--orange-ch),0.14)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-2)' }}>
                         <div>
                           <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color: 'var(--white)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
@@ -2084,7 +2083,7 @@ export function Train() {
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
                       {workoutSuggestion.segments.map(segment => (
-                        <div key={`${segment.label}-${segment.detail}`} style={{ background: 'var(--surface3)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: 'var(--sp-3)' }}>
+                        <div key={`${segment.label}-${segment.detail}`} style={{ ...controlPanelCard, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 'var(--sp-3)' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-2)' }}>
                             <div style={{ minWidth: 0 }}>
                               <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color: 'var(--white)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
@@ -2094,10 +2093,10 @@ export function Train() {
                                 {segment.detail}
                               </div>
                             </div>
-                            <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                                {segment.zone} pace
-                              </div>
+                          <div style={{ textAlign: 'right', flexShrink: 0, minWidth: '118px', padding: '8px 10px', borderRadius: 'var(--radius-sm)', background: 'var(--surface2)', border: '1px solid var(--border)' }}>
+                            <div style={{ fontSize: 'var(--text-xs)', color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                              {segment.zone} pace
+                            </div>
                               <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color: 'var(--orange)', marginTop: '4px' }}>
                                 {segment.pace}
                               </div>
