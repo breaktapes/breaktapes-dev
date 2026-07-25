@@ -4,6 +4,8 @@ import { useAthleteStore } from '@/stores/useAthleteStore'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { DateInput } from '@/components/DateInput'
+import { sharedSheetStyles } from '@/components/ui/sheetStyles'
+import { sharedFormControlStyles } from '@/components/ui/formControlStyles'
 import type { Athlete } from '@/types'
 
 interface Props {
@@ -282,54 +284,24 @@ const st = {
   } as React.CSSProperties,
 
   sheet: {
-    width: '100%',
-    maxWidth: '680px',
+    ...sharedSheetStyles.sheet,
     maxHeight: '90vh',
-    background: 'var(--surface2)',
-    borderTop: '1px solid var(--border2)',
-    borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0',
-    display: 'flex',
-    flexDirection: 'column',
     overflowY: 'auto',
     WebkitOverflowScrolling: 'touch' as any,
     overscrollBehavior: 'contain',
   } as React.CSSProperties,
 
-  handle: {
-    width: '36px',
-    height: '4px',
-    background: 'var(--border2)',
-    borderRadius: 'var(--radius-xs)',
-    margin: '12px auto 0',
-    flexShrink: 0,
-  } as React.CSSProperties,
+  handle: sharedSheetStyles.handle,
 
-  header: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '16px 16px 0',
-    flexShrink: 0,
-  } as React.CSSProperties,
+  header: sharedSheetStyles.header,
 
   title: {
-    fontFamily: 'var(--headline)',
-    fontWeight: 900,
+    ...sharedSheetStyles.title,
     fontSize: 'var(--text-base)',
     letterSpacing: '0.12em',
-    textTransform: 'uppercase',
-    color: 'var(--white)',
   } as React.CSSProperties,
 
-  closeBtn: {
-    background: 'transparent',
-    border: 'none',
-    color: 'var(--muted)',
-    fontSize: 'var(--text-md)',
-    cursor: 'pointer',
-    padding: '4px 8px',
-    lineHeight: 1,
-  } as React.CSSProperties,
+  closeBtn: sharedSheetStyles.closeBtn,
 
   body: {
     padding: 'var(--sp-4)',
@@ -349,16 +321,8 @@ const st = {
   } as React.CSSProperties,
 
   input: {
-    width: '100%',
-    background: 'var(--surface3)',
-    border: '1px solid var(--border2)',
-    borderRadius: 'var(--radius-sm)',
-    color: 'var(--white)',
+    ...sharedFormControlStyles.input,
     fontSize: 'var(--text-sm)',
-    padding: '0.6rem 0.75rem',
-    fontFamily: 'var(--body)',
-    boxSizing: 'border-box',
-    minWidth: 0,
   } as React.CSSProperties,
 
   saveBtn: {

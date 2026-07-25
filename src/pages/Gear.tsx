@@ -2,6 +2,8 @@ import { useState, useMemo, useCallback } from 'react'
 import { useAuthStore } from '@/stores/useAuthStore'
 import { useRaceStore } from '@/stores/useRaceStore'
 import { fmtDateDDMM } from '@/lib/utils'
+import { sharedFormControlStyles } from '@/components/ui/formControlStyles'
+import { sharedSheetStyles } from '@/components/ui/sheetStyles'
 
 // ─── Custom gear local storage helpers ────────────────────────────────────────
 
@@ -646,7 +648,7 @@ export function Gear() {
               {/* Custom product modal */}
               {customModal && (
                 <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 900, display: 'flex', alignItems: 'flex-end' }} onClick={() => setCustomModal(null)}>
-                  <div style={{ width: '100%', background: 'var(--surface2)', borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0', padding: 'var(--sp-6)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }} onClick={e => e.stopPropagation()}>
+                  <div style={{ ...sharedSheetStyles.sheet, width: '100%', maxWidth: '100%', maxHeight: 'unset', padding: 'var(--sp-6)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }} onClick={e => e.stopPropagation()}>
                     <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-md)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)' }}>
                       {customModal.mode === 'edit' ? 'Edit Product' : 'Custom Product'}
                     </div>
@@ -658,19 +660,19 @@ export function Gear() {
                           value={customForm[field]}
                           onChange={e => setCustomForm(f => ({ ...f, [field]: e.target.value }))}
                           placeholder={field === 'brand' ? 'Brand name' : 'Product name'}
-                          style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-md)', padding: '10px 12px', color: 'var(--white)', fontFamily: 'var(--body)', fontSize: 'var(--text-compact)' }}
+                          style={sharedFormControlStyles.input}
                         />
                       </div>
                     ))}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       <label style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)' }}>Category</label>
-                      <select value={customForm.category} onChange={e => setCustomForm(f => ({ ...f, category: e.target.value }))} style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-md)', padding: '10px 12px', color: 'var(--white)', fontFamily: 'var(--body)', fontSize: 'var(--text-compact)' }}>
+                      <select value={customForm.category} onChange={e => setCustomForm(f => ({ ...f, category: e.target.value }))} style={sharedFormControlStyles.select}>
                         {CATEGORIES.filter(c => c !== 'All').map(c => <option key={c} value={c}>{c}</option>)}
                       </select>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       <label style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)' }}>Notes</label>
-                      <input type="text" value={customForm.notes} onChange={e => setCustomForm(f => ({ ...f, notes: e.target.value }))} placeholder="Optional notes" style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-md)', padding: '10px 12px', color: 'var(--white)', fontFamily: 'var(--body)', fontSize: 'var(--text-compact)' }} />
+                      <input type="text" value={customForm.notes} onChange={e => setCustomForm(f => ({ ...f, notes: e.target.value }))} placeholder="Optional notes" style={sharedFormControlStyles.input} />
                     </div>
                     <div style={{ display: 'flex', gap: 'var(--sp-2)' }}>
                       <button
@@ -744,15 +746,15 @@ export function Gear() {
               {/* New list modal */}
               {listModal === 'new' && (
                 <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 900, display: 'flex', alignItems: 'flex-end' }} onClick={() => setListModal(null)}>
-                  <div style={{ width: '100%', background: 'var(--surface2)', borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0', padding: 'var(--sp-6)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }} onClick={e => e.stopPropagation()}>
+                  <div style={{ ...sharedSheetStyles.sheet, width: '100%', maxWidth: '100%', maxHeight: 'unset', padding: 'var(--sp-6)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }} onClick={e => e.stopPropagation()}>
                     <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-md)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)' }}>New Gear List</div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       <label style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)' }}>List Name</label>
-                      <input type="text" value={listForm.name} onChange={e => setListForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Valencia Marathon kit" style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-md)', padding: '10px 12px', color: 'var(--white)', fontFamily: 'var(--body)', fontSize: 'var(--text-compact)' }} />
+                      <input type="text" value={listForm.name} onChange={e => setListForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Valencia Marathon kit" style={sharedFormControlStyles.input} />
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       <label style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)' }}>Type</label>
-                      <select value={listForm.kind} onChange={e => setListForm(f => ({ ...f, kind: e.target.value }))} style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-md)', padding: '10px 12px', color: 'var(--white)', fontFamily: 'var(--body)', fontSize: 'var(--text-compact)' }}>
+                      <select value={listForm.kind} onChange={e => setListForm(f => ({ ...f, kind: e.target.value }))} style={sharedFormControlStyles.select}>
                         {LIST_KINDS.map(k => <option key={k} value={k}>{k}</option>)}
                       </select>
                     </div>
@@ -857,17 +859,17 @@ export function Gear() {
 
               {/* New stack modal */}
               {stackModal === 'new' && (
-                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 900, display: 'flex', alignItems: 'flex-end' }} onClick={() => setStackModal(null)}>
-                  <div style={{ width: '100%', background: 'var(--surface2)', borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0', padding: 'var(--sp-6)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }} onClick={e => e.stopPropagation()}>
+                  <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 900, display: 'flex', alignItems: 'flex-end' }} onClick={() => setStackModal(null)}>
+                    <div style={{ ...sharedSheetStyles.sheet, width: '100%', maxWidth: '100%', maxHeight: 'unset', padding: 'var(--sp-6)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }} onClick={e => e.stopPropagation()}>
                     <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-md)', letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--white)' }}>New Race Stack</div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       <label style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)' }}>Stack Name</label>
-                      <input type="text" value={stackForm.name} onChange={e => setStackForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Berlin Marathon 2026" style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-md)', padding: '10px 12px', color: 'var(--white)', fontFamily: 'var(--body)', fontSize: 'var(--text-compact)' }} />
+                      <input type="text" value={stackForm.name} onChange={e => setStackForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Berlin Marathon 2026" style={sharedFormControlStyles.input} />
                     </div>
                     {allRaces.length > 0 && (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                         <label style={{ fontSize: 'var(--text-xs)', fontFamily: 'var(--headline)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)' }}>Link to Race (optional)</label>
-                        <select value={stackForm.raceId} onChange={e => setStackForm(f => ({ ...f, raceId: e.target.value }))} style={{ background: 'var(--surface3)', border: '1px solid var(--border2)', borderRadius: 'var(--radius-md)', padding: '10px 12px', color: 'var(--white)', fontFamily: 'var(--body)', fontSize: 'var(--text-compact)' }}>
+                        <select value={stackForm.raceId} onChange={e => setStackForm(f => ({ ...f, raceId: e.target.value }))} style={sharedFormControlStyles.select}>
                           <option value="">— No race linked —</option>
                           {allRaces.map(r => <option key={r.id} value={r.id}>{r.name ?? r.distance} · {fmtDateDDMM(r.date)}</option>)}
                         </select>
