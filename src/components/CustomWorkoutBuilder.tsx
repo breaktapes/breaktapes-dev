@@ -109,6 +109,14 @@ const BLOCK_LABELS: Record<CustomBlockType, string> = {
   cooldown: 'Cool-down',
 }
 
+const STEPS = [
+  { id: 'setup', label: 'Setup' },
+  { id: 'build', label: 'Build' },
+  { id: 'review', label: 'Review' },
+] as const
+
+type BuilderStep = typeof STEPS[number]['id']
+
 const tileCard: React.CSSProperties = {
   background: 'var(--surface2)',
   border: '1px solid var(--border)',
@@ -157,6 +165,7 @@ export function CustomWorkoutBuilder({
   const [freshness, setFreshness] = useState<'fresh' | 'normal' | 'tired'>('normal')
   const [availableMinutes, setAvailableMinutes] = useState(70)
   const [blocks, setBlocks] = useState<CustomWorkoutBlock[]>(() => createDefaultCustomBlocks())
+  const [step, setStep] = useState<BuilderStep>('setup')
 
   const summary = useMemo(() => {
     if (!activeZones) return null
@@ -248,6 +257,14 @@ export function CustomWorkoutBuilder({
     })
   }
 
+  function goNext() {
+    setStep(current => current === 'setup' ? 'build' : current === 'build' ? 'review' : 'review')
+  }
+
+  function goBack() {
+    setStep(current => current === 'review' ? 'build' : current === 'build' ? 'setup' : 'setup')
+  }
+
   if (!activeZones) {
     return (
       <div style={card}>
@@ -275,6 +292,41 @@ export function CustomWorkoutBuilder({
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+          <div style={{ ...card, padding: 'var(--sp-2)', background: 'var(--surface2)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+              {STEPS.map((item, index) => {
+                const active = step === item.id
+                const complete =
+                  (step === 'build' && item.id === 'setup') ||
+                  (step === 'review' && (item.id === 'setup' || item.id === 'build'))
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => setStep(item.id)}
+                    style={{
+                      minHeight: '56px',
+                      padding: '10px 12px',
+                      borderRadius: 'var(--radius-sm)',
+                      border: `1px solid ${active ? 'rgba(var(--orange-ch),0.45)' : complete ? 'rgba(0,255,136,0.22)' : 'var(--border2)'}`,
+                      background: active ? 'rgba(var(--orange-ch),0.12)' : complete ? 'rgba(0,255,136,0.07)' : 'var(--surface3)',
+                      color: active ? 'var(--orange)' : complete ? 'var(--green)' : 'var(--muted)',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                    }}
+                  >
+                    <div style={{ fontFamily: 'var(--num)', fontWeight: 700, fontSize: 'var(--text-xs)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: '4px' }}>
+                      0{index + 1}
+                    </div>
+                    <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                      {item.label}
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {step === 'setup' && (
           <div style={{ ...card, padding: 'var(--sp-3)', background: 'var(--surface2)' }}>
             <div style={{ display: 'grid', gap: 'var(--sp-2)' }}>
               <div style={{ ...tileCard, minHeight: '104px' }}>
@@ -348,7 +400,9 @@ export function CustomWorkoutBuilder({
               </div>
             </div>
           </div>
+          )}
 
+          {step === 'build' && (
           <div style={{ ...card, padding: 'var(--sp-3)', background: 'var(--surface2)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--sp-2)' }}>
               <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-sm)', color: 'var(--white)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
@@ -487,8 +541,9 @@ export function CustomWorkoutBuilder({
               ))}
             </div>
           </div>
+          )}
 
-          {summary && (
+          {summary && step === 'review' && (
             <>
               <div style={{ ...card, background: 'linear-gradient(180deg, rgba(var(--orange-ch),0.06), rgba(255,255,255,0.01)), var(--surface2)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--sp-2)', alignItems: 'flex-start', marginBottom: 'var(--sp-2)' }}>
@@ -632,6 +687,36 @@ export function CustomWorkoutBuilder({
               </div>
 	            </>
 	          )}
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'var(--sp-2)' }}>
+            <button
+              onClick={goBack}
+              disabled={step === 'setup'}
+              style={{
+                ...textInput,
+                width: 'auto',
+                minWidth: '132px',
+                background: step === 'setup' ? 'var(--surface2)' : 'var(--surface3)',
+                color: step === 'setup' ? 'var(--muted2)' : 'var(--white)',
+                cursor: step === 'setup' ? 'default' : 'pointer',
+                fontFamily: 'var(--headline)',
+                fontWeight: 800,
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+              }}
+            >
+              Back
+            </button>
+            {step !== 'review' ? (
+              <button onClick={goNext} style={{ ...btnMain, minWidth: '160px' }}>
+                {step === 'setup' ? 'Go To Build' : 'Review Session'}
+              </button>
+            ) : (
+              <button onClick={saveCustomWorkout} style={{ ...btnMain, minWidth: '180px' }}>
+                Save Custom Workout
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
