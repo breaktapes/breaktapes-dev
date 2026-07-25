@@ -260,26 +260,28 @@ export function CustomWorkoutBuilder({
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
           <div style={{ ...card, padding: 'var(--sp-3)', background: 'var(--surface2)' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 0.8fr 0.7fr', gap: 'var(--sp-2)' }}>
-              <div style={tileCard}>
+            <div style={{ display: 'grid', gap: 'var(--sp-2)' }}>
+              <div style={{ ...tileCard, minHeight: '104px' }}>
                 <label style={fieldLabel}>Session Objective</label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '4px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, minmax(0, 1fr))', gap: '6px' }}>
                   {OBJECTIVES.map(option => (
                     <button
                       key={option.id}
                       onClick={() => setObjective(option.id)}
                       style={{
-                        padding: '7px 4px',
+                        minHeight: '44px',
+                        padding: '8px 6px',
                         background: objective === option.id ? 'rgba(var(--orange-ch),0.12)' : 'var(--surface3)',
                         border: `1px solid ${objective === option.id ? 'rgba(var(--orange-ch),0.4)' : 'var(--border2)'}`,
                         borderRadius: 'var(--radius-sm)',
                         color: objective === option.id ? 'var(--orange)' : 'var(--muted)',
                         fontFamily: 'var(--headline)',
                         fontWeight: 700,
-                        fontSize: 'var(--text-xs)',
+                        fontSize: 'var(--text-sm)',
                         letterSpacing: '0.06em',
                         textTransform: 'uppercase',
                         cursor: 'pointer',
+                        lineHeight: 1.05,
                       }}
                     >
                       {option.label}
@@ -287,42 +289,46 @@ export function CustomWorkoutBuilder({
                   ))}
                 </div>
               </div>
-              <div style={tileCard}>
-                <label style={fieldLabel}>Freshness</label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px' }}>
-                  {(['fresh', 'normal', 'tired'] as const).map(option => (
-                    <button
-                      key={option}
-                      onClick={() => setFreshness(option)}
-                      style={{
-                        padding: '7px 4px',
-                        background: freshness === option ? 'rgba(var(--orange-ch),0.12)' : 'var(--surface3)',
-                        border: `1px solid ${freshness === option ? 'rgba(var(--orange-ch),0.4)' : 'var(--border2)'}`,
-                        borderRadius: 'var(--radius-sm)',
-                        color: freshness === option ? 'var(--orange)' : 'var(--muted)',
-                        fontFamily: 'var(--headline)',
-                        fontWeight: 700,
-                        fontSize: 'var(--text-xs)',
-                        letterSpacing: '0.06em',
-                        textTransform: 'uppercase',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      {option}
-                    </button>
-                  ))}
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-2)' }}>
+                <div style={tileCard}>
+                  <label style={fieldLabel}>Freshness</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+                    {(['fresh', 'normal', 'tired'] as const).map(option => (
+                      <button
+                        key={option}
+                        onClick={() => setFreshness(option)}
+                        style={{
+                          minHeight: '44px',
+                          padding: '8px 6px',
+                          background: freshness === option ? 'rgba(var(--orange-ch),0.12)' : 'var(--surface3)',
+                          border: `1px solid ${freshness === option ? 'rgba(var(--orange-ch),0.4)' : 'var(--border2)'}`,
+                          borderRadius: 'var(--radius-sm)',
+                          color: freshness === option ? 'var(--orange)' : 'var(--muted)',
+                          fontFamily: 'var(--headline)',
+                          fontWeight: 700,
+                          fontSize: 'var(--text-sm)',
+                          letterSpacing: '0.06em',
+                          textTransform: 'uppercase',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-              <div style={tileCard}>
-                <label style={fieldLabel}>Available Time</label>
-                <input
-                  type="number"
-                  min={20}
-                  max={180}
-                  value={availableMinutes}
-                  onChange={e => setAvailableMinutes(Math.max(20, Math.min(180, parseInt(e.target.value, 10) || 20)))}
-                  style={textInput}
-                />
+                <div style={tileCard}>
+                  <label style={fieldLabel}>Available Time</label>
+                  <input
+                    type="number"
+                    min={20}
+                    max={180}
+                    value={availableMinutes}
+                    onChange={e => setAvailableMinutes(Math.max(20, Math.min(180, parseInt(e.target.value, 10) || 20)))}
+                    style={{ ...textInput, minHeight: '44px', fontSize: 'var(--text-lg)' }}
+                  />
+                </div>
               </div>
             </div>
           </div>
