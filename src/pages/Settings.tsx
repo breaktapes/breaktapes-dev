@@ -812,7 +812,7 @@ export function Settings() {
                   {theme.label}
                 </span>
                 <span style={{
-                  fontSize: '11px',
+                  fontSize: 'var(--text-xs)',
                   color: isActive ? 'var(--white)' : 'var(--muted)',
                   lineHeight: 1.4,
                 }}>
