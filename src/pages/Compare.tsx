@@ -49,6 +49,28 @@ const NUMERIC_STYLE: React.CSSProperties = {
   fontFeatureSettings: '"tnum" 1, "zero" 1',
 }
 
+const PANEL: React.CSSProperties = {
+  background: 'linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0) 100%), var(--surface2)',
+  border: '1px solid var(--border)',
+  borderRadius: 'calc(var(--radius-lg) + 2px)',
+  boxShadow: '0 18px 36px rgba(0,0,0,0.24)',
+}
+
+const SOFT_PANEL: React.CSSProperties = {
+  background: 'linear-gradient(180deg, rgba(var(--orange-ch),0.05) 0%, rgba(255,255,255,0) 100%), var(--surface2)',
+  border: '1px solid var(--border)',
+  borderRadius: 'var(--radius-lg)',
+}
+
+const SECTION_KICKER: React.CSSProperties = {
+  fontFamily: 'var(--headline)',
+  fontWeight: 800,
+  fontSize: 'var(--text-xs)',
+  letterSpacing: '0.14em',
+  textTransform: 'uppercase',
+  color: 'var(--muted)',
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function parseHMS(str: string | undefined): number | null {
@@ -174,12 +196,49 @@ function StatRow({
   )
 }
 
+function SummaryCell({
+  label,
+  value,
+  accent,
+}: {
+  label: string
+  value: string | number
+  accent?: boolean
+}) {
+  return (
+    <div style={{
+      ...SOFT_PANEL,
+      padding: '14px 16px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '6px',
+      minWidth: 0,
+    }}>
+      <div style={{
+        ...SECTION_KICKER,
+        color: accent ? 'var(--orange)' : 'var(--muted)',
+        fontSize: 'var(--text-xs)',
+      }}>
+        {label}
+      </div>
+      <div style={{
+        ...NUMERIC_STYLE,
+        fontSize: 'clamp(24px, 6vw, 36px)',
+        lineHeight: 0.95,
+        color: 'var(--white)',
+      }}>
+        {value}
+      </div>
+    </div>
+  )
+}
+
 function ProfileColumn({ profile }: { profile: AthleteRow | 'private' | 'not_found' | null; }) {
   if (!profile) return <div style={{ flex: 1 }} />
 
   if (profile === 'private') {
     return (
-      <div style={{ flex: 1, padding: '1rem', textAlign: 'center', color: 'var(--muted)', fontFamily: 'var(--body)', fontSize: 'var(--text-sm)' }}>
+      <div style={{ ...SOFT_PANEL, flex: 1, padding: '1rem', textAlign: 'center', color: 'var(--muted)', fontFamily: 'var(--body)', fontSize: 'var(--text-sm)' }}>
         Profile is private
       </div>
     )
@@ -187,7 +246,7 @@ function ProfileColumn({ profile }: { profile: AthleteRow | 'private' | 'not_fou
 
   if (profile === 'not_found') {
     return (
-      <div style={{ flex: 1, padding: '1rem', textAlign: 'center', color: 'var(--muted)', fontFamily: 'var(--body)', fontSize: 'var(--text-sm)' }}>
+      <div style={{ ...SOFT_PANEL, flex: 1, padding: '1rem', textAlign: 'center', color: 'var(--muted)', fontFamily: 'var(--body)', fontSize: 'var(--text-sm)' }}>
         Athlete not found
       </div>
     )
@@ -198,26 +257,43 @@ function ProfileColumn({ profile }: { profile: AthleteRow | 'private' | 'not_fou
   const loc = [profile.city, profile.country].filter(Boolean).join(', ')
 
   return (
-    <div style={{ flex: 1, textAlign: 'center', minWidth: 0 }}>
+    <div style={{ ...SOFT_PANEL, flex: 1, textAlign: 'center', minWidth: 0, padding: '18px 14px', display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
       <div style={{
-        width: '48px', height: '48px', borderRadius: 'var(--radius-round)',
-        background: 'var(--surface3)', border: '2px solid var(--orange)',
+        width: '56px', height: '56px', borderRadius: '18px',
+        background: 'linear-gradient(135deg, rgba(var(--orange-ch),0.2) 0%, var(--surface3) 100%)', border: '1px solid rgba(var(--orange-ch),0.35)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        margin: '0 auto 8px', fontFamily: 'var(--headline)', fontWeight: 900,
-        fontSize: 'var(--text-md)', color: 'var(--white)',
+        margin: '0 auto 2px', fontFamily: 'var(--headline)', fontWeight: 900,
+        fontSize: 'var(--text-lg)', color: 'var(--white)',
       }}>
         {initials}
       </div>
-      <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', letterSpacing: '0.04em', color: 'var(--white)', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+      <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-base)', letterSpacing: '0.04em', color: 'var(--white)', textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>
         {name}
       </div>
-      <div style={{ fontFamily: 'var(--body)', fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+      <div style={{ fontFamily: 'var(--body)', fontSize: 'var(--text-xs)', color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>
         @{profile.username}
       </div>
       {loc && (
-        <div style={{ fontFamily: 'var(--body)', fontSize: 'var(--text-xs)', color: 'var(--muted)', marginTop: '1px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <div style={{ fontFamily: 'var(--body)', fontSize: 'var(--text-xs)', color: 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>
           {loc}
         </div>
+      )}
+      {profile.mainSport && (
+        <span style={{
+          marginTop: '2px',
+          padding: '5px 8px',
+          borderRadius: 'var(--radius-pill)',
+          background: 'rgba(var(--orange-ch),0.12)',
+          border: '1px solid rgba(var(--orange-ch),0.25)',
+          fontFamily: 'var(--headline)',
+          fontWeight: 800,
+          fontSize: 'var(--text-xs)',
+          letterSpacing: '0.08em',
+          textTransform: 'uppercase',
+          color: 'var(--orange)',
+        }}>
+          {profile.mainSport}
+        </span>
       )}
     </div>
   )
@@ -349,8 +425,9 @@ export function Compare() {
   return (
     <div style={{
       display: 'flex', flexDirection: 'column',
-      minHeight: '100dvh', background: 'var(--surface)',
-      paddingBottom: 'env(safe-area-inset-bottom, 16px)',
+      minHeight: '100dvh',
+      background: 'linear-gradient(180deg, var(--black) 0%, var(--surface) 100%)',
+      paddingBottom: 'calc(env(safe-area-inset-bottom, 16px) + 24px)',
     }}>
       {/* Back button */}
       <div style={{ padding: '1rem 1rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -371,10 +448,42 @@ export function Compare() {
       </div>
 
       <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <section style={{ ...PANEL, position: 'relative', overflow: 'hidden', padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            pointerEvents: 'none',
+            background: 'radial-gradient(circle at top left, rgba(var(--orange-ch),0.2), transparent 30%), radial-gradient(circle at bottom right, rgba(255,255,255,0.05), transparent 28%)',
+          }} />
+          <div style={{ position: 'relative' }}>
+            <div style={SECTION_KICKER}>Head To Head</div>
+            <h1 style={{
+              margin: '6px 0 0',
+              fontFamily: 'var(--headline)',
+              fontWeight: 900,
+              fontSize: 'clamp(30px, 8vw, 42px)',
+              lineHeight: 0.92,
+              letterSpacing: '0.04em',
+              textTransform: 'uppercase',
+              color: 'var(--white)',
+            }}>
+              Compare Athletes
+            </h1>
+            <p style={{ margin: '10px 0 0', maxWidth: '560px', fontSize: 'var(--text-sm)', color: 'var(--muted)', lineHeight: 1.6 }}>
+              Put two public race histories side by side to compare volume, countries raced, and personal bests across the distances that matter.
+            </p>
+          </div>
+
+          <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '10px' }}>
+            <SummaryCell label="Loaded Athletes" value={[usernameA, usernameB].filter(Boolean).length} accent />
+            <SummaryCell label="Shared Distances" value={COMPARE_DISTS.length} />
+            <SummaryCell label="Share Ready" value={usernameA && usernameB ? 'YES' : 'NO'} />
+          </div>
+        </section>
 
         {/* Athlete headers */}
         <div style={{
-          background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)',
+          ...PANEL,
           padding: '1rem',
         }}>
           {/* Instructional state — no params yet */}
@@ -390,28 +499,31 @@ export function Compare() {
           )}
           {/* Same username guard */}
           {usernameA && usernameB && usernameA.toLowerCase() === usernameB.toLowerCase() && (
-            <div style={{ textAlign: 'center', color: 'var(--muted)', fontFamily: 'var(--body)', fontSize: 'var(--text-sm)', marginBottom: '1rem' }}>
+            <div style={{ ...SOFT_PANEL, textAlign: 'center', color: 'var(--muted)', fontFamily: 'var(--body)', fontSize: 'var(--text-sm)', marginBottom: '1rem', padding: '12px 14px' }}>
               Can't compare an athlete to themselves.
             </div>
           )}
+          <div style={{ ...SECTION_KICKER, marginBottom: '10px' }}>Matchup</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', gap: '0.5rem', alignItems: 'center' }}>
             {/* Athlete A */}
             <div>
               {loadA === 'loading' ? (
-                <div style={{ textAlign: 'center', color: 'var(--muted)', fontFamily: 'var(--body)', fontSize: 'var(--text-xs)' }}>Loading...</div>
+                <div style={{ ...SOFT_PANEL, textAlign: 'center', color: 'var(--muted)', fontFamily: 'var(--body)', fontSize: 'var(--text-xs)', padding: '1rem' }}>Loading...</div>
               ) : profileA ? (
                 <ProfileColumn profile={profileA} />
               ) : (
                 <button
                   onClick={() => setSearchSlot('a')}
                   style={{
-                    width: '100%', background: 'var(--surface3)', border: '1px dashed var(--border2)',
-                    borderRadius: 'var(--radius-md)', padding: '1rem 0.5rem', cursor: 'pointer',
+                    width: '100%', background: 'linear-gradient(180deg, rgba(var(--orange-ch),0.05) 0%, rgba(255,255,255,0) 100%), var(--surface3)', border: '1px dashed rgba(var(--orange-ch),0.35)',
+                    borderRadius: 'var(--radius-lg)', padding: '1.15rem 0.75rem', cursor: 'pointer',
                     fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)',
                     letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)',
+                    minHeight: '178px',
                   }}
                 >
-                  + Athlete A
+                  <div style={{ fontSize: '28px', lineHeight: 1, color: 'var(--orange)', marginBottom: '8px' }}>+</div>
+                  Athlete A
                 </button>
               )}
               {profileA && (
@@ -430,8 +542,16 @@ export function Compare() {
 
             {/* VS divider */}
             <div style={{
-              fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xl)',
-              color: 'var(--orange)', letterSpacing: '0.04em',
+              width: '54px',
+              height: '54px',
+              borderRadius: '18px',
+              border: '1px solid rgba(var(--orange-ch),0.3)',
+              background: 'linear-gradient(180deg, rgba(var(--orange-ch),0.18) 0%, rgba(var(--orange-ch),0.04) 100%)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-lg)',
+              color: 'var(--orange)', letterSpacing: '0.08em',
             }}>
               VS
             </div>
@@ -439,20 +559,22 @@ export function Compare() {
             {/* Athlete B */}
             <div>
               {loadB === 'loading' ? (
-                <div style={{ textAlign: 'center', color: 'var(--muted)', fontFamily: 'var(--body)', fontSize: 'var(--text-xs)' }}>Loading...</div>
+                <div style={{ ...SOFT_PANEL, textAlign: 'center', color: 'var(--muted)', fontFamily: 'var(--body)', fontSize: 'var(--text-xs)', padding: '1rem' }}>Loading...</div>
               ) : profileB ? (
                 <ProfileColumn profile={profileB} />
               ) : (
                 <button
                   onClick={() => setSearchSlot('b')}
                   style={{
-                    width: '100%', background: 'var(--surface3)', border: '1px dashed var(--border2)',
-                    borderRadius: 'var(--radius-md)', padding: '1rem 0.5rem', cursor: 'pointer',
+                    width: '100%', background: 'linear-gradient(180deg, rgba(var(--orange-ch),0.05) 0%, rgba(255,255,255,0) 100%), var(--surface3)', border: '1px dashed rgba(var(--orange-ch),0.35)',
+                    borderRadius: 'var(--radius-lg)', padding: '1.15rem 0.75rem', cursor: 'pointer',
                     fontFamily: 'var(--headline)', fontWeight: 700, fontSize: 'var(--text-xs)',
                     letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)',
+                    minHeight: '178px',
                   }}
                 >
-                  + Athlete B
+                  <div style={{ fontSize: '28px', lineHeight: 1, color: 'var(--orange)', marginBottom: '8px' }}>+</div>
+                  Athlete B
                 </button>
               )}
               {profileB && (
@@ -473,9 +595,9 @@ export function Compare() {
 
         {/* Stats comparison — only show when both profiles loaded */}
         {aIsAthleteRow && bIsAthleteRow && (
-          <div style={{ background: 'var(--surface2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg)', padding: '1rem' }}>
-            <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xs)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '0.75rem', textAlign: 'center' }}>
-              Stats
+          <div style={{ ...PANEL, padding: '1rem' }}>
+            <div style={{ ...SECTION_KICKER, marginBottom: '0.75rem', textAlign: 'center' }}>
+              Stats Board
             </div>
 
             {/* Overview stats */}
@@ -528,7 +650,7 @@ export function Compare() {
               }
               return (
                 <>
-                  <div style={{ fontFamily: 'var(--headline)', fontWeight: 900, fontSize: 'var(--text-xs)', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--muted)', marginTop: '0.75rem', marginBottom: '0.25rem' }}>
+                  <div style={{ ...SECTION_KICKER, marginTop: '0.75rem', marginBottom: '0.25rem' }}>
                     Personal Bests
                   </div>
                   {rows}
@@ -543,12 +665,12 @@ export function Compare() {
           <button
             onClick={copyLink}
             style={{
-              width: '100%', background: copied ? 'var(--surface3)' : 'var(--surface2)',
-              border: '1px solid var(--border2)', borderRadius: 'var(--radius-lg)',
+              width: '100%', background: copied ? 'rgba(var(--green-ch),0.12)' : 'linear-gradient(180deg, rgba(var(--orange-ch),0.16) 0%, rgba(var(--orange-ch),0.06) 100%), var(--surface2)',
+              border: `1px solid ${copied ? 'rgba(var(--green-ch),0.34)' : 'rgba(var(--orange-ch),0.28)'}`, borderRadius: 'var(--radius-lg)',
               padding: 'var(--sp-3)', fontFamily: 'var(--headline)', fontWeight: 900,
               fontSize: 'var(--text-xs)', letterSpacing: '0.1em', textTransform: 'uppercase',
               color: copied ? 'var(--green)' : 'var(--white)', cursor: 'pointer',
-              transition: 'all 0.15s',
+              transition: 'all 0.15s', boxShadow: copied ? '0 12px 24px rgba(var(--green-ch),0.1)' : '0 16px 28px rgba(var(--orange-ch),0.08)',
             }}
           >
             {copied ? '✓ Link Copied!' : '↑ Share Comparison'}
